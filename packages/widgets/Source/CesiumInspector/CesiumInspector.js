@@ -48,7 +48,7 @@ function CesiumInspector(container, scene) {
   element.className = "cesium-cesiumInspector";
   element.setAttribute(
     "data-bind",
-    'css: { "cesium-cesiumInspector-visible" : dropDownVisible, "cesium-cesiumInspector-hidden" : !dropDownVisible }'
+    'css: { "cesium-cesiumInspector-visible" : dropDownVisible, "cesium-cesiumInspector-hidden" : !dropDownVisible }',
   );
   container.appendChild(this._element);
 
@@ -64,7 +64,7 @@ function CesiumInspector(container, scene) {
     panel,
     "General",
     "generalVisible",
-    "toggleGeneral"
+    "toggleGeneral",
   );
 
   const debugShowFrustums = createCheckbox("Show Frustums", "frustums");
@@ -72,16 +72,16 @@ function CesiumInspector(container, scene) {
   frustumStatistics.className = "cesium-cesiumInspector-frustumStatistics";
   frustumStatistics.setAttribute(
     "data-bind",
-    "visible: frustums, html: frustumStatisticText"
+    "visible: frustums, html: frustumStatisticText",
   );
   debugShowFrustums.appendChild(frustumStatistics);
   generalSection.appendChild(debugShowFrustums);
 
   generalSection.appendChild(
-    createCheckbox("Show Frustum Planes", "frustumPlanes")
+    createCheckbox("Show Frustum Planes", "frustumPlanes"),
   );
   generalSection.appendChild(
-    createCheckbox("Performance Display", "performance")
+    createCheckbox("Performance Display", "performance"),
   );
 
   performanceContainer.className = "cesium-cesiumInspector-performanceDisplay";
@@ -99,7 +99,7 @@ function CesiumInspector(container, scene) {
   const gLabel = document.createElement("span");
   gLabel.setAttribute(
     "data-bind",
-    'html: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Frustum:"'
+    'html: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Frustum:"',
   );
   depthFrustum.appendChild(gLabel);
 
@@ -126,7 +126,7 @@ function CesiumInspector(container, scene) {
     panel,
     "Primitives",
     "primitivesVisible",
-    "togglePrimitives"
+    "togglePrimitives",
   );
   const pickPrimRequired = document.createElement("div");
   pickPrimRequired.className = "cesium-cesiumInspector-pickSection";
@@ -138,7 +138,7 @@ function CesiumInspector(container, scene) {
   pickPrimitiveButton.className = "cesium-cesiumInspector-pickButton";
   pickPrimitiveButton.setAttribute(
     "data-bind",
-    'css: {"cesium-cesiumInspector-pickButtonHighlight" : pickPrimitiveActive}, click: pickPrimitive'
+    'css: {"cesium-cesiumInspector-pickButtonHighlight" : pickPrimitiveActive}, click: pickPrimitive',
   );
   let buttonWrap = document.createElement("div");
   buttonWrap.className = "cesium-cesiumInspector-center";
@@ -149,21 +149,21 @@ function CesiumInspector(container, scene) {
     createCheckbox(
       "Show bounding sphere",
       "primitiveBoundingSphere",
-      "hasPickedPrimitive"
-    )
+      "hasPickedPrimitive",
+    ),
   );
   pickPrimRequired.appendChild(
     createCheckbox(
       "Show reference frame",
       "primitiveReferenceFrame",
-      "hasPickedPrimitive"
-    )
+      "hasPickedPrimitive",
+    ),
   );
 
   this._primitiveOnly = createCheckbox(
     "Show only selected",
     "filterPrimitive",
-    "hasPickedPrimitive"
+    "hasPickedPrimitive",
   );
   pickPrimRequired.appendChild(this._primitiveOnly);
 
@@ -172,7 +172,7 @@ function CesiumInspector(container, scene) {
     panel,
     "Terrain",
     "terrainVisible",
-    "toggleTerrain"
+    "toggleTerrain",
   );
   const pickTileRequired = document.createElement("div");
   pickTileRequired.className = "cesium-cesiumInspector-pickSection";
@@ -183,7 +183,7 @@ function CesiumInspector(container, scene) {
   pickTileButton.className = "cesium-cesiumInspector-pickButton";
   pickTileButton.setAttribute(
     "data-bind",
-    'css: {"cesium-cesiumInspector-pickButtonHighlight" : pickTileActive}, click: pickTile'
+    'css: {"cesium-cesiumInspector-pickButtonHighlight" : pickTileActive}, click: pickTile',
   );
   buttonWrap = document.createElement("div");
   buttonWrap.appendChild(pickTileButton);
@@ -258,19 +258,19 @@ function CesiumInspector(container, scene) {
     createCheckbox(
       "Show bounding volume",
       "tileBoundingSphere",
-      "hasPickedTile"
-    )
+      "hasPickedTile",
+    ),
   );
   pickTileRequired.appendChild(
-    createCheckbox("Show only selected", "filterTile", "hasPickedTile")
+    createCheckbox("Show only selected", "filterTile", "hasPickedTile"),
   );
 
   terrainSection.appendChild(createCheckbox("Wireframe", "wireframe"));
   terrainSection.appendChild(
-    createCheckbox("Suspend LOD update", "suspendUpdates")
+    createCheckbox("Suspend LOD update", "suspendUpdates"),
   );
   terrainSection.appendChild(
-    createCheckbox("Show tile coordinates", "tileCoordinates")
+    createCheckbox("Show tile coordinates", "tileCoordinates"),
   );
 
   knockout.applyBindings(viewModel, this._element);

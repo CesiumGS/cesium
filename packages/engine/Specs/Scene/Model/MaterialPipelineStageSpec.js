@@ -251,7 +251,7 @@ describe(
 
       const material = primitive.material;
       material.emissiveFactor = Cartesian3.clone(
-        ModelComponents.Material.DEFAULT_EMISSIVE_FACTOR
+        ModelComponents.Material.DEFAULT_EMISSIVE_FACTOR,
       );
       const metallicRoughness = material.metallicRoughness;
 
@@ -471,15 +471,12 @@ describe(
         "USE_METALLIC_ROUGHNESS",
       ]);
 
-      const {
-        anisotropyStrength,
-        anisotropyRotation,
-        anisotropyTexture,
-      } = primitive.material.anisotropy;
+      const { anisotropyStrength, anisotropyRotation, anisotropyTexture } =
+        primitive.material.anisotropy;
       const expectedAnisotropy = Cartesian3.fromElements(
         Math.cos(anisotropyRotation),
         Math.sin(anisotropyRotation),
-        anisotropyStrength
+        anisotropyStrength,
       );
       const expectedUniforms = {
         u_anisotropy: expectedAnisotropy,
@@ -835,7 +832,7 @@ describe(
         uniformMap,
         textureReader,
         "u_testTexture",
-        "TEST"
+        "TEST",
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
@@ -867,7 +864,7 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockFrameState.context.defaultTexture
+        mockFrameState.context.defaultTexture,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
@@ -902,7 +899,7 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockFrameState.context.defaultTexture
+        mockFrameState.context.defaultTexture,
       );
 
       expectUniformMap(uniformMap, {
@@ -910,5 +907,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

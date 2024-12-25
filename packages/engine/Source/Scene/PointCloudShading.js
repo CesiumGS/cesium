@@ -36,7 +36,7 @@ function PointCloudShading(options) {
    */
   this.geometricErrorScale = defaultValue(
     pointCloudShading.geometricErrorScale,
-    1.0
+    1.0,
   );
 
   /**
@@ -70,7 +70,7 @@ function PointCloudShading(options) {
    */
   this.eyeDomeLightingStrength = defaultValue(
     pointCloudShading.eyeDomeLightingStrength,
-    1.0
+    1.0,
   );
 
   /**
@@ -80,7 +80,7 @@ function PointCloudShading(options) {
    */
   this.eyeDomeLightingRadius = defaultValue(
     pointCloudShading.eyeDomeLightingRadius,
-    1.0
+    1.0,
   );
 
   /**

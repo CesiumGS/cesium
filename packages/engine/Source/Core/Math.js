@@ -236,7 +236,7 @@ CesiumMath.signNotZero = function (value) {
 CesiumMath.toSNorm = function (value, rangeMaximum) {
   rangeMaximum = defaultValue(rangeMaximum, 255);
   return Math.round(
-    (CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum
+    (CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum,
   );
 };
 
@@ -509,7 +509,7 @@ CesiumMath.clampToLatitudeRange = function (angle) {
   return CesiumMath.clamp(
     angle,
     -1 * CesiumMath.PI_OVER_TWO,
-    CesiumMath.PI_OVER_TWO
+    CesiumMath.PI_OVER_TWO,
   );
 };
 
@@ -610,7 +610,7 @@ CesiumMath.equalsEpsilon = function (
   left,
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(left)) {
@@ -753,7 +753,7 @@ CesiumMath.factorial = function (n) {
   //>>includeStart('debug', pragmas.debug);
   if (typeof n !== "number" || n < 0) {
     throw new DeveloperError(
-      "A number greater than or equal to 0 is required."
+      "A number greater than or equal to 0 is required.",
     );
   }
   //>>includeEnd('debug');
@@ -1048,6 +1048,8 @@ CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
 });
 
 /**
+ * Calculate the fog impact at a given distance. Useful for culling.
+ * Matches the equation in `fog.glsl`
  * @private
  */
 CesiumMath.fog = function (distanceToCamera, density) {

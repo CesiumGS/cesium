@@ -52,36 +52,36 @@ describe("Core/Quaternion", function () {
   it("fromRotationMatrix works when m22 is max", function () {
     const q = Quaternion.fromAxisAngle(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      Math.PI
+      Math.PI,
     );
     const rotation = new Matrix3(-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0);
     expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(
       q,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
   it("fromRotationMatrix works when m11 is max", function () {
     const q = Quaternion.fromAxisAngle(
       Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()),
-      Math.PI
+      Math.PI,
     );
     const rotation = new Matrix3(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0);
     expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(
       q,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
   it("fromRotationMatrix works when m00 is max", function () {
     const q = Quaternion.fromAxisAngle(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      Math.PI
+      Math.PI,
     );
     const rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0);
     expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(
       q,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -90,7 +90,7 @@ describe("Core/Quaternion", function () {
     const q = new Quaternion(0.0, 0.0, 0.0, 1.0);
     expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(
       q,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -107,17 +107,17 @@ describe("Core/Quaternion", function () {
     const direction = new Cartesian3(
       -0.2349326833984488,
       0.8513513009480378,
-      0.46904967396353314
+      0.46904967396353314,
     );
     const up = new Cartesian3(
       0.12477198625717335,
       -0.4521499177166376,
-      0.8831717858696695
+      0.8831717858696695,
     );
     const right = new Cartesian3(
       0.9639702203483635,
       0.26601017702986895,
-      6.456422901079747e-10
+      6.456422901079747e-10,
     );
     const matrix = new Matrix3(
       right.x,
@@ -128,12 +128,12 @@ describe("Core/Quaternion", function () {
       up.z,
       -direction.x,
       -direction.y,
-      -direction.z
+      -direction.z,
     );
     const quaternion = Quaternion.fromRotationMatrix(matrix);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       matrix,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -143,7 +143,7 @@ describe("Core/Quaternion", function () {
     const quaternion = Quaternion.fromHeadingPitchRoll(hpr);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       Matrix3.fromRotationZ(-angle),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -153,7 +153,7 @@ describe("Core/Quaternion", function () {
     const quaternion = Quaternion.fromHeadingPitchRoll(hpr);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       Matrix3.fromRotationY(-angle),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -163,7 +163,7 @@ describe("Core/Quaternion", function () {
     const quaternion = Quaternion.fromHeadingPitchRoll(hpr);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       Matrix3.fromRotationX(angle),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -176,7 +176,7 @@ describe("Core/Quaternion", function () {
     Matrix3.multiply(Matrix3.fromRotationZ(-angle), expected, expected);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -191,7 +191,7 @@ describe("Core/Quaternion", function () {
     Matrix3.multiply(Matrix3.fromRotationZ(-heading), expected, expected);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -201,7 +201,7 @@ describe("Core/Quaternion", function () {
     const result = new Quaternion();
     const quaternion = Quaternion.fromHeadingPitchRoll(hpr, result);
     const expected = Quaternion.fromRotationMatrix(
-      Matrix3.fromRotationX(angle)
+      Matrix3.fromRotationX(angle),
     );
     expect(quaternion).toBe(result);
     expect(quaternion).toEqualEpsilon(expected, CesiumMath.EPSILON11);
@@ -284,7 +284,7 @@ describe("Core/Quaternion", function () {
       -2.0 / magnitudeSquared,
       -3.0 / magnitudeSquared,
       -4.0 / magnitudeSquared,
-      5.0 / magnitudeSquared
+      5.0 / magnitudeSquared,
     );
     const result = new Quaternion();
     const returnedResult = Quaternion.inverse(quaternion, result);
@@ -299,7 +299,7 @@ describe("Core/Quaternion", function () {
       -2.0 / magnitudeSquared,
       -3.0 / magnitudeSquared,
       -4.0 / magnitudeSquared,
-      5.0 / magnitudeSquared
+      5.0 / magnitudeSquared,
     );
     const returnedResult = Quaternion.inverse(quaternion, quaternion);
     expect(returnedResult).toEqual(expected);
@@ -381,7 +381,7 @@ describe("Core/Quaternion", function () {
     const returnedResult = Quaternion.multiplyByScalar(
       quaternion,
       scalar,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
@@ -394,7 +394,7 @@ describe("Core/Quaternion", function () {
     const returnedResult = Quaternion.multiplyByScalar(
       quaternion,
       scalar,
-      quaternion
+      quaternion,
     );
     expect(quaternion).toBe(returnedResult);
     expect(quaternion).toEqual(expectedResult);
@@ -408,7 +408,7 @@ describe("Core/Quaternion", function () {
     const returnedResult = Quaternion.divideByScalar(
       quaternion,
       scalar,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
@@ -421,7 +421,7 @@ describe("Core/Quaternion", function () {
     const returnedResult = Quaternion.divideByScalar(
       quaternion,
       scalar,
-      quaternion
+      quaternion,
     );
     expect(quaternion).toBe(returnedResult);
     expect(quaternion).toEqual(expectedResult);
@@ -434,13 +434,13 @@ describe("Core/Quaternion", function () {
     const sin = Math.sin(angle / 2.0);
     const expected = Cartesian3.normalize(
       new Cartesian3(2.0, 3.0, 6.0),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const quaternion = new Quaternion(
       sin * expected.x,
       sin * expected.y,
       sin * expected.z,
-      cos
+      cos,
     );
     const result = new Cartesian3();
     const returnedResult = Quaternion.computeAxis(quaternion, result);
@@ -473,13 +473,13 @@ describe("Core/Quaternion", function () {
     const sin = Math.sin(angle / 2.0);
     const axis = Cartesian3.normalize(
       new Cartesian3(2.0, 3.0, 6.0),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const quaternion = new Quaternion(
       sin * axis.x,
       sin * axis.y,
       sin * axis.z,
-      cos
+      cos,
     );
     const result = Quaternion.computeAngle(quaternion);
     expect(result).toEqualEpsilon(angle, CesiumMath.EPSILON15);
@@ -544,19 +544,19 @@ describe("Core/Quaternion", function () {
   it("slerp works", function () {
     const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
-      new Quaternion()
+      new Quaternion(),
     );
     const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
-      Math.cos(CesiumMath.PI_OVER_FOUR)
+      Math.cos(CesiumMath.PI_OVER_FOUR),
     );
     const expected = new Quaternion(
       0.0,
       0.0,
       Math.sin(Math.PI / 8.0),
-      Math.cos(Math.PI / 8.0)
+      Math.cos(Math.PI / 8.0),
     );
 
     const result = new Quaternion();
@@ -568,19 +568,19 @@ describe("Core/Quaternion", function () {
   it("slerp works with a result parameter that is an input parameter", function () {
     const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
-      new Quaternion()
+      new Quaternion(),
     );
     const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
-      Math.cos(CesiumMath.PI_OVER_FOUR)
+      Math.cos(CesiumMath.PI_OVER_FOUR),
     );
     const expected = new Quaternion(
       0.0,
       0.0,
       Math.sin(Math.PI / 8.0),
-      Math.cos(Math.PI / 8.0)
+      Math.cos(Math.PI / 8.0),
     );
 
     const returnedResult = Quaternion.slerp(start, end, 0.5, start);
@@ -591,23 +591,23 @@ describe("Core/Quaternion", function () {
   it("slerp works with obtuse angles", function () {
     const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, -1.0),
-      new Quaternion()
+      new Quaternion(),
     );
     const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
-      Math.cos(CesiumMath.PI_OVER_FOUR)
+      Math.cos(CesiumMath.PI_OVER_FOUR),
     );
     const expected = new Quaternion(
       0.0,
       0.0,
       -Math.sin(Math.PI / 8.0),
-      -Math.cos(Math.PI / 8.0)
+      -Math.cos(Math.PI / 8.0),
     );
     expect(Quaternion.slerp(start, end, 0.5, new Quaternion())).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -634,7 +634,7 @@ describe("Core/Quaternion", function () {
   it("log works", function () {
     const axis = Cartesian3.normalize(
       new Cartesian3(1.0, -1.0, 1.0),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const angle = CesiumMath.PI_OVER_FOUR;
     const quat = Quaternion.fromAxisAngle(axis, angle);
@@ -644,7 +644,7 @@ describe("Core/Quaternion", function () {
     const expected = Cartesian3.multiplyByScalar(
       axis,
       angle * 0.5,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(log).toBe(result);
     expect(log).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -653,13 +653,13 @@ describe("Core/Quaternion", function () {
   it("exp works", function () {
     const axis = Cartesian3.normalize(
       new Cartesian3(1.0, -1.0, 1.0),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const angle = CesiumMath.PI_OVER_FOUR;
     const cartesian = Cartesian3.multiplyByScalar(
       axis,
       angle * 0.5,
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     const result = new Quaternion();
@@ -673,15 +673,15 @@ describe("Core/Quaternion", function () {
     const q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
     const q1 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const q2 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_Z,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const q3 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
-      -CesiumMath.PI_OVER_FOUR
+      -CesiumMath.PI_OVER_FOUR,
     );
 
     const s1Result = new Quaternion();
@@ -699,19 +699,19 @@ describe("Core/Quaternion", function () {
   it("fastSlerp works", function () {
     const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
-      new Quaternion()
+      new Quaternion(),
     );
     const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
-      Math.cos(CesiumMath.PI_OVER_FOUR)
+      Math.cos(CesiumMath.PI_OVER_FOUR),
     );
     const expected = new Quaternion(
       0.0,
       0.0,
       Math.sin(Math.PI / 8.0),
-      Math.cos(Math.PI / 8.0)
+      Math.cos(Math.PI / 8.0),
     );
 
     const result = new Quaternion();
@@ -723,19 +723,19 @@ describe("Core/Quaternion", function () {
   it("fastSlerp works with a result parameter that is an input parameter", function () {
     const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
-      new Quaternion()
+      new Quaternion(),
     );
     const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
-      Math.cos(CesiumMath.PI_OVER_FOUR)
+      Math.cos(CesiumMath.PI_OVER_FOUR),
     );
     const expected = new Quaternion(
       0.0,
       0.0,
       Math.sin(Math.PI / 8.0),
-      Math.cos(Math.PI / 8.0)
+      Math.cos(Math.PI / 8.0),
     );
 
     const returnedResult = Quaternion.fastSlerp(start, end, 0.5, start);
@@ -746,35 +746,35 @@ describe("Core/Quaternion", function () {
   it("fastSlerp works with obtuse angles", function () {
     const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, -1.0),
-      new Quaternion()
+      new Quaternion(),
     );
     const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
-      Math.cos(CesiumMath.PI_OVER_FOUR)
+      Math.cos(CesiumMath.PI_OVER_FOUR),
     );
     const expected = new Quaternion(
       0.0,
       0.0,
       -Math.sin(Math.PI / 8.0),
-      -Math.cos(Math.PI / 8.0)
+      -Math.cos(Math.PI / 8.0),
     );
     expect(
-      Quaternion.fastSlerp(start, end, 0.5, new Quaternion())
+      Quaternion.fastSlerp(start, end, 0.5, new Quaternion()),
     ).toEqualEpsilon(expected, CesiumMath.EPSILON6);
   });
 
   it("fastSlerp vs slerp", function () {
     const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
-      new Quaternion()
+      new Quaternion(),
     );
     const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
-      Math.cos(CesiumMath.PI_OVER_FOUR)
+      Math.cos(CesiumMath.PI_OVER_FOUR),
     );
 
     let expected = Quaternion.slerp(start, end, 0.25, new Quaternion());
@@ -794,15 +794,15 @@ describe("Core/Quaternion", function () {
     const q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
     const q1 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const q2 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_Z,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const q3 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
-      -CesiumMath.PI_OVER_FOUR
+      -CesiumMath.PI_OVER_FOUR,
     );
 
     const s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, new Quaternion());
@@ -818,15 +818,15 @@ describe("Core/Quaternion", function () {
     const q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
     const q1 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const q2 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_Z,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const q3 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
-      -CesiumMath.PI_OVER_FOUR
+      -CesiumMath.PI_OVER_FOUR,
     );
 
     const s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, new Quaternion());
@@ -848,19 +848,19 @@ describe("Core/Quaternion", function () {
   it("equals", function () {
     const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
     expect(
-      Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))
+      Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0)),
     ).toEqual(true);
     expect(
-      Quaternion.equals(quaternion, new Quaternion(2.0, 2.0, 3.0, 4.0))
+      Quaternion.equals(quaternion, new Quaternion(2.0, 2.0, 3.0, 4.0)),
     ).toEqual(false);
     expect(
-      Quaternion.equals(quaternion, new Quaternion(2.0, 1.0, 3.0, 4.0))
+      Quaternion.equals(quaternion, new Quaternion(2.0, 1.0, 3.0, 4.0)),
     ).toEqual(false);
     expect(
-      Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 4.0, 4.0))
+      Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 4.0, 4.0)),
     ).toEqual(false);
     expect(
-      Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 5.0))
+      Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 5.0)),
     ).toEqual(false);
     expect(Quaternion.equals(quaternion, undefined)).toEqual(false);
   });
@@ -871,71 +871,71 @@ describe("Core/Quaternion", function () {
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(1.0, 2.0, 3.0, 4.0),
-        0.0
-      )
+        0.0,
+      ),
     ).toEqual(true);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(1.0, 2.0, 3.0, 4.0),
-        1.0
-      )
+        1.0,
+      ),
     ).toEqual(true);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(2.0, 2.0, 3.0, 4.0),
-        1.0
-      )
+        1.0,
+      ),
     ).toEqual(true);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(1.0, 3.0, 3.0, 4.0),
-        1.0
-      )
+        1.0,
+      ),
     ).toEqual(true);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(1.0, 2.0, 4.0, 4.0),
-        1.0
-      )
+        1.0,
+      ),
     ).toEqual(true);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(1.0, 2.0, 3.0, 5.0),
-        1.0
-      )
+        1.0,
+      ),
     ).toEqual(true);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(2.0, 2.0, 3.0, 4.0),
-        0.99999
-      )
+        0.99999,
+      ),
     ).toEqual(false);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(1.0, 3.0, 3.0, 4.0),
-        0.99999
-      )
+        0.99999,
+      ),
     ).toEqual(false);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(1.0, 2.0, 4.0, 4.0),
-        0.99999
-      )
+        0.99999,
+      ),
     ).toEqual(false);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
         new Quaternion(1.0, 2.0, 3.0, 5.0),
-        0.99999
-      )
+        0.99999,
+      ),
     ).toEqual(false);
     expect(Quaternion.equalsEpsilon(quaternion, undefined, 1)).toEqual(false);
   });
@@ -1165,7 +1165,7 @@ describe("Core/Quaternion", function () {
         new Quaternion(),
         new Quaternion(),
         new Quaternion(),
-        new Quaternion()
+        new Quaternion(),
       );
     }).toThrowDeveloperError();
   });
@@ -1247,7 +1247,7 @@ describe("Core/Quaternion", function () {
       Quaternion.computeInnerQuadrangle(
         new Quaternion(),
         new Quaternion(),
-        new Quaternion()
+        new Quaternion(),
       );
     }).toThrowDeveloperError();
   });
@@ -1259,7 +1259,7 @@ describe("Core/Quaternion", function () {
         new Quaternion(),
         new Quaternion(),
         new Quaternion(),
-        3
+        3,
       );
     }).toThrowDeveloperError();
   });
@@ -1311,7 +1311,7 @@ describe("Core/Quaternion", function () {
       Quaternion.fastSquad(
         new Quaternion(),
         new Quaternion(),
-        new Quaternion()
+        new Quaternion(),
       );
     }).toThrowDeveloperError();
   });
@@ -1322,7 +1322,7 @@ describe("Core/Quaternion", function () {
         new Quaternion(),
         new Quaternion(),
         new Quaternion(),
-        new Quaternion()
+        new Quaternion(),
       );
     }).toThrowDeveloperError();
   });
@@ -1334,7 +1334,7 @@ describe("Core/Quaternion", function () {
         new Quaternion(),
         new Quaternion(),
         new Quaternion(),
-        3
+        3,
       );
     }).toThrowDeveloperError();
   });

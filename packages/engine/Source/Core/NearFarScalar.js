@@ -58,7 +58,7 @@ NearFarScalar.clone = function (nearFarScalar, result) {
       nearFarScalar.near,
       nearFarScalar.nearValue,
       nearFarScalar.far,
-      nearFarScalar.farValue
+      nearFarScalar.farValue,
     );
   }
 

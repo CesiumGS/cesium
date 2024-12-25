@@ -26,7 +26,7 @@ function GoogleEarthEnterpriseTileInformation(
   imageryVersion,
   terrainVersion,
   imageryProvider,
-  terrainProvider
+  terrainProvider,
 ) {
   this._bits = bits;
   this.cnodeVersion = cnodeVersion;
@@ -53,7 +53,7 @@ GoogleEarthEnterpriseTileInformation.clone = function (info, result) {
       info.imageryVersion,
       info.terrainVersion,
       info.imageryProvider,
-      info.terrainProvider
+      info.terrainProvider,
     );
   } else {
     result._bits = info._bits;

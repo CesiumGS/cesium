@@ -32,7 +32,7 @@ const PrimitiveOutlinePipelineStage = {
 PrimitiveOutlinePipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const uniformMap = renderResources.uniformMap;
@@ -40,7 +40,7 @@ PrimitiveOutlinePipelineStage.process = function (
   shaderBuilder.addDefine(
     "HAS_PRIMITIVE_OUTLINE",
     undefined,
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   shaderBuilder.addAttribute("vec3", "a_outlineCoordinates");
@@ -51,7 +51,7 @@ PrimitiveOutlinePipelineStage.process = function (
     index: renderResources.attributeIndex++,
     vertexBuffer: outlineCoordinates.buffer,
     componentsPerAttribute: AttributeType.getNumberOfComponents(
-      outlineCoordinates.type
+      outlineCoordinates.type,
     ),
     componentDatatype: outlineCoordinates.componentDatatype,
     offsetInBytes: outlineCoordinates.byteOffset,
@@ -63,12 +63,12 @@ PrimitiveOutlinePipelineStage.process = function (
   shaderBuilder.addUniform(
     "sampler2D",
     "model_outlineTexture",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // This automatically handles caching the texture on the context
   const outlineTexture = PrimitiveOutlineGenerator.createTexture(
-    frameState.context
+    frameState.context,
   );
   uniformMap.model_outlineTexture = function () {
     return outlineTexture;
@@ -78,7 +78,7 @@ PrimitiveOutlinePipelineStage.process = function (
   shaderBuilder.addUniform(
     "vec4",
     "model_outlineColor",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   uniformMap.model_outlineColor = function () {
     return model.outlineColor;
@@ -86,7 +86,7 @@ PrimitiveOutlinePipelineStage.process = function (
   shaderBuilder.addUniform(
     "bool",
     "model_showOutline",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   uniformMap.model_showOutline = function () {
     return model.showOutline;

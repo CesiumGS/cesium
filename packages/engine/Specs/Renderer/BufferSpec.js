@@ -692,5 +692,5 @@ describe(
       });
     }
   },
-  "WebGL"
+  "WebGL",
 );

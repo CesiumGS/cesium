@@ -5,7 +5,7 @@ describe("Scene/Axis", function () {
     const transformed = Matrix4.multiplyByVector(
       transformation,
       upAxis,
-      new Cartesian4()
+      new Cartesian4(),
     );
     Cartesian4.normalize(transformed, transformed);
     expect(transformed).toEqualEpsilon(expected, CesiumMath.EPSILON1);

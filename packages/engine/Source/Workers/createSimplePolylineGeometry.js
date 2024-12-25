@@ -6,11 +6,11 @@ function createSimplePolylineGeometry(simplePolylineGeometry, offset) {
   if (defined(offset)) {
     simplePolylineGeometry = SimplePolylineGeometry.unpack(
       simplePolylineGeometry,
-      offset
+      offset,
     );
   }
   simplePolylineGeometry._ellipsoid = Ellipsoid.clone(
-    simplePolylineGeometry._ellipsoid
+    simplePolylineGeometry._ellipsoid,
   );
   return SimplePolylineGeometry.createGeometry(simplePolylineGeometry);
 }

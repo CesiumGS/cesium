@@ -15,7 +15,7 @@ function createEvaluateFunction(spline) {
     }
     const i = (spline._lastTimeIndex = spline.findTimeInterval(
       time,
-      spline._lastTimeIndex
+      spline._lastTimeIndex,
     ));
     const u = (time - times[i]) / (times[i + 1] - times[i]);
 
@@ -61,7 +61,7 @@ function QuaternionSpline(options) {
   }
   if (points.length < 2) {
     throw new DeveloperError(
-      "points.length must be greater than or equal to 2."
+      "points.length must be greater than or equal to 2.",
     );
   }
   if (times.length !== points.length) {

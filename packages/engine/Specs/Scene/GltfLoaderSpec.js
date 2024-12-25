@@ -163,7 +163,7 @@ describe(
     it("load throws if glTF JSON fails to load", async function () {
       const error = new Error("404 Not Found");
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        Promise.reject(error)
+        Promise.reject(error),
       );
 
       const gltfResource = new Resource({
@@ -178,7 +178,7 @@ describe(
 
       await expectAsync(gltfLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load glTF\nFailed to load glTF: https://example.com/model.glb\n404 Not Found"
+        "Failed to load glTF\nFailed to load glTF: https://example.com/model.glb\n404 Not Found",
       );
     });
 
@@ -230,7 +230,7 @@ describe(
       gltf = modifyFunction(gltf);
 
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        Promise.resolve(generateJsonBuffer(gltf).buffer)
+        Promise.resolve(generateJsonBuffer(gltf).buffer),
       );
 
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
@@ -294,11 +294,11 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
 
         expect(positionAttribute.buffer).toBeDefined();
@@ -325,16 +325,16 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
 
         const indices = primitive.indices;
@@ -370,11 +370,11 @@ describe(
 
         expect(positionAttribute.name).toBe("POSITION");
         expect(positionAttribute.semantic).toBe(
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         expect(positionAttribute.setIndex).toBeUndefined();
         expect(positionAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(positionAttribute.type).toBe(AttributeType.VEC3);
         expect(positionAttribute.normalized).toBe(false);
@@ -406,11 +406,11 @@ describe(
 
         expect(texcoordAttribute.name).toBe("TEXCOORD_0");
         expect(texcoordAttribute.semantic).toBe(
-          VertexAttributeSemantic.TEXCOORD
+          VertexAttributeSemantic.TEXCOORD,
         );
         expect(texcoordAttribute.setIndex).toBe(0);
         expect(texcoordAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(texcoordAttribute.type).toBe(AttributeType.VEC2);
         expect(texcoordAttribute.normalized).toBe(false);
@@ -436,7 +436,7 @@ describe(
         expect(texcoordAttribute.buffer.sizeInBytes).toBe(192);
 
         expect(metallicRoughness.baseColorFactor).toEqual(
-          new Cartesian4(1.0, 1.0, 1.0, 1.0)
+          new Cartesian4(1.0, 1.0, 1.0, 1.0),
         );
         expect(metallicRoughness.metallicFactor).toBe(0.0);
         expect(metallicRoughness.roughnessFactor).toBe(1.0);
@@ -448,10 +448,10 @@ describe(
         expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
         expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
         expect(sampler.magnificationFilter).toBe(
-          TextureMagnificationFilter.LINEAR
+          TextureMagnificationFilter.LINEAR,
         );
         expect(sampler.minificationFilter).toBe(
-          TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+          TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
         );
 
         expect(nodes.length).toBe(2);
@@ -488,7 +488,7 @@ describe(
           const metallicRoughness = material.metallicRoughness;
 
           expect(metallicRoughness.baseColorTexture).toBeUndefined();
-        }
+        },
       );
     });
 
@@ -511,10 +511,10 @@ describe(
         expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
         expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
         expect(sampler.magnificationFilter).toBe(
-          TextureMagnificationFilter.LINEAR
+          TextureMagnificationFilter.LINEAR,
         );
         expect(sampler.minificationFilter).toBe(
-          TextureMinificationFilter.LINEAR
+          TextureMinificationFilter.LINEAR,
         );
       });
     }
@@ -543,21 +543,21 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
         const colorAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.COLOR,
-          0
+          0,
         );
 
         expect(positionAttribute.buffer).toBeDefined();
@@ -602,7 +602,7 @@ describe(
       return loadModifiedGltfAndTest(
         boxVertexColors,
         undefined,
-        modifyGltf
+        modifyGltf,
       ).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const scene = components.scene;
@@ -612,21 +612,21 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
         const colorAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.COLOR,
-          0
+          0,
         );
 
         expect(positionAttribute.buffer).toBeDefined();
@@ -648,18 +648,18 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const morphTargets = primitive.morphTargets;
         const morphTarget0 = morphTargets[0];
         const morphTarget1 = morphTargets[1];
         const morphPositions0 = getAttribute(
           morphTarget0.attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const morphPositions1 = getAttribute(
           morphTarget1.attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
 
         expect(morphPositions0.name).toBe("POSITION");
@@ -715,7 +715,7 @@ describe(
           const scene = components.scene;
           const rootNode = scene.nodes[0];
           expect(rootNode.morphWeights).toEqual([0.0, 0.0]);
-        }
+        },
       );
     });
 
@@ -730,17 +730,17 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const jointsAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.JOINTS,
-          0
+          0,
         );
         const weightsAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.WEIGHTS,
-          0
+          0,
         );
 
         expect(positionAttribute.buffer).toBeDefined();
@@ -751,7 +751,7 @@ describe(
         expect(jointsAttribute.semantic).toBe(VertexAttributeSemantic.JOINTS);
         expect(jointsAttribute.setIndex).toBe(0);
         expect(jointsAttribute.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_SHORT
+          ComponentDatatype.UNSIGNED_SHORT,
         );
         expect(jointsAttribute.type).toBe(AttributeType.VEC4);
         expect(jointsAttribute.normalized).toBe(false);
@@ -769,7 +769,7 @@ describe(
         expect(weightsAttribute.semantic).toBe(VertexAttributeSemantic.WEIGHTS);
         expect(weightsAttribute.setIndex).toBe(0);
         expect(weightsAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(weightsAttribute.type).toBe(AttributeType.VEC4);
         expect(weightsAttribute.normalized).toBe(false);
@@ -824,7 +824,7 @@ describe(
             Matrix4.IDENTITY,
             Matrix4.IDENTITY,
           ]);
-        }
+        },
       );
     });
 
@@ -838,7 +838,7 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
 
         expect(positionAttribute.buffer).toBeDefined();
@@ -866,8 +866,8 @@ describe(
             Quaternion.equalsEpsilon(
               sampler.output[i],
               expectedOutput[i],
-              CesiumMath.EPSILON3
-            )
+              CesiumMath.EPSILON3,
+            ),
           ).toBe(true);
         }
 
@@ -876,7 +876,7 @@ describe(
         expect(channel.sampler).toBe(sampler);
         expect(channel.target.node).toBe(rootNode);
         expect(channel.target.path).toEqual(
-          ModelComponents.AnimatedPropertyType.ROTATION
+          ModelComponents.AnimatedPropertyType.ROTATION,
         );
       });
     });
@@ -891,7 +891,7 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
 
         expect(positionAttribute.buffer).toBeDefined();
@@ -911,7 +911,7 @@ describe(
         expect(channel.sampler).toBe(sampler);
         expect(channel.target.node).toBe(rootNode);
         expect(channel.target.path).toEqual(
-          ModelComponents.AnimatedPropertyType.WEIGHTS
+          ModelComponents.AnimatedPropertyType.WEIGHTS,
         );
       });
     });
@@ -935,7 +935,7 @@ describe(
         expect(channel.sampler).toBe(sampler);
         expect(channel.target.node).toBe(nodes[0]);
         expect(channel.target.path).toEqual(
-          ModelComponents.AnimatedPropertyType.SCALE
+          ModelComponents.AnimatedPropertyType.SCALE,
         );
 
         const cubicSplineRotation = animations[4];
@@ -952,7 +952,7 @@ describe(
         expect(channel.sampler).toBe(sampler);
         expect(channel.target.node).toBe(nodes[6]);
         expect(channel.target.path).toEqual(
-          ModelComponents.AnimatedPropertyType.ROTATION
+          ModelComponents.AnimatedPropertyType.ROTATION,
         );
 
         const linearTranslation = animations[8];
@@ -968,7 +968,7 @@ describe(
         expect(channel.sampler).toBe(sampler);
         expect(channel.target.node).toBe(nodes[10]);
         expect(channel.target.path).toEqual(
-          ModelComponents.AnimatedPropertyType.TRANSLATION
+          ModelComponents.AnimatedPropertyType.TRANSLATION,
         );
       });
     });
@@ -982,13 +982,13 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
 
         expect(positionAttribute).toBeDefined();
         expect(primitive.indices).toBeDefined();
         expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
+          IndexDatatype.UNSIGNED_SHORT,
         );
         expect(primitive.indices.count).toBe(3);
         expect(primitive.indices.buffer).toBeDefined();
@@ -1011,12 +1011,12 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
 
           expect(positionAttribute).toBeDefined();
           expect(primitive.indices).toBeUndefined();
-        }
+        },
       );
     });
 
@@ -1029,7 +1029,7 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
 
         expect(positionAttribute).toBeDefined();
@@ -1048,20 +1048,20 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const tangentAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.TANGENT
+          VertexAttributeSemantic.TANGENT,
         );
         const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
 
         expect(positionAttribute).toBeDefined();
@@ -1071,7 +1071,7 @@ describe(
 
         expect(metallicRoughness.baseColorTexture.texture).toBeDefined();
         expect(
-          metallicRoughness.metallicRoughnessTexture.texture
+          metallicRoughness.metallicRoughnessTexture.texture,
         ).toBeDefined();
         expect(material.normalTexture.texture).toBeDefined();
         expect(material.doubleSided).toBe(true);
@@ -1106,25 +1106,25 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const tangentAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.TANGENT
+          VertexAttributeSemantic.TANGENT,
         );
         const texcoordAttribute0 = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
         const texcoordAttribute1 = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          1
+          1,
         );
 
         expect(positionAttribute).toBeDefined();
@@ -1154,7 +1154,7 @@ describe(
 
         const featureIdTexture = primitive.featureIds[0];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(256);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
@@ -1166,7 +1166,7 @@ describe(
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
         expect(featureIdTexture.textureReader.texture.height).toBe(256);
         expect(featureIdTexture.textureReader.texture.sampler).toBe(
-          Sampler.NEAREST
+          Sampler.NEAREST,
         );
 
         const classDefinition = structuralMetadata.schema.classes.landCover;
@@ -1175,7 +1175,7 @@ describe(
         expect(properties.name.componentType).not.toBeDefined();
         expect(properties.color.type).toBe(MetadataType.VEC3);
         expect(properties.color.componentType).toBe(
-          MetadataComponentType.UINT8
+          MetadataComponentType.UINT8,
         );
 
         const propertyTable = structuralMetadata.getPropertyTable(0);
@@ -1185,19 +1185,18 @@ describe(
         expect(propertyTable.class).toBe(classDefinition);
         expect(propertyTable.getProperty(0, "name")).toBe("Grassland");
         expect(propertyTable.getProperty(0, "color")).toEqual(
-          new Cartesian3(118, 163, 11)
+          new Cartesian3(118, 163, 11),
         );
         expect(propertyTable.getProperty(255, "name")).toBe("Building");
         expect(propertyTable.getProperty(255, "color")).toEqual(
-          new Cartesian3(194, 194, 194)
+          new Cartesian3(194, 194, 194),
         );
 
         const propertyTexture = structuralMetadata.getPropertyTexture(0);
         expect(propertyTexture.id).toEqual(0);
         expect(propertyTexture.name).toEqual("Vegetation");
-        const vegetationProperty = propertyTexture.getProperty(
-          "vegetationDensity"
-        );
+        const vegetationProperty =
+          propertyTexture.getProperty("vegetationDensity");
 
         expect(vegetationProperty.textureReader.texture.width).toBe(256);
         expect(vegetationProperty.textureReader.texture.height).toBe(256);
@@ -1220,7 +1219,7 @@ describe(
 
         const featureIdTexture = primitive.featureIds[0];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(256);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
@@ -1232,7 +1231,7 @@ describe(
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
         expect(featureIdTexture.textureReader.texture.height).toBe(256);
         expect(featureIdTexture.textureReader.texture.sampler).toBe(
-          Sampler.NEAREST
+          Sampler.NEAREST,
         );
 
         const classDefinition = structuralMetadata.schema.classes.landCover;
@@ -1241,7 +1240,7 @@ describe(
         expect(properties.name.componentType).not.toBeDefined();
         expect(properties.color.type).toBe(MetadataType.SCALAR);
         expect(properties.color.componentType).toBe(
-          MetadataComponentType.UINT8
+          MetadataComponentType.UINT8,
         );
         expect(properties.color.arrayLength).toBe(3);
 
@@ -1253,16 +1252,13 @@ describe(
         expect(propertyTable.getProperty(0, "color")).toEqual([118, 163, 11]);
         expect(propertyTable.getProperty(255, "name")).toBe("Building");
         expect(propertyTable.getProperty(255, "color")).toEqual([
-          194,
-          194,
-          194,
+          194, 194, 194,
         ]);
 
         const propertyTexture = structuralMetadata.getPropertyTexture(0);
         expect(propertyTexture.id).toEqual("vegetationTexture");
-        const vegetationProperty = propertyTexture.getProperty(
-          "vegetationDensity"
-        );
+        const vegetationProperty =
+          propertyTexture.getProperty("vegetationDensity");
 
         expect(vegetationProperty.textureReader.texture.width).toBe(256);
         expect(vegetationProperty.textureReader.texture.height).toBe(256);
@@ -1286,7 +1282,7 @@ describe(
 
         let featureIdTexture = primitive.featureIds[0];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(1048576);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
@@ -1302,7 +1298,7 @@ describe(
 
         featureIdTexture = primitive.featureIds[1];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(1048576);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
@@ -1316,7 +1312,7 @@ describe(
 
         featureIdTexture = primitive.featureIds[2];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(256);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
@@ -1329,7 +1325,7 @@ describe(
 
         featureIdTexture = primitive.featureIds[3];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(65536);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
@@ -1342,7 +1338,7 @@ describe(
 
         featureIdTexture = primitive.featureIds[4];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(65536);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
@@ -1355,7 +1351,7 @@ describe(
 
         featureIdTexture = primitive.featureIds[5];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(1048576);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
@@ -1368,7 +1364,7 @@ describe(
 
         featureIdTexture = primitive.featureIds[6];
         expect(featureIdTexture).toBeInstanceOf(
-          ModelComponents.FeatureIdTexture
+          ModelComponents.FeatureIdTexture,
         );
         expect(featureIdTexture.featureCount).toEqual(255);
         expect(featureIdTexture.nullFeatureId).toBe(10);
@@ -1391,16 +1387,16 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const featureIdAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.FEATURE_ID,
-          0
+          0,
         );
         const structuralMetadata = components.structuralMetadata;
 
@@ -1409,11 +1405,11 @@ describe(
 
         expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
         expect(featureIdAttribute.semantic).toBe(
-          VertexAttributeSemantic.FEATURE_ID
+          VertexAttributeSemantic.FEATURE_ID,
         );
         expect(featureIdAttribute.setIndex).toBe(0);
         expect(featureIdAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(featureIdAttribute.type).toBe(AttributeType.SCALAR);
         expect(featureIdAttribute.normalized).toBe(false);
@@ -1433,7 +1429,7 @@ describe(
         // feature ID via accessor
         const featureIdAccessor = primitive.featureIds[0];
         expect(featureIdAccessor).toBeInstanceOf(
-          ModelComponents.FeatureIdAttribute
+          ModelComponents.FeatureIdAttribute,
         );
         expect(featureIdAccessor.featureCount).toEqual(10);
         expect(featureIdAccessor.nullFeatureId).not.toBeDefined();
@@ -1445,7 +1441,7 @@ describe(
         // Default feature ID
         const featureIdDefault = primitive.featureIds[1];
         expect(featureIdDefault).toBeInstanceOf(
-          ModelComponents.FeatureIdImplicitRange
+          ModelComponents.FeatureIdImplicitRange,
         );
         expect(featureIdDefault.featureCount).toEqual(5);
         expect(featureIdDefault.nullFeatureId).not.toBeDefined();
@@ -1459,7 +1455,7 @@ describe(
         const classDefinition = structuralMetadata.schema.classes.building;
         const properties = classDefinition.properties;
         expect(properties.height.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(properties.id.componentType).toBe(MetadataComponentType.INT32);
 
@@ -1502,7 +1498,7 @@ describe(
         for (let i = 0; i < 10; i++) {
           const temperature = propertyTable.getProperty(
             i,
-            "temperatureCelsius"
+            "temperatureCelsius",
           );
           expect(temperature).toBeGreaterThanOrEqual(18);
           expect(temperature).toBeLessThanOrEqual(24);
@@ -1520,16 +1516,16 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const featureIdAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.FEATURE_ID,
-          0
+          0,
         );
         const structuralMetadata = components.structuralMetadata;
 
@@ -1538,11 +1534,11 @@ describe(
 
         expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
         expect(featureIdAttribute.semantic).toBe(
-          VertexAttributeSemantic.FEATURE_ID
+          VertexAttributeSemantic.FEATURE_ID,
         );
         expect(featureIdAttribute.setIndex).toBe(0);
         expect(featureIdAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(featureIdAttribute.type).toBe(AttributeType.SCALAR);
         expect(featureIdAttribute.normalized).toBe(false);
@@ -1562,7 +1558,7 @@ describe(
         // feature ID via accessor
         const featureIdAccessor = primitive.featureIds[0];
         expect(featureIdAccessor).toBeInstanceOf(
-          ModelComponents.FeatureIdAttribute
+          ModelComponents.FeatureIdAttribute,
         );
         expect(featureIdAccessor.featureCount).toEqual(10);
         expect(featureIdAccessor.nullFeatureId).not.toBeDefined();
@@ -1574,7 +1570,7 @@ describe(
         // feature ID range
         const featureIdDefault = primitive.featureIds[1];
         expect(featureIdDefault).toBeInstanceOf(
-          ModelComponents.FeatureIdImplicitRange
+          ModelComponents.FeatureIdImplicitRange,
         );
         expect(featureIdDefault.featureCount).toEqual(10);
         expect(featureIdDefault.nullFeatureId).not.toBeDefined();
@@ -1588,7 +1584,7 @@ describe(
         const classDefinition = structuralMetadata.schema.classes.building;
         const properties = classDefinition.properties;
         expect(properties.height.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(properties.id.componentType).toBe(MetadataComponentType.INT32);
 
@@ -1621,12 +1617,12 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const featureIdAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.FEATURE_ID,
-          0
+          0,
         );
         const structuralMetadata = components.structuralMetadata;
 
@@ -1640,7 +1636,7 @@ describe(
 
         const featureIdAttributeMapping0 = primitive.featureIds[0];
         expect(featureIdAttributeMapping0).toBeInstanceOf(
-          ModelComponents.FeatureIdImplicitRange
+          ModelComponents.FeatureIdImplicitRange,
         );
         expect(featureIdAttributeMapping0.featureCount).toEqual(1000);
         expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
@@ -1652,7 +1648,7 @@ describe(
 
         const featureIdAttributeMapping1 = primitive.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
-          ModelComponents.FeatureIdAttribute
+          ModelComponents.FeatureIdAttribute,
         );
         expect(featureIdAttributeMapping1.featureCount).toEqual(3);
         expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
@@ -1664,14 +1660,14 @@ describe(
         const weatherClass = structuralMetadata.schema.classes.weather;
         const weatherProperties = weatherClass.properties;
         expect(weatherProperties.airTemperature.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(weatherProperties.airPressure.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(weatherProperties.windVelocity.type).toBe(MetadataType.VEC3);
         expect(weatherProperties.windVelocity.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
 
         const townClass = structuralMetadata.schema.classes.town;
@@ -1680,7 +1676,7 @@ describe(
         expect(townProperties.name.componentCount).not.toBeDefined();
         expect(townProperties.population.type).toBe(MetadataType.SCALAR);
         expect(townProperties.population.componentType).toBe(
-          MetadataComponentType.UINT16
+          MetadataComponentType.UINT16,
         );
 
         const weatherTable = structuralMetadata.getPropertyTable(1);
@@ -1689,22 +1685,22 @@ describe(
         expect(weatherTable.count).toBe(1000);
         expect(weatherTable.class).toBe(weatherClass);
         expect(weatherTable.getProperty(0, "airTemperature")).toBe(
-          22.120203018188477
+          22.120203018188477,
         );
         expect(weatherTable.getProperty(0, "airPressure")).toBe(
-          1.170711874961853
+          1.170711874961853,
         );
         expect(weatherTable.getProperty(0, "windVelocity")).toEqual(
-          new Cartesian3(1, 0.2964223027229309, 0.23619766533374786)
+          new Cartesian3(1, 0.2964223027229309, 0.23619766533374786),
         );
         expect(weatherTable.getProperty(999, "airTemperature")).toBe(
-          24.308320999145508
+          24.308320999145508,
         );
         expect(weatherTable.getProperty(999, "airPressure")).toBe(
-          1.1136815547943115
+          1.1136815547943115,
         );
         expect(weatherTable.getProperty(999, "windVelocity")).toEqual(
-          new Cartesian3(1, 0.07490774989128113, 0.0022833053953945637)
+          new Cartesian3(1, 0.07490774989128113, 0.0022833053953945637),
         );
 
         const townTable = structuralMetadata.getPropertyTable(0);
@@ -1730,12 +1726,12 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const featureIdAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.FEATURE_ID,
-          0
+          0,
         );
         const structuralMetadata = components.structuralMetadata;
 
@@ -1749,7 +1745,7 @@ describe(
 
         const featureIdAttributeMapping0 = primitive.featureIds[0];
         expect(featureIdAttributeMapping0).toBeInstanceOf(
-          ModelComponents.FeatureIdImplicitRange
+          ModelComponents.FeatureIdImplicitRange,
         );
         expect(featureIdAttributeMapping0.featureCount).toEqual(1000);
         expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
@@ -1761,7 +1757,7 @@ describe(
 
         const featureIdAttributeMapping1 = primitive.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
-          ModelComponents.FeatureIdAttribute
+          ModelComponents.FeatureIdAttribute,
         );
         expect(featureIdAttributeMapping1.featureCount).toEqual(3);
         expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
@@ -1773,14 +1769,14 @@ describe(
         const weatherClass = structuralMetadata.schema.classes.weather;
         const weatherProperties = weatherClass.properties;
         expect(weatherProperties.airTemperature.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(weatherProperties.airPressure.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(weatherProperties.windVelocity.type).toBe(MetadataType.SCALAR);
         expect(weatherProperties.windVelocity.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(weatherProperties.windVelocity.arrayLength).toBe(3);
 
@@ -1790,7 +1786,7 @@ describe(
         expect(townProperties.name.componentType).not.toBeDefined();
         expect(townProperties.population.type).toBe(MetadataType.SCALAR);
         expect(townProperties.population.componentType).toBe(
-          MetadataComponentType.UINT16
+          MetadataComponentType.UINT16,
         );
 
         const weatherTable = structuralMetadata.getPropertyTable(1);
@@ -1798,26 +1794,22 @@ describe(
         expect(weatherTable.count).toBe(1000);
         expect(weatherTable.class).toBe(weatherClass);
         expect(weatherTable.getProperty(0, "airTemperature")).toBe(
-          22.120203018188477
+          22.120203018188477,
         );
         expect(weatherTable.getProperty(0, "airPressure")).toBe(
-          1.170711874961853
+          1.170711874961853,
         );
         expect(weatherTable.getProperty(0, "windVelocity")).toEqual([
-          1,
-          0.2964223027229309,
-          0.23619766533374786,
+          1, 0.2964223027229309, 0.23619766533374786,
         ]);
         expect(weatherTable.getProperty(999, "airTemperature")).toBe(
-          24.308320999145508
+          24.308320999145508,
         );
         expect(weatherTable.getProperty(999, "airPressure")).toBe(
-          1.1136815547943115
+          1.1136815547943115,
         );
         expect(weatherTable.getProperty(999, "windVelocity")).toEqual([
-          1,
-          0.07490774989128113,
-          0.0022833053953945637,
+          1, 0.07490774989128113, 0.0022833053953945637,
         ]);
 
         const townTable = structuralMetadata.getPropertyTable(0);
@@ -1834,130 +1826,128 @@ describe(
     });
 
     it("loads PointCloudWithPropertyAttributes", function () {
-      return loadGltf(pointCloudWithPropertyAttributes).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const color0Attribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.COLOR,
-          0
-        );
-        // custom attributes don't have a VertexAttributeSemantic
-        const circleTAttribute = getAttributeByName(attributes, "_CIRCLE_T");
-        const featureId0Attribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.FEATURE_ID,
-          0
-        );
-        const featureId1Attribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.FEATURE_ID,
-          1
-        );
-        const structuralMetadata = components.structuralMetadata;
+      return loadGltf(pointCloudWithPropertyAttributes).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION,
+          );
+          const color0Attribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.COLOR,
+            0,
+          );
+          // custom attributes don't have a VertexAttributeSemantic
+          const circleTAttribute = getAttributeByName(attributes, "_CIRCLE_T");
+          const featureId0Attribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.FEATURE_ID,
+            0,
+          );
+          const featureId1Attribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.FEATURE_ID,
+            1,
+          );
+          const structuralMetadata = components.structuralMetadata;
 
-        expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
+          expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
 
-        expect(positionAttribute).toBeDefined();
-        expect(color0Attribute).toBeDefined();
-        expect(circleTAttribute).toBeDefined();
-        expect(featureId0Attribute).toBeDefined();
-        expect(featureId1Attribute).toBeDefined();
+          expect(positionAttribute).toBeDefined();
+          expect(color0Attribute).toBeDefined();
+          expect(circleTAttribute).toBeDefined();
+          expect(featureId0Attribute).toBeDefined();
+          expect(featureId1Attribute).toBeDefined();
 
-        expect(primitive.featureIds.length).toBe(2);
-        expect(primitive.propertyTextureIds.length).toBe(0);
-        expect(primitive.propertyAttributeIds).toEqual([0]);
+          expect(primitive.featureIds.length).toBe(2);
+          expect(primitive.propertyTextureIds.length).toBe(0);
+          expect(primitive.propertyAttributeIds).toEqual([0]);
 
-        const featureIdAttribute0 = primitive.featureIds[0];
-        expect(featureIdAttribute0).toBeInstanceOf(
-          ModelComponents.FeatureIdAttribute
-        );
-        expect(featureIdAttribute0.featureCount).toEqual(30);
-        expect(featureIdAttribute0.nullFeatureId).not.toBeDefined();
-        expect(featureIdAttribute0.propertyTableId).not.toBeDefined();
-        expect(featureIdAttribute0.setIndex).toBe(0);
-        expect(featureIdAttribute0.label).toBe("iteration");
-        expect(featureIdAttribute0.positionalLabel).toBe("featureId_0");
+          const featureIdAttribute0 = primitive.featureIds[0];
+          expect(featureIdAttribute0).toBeInstanceOf(
+            ModelComponents.FeatureIdAttribute,
+          );
+          expect(featureIdAttribute0.featureCount).toEqual(30);
+          expect(featureIdAttribute0.nullFeatureId).not.toBeDefined();
+          expect(featureIdAttribute0.propertyTableId).not.toBeDefined();
+          expect(featureIdAttribute0.setIndex).toBe(0);
+          expect(featureIdAttribute0.label).toBe("iteration");
+          expect(featureIdAttribute0.positionalLabel).toBe("featureId_0");
 
-        const featureIdAttribute1 = primitive.featureIds[1];
-        expect(featureIdAttribute1).toBeInstanceOf(
-          ModelComponents.FeatureIdAttribute
-        );
-        expect(featureIdAttribute1.featureCount).toEqual(20);
-        expect(featureIdAttribute1.nullFeatureId).not.toBeDefined();
-        expect(featureIdAttribute1.propertyTableId).not.toBeDefined();
-        expect(featureIdAttribute1.setIndex).toBe(1);
-        expect(featureIdAttribute1.label).toBe("pointId");
-        expect(featureIdAttribute1.positionalLabel).toBe("featureId_1");
+          const featureIdAttribute1 = primitive.featureIds[1];
+          expect(featureIdAttribute1).toBeInstanceOf(
+            ModelComponents.FeatureIdAttribute,
+          );
+          expect(featureIdAttribute1.featureCount).toEqual(20);
+          expect(featureIdAttribute1.nullFeatureId).not.toBeDefined();
+          expect(featureIdAttribute1.propertyTableId).not.toBeDefined();
+          expect(featureIdAttribute1.setIndex).toBe(1);
+          expect(featureIdAttribute1.label).toBe("pointId");
+          expect(featureIdAttribute1.positionalLabel).toBe("featureId_1");
 
-        const torusClass = structuralMetadata.schema.classes.torus;
-        const torusProperties = torusClass.properties;
-        const circleT = torusProperties.circleT;
-        expect(circleT.type).toBe(MetadataType.SCALAR);
-        expect(circleT.componentType).toBe(MetadataComponentType.FLOAT32);
+          const torusClass = structuralMetadata.schema.classes.torus;
+          const torusProperties = torusClass.properties;
+          const circleT = torusProperties.circleT;
+          expect(circleT.type).toBe(MetadataType.SCALAR);
+          expect(circleT.componentType).toBe(MetadataComponentType.FLOAT32);
 
-        const iteration = torusProperties.iteration;
-        expect(iteration.type).toBe(MetadataType.SCALAR);
-        expect(iteration.componentType).toBe(MetadataComponentType.FLOAT32);
+          const iteration = torusProperties.iteration;
+          expect(iteration.type).toBe(MetadataType.SCALAR);
+          expect(iteration.componentType).toBe(MetadataComponentType.FLOAT32);
 
-        const pointId = torusProperties.pointId;
-        expect(pointId.type).toBe(MetadataType.SCALAR);
-        expect(pointId.componentType).toBe(MetadataComponentType.FLOAT32);
+          const pointId = torusProperties.pointId;
+          expect(pointId.type).toBe(MetadataType.SCALAR);
+          expect(pointId.componentType).toBe(MetadataComponentType.FLOAT32);
 
-        const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
-        expect(propertyAttribute.id).toBe(0);
-        expect(propertyAttribute.name).not.toBeDefined();
-        expect(propertyAttribute.class).toBe(torusClass);
-        expect(propertyAttribute.getProperty("circleT").attribute).toBe(
-          "_CIRCLE_T"
-        );
-        expect(propertyAttribute.getProperty("iteration").attribute).toBe(
-          "_FEATURE_ID_0"
-        );
-        expect(propertyAttribute.getProperty("pointId").attribute).toBe(
-          "_FEATURE_ID_1"
-        );
+          const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
+          expect(propertyAttribute.id).toBe(0);
+          expect(propertyAttribute.name).not.toBeDefined();
+          expect(propertyAttribute.class).toBe(torusClass);
+          expect(propertyAttribute.getProperty("circleT").attribute).toBe(
+            "_CIRCLE_T",
+          );
+          expect(propertyAttribute.getProperty("iteration").attribute).toBe(
+            "_FEATURE_ID_0",
+          );
+          expect(propertyAttribute.getProperty("pointId").attribute).toBe(
+            "_FEATURE_ID_1",
+          );
 
-        // A few more properties were added to test offset/scale
-        const toroidalNormalized = propertyAttribute.getProperty(
-          "toroidalNormalized"
-        );
-        expect(toroidalNormalized.attribute).toBe("_FEATURE_ID_0");
-        expect(toroidalNormalized.hasValueTransform).toBe(true);
-        expect(toroidalNormalized.offset).toBe(0);
-        expect(toroidalNormalized.scale).toBe(0.034482758620689655);
+          // A few more properties were added to test offset/scale
+          const toroidalNormalized =
+            propertyAttribute.getProperty("toroidalNormalized");
+          expect(toroidalNormalized.attribute).toBe("_FEATURE_ID_0");
+          expect(toroidalNormalized.hasValueTransform).toBe(true);
+          expect(toroidalNormalized.offset).toBe(0);
+          expect(toroidalNormalized.scale).toBe(0.034482758620689655);
 
-        const poloidalNormalized = propertyAttribute.getProperty(
-          "poloidalNormalized"
-        );
-        expect(poloidalNormalized.attribute).toBe("_FEATURE_ID_1");
-        expect(poloidalNormalized.hasValueTransform).toBe(true);
-        expect(poloidalNormalized.offset).toBe(0);
-        expect(poloidalNormalized.scale).toBe(0.05263157894736842);
+          const poloidalNormalized =
+            propertyAttribute.getProperty("poloidalNormalized");
+          expect(poloidalNormalized.attribute).toBe("_FEATURE_ID_1");
+          expect(poloidalNormalized.hasValueTransform).toBe(true);
+          expect(poloidalNormalized.offset).toBe(0);
+          expect(poloidalNormalized.scale).toBe(0.05263157894736842);
 
-        // These two properties have offset/scale in both the class definition
-        // and the property attribute. The latter should be used.
-        const toroidalAngle = propertyAttribute.getProperty("toroidalAngle");
-        expect(toroidalAngle.attribute).toBe("_FEATURE_ID_0");
-        expect(toroidalAngle.hasValueTransform).toBe(true);
-        expect(toroidalAngle.offset).toBe(0);
-        expect(toroidalAngle.scale).toBe(0.21666156231653746);
+          // These two properties have offset/scale in both the class definition
+          // and the property attribute. The latter should be used.
+          const toroidalAngle = propertyAttribute.getProperty("toroidalAngle");
+          expect(toroidalAngle.attribute).toBe("_FEATURE_ID_0");
+          expect(toroidalAngle.hasValueTransform).toBe(true);
+          expect(toroidalAngle.offset).toBe(0);
+          expect(toroidalAngle.scale).toBe(0.21666156231653746);
 
-        const poloidalAngle = propertyAttribute.getProperty("poloidalAngle");
-        expect(poloidalAngle.attribute).toBe("_FEATURE_ID_1");
-        expect(poloidalAngle.hasValueTransform).toBe(true);
-        expect(poloidalAngle.offset).toBe(-3.141592653589793);
-        expect(poloidalAngle.scale).toBe(0.3306939635357677);
-      });
+          const poloidalAngle = propertyAttribute.getProperty("poloidalAngle");
+          expect(poloidalAngle.attribute).toBe("_FEATURE_ID_1");
+          expect(poloidalAngle.hasValueTransform).toBe(true);
+          expect(poloidalAngle.offset).toBe(-3.141592653589793);
+          expect(poloidalAngle.scale).toBe(0.3306939635357677);
+        },
+      );
     });
 
     it("loads BoxTexturedWithPropertyAttributes", function () {
@@ -1971,24 +1961,24 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
         const warpMatrixAttribute = getAttributeByName(
           attributes,
-          "_WARP_MATRIX"
+          "_WARP_MATRIX",
         );
         const temperaturesAttribute = getAttributeByName(
           attributes,
-          "_TEMPERATURES"
+          "_TEMPERATURES",
         );
 
         const indices = primitive.indices;
@@ -2000,11 +1990,11 @@ describe(
 
         expect(positionAttribute.name).toBe("POSITION");
         expect(positionAttribute.semantic).toBe(
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         expect(positionAttribute.setIndex).toBeUndefined();
         expect(positionAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(positionAttribute.type).toBe(AttributeType.VEC3);
         expect(positionAttribute.normalized).toBe(false);
@@ -2036,11 +2026,11 @@ describe(
 
         expect(texcoordAttribute.name).toBe("TEXCOORD_0");
         expect(texcoordAttribute.semantic).toBe(
-          VertexAttributeSemantic.TEXCOORD
+          VertexAttributeSemantic.TEXCOORD,
         );
         expect(texcoordAttribute.setIndex).toBe(0);
         expect(texcoordAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(texcoordAttribute.type).toBe(AttributeType.VEC2);
         expect(texcoordAttribute.normalized).toBe(false);
@@ -2058,7 +2048,7 @@ describe(
         expect(warpMatrixAttribute.semantic).toBeUndefined();
         expect(warpMatrixAttribute.setIndex).toBeUndefined();
         expect(warpMatrixAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(warpMatrixAttribute.type).toBe(AttributeType.MAT2);
         expect(warpMatrixAttribute.normalized).toBe(false);
@@ -2076,7 +2066,7 @@ describe(
         expect(temperaturesAttribute.semantic).toBeUndefined();
         expect(temperaturesAttribute.setIndex).toBeUndefined();
         expect(temperaturesAttribute.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_SHORT
+          ComponentDatatype.UNSIGNED_SHORT,
         );
         expect(temperaturesAttribute.type).toBe(AttributeType.VEC2);
         expect(temperaturesAttribute.normalized).toBe(true);
@@ -2102,7 +2092,7 @@ describe(
         expect(texcoordAttribute.buffer.sizeInBytes).toBe(192);
 
         expect(metallicRoughness.baseColorFactor).toEqual(
-          new Cartesian4(1.0, 1.0, 1.0, 1.0)
+          new Cartesian4(1.0, 1.0, 1.0, 1.0),
         );
         expect(metallicRoughness.metallicFactor).toBe(0.0);
         expect(metallicRoughness.roughnessFactor).toBe(1.0);
@@ -2114,10 +2104,10 @@ describe(
         expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
         expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
         expect(sampler.magnificationFilter).toBe(
-          TextureMagnificationFilter.LINEAR
+          TextureMagnificationFilter.LINEAR,
         );
         expect(sampler.minificationFilter).toBe(
-          TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+          TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
         );
 
         expect(nodes.length).toBe(2);
@@ -2130,7 +2120,7 @@ describe(
         const warpMatrixProperty = boxProperties.warpMatrix;
         expect(warpMatrixProperty.type).toBe(MetadataType.MAT2);
         expect(warpMatrixProperty.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(warpMatrixProperty.hasValueTransform).toBe(false);
 
@@ -2138,21 +2128,18 @@ describe(
           boxProperties.transformedWarpMatrix;
         expect(transformedWarpMatrixProperty.type).toBe(MetadataType.MAT2);
         expect(transformedWarpMatrixProperty.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
         expect(transformedWarpMatrixProperty.hasValueTransform).toBe(true);
         expect(transformedWarpMatrixProperty.offset).toEqual([
-          0.5,
-          0.5,
-          0.5,
-          0.5,
+          0.5, 0.5, 0.5, 0.5,
         ]);
         expect(transformedWarpMatrixProperty.scale).toEqual([2, 2, 2, 2]);
 
         const temperaturesProperty = boxProperties.temperatures;
         expect(temperaturesProperty.type).toBe(MetadataType.VEC2);
         expect(temperaturesProperty.componentType).toBe(
-          MetadataComponentType.UINT16
+          MetadataComponentType.UINT16,
         );
         expect(temperaturesProperty.normalized).toBe(true);
         expect(temperaturesProperty.hasValueTransform).toBe(true);
@@ -2169,12 +2156,12 @@ describe(
         expect(warpMatrix.hasValueTransform).toBe(false);
 
         const transformedWarpMatrix = propertyAttribute.getProperty(
-          "transformedWarpMatrix"
+          "transformedWarpMatrix",
         );
         expect(transformedWarpMatrix.attribute).toBe("_WARP_MATRIX");
         expect(transformedWarpMatrix.hasValueTransform).toBe(true);
         expect(transformedWarpMatrix.offset).toEqual(
-          new Matrix2(0.5, 0.5, 0.5, 0.5)
+          new Matrix2(0.5, 0.5, 0.5, 0.5),
         );
         expect(transformedWarpMatrix.scale).toEqual(new Matrix2(2, 2, 2, 2));
 
@@ -2204,7 +2191,7 @@ describe(
         const interleaved = defaultValue(options.interleaved, false);
         const instancingDisabled = defaultValue(
           options.instancingDisabled,
-          false
+          false,
         );
 
         const components = loader.components;
@@ -2214,40 +2201,40 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const instances = rootNode.instances;
         const instancedAttributes = instances.attributes;
         const translationAttribute = getAttribute(
           instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
+          InstanceAttributeSemantic.TRANSLATION,
         );
         const rotationAttribute = getAttribute(
           instancedAttributes,
-          InstanceAttributeSemantic.ROTATION
+          InstanceAttributeSemantic.ROTATION,
         );
         const scaleAttribute = getAttribute(
           instancedAttributes,
-          InstanceAttributeSemantic.SCALE
+          InstanceAttributeSemantic.SCALE,
         );
         const featureIdAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.FEATURE_ID,
-          0
+          0,
         );
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
         expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
+          InstanceAttributeSemantic.TRANSLATION,
         );
         expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(translationAttribute.type).toBe(AttributeType.VEC3);
         expect(translationAttribute.normalized).toBe(false);
@@ -2257,17 +2244,17 @@ describe(
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
         expect(translationAttribute.typedArray).toEqual(
-          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
+          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0]),
         );
         expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
 
         expect(rotationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.ROTATION
+          InstanceAttributeSemantic.ROTATION,
         );
         expect(rotationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(rotationAttribute.type).toBe(AttributeType.VEC4);
         expect(rotationAttribute.normalized).toBe(false);
@@ -2283,7 +2270,7 @@ describe(
             0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
             0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
             0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
-          ])
+          ]),
         );
         expect(rotationAttribute.buffer).toBeUndefined();
         expect(rotationAttribute.byteOffset).toBe(0);
@@ -2305,7 +2292,7 @@ describe(
             1, 1, 0.5,
             0.75, 0.20000000298023224, 0.5,
             0.800000011920929, 0.6000000238418579, 0.8999999761581421,
-          ])
+          ]),
         );
         expect(scaleAttribute.buffer).toBeUndefined();
         expect(scaleAttribute.byteOffset).toBe(0);
@@ -2313,7 +2300,7 @@ describe(
 
         expect(featureIdAttribute.setIndex).toBe(0);
         expect(featureIdAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(featureIdAttribute.type).toBe(AttributeType.SCALAR);
         expect(featureIdAttribute.normalized).toBe(false);
@@ -2326,7 +2313,7 @@ describe(
         // if instancing is disabled.
         if (instancingDisabled) {
           expect(featureIdAttribute.typedArray).toEqual(
-            new Float32Array([0, 0, 1, 1])
+            new Float32Array([0, 0, 1, 1]),
           );
           expect(featureIdAttribute.buffer).toBeUndefined();
         } else {
@@ -2358,7 +2345,7 @@ describe(
 
         const featureIdAttributeMapping0 = instances.featureIds[0];
         expect(featureIdAttributeMapping0).toBeInstanceOf(
-          ModelComponents.FeatureIdImplicitRange
+          ModelComponents.FeatureIdImplicitRange,
         );
         expect(featureIdAttributeMapping0.featureCount).toEqual(4);
         expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
@@ -2367,12 +2354,12 @@ describe(
         expect(featureIdAttributeMapping0.repeat).toBe(1);
         expect(featureIdAttributeMapping0.label).toBe("perInstance");
         expect(featureIdAttributeMapping0.positionalLabel).toBe(
-          "instanceFeatureId_0"
+          "instanceFeatureId_0",
         );
 
         const featureIdAttributeMapping1 = instances.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
-          ModelComponents.FeatureIdAttribute
+          ModelComponents.FeatureIdAttribute,
         );
         expect(featureIdAttributeMapping1.featureCount).toEqual(2);
         expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
@@ -2380,7 +2367,7 @@ describe(
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.label).toBe("section");
         expect(featureIdAttributeMapping1.positionalLabel).toBe(
-          "instanceFeatureId_1"
+          "instanceFeatureId_1",
         );
 
         const boxClass = structuralMetadata.schema.classes.box;
@@ -2388,7 +2375,7 @@ describe(
         expect(boxProperties.name.type).toBe(MetadataType.STRING);
         expect(boxProperties.name.componentType).not.toBeDefined();
         expect(boxProperties.volume.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
 
         const sectionClass = structuralMetadata.schema.classes.section;
@@ -2397,7 +2384,7 @@ describe(
         expect(sectionProperties.name.componentType).not.toBeDefined();
         expect(sectionProperties.id.type).toBe(MetadataType.SCALAR);
         expect(sectionProperties.id.componentType).toBe(
-          MetadataComponentType.UINT16
+          MetadataComponentType.UINT16,
         );
 
         const boxTable = structuralMetadata.getPropertyTable(0);
@@ -2436,7 +2423,7 @@ describe(
 
         const featureIdAttributeMapping0 = instances.featureIds[0];
         expect(featureIdAttributeMapping0).toBeInstanceOf(
-          ModelComponents.FeatureIdImplicitRange
+          ModelComponents.FeatureIdImplicitRange,
         );
         expect(featureIdAttributeMapping0.featureCount).toEqual(4);
         expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
@@ -2445,12 +2432,12 @@ describe(
         expect(featureIdAttributeMapping0.repeat).toBe(1);
         expect(featureIdAttributeMapping0.label).not.toBeDefined();
         expect(featureIdAttributeMapping0.positionalLabel).toBe(
-          "instanceFeatureId_0"
+          "instanceFeatureId_0",
         );
 
         const featureIdAttributeMapping1 = instances.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
-          ModelComponents.FeatureIdAttribute
+          ModelComponents.FeatureIdAttribute,
         );
         expect(featureIdAttributeMapping1.featureCount).toEqual(2);
         expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
@@ -2458,7 +2445,7 @@ describe(
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.label).not.toBeDefined();
         expect(featureIdAttributeMapping1.positionalLabel).toBe(
-          "instanceFeatureId_1"
+          "instanceFeatureId_1",
         );
 
         const boxClass = structuralMetadata.schema.classes.box;
@@ -2466,7 +2453,7 @@ describe(
         expect(boxProperties.name.type).toBe(MetadataType.STRING);
         expect(boxProperties.name.componentType).not.toBeDefined();
         expect(boxProperties.volume.componentType).toBe(
-          MetadataComponentType.FLOAT32
+          MetadataComponentType.FLOAT32,
         );
 
         const sectionClass = structuralMetadata.schema.classes.section;
@@ -2475,7 +2462,7 @@ describe(
         expect(sectionProperties.name.componentType).not.toBeDefined();
         expect(sectionProperties.id.type).toBe(MetadataType.SCALAR);
         expect(sectionProperties.id.componentType).toBe(
-          MetadataComponentType.UINT16
+          MetadataComponentType.UINT16,
         );
 
         const boxTable = structuralMetadata.getPropertyTable(0);
@@ -2537,7 +2524,7 @@ describe(
         return loadModifiedGltfAndTest(
           boxInstanced,
           undefined,
-          modifyGltf
+          modifyGltf,
         ).then(function (gltfLoader) {
           const components = gltfLoader.components;
           const scene = components.scene;
@@ -2547,7 +2534,7 @@ describe(
           const featureIdAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.FEATURE_ID,
-            0
+            0,
           );
 
           expect(featureIdAttribute.buffer).toBeUndefined();
@@ -2568,21 +2555,21 @@ describe(
         const options = {
           scene: sceneWithNoInstancing,
         };
-        return loadGltf(boxInstancedInterleaved, options).then(function (
-          gltfLoader
-        ) {
-          verifyBoxInstancedAttributes(gltfLoader, {
-            interleaved: true,
-            instancingDisabled: true,
-          });
-        });
+        return loadGltf(boxInstancedInterleaved, options).then(
+          function (gltfLoader) {
+            verifyBoxInstancedAttributes(gltfLoader, {
+              interleaved: true,
+              instancingDisabled: true,
+            });
+          },
+        );
       });
 
       function verifyBoxInstancedTranslation(
         loader,
         expectMinMax,
         expectBufferDefined,
-        expectTypedArrayDefined
+        expectTypedArrayDefined,
       ) {
         const components = loader.components;
         const scene = components.scene;
@@ -2591,27 +2578,27 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const instances = rootNode.instances;
         const instancedAttributes = instances.attributes;
         const translationAttribute = getAttribute(
           instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
+          InstanceAttributeSemantic.TRANSLATION,
         );
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
         expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
+          InstanceAttributeSemantic.TRANSLATION,
         );
         expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(translationAttribute.type).toBe(AttributeType.VEC3);
         expect(translationAttribute.normalized).toBe(false);
@@ -2630,7 +2617,7 @@ describe(
 
         if (expectTypedArrayDefined) {
           expect(translationAttribute.typedArray).toEqual(
-            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
+            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0]),
           );
         } else {
           expect(translationAttribute.typedArray).toBeUndefined();
@@ -2661,7 +2648,7 @@ describe(
             gltfLoader,
             expectMinMax,
             expectBufferDefined,
-            expectTypedArrayDefined
+            expectTypedArrayDefined,
           );
         });
       });
@@ -2670,39 +2657,39 @@ describe(
         const options = {
           scene: sceneWithNoInstancing,
         };
-        return loadGltf(boxInstancedTranslation, options).then(function (
-          gltfLoader
-        ) {
-          const expectMinMax = false;
-          const expectBufferDefined = false;
-          const expectTypedArrayDefined = true;
+        return loadGltf(boxInstancedTranslation, options).then(
+          function (gltfLoader) {
+            const expectMinMax = false;
+            const expectBufferDefined = false;
+            const expectTypedArrayDefined = true;
 
-          verifyBoxInstancedTranslation(
-            gltfLoader,
-            expectMinMax,
-            expectBufferDefined,
-            expectTypedArrayDefined
-          );
-        });
+            verifyBoxInstancedTranslation(
+              gltfLoader,
+              expectMinMax,
+              expectBufferDefined,
+              expectTypedArrayDefined,
+            );
+          },
+        );
       });
 
       it("loads BoxInstancedTranslationWithMinMax", function () {
-        return loadGltf(boxInstancedTranslationMinMax).then(function (
-          gltfLoader
-        ) {
-          // The translation accessor does have a min/max, so it only needs to
-          // load the buffer.
-          const expectMinMax = true;
-          const expectBufferDefined = true;
-          const expectTypedArrayDefined = false;
+        return loadGltf(boxInstancedTranslationMinMax).then(
+          function (gltfLoader) {
+            // The translation accessor does have a min/max, so it only needs to
+            // load the buffer.
+            const expectMinMax = true;
+            const expectBufferDefined = true;
+            const expectTypedArrayDefined = false;
 
-          verifyBoxInstancedTranslation(
-            gltfLoader,
-            expectMinMax,
-            expectBufferDefined,
-            expectTypedArrayDefined
-          );
-        });
+            verifyBoxInstancedTranslation(
+              gltfLoader,
+              expectMinMax,
+              expectBufferDefined,
+              expectTypedArrayDefined,
+            );
+          },
+        );
       });
     });
 
@@ -2716,16 +2703,16 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
         const positionQuantization = positionAttribute.quantization;
         const normalQuantization = normalAttribute.quantization;
@@ -2735,11 +2722,11 @@ describe(
 
         expect(positionAttribute.name).toBe("POSITION");
         expect(positionAttribute.semantic).toBe(
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         expect(positionAttribute.setIndex).toBeUndefined();
         expect(positionAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(positionAttribute.type).toBe(AttributeType.VEC3);
         expect(positionAttribute.normalized).toBe(false);
@@ -2748,15 +2735,15 @@ describe(
           new Cartesian3(
             -69.37933953401223,
             9.848530453475558,
-            -61.40903695222513
-          )
+            -61.40903695222513,
+          ),
         );
         expect(positionAttribute.max).toEqual(
           new Cartesian3(
             96.26074059602396,
             164.09024489374352,
-            54.029730459044615
-          )
+            54.029730459044615,
+          ),
         );
         expect(positionAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(positionAttribute.typedArray).toBeUndefined();
@@ -2765,24 +2752,24 @@ describe(
         expect(positionAttribute.byteStride).toBeUndefined();
         expect(positionQuantization.octEncoded).toBe(false);
         expect(positionQuantization.normalizationRange).toEqual(
-          new Cartesian3(2047, 2047, 2047)
+          new Cartesian3(2047, 2047, 2047),
         );
         expect(positionQuantization.quantizedVolumeOffset).toEqual(
           new Cartesian3(
             -69.29850006103516,
             9.929369926452637,
-            -61.32819747924805
-          )
+            -61.32819747924805,
+          ),
         );
         expect(positionQuantization.quantizedVolumeDimensions).toEqual(
           new Cartesian3(
             165.4783935546875,
             165.4783935546875,
-            165.4783935546875
-          )
+            165.4783935546875,
+          ),
         );
         expect(positionQuantization.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_SHORT
+          ComponentDatatype.UNSIGNED_SHORT,
         );
         expect(positionQuantization.type).toBe(AttributeType.VEC3);
 
@@ -2797,15 +2784,15 @@ describe(
           new Cartesian3(
             -1.0069254898557476,
             -1.0078414940366558,
-            -1.007673468543034
-          )
+            -1.007673468543034,
+          ),
         );
         expect(normalAttribute.max).toEqual(
           new Cartesian3(
             1.0083384775647932,
             1.007422473383885,
-            1.0075904988775068
-          )
+            1.0075904988775068,
+          ),
         );
         expect(normalAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(normalAttribute.typedArray).toBeUndefined();
@@ -2817,26 +2804,26 @@ describe(
         expect(normalQuantization.quantizedVolumeOffset).toBeUndefined();
         expect(normalQuantization.quantizedVolumeDimensions).toBeUndefined();
         expect(normalQuantization.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_BYTE
+          ComponentDatatype.UNSIGNED_BYTE,
         );
         expect(normalQuantization.type).toBe(AttributeType.VEC2);
 
         expect(texcoordAttribute.name).toBe("TEXCOORD_0");
         expect(texcoordAttribute.semantic).toBe(
-          VertexAttributeSemantic.TEXCOORD
+          VertexAttributeSemantic.TEXCOORD,
         );
         expect(texcoordAttribute.setIndex).toBe(0);
         expect(texcoordAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(texcoordAttribute.type).toBe(AttributeType.VEC2);
         expect(texcoordAttribute.normalized).toBe(false);
         expect(texcoordAttribute.count).toBe(2399);
         expect(texcoordAttribute.min).toEqual(
-          new Cartesian2(0.025470511450678954, 0.019024537339121947)
+          new Cartesian2(0.025470511450678954, 0.019024537339121947),
         );
         expect(texcoordAttribute.max).toEqual(
-          new Cartesian2(0.9846059706495423, 0.9809754626608782)
+          new Cartesian2(0.9846059706495423, 0.9809754626608782),
         );
         expect(texcoordAttribute.constant).toEqual(Cartesian2.ZERO);
         expect(texcoordAttribute.typedArray).toBeUndefined();
@@ -2845,16 +2832,16 @@ describe(
         expect(texcoordAttribute.byteStride).toBeUndefined();
         expect(texcoordQuantization.octEncoded).toBe(false);
         expect(texcoordQuantization.normalizationRange).toEqual(
-          new Cartesian2(1023, 1023)
+          new Cartesian2(1023, 1023),
         );
         expect(texcoordQuantization.quantizedVolumeOffset).toEqual(
-          new Cartesian2(0.026409000158309937, 0.01996302604675293)
+          new Cartesian2(0.026409000158309937, 0.01996302604675293),
         );
         expect(texcoordQuantization.quantizedVolumeDimensions).toEqual(
-          new Cartesian2(0.9600739479064941, 0.9600739479064941)
+          new Cartesian2(0.9600739479064941, 0.9600739479064941),
         );
         expect(texcoordQuantization.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_SHORT
+          ComponentDatatype.UNSIGNED_SHORT,
         );
         expect(texcoordQuantization.type).toBe(AttributeType.VEC2);
 
@@ -2881,16 +2868,16 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
 
         expect(positionAttribute.quantization).toBeDefined();
@@ -2917,14 +2904,14 @@ describe(
         expect(material.emissiveTexture.texture.width).toBe(256);
         expect(specularGlossiness.diffuseTexture.texture.width).toBe(256);
         expect(specularGlossiness.specularGlossinessTexture.texture.width).toBe(
-          256
+          256,
         );
 
         expect(specularGlossiness.diffuseFactor).toEqual(
-          new Cartesian4(1.0, 1.0, 1.0, 1.0)
+          new Cartesian4(1.0, 1.0, 1.0, 1.0),
         );
         expect(specularGlossiness.specularFactor).toEqual(
-          new Cartesian3(1.0, 1.0, 1.0)
+          new Cartesian3(1.0, 1.0, 1.0),
         );
         expect(specularGlossiness.glossinessFactor).toBe(0.5);
 
@@ -2994,7 +2981,7 @@ describe(
         const uniformScaleStage = stages[6];
         expect(uniformScaleStage.name).toEqual("Size");
         expect(uniformScaleStage.type).toEqual(
-          ArticulationStageType.UNIFORMSCALE
+          ArticulationStageType.UNIFORMSCALE,
         );
         expect(uniformScaleStage.minimumValue).toEqual(0.0);
         expect(uniformScaleStage.maximumValue).toEqual(1.0);
@@ -3027,7 +3014,7 @@ describe(
       return loadGltf(boxCesiumRtc).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const expectedTransform = Matrix4.fromTranslation(
-          new Cartesian3(6378137, 0, 0)
+          new Cartesian3(6378137, 0, 0),
         );
         expect(components.transform).toEqual(expectedTransform);
       });
@@ -3041,11 +3028,11 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
 
         expect(positionAttribute.buffer).toBeDefined();
@@ -3058,7 +3045,7 @@ describe(
         const dequantizedValue = 127 / 255.0;
         expect(positionAttribute.min).toEqual(new Cartesian3(0.0, 0.0, 0.0));
         expect(positionAttribute.max).toEqual(
-          new Cartesian3(dequantizedValue, dequantizedValue, dequantizedValue)
+          new Cartesian3(dequantizedValue, dequantizedValue, dequantizedValue),
         );
 
         expect(normalAttribute.buffer).toBeDefined();
@@ -3077,25 +3064,25 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const scalarAttribute = getAttributeByName(attributes, "_SCALAR_TEST");
 
         const positionQuantization = positionAttribute.quantization;
         expect(positionQuantization).toBeDefined();
         expect(positionQuantization.quantizedVolumeOffset).toEqual(
-          new Cartesian3(-0.5, -0.5, -0.5)
+          new Cartesian3(-0.5, -0.5, -0.5),
         );
         expect(positionQuantization.quantizedVolumeStepSize).toEqual(
           new Cartesian3(
             0.000015259021896696422,
             0.000015259021896696422,
-            0.000015259021896696422
-          )
+            0.000015259021896696422,
+          ),
         );
         expect(positionAttribute.min).toEqual(new Cartesian3(-0.5, -0.5, -0.5));
         expect(positionAttribute.max).toEqual(new Cartesian3(0.5, 0.5, 0.5));
@@ -3103,14 +3090,14 @@ describe(
         const normalQuantization = normalAttribute.quantization;
         expect(normalQuantization).toBeDefined();
         expect(normalQuantization.quantizedVolumeOffset).toEqual(
-          new Cartesian3(-1.0, -1.0, -1.0)
+          new Cartesian3(-1.0, -1.0, -1.0),
         );
         expect(normalQuantization.quantizedVolumeStepSize).toEqual(
           new Cartesian3(
             0.000030518043793392844,
             0.000030518043793392844,
-            0.000030518043793392844
-          )
+            0.000030518043793392844,
+          ),
         );
 
         const scalarQuantization = scalarAttribute.quantization;
@@ -3131,13 +3118,13 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
 
         expect(positionAttribute).toBeDefined();
         expect(primitive.indices).toBeDefined();
         expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
+          IndexDatatype.UNSIGNED_SHORT,
         );
         expect(primitive.indices.count).toBe(3);
         expect(primitive.indices.buffer).toBeDefined();
@@ -3161,14 +3148,14 @@ describe(
 
           gltfLoaders[0].destroy();
           gltfLoaders[1].destroy();
-        }
+        },
       );
     });
 
     it("releases glTF JSON after parse", function () {
       const destroyGltfJsonLoader = spyOn(
         GltfJsonLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const options = {
@@ -3183,7 +3170,7 @@ describe(
     it("releases glTF JSON after unload", function () {
       const destroyGltfJsonLoader = spyOn(
         GltfJsonLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const options = {
@@ -3200,7 +3187,7 @@ describe(
     it("creates GPU resources asynchronously", function () {
       const jobSchedulerExecute = spyOn(
         JobScheduler.prototype,
-        "execute"
+        "execute",
       ).and.callThrough();
 
       const options = {
@@ -3215,7 +3202,7 @@ describe(
     it("creates GPU resources synchronously", function () {
       const jobSchedulerExecute = spyOn(
         JobScheduler.prototype,
-        "execute"
+        "execute",
       ).and.callThrough();
 
       const options = {
@@ -3271,22 +3258,22 @@ describe(
     it("destroys glTF loader", function () {
       const destroyStructuralMetadataLoader = spyOn(
         GltfStructuralMetadataLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const destroyVertexBufferLoader = spyOn(
         GltfVertexBufferLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const destroyIndexBufferLoader = spyOn(
         GltfIndexBufferLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const destroyTextureLoader = spyOn(
         GltfTextureLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       return loadGltf(microcosm).then(function (gltfLoader) {
@@ -3312,17 +3299,17 @@ describe(
 
       const destroyVertexBufferLoader = spyOn(
         GltfVertexBufferLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const destroyIndexBufferLoader = spyOn(
         GltfIndexBufferLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const destroyTextureLoader = spyOn(
         GltfTextureLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const options = {
@@ -3334,10 +3321,10 @@ describe(
       await gltfLoader.load();
 
       await expectAsync(
-        waitForLoaderProcess(gltfLoader, scene)
+        waitForLoaderProcess(gltfLoader, scene),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found"
+        "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found",
       );
 
       expect(destroyVertexBufferLoader.calls.count()).toBe(2);
@@ -3361,7 +3348,7 @@ describe(
         }
       });
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        fetchPromise
+        fetchPromise,
       );
 
       const gltfUri = "https://example.com/model.glb";
@@ -3420,13 +3407,13 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
 
           expect(positionAttribute).toBeDefined();
           expect(primitive.indices).toBeDefined();
           expect(primitive.indices.indexDatatype).toBe(
-            IndexDatatype.UNSIGNED_SHORT
+            IndexDatatype.UNSIGNED_SHORT,
           );
           expect(primitive.indices.count).toBe(3);
           expect(primitive.indices.typedArray).toBeDefined();
@@ -3449,13 +3436,13 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
 
           expect(positionAttribute).toBeDefined();
           expect(primitive.indices).toBeDefined();
           expect(primitive.indices.indexDatatype).toBe(
-            IndexDatatype.UNSIGNED_SHORT
+            IndexDatatype.UNSIGNED_SHORT,
           );
           expect(primitive.indices.count).toBe(3);
           expect(primitive.indices.typedArray).not.toBeDefined();
@@ -3481,11 +3468,11 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
           const normalAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.NORMAL
+            VertexAttributeSemantic.NORMAL,
           );
 
           expect(positionAttribute.buffer).toBeUndefined();
@@ -3510,50 +3497,50 @@ describe(
           loadAttributesAsTypedArray: true,
         };
 
-        return loadGltf(boxInstancedTranslationMinMax, options).then(function (
-          gltfLoader
-        ) {
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
+        return loadGltf(boxInstancedTranslationMinMax, options).then(
+          function (gltfLoader) {
+            const components = gltfLoader.components;
+            const scene = components.scene;
+            const rootNode = scene.nodes[0];
+            const primitive = rootNode.primitives[0];
+            const attributes = primitive.attributes;
+            const positionAttribute = getAttribute(
+              attributes,
+              VertexAttributeSemantic.POSITION,
+            );
+            const normalAttribute = getAttribute(
+              attributes,
+              VertexAttributeSemantic.NORMAL,
+            );
+            const instances = rootNode.instances;
+            const instancedAttributes = instances.attributes;
+            const translationAttribute = getAttribute(
+              instancedAttributes,
+              InstanceAttributeSemantic.TRANSLATION,
+            );
 
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
+            expect(positionAttribute).toBeDefined();
+            expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.semantic).toBe(
-            InstanceAttributeSemantic.TRANSLATION
-          );
-          expect(translationAttribute.componentDatatype).toBe(
-            ComponentDatatype.FLOAT
-          );
-          expect(translationAttribute.type).toBe(AttributeType.VEC3);
-          expect(translationAttribute.normalized).toBe(false);
-          expect(translationAttribute.count).toBe(4);
-          expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
-          expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
-          expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-          expect(translationAttribute.quantization).toBeUndefined();
-          expect(translationAttribute.typedArray).toBeDefined();
-          expect(translationAttribute.buffer).toBeUndefined();
-          expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBeUndefined();
-        });
+            expect(translationAttribute.semantic).toBe(
+              InstanceAttributeSemantic.TRANSLATION,
+            );
+            expect(translationAttribute.componentDatatype).toBe(
+              ComponentDatatype.FLOAT,
+            );
+            expect(translationAttribute.type).toBe(AttributeType.VEC3);
+            expect(translationAttribute.normalized).toBe(false);
+            expect(translationAttribute.count).toBe(4);
+            expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
+            expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
+            expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+            expect(translationAttribute.quantization).toBeUndefined();
+            expect(translationAttribute.typedArray).toBeDefined();
+            expect(translationAttribute.buffer).toBeUndefined();
+            expect(translationAttribute.byteOffset).toBe(0);
+            expect(translationAttribute.byteStride).toBeUndefined();
+          },
+        );
       });
     });
 
@@ -3572,11 +3559,11 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
           const normalAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.NORMAL
+            VertexAttributeSemantic.NORMAL,
           );
 
           expect(positionAttribute.buffer).toBeDefined();
@@ -3610,7 +3597,7 @@ describe(
           // attribute to be loaded as a typed array.
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
           expect(positionAttribute.buffer).toBeDefined();
           expect(positionAttribute.typedArray).toBeUndefined();
@@ -3634,21 +3621,21 @@ describe(
           const instancedAttributes = instances.attributes;
           const translationAttribute = getAttribute(
             instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
+            InstanceAttributeSemantic.TRANSLATION,
           );
           expect(translationAttribute.typedArray).toBeDefined();
           expect(translationAttribute.buffer).toBeUndefined();
 
           const rotationAttribute = getAttribute(
             instancedAttributes,
-            InstanceAttributeSemantic.ROTATION
+            InstanceAttributeSemantic.ROTATION,
           );
           expect(rotationAttribute.typedArray).toBeDefined();
           expect(rotationAttribute.buffer).toBeUndefined();
 
           const scaleAttribute = getAttribute(
             instancedAttributes,
-            InstanceAttributeSemantic.SCALE
+            InstanceAttributeSemantic.SCALE,
           );
           expect(scaleAttribute.typedArray).toBeDefined();
           expect(scaleAttribute.buffer).toBeUndefined();
@@ -3656,7 +3643,7 @@ describe(
           const featureIdAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.FEATURE_ID,
-            0
+            0,
           );
           expect(featureIdAttribute.typedArray).toBeUndefined();
           expect(featureIdAttribute.buffer).toBeDefined();
@@ -3668,51 +3655,51 @@ describe(
           loadAttributesFor2D: true,
         };
 
-        return loadGltf(boxInstancedTranslation, options).then(function (
-          gltfLoader
-        ) {
-          // Since the translation attribute has no min / max readily defined,
-          // it will load in as a typed array in addition to a buffer in order
-          // to find these bounds at runtime.
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
+        return loadGltf(boxInstancedTranslation, options).then(
+          function (gltfLoader) {
+            // Since the translation attribute has no min / max readily defined,
+            // it will load in as a typed array in addition to a buffer in order
+            // to find these bounds at runtime.
+            const components = gltfLoader.components;
+            const scene = components.scene;
+            const rootNode = scene.nodes[0];
+            const primitive = rootNode.primitives[0];
+            const attributes = primitive.attributes;
+            const positionAttribute = getAttribute(
+              attributes,
+              VertexAttributeSemantic.POSITION,
+            );
+            const normalAttribute = getAttribute(
+              attributes,
+              VertexAttributeSemantic.NORMAL,
+            );
+            const instances = rootNode.instances;
+            const instancedAttributes = instances.attributes;
+            const translationAttribute = getAttribute(
+              instancedAttributes,
+              InstanceAttributeSemantic.TRANSLATION,
+            );
 
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
+            expect(positionAttribute).toBeDefined();
+            expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.semantic).toBe(
-            InstanceAttributeSemantic.TRANSLATION
-          );
-          expect(translationAttribute.componentDatatype).toBe(
-            ComponentDatatype.FLOAT
-          );
-          expect(translationAttribute.type).toBe(AttributeType.VEC3);
-          expect(translationAttribute.normalized).toBe(false);
-          expect(translationAttribute.count).toBe(4);
-          expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-          expect(translationAttribute.quantization).toBeUndefined();
-          expect(translationAttribute.typedArray).toBeDefined();
-          expect(translationAttribute.buffer).toBeDefined();
-          expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBe(12);
-        });
+            expect(translationAttribute.semantic).toBe(
+              InstanceAttributeSemantic.TRANSLATION,
+            );
+            expect(translationAttribute.componentDatatype).toBe(
+              ComponentDatatype.FLOAT,
+            );
+            expect(translationAttribute.type).toBe(AttributeType.VEC3);
+            expect(translationAttribute.normalized).toBe(false);
+            expect(translationAttribute.count).toBe(4);
+            expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+            expect(translationAttribute.quantization).toBeUndefined();
+            expect(translationAttribute.typedArray).toBeDefined();
+            expect(translationAttribute.buffer).toBeDefined();
+            expect(translationAttribute.byteOffset).toBe(0);
+            expect(translationAttribute.byteStride).toBe(12);
+          },
+        );
       });
 
       it("loads instanced translation with min/max as buffer and typed array for 2D", function () {
@@ -3720,52 +3707,52 @@ describe(
           loadAttributesFor2D: true,
         };
 
-        return loadGltf(boxInstancedTranslationMinMax, options).then(function (
-          gltfLoader
-        ) {
-          // Typed arrays are necessary for 2D projection, so this should load
-          // both a buffer and a typed array for the attribute.
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
+        return loadGltf(boxInstancedTranslationMinMax, options).then(
+          function (gltfLoader) {
+            // Typed arrays are necessary for 2D projection, so this should load
+            // both a buffer and a typed array for the attribute.
+            const components = gltfLoader.components;
+            const scene = components.scene;
+            const rootNode = scene.nodes[0];
+            const primitive = rootNode.primitives[0];
+            const attributes = primitive.attributes;
+            const positionAttribute = getAttribute(
+              attributes,
+              VertexAttributeSemantic.POSITION,
+            );
+            const normalAttribute = getAttribute(
+              attributes,
+              VertexAttributeSemantic.NORMAL,
+            );
+            const instances = rootNode.instances;
+            const instancedAttributes = instances.attributes;
+            const translationAttribute = getAttribute(
+              instancedAttributes,
+              InstanceAttributeSemantic.TRANSLATION,
+            );
 
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
+            expect(positionAttribute).toBeDefined();
+            expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.semantic).toBe(
-            InstanceAttributeSemantic.TRANSLATION
-          );
-          expect(translationAttribute.componentDatatype).toBe(
-            ComponentDatatype.FLOAT
-          );
-          expect(translationAttribute.type).toBe(AttributeType.VEC3);
-          expect(translationAttribute.normalized).toBe(false);
-          expect(translationAttribute.count).toBe(4);
-          expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
-          expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
-          expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-          expect(translationAttribute.quantization).toBeUndefined();
-          expect(translationAttribute.typedArray).toBeDefined();
-          expect(translationAttribute.buffer).toBeDefined();
-          expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBe(12);
-        });
+            expect(translationAttribute.semantic).toBe(
+              InstanceAttributeSemantic.TRANSLATION,
+            );
+            expect(translationAttribute.componentDatatype).toBe(
+              ComponentDatatype.FLOAT,
+            );
+            expect(translationAttribute.type).toBe(AttributeType.VEC3);
+            expect(translationAttribute.normalized).toBe(false);
+            expect(translationAttribute.count).toBe(4);
+            expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
+            expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
+            expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+            expect(translationAttribute.quantization).toBeUndefined();
+            expect(translationAttribute.typedArray).toBeDefined();
+            expect(translationAttribute.buffer).toBeDefined();
+            expect(translationAttribute.byteOffset).toBe(0);
+            expect(translationAttribute.byteStride).toBe(12);
+          },
+        );
       });
     });
 
@@ -3784,21 +3771,21 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
           const normalAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.NORMAL
+            VertexAttributeSemantic.NORMAL,
           );
           const texcoordAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.TEXCOORD,
-            0
+            0,
           );
           const colorAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.COLOR,
-            0
+            0,
           );
 
           expect(positionAttribute).toBeDefined();
@@ -3825,16 +3812,16 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
           const normalAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.NORMAL
+            VertexAttributeSemantic.NORMAL,
           );
           const featureIdAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.FEATURE_ID,
-            0
+            0,
           );
 
           expect(positionAttribute).toBeDefined();
@@ -3846,7 +3833,7 @@ describe(
 
           expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
           expect(featureIdAttribute.semantic).toBe(
-            VertexAttributeSemantic.FEATURE_ID
+            VertexAttributeSemantic.FEATURE_ID,
           );
           expect(featureIdAttribute.setIndex).toBe(0);
           expect(featureIdAttribute.buffer).toBeDefined();
@@ -3871,7 +3858,7 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
           expect(positionAttribute).toBeDefined();
           expect(positionAttribute.buffer).toBeDefined();
@@ -3898,17 +3885,17 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
           const jointsAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.JOINTS,
-            0
+            0,
           );
           const weightsAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.WEIGHTS,
-            0
+            0,
           );
 
           expect(positionAttribute).toBeDefined();
@@ -3935,7 +3922,7 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
 
           expect(positionAttribute).toBeDefined();
@@ -3959,20 +3946,20 @@ describe(
           const attributes = primitive.attributes;
           const positionAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.POSITION
+            VertexAttributeSemantic.POSITION,
           );
           const normalAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.NORMAL
+            VertexAttributeSemantic.NORMAL,
           );
           const tangentAttribute = getAttribute(
             attributes,
-            VertexAttributeSemantic.TANGENT
+            VertexAttributeSemantic.TANGENT,
           );
           const texcoordAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.TEXCOORD,
-            0
+            0,
           );
 
           expect(positionAttribute).toBeDefined();
@@ -3991,10 +3978,10 @@ describe(
         };
 
         await expectAsync(
-          loadGltf(boxInstanced, options)
+          loadGltf(boxInstanced, options),
         ).toBeRejectedWithError(
           RuntimeError,
-          "Failed to load glTF\nModels with the EXT_mesh_gpu_instancing extension cannot be used for classification."
+          "Failed to load glTF\nModels with the EXT_mesh_gpu_instancing extension cannot be used for classification.",
         );
       });
 
@@ -4004,10 +3991,10 @@ describe(
         };
 
         await expectAsync(
-          loadGltf(pointCloudWithPropertyAttributes, options)
+          loadGltf(pointCloudWithPropertyAttributes, options),
         ).toBeRejectedWithError(
           RuntimeError,
-          "Failed to load glTF\nOnly triangle meshes can be used for classification."
+          "Failed to load glTF\nOnly triangle meshes can be used for classification.",
         );
       });
     });
@@ -4022,16 +4009,16 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const normalAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.NORMAL
+          VertexAttributeSemantic.NORMAL,
         );
         const texCoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
-          0
+          0,
         );
 
         expect(positionAttribute).toBeDefined();
@@ -4056,92 +4043,92 @@ describe(
     });
 
     it("loads model with CESIUM_primitive_outline with shared vertices", function () {
-      return loadGltf(boxWithPrimitiveOutlineSharedVertices).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const [rootNode] = scene.nodes;
-        const [primitive] = rootNode.primitives;
+      return loadGltf(boxWithPrimitiveOutlineSharedVertices).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const [rootNode] = scene.nodes;
+          const [primitive] = rootNode.primitives;
 
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const texCoordAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.TEXCOORD,
-          0
-        );
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION,
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL,
+          );
+          const texCoordAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.TEXCOORD,
+            0,
+          );
 
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).not.toBeDefined();
-        expect(texCoordAttribute).not.toBeDefined();
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).not.toBeDefined();
+          expect(texCoordAttribute).not.toBeDefined();
 
-        const indices = primitive.indices;
-        expect(indices).toBeDefined();
-        expect(indices.buffer).toBeDefined();
-        expect(indices.typedArray).not.toBeDefined();
-        expect(indices.count).toBe(36);
+          const indices = primitive.indices;
+          expect(indices).toBeDefined();
+          expect(indices.buffer).toBeDefined();
+          expect(indices.typedArray).not.toBeDefined();
+          expect(indices.count).toBe(36);
 
-        const outlineCoordinates = primitive.outlineCoordinates;
-        expect(outlineCoordinates).toBeDefined();
-        expect(outlineCoordinates.name).toBe("_OUTLINE_COORDINATES");
-        // the model originally had 8 vertices, but some are duplicated
-        // when generating outlines
-        expect(outlineCoordinates.count).toBe(16);
-        expect(outlineCoordinates.semantic).not.toBeDefined();
-        expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
-        expect(outlineCoordinates.buffer).toBeDefined();
-        expect(outlineCoordinates.typedArray).not.toBeDefined();
-      });
+          const outlineCoordinates = primitive.outlineCoordinates;
+          expect(outlineCoordinates).toBeDefined();
+          expect(outlineCoordinates.name).toBe("_OUTLINE_COORDINATES");
+          // the model originally had 8 vertices, but some are duplicated
+          // when generating outlines
+          expect(outlineCoordinates.count).toBe(16);
+          expect(outlineCoordinates.semantic).not.toBeDefined();
+          expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
+          expect(outlineCoordinates.buffer).toBeDefined();
+          expect(outlineCoordinates.typedArray).not.toBeDefined();
+        },
+      );
     });
 
     it("does not load CESIUM_primitive_outline if loadPrimitiveOutline is false", function () {
       const options = {
         loadPrimitiveOutline: false,
       };
-      return loadGltf(boxWithPrimitiveOutline, options).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const [rootNode] = scene.nodes;
-        const [primitive] = rootNode.primitives;
+      return loadGltf(boxWithPrimitiveOutline, options).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const [rootNode] = scene.nodes;
+          const [primitive] = rootNode.primitives;
 
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const texCoordAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.TEXCOORD,
-          0
-        );
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION,
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL,
+          );
+          const texCoordAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.TEXCOORD,
+            0,
+          );
 
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
-        expect(texCoordAttribute).toBeDefined();
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).toBeDefined();
+          expect(texCoordAttribute).toBeDefined();
 
-        const indices = primitive.indices;
-        expect(indices).toBeDefined();
-        expect(indices.buffer).toBeDefined();
-        expect(indices.typedArray).not.toBeDefined();
-        expect(indices.count).toBe(36);
+          const indices = primitive.indices;
+          expect(indices).toBeDefined();
+          expect(indices.buffer).toBeDefined();
+          expect(indices.typedArray).not.toBeDefined();
+          expect(indices.count).toBe(36);
 
-        const outlineCoordinates = primitive.outlineCoordinates;
-        expect(outlineCoordinates).not.toBeDefined();
-      });
+          const outlineCoordinates = primitive.outlineCoordinates;
+          expect(outlineCoordinates).not.toBeDefined();
+        },
+      );
     });
 
     it("loads model with KHR_materials_specular extension", async function () {
@@ -4152,7 +4139,7 @@ describe(
       expect(material.specular.specularFactor).toEqual(0.7);
       expect(material.specular.specularTexture.texture.width).toBe(256);
       expect(material.specular.specularColorFactor).toEqual(
-        Cartesian3.fromElements(50, 0, 0)
+        Cartesian3.fromElements(50, 0, 0),
       );
       expect(material.specular.specularTexture.texture.width).toBe(256);
     });
@@ -4161,11 +4148,8 @@ describe(
       const gltfLoader = await loadGltf(anisotropyTestData);
 
       const { material } = gltfLoader.components.nodes[1].primitives[0];
-      const {
-        anisotropyStrength,
-        anisotropyRotation,
-        anisotropyTexture,
-      } = material.anisotropy;
+      const { anisotropyStrength, anisotropyRotation, anisotropyTexture } =
+        material.anisotropy;
 
       expect(anisotropyStrength).toBe(0.5);
       expect(anisotropyRotation).toBe(0.349065850398866);
@@ -4211,5 +4195,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

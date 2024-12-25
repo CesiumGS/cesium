@@ -46,12 +46,12 @@ viewer.scene.camera.setView({
   destination: new Cesium.Cartesian3(
     2881774.230386411,
     1342620.6006856258,
-    5510835.220814708
+    5510835.220814708,
   ),
   orientation: new Cesium.HeadingPitchRoll(
     5.708910165980631,
     -0.2293856922649915,
-    2.875174018868165e-7
+    2.875174018868165e-7,
   ),
 });
 ```

@@ -6,7 +6,7 @@ function createCoplanarPolygonOutlineGeometry(polygonGeometry, offset) {
   if (defined(offset)) {
     polygonGeometry = CoplanarPolygonOutlineGeometry.unpack(
       polygonGeometry,
-      offset
+      offset,
     );
   }
   polygonGeometry._ellipsoid = Ellipsoid.clone(polygonGeometry._ellipsoid);

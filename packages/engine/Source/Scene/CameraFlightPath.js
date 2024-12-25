@@ -46,7 +46,7 @@ function createPitchFunction(
   startPitch,
   endPitch,
   heightFunction,
-  pitchAdjustHeight
+  pitchAdjustHeight,
 ) {
   if (defined(pitchAdjustHeight) && heightFunction(0.5) > pitchAdjustHeight) {
     const startHeight = heightFunction(0.0);
@@ -77,7 +77,7 @@ function createHeightFunction(
   destination,
   startHeight,
   endHeight,
-  optionAltitude
+  optionAltitude,
 ) {
   let altitude = optionAltitude;
   const maxHeight = Math.max(startHeight, endHeight);
@@ -91,19 +91,19 @@ function createHeightFunction(
 
     const diff = Cartesian3.subtract(start, end, scratchCart);
     const verticalDistance = Cartesian3.magnitude(
-      Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2)
+      Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2),
     );
     const horizontalDistance = Cartesian3.magnitude(
       Cartesian3.multiplyByScalar(
         right,
         Cartesian3.dot(diff, right),
-        scratchCart2
-      )
+        scratchCart2,
+      ),
     );
 
     altitude = Math.min(
       getAltitude(frustum, verticalDistance, horizontalDistance) * 0.2,
-      1000000000.0
+      1000000000.0,
     );
   }
 
@@ -130,7 +130,7 @@ function adjustAngleForLERP(startAngle, endAngle) {
     CesiumMath.equalsEpsilon(
       startAngle,
       CesiumMath.TWO_PI,
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     )
   ) {
     startAngle = 0.0;
@@ -155,7 +155,7 @@ function createUpdateCV(
   pitch,
   roll,
   optionAltitude,
-  optionPitchAdjustHeight
+  optionPitchAdjustHeight,
 ) {
   const camera = scene.camera;
 
@@ -169,14 +169,14 @@ function createUpdateCV(
     destination,
     start.z,
     destination.z,
-    optionAltitude
+    optionAltitude,
   );
 
   const pitchFunction = createPitchFunction(
     startPitch,
     pitch,
     heightFunction,
-    optionPitchAdjustHeight
+    optionPitchAdjustHeight,
   );
 
   function update(value) {
@@ -226,7 +226,7 @@ function createUpdate3D(
   optionAltitude,
   optionFlyOverLongitude,
   optionFlyOverLongitudeWeight,
-  optionPitchAdjustHeight
+  optionPitchAdjustHeight,
 ) {
   const camera = scene.camera;
   const projection = scene.mapProjection;
@@ -234,7 +234,7 @@ function createUpdate3D(
 
   const startCart = Cartographic.clone(
     camera.positionCartographic,
-    scratchStartCart
+    scratchStartCart,
   );
   const startPitch = camera.pitch;
   const startHeading = adjustAngleForLERP(camera.heading, heading);
@@ -242,7 +242,7 @@ function createUpdate3D(
 
   const destCart = ellipsoid.cartesianToCartographic(
     destination,
-    scratchEndCart
+    scratchEndCart,
   );
   startCart.longitude = CesiumMath.zeroToTwoPi(startCart.longitude);
   destCart.longitude = CesiumMath.zeroToTwoPi(destCart.longitude);
@@ -288,13 +288,13 @@ function createUpdate3D(
     destination,
     startCart.height,
     destCart.height,
-    optionAltitude
+    optionAltitude,
   );
   const pitchFunction = createPitchFunction(
     startPitch,
     pitch,
     heightFunction,
-    optionPitchAdjustHeight
+    optionPitchAdjustHeight,
   );
 
   // Isolate scope for update function.
@@ -315,7 +315,7 @@ function createUpdate3D(
         CesiumMath.lerp(startLongitude, destLongitude, time),
         CesiumMath.lerp(startLatitude, destLatitude, time),
         heightFunction(time),
-        ellipsoid
+        ellipsoid,
       );
 
       camera.setView({
@@ -338,7 +338,7 @@ function createUpdate2D(
   heading,
   pitch,
   roll,
-  optionAltitude
+  optionAltitude,
 ) {
   const camera = scene.camera;
 
@@ -351,7 +351,7 @@ function createUpdate2D(
     destination,
     startHeight,
     destination.z,
-    optionAltitude
+    optionAltitude,
   );
 
   function update(value) {
@@ -470,7 +470,7 @@ CameraFlightPath.createTween = function (scene, options) {
     CesiumMath.equalsEpsilon(
       Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom),
       destination.z,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
   empty =
@@ -479,7 +479,7 @@ CameraFlightPath.createTween = function (scene, options) {
       Cartesian3.equalsEpsilon(
         destination,
         camera.position,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       ));
 
   empty =
@@ -487,17 +487,17 @@ CameraFlightPath.createTween = function (scene, options) {
     CesiumMath.equalsEpsilon(
       CesiumMath.negativePiToPi(heading),
       CesiumMath.negativePiToPi(camera.heading),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ) &&
     CesiumMath.equalsEpsilon(
       CesiumMath.negativePiToPi(pitch),
       CesiumMath.negativePiToPi(camera.pitch),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ) &&
     CesiumMath.equalsEpsilon(
       CesiumMath.negativePiToPi(roll),
       CesiumMath.negativePiToPi(camera.roll),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
   if (empty) {
@@ -521,7 +521,7 @@ CameraFlightPath.createTween = function (scene, options) {
         maximumHeight,
         flyOverLongitude,
         flyOverLongitudeWeight,
-        pitchAdjustHeight
+        pitchAdjustHeight,
       );
       update({ time: 1.0 });
 
@@ -542,7 +542,7 @@ CameraFlightPath.createTween = function (scene, options) {
     maximumHeight,
     flyOverLongitude,
     flyOverLongitudeWeight,
-    pitchAdjustHeight
+    pitchAdjustHeight,
   );
 
   if (!defined(easingFunction)) {

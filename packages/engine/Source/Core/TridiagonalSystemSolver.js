@@ -61,7 +61,7 @@ TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {
     throw new DeveloperError("lower and upper must have the same lengths.");
   } else if (lower.length !== diagonal.length - 1) {
     throw new DeveloperError(
-      "lower and upper must be one less than the length of diagonal."
+      "lower and upper must be one less than the length of diagonal.",
     );
   }
   //>>includeEnd('debug');
@@ -86,7 +86,7 @@ TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {
     d[i] = Cartesian3.subtract(
       right[i],
       Cartesian3.multiplyByScalar(d[i - 1], lower[i - 1], d[i]),
-      d[i]
+      d[i],
     );
     d[i] = Cartesian3.multiplyByScalar(d[i], scalar, d[i]);
   }
@@ -95,7 +95,7 @@ TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {
   d[i] = Cartesian3.subtract(
     right[i],
     Cartesian3.multiplyByScalar(d[i - 1], lower[i - 1], d[i]),
-    d[i]
+    d[i],
   );
   d[i] = Cartesian3.multiplyByScalar(d[i], scalar, d[i]);
 
@@ -104,7 +104,7 @@ TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {
     x[i] = Cartesian3.subtract(
       d[i],
       Cartesian3.multiplyByScalar(x[i + 1], c[i], x[i]),
-      x[i]
+      x[i],
     );
   }
 

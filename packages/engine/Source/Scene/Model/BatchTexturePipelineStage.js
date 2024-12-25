@@ -25,7 +25,7 @@ const BatchTexturePipelineStage = {
 BatchTexturePipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const batchTextureUniforms = {};
@@ -65,7 +65,7 @@ BatchTexturePipelineStage.process = function (
 
   renderResources.uniformMap = combine(
     batchTextureUniforms,
-    renderResources.uniformMap
+    renderResources.uniformMap,
   );
 };
 

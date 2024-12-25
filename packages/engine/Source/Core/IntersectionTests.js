@@ -86,7 +86,7 @@ IntersectionTests.rayTriangleParametric = function (
   p0,
   p1,
   p2,
-  cullBackFaces
+  cullBackFaces,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(ray)) {
@@ -188,14 +188,14 @@ IntersectionTests.rayTriangle = function (
   p1,
   p2,
   cullBackFaces,
-  result
+  result,
 ) {
   const t = IntersectionTests.rayTriangleParametric(
     ray,
     p0,
     p1,
     p2,
-    cullBackFaces
+    cullBackFaces,
   );
   if (!defined(t) || t < 0.0) {
     return undefined;
@@ -232,7 +232,7 @@ IntersectionTests.lineSegmentTriangle = function (
   p1,
   p2,
   cullBackFaces,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(v0)) {
@@ -262,7 +262,7 @@ IntersectionTests.lineSegmentTriangle = function (
     p0,
     p1,
     p2,
-    cullBackFaces
+    cullBackFaces,
   );
   if (!defined(t) || t < 0.0 || t > Cartesian3.distance(v0, v1)) {
     return undefined;
@@ -433,7 +433,7 @@ IntersectionTests.rayEllipsoid = function (ray, ellipsoid) {
   const w = Cartesian3.multiplyComponents(
     inverseRadii,
     ray.direction,
-    scratchW
+    scratchW,
   );
 
   const q2 = Cartesian3.magnitudeSquared(q);
@@ -522,7 +522,7 @@ IntersectionTests.quadraticVectorExpression = function (A, b, c, x, w) {
       addWithCancellationCheck(
         A[Matrix3.COLUMN1ROW0],
         A[Matrix3.COLUMN0ROW1],
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       ) +
       b.y);
   const l0 =
@@ -536,7 +536,7 @@ IntersectionTests.quadraticVectorExpression = function (A, b, c, x, w) {
     addWithCancellationCheck(
       A[Matrix3.COLUMN2ROW1],
       A[Matrix3.COLUMN1ROW2],
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   const r0 =
     w *
@@ -600,26 +600,26 @@ IntersectionTests.quadraticVectorExpression = function (A, b, c, x, w) {
       left = addWithCancellationCheck(
         l2 * cosineSquared + l0,
         l1 * cosine,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     } else if (CesiumMath.sign(l0) === CesiumMath.sign(l1 * cosine)) {
       left = addWithCancellationCheck(
         l2 * cosineSquared,
         l1 * cosine + l0,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     } else {
       left = addWithCancellationCheck(
         l2 * cosineSquared + l1 * cosine,
         l0,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     }
 
     const right = addWithCancellationCheck(
       r1 * cosine,
       r0,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     const product = left * right;
 
@@ -688,7 +688,7 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
   // Compute the scaled direction vector.
   const f = ellipsoid.transformPositionToScaledSpace(
     direction,
-    firstAxisScratch
+    firstAxisScratch,
   );
 
   // Constructs a basis from the unit scaled direction vector. Construct its rotation and transpose.
@@ -696,11 +696,11 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
   const reference = Cartesian3.mostOrthogonalAxis(f, referenceScratch);
   const secondAxis = Cartesian3.normalize(
     Cartesian3.cross(reference, firstAxis, secondAxisScratch),
-    secondAxisScratch
+    secondAxisScratch,
   );
   const thirdAxis = Cartesian3.normalize(
     Cartesian3.cross(firstAxis, secondAxis, thirdAxisScratch),
-    thirdAxisScratch
+    thirdAxisScratch,
   );
   const B = bScratch;
   B[0] = firstAxis.x;
@@ -733,12 +733,12 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
   const temp = Matrix3.multiply(
     Matrix3.multiply(B_T, D, tempMatrix),
     C,
-    tempMatrix
+    tempMatrix,
   );
   const A = Matrix3.multiply(
     Matrix3.multiply(temp, D_I, aScratch),
     B,
-    aScratch
+    aScratch,
   );
   const b = Matrix3.multiplyByVector(temp, position, bCart);
 
@@ -748,7 +748,7 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
     Cartesian3.negate(b, firstAxisScratch),
     0.0,
     0.0,
-    1.0
+    1.0,
   );
 
   let s;
@@ -762,11 +762,11 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
       s = Matrix3.multiplyByVector(
         D_I,
         Matrix3.multiplyByVector(B, solutions[i], sScratch),
-        sScratch
+        sScratch,
       );
       const v = Cartesian3.normalize(
         Cartesian3.subtract(s, position, referenceScratch),
-        referenceScratch
+        referenceScratch,
       );
       const dotProduct = Cartesian3.dot(v, direction);
 
@@ -778,12 +778,12 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
 
     const surfacePoint = ellipsoid.cartesianToCartographic(
       closest,
-      surfPointScratch
+      surfPointScratch,
     );
     maximumValue = CesiumMath.clamp(maximumValue, 0.0, 1.0);
     altitude =
       Cartesian3.magnitude(
-        Cartesian3.subtract(closest, position, referenceScratch)
+        Cartesian3.subtract(closest, position, referenceScratch),
       ) * Math.sqrt(1.0 - maximumValue * maximumValue);
     altitude = intersects ? -altitude : altitude;
     surfacePoint.height = altitude;
@@ -819,7 +819,7 @@ IntersectionTests.lineSegmentPlane = function (
   endPoint0,
   endPoint1,
   plane,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(endPoint0)) {
@@ -840,7 +840,7 @@ IntersectionTests.lineSegmentPlane = function (
   const difference = Cartesian3.subtract(
     endPoint1,
     endPoint0,
-    lineSegmentPlaneDifference
+    lineSegmentPlaneDifference,
   );
   const normal = plane.normal;
   const nDotDiff = Cartesian3.dot(normal, difference);
@@ -920,17 +920,10 @@ IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
         positions: [p0, p1, p2, u1, u2],
         indices: [
           // Behind
-          0,
-          3,
-          4,
+          0, 3, 4,
 
           // In front
-          1,
-          2,
-          4,
-          1,
-          4,
-          3,
+          1, 2, 4, 1, 4, 3,
         ],
       };
     } else if (p1Behind) {
@@ -941,17 +934,10 @@ IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
         positions: [p0, p1, p2, u1, u2],
         indices: [
           // Behind
-          1,
-          3,
-          4,
+          1, 3, 4,
 
           // In front
-          2,
-          0,
-          4,
-          2,
-          4,
-          3,
+          2, 0, 4, 2, 4, 3,
         ],
       };
     } else if (p2Behind) {
@@ -962,17 +948,10 @@ IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
         positions: [p0, p1, p2, u1, u2],
         indices: [
           // Behind
-          2,
-          3,
-          4,
+          2, 3, 4,
 
           // In front
-          0,
-          1,
-          4,
-          0,
-          4,
-          3,
+          0, 1, 4, 0, 4, 3,
         ],
       };
     }
@@ -985,17 +964,10 @@ IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
         positions: [p0, p1, p2, u1, u2],
         indices: [
           // Behind
-          1,
-          2,
-          4,
-          1,
-          4,
-          3,
+          1, 2, 4, 1, 4, 3,
 
           // In front
-          0,
-          3,
-          4,
+          0, 3, 4,
         ],
       };
     } else if (!p1Behind) {
@@ -1006,17 +978,10 @@ IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
         positions: [p0, p1, p2, u1, u2],
         indices: [
           // Behind
-          2,
-          0,
-          4,
-          2,
-          4,
-          3,
+          2, 0, 4, 2, 4, 3,
 
           // In front
-          1,
-          3,
-          4,
+          1, 3, 4,
         ],
       };
     } else if (!p2Behind) {
@@ -1027,17 +992,10 @@ IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
         positions: [p0, p1, p2, u1, u2],
         indices: [
           // Behind
-          0,
-          1,
-          4,
-          0,
-          4,
-          3,
+          0, 1, 4, 0, 4, 3,
 
           // In front
-          2,
-          3,
-          4,
+          2, 3, 4,
         ],
       };
     }

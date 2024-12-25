@@ -99,7 +99,7 @@ OrderedGroundPrimitiveCollection.prototype.set = function (primitive, zIndex) {
  */
 OrderedGroundPrimitiveCollection.prototype.remove = function (
   primitive,
-  doNotDestroy
+  doNotDestroy,
 ) {
   if (this.contains(primitive)) {
     const index = primitive._zIndex;
@@ -118,7 +118,7 @@ OrderedGroundPrimitiveCollection.prototype.remove = function (
     if (collection.length === 0) {
       this._collectionsArray.splice(
         this._collectionsArray.indexOf(collection),
-        1
+        1,
       );
       this._collections[index] = undefined;
       collection.destroy();

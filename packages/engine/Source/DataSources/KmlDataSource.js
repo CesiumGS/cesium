@@ -319,7 +319,7 @@ function isZipFile(blob) {
   const reader = new FileReader();
   reader.addEventListener("load", function () {
     deferred.resolve(
-      new DataView(reader.result).getUint32(0, false) === 0x504b0304
+      new DataView(reader.result).getUint32(0, false) === 0x504b0304,
     );
   });
   reader.addEventListener("error", function () {
@@ -391,24 +391,24 @@ function removeDuplicateNamespaces(text) {
 }
 
 function loadXmlFromZip(entry, uriResolver) {
-  return Promise.resolve(entry.getData(new zip.TextWriter())).then(function (
-    text
-  ) {
-    text = insertNamespaces(text);
-    text = removeDuplicateNamespaces(text);
-    uriResolver.kml = parser.parseFromString(text, "application/xml");
-  });
+  return Promise.resolve(entry.getData(new zip.TextWriter())).then(
+    function (text) {
+      text = insertNamespaces(text);
+      text = removeDuplicateNamespaces(text);
+      uriResolver.kml = parser.parseFromString(text, "application/xml");
+    },
+  );
 }
 
 function loadDataUriFromZip(entry, uriResolver) {
   const mimeType = defaultValue(
     MimeTypes.detectFromFilename(entry.filename),
-    "application/octet-stream"
+    "application/octet-stream",
   );
   return Promise.resolve(entry.getData(new zip.Data64URIWriter(mimeType))).then(
     function (dataUri) {
       uriResolver[entry.filename] = dataUri;
-    }
+    },
   );
 }
 
@@ -720,7 +720,7 @@ function queryColorValue(node, tagName, namespace) {
   }
   return parseColorString(
     value,
-    queryStringValue(node, "colorMode", namespace) === "random"
+    queryStringValue(node, "colorMode", namespace) === "random",
   );
 }
 
@@ -743,7 +743,7 @@ function processTimeStamp(featureNode) {
     new TimeInterval({
       start: when,
       stop: Iso8601.MAXIMUM_VALUE,
-    })
+    }),
   );
   return result;
 }
@@ -776,7 +776,7 @@ function processTimeSpan(featureNode) {
       new TimeInterval({
         start: beginDate,
         stop: endDate,
-      })
+      }),
     );
   } else if (defined(beginDate)) {
     result = new TimeIntervalCollection();
@@ -784,7 +784,7 @@ function processTimeSpan(featureNode) {
       new TimeInterval({
         start: beginDate,
         stop: Iso8601.MAXIMUM_VALUE,
-      })
+      }),
     );
   } else if (defined(endDate)) {
     result = new TimeIntervalCollection();
@@ -792,7 +792,7 @@ function processTimeSpan(featureNode) {
       new TimeInterval({
         start: Iso8601.MINIMUM_VALUE,
         stop: endDate,
-      })
+      }),
     );
   }
 
@@ -807,13 +807,13 @@ function createDefaultBillboard() {
     BILLBOARD_NEAR_DISTANCE,
     BILLBOARD_NEAR_RATIO,
     BILLBOARD_FAR_DISTANCE,
-    BILLBOARD_FAR_RATIO
+    BILLBOARD_FAR_RATIO,
   );
   billboard.pixelOffsetScaleByDistance = new NearFarScalar(
     BILLBOARD_NEAR_DISTANCE,
     BILLBOARD_NEAR_RATIO,
     BILLBOARD_FAR_DISTANCE,
-    BILLBOARD_FAR_RATIO
+    BILLBOARD_FAR_RATIO,
   );
   return billboard;
 }
@@ -840,7 +840,7 @@ function getIconHref(
   dataSource,
   sourceResource,
   uriResolver,
-  canRefresh
+  canRefresh,
 ) {
   let href = queryStringValue(iconNode, "href", namespaces.kml);
   if (!defined(href) || href.length === 0) {
@@ -866,28 +866,28 @@ function getIconHref(
     const refreshMode = queryStringValue(
       iconNode,
       "refreshMode",
-      namespaces.kml
+      namespaces.kml,
     );
     const viewRefreshMode = queryStringValue(
       iconNode,
       "viewRefreshMode",
-      namespaces.kml
+      namespaces.kml,
     );
     if (refreshMode === "onInterval" || refreshMode === "onExpire") {
       oneTimeWarning(
         `kml-refreshMode-${refreshMode}`,
-        `KML - Unsupported Icon refreshMode: ${refreshMode}`
+        `KML - Unsupported Icon refreshMode: ${refreshMode}`,
       );
     } else if (viewRefreshMode === "onStop" || viewRefreshMode === "onRegion") {
       oneTimeWarning(
         `kml-refreshMode-${viewRefreshMode}`,
-        `KML - Unsupported Icon viewRefreshMode: ${viewRefreshMode}`
+        `KML - Unsupported Icon viewRefreshMode: ${viewRefreshMode}`,
       );
     }
 
     const viewBoundScale = defaultValue(
       queryStringValue(iconNode, "viewBoundScale", namespaces.kml),
-      1.0
+      1.0,
     );
     const defaultViewFormat =
       viewRefreshMode === "onStop"
@@ -895,7 +895,7 @@ function getIconHref(
         : "";
     const viewFormat = defaultValue(
       queryStringValue(iconNode, "viewFormat", namespaces.kml),
-      defaultViewFormat
+      defaultViewFormat,
     );
     const httpQuery = queryStringValue(iconNode, "httpQuery", namespaces.kml);
     if (defined(viewFormat)) {
@@ -912,7 +912,7 @@ function getIconHref(
       dataSource.canvas,
       viewBoundScale,
       dataSource._lastCameraView.bbox,
-      ellipsoid
+      ellipsoid,
     );
 
     return hrefResource;
@@ -926,7 +926,7 @@ function processBillboardIcon(
   node,
   targetEntity,
   sourceResource,
-  uriResolver
+  uriResolver,
 ) {
   let scale = queryNumericValue(node, "scale", namespaces.kml);
   const heading = queryNumericValue(node, "heading", namespaces.kml);
@@ -938,7 +938,7 @@ function processBillboardIcon(
     dataSource,
     sourceResource,
     uriResolver,
-    false
+    false,
   );
 
   // If icon tags are present but blank, we do not want to show an icon
@@ -1019,7 +1019,7 @@ function applyStyle(
   styleNode,
   targetEntity,
   sourceResource,
-  uriResolver
+  uriResolver,
 ) {
   for (let i = 0, len = styleNode.childNodes.length; i < len; i++) {
     const node = styleNode.childNodes.item(i);
@@ -1029,7 +1029,7 @@ function applyStyle(
         node,
         targetEntity,
         sourceResource,
-        uriResolver
+        uriResolver,
       );
     } else if (node.localName === "LabelStyle") {
       let label = targetEntity.label;
@@ -1039,11 +1039,11 @@ function applyStyle(
       }
       label.scale = defaultValue(
         queryNumericValue(node, "scale", namespaces.kml),
-        label.scale
+        label.scale,
       );
       label.fillColor = defaultValue(
         queryColorValue(node, "color", namespaces.kml),
-        label.fillColor
+        label.fillColor,
       );
       label.text = targetEntity.name;
     } else if (node.localName === "LineStyle") {
@@ -1057,25 +1057,25 @@ function applyStyle(
       if (defined(queryColorValue(node, "outerColor", namespaces.gx))) {
         oneTimeWarning(
           "kml-gx:outerColor",
-          "KML - gx:outerColor is not supported in a LineStyle"
+          "KML - gx:outerColor is not supported in a LineStyle",
         );
       }
       if (defined(queryNumericValue(node, "outerWidth", namespaces.gx))) {
         oneTimeWarning(
           "kml-gx:outerWidth",
-          "KML - gx:outerWidth is not supported in a LineStyle"
+          "KML - gx:outerWidth is not supported in a LineStyle",
         );
       }
       if (defined(queryNumericValue(node, "physicalWidth", namespaces.gx))) {
         oneTimeWarning(
           "kml-gx:physicalWidth",
-          "KML - gx:physicalWidth is not supported in a LineStyle"
+          "KML - gx:physicalWidth is not supported in a LineStyle",
         );
       }
       if (defined(queryBooleanValue(node, "labelVisibility", namespaces.gx))) {
         oneTimeWarning(
           "kml-gx:labelVisibility",
-          "KML - gx:labelVisibility is not supported in a LineStyle"
+          "KML - gx:labelVisibility is not supported in a LineStyle",
         );
       }
     } else if (node.localName === "PolyStyle") {
@@ -1086,24 +1086,24 @@ function applyStyle(
       }
       polygon.material = defaultValue(
         queryColorValue(node, "color", namespaces.kml),
-        polygon.material
+        polygon.material,
       );
       polygon.fill = defaultValue(
         queryBooleanValue(node, "fill", namespaces.kml),
-        polygon.fill
+        polygon.fill,
       );
       polygon.outline = defaultValue(
         queryBooleanValue(node, "outline", namespaces.kml),
-        polygon.outline
+        polygon.outline,
       );
     } else if (node.localName === "BalloonStyle") {
       const bgColor = defaultValue(
         parseColorString(queryStringValue(node, "bgColor", namespaces.kml)),
-        Color.WHITE
+        Color.WHITE,
       );
       const textColor = defaultValue(
         parseColorString(queryStringValue(node, "textColor", namespaces.kml)),
-        Color.BLACK
+        Color.BLACK,
       );
       const text = queryStringValue(node, "text", namespaces.kml);
 
@@ -1119,12 +1119,12 @@ function applyStyle(
       const listItemType = queryStringValue(
         node,
         "listItemType",
-        namespaces.kml
+        namespaces.kml,
       );
       if (listItemType === "radioFolder" || listItemType === "checkOffOnly") {
         oneTimeWarning(
           `kml-listStyle-${listItemType}`,
-          `KML - Unsupported ListStyle with listItemType: ${listItemType}`
+          `KML - Unsupported ListStyle with listItemType: ${listItemType}`,
         );
       }
     }
@@ -1137,7 +1137,7 @@ function computeFinalStyle(
   placeMark,
   styleCollection,
   sourceResource,
-  uriResolver
+  uriResolver,
 ) {
   const result = new Entity();
   let styleEntity;
@@ -1161,7 +1161,7 @@ function computeFinalStyle(
         inlineStyleNode,
         result,
         sourceResource,
-        uriResolver
+        uriResolver,
       );
     } else {
       // StyleMap
@@ -1186,7 +1186,7 @@ function computeFinalStyle(
         } else {
           oneTimeWarning(
             `kml-styleMap-${key}`,
-            `KML - Unsupported StyleMap key: ${key}`
+            `KML - Unsupported StyleMap key: ${key}`,
           );
         }
       }
@@ -1236,7 +1236,7 @@ function processStyles(
   styleCollection,
   sourceResource,
   isExternal,
-  uriResolver
+  uriResolver,
 ) {
   let i;
   let id;
@@ -1264,7 +1264,7 @@ function processStyles(
             node,
             styleEntity,
             sourceResource,
-            uriResolver
+            uriResolver,
           );
         }
       }
@@ -1311,14 +1311,14 @@ function processStyles(
                   node,
                   styleEntity,
                   sourceResource,
-                  uriResolver
+                  uriResolver,
                 );
               }
             }
           } else {
             oneTimeWarning(
               `kml-styleMap-${key}`,
-              `KML - Unsupported StyleMap key: ${key}`
+              `KML - Unsupported StyleMap key: ${key}`,
             );
           }
         }
@@ -1344,7 +1344,7 @@ function processStyles(
         });
 
         promises.push(
-          processExternalStyles(dataSource, resource, styleCollection)
+          processExternalStyles(dataSource, resource, styleCollection),
         );
       }
     }
@@ -1386,7 +1386,7 @@ function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
   if (gxAltitudeMode === "clampToSeaFloor") {
     oneTimeWarning(
       "kml-gx:altitudeMode-clampToSeaFloor",
-      "KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround."
+      "KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.",
     );
     return HeightReference.CLAMP_TO_GROUND;
   }
@@ -1394,7 +1394,7 @@ function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
   if (gxAltitudeMode === "relativeToSeaFloor") {
     oneTimeWarning(
       "kml-gx:altitudeMode-relativeToSeaFloor",
-      "KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround."
+      "KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.",
     );
     return HeightReference.RELATIVE_TO_GROUND;
   }
@@ -1402,12 +1402,12 @@ function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
   if (defined(altitudeMode)) {
     oneTimeWarning(
       "kml-altitudeMode-unknown",
-      `KML - Unknown <kml:altitudeMode>:${altitudeMode}, using <kml:altitudeMode>:CLAMP_TO_GROUND.`
+      `KML - Unknown <kml:altitudeMode>:${altitudeMode}, using <kml:altitudeMode>:CLAMP_TO_GROUND.`,
     );
   } else {
     oneTimeWarning(
       "kml-gx:altitudeMode-unknown",
-      `KML - Unknown <gx:altitudeMode>:${gxAltitudeMode}, using <kml:altitudeMode>:CLAMP_TO_GROUND.`
+      `KML - Unknown <gx:altitudeMode>:${gxAltitudeMode}, using <kml:altitudeMode>:CLAMP_TO_GROUND.`,
     );
   }
 
@@ -1418,7 +1418,7 @@ function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
 function createPositionPropertyFromAltitudeMode(
   property,
   altitudeMode,
-  gxAltitudeMode
+  gxAltitudeMode,
 ) {
   if (
     gxAltitudeMode === "relativeToSeaFloor" ||
@@ -1437,8 +1437,8 @@ function createPositionPropertyFromAltitudeMode(
       "kml-altitudeMode-unknown",
       `KML - Unknown altitudeMode: ${defaultValue(
         altitudeMode,
-        gxAltitudeMode
-      )}`
+        gxAltitudeMode,
+      )}`,
     );
   }
 
@@ -1450,7 +1450,7 @@ function createPositionPropertyArrayFromAltitudeMode(
   properties,
   altitudeMode,
   gxAltitudeMode,
-  ellipsoid
+  ellipsoid,
 ) {
   if (!defined(properties)) {
     return undefined;
@@ -1473,8 +1473,8 @@ function createPositionPropertyArrayFromAltitudeMode(
       "kml-altitudeMode-unknown",
       `KML - Unknown altitudeMode: ${defaultValue(
         altitudeMode,
-        gxAltitudeMode
-      )}`
+        gxAltitudeMode,
+      )}`,
     );
   }
 
@@ -1491,7 +1491,7 @@ function processPositionGraphics(
   dataSource,
   entity,
   styleEntity,
-  heightReference
+  heightReference,
 ) {
   let label = entity.label;
   if (!defined(label)) {
@@ -1558,22 +1558,22 @@ function processPoint(
   entityCollection,
   geometryNode,
   entity,
-  styleEntity
+  styleEntity,
 ) {
   const coordinatesString = queryStringValue(
     geometryNode,
     "coordinates",
-    namespaces.kml
+    namespaces.kml,
   );
   const altitudeMode = queryStringValue(
     geometryNode,
     "altitudeMode",
-    namespaces.kml
+    namespaces.kml,
   );
   const gxAltitudeMode = queryStringValue(
     geometryNode,
     "altitudeMode",
-    namespaces.gx
+    namespaces.gx,
   );
   const extrude = queryBooleanValue(geometryNode, "extrude", namespaces.kml);
   const ellipsoid = dataSource._ellipsoid;
@@ -1584,7 +1584,7 @@ function processPoint(
     dataSource,
     entity,
     styleEntity,
-    heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode)
+    heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode),
   );
 
   if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
@@ -1599,28 +1599,28 @@ function processLineStringOrLinearRing(
   entityCollection,
   geometryNode,
   entity,
-  styleEntity
+  styleEntity,
 ) {
   const coordinatesNode = queryFirstNode(
     geometryNode,
     "coordinates",
-    namespaces.kml
+    namespaces.kml,
   );
   const altitudeMode = queryStringValue(
     geometryNode,
     "altitudeMode",
-    namespaces.kml
+    namespaces.kml,
   );
   const gxAltitudeMode = queryStringValue(
     geometryNode,
     "altitudeMode",
-    namespaces.gx
+    namespaces.gx,
   );
   const extrude = queryBooleanValue(geometryNode, "extrude", namespaces.kml);
   const tessellate = queryBooleanValue(
     geometryNode,
     "tessellate",
-    namespaces.kml
+    namespaces.kml,
   );
   const canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
   const zIndex = queryNumericValue(geometryNode, "drawOrder", namespaces.gx);
@@ -1670,13 +1670,13 @@ function processLineStringOrLinearRing(
     if (defined(zIndex)) {
       oneTimeWarning(
         "kml-gx:drawOrder",
-        "KML - gx:drawOrder is not supported in LineStrings when clampToGround is false"
+        "KML - gx:drawOrder is not supported in LineStrings when clampToGround is false",
       );
     }
     if (dataSource._clampToGround && !tessellate) {
       oneTimeWarning(
         "kml-line-tesselate",
-        "Ignoring clampToGround for KML lines without the tessellate flag."
+        "Ignoring clampToGround for KML lines without the tessellate flag.",
       );
     }
 
@@ -1686,7 +1686,7 @@ function processLineStringOrLinearRing(
       coordinates,
       altitudeMode,
       gxAltitudeMode,
-      ellipsoid
+      ellipsoid,
     );
     if (!tessellate || canExtrude) {
       polyline.arcType = ArcType.NONE;
@@ -1701,22 +1701,22 @@ function processPolygon(
   entityCollection,
   geometryNode,
   entity,
-  styleEntity
+  styleEntity,
 ) {
   const outerBoundaryIsNode = queryFirstNode(
     geometryNode,
     "outerBoundaryIs",
-    namespaces.kml
+    namespaces.kml,
   );
   let linearRingNode = queryFirstNode(
     outerBoundaryIsNode,
     "LinearRing",
-    namespaces.kml
+    namespaces.kml,
   );
   let coordinatesNode = queryFirstNode(
     linearRingNode,
     "coordinates",
-    namespaces.kml
+    namespaces.kml,
   );
   const ellipsoid = dataSource._ellipsoid;
   let coordinates = readCoordinates(coordinatesNode, ellipsoid);
@@ -1724,12 +1724,12 @@ function processPolygon(
   const altitudeMode = queryStringValue(
     geometryNode,
     "altitudeMode",
-    namespaces.kml
+    namespaces.kml,
   );
   const gxAltitudeMode = queryStringValue(
     geometryNode,
     "altitudeMode",
-    namespaces.gx
+    namespaces.gx,
   );
   const canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
@@ -1758,19 +1758,19 @@ function processPolygon(
     const innerBoundaryIsNodes = queryChildNodes(
       geometryNode,
       "innerBoundaryIs",
-      namespaces.kml
+      namespaces.kml,
     );
     for (let j = 0; j < innerBoundaryIsNodes.length; j++) {
       linearRingNode = queryChildNodes(
         innerBoundaryIsNodes[j],
         "LinearRing",
-        namespaces.kml
+        namespaces.kml,
       );
       for (let k = 0; k < linearRingNode.length; k++) {
         coordinatesNode = queryFirstNode(
           linearRingNode[k],
           "coordinates",
-          namespaces.kml
+          namespaces.kml,
         );
         coordinates = readCoordinates(coordinatesNode, ellipsoid);
         if (defined(coordinates)) {
@@ -1789,17 +1789,17 @@ function processTrack(
   entityCollection,
   geometryNode,
   entity,
-  styleEntity
+  styleEntity,
 ) {
   const altitudeMode = queryStringValue(
     geometryNode,
     "altitudeMode",
-    namespaces.kml
+    namespaces.kml,
   );
   const gxAltitudeMode = queryStringValue(
     geometryNode,
     "altitudeMode",
-    namespaces.gx
+    namespaces.gx,
   );
   const coordNodes = queryChildNodes(geometryNode, "coord", namespaces.gx);
   const angleNodes = queryChildNodes(geometryNode, "angles", namespaces.gx);
@@ -1811,7 +1811,7 @@ function processTrack(
   if (angleNodes.length > 0) {
     oneTimeWarning(
       "kml-gx:angles",
-      "KML - gx:angles are not supported in gx:Tracks"
+      "KML - gx:angles are not supported in gx:Tracks",
     );
   }
 
@@ -1830,7 +1830,7 @@ function processTrack(
     dataSource,
     entity,
     styleEntity,
-    heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode)
+    heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode),
   );
   processPathGraphics(entity, styleEntity);
 
@@ -1841,7 +1841,7 @@ function processTrack(
       new TimeInterval({
         start: times[0],
         stop: times[times.length - 1],
-      })
+      }),
     );
   }
 
@@ -1861,7 +1861,7 @@ function addToMultiTrack(
   extrude,
   altitudeMode,
   gxAltitudeMode,
-  includeEndPoints
+  includeEndPoints,
 ) {
   const start = times[0];
   const stop = times[times.length - 1];
@@ -1878,9 +1878,9 @@ function addToMultiTrack(
       data: createPositionPropertyFromAltitudeMode(
         data,
         altitudeMode,
-        gxAltitudeMode
+        gxAltitudeMode,
       ),
-    })
+    }),
   );
   availability.addInterval(
     new TimeInterval({
@@ -1888,7 +1888,7 @@ function addToMultiTrack(
       stop: stop,
       isStartIncluded: includeEndPoints,
       isStopIncluded: includeEndPoints,
-    })
+    }),
   );
   dropShowProperty.intervals.addInterval(
     new TimeInterval({
@@ -1897,7 +1897,7 @@ function addToMultiTrack(
       isStartIncluded: includeEndPoints,
       isStopIncluded: includeEndPoints,
       data: extrude,
-    })
+    }),
   );
 }
 
@@ -1906,7 +1906,7 @@ function processMultiTrack(
   entityCollection,
   geometryNode,
   entity,
-  styleEntity
+  styleEntity,
 ) {
   // Multitrack options do not work in GE as detailed in the spec,
   // rather than altitudeMode being at the MultiTrack level,
@@ -1915,7 +1915,7 @@ function processMultiTrack(
   const interpolate = queryBooleanValue(
     geometryNode,
     "interpolate",
-    namespaces.gx
+    namespaces.gx,
   );
   const trackNodes = queryChildNodes(geometryNode, "Track", namespaces.gx);
 
@@ -1934,12 +1934,12 @@ function processMultiTrack(
     const altitudeMode = queryStringValue(
       trackNode,
       "altitudeMode",
-      namespaces.kml
+      namespaces.kml,
     );
     const gxAltitudeMode = queryStringValue(
       trackNode,
       "altitudeMode",
-      namespaces.gx
+      namespaces.gx,
     );
     const canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
     const extrude = queryBooleanValue(trackNode, "extrude", namespaces.kml);
@@ -1969,7 +1969,7 @@ function processMultiTrack(
           false,
           "absolute",
           undefined,
-          false
+          false,
         );
       }
       lastStop = times[length - 1];
@@ -1985,7 +1985,7 @@ function processMultiTrack(
       canExtrude && extrude,
       altitudeMode,
       gxAltitudeMode,
-      true
+      true,
     );
     needDropLine = needDropLine || (canExtrude && extrude);
   }
@@ -2019,7 +2019,7 @@ function processMultiGeometry(
   geometryNode,
   entity,
   styleEntity,
-  context
+  context,
 ) {
   const childNodes = geometryNode.childNodes;
   let hasGeometry = false;
@@ -2039,7 +2039,7 @@ function processMultiGeometry(
           entityCollection,
           childNode,
           childEntity,
-          styleEntity
+          styleEntity,
         )
       ) {
         hasGeometry = true;
@@ -2055,11 +2055,11 @@ function processUnsupportedGeometry(
   entityCollection,
   geometryNode,
   entity,
-  styleEntity
+  styleEntity,
 ) {
   oneTimeWarning(
     "kml-unsupportedGeometry",
-    `KML - Unsupported geometry: ${geometryNode.localName}`
+    `KML - Unsupported geometry: ${geometryNode.localName}`,
   );
   return false;
 }
@@ -2077,7 +2077,7 @@ function processExtendedData(node, entity) {
   if (defined(queryStringAttribute(extendedDataNode, "xmlns:prefix"))) {
     oneTimeWarning(
       "kml-extendedData",
-      "KML - ExtendedData with xmlns:prefix is unsupported"
+      "KML - ExtendedData with xmlns:prefix is unsupported",
     );
   }
 
@@ -2093,7 +2093,7 @@ function processExtendedData(node, entity) {
           displayName: queryStringValue(
             dataNode,
             "displayName",
-            namespaces.kml
+            namespaces.kml,
           ),
           value: queryStringValue(dataNode, "value", namespaces.kml),
         };
@@ -2113,7 +2113,7 @@ function processDescription(
   entity,
   styleEntity,
   uriResolver,
-  sourceResource
+  sourceResource,
 ) {
   let i;
   let key;
@@ -2125,7 +2125,7 @@ function processDescription(
 
   const balloonStyle = defaultValue(
     entity.balloonStyle,
-    styleEntity.balloonStyle
+    styleEntity.balloonStyle,
   );
 
   let background = Color.WHITE;
@@ -2181,7 +2181,7 @@ function processDescription(
         value = extendedData[key];
         text += `<tr><th>${defaultValue(
           value.displayName,
-          key
+          key,
         )}</th><td>${defaultValue(value.value, "")}</td></tr>`;
       }
       text += "</tbody></table>";
@@ -2258,7 +2258,7 @@ function processFeature(dataSource, featureNode, processingData) {
   const entity = createEntity(
     featureNode,
     entityCollection,
-    processingData.context
+    processingData.context,
   );
   const kmlData = entity.kml;
   const styleEntity = computeFinalStyle(
@@ -2266,7 +2266,7 @@ function processFeature(dataSource, featureNode, processingData) {
     featureNode,
     processingData.styleCollection,
     sourceResource,
-    uriResolver
+    uriResolver,
   );
 
   const name = queryStringValue(featureNode, "name", namespaces.kml);
@@ -2292,7 +2292,7 @@ function processFeature(dataSource, featureNode, processingData) {
   const visibility = queryBooleanValue(
     featureNode,
     "visibility",
-    namespaces.kml
+    namespaces.kml,
   );
   entity.show = ancestryIsVisible(parent) && defaultValue(visibility, true);
   //const open = queryBooleanValue(featureNode, 'open', namespaces.kml);
@@ -2316,7 +2316,7 @@ function processFeature(dataSource, featureNode, processingData) {
   kmlData.phoneNumber = queryStringValue(
     featureNode,
     "phoneNumber",
-    namespaces.kml
+    namespaces.kml,
   );
   kmlData.snippet = queryStringValue(featureNode, "Snippet", namespaces.kml);
 
@@ -2326,7 +2326,7 @@ function processFeature(dataSource, featureNode, processingData) {
     entity,
     styleEntity,
     uriResolver,
-    sourceResource
+    sourceResource,
   );
 
   const ellipsoid = dataSource._ellipsoid;
@@ -2359,7 +2359,7 @@ function processPlacemark(
   dataSource,
   placemark,
   processingData,
-  deferredLoading
+  deferredLoading,
 ) {
   const r = processFeature(dataSource, placemark, processingData);
   const entity = r.entity;
@@ -2379,7 +2379,7 @@ function processPlacemark(
         childNode,
         entity,
         styleEntity,
-        entity.id
+        entity.id,
       );
       hasGeometry = true;
     }
@@ -2417,7 +2417,7 @@ function processTour(dataSource, node, processingData, deferredLoading) {
           playlistNodeProcessor(tour, entryNode, ellipsoid);
         } else {
           console.log(
-            `Unknown KML Tour playlist entry type ${entryNode.localName}`
+            `Unknown KML Tour playlist entry type ${entryNode.localName}`,
           );
         }
       }
@@ -2456,28 +2456,28 @@ function processCamera(featureNode, entity, ellipsoid) {
   if (defined(camera)) {
     const lon = defaultValue(
       queryNumericValue(camera, "longitude", namespaces.kml),
-      0.0
+      0.0,
     );
     const lat = defaultValue(
       queryNumericValue(camera, "latitude", namespaces.kml),
-      0.0
+      0.0,
     );
     const altitude = defaultValue(
       queryNumericValue(camera, "altitude", namespaces.kml),
-      0.0
+      0.0,
     );
 
     const heading = defaultValue(
       queryNumericValue(camera, "heading", namespaces.kml),
-      0.0
+      0.0,
     );
     const tilt = defaultValue(
       queryNumericValue(camera, "tilt", namespaces.kml),
-      0.0
+      0.0,
     );
     const roll = defaultValue(
       queryNumericValue(camera, "roll", namespaces.kml),
-      0.0
+      0.0,
     );
 
     const position = Cartesian3.fromDegrees(lon, lat, altitude, ellipsoid);
@@ -2492,21 +2492,21 @@ function processLookAt(featureNode, entity, ellipsoid) {
   if (defined(lookAt)) {
     const lon = defaultValue(
       queryNumericValue(lookAt, "longitude", namespaces.kml),
-      0.0
+      0.0,
     );
     const lat = defaultValue(
       queryNumericValue(lookAt, "latitude", namespaces.kml),
-      0.0
+      0.0,
     );
     const altitude = defaultValue(
       queryNumericValue(lookAt, "altitude", namespaces.kml),
-      0.0
+      0.0,
     );
     let heading = queryNumericValue(lookAt, "heading", namespaces.kml);
     let tilt = queryNumericValue(lookAt, "tilt", namespaces.kml);
     const range = defaultValue(
       queryNumericValue(lookAt, "range", namespaces.kml),
-      0.0
+      0.0,
     );
 
     tilt = CesiumMath.toRadians(defaultValue(tilt, 0.0));
@@ -2515,7 +2515,7 @@ function processLookAt(featureNode, entity, ellipsoid) {
     const hpr = new HeadingPitchRange(
       heading,
       tilt - CesiumMath.PI_OVER_TWO,
-      range
+      range,
     );
     const viewPoint = Cartesian3.fromDegrees(lon, lat, altitude, ellipsoid);
 
@@ -2527,7 +2527,7 @@ function processScreenOverlay(
   dataSource,
   screenOverlayNode,
   processingData,
-  deferredLoading
+  deferredLoading,
 ) {
   const screenOverlay = processingData.screenOverlayContainer;
   if (!defined(screenOverlay)) {
@@ -2543,7 +2543,7 @@ function processScreenOverlay(
     dataSource,
     sourceResource,
     uriResolver,
-    false
+    false,
   );
 
   if (!defined(icon)) {
@@ -2560,12 +2560,12 @@ function processScreenOverlay(
     const screenXY = queryFirstNode(
       screenOverlayNode,
       "screenXY",
-      namespaces.kml
+      namespaces.kml,
     );
     const overlayXY = queryFirstNode(
       screenOverlayNode,
       "overlayXY",
-      namespaces.kml
+      namespaces.kml,
     );
     const size = queryFirstNode(screenOverlayNode, "size", namespaces.kml);
 
@@ -2642,7 +2642,7 @@ function processScreenOverlay(
       if (defined(x)) {
         if (xUnit === "fraction") {
           xStyle = `${"left: " + "calc("}${Math.floor(
-            x * 100
+            x * 100,
           )}% - ${xOrigin}px)`;
         } else if (xUnit === "pixels") {
           xStyle = `left: ${x - xOrigin}px`;
@@ -2656,7 +2656,7 @@ function processScreenOverlay(
       if (defined(y)) {
         if (yUnit === "fraction") {
           yStyle = `${"bottom: " + "calc("}${Math.floor(
-            y * 100
+            y * 100,
           )}% - ${yOrigin}px)`;
         } else if (yUnit === "pixels") {
           yStyle = `bottom: ${y - yOrigin}px`;
@@ -2678,7 +2678,7 @@ function processGroundOverlay(
   dataSource,
   groundOverlay,
   processingData,
-  deferredLoading
+  deferredLoading,
 ) {
   const r = processFeature(dataSource, groundOverlay, processingData);
   const entity = r.entity;
@@ -2689,7 +2689,7 @@ function processGroundOverlay(
   const ellipsoid = dataSource._ellipsoid;
   const positions = readCoordinates(
     queryFirstNode(groundOverlay, "LatLonQuad", namespaces.gx),
-    ellipsoid
+    ellipsoid,
   );
   const zIndex = queryNumericValue(groundOverlay, "drawOrder", namespaces.kml);
   if (defined(positions)) {
@@ -2706,7 +2706,7 @@ function processGroundOverlay(
     const latLonBox = queryFirstNode(
       groundOverlay,
       "LatLonBox",
-      namespaces.kml
+      namespaces.kml,
     );
     if (defined(latLonBox)) {
       let west = queryNumericValue(latLonBox, "west", namespaces.kml);
@@ -2743,13 +2743,13 @@ function processGroundOverlay(
     dataSource,
     processingData.sourceResource,
     processingData.uriResolver,
-    true
+    true,
   );
   if (defined(href)) {
     if (isLatLonQuad) {
       oneTimeWarning(
         "kml-gx:LatLonQuad",
-        "KML - gx:LatLonQuad Icon does not support texture projection."
+        "KML - gx:LatLonQuad Icon does not support texture projection.",
       );
     }
     const x = queryNumericValue(iconNode, "x", namespaces.gx);
@@ -2760,7 +2760,7 @@ function processGroundOverlay(
     if (defined(x) || defined(y) || defined(w) || defined(h)) {
       oneTimeWarning(
         "kml-groundOverlay-xywh",
-        "KML - gx:x, gx:y, gx:w, gx:h aren't supported for GroundOverlays"
+        "KML - gx:x, gx:y, gx:w, gx:h aren't supported for GroundOverlays",
       );
     }
 
@@ -2768,7 +2768,7 @@ function processGroundOverlay(
     geometry.material.color = queryColorValue(
       groundOverlay,
       "color",
-      namespaces.kml
+      namespaces.kml,
     );
     geometry.material.transparent = true;
   } else {
@@ -2778,7 +2778,7 @@ function processGroundOverlay(
   let altitudeMode = queryStringValue(
     groundOverlay,
     "altitudeMode",
-    namespaces.kml
+    namespaces.kml,
   );
 
   if (defined(altitudeMode)) {
@@ -2787,13 +2787,13 @@ function processGroundOverlay(
       geometry.height = queryNumericValue(
         groundOverlay,
         "altitude",
-        namespaces.kml
+        namespaces.kml,
       );
       geometry.zIndex = undefined;
     } else if (altitudeMode !== "clampToGround") {
       oneTimeWarning(
         "kml-altitudeMode-unknown",
-        `KML - Unknown altitudeMode: ${altitudeMode}`
+        `KML - Unknown altitudeMode: ${altitudeMode}`,
       );
     }
     // else just use the default of 0 until we support 'clampToGround'
@@ -2801,28 +2801,28 @@ function processGroundOverlay(
     altitudeMode = queryStringValue(
       groundOverlay,
       "altitudeMode",
-      namespaces.gx
+      namespaces.gx,
     );
     if (altitudeMode === "relativeToSeaFloor") {
       oneTimeWarning(
         "kml-altitudeMode-relativeToSeaFloor",
-        "KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute."
+        "KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.",
       );
       geometry.height = queryNumericValue(
         groundOverlay,
         "altitude",
-        namespaces.kml
+        namespaces.kml,
       );
       geometry.zIndex = undefined;
     } else if (altitudeMode === "clampToSeaFloor") {
       oneTimeWarning(
         "kml-altitudeMode-clampToSeaFloor",
-        "KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround."
+        "KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.",
       );
     } else if (defined(altitudeMode)) {
       oneTimeWarning(
         "kml-altitudeMode-unknown",
-        `KML - Unknown altitudeMode: ${altitudeMode}`
+        `KML - Unknown altitudeMode: ${altitudeMode}`,
       );
     }
   }
@@ -2832,7 +2832,7 @@ function processUnsupportedFeature(
   dataSource,
   node,
   processingData,
-  deferredLoading
+  deferredLoading,
 ) {
   dataSource._unsupportedNode.raiseEvent(
     dataSource,
@@ -2841,11 +2841,11 @@ function processUnsupportedFeature(
     processingData.entityCollection,
     processingData.styleCollection,
     processingData.sourceResource,
-    processingData.uriResolver
+    processingData.uriResolver,
   );
   oneTimeWarning(
     `kml-unsupportedFeature-${node.nodeName}`,
-    `KML - Unsupported feature: ${node.nodeName}`
+    `KML - Unsupported feature: ${node.nodeName}`,
   );
 }
 
@@ -2879,7 +2879,7 @@ function processNetworkLinkQueryString(
   canvas,
   viewBoundScale,
   bbox,
-  ellipsoid
+  ellipsoid,
 ) {
   function fixLatitude(value) {
     if (value < -CesiumMath.PI_OVER_TWO) {
@@ -2916,14 +2916,14 @@ function processNetworkLinkQueryString(
       centerCartesian = camera.pickEllipsoid(
         scratchCartesian2,
         ellipsoid,
-        scratchCartesian3
+        scratchCartesian3,
       );
     }
 
     if (defined(centerCartesian)) {
       centerCartographic = ellipsoid.cartesianToCartographic(
         centerCartesian,
-        scratchCartographic
+        scratchCartographic,
       );
     } else {
       centerCartographic = Rectangle.center(bbox, scratchCartographic);
@@ -2940,25 +2940,25 @@ function processNetworkLinkQueryString(
         fixLongitude(centerCartographic.longitude - newHalfWidth),
         fixLatitude(centerCartographic.latitude - newHalfHeight),
         fixLongitude(centerCartographic.longitude + newHalfWidth),
-        fixLatitude(centerCartographic.latitude + newHalfHeight)
+        fixLatitude(centerCartographic.latitude + newHalfHeight),
       );
     }
 
     queryString = queryString.replace(
       "[bboxWest]",
-      CesiumMath.toDegrees(bbox.west).toString()
+      CesiumMath.toDegrees(bbox.west).toString(),
     );
     queryString = queryString.replace(
       "[bboxSouth]",
-      CesiumMath.toDegrees(bbox.south).toString()
+      CesiumMath.toDegrees(bbox.south).toString(),
     );
     queryString = queryString.replace(
       "[bboxEast]",
-      CesiumMath.toDegrees(bbox.east).toString()
+      CesiumMath.toDegrees(bbox.east).toString(),
     );
     queryString = queryString.replace(
       "[bboxNorth]",
-      CesiumMath.toDegrees(bbox.north).toString()
+      CesiumMath.toDegrees(bbox.north).toString(),
     );
 
     const lon = CesiumMath.toDegrees(centerCartographic.longitude).toString();
@@ -2967,35 +2967,35 @@ function processNetworkLinkQueryString(
     queryString = queryString.replace("[lookatLat]", lat);
     queryString = queryString.replace(
       "[lookatTilt]",
-      CesiumMath.toDegrees(camera.pitch).toString()
+      CesiumMath.toDegrees(camera.pitch).toString(),
     );
     queryString = queryString.replace(
       "[lookatHeading]",
-      CesiumMath.toDegrees(camera.heading).toString()
+      CesiumMath.toDegrees(camera.heading).toString(),
     );
     queryString = queryString.replace(
       "[lookatRange]",
-      Cartesian3.distance(camera.positionWC, centerCartesian)
+      Cartesian3.distance(camera.positionWC, centerCartesian),
     );
     queryString = queryString.replace("[lookatTerrainLon]", lon);
     queryString = queryString.replace("[lookatTerrainLat]", lat);
     queryString = queryString.replace(
       "[lookatTerrainAlt]",
-      centerCartographic.height.toString()
+      centerCartographic.height.toString(),
     );
 
     ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic);
     queryString = queryString.replace(
       "[cameraLon]",
-      CesiumMath.toDegrees(scratchCartographic.longitude).toString()
+      CesiumMath.toDegrees(scratchCartographic.longitude).toString(),
     );
     queryString = queryString.replace(
       "[cameraLat]",
-      CesiumMath.toDegrees(scratchCartographic.latitude).toString()
+      CesiumMath.toDegrees(scratchCartographic.latitude).toString(),
     );
     queryString = queryString.replace(
       "[cameraAlt]",
-      CesiumMath.toDegrees(scratchCartographic.height).toString()
+      CesiumMath.toDegrees(scratchCartographic.height).toString(),
     );
 
     const frustum = camera.frustum;
@@ -3087,18 +3087,18 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
         viewRefreshMode = queryStringValue(
           link,
           "viewRefreshMode",
-          namespaces.kml
+          namespaces.kml,
         );
         if (viewRefreshMode === "onRegion") {
           oneTimeWarning(
             "kml-refrehMode-onRegion",
-            "KML - Unsupported viewRefreshMode: onRegion"
+            "KML - Unsupported viewRefreshMode: onRegion",
           );
           return;
         }
         viewBoundScale = defaultValue(
           queryStringValue(link, "viewBoundScale", namespaces.kml),
-          1.0
+          1.0,
         );
         const defaultViewFormat =
           viewRefreshMode === "onStop"
@@ -3106,7 +3106,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             : "";
         const viewFormat = defaultValue(
           queryStringValue(link, "viewFormat", namespaces.kml),
-          defaultViewFormat
+          defaultViewFormat,
         );
         const httpQuery = queryStringValue(link, "httpQuery", namespaces.kml);
         if (defined(viewFormat)) {
@@ -3123,7 +3123,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
           dataSource.canvas,
           viewBoundScale,
           dataSource._lastCameraView.bbox,
-          ellipsoid
+          ellipsoid,
         );
       }
 
@@ -3154,11 +3154,11 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
           const refreshMode = queryStringValue(
             link,
             "refreshMode",
-            namespaces.kml
+            namespaces.kml,
           );
           let refreshInterval = defaultValue(
             queryNumericValue(link, "refreshInterval", namespaces.kml),
-            0
+            0,
           );
           if (
             (refreshMode === "onInterval" && refreshInterval > 0) ||
@@ -3168,7 +3168,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             const networkLinkControl = queryFirstNode(
               rootElement,
               "NetworkLinkControl",
-              namespaces.kml
+              namespaces.kml,
             );
             const hasNetworkLinkControl = defined(networkLinkControl);
 
@@ -3192,18 +3192,18 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
                   queryStringValue(
                     networkLinkControl,
                     "cookie",
-                    namespaces.kml
+                    namespaces.kml,
                   ),
-                  ""
-                )
+                  "",
+                ),
               );
               minRefreshPeriod = defaultValue(
                 queryNumericValue(
                   networkLinkControl,
                   "minRefreshPeriod",
-                  namespaces.kml
+                  namespaces.kml,
                 ),
-                0
+                0,
               );
             }
 
@@ -3219,7 +3219,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
                 expires = queryStringValue(
                   networkLinkControl,
                   "expires",
-                  namespaces.kml
+                  namespaces.kml,
                 );
               }
               if (defined(expires)) {
@@ -3234,13 +3234,13 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
                 } catch (e) {
                   oneTimeWarning(
                     "kml-refreshMode-onInterval-onExpire",
-                    "KML - NetworkLinkControl expires is not a valid date"
+                    "KML - NetworkLinkControl expires is not a valid date",
                   );
                 }
               } else {
                 oneTimeWarning(
                   "kml-refreshMode-onExpire",
-                  "KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element"
+                  "KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element",
                 );
               }
             } else if (defined(dataSource.camera)) {
@@ -3248,12 +3248,12 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
               networkLinkInfo.refreshMode = RefreshMode.STOP;
               networkLinkInfo.time = defaultValue(
                 queryNumericValue(link, "viewRefreshTime", namespaces.kml),
-                0
+                0,
               );
             } else {
               oneTimeWarning(
                 "kml-refrehMode-onStop-noCamera",
-                "A NetworkLink with viewRefreshMode=onStop requires the `camera` property to be defined."
+                "A NetworkLink with viewRefreshMode=onStop requires the `camera` property to be defined.",
               );
             }
 
@@ -3282,7 +3282,7 @@ function processFeatureNode(dataSource, node, processingData, deferredLoading) {
     dataSource,
     node,
     processingData,
-    deferredLoading
+    deferredLoading,
   );
 }
 
@@ -3293,7 +3293,7 @@ function loadKml(
   sourceResource,
   uriResolver,
   screenOverlayContainer,
-  context
+  context,
 ) {
   entityCollection.removeAll();
 
@@ -3321,8 +3321,8 @@ function loadKml(
       styleCollection,
       sourceResource,
       false,
-      uriResolver
-    )
+      uriResolver,
+    ),
   ).then(function () {
     let element = kml.documentElement;
     if (element.localName === "kml") {
@@ -3361,7 +3361,7 @@ function loadKmz(
   entityCollection,
   blob,
   sourceResource,
-  screenOverlayContainer
+  screenOverlayContainer,
 ) {
   const zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
   zip.configure({
@@ -3415,7 +3415,7 @@ function loadKmz(
         uriResolver.kml,
         sourceResource,
         uriResolver,
-        screenOverlayContainer
+        screenOverlayContainer,
       );
     });
   });
@@ -3463,7 +3463,7 @@ function load(dataSource, entityCollection, data, options) {
               entityCollection,
               dataToLoad,
               sourceUri,
-              screenOverlayContainer
+              screenOverlayContainer,
             );
           }
           return readBlobAsText(dataToLoad).then(function (text) {
@@ -3512,7 +3512,7 @@ function load(dataSource, entityCollection, data, options) {
               sourceUri,
               uriResolver,
               screenOverlayContainer,
-              context
+              context,
             );
           });
         });
@@ -3524,7 +3524,7 @@ function load(dataSource, entityCollection, data, options) {
         sourceUri,
         uriResolver,
         screenOverlayContainer,
-        context
+        context,
       );
     })
     .catch(function (error) {
@@ -3892,8 +3892,8 @@ KmlDataSource.prototype.load = function (data, options) {
         clock.multiplier = Math.round(
           Math.min(
             Math.max(JulianDate.secondsDifference(stop, start) / 60, 1),
-            3.15569e7
-          )
+            3.15569e7,
+          ),
         );
       }
 
@@ -3953,7 +3953,7 @@ function getNetworkLinkUpdateCallback(
   networkLink,
   newEntityCollection,
   networkLinks,
-  processedHref
+  processedHref,
 ) {
   return function (rootElement) {
     if (!networkLinks.contains(networkLink.id)) {
@@ -3965,7 +3965,7 @@ function getNetworkLinkUpdateCallback(
     const networkLinkControl = queryFirstNode(
       rootElement,
       "NetworkLinkControl",
-      namespaces.kml
+      namespaces.kml,
     );
     const hasNetworkLinkControl = defined(networkLinkControl);
 
@@ -3976,7 +3976,7 @@ function getNetworkLinkUpdateCallback(
       ) {
         oneTimeWarning(
           "kml-networkLinkControl-update",
-          "KML - NetworkLinkControl updates aren't supported."
+          "KML - NetworkLinkControl updates aren't supported.",
         );
         networkLink.updating = false;
         networkLinks.remove(networkLink.id);
@@ -3985,16 +3985,16 @@ function getNetworkLinkUpdateCallback(
       networkLink.cookie = queryToObject(
         defaultValue(
           queryStringValue(networkLinkControl, "cookie", namespaces.kml),
-          ""
-        )
+          "",
+        ),
       );
       minRefreshPeriod = defaultValue(
         queryNumericValue(
           networkLinkControl,
           "minRefreshPeriod",
-          namespaces.kml
+          namespaces.kml,
         ),
-        0
+        0,
       );
     }
 
@@ -4010,7 +4010,7 @@ function getNetworkLinkUpdateCallback(
         expires = queryStringValue(
           networkLinkControl,
           "expires",
-          namespaces.kml
+          namespaces.kml,
         );
       }
       if (defined(expires)) {
@@ -4024,14 +4024,14 @@ function getNetworkLinkUpdateCallback(
         } catch (e) {
           oneTimeWarning(
             "kml-networkLinkControl-expires",
-            "KML - NetworkLinkControl expires is not a valid date"
+            "KML - NetworkLinkControl expires is not a valid date",
           );
           remove = true;
         }
       } else {
         oneTimeWarning(
           "kml-refreshMode-onExpire",
-          "KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element"
+          "KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element",
         );
         remove = true;
       }
@@ -4102,7 +4102,7 @@ function getNetworkLinkUpdateCallback(
     networkLink.needsUpdate = false;
     dataSource._refresh.raiseEvent(
       dataSource,
-      processedHref.getUrlComponent(true)
+      processedHref.getUrlComponent(true),
     );
   };
 }
@@ -4144,11 +4144,11 @@ KmlDataSource.prototype.update = function (time) {
     !(
       camera.positionWC.equalsEpsilon(
         lastCameraView.position,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       ) &&
       camera.directionWC.equalsEpsilon(
         lastCameraView.direction,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       ) &&
       camera.upWC.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7)
     )
@@ -4211,7 +4211,7 @@ KmlDataSource.prototype.update = function (time) {
           that.canvas,
           networkLink.viewBoundScale,
           lastCameraView.bbox,
-          ellipsoid
+          ellipsoid,
         );
 
         load(that, newEntityCollection, href, {
@@ -4223,8 +4223,8 @@ KmlDataSource.prototype.update = function (time) {
               networkLink,
               newEntityCollection,
               newNetworkLinks,
-              href
-            )
+              href,
+            ),
           )
           .catch(function (error) {
             const msg = `NetworkLink ${networkLink.href} refresh failed: ${error}`;

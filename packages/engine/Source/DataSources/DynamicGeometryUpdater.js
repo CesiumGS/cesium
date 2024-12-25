@@ -29,7 +29,7 @@ import Property from "./Property.js";
 function DynamicGeometryUpdater(
   geometryUpdater,
   primitives,
-  orderedGroundPrimitives
+  orderedGroundPrimitives,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("geometryUpdater", geometryUpdater);
@@ -109,7 +109,7 @@ DynamicGeometryUpdater.prototype.update = function (time) {
       const material = MaterialProperty.getValue(
         time,
         fillMaterialProperty,
-        this._material
+        this._material,
       );
       this._material = material;
       appearance = new MaterialAppearance({
@@ -123,24 +123,21 @@ DynamicGeometryUpdater.prototype.update = function (time) {
       options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
       this._primitive = orderedGroundPrimitives.add(
         new GroundPrimitive({
-          geometryInstances: this._geometryUpdater.createFillGeometryInstance(
-            time
-          ),
+          geometryInstances:
+            this._geometryUpdater.createFillGeometryInstance(time),
           appearance: appearance,
           asynchronous: false,
           shadows: shadows,
-          classificationType: this._geometryUpdater.classificationTypeProperty.getValue(
-            time
-          ),
+          classificationType:
+            this._geometryUpdater.classificationTypeProperty.getValue(time),
         }),
-        Property.getValueOrUndefined(this._geometryUpdater.zIndex, time)
+        Property.getValueOrUndefined(this._geometryUpdater.zIndex, time),
       );
     } else {
       options.vertexFormat = appearance.vertexFormat;
 
-      const fillInstance = this._geometryUpdater.createFillGeometryInstance(
-        time
-      );
+      const fillInstance =
+        this._geometryUpdater.createFillGeometryInstance(time);
 
       if (isColorAppearance) {
         appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
@@ -152,7 +149,7 @@ DynamicGeometryUpdater.prototype.update = function (time) {
           appearance: appearance,
           asynchronous: false,
           shadows: shadows,
-        })
+        }),
       );
     }
   }
@@ -162,13 +159,12 @@ DynamicGeometryUpdater.prototype.update = function (time) {
     defined(geometry.outline) &&
     geometry.outline.getValue(time)
   ) {
-    const outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(
-      time
-    );
+    const outlineInstance =
+      this._geometryUpdater.createOutlineGeometryInstance(time);
     const outlineWidth = Property.getValueOrDefault(
       geometry.outlineWidth,
       time,
-      1.0
+      1.0,
     );
 
     this._outlinePrimitive = primitives.add(
@@ -183,7 +179,7 @@ DynamicGeometryUpdater.prototype.update = function (time) {
         }),
         asynchronous: false,
         shadows: shadows,
-      })
+      }),
     );
   }
 };

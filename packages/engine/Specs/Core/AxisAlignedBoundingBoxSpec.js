@@ -109,7 +109,7 @@ describe("Core/AxisAlignedBoundingBox", function () {
   it("clone without a result parameter", function () {
     const box = new AxisAlignedBoundingBox(
       Cartesian3.UNIT_Y,
-      Cartesian3.UNIT_X
+      Cartesian3.UNIT_X,
     );
     const result = box.clone();
     expect(box).not.toBe(result);
@@ -120,7 +120,7 @@ describe("Core/AxisAlignedBoundingBox", function () {
     const box = new AxisAlignedBoundingBox(
       Cartesian3.UNIT_Y,
       Cartesian3.UNIT_X,
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
     const result = box.clone();
     expect(box).not.toBe(result);
@@ -130,11 +130,11 @@ describe("Core/AxisAlignedBoundingBox", function () {
   it("clone with a result parameter", function () {
     const box = new AxisAlignedBoundingBox(
       Cartesian3.UNIT_Y,
-      Cartesian3.UNIT_X
+      Cartesian3.UNIT_X,
     );
     const result = new AxisAlignedBoundingBox(
       Cartesian3.ZERO,
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
     const returnedResult = box.clone(result);
     expect(result).toBe(returnedResult);
@@ -145,7 +145,7 @@ describe("Core/AxisAlignedBoundingBox", function () {
   it('clone works with "this" result parameter', function () {
     const box = new AxisAlignedBoundingBox(
       Cartesian3.UNIT_Y,
-      Cartesian3.UNIT_X
+      Cartesian3.UNIT_X,
     );
     const returnedResult = box.clone(box);
     expect(box).toBe(returnedResult);
@@ -157,7 +157,7 @@ describe("Core/AxisAlignedBoundingBox", function () {
     const box = new AxisAlignedBoundingBox(
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Y,
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
     const bogie = new Cartesian3(2, 3, 4);
     expect(
@@ -165,24 +165,24 @@ describe("Core/AxisAlignedBoundingBox", function () {
         new AxisAlignedBoundingBox(
           Cartesian3.UNIT_X,
           Cartesian3.UNIT_Y,
-          Cartesian3.UNIT_Z
-        )
-      )
+          Cartesian3.UNIT_Z,
+        ),
+      ),
     ).toEqual(true);
     expect(
       box.equals(
-        new AxisAlignedBoundingBox(bogie, Cartesian3.UNIT_Y, Cartesian3.UNIT_Y)
-      )
+        new AxisAlignedBoundingBox(bogie, Cartesian3.UNIT_Y, Cartesian3.UNIT_Y),
+      ),
     ).toEqual(false);
     expect(
       box.equals(
-        new AxisAlignedBoundingBox(Cartesian3.UNIT_X, bogie, Cartesian3.UNIT_Z)
-      )
+        new AxisAlignedBoundingBox(Cartesian3.UNIT_X, bogie, Cartesian3.UNIT_Z),
+      ),
     ).toEqual(false);
     expect(
       box.equals(
-        new AxisAlignedBoundingBox(Cartesian3.UNIT_X, Cartesian3.UNIT_Y, bogie)
-      )
+        new AxisAlignedBoundingBox(Cartesian3.UNIT_X, Cartesian3.UNIT_Y, bogie),
+      ),
     ).toEqual(false);
     expect(box.equals(undefined)).toEqual(false);
   });
@@ -197,7 +197,7 @@ describe("Core/AxisAlignedBoundingBox", function () {
   it("intersectPlane works with box on the positive side of a plane", function () {
     const box = new AxisAlignedBoundingBox(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      Cartesian3.ZERO
+      Cartesian3.ZERO,
     );
     const normal = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
     const position = Cartesian3.UNIT_X;
@@ -208,7 +208,7 @@ describe("Core/AxisAlignedBoundingBox", function () {
   it("intersectPlane works with box on the negative side of a plane", function () {
     const box = new AxisAlignedBoundingBox(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      Cartesian3.ZERO
+      Cartesian3.ZERO,
     );
     const normal = Cartesian3.UNIT_X;
     const position = Cartesian3.UNIT_X;
@@ -219,7 +219,7 @@ describe("Core/AxisAlignedBoundingBox", function () {
   it("intersectPlane works with box intersecting a plane", function () {
     const box = new AxisAlignedBoundingBox(
       Cartesian3.ZERO,
-      Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3())
+      Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
     );
     const normal = Cartesian3.UNIT_X;
     const position = Cartesian3.UNIT_X;

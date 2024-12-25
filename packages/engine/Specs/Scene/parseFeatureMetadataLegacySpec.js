@@ -298,5 +298,5 @@ describe(
       expect(metadata.extensions).toBe(extensions);
     });
   },
-  "WebGL"
+  "WebGL",
 );

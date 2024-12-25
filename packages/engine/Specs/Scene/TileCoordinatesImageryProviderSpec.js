@@ -9,7 +9,7 @@ import {
 describe("Scene/TileCoordinatesImageryProvider", function () {
   it("conforms to ImageryProvider interface", function () {
     expect(TileCoordinatesImageryProvider).toConformToInterface(
-      ImageryProvider
+      ImageryProvider,
     );
   });
 
@@ -37,11 +37,11 @@ describe("Scene/TileCoordinatesImageryProvider", function () {
     expect(provider.tileDiscardPolicy).toBeUndefined();
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-    return Promise.resolve(provider.requestImage(0, 0, 0)).then(function (
-      image
-    ) {
-      expect(image).toBeDefined();
-    });
+    return Promise.resolve(provider.requestImage(0, 0, 0)).then(
+      function (image) {
+        expect(image).toBeDefined();
+      },
+    );
   });
 
   it("uses alternate tiling scheme if provided", function () {

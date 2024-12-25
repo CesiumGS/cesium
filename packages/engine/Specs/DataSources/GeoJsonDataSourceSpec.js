@@ -48,7 +48,7 @@ describe("DataSources/GeoJsonDataSource", function () {
     return Cartesian3.fromDegrees(
       coordinates[0],
       coordinates[1],
-      coordinates[2]
+      coordinates[2],
     );
   }
 
@@ -414,7 +414,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.properties).toBe(feature.properties);
       expect(entity.position.getValue(time)).toEqual(
-        coordinatesToCartesian(feature.geometry.coordinates)
+        coordinatesToCartesian(feature.geometry.coordinates),
       );
       expect(entity.billboard).toBeDefined();
     });
@@ -523,7 +523,7 @@ describe("DataSources/GeoJsonDataSource", function () {
     function testDescribeProperty(properties, nameProperty) {
       return new CallbackProperty(
         createDescriptionCallback(testDescribe, properties, nameProperty),
-        true
+        true,
       );
     }
 
@@ -559,7 +559,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.description).toBeDefined();
       expect(entity.description.getValue(time)).toEqual(
-        featureWithDescription.properties.description
+        featureWithDescription.properties.description,
       );
     });
   });
@@ -588,13 +588,13 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.name).toBeUndefined();
       expect(entity.properties.name.getValue()).toBe(
-        featureWithNullName.properties.name
+        featureWithNullName.properties.name,
       );
       expect(entity.properties.getValue(time)).toEqual(
-        featureWithNullName.properties
+        featureWithNullName.properties,
       );
       expect(entity.position.getValue(time)).toEqual(
-        coordinatesToCartesian(featureWithNullName.geometry.coordinates)
+        coordinatesToCartesian(featureWithNullName.geometry.coordinates),
       );
       expect(entity.billboard).toBeDefined();
     });
@@ -665,7 +665,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.properties).toBe(point.properties);
       expect(entity.position.getValue(time)).toEqual(
-        coordinatesToCartesian(point.coordinates)
+        coordinatesToCartesian(point.coordinates),
       );
       expect(entity.billboard).toBeDefined();
       expect(entity.billboard.image).toBeDefined();
@@ -683,12 +683,12 @@ describe("DataSources/GeoJsonDataSource", function () {
         const entity = entityCollection.values[0];
         expect(entity.properties).toBe(point.properties);
         expect(entity.position.getValue(time)).toEqual(
-          coordinatesToCartesian(point.coordinates)
+          coordinatesToCartesian(point.coordinates),
         );
         expect(entity.billboard).toBeDefined();
         expect(entity.billboard.image).toBeDefined();
         expect(entity.billboard.heightReference.getValue(time)).toBe(
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       });
   });
@@ -710,7 +710,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.billboard).toBeDefined();
       return Promise.resolve(
-        dataSource._pinBuilder.fromMakiIconId("bus", Color.WHITE, 64)
+        dataSource._pinBuilder.fromMakiIconId("bus", Color.WHITE, 64),
       ).then(function (image) {
         expect(entity.billboard.image.getValue()).toBe(image);
       });
@@ -732,7 +732,7 @@ describe("DataSources/GeoJsonDataSource", function () {
     return dataSource.load(geojson).then(function () {
       const image = dataSource._pinBuilder.fromColor(
         GeoJsonDataSource.markerColor,
-        GeoJsonDataSource.markerSize
+        GeoJsonDataSource.markerSize,
       );
       const entityCollection = dataSource.entities;
       const entity = entityCollection.values[0];
@@ -758,7 +758,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.billboard).toBeDefined();
       return Promise.resolve(
-        dataSource._pinBuilder.fromColor(Color.WHITE, 64)
+        dataSource._pinBuilder.fromColor(Color.WHITE, 64),
       ).then(function (image) {
         expect(entity.billboard.image.getValue()).toBe(image);
       });
@@ -771,7 +771,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entityCollection = dataSource.entities;
       const entities = entityCollection.values;
       const expectedPositions = coordinatesArrayToCartesian(
-        multiPoint.coordinates
+        multiPoint.coordinates,
       );
       for (let i = 0; i < multiPoint.coordinates.length; i++) {
         const entity = entities[i];
@@ -790,7 +790,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entityCollection = dataSource.entities;
       const entities = entityCollection.values;
       const expectedPositions = coordinatesArrayToCartesian(
-        multiPoint.coordinates
+        multiPoint.coordinates,
       );
       for (let i = 0; i < multiPoint.coordinates.length; i++) {
         const entity = entities[i];
@@ -799,7 +799,7 @@ describe("DataSources/GeoJsonDataSource", function () {
         expect(entity.billboard).toBeDefined();
         expect(entity.billboard.image).toBeDefined();
         expect(entity.billboard.heightReference.getValue()).toBe(
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       }
     });
@@ -812,10 +812,10 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.properties).toBe(lineString.properties);
       expect(entity.polyline.positions.getValue(time)).toEqual(
-        coordinatesArrayToCartesian(lineString.coordinates)
+        coordinatesArrayToCartesian(lineString.coordinates),
       );
       expect(entity.polyline.material.color.getValue(time)).toEqual(
-        GeoJsonDataSource.stroke
+        GeoJsonDataSource.stroke,
       );
       expect(entity.polyline.width.getValue(time)).toEqual(2);
     });
@@ -832,10 +832,10 @@ describe("DataSources/GeoJsonDataSource", function () {
         const entity = entityCollection.values[0];
         expect(entity.properties).toBe(lineString.properties);
         expect(entity.polyline.positions.getValue(time)).toEqual(
-          coordinatesArrayToCartesian(lineString.coordinates)
+          coordinatesArrayToCartesian(lineString.coordinates),
         );
         expect(entity.polyline.material.color.getValue(time)).toEqual(
-          GeoJsonDataSource.stroke
+          GeoJsonDataSource.stroke,
         );
         expect(entity.polyline.width.getValue(time)).toEqual(2);
         expect(entity.polyline.clampToGround.getValue(time)).toEqual(true);
@@ -853,7 +853,7 @@ describe("DataSources/GeoJsonDataSource", function () {
         expect(entity.properties).toBe(multiLineString.properties);
         expect(entity.polyline.positions.getValue(time)).toEqual(lines[i]);
         expect(entity.polyline.material.color.getValue(time)).toEqual(
-          Color.YELLOW
+          Color.YELLOW,
         );
         expect(entity.polyline.width.getValue(time)).toEqual(2);
       }
@@ -875,7 +875,7 @@ describe("DataSources/GeoJsonDataSource", function () {
           expect(entity.properties).toBe(multiLineString.properties);
           expect(entity.polyline.positions.getValue(time)).toEqual(lines[i]);
           expect(entity.polyline.material.color.getValue(time)).toEqual(
-            Color.YELLOW
+            Color.YELLOW,
           );
           expect(entity.polyline.width.getValue(time)).toEqual(2);
           expect(entity.polyline.clampToGround.getValue(time)).toEqual(true);
@@ -891,19 +891,19 @@ describe("DataSources/GeoJsonDataSource", function () {
       expect(entity.properties).toBe(polygon.properties);
       expect(entity.polygon.hierarchy.getValue(time)).toEqual(
         new PolygonHierarchy(
-          polygonCoordinatesToCartesian(polygon.coordinates[0])
-        )
+          polygonCoordinatesToCartesian(polygon.coordinates[0]),
+        ),
       );
       expect(entity.polygon.perPositionHeight).toBeUndefined();
       expect(entity.polygon.material.color.getValue(time)).toEqual(
-        GeoJsonDataSource.fill
+        GeoJsonDataSource.fill,
       );
       expect(entity.polygon.outline.getValue(time)).toEqual(true);
       expect(entity.polygon.outlineWidth.getValue(time)).toEqual(
-        GeoJsonDataSource.strokeWidth
+        GeoJsonDataSource.strokeWidth,
       );
       expect(entity.polygon.outlineColor.getValue(time)).toEqual(
-        GeoJsonDataSource.stroke
+        GeoJsonDataSource.stroke,
       );
       expect(entity.polygon.height).toBeInstanceOf(ConstantProperty);
     });
@@ -921,19 +921,19 @@ describe("DataSources/GeoJsonDataSource", function () {
         expect(entity.properties).toBe(polygon.properties);
         expect(entity.polygon.hierarchy.getValue(time)).toEqual(
           new PolygonHierarchy(
-            polygonCoordinatesToCartesian(polygon.coordinates[0])
-          )
+            polygonCoordinatesToCartesian(polygon.coordinates[0]),
+          ),
         );
         expect(entity.polygon.perPositionHeight).toBeUndefined();
         expect(entity.polygon.material.color.getValue(time)).toEqual(
-          GeoJsonDataSource.fill
+          GeoJsonDataSource.fill,
         );
         expect(entity.polygon.outline.getValue(time)).toEqual(true);
         expect(entity.polygon.outlineWidth.getValue(time)).toEqual(
-          GeoJsonDataSource.strokeWidth
+          GeoJsonDataSource.strokeWidth,
         );
         expect(entity.polygon.outlineColor.getValue(time)).toEqual(
-          GeoJsonDataSource.stroke
+          GeoJsonDataSource.stroke,
         );
         expect(entity.polygon.height).toBeUndefined();
       });
@@ -947,19 +947,19 @@ describe("DataSources/GeoJsonDataSource", function () {
       expect(entity.properties).toBe(polygonWithHeights.properties);
       expect(entity.polygon.hierarchy.getValue(time)).toEqual(
         new PolygonHierarchy(
-          polygonCoordinatesToCartesian(polygonWithHeights.coordinates[0])
-        )
+          polygonCoordinatesToCartesian(polygonWithHeights.coordinates[0]),
+        ),
       );
       expect(entity.polygon.perPositionHeight.getValue(time)).toBe(true);
       expect(entity.polygon.material.color.getValue(time)).toEqual(
-        GeoJsonDataSource.fill
+        GeoJsonDataSource.fill,
       );
       expect(entity.polygon.outline.getValue(time)).toEqual(true);
       expect(entity.polygon.outlineWidth.getValue(time)).toEqual(
-        GeoJsonDataSource.strokeWidth
+        GeoJsonDataSource.strokeWidth,
       );
       expect(entity.polygon.outlineColor.getValue(time)).toEqual(
-        GeoJsonDataSource.stroke
+        GeoJsonDataSource.stroke,
       );
     });
   });
@@ -975,10 +975,10 @@ describe("DataSources/GeoJsonDataSource", function () {
           polygonCoordinatesToCartesian(polygonWithHoles.coordinates[0]),
           [
             new PolygonHierarchy(
-              polygonCoordinatesToCartesian(polygonWithHoles.coordinates[1])
+              polygonCoordinatesToCartesian(polygonWithHoles.coordinates[1]),
             ),
-          ]
-        )
+          ],
+        ),
       );
     });
   });
@@ -989,13 +989,13 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entityCollection = dataSource.entities;
       const entities = entityCollection.values;
       const positions = multiPolygonCoordinatesToCartesian(
-        multiPolygon.coordinates
+        multiPolygon.coordinates,
       );
       for (let i = 0; i < multiPolygon.coordinates.length; i++) {
         const entity = entities[i];
         expect(entity.properties).toBe(multiPolygon.properties);
         expect(entity.polygon.hierarchy.getValue(time)).toEqual(
-          new PolygonHierarchy(positions[i])
+          new PolygonHierarchy(positions[i]),
         );
       }
     });
@@ -1009,20 +1009,20 @@ describe("DataSources/GeoJsonDataSource", function () {
 
       const polygon = entities[0];
       expect(polygon.properties.myProps.getValue()).toBe(
-        topoJson.objects.polygon.properties.myProps
+        topoJson.objects.polygon.properties.myProps,
       );
       expect(polygon.properties.getValue(time)).toEqual(
-        topoJson.objects.polygon.properties
+        topoJson.objects.polygon.properties,
       );
 
       expect(polygon.polygon.hierarchy).toBeDefined();
 
       const lineString = entities[1];
       expect(lineString.properties.myProps.getValue()).toBe(
-        topoJson.objects.lineString.properties.myProps
+        topoJson.objects.lineString.properties.myProps,
       );
       expect(lineString.properties.getValue(time)).toEqual(
-        topoJson.objects.lineString.properties
+        topoJson.objects.lineString.properties,
       );
 
       expect(lineString.polyline).toBeDefined();
@@ -1052,14 +1052,14 @@ describe("DataSources/GeoJsonDataSource", function () {
       expect(entity.polygon.material.color.getValue()).toEqual(options.fill);
       expect(entity.polygon.outlineColor.getValue()).toEqual(options.stroke);
       expect(entity.polygon.outlineWidth.getValue()).toEqual(
-        options.strokeWidth
+        options.strokeWidth,
       );
 
       entity = entities[2];
       const expectedImage = dataSource._pinBuilder.fromMakiIconId(
         options.markerSymbol,
         options.markerColor,
-        options.markerSize
+        options.markerSize,
       );
       expect(entity.billboard.image.getValue()).toEqual(expectedImage);
     });
@@ -1080,28 +1080,28 @@ describe("DataSources/GeoJsonDataSource", function () {
 
       let entity = entities[0];
       expect(entity.polyline.material.color.getValue()).toEqual(
-        GeoJsonDataSource.stroke
+        GeoJsonDataSource.stroke,
       );
       expect(entity.polyline.width.getValue()).toEqual(
-        GeoJsonDataSource.strokeWidth
+        GeoJsonDataSource.strokeWidth,
       );
 
       entity = entities[1];
       expect(entity.polygon.material.color.getValue()).toEqual(
-        GeoJsonDataSource.fill
+        GeoJsonDataSource.fill,
       );
       expect(entity.polygon.outlineColor.getValue()).toEqual(
-        GeoJsonDataSource.stroke
+        GeoJsonDataSource.stroke,
       );
       expect(entity.polygon.outlineWidth.getValue()).toEqual(
-        GeoJsonDataSource.strokeWidth
+        GeoJsonDataSource.strokeWidth,
       );
 
       entity = entities[2];
       const expectedImage = dataSource._pinBuilder.fromMakiIconId(
         GeoJsonDataSource.markerSymbol,
         GeoJsonDataSource.markerColor,
-        GeoJsonDataSource.markerSize
+        GeoJsonDataSource.markerSize,
       );
       expect(entity.billboard.image.getValue()).toEqual(expectedImage);
     });
@@ -1124,7 +1124,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       let entity = entityCollection.values[0];
       expect(entity.properties).toBe(geometryCollection.properties);
       expect(entity.position.getValue(time)).toEqual(
-        coordinatesToCartesian(geometryCollection.geometries[0].coordinates)
+        coordinatesToCartesian(geometryCollection.geometries[0].coordinates),
       );
       expect(entity.billboard).toBeDefined();
 
@@ -1132,8 +1132,8 @@ describe("DataSources/GeoJsonDataSource", function () {
       expect(entity.properties).toBe(geometryCollection.properties);
       expect(entity.polyline.positions.getValue(time)).toEqual(
         coordinatesArrayToCartesian(
-          geometryCollection.geometries[1].coordinates
-        )
+          geometryCollection.geometries[1].coordinates,
+        ),
       );
     });
   });
@@ -1144,7 +1144,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entityCollection = dataSource.entities;
       const entity = entityCollection.values[0];
       expect(entity.position.getValue(time)).toEqual(
-        coordinatesToCartesian(point.coordinates)
+        coordinatesToCartesian(point.coordinates),
       );
     });
   });
@@ -1155,7 +1155,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entityCollection = dataSource.entities;
       const entity = entityCollection.values[0];
       expect(entity.position.getValue(time)).toEqual(
-        coordinatesToCartesian(point.coordinates)
+        coordinatesToCartesian(point.coordinates),
       );
     });
   });
@@ -1166,24 +1166,23 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entityCollection = dataSource.entities;
       const entity = entityCollection.values[0];
       expect(entity.position.getValue(time)).toEqual(
-        coordinatesToCartesian(point.coordinates)
+        coordinatesToCartesian(point.coordinates),
       );
     });
   });
 
   it("Works with link crs href", function () {
     const projectedPosition = new Cartesian3(1, 2, 3);
-    GeoJsonDataSource.crsLinkHrefs[
-      pointCrsLinkHref.crs.properties.href
-    ] = function (properties) {
-      expect(properties).toBe(pointCrsLinkHref.crs.properties);
-      return Promise.resolve(properties.href).then(function (href) {
-        return function (coordinate) {
-          expect(coordinate).toBe(pointCrsLinkHref.coordinates);
-          return projectedPosition;
-        };
-      });
-    };
+    GeoJsonDataSource.crsLinkHrefs[pointCrsLinkHref.crs.properties.href] =
+      function (properties) {
+        expect(properties).toBe(pointCrsLinkHref.crs.properties);
+        return Promise.resolve(properties.href).then(function (href) {
+          return function (coordinate) {
+            expect(coordinate).toBe(pointCrsLinkHref.coordinates);
+            return projectedPosition;
+          };
+        });
+      };
 
     const dataSource = new GeoJsonDataSource();
     return dataSource.load(pointCrsLinkHref).then(function () {
@@ -1200,7 +1199,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entityCollection = dataSource.entities;
       const entity = entityCollection.values[0];
       expect(entity.position.getValue(time)).toEqual(
-        coordinatesToCartesian(point.coordinates)
+        coordinatesToCartesian(point.coordinates),
       );
     });
   });
@@ -1230,16 +1229,16 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.name).toEqual(geoJson.properties.title);
       expect(entity.description.getValue(time)).toEqual(
-        geoJson.properties.description
+        geoJson.properties.description,
       );
 
       const expectedColor = Color.fromCssColorString(geoJson.properties.stroke);
       expectedColor.alpha = geoJson.properties["stroke-opacity"];
       expect(entity.polyline.material.color.getValue(time)).toEqual(
-        expectedColor
+        expectedColor,
       );
       expect(entity.polyline.width.getValue(time)).toEqual(
-        geoJson.properties["stroke-width"]
+        geoJson.properties["stroke-width"],
       );
     });
   });
@@ -1270,10 +1269,10 @@ describe("DataSources/GeoJsonDataSource", function () {
       expect(entity.name).toBeUndefined();
       expect(entity.description).toBeUndefined();
       expect(entity.polyline.material.color.getValue(time)).toEqual(
-        GeoJsonDataSource.stroke
+        GeoJsonDataSource.stroke,
       );
       expect(entity.polyline.width.getValue(time)).toEqual(
-        GeoJsonDataSource.strokeWidth
+        GeoJsonDataSource.strokeWidth,
       );
     });
   });
@@ -1307,10 +1306,10 @@ describe("DataSources/GeoJsonDataSource", function () {
       const expectedMaterialColor = GeoJsonDataSource.stroke.clone();
       expectedMaterialColor.alpha = 0.42;
       expect(entity.polyline.material.color.getValue(time)).toEqual(
-        expectedMaterialColor
+        expectedMaterialColor,
       );
       expect(entity.polyline.width.getValue(time)).toEqual(
-        GeoJsonDataSource.strokeWidth
+        GeoJsonDataSource.strokeWidth,
       );
     });
   });
@@ -1347,24 +1346,24 @@ describe("DataSources/GeoJsonDataSource", function () {
       const entity = entityCollection.values[0];
       expect(entity.name).toEqual(geoJson.properties.title);
       expect(entity.description.getValue(time)).toEqual(
-        geoJson.properties.description
+        geoJson.properties.description,
       );
 
       const expectedFill = Color.fromCssColorString(geoJson.properties.fill);
       expectedFill.alpha = geoJson.properties["fill-opacity"];
 
       const expectedOutlineColor = Color.fromCssColorString(
-        geoJson.properties.stroke
+        geoJson.properties.stroke,
       );
       expectedOutlineColor.alpha = geoJson.properties["stroke-opacity"];
 
       expect(entity.polygon.material.color.getValue(time)).toEqual(
-        expectedFill
+        expectedFill,
       );
       expect(entity.polygon.outline.getValue(time)).toEqual(true);
       expect(entity.polygon.outlineWidth.getValue(time)).toEqual(5);
       expect(entity.polygon.outlineColor.getValue(time)).toEqual(
-        expectedOutlineColor
+        expectedOutlineColor,
       );
     });
   });
@@ -1402,14 +1401,14 @@ describe("DataSources/GeoJsonDataSource", function () {
       expect(entity.name).toBeUndefined();
       expect(entity.description).toBeUndefined();
       expect(entity.polygon.material.color.getValue(time)).toEqual(
-        GeoJsonDataSource.fill
+        GeoJsonDataSource.fill,
       );
       expect(entity.polygon.outline.getValue(time)).toEqual(true);
       expect(entity.polygon.outlineWidth.getValue(time)).toEqual(
-        GeoJsonDataSource.strokeWidth
+        GeoJsonDataSource.strokeWidth,
       );
       expect(entity.polygon.outlineColor.getValue(time)).toEqual(
-        GeoJsonDataSource.stroke
+        GeoJsonDataSource.stroke,
       );
     });
   });
@@ -1450,17 +1449,17 @@ describe("DataSources/GeoJsonDataSource", function () {
       const expectedFill = GeoJsonDataSource.fill.clone();
       expectedFill.alpha = geoJson.properties["fill-opacity"];
       expect(entity.polygon.material.color.getValue(time)).toEqual(
-        expectedFill
+        expectedFill,
       );
 
       const expectedOutlineColor = GeoJsonDataSource.stroke.clone();
       expectedOutlineColor.alpha = 0.42;
       expect(entity.polygon.outline.getValue(time)).toEqual(true);
       expect(entity.polygon.outlineWidth.getValue(time)).toEqual(
-        GeoJsonDataSource.strokeWidth
+        GeoJsonDataSource.strokeWidth,
       );
       expect(entity.polygon.outlineColor.getValue(time)).toEqual(
-        expectedOutlineColor
+        expectedOutlineColor,
       );
     });
   });
@@ -1517,7 +1516,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       .catch(function (error) {
         expect(error).toBeInstanceOf(RuntimeError);
         expect(error.message).toContain(
-          "Unsupported GeoJSON object type: TimeyWimey"
+          "Unsupported GeoJSON object type: TimeyWimey",
         );
       });
   });
@@ -1539,11 +1538,11 @@ describe("DataSources/GeoJsonDataSource", function () {
       crs: null,
     };
 
-    return GeoJsonDataSource.load(featureWithNullCrs).then(function (
-      dataSource
-    ) {
-      expect(dataSource.entities.values.length).toBe(0);
-    });
+    return GeoJsonDataSource.load(featureWithNullCrs).then(
+      function (dataSource) {
+        expect(dataSource.entities.values.length).toBe(0);
+      },
+    );
   });
 
   it("rejects unknown CRS", function () {
@@ -1627,7 +1626,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       .catch(function (error) {
         expect(error).toBeInstanceOf(RuntimeError);
         expect(error.message).toContain(
-          'Unable to resolve crs link: {"href":"failMe","type":"failMeTwice"}'
+          'Unable to resolve crs link: {"href":"failMe","type":"failMeTwice"}',
         );
       });
   });

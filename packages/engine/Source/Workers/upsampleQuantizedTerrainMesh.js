@@ -86,7 +86,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     const texCoords = encoding.decodeTextureCoordinates(
       parentVertices,
       i,
-      decodeTexCoordsScratch
+      decodeTexCoordsScratch,
     );
     height = encoding.decodeHeight(parentVertices, i);
 
@@ -98,7 +98,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
         maxShort) |
         0,
       0,
-      maxShort
+      maxShort,
     );
 
     if (u < threshold) {
@@ -124,7 +124,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       const encodedNormal = encoding.getOctEncodedNormal(
         parentVertices,
         i,
-        octEncodedNormalScratch
+        octEncodedNormalScratch,
       );
       parentNormalBuffer[n] = encodedNormal.x;
       parentNormalBuffer[n + 1] = encodedNormal.y;
@@ -176,21 +176,21 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       parentVBuffer,
       parentHeightBuffer,
       parentNormalBuffer,
-      i0
+      i0,
     );
     triangleVertices[1].initializeIndexed(
       parentUBuffer,
       parentVBuffer,
       parentHeightBuffer,
       parentNormalBuffer,
-      i1
+      i1,
     );
     triangleVertices[2].initializeIndexed(
       parentUBuffer,
       parentVBuffer,
       parentHeightBuffer,
       parentNormalBuffer,
-      i2
+      i2,
     );
 
     // Clip triangle on the east-west boundary.
@@ -200,7 +200,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       u0,
       u1,
       u2,
-      clipScratch
+      clipScratch,
     );
 
     // Get the first clipped triangle, if any.
@@ -212,7 +212,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     clippedIndex = clippedTriangleVertices[0].initializeFromClipResult(
       clipped,
       clippedIndex,
-      triangleVertices
+      triangleVertices,
     );
 
     if (clippedIndex >= clipped.length) {
@@ -221,7 +221,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     clippedIndex = clippedTriangleVertices[1].initializeFromClipResult(
       clipped,
       clippedIndex,
-      triangleVertices
+      triangleVertices,
     );
 
     if (clippedIndex >= clipped.length) {
@@ -230,7 +230,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(
       clipped,
       clippedIndex,
-      triangleVertices
+      triangleVertices,
     );
 
     // Clip the triangle against the North-south boundary.
@@ -240,7 +240,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       clippedTriangleVertices[0].getV(),
       clippedTriangleVertices[1].getV(),
       clippedTriangleVertices[2].getV(),
-      clipScratch2
+      clipScratch2,
     );
     addClippedPolygon(
       uBuffer,
@@ -251,7 +251,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       vertexMap,
       clipped2,
       clippedTriangleVertices,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     // If there's another vertex in the original clipped result,
@@ -261,7 +261,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       clippedTriangleVertices[2].initializeFromClipResult(
         clipped,
         clippedIndex,
-        triangleVertices
+        triangleVertices,
       );
 
       clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(
@@ -270,7 +270,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
         clippedTriangleVertices[0].getV(),
         clippedTriangleVertices[1].getV(),
         clippedTriangleVertices[2].getV(),
-        clipScratch2
+        clipScratch2,
       );
       addClippedPolygon(
         uBuffer,
@@ -281,7 +281,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
         vertexMap,
         clipped2,
         clippedTriangleVertices,
-        hasVertexNormals
+        hasVertexNormals,
       );
     }
   }
@@ -342,7 +342,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     height = CesiumMath.lerp(
       parentMinimumHeight,
       parentMaximumHeight,
-      heightBuffer[i] / maxShort
+      heightBuffer[i] / maxShort,
     );
     if (height < minimumHeight) {
       minimumHeight = height;
@@ -368,30 +368,31 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     cartesianVertices,
     Cartesian3.ZERO,
     3,
-    boundingSphereScratch
+    boundingSphereScratch,
   );
   const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
     rectangle,
     minimumHeight,
     maximumHeight,
     ellipsoid,
-    orientedBoundingBoxScratch
+    orientedBoundingBoxScratch,
   );
 
   const occluder = new EllipsoidalOccluder(ellipsoid);
-  const horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(
-    boundingSphere.center,
-    cartesianVertices,
-    3,
-    boundingSphere.center,
-    minimumHeight,
-    horizonOcclusionPointScratch
-  );
+  const horizonOcclusionPoint =
+    occluder.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(
+      boundingSphere.center,
+      cartesianVertices,
+      3,
+      boundingSphere.center,
+      minimumHeight,
+      horizonOcclusionPointScratch,
+    );
 
   const heightRange = maximumHeight - minimumHeight;
 
   const vertices = new Uint16Array(
-    uBuffer.length + vBuffer.length + heightBuffer.length
+    uBuffer.length + vBuffer.length + heightBuffer.length,
   );
 
   for (i = 0; i < uBuffer.length; ++i) {
@@ -413,7 +414,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
 
   const indicesTypedArray = IndexDatatype.createTypedArray(
     uBuffer.length,
-    indices
+    indices,
   );
 
   let encodedNormals;
@@ -422,7 +423,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     transferableObjects.push(
       vertices.buffer,
       indicesTypedArray.buffer,
-      normalArray.buffer
+      normalArray.buffer,
     );
     encodedNormals = normalArray.buffer;
   } else {
@@ -475,7 +476,7 @@ Vertex.prototype.initializeIndexed = function (
   vBuffer,
   heightBuffer,
   normalBuffer,
-  index
+  index,
 ) {
   this.uBuffer = uBuffer;
   this.vBuffer = vBuffer;
@@ -490,7 +491,7 @@ Vertex.prototype.initializeIndexed = function (
 Vertex.prototype.initializeFromClipResult = function (
   clipResult,
   index,
-  vertices
+  vertices,
 ) {
   let nextIndex = index + 1;
 
@@ -561,18 +562,18 @@ function lerpOctEncodedNormal(vertex, result) {
   first = AttributeCompression.octDecode(
     vertex.first.getNormalX(),
     vertex.first.getNormalY(),
-    first
+    first,
   );
   second = AttributeCompression.octDecode(
     vertex.second.getNormalX(),
     vertex.second.getNormalY(),
-    second
+    second,
   );
   cartesian3Scratch = Cartesian3.lerp(
     first,
     second,
     vertex.ratio,
-    cartesian3Scratch
+    cartesian3Scratch,
   );
   Cartesian3.normalize(cartesian3Scratch, cartesian3Scratch);
 
@@ -616,7 +617,7 @@ function addClippedPolygon(
   vertexMap,
   clipped,
   triangleVertices,
-  hasVertexNormals
+  hasVertexNormals,
 ) {
   if (clipped.length === 0) {
     return;
@@ -628,7 +629,7 @@ function addClippedPolygon(
     clippedIndex = polygonVertices[numVertices++].initializeFromClipResult(
       clipped,
       clippedIndex,
-      triangleVertices
+      triangleVertices,
     );
   }
 

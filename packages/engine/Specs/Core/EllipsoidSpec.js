@@ -14,18 +14,18 @@ describe("Core/Ellipsoid", function () {
   const radiiSquared = Cartesian3.multiplyComponents(
     radii,
     radii,
-    new Cartesian3()
+    new Cartesian3(),
   );
   const radiiToTheFourth = Cartesian3.multiplyComponents(
     radiiSquared,
     radiiSquared,
-    new Cartesian3()
+    new Cartesian3(),
   );
   const oneOverRadii = new Cartesian3(1 / radii.x, 1 / radii.y, 1 / radii.z);
   const oneOverRadiiSquared = new Cartesian3(
     1 / radiiSquared.x,
     1 / radiiSquared.y,
-    1 / radiiSquared.z
+    1 / radiiSquared.z,
   );
   const minimumRadius = 1.0;
   const maximumRadius = 3.0;
@@ -34,34 +34,34 @@ describe("Core/Ellipsoid", function () {
   const spaceCartesian = new Cartesian3(
     4582719.8827300891,
     -4582719.8827300882,
-    1725510.4250797231
+    1725510.4250797231,
   );
   const spaceCartesianGeodeticSurfaceNormal = new Cartesian3(
     0.6829975339864266,
     -0.68299753398642649,
-    0.25889908678270795
+    0.25889908678270795,
   );
 
   const spaceCartographic = new Cartographic(
     CesiumMath.toRadians(-45.0),
     CesiumMath.toRadians(15.0),
-    330000.0
+    330000.0,
   );
   const spaceCartographicGeodeticSurfaceNormal = new Cartesian3(
     0.68301270189221941,
     -0.6830127018922193,
-    0.25881904510252074
+    0.25881904510252074,
   );
 
   const surfaceCartesian = new Cartesian3(
     4094327.7921465295,
     1909216.4044747739,
-    4487348.4088659193
+    4487348.4088659193,
   );
   const surfaceCartographic = new Cartographic(
     CesiumMath.toRadians(25.0),
     CesiumMath.toRadians(45.0),
-    0.0
+    0.0,
   );
 
   it("default constructor creates zero Ellipsoid", function () {
@@ -110,12 +110,11 @@ describe("Core/Ellipsoid", function () {
 
   it("geodeticSurfaceNormalCartographic works without a result parameter", function () {
     const ellipsoid = Ellipsoid.WGS84;
-    const returnedResult = ellipsoid.geodeticSurfaceNormalCartographic(
-      spaceCartographic
-    );
+    const returnedResult =
+      ellipsoid.geodeticSurfaceNormalCartographic(spaceCartographic);
     expect(returnedResult).toEqualEpsilon(
       spaceCartographicGeodeticSurfaceNormal,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -124,12 +123,12 @@ describe("Core/Ellipsoid", function () {
     const result = new Cartesian3();
     const returnedResult = ellipsoid.geodeticSurfaceNormalCartographic(
       spaceCartographic,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqualEpsilon(
       spaceCartographicGeodeticSurfaceNormal,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -138,7 +137,7 @@ describe("Core/Ellipsoid", function () {
     const returnedResult = ellipsoid.geodeticSurfaceNormal(spaceCartesian);
     expect(returnedResult).toEqualEpsilon(
       spaceCartesianGeodeticSurfaceNormal,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -153,12 +152,12 @@ describe("Core/Ellipsoid", function () {
     const result = new Cartesian3();
     const returnedResult = ellipsoid.geodeticSurfaceNormal(
       spaceCartesian,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqualEpsilon(
       spaceCartesianGeodeticSurfaceNormal,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -173,7 +172,7 @@ describe("Core/Ellipsoid", function () {
     const result = new Cartesian3();
     const returnedResult = ellipsoid.cartographicToCartesian(
       spaceCartographic,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqualEpsilon(spaceCartesian, CesiumMath.EPSILON7);
@@ -188,11 +187,11 @@ describe("Core/Ellipsoid", function () {
     expect(returnedResult.length).toEqual(2);
     expect(returnedResult[0]).toEqualEpsilon(
       spaceCartesian,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(returnedResult[1]).toEqualEpsilon(
       surfaceCartesian,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -202,18 +201,18 @@ describe("Core/Ellipsoid", function () {
     const result = [resultCartesian];
     const returnedResult = ellipsoid.cartographicArrayToCartesianArray(
       [spaceCartographic, surfaceCartographic],
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result[0]).toBe(resultCartesian);
     expect(returnedResult.length).toEqual(2);
     expect(returnedResult[0]).toEqualEpsilon(
       spaceCartesian,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(returnedResult[1]).toEqualEpsilon(
       surfaceCartesian,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -222,7 +221,7 @@ describe("Core/Ellipsoid", function () {
     const returnedResult = ellipsoid.cartesianToCartographic(surfaceCartesian);
     expect(returnedResult).toEqualEpsilon(
       surfaceCartographic,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 
@@ -231,12 +230,12 @@ describe("Core/Ellipsoid", function () {
     const result = new Cartographic();
     const returnedResult = ellipsoid.cartesianToCartographic(
       surfaceCartesian,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqualEpsilon(
       surfaceCartographic,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 
@@ -244,10 +243,10 @@ describe("Core/Ellipsoid", function () {
     const expected = new Cartographic(
       9.999999999999999e-11,
       1.0067394967422763e-20,
-      -6378137.0
+      -6378137.0,
     );
     const returnedResult = Ellipsoid.WGS84.cartesianToCartographic(
-      new Cartesian3(1e-50, 1e-60, 1e-70)
+      new Cartesian3(1e-50, 1e-60, 1e-70),
     );
     expect(returnedResult).toEqual(expected);
   });
@@ -255,7 +254,7 @@ describe("Core/Ellipsoid", function () {
   it("cartesianToCartographic return undefined very close to center", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const returnedResult = ellipsoid.cartesianToCartographic(
-      new Cartesian3(1e-150, 1e-150, 1e-150)
+      new Cartesian3(1e-150, 1e-150, 1e-150),
     );
     expect(returnedResult).toBeUndefined();
   });
@@ -275,11 +274,11 @@ describe("Core/Ellipsoid", function () {
     expect(returnedResult.length).toEqual(2);
     expect(returnedResult[0]).toEqualEpsilon(
       spaceCartographic,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(returnedResult[1]).toEqualEpsilon(
       surfaceCartographic,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -289,7 +288,7 @@ describe("Core/Ellipsoid", function () {
     const result = [resultCartographic];
     const returnedResult = ellipsoid.cartesianArrayToCartographicArray(
       [spaceCartesian, surfaceCartesian],
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result.length).toEqual(2);
@@ -327,7 +326,7 @@ describe("Core/Ellipsoid", function () {
     const expected = new Cartesian3(
       0.2680893773941855,
       1.1160466902266495,
-      2.3559801120411263
+      2.3559801120411263,
     );
     const cartesian = new Cartesian3(4.0, 5.0, 6.0);
     const returnedResult = ellipsoid.scaleToGeodeticSurface(cartesian);
@@ -339,7 +338,7 @@ describe("Core/Ellipsoid", function () {
     const expected = new Cartesian3(
       0.2680893773941855,
       1.1160466902266495,
-      2.3559801120411263
+      2.3559801120411263,
     );
     const cartesian = new Cartesian3(4.0, 5.0, 6.0);
     const result = new Cartesian3();
@@ -377,7 +376,7 @@ describe("Core/Ellipsoid", function () {
     const expected = new Cartesian3(
       0.7807200583588266,
       0.9759000729485333,
-      1.1710800875382399
+      1.1710800875382399,
     );
     const cartesian = new Cartesian3(4.0, 5.0, 6.0);
     const returnedResult = ellipsoid.scaleToGeocentricSurface(cartesian);
@@ -389,13 +388,13 @@ describe("Core/Ellipsoid", function () {
     const expected = new Cartesian3(
       0.7807200583588266,
       0.9759000729485333,
-      1.1710800875382399
+      1.1710800875382399,
     );
     const cartesian = new Cartesian3(4.0, 5.0, 6.0);
     const result = new Cartesian3();
     const returnedResult = ellipsoid.scaleToGeocentricSurface(
       cartesian,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON16);
@@ -423,7 +422,7 @@ describe("Core/Ellipsoid", function () {
     const result = new Cartesian3();
     const returnedResult = ellipsoid.transformPositionToScaledSpace(
       cartesian,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON16);
@@ -433,9 +432,8 @@ describe("Core/Ellipsoid", function () {
     const ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
     const expected = new Cartesian3(4.0, 6.0, 8.0);
     const cartesian = new Cartesian3(2.0, 2.0, 2.0);
-    const returnedResult = ellipsoid.transformPositionFromScaledSpace(
-      cartesian
-    );
+    const returnedResult =
+      ellipsoid.transformPositionFromScaledSpace(cartesian);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON16);
   });
 
@@ -446,7 +444,7 @@ describe("Core/Ellipsoid", function () {
     const result = new Cartesian3();
     const returnedResult = ellipsoid.transformPositionFromScaledSpace(
       cartesian,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON16);
@@ -595,11 +593,10 @@ describe("Core/Ellipsoid", function () {
   it("getSurfaceNormalIntersectionWithZAxis works without a result parameter", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const cartographic = Cartographic.fromDegrees(35.23, 33.23);
-    const cartesianOnTheSurface = ellipsoid.cartographicToCartesian(
-      cartographic
-    );
+    const cartesianOnTheSurface =
+      ellipsoid.cartographicToCartesian(cartographic);
     const returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
-      cartesianOnTheSurface
+      cartesianOnTheSurface,
     );
     expect(returnedResult).toBeInstanceOf(Cartesian3);
   });
@@ -607,13 +604,12 @@ describe("Core/Ellipsoid", function () {
   it("getSurfaceNormalIntersectionWithZAxis works with a result parameter", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const cartographic = Cartographic.fromDegrees(35.23, 33.23);
-    const cartesianOnTheSurface = ellipsoid.cartographicToCartesian(
-      cartographic
-    );
+    const cartesianOnTheSurface =
+      ellipsoid.cartographicToCartesian(cartographic);
     const returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
       cartesianOnTheSurface,
       undefined,
-      cartesianOnTheSurface
+      cartesianOnTheSurface,
     );
     expect(returnedResult).toBe(cartesianOnTheSurface);
   });
@@ -621,12 +617,11 @@ describe("Core/Ellipsoid", function () {
   it("getSurfaceNormalIntersectionWithZAxis returns undefined if the result is outside the ellipsoid with buffer parameter", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const cartographic = Cartographic.fromDegrees(35.23, 33.23);
-    const cartesianOnTheSurface = ellipsoid.cartographicToCartesian(
-      cartographic
-    );
+    const cartesianOnTheSurface =
+      ellipsoid.cartographicToCartesian(cartographic);
     const returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
       cartesianOnTheSurface,
-      ellipsoid.radii.z
+      ellipsoid.radii.z,
     );
     expect(returnedResult).toBe(undefined);
   });
@@ -636,12 +631,11 @@ describe("Core/Ellipsoid", function () {
     const minorAxis = 1;
     const ellipsoid = new Ellipsoid(majorAxis, majorAxis, minorAxis);
     const cartographic = Cartographic.fromDegrees(45.0, 90.0);
-    const cartesianOnTheSurface = ellipsoid.cartographicToCartesian(
-      cartographic
-    );
+    const cartesianOnTheSurface =
+      ellipsoid.cartographicToCartesian(cartographic);
     const returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
       cartesianOnTheSurface,
-      undefined
+      undefined,
     );
     expect(returnedResult).toBe(undefined);
   });
@@ -651,7 +645,7 @@ describe("Core/Ellipsoid", function () {
     const cartographic = Cartographic.fromDegrees(35.23, 33.23);
     let cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
     const surfaceNormal = ellipsoid.geodeticSurfaceNormal(
-      cartesianOnTheSurface
+      cartesianOnTheSurface,
     );
     const magnitude = cartesianOnTheSurface.x / surfaceNormal.x;
 
@@ -659,7 +653,7 @@ describe("Core/Ellipsoid", function () {
     expected.z = cartesianOnTheSurface.z - surfaceNormal.z * magnitude;
     let result = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
       cartesianOnTheSurface,
-      undefined
+      undefined,
     );
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON8);
 
@@ -667,7 +661,7 @@ describe("Core/Ellipsoid", function () {
     cartesianOnTheSurface = new Cartesian3(ellipsoid.radii.x, 0, 0);
     result = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
       cartesianOnTheSurface,
-      undefined
+      undefined,
     );
     expect(result).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON8);
   });
@@ -680,24 +674,24 @@ describe("Core/Ellipsoid", function () {
 
     let result = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
       cartesianOnTheSurface,
-      undefined
+      undefined,
     );
 
     let surfaceNormalWithLength = Cartesian3.multiplyByScalar(
       surfaceNormal,
       ellipsoid.maximumRadius,
-      new Cartesian3()
+      new Cartesian3(),
     );
     let position = Cartesian3.add(
       result,
       surfaceNormalWithLength,
-      new Cartesian3()
+      new Cartesian3(),
     );
     let resultCartographic = ellipsoid.cartesianToCartographic(position);
     resultCartographic.height = 0.0;
     expect(resultCartographic).toEqualEpsilon(
       cartographic,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
 
     // at the north pole
@@ -707,22 +701,22 @@ describe("Core/Ellipsoid", function () {
     surfaceNormalWithLength = Cartesian3.multiplyByScalar(
       surfaceNormal,
       ellipsoid.maximumRadius,
-      new Cartesian3()
+      new Cartesian3(),
     );
     result = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
       cartesianOnTheSurface,
-      undefined
+      undefined,
     );
     position = Cartesian3.add(
       result,
       surfaceNormalWithLength,
-      new Cartesian3()
+      new Cartesian3(),
     );
     resultCartographic = ellipsoid.cartesianToCartographic(position);
     resultCartographic.height = 0.0;
     expect(resultCartographic).toEqualEpsilon(
       cartographic,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 
@@ -735,14 +729,13 @@ describe("Core/Ellipsoid", function () {
   it("getLocalCurvature returns expected values at the equator", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const cartographic = Cartographic.fromDegrees(0.0, 0.0);
-    const cartesianOnTheSurface = ellipsoid.cartographicToCartesian(
-      cartographic
-    );
+    const cartesianOnTheSurface =
+      ellipsoid.cartographicToCartesian(cartographic);
     const returnedResult = ellipsoid.getLocalCurvature(cartesianOnTheSurface);
     const expectedResult = new Cartesian2(
       1.0 / ellipsoid.maximumRadius,
       ellipsoid.maximumRadius /
-        (ellipsoid.minimumRadius * ellipsoid.minimumRadius)
+        (ellipsoid.minimumRadius * ellipsoid.minimumRadius),
     );
     expect(returnedResult).toEqualEpsilon(expectedResult, CesiumMath.EPSILON8);
   });
@@ -750,16 +743,15 @@ describe("Core/Ellipsoid", function () {
   it("getLocalCurvature returns expected values at the north pole", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const cartographic = Cartographic.fromDegrees(0.0, 90.0);
-    const cartesianOnTheSurface = ellipsoid.cartographicToCartesian(
-      cartographic
-    );
+    const cartesianOnTheSurface =
+      ellipsoid.cartographicToCartesian(cartographic);
     const returnedResult = ellipsoid.getLocalCurvature(cartesianOnTheSurface);
     const semiLatusRectum =
       (ellipsoid.maximumRadius * ellipsoid.maximumRadius) /
       ellipsoid.minimumRadius;
     const expectedResult = new Cartesian2(
       1.0 / semiLatusRectum,
-      1.0 / semiLatusRectum
+      1.0 / semiLatusRectum,
     );
     expect(returnedResult).toEqualEpsilon(expectedResult, CesiumMath.EPSILON8);
   });
@@ -793,9 +785,9 @@ describe("Core/Ellipsoid", function () {
           -CesiumMath.PI,
           -CesiumMath.PI_OVER_TWO,
           CesiumMath.PI,
-          CesiumMath.PI_OVER_TWO
-        )
-      )
+          CesiumMath.PI_OVER_TWO,
+        ),
+      ),
     ).toEqualEpsilon(area, CesiumMath.EPSILON3);
 
     // area of a prolate spheroid
@@ -813,9 +805,9 @@ describe("Core/Ellipsoid", function () {
           -CesiumMath.PI,
           -CesiumMath.PI_OVER_TWO,
           CesiumMath.PI,
-          CesiumMath.PI_OVER_TWO
-        )
-      )
+          CesiumMath.PI_OVER_TWO,
+        ),
+      ),
     ).toEqualEpsilon(area, CesiumMath.EPSILON3);
   });
 

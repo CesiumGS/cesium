@@ -195,7 +195,7 @@ describe("Scene/Model/ModelArticulation", function () {
 
     const transform = Matrix4.fromTranslation(
       new Cartesian3(1.0, 2.0, 3.0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     const node = mockRuntimeNode(transform);
@@ -216,7 +216,7 @@ describe("Scene/Model/ModelArticulation", function () {
 
     const transform = Matrix4.fromTranslation(
       new Cartesian3(1.0, 2.0, 3.0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     const node = mockRuntimeNode(transform);
@@ -226,7 +226,7 @@ describe("Scene/Model/ModelArticulation", function () {
 
     let expectedMatrix = Matrix4.fromTranslation(
       new Cartesian3(50.0, 0.0, 0.0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     const rotation = CesiumMath.toRadians(180.0);
@@ -235,19 +235,19 @@ describe("Scene/Model/ModelArticulation", function () {
     expectedMatrix = Matrix4.multiplyByMatrix3(
       expectedMatrix,
       expectedRotation,
-      expectedMatrix
+      expectedMatrix,
     );
 
     expectedMatrix = Matrix4.multiplyByUniformScale(
       expectedMatrix,
       0.5,
-      expectedMatrix
+      expectedMatrix,
     );
 
     expectedMatrix = Matrix4.multiplyTransformation(
       transform,
       expectedMatrix,
-      expectedMatrix
+      expectedMatrix,
     );
 
     runtimeArticulation.apply();

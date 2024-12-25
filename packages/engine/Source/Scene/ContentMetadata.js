@@ -100,7 +100,7 @@ ContentMetadata.prototype.hasPropertyBySemantic = function (semantic) {
   return MetadataEntity.hasPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -145,7 +145,7 @@ ContentMetadata.prototype.setProperty = function (propertyId, value) {
     propertyId,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -160,7 +160,7 @@ ContentMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -177,7 +177,7 @@ ContentMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
     semantic,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 

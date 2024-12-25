@@ -59,7 +59,7 @@ ModelUtility.getNodeTransform = function (node) {
   return Matrix4.fromTranslationQuaternionRotationScale(
     defined(node.translation) ? node.translation : Cartesian3.ZERO,
     defined(node.rotation) ? node.rotation : Quaternion.IDENTITY,
-    defined(node.scale) ? node.scale : Cartesian3.ONE
+    defined(node.scale) ? node.scale : Cartesian3.ONE,
   );
 };
 
@@ -220,11 +220,11 @@ const cartesianMinScratch = new Cartesian3();
 ModelUtility.getPositionMinMax = function (
   primitive,
   instancingTranslationMin,
-  instancingTranslationMax
+  instancingTranslationMax,
 ) {
   const positionGltfAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
-    "POSITION"
+    "POSITION",
   );
 
   let positionMax = positionGltfAttribute.max;
@@ -234,12 +234,12 @@ ModelUtility.getPositionMinMax = function (
     positionMin = Cartesian3.add(
       positionMin,
       instancingTranslationMin,
-      cartesianMinScratch
+      cartesianMinScratch,
     );
     positionMax = Cartesian3.add(
       positionMax,
       instancingTranslationMax,
-      cartesianMaxScratch
+      cartesianMaxScratch,
     );
   }
 

@@ -23,7 +23,7 @@ describe("DataSources/DynamicGeometryUpdater", function () {
       return new DynamicGeometryUpdater(
         undefined,
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
     }).toThrowDeveloperError();
   });
@@ -40,7 +40,7 @@ describe("DataSources/DynamicGeometryUpdater", function () {
       return new DynamicGeometryUpdater(
         updater,
         undefined,
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
     }).toThrowDeveloperError();
   });
@@ -57,7 +57,7 @@ describe("DataSources/DynamicGeometryUpdater", function () {
       return new DynamicGeometryUpdater(
         updater,
         undefined,
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
     }).toThrowDeveloperError();
   });
@@ -73,7 +73,7 @@ describe("DataSources/DynamicGeometryUpdater", function () {
     const dynamicUpdater = new DynamicGeometryUpdater(
       updater,
       new PrimitiveCollection(),
-      new PrimitiveCollection()
+      new PrimitiveCollection(),
     );
     expect(function () {
       return dynamicUpdater.update();

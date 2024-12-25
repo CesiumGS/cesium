@@ -34,7 +34,7 @@ describe("Scene/SingleTileImageryProvider", function () {
         new SingleTileImageryProvider({
           url: "Data/Images/Red16x16.png",
           tileWidth: 16,
-        })
+        }),
     ).toThrowDeveloperError();
 
     expect(
@@ -42,19 +42,19 @@ describe("Scene/SingleTileImageryProvider", function () {
         new SingleTileImageryProvider({
           url: "Data/Images/Red16x16.png",
           tileHeight: 16,
-        })
+        }),
     ).toThrowDeveloperError();
   });
 
   it("fromUrl throws without url", async function () {
     await expectAsync(
-      SingleTileImageryProvider.fromUrl()
+      SingleTileImageryProvider.fromUrl(),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("fromUrl resolves to created provider", async function () {
     const provider = await SingleTileImageryProvider.fromUrl(
-      "Data/Images/Red16x16.png"
+      "Data/Images/Red16x16.png",
     );
     expect(provider).toBeInstanceOf(SingleTileImageryProvider);
   });
@@ -70,16 +70,16 @@ describe("Scene/SingleTileImageryProvider", function () {
 
   it("fromUrl throws on failed request", async function () {
     await expectAsync(
-      SingleTileImageryProvider.fromUrl("invalid.image.url")
+      SingleTileImageryProvider.fromUrl("invalid.image.url"),
     ).toBeRejectedWithError(
       RuntimeError,
-      "Failed to load image invalid.image.url"
+      "Failed to load image invalid.image.url",
     );
   });
 
   it("returns valid value for hasAlphaChannel", async function () {
     const provider = await SingleTileImageryProvider.fromUrl(
-      "Data/Images/Red16x16.png"
+      "Data/Images/Red16x16.png",
     );
 
     expect(typeof provider.hasAlphaChannel).toBe("boolean");
@@ -112,7 +112,7 @@ describe("Scene/SingleTileImageryProvider", function () {
       "Data/Images/Red16x16.png",
       {
         ellipsoid: ellipsoid,
-      }
+      },
     );
 
     expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
@@ -121,19 +121,17 @@ describe("Scene/SingleTileImageryProvider", function () {
   it("requests the single image immediately upon construction", async function () {
     const imageUrl = "Data/Images/Red16x16.png";
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const url = request.url;
-      expect(url).toEqual(imageUrl);
-      Resource._DefaultImplementations.createImage(
-        request,
-        crossOrigin,
-        deferred
-      );
-    });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const url = request.url;
+        expect(url).toEqual(imageUrl);
+        Resource._DefaultImplementations.createImage(
+          request,
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     const provider = await SingleTileImageryProvider.fromUrl(imageUrl);
 
@@ -146,19 +144,17 @@ describe("Scene/SingleTileImageryProvider", function () {
   it("lazy loads image when constructed with tile height and tile width", async function () {
     const imageUrl = "Data/Images/Red16x16.png";
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const url = request.url;
-      expect(url).toEqual(imageUrl);
-      Resource._DefaultImplementations.createImage(
-        request,
-        crossOrigin,
-        deferred
-      );
-    });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const url = request.url;
+        expect(url).toEqual(imageUrl);
+        Resource._DefaultImplementations.createImage(
+          request,
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     const provider = new SingleTileImageryProvider({
       url: imageUrl,
@@ -175,7 +171,7 @@ describe("Scene/SingleTileImageryProvider", function () {
 
   it("turns the supplied credit into a logo", async function () {
     const provider = await SingleTileImageryProvider.fromUrl(
-      "Data/Images/Red16x16.png"
+      "Data/Images/Red16x16.png",
     );
 
     expect(provider.credit).toBeUndefined();
@@ -184,7 +180,7 @@ describe("Scene/SingleTileImageryProvider", function () {
       "Data/Images/Red16x16.png",
       {
         credit: "Thanks to our awesome made up source of this imagery!",
-      }
+      },
     );
 
     expect(providerWithCredit.credit).toBeDefined();
@@ -211,14 +207,14 @@ describe("Scene/SingleTileImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       } else {
         // fail

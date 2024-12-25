@@ -213,7 +213,7 @@ function initialize(outlineGenerator) {
       i2,
       hasEdge01,
       hasEdge12,
-      hasEdge20
+      hasEdge20,
     );
     while (defined(unmatchableVertexIndex)) {
       // Copy the unmatchable index and try again.
@@ -277,7 +277,7 @@ function initialize(outlineGenerator) {
         i2,
         hasEdge01,
         hasEdge12,
-        hasEdge20
+        hasEdge20,
       );
     }
   }
@@ -285,7 +285,7 @@ function initialize(outlineGenerator) {
   // Store the triangle indices in case we had to expand to 32-bit indices
   outlineGenerator._triangleIndices = triangleIndices;
   outlineGenerator._outlineCoordinatesTypedArray = new Float32Array(
-    outlineCoordinates
+    outlineCoordinates,
   );
 }
 
@@ -312,7 +312,7 @@ function matchAndStoreCoordinates(
   i2,
   hasEdge01,
   hasEdge12,
-  hasEdge20
+  hasEdge20,
 ) {
   const a0 = hasEdge20 ? 1.0 : 0.0;
   const b0 = hasEdge01 ? 1.0 : 0.0;
@@ -510,7 +510,7 @@ function popcount6Bit(value) {
  * @private
  */
 PrimitiveOutlineGenerator.prototype.updateAttribute = function (
-  attributeTypedArray
+  attributeTypedArray,
 ) {
   const extraVertices = this._extraVertices;
 
@@ -525,7 +525,7 @@ PrimitiveOutlineGenerator.prototype.updateAttribute = function (
   // Make a larger typed array of the same type as the input
   const ArrayType = attributeTypedArray.constructor;
   const result = new ArrayType(
-    attributeTypedArray.length + extraVerticesLength * stride
+    attributeTypedArray.length + extraVerticesLength * stride,
   );
 
   // Copy original vertices

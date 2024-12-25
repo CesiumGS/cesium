@@ -50,7 +50,7 @@ function SteppedSpline(options) {
   }
   if (points.length < 2) {
     throw new DeveloperError(
-      "points.length must be greater than or equal to 2."
+      "points.length must be greater than or equal to 2.",
     );
   }
   if (times.length !== points.length) {

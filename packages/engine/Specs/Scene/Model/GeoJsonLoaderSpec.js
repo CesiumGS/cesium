@@ -93,12 +93,12 @@ describe(
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         const featureIdAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.FEATURE_ID,
-          0
+          0,
         );
         const indices = primitive.indices;
         const material = primitive.material;
@@ -109,7 +109,7 @@ describe(
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.buffer.sizeInBytes).toBe(
-          expected.vertexCount * 3 * 4
+          expected.vertexCount * 3 * 4,
         );
         expect(positionAttribute.count).toBe(expected.vertexCount);
         expect(positionAttribute.min).toBeDefined();
@@ -117,7 +117,7 @@ describe(
 
         expect(featureIdAttribute.buffer).toBeDefined();
         expect(featureIdAttribute.buffer.sizeInBytes).toBe(
-          expected.vertexCount * 4
+          expected.vertexCount * 4,
         );
         expect(featureIdAttribute.count).toBe(expected.vertexCount);
 
@@ -252,5 +252,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

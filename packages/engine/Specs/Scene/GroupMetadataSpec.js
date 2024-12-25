@@ -58,7 +58,7 @@ describe("Scene/GroupMetadata", function () {
     expect(groupMetadata.extras).toBe(extras);
     expect(groupMetadata.extensions).toBe(extensions);
     expect(groupMetadata.getProperty("position")).toEqual(
-      Cartesian3.unpack(properties.position)
+      Cartesian3.unpack(properties.position),
     );
   });
 

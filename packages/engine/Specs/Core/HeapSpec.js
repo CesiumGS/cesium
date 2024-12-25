@@ -77,7 +77,7 @@ describe("Core/Heap", function () {
     expect(heap.length).toBeLessThanOrEqual(heap.maximumLength);
     // allowed one extra slot for swapping
     expect(heap.internalArray.length).toBeLessThanOrEqual(
-      heap.maximumLength + 1
+      heap.maximumLength + 1,
     );
   });
 

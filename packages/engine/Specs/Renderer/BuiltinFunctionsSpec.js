@@ -525,5 +525,5 @@ describe(
       }).contextToRender();
     });
   },
-  "WebGL"
+  "WebGL",
 );

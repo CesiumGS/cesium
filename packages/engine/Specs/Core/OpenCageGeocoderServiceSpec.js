@@ -51,7 +51,7 @@ describe("Core/OpenCageGeocoderService", function () {
       ],
     };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(data)
+      Promise.resolve(data),
     );
 
     const results = await service.geocode(query);
@@ -66,7 +66,7 @@ describe("Core/OpenCageGeocoderService", function () {
     const query = "";
     const data = { results: [] };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(data)
+      Promise.resolve(data),
     );
 
     const results = await service.geocode(query);
@@ -78,7 +78,7 @@ describe("Core/OpenCageGeocoderService", function () {
 
     expect(service.credit).toBeInstanceOf(Credit);
     expect(service.credit.html).toEqual(
-      `Geodata copyright <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors`
+      `Geodata copyright <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors`,
     );
     expect(service.credit.showOnScreen).toBe(false);
   });

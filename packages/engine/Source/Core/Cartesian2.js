@@ -163,7 +163,7 @@ Cartesian2.packArray = function (array, result) {
   } else if (!Array.isArray(result) && result.length !== resultLength) {
     //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
-      "If result is a typed array, it must have exactly array.length * 2 elements"
+      "If result is a typed array, it must have exactly array.length * 2 elements",
     );
     //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
@@ -646,7 +646,7 @@ Cartesian2.angleBetween = function (left, right) {
   Cartesian2.normalize(left, angleBetweenScratch);
   Cartesian2.normalize(right, angleBetweenScratch2);
   return CesiumMath.acosClamped(
-    Cartesian2.dot(angleBetweenScratch, angleBetweenScratch2)
+    Cartesian2.dot(angleBetweenScratch, angleBetweenScratch2),
   );
 };
 
@@ -716,7 +716,7 @@ Cartesian2.equalsEpsilon = function (
   left,
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return (
     left === right ||
@@ -726,13 +726,13 @@ Cartesian2.equalsEpsilon = function (
         left.x,
         right.x,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.y,
         right.y,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ))
   );
 };
@@ -803,13 +803,13 @@ Cartesian2.prototype.equals = function (right) {
 Cartesian2.prototype.equalsEpsilon = function (
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return Cartesian2.equalsEpsilon(
     this,
     right,
     relativeEpsilon,
-    absoluteEpsilon
+    absoluteEpsilon,
   );
 };
 

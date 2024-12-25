@@ -37,7 +37,7 @@ describe(
     it("can create and destroy", function () {
       const viewModel = new Cesium3DTilesInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       expect(viewModel._scene).toBe(scene);
       expect(viewModel.isDestroyed()).toEqual(false);
@@ -61,7 +61,7 @@ describe(
       it("show properties", async function () {
         viewModel = new Cesium3DTilesInspectorViewModel(
           scene,
-          performanceContainer
+          performanceContainer,
         );
         const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
         viewModel.tileset = tileset;
@@ -77,7 +77,7 @@ describe(
       beforeAll(async function () {
         viewModel = new Cesium3DTilesInspectorViewModel(
           scene,
-          performanceContainer
+          performanceContainer,
         );
         const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
         viewModel.tileset = tileset;
@@ -167,22 +167,22 @@ describe(
       it("geometricErrorScale", function () {
         viewModel.geometricErrorScale = 1.0;
         expect(viewModel.tileset.pointCloudShading.geometricErrorScale).toBe(
-          1.0
+          1.0,
         );
         viewModel.geometricErrorScale = 0.0;
         expect(viewModel.tileset.pointCloudShading.geometricErrorScale).toBe(
-          0.0
+          0.0,
         );
       });
 
       it("maximumAttenuation", function () {
         viewModel.maximumAttenuation = 1.0;
         expect(viewModel.tileset.pointCloudShading.maximumAttenuation).toBe(
-          1.0
+          1.0,
         );
         viewModel.maximumAttenuation = 0.0;
         expect(
-          viewModel.tileset.pointCloudShading.maximumAttenuation
+          viewModel.tileset.pointCloudShading.maximumAttenuation,
         ).not.toBeDefined();
       });
 
@@ -191,7 +191,7 @@ describe(
         expect(viewModel.tileset.pointCloudShading.baseResolution).toBe(1.0);
         viewModel.baseResolution = 0.0;
         expect(
-          viewModel.tileset.pointCloudShading.baseResolution
+          viewModel.tileset.pointCloudShading.baseResolution,
         ).not.toBeDefined();
       });
 
@@ -205,22 +205,22 @@ describe(
       it("eyeDomeLightingStrength", function () {
         viewModel.eyeDomeLightingStrength = 1.0;
         expect(
-          viewModel.tileset.pointCloudShading.eyeDomeLightingStrength
+          viewModel.tileset.pointCloudShading.eyeDomeLightingStrength,
         ).toBe(1.0);
         viewModel.eyeDomeLightingStrength = 0.0;
         expect(
-          viewModel.tileset.pointCloudShading.eyeDomeLightingStrength
+          viewModel.tileset.pointCloudShading.eyeDomeLightingStrength,
         ).toBe(0.0);
       });
 
       it("eyeDomeLightingRadius", function () {
         viewModel.eyeDomeLightingRadius = 1.0;
         expect(viewModel.tileset.pointCloudShading.eyeDomeLightingRadius).toBe(
-          1.0
+          1.0,
         );
         viewModel.eyeDomeLightingRadius = 0.0;
         expect(viewModel.tileset.pointCloudShading.eyeDomeLightingRadius).toBe(
-          0.0
+          0.0,
         );
       });
     });
@@ -229,7 +229,7 @@ describe(
       beforeAll(async function () {
         viewModel = new Cesium3DTilesInspectorViewModel(
           scene,
-          performanceContainer
+          performanceContainer,
         );
         viewModel.tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
       });
@@ -269,12 +269,12 @@ describe(
 
         viewModel.dynamicScreenSpaceErrorDensitySliderValue = rawSliderValue;
         expect(
-          viewModel.dynamicScreenSpaceErrorDensitySliderValue
+          viewModel.dynamicScreenSpaceErrorDensitySliderValue,
         ).toEqualEpsilon(rawSliderValue, CesiumMath.EPSILON8);
 
         expect(viewModel.tileset.dynamicScreenSpaceErrorDensity).toEqualEpsilon(
           scaledValue,
-          CesiumMath.EPSILON8
+          CesiumMath.EPSILON8,
         );
       });
     });
@@ -302,7 +302,7 @@ describe(
 
         viewModel = new Cesium3DTilesInspectorViewModel(
           scene,
-          performanceContainer
+          performanceContainer,
         );
         viewModel.tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
       });
@@ -315,7 +315,7 @@ describe(
         viewModel.tileset.style = style;
         viewModel._update();
         expect(JSON.stringify(style.style)).toBe(
-          JSON.stringify(JSON.parse(viewModel.styleString))
+          JSON.stringify(JSON.parse(viewModel.styleString)),
         );
       });
 
@@ -336,7 +336,7 @@ describe(
         viewModel._update();
         expect(viewModel.tileset.style.style.color).toBe("color('red')");
         expect(viewModel.tileset.style.style.meta.description).toBe(
-          "'Building id ${id} has height ${Height}.'"
+          "'Building id ${id} has height ${Height}.'",
         );
       });
 
@@ -347,5 +347,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <!-- Use Chrome Frame in IE -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Isolate elements of an architectural design model by the category."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+
+      #toolbar .cesium-button {
+        display: block;
+        width: 100%;
+        text-align: left;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        // A demo showing how to isolate elements in an architectural design by CategoryID
+        // Snowdon Towers sample data courtesy of Autodesk Revit.
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          globe: false,
+        });
+
+        // Enable rendering the sky
+        viewer.scene.skyAtmosphere.show = true;
+
+        // Configure Ambient Occlusion
+        if (Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
+          const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
+          ambientOcclusion.enabled = true;
+          ambientOcclusion.uniforms.intensity = 2.0;
+          ambientOcclusion.uniforms.bias = 0.1;
+          ambientOcclusion.uniforms.lengthCap = 0.5;
+          ambientOcclusion.uniforms.directionCount = 16;
+          ambientOcclusion.uniforms.stepCount = 32;
+        }
+
+        // Set to 1 PM Philadelphia time in UTC
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2024-11-22T18:00:00Z");
+
+        // Set the initial camera view
+        viewer.camera.setView({
+          destination: Cesium.Cartesian3.fromDegrees(-79.886626, 40.021649, 235.65),
+          orientation: {
+            heading: 0,
+            pitch: Cesium.Math.toRadians(-20),
+            roll: 0,
+          },
+        });
+
+        // Add Photorealistic 3D tiles
+        let googleTileset;
+        try {
+          googleTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207);
+          viewer.scene.primitives.add(googleTileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
+
+        // Add clipping for the site
+        const positions = Cesium.Cartesian3.fromDegreesArray([
+          -79.887735, 40.022564, -79.886341, 40.023087, -79.886161, 40.023087, -79.885493,
+          40.022032, -79.88703, 40.021456, -79.887735, 40.022564,
+        ]);
+
+        const polygon = new Cesium.ClippingPolygon({
+          positions: positions,
+        });
+
+        const polygons = new Cesium.ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        googleTileset.clippingPolygons = polygons;
+
+        // Add the architectural tileset
+        let archTileset;
+        try {
+          archTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123);
+          viewer.scene.primitives.add(archTileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
+
+        // Add the site tileset
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887129);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
+
+        // Functions to control styling
+        function showAll() {
+          archTileset.style = new Cesium.Cesium3DTileStyle();
+        }
+
+        function showByCategory(category) {
+          archTileset.style = new Cesium.Cesium3DTileStyle({
+            show: `\${feature['category']} === '${category}'`,
+          });
+        }
+
+        // Add UI buttons to isolate by category
+        Sandcastle.addToolbarButton("Show All", function () {
+          showAll();
+        });
+
+        Sandcastle.addToolbarButton("Isolate Walls", function () {
+          showByCategory(-2000011);
+        });
+
+        Sandcastle.addToolbarButton("Isolate Floors", function () {
+          showByCategory(-2000032);
+        });
+
+        Sandcastle.addToolbarButton("Isolate Stairs", function () {
+          showByCategory(-2000120);
+        });
+
+        Sandcastle.addToolbarButton("Isolate Doors", function () {
+          showByCategory(-2000023);
+        });
+
+        Sandcastle.addToolbarButton("Isolate Lighting", function () {
+          showByCategory(-2001120);
+        });
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

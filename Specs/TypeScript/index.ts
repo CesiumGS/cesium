@@ -184,7 +184,7 @@ property = positionProperty = new TimeIntervalCollectionPositionProperty();
 property = positionProperty = new ReferenceProperty(
   new EntityCollection(),
   "object1",
-  ["billboard", "scale"]
+  ["billboard", "scale"],
 );
 
 // Verify MaterialProperty instances conform to the expected MaterialProperty and Property interfaces

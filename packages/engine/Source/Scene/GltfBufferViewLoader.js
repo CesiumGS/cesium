@@ -139,7 +139,7 @@ async function loadResources(loader) {
     const bufferViewTypedArray = new Uint8Array(
       bufferTypedArray.buffer,
       bufferTypedArray.byteOffset + loader._byteOffset,
-      loader._byteLength
+      loader._byteLength,
     );
 
     // Unload the buffer
@@ -156,7 +156,7 @@ async function loadResources(loader) {
         byteStride,
         loader._typedArray,
         loader._meshoptMode,
-        loader._meshoptFilter
+        loader._meshoptFilter,
       );
       loader._typedArray = result;
     }

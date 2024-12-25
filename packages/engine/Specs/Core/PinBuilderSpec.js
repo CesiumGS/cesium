@@ -35,8 +35,8 @@ describe("Core/PinBuilder", function () {
       builder.fromUrl(
         buildModuleUrl("Assets/Textures/maki/square.png"),
         Color.RED,
-        128
-      )
+        128,
+      ),
     ).then(function (canvas) {
       expect(getPinColor(canvas)).toEqual(Color.RED);
       expect(getIconColor(canvas)).toEqual(Color.WHITE);
@@ -48,7 +48,7 @@ describe("Core/PinBuilder", function () {
 
     //Solid square icon
     return Promise.resolve(
-      builder.fromMakiIconId("square", Color.YELLOW, 128)
+      builder.fromMakiIconId("square", Color.YELLOW, 128),
     ).then(function (canvas) {
       expect(getPinColor(canvas)).toEqual(Color.YELLOW);
       expect(getIconColor(canvas)).toEqual(Color.WHITE);

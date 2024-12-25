@@ -52,7 +52,7 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
       r0 + i * redPerVertex,
       g0 + i * greenPerVertex,
       b0 + i * bluePerVertex,
-      a0 + i * alphaPerVertex
+      a0 + i * alphaPerVertex,
     );
   }
 
@@ -125,16 +125,16 @@ function PolylineGeometry(options) {
   this._width = width;
   this._colorsPerVertex = colorsPerVertex;
   this._vertexFormat = VertexFormat.clone(
-    defaultValue(options.vertexFormat, VertexFormat.DEFAULT)
+    defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
   );
 
   this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
   this._granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default)
+    defaultValue(options.ellipsoid, Ellipsoid.default),
   );
   this._workerName = "createPolylineGeometry";
 
@@ -254,7 +254,7 @@ PolylineGeometry.unpack = function (array, startingIndex, result) {
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
 
@@ -314,7 +314,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
     polylineGeometry._positions,
     Cartesian3.equalsEpsilon,
     false,
-    removedIndices
+    removedIndices,
   );
 
   if (defined(colors) && removedIndices.length > 0) {
@@ -352,7 +352,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
     if (arcType === ArcType.GEODESIC) {
       subdivisionSize = CesiumMath.chordLength(
         granularity,
-        ellipsoid.maximumRadius
+        ellipsoid.maximumRadius,
       );
       numberOfPointsFunction = PolylinePipeline.numberOfPoints;
     } else {
@@ -368,7 +368,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
         colorLength += numberOfPointsFunction(
           positions[i],
           positions[i + 1],
-          subdivisionSize
+          subdivisionSize,
         );
       }
 
@@ -388,7 +388,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
             p1,
             c0,
             c1,
-            numColors
+            numColors,
           );
           const interpolatedColorsLength = interpolatedColors.length;
           for (j = 0; j < interpolatedColorsLength; ++j) {
@@ -457,7 +457,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
       Cartesian3.subtract(
         positions[positionsLength - 1],
         positions[positionsLength - 2],
-        position
+        position,
       );
       Cartesian3.add(positions[positionsLength - 1], position, position);
     } else {

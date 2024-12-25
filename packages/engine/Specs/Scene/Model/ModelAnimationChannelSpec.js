@@ -128,7 +128,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.TRANSLATION
+      AnimatedPropertyType.TRANSLATION,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -154,7 +154,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.TRANSLATION
+      AnimatedPropertyType.TRANSLATION,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -180,7 +180,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.ROTATION
+      AnimatedPropertyType.ROTATION,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -206,7 +206,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.SCALE
+      AnimatedPropertyType.SCALE,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -247,7 +247,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.TRANSLATION
+      AnimatedPropertyType.TRANSLATION,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -285,7 +285,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.WEIGHTS
+      AnimatedPropertyType.WEIGHTS,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -324,7 +324,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.WEIGHTS
+      AnimatedPropertyType.WEIGHTS,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -361,7 +361,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.TRANSLATION
+      AnimatedPropertyType.TRANSLATION,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -379,7 +379,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     runtimeChannel.animate(time);
     expect(runtimeNode.translation).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
-      Matrix4.fromTranslation(expected, scratchTransform)
+      Matrix4.fromTranslation(expected, scratchTransform),
     );
 
     time = (times[1] + times[2]) / 2.0;
@@ -387,13 +387,13 @@ describe("Scene/Model/ModelAnimationChannel", function () {
       translationPoints[1],
       translationPoints[2],
       0.5,
-      expected
+      expected,
     );
 
     runtimeChannel.animate(time);
     expect(runtimeNode.translation).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
-      Matrix4.fromTranslation(expected, scratchTransform)
+      Matrix4.fromTranslation(expected, scratchTransform),
     );
   });
 
@@ -407,7 +407,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.ROTATION
+      AnimatedPropertyType.ROTATION,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -428,8 +428,8 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     expect(
       runtimeNode.transform.equalsEpsilon(
         Matrix4.fromRotation(expectedMatrix, scratchTransform),
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toBe(true);
 
     time = (times[1] + times[2]) / 2.0;
@@ -437,19 +437,19 @@ describe("Scene/Model/ModelAnimationChannel", function () {
       rotationPoints[1],
       rotationPoints[2],
       0.5,
-      expected
+      expected,
     );
     expectedMatrix = Matrix3.fromQuaternion(expected, expectedMatrix);
 
     runtimeChannel.animate(time);
     expect(
-      runtimeNode.rotation.equalsEpsilon(expected, CesiumMath.EPSILON6)
+      runtimeNode.rotation.equalsEpsilon(expected, CesiumMath.EPSILON6),
     ).toEqual(true);
     expect(
       runtimeNode.transform.equalsEpsilon(
         Matrix4.fromRotation(expectedMatrix, scratchTransform),
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     );
   });
 
@@ -463,7 +463,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.SCALE
+      AnimatedPropertyType.SCALE,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -482,7 +482,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     runtimeChannel.animate(time);
     expect(runtimeNode.scale).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
-      Matrix4.fromScale(expected, scratchTransform)
+      Matrix4.fromScale(expected, scratchTransform),
     );
 
     time = (times[1] + times[2]) / 2.0;
@@ -491,7 +491,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     runtimeChannel.animate(time);
     expect(runtimeNode.scale).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
-      Matrix4.fromScale(expected, scratchTransform)
+      Matrix4.fromScale(expected, scratchTransform),
     );
   });
 
@@ -507,7 +507,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.WEIGHTS
+      AnimatedPropertyType.WEIGHTS,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -543,7 +543,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.TRANSLATION
+      AnimatedPropertyType.TRANSLATION,
     );
 
     const runtimeChannel = new ModelAnimationChannel({
@@ -561,7 +561,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     runtimeChannel.animate(time);
     expect(runtimeNode.translation).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
-      Matrix4.fromTranslation(expected, scratchTransform)
+      Matrix4.fromTranslation(expected, scratchTransform),
     );
 
     time = -10.0;
@@ -570,7 +570,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     runtimeChannel.animate(time);
     expect(runtimeNode.translation).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
-      Matrix4.fromTranslation(expected, scratchTransform)
+      Matrix4.fromTranslation(expected, scratchTransform),
     );
   });
 
@@ -584,7 +584,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.TRANSLATION
+      AnimatedPropertyType.TRANSLATION,
     );
 
     const wrappedRuntimeAnimation = {
@@ -608,7 +608,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     runtimeChannel.animate(time);
     expect(runtimeNode.translation).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
-      Matrix4.fromTranslation(expected, scratchTransform)
+      Matrix4.fromTranslation(expected, scratchTransform),
     );
 
     time = -0.5;
@@ -617,7 +617,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     runtimeChannel.animate(time);
     expect(runtimeNode.translation).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
-      Matrix4.fromTranslation(expected, scratchTransform)
+      Matrix4.fromTranslation(expected, scratchTransform),
     );
   });
 
@@ -631,7 +631,7 @@ describe("Scene/Model/ModelAnimationChannel", function () {
     const mockChannel = createMockChannel(
       mockNode,
       mockSampler,
-      AnimatedPropertyType.TRANSLATION
+      AnimatedPropertyType.TRANSLATION,
     );
 
     const runtimeChannel = new ModelAnimationChannel({

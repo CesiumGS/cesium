@@ -432,7 +432,7 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
       tileBoundariesLayer = scene.imageryLayers.addImageryProvider(
         new TileCoordinatesImageryProvider({
           tilingScheme: scene.terrainProvider.tilingScheme,
-        })
+        }),
       );
     } else if (!that.tileCoordinates && defined(tileBoundariesLayer)) {
       scene.imageryLayers.remove(tileBoundariesLayer);
@@ -512,7 +512,7 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
       if (val) {
         eventHandler.setInputAction(
           pickPrimitive,
-          ScreenSpaceEventType.LEFT_CLICK
+          ScreenSpaceEventType.LEFT_CLICK,
         );
       } else {
         eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
@@ -568,7 +568,7 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
       if (val) {
         eventHandler.setInputAction(
           selectTile,
-          ScreenSpaceEventType.LEFT_CLICK
+          ScreenSpaceEventType.LEFT_CLICK,
         );
       } else {
         eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
@@ -925,7 +925,7 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
 CesiumInspectorViewModel.prototype._update = function () {
   if (this.frustums) {
     this.frustumStatisticText = frustumStatisticsToString(
-      this._scene.debugFrustumStatistics
+      this._scene.debugFrustumStatistics,
     );
   }
 

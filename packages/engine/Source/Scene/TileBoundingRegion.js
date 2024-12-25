@@ -145,11 +145,11 @@ TileBoundingRegion.prototype.computeBoundingVolumes = function (ellipsoid) {
     this.rectangle,
     this.minimumHeight,
     this.maximumHeight,
-    ellipsoid
+    ellipsoid,
   );
 
   this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-    this._orientedBoundingBox
+    this._orientedBoundingBox,
   );
 };
 
@@ -167,11 +167,11 @@ const rayScratch = new Ray();
 function computeBox(tileBB, rectangle, ellipsoid) {
   ellipsoid.cartographicToCartesian(
     Rectangle.southwest(rectangle),
-    tileBB.southwestCornerCartesian
+    tileBB.southwestCornerCartesian,
   );
   ellipsoid.cartographicToCartesian(
     Rectangle.northeast(rectangle),
-    tileBB.northeastCornerCartesian
+    tileBB.northeastCornerCartesian,
   );
 
   // The middle latitude on the western edge.
@@ -180,14 +180,14 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   cartographicScratch.height = 0.0;
   const westernMidpointCartesian = ellipsoid.cartographicToCartesian(
     cartographicScratch,
-    westernMidpointScratch
+    westernMidpointScratch,
   );
 
   // Compute the normal of the plane on the western edge of the tile.
   const westNormal = Cartesian3.cross(
     westernMidpointCartesian,
     Cartesian3.UNIT_Z,
-    westNormalScratch
+    westNormalScratch,
   );
   Cartesian3.normalize(westNormal, tileBB.westNormal);
 
@@ -195,21 +195,21 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   cartographicScratch.longitude = rectangle.east;
   const easternMidpointCartesian = ellipsoid.cartographicToCartesian(
     cartographicScratch,
-    easternMidpointScratch
+    easternMidpointScratch,
   );
 
   // Compute the normal of the plane on the eastern edge of the tile.
   const eastNormal = Cartesian3.cross(
     Cartesian3.UNIT_Z,
     easternMidpointCartesian,
-    cartesian3Scratch
+    cartesian3Scratch,
   );
   Cartesian3.normalize(eastNormal, tileBB.eastNormal);
 
   let westVector = Cartesian3.subtract(
     westernMidpointCartesian,
     easternMidpointCartesian,
-    cartesian3Scratch
+    cartesian3Scratch,
   );
 
   if (Cartesian3.magnitude(westVector) === 0.0) {
@@ -218,7 +218,7 @@ function computeBox(tileBB, rectangle, ellipsoid) {
 
   const eastWestNormal = Cartesian3.normalize(
     westVector,
-    eastWestNormalScratch
+    eastWestNormalScratch,
   );
 
   // Compute the normal of the plane bounding the southern edge of the tile.
@@ -231,34 +231,34 @@ function computeBox(tileBB, rectangle, ellipsoid) {
     cartographicScratch.latitude = south;
     const southCenterCartesian = ellipsoid.cartographicToCartesian(
       cartographicScratch,
-      rayScratch.origin
+      rayScratch.origin,
     );
     Cartesian3.clone(eastWestNormal, rayScratch.direction);
     const westPlane = Plane.fromPointNormal(
       tileBB.southwestCornerCartesian,
       tileBB.westNormal,
-      planeScratch
+      planeScratch,
     );
     // Find a point that is on the west and the south planes
     IntersectionTests.rayPlane(
       rayScratch,
       westPlane,
-      tileBB.southwestCornerCartesian
+      tileBB.southwestCornerCartesian,
     );
     southSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
       southCenterCartesian,
-      cartesian3Scratch2
+      cartesian3Scratch2,
     );
   } else {
     southSurfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(
       Rectangle.southeast(rectangle),
-      cartesian3Scratch2
+      cartesian3Scratch2,
     );
   }
   const southNormal = Cartesian3.cross(
     southSurfaceNormal,
     westVector,
-    cartesian3Scratch3
+    cartesian3Scratch3,
   );
   Cartesian3.normalize(southNormal, tileBB.southNormal);
 
@@ -272,34 +272,34 @@ function computeBox(tileBB, rectangle, ellipsoid) {
     cartographicScratch.latitude = north;
     const northCenterCartesian = ellipsoid.cartographicToCartesian(
       cartographicScratch,
-      rayScratch.origin
+      rayScratch.origin,
     );
     Cartesian3.negate(eastWestNormal, rayScratch.direction);
     const eastPlane = Plane.fromPointNormal(
       tileBB.northeastCornerCartesian,
       tileBB.eastNormal,
-      planeScratch
+      planeScratch,
     );
     // Find a point that is on the east and the north planes
     IntersectionTests.rayPlane(
       rayScratch,
       eastPlane,
-      tileBB.northeastCornerCartesian
+      tileBB.northeastCornerCartesian,
     );
     northSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
       northCenterCartesian,
-      cartesian3Scratch2
+      cartesian3Scratch2,
     );
   } else {
     northSurfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(
       Rectangle.northwest(rectangle),
-      cartesian3Scratch2
+      cartesian3Scratch2,
     );
   }
   const northNormal = Cartesian3.cross(
     westVector,
     northSurfaceNormal,
-    cartesian3Scratch3
+    cartesian3Scratch3,
   );
   Cartesian3.normalize(northNormal, tileBB.northNormal);
 }
@@ -327,14 +327,14 @@ function distanceToCameraRegion(tileBB, frameState) {
     if (frameState.mode !== SceneMode.SCENE3D) {
       southwestCornerCartesian = frameState.mapProjection.project(
         Rectangle.southwest(tileBB.rectangle),
-        southwestCornerScratch
+        southwestCornerScratch,
       );
       southwestCornerCartesian.z = southwestCornerCartesian.y;
       southwestCornerCartesian.y = southwestCornerCartesian.x;
       southwestCornerCartesian.x = 0.0;
       northeastCornerCartesian = frameState.mapProjection.project(
         Rectangle.northeast(tileBB.rectangle),
-        northeastCornerScratch
+        northeastCornerScratch,
       );
       northeastCornerCartesian.z = northeastCornerCartesian.y;
       northeastCornerCartesian.y = northeastCornerCartesian.x;
@@ -348,29 +348,29 @@ function distanceToCameraRegion(tileBB, frameState) {
     const vectorFromSouthwestCorner = Cartesian3.subtract(
       cameraCartesianPosition,
       southwestCornerCartesian,
-      vectorScratch
+      vectorScratch,
     );
     const distanceToWestPlane = Cartesian3.dot(
       vectorFromSouthwestCorner,
-      westNormal
+      westNormal,
     );
     const distanceToSouthPlane = Cartesian3.dot(
       vectorFromSouthwestCorner,
-      southNormal
+      southNormal,
     );
 
     const vectorFromNortheastCorner = Cartesian3.subtract(
       cameraCartesianPosition,
       northeastCornerCartesian,
-      vectorScratch
+      vectorScratch,
     );
     const distanceToEastPlane = Cartesian3.dot(
       vectorFromNortheastCorner,
-      eastNormal
+      eastNormal,
     );
     const distanceToNorthPlane = Cartesian3.dot(
       vectorFromNortheastCorner,
-      northNormal
+      northNormal,
     );
 
     if (distanceToWestPlane > 0.0) {
@@ -427,7 +427,7 @@ TileBoundingRegion.prototype.distanceToCamera = function (frameState) {
     defined(this._orientedBoundingBox)
   ) {
     const obbResult = Math.sqrt(
-      this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC)
+      this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC),
     );
     return Math.max(regionResult, obbResult);
   }

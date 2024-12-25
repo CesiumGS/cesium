@@ -67,7 +67,7 @@ WallGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -82,14 +82,14 @@ WallGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
-      this._fillProperty.getValue(time)
+      this._fillProperty.getValue(time),
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-    distanceDisplayCondition
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
+  const distanceDisplayConditionAttribute =
+    DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+      distanceDisplayCondition,
+    );
   if (this._materialProperty instanceof ColorMaterialProperty) {
     let currentColor;
     if (
@@ -135,7 +135,7 @@ WallGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
 
   if (!this._outlineEnabled) {
     throw new DeveloperError(
-      "This instance does not represent an outlined geometry."
+      "This instance does not represent an outlined geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -146,11 +146,10 @@ WallGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
     this._outlineColorProperty,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
 
   return new GeometryInstance({
     id: entity,
@@ -160,12 +159,13 @@ WallGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
         isAvailable &&
           entity.isShowing &&
           this._showProperty.getValue(time) &&
-          this._showOutlineProperty.getValue(time)
+          this._showOutlineProperty.getValue(time),
       ),
       color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-      distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-        distanceDisplayCondition
-      ),
+      distanceDisplayCondition:
+        DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+          distanceDisplayCondition,
+        ),
     },
   });
 };
@@ -204,7 +204,7 @@ WallGeometryUpdater.prototype._setStaticOptions = function (entity, wall) {
     : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
   options.positions = wall.positions.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.positions
+    options.positions,
   );
   options.minimumHeights = defined(minimumHeights)
     ? minimumHeights.getValue(Iso8601.MINIMUM_VALUE, options.minimumHeights)
@@ -225,19 +225,19 @@ WallGeometryUpdater.DynamicGeometryUpdater = DynamicWallGeometryUpdater;
 function DynamicWallGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 }
 
 if (defined(Object.create)) {
   DynamicWallGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
   DynamicWallGeometryUpdater.prototype.constructor = DynamicWallGeometryUpdater;
 }
@@ -252,23 +252,23 @@ DynamicWallGeometryUpdater.prototype._isHidden = function (entity, wall, time) {
 DynamicWallGeometryUpdater.prototype._setOptions = function (
   entity,
   wall,
-  time
+  time,
 ) {
   const options = this._options;
   options.positions = Property.getValueOrUndefined(
     wall.positions,
     time,
-    options.positions
+    options.positions,
   );
   options.minimumHeights = Property.getValueOrUndefined(
     wall.minimumHeights,
     time,
-    options.minimumHeights
+    options.minimumHeights,
   );
   options.maximumHeights = Property.getValueOrUndefined(
     wall.maximumHeights,
     time,
-    options.maximumHeights
+    options.maximumHeights,
   );
   options.granularity = Property.getValueOrUndefined(wall.granularity, time);
 };

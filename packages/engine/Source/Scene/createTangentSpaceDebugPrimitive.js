@@ -48,7 +48,7 @@ function createTangentSpaceDebugPrimitive(options) {
 
   const attributes = geometry.attributes;
   const modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   const length = defaultValue(options.length, 10000.0);
 
@@ -58,13 +58,13 @@ function createTangentSpaceDebugPrimitive(options) {
         geometry: GeometryPipeline.createLineSegmentsForVectors(
           geometry,
           "normal",
-          length
+          length,
         ),
         attributes: {
           color: new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0),
         },
         modelMatrix: modelMatrix,
-      })
+      }),
     );
   }
 
@@ -74,13 +74,13 @@ function createTangentSpaceDebugPrimitive(options) {
         geometry: GeometryPipeline.createLineSegmentsForVectors(
           geometry,
           "tangent",
-          length
+          length,
         ),
         attributes: {
           color: new ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0),
         },
         modelMatrix: modelMatrix,
-      })
+      }),
     );
   }
 
@@ -90,13 +90,13 @@ function createTangentSpaceDebugPrimitive(options) {
         geometry: GeometryPipeline.createLineSegmentsForVectors(
           geometry,
           "bitangent",
-          length
+          length,
         ),
         attributes: {
           color: new ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 1.0),
         },
         modelMatrix: modelMatrix,
-      })
+      }),
     );
   }
 

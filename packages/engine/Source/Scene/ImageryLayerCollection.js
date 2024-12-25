@@ -97,7 +97,7 @@ ImageryLayerCollection.prototype.add = function (layer, index) {
       throw new DeveloperError("index must be greater than or equal to zero.");
     } else if (index > this._layers.length) {
       throw new DeveloperError(
-        "index must be less than or equal to the number of layers."
+        "index must be less than or equal to the number of layers.",
       );
     }
   }
@@ -136,7 +136,7 @@ ImageryLayerCollection.prototype.add = function (layer, index) {
  */
 ImageryLayerCollection.prototype.addImageryProvider = function (
   imageryProvider,
-  index
+  index,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(imageryProvider)) {
@@ -393,22 +393,22 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
     applicableRectangle.west = CesiumMath.lerp(
       pickedTile.rectangle.west,
       pickedTile.rectangle.east,
-      terrainImagery.textureCoordinateRectangle.x - epsilon
+      terrainImagery.textureCoordinateRectangle.x - epsilon,
     );
     applicableRectangle.east = CesiumMath.lerp(
       pickedTile.rectangle.west,
       pickedTile.rectangle.east,
-      terrainImagery.textureCoordinateRectangle.z + epsilon
+      terrainImagery.textureCoordinateRectangle.z + epsilon,
     );
     applicableRectangle.south = CesiumMath.lerp(
       pickedTile.rectangle.south,
       pickedTile.rectangle.north,
-      terrainImagery.textureCoordinateRectangle.y - epsilon
+      terrainImagery.textureCoordinateRectangle.y - epsilon,
     );
     applicableRectangle.north = CesiumMath.lerp(
       pickedTile.rectangle.south,
       pickedTile.rectangle.north,
-      terrainImagery.textureCoordinateRectangle.w + epsilon
+      terrainImagery.textureCoordinateRectangle.w + epsilon,
     );
     if (!Rectangle.contains(applicableRectangle, pickedLocation)) {
       continue;
@@ -436,9 +436,8 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
     return;
   }
 
-  const pickedLocation = scene.ellipsoid.cartesianToCartographic(
-    pickedPosition
-  );
+  const pickedLocation =
+    scene.ellipsoid.cartesianToCartographic(pickedPosition);
 
   const imageryLayers = [];
 
@@ -483,7 +482,7 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
  */
 ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   ray,
-  scene
+  scene,
 ) {
   // Find the picked location on the globe.
   const pickedPosition = scene.globe.pick(ray, scene);
@@ -491,9 +490,8 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
     return;
   }
 
-  const pickedLocation = scene.ellipsoid.cartesianToCartographic(
-    pickedPosition
-  );
+  const pickedLocation =
+    scene.ellipsoid.cartesianToCartographic(pickedPosition);
 
   const promises = [];
   const imageryLayers = [];
@@ -508,7 +506,7 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
       imagery.y,
       imagery.level,
       pickedLocation.longitude,
-      pickedLocation.latitude
+      pickedLocation.latitude,
     );
     if (defined(promise)) {
       promises.push(promise);
@@ -552,7 +550,7 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
  * @param {FrameState} frameState The frameState.
  */
 ImageryLayerCollection.prototype.queueReprojectionCommands = function (
-  frameState
+  frameState,
 ) {
   const layers = this._layers;
   for (let i = 0, len = layers.length; i < len; ++i) {

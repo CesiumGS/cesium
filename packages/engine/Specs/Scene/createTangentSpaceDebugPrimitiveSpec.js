@@ -16,7 +16,7 @@ describe("Scene/createTangentSpaceDebugPrimitive", function () {
     const modelMatrix = Matrix4.multiplyByTranslation(
       Matrix4.IDENTITY,
       new Cartesian3(0.0, 0.0, 11000000.0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     const primitive = createTangentSpaceDebugPrimitive({

@@ -25,7 +25,7 @@ describe("Scene/KeyframeNode", function () {
     keyframeNode2.priority = 2;
     const comparison = KeyframeNode.priorityComparator(
       keyframeNode1,
-      keyframeNode2
+      keyframeNode2,
     );
     expect(comparison).toBe(-1);
   });
@@ -37,7 +37,7 @@ describe("Scene/KeyframeNode", function () {
     const keyframeNode2 = new KeyframeNode(dummySpatialNode, keyframe2);
     const comparison = KeyframeNode.searchComparator(
       keyframeNode1,
-      keyframeNode2
+      keyframeNode2,
     );
     expect(comparison).toBe(6);
   });

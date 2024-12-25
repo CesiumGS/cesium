@@ -37,7 +37,7 @@ function createEvaluateFunction(spline) {
     }
     const i = (spline._lastTimeIndex = spline.findTimeInterval(
       time,
-      spline._lastTimeIndex
+      spline._lastTimeIndex,
     ));
     const u = (time - times[i]) / (times[i + 1] - times[i]);
 
@@ -64,7 +64,7 @@ function createEvaluateFunction(spline) {
       coefs = Matrix4.multiplyByVector(
         HermiteSpline.hermiteCoefficientMatrix,
         timeVec,
-        timeVec
+        timeVec,
       );
     } else if (i === points.length - 2) {
       p0 = points[i];
@@ -77,7 +77,7 @@ function createEvaluateFunction(spline) {
       coefs = Matrix4.multiplyByVector(
         HermiteSpline.hermiteCoefficientMatrix,
         timeVec,
-        timeVec
+        timeVec,
       );
     } else {
       p0 = points[i - 1];
@@ -87,7 +87,7 @@ function createEvaluateFunction(spline) {
       coefs = Matrix4.multiplyByVector(
         CatmullRomSpline.catmullRomCoefficientMatrix,
         timeVec,
-        timeVec
+        timeVec,
       );
     }
     result = Cartesian3.multiplyByScalar(p0, coefs.x, result);
@@ -163,7 +163,7 @@ function CatmullRomSpline(options) {
     "times.length",
     "points.length",
     times.length,
-    points.length
+    points.length,
   );
   //>>includeEnd('debug');
 
@@ -272,7 +272,7 @@ CatmullRomSpline.catmullRomCoefficientMatrix = new Matrix4(
   0.5,
   -0.5,
   0.0,
-  0.0
+  0.0,
 );
 
 /**

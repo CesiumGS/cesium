@@ -135,7 +135,7 @@ function PolylineCollection(options) {
    * @default {@link Matrix4.IDENTITY}
    */
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
@@ -151,7 +151,7 @@ function PolylineCollection(options) {
    */
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
 
   this._opaqueRS = undefined;
@@ -402,7 +402,7 @@ function createBatchTable(collection, context) {
   collection._batchTable = new BatchTable(
     context,
     attributes,
-    collection._polylines.length
+    collection._polylines.length,
   );
 }
 
@@ -437,7 +437,7 @@ PolylineCollection.prototype.update = function (frameState) {
   if (this._createBatchTable) {
     if (ContextLimits.maximumVertexTextureImageUnits === 0) {
       throw new RuntimeError(
-        "Vertex texture fetch support is required to render polylines. The maximum number of vertex texture image units must be greater than zero."
+        "Vertex texture fetch support is required to render polylines. The maximum number of vertex texture image units must be greater than zero.",
       );
     }
     createBatchTable(this, context);
@@ -477,7 +477,7 @@ PolylineCollection.prototype.update = function (frameState) {
                   index,
                   polyline,
                   this._positionBuffer,
-                  projection
+                  projection,
                 );
               }
               break;
@@ -490,7 +490,7 @@ PolylineCollection.prototype.update = function (frameState) {
           this._batchTable.setBatchedAttribute(
             polyline._index,
             0,
-            new Cartesian2(polyline._width, polyline._show)
+            new Cartesian2(polyline._width, polyline._show),
           );
         }
 
@@ -502,19 +502,19 @@ PolylineCollection.prototype.update = function (frameState) {
                 : polyline._boundingVolumeWC;
             const encodedCenter = EncodedCartesian3.fromCartesian(
               boundingSphere.center,
-              scratchUpdatePolylineEncodedCartesian
+              scratchUpdatePolylineEncodedCartesian,
             );
             const low = Cartesian4.fromElements(
               encodedCenter.low.x,
               encodedCenter.low.y,
               encodedCenter.low.z,
               boundingSphere.radius,
-              scratchUpdatePolylineCartesian4
+              scratchUpdatePolylineCartesian4,
             );
             this._batchTable.setBatchedAttribute(
               polyline._index,
               2,
-              encodedCenter.high
+              encodedCenter.high,
             );
             this._batchTable.setBatchedAttribute(polyline._index, 3, low);
           }
@@ -533,7 +533,7 @@ PolylineCollection.prototype.update = function (frameState) {
             this._batchTable.setBatchedAttribute(
               polyline._index,
               4,
-              nearFarCartesian
+              nearFarCartesian,
             );
           }
         }
@@ -598,7 +598,7 @@ function createCommandLists(
   polylineCollection,
   frameState,
   commands,
-  modelMatrix
+  modelMatrix,
 ) {
   const context = frameState.context;
   const commandList = frameState.commandList;
@@ -653,12 +653,12 @@ function createCommandLists(
 
             uniformMap = combine(
               uniformCallback(currentMaterial._uniforms),
-              polylineCollection._uniformMap
+              polylineCollection._uniformMap,
             );
 
             command.boundingVolume = BoundingSphere.clone(
               boundingSphereScratch,
-              command.boundingVolume
+              command.boundingVolume,
             );
             command.modelMatrix = modelMatrix;
             command.shaderProgram = sp;
@@ -704,7 +704,7 @@ function createCommandLists(
           if (defined(polyline._boundingVolume2D)) {
             boundingVolume = BoundingSphere.clone(
               polyline._boundingVolume2D,
-              boundingSphereScratch2
+              boundingSphereScratch2,
             );
             boundingVolume.center.x = 0.0;
           }
@@ -715,7 +715,7 @@ function createCommandLists(
           boundingVolume = BoundingSphere.union(
             polyline._boundingVolumeWC,
             polyline._boundingVolume2D,
-            boundingSphereScratch2
+            boundingSphereScratch2,
           );
         }
 
@@ -726,7 +726,7 @@ function createCommandLists(
           BoundingSphere.union(
             boundingVolume,
             boundingSphereScratch,
-            boundingSphereScratch
+            boundingSphereScratch,
           );
         }
       }
@@ -745,12 +745,12 @@ function createCommandLists(
 
         uniformMap = combine(
           uniformCallback(currentMaterial._uniforms),
-          polylineCollection._uniformMap
+          polylineCollection._uniformMap,
         );
 
         command.boundingVolume = BoundingSphere.clone(
           boundingSphereScratch,
-          command.boundingVolume
+          command.boundingVolume,
         );
         command.modelMatrix = modelMatrix;
         command.shaderProgram = sp;
@@ -897,7 +897,7 @@ function createVertexArrays(collection, context, projection) {
           texCoordExpandAndBatchIndexIndex,
           batchTable,
           context,
-          projection
+          projection,
         );
 
         if (mode === SceneMode.MORPHING) {
@@ -915,7 +915,7 @@ function createVertexArrays(collection, context, projection) {
           totalIndices,
           vertexBufferOffset,
           vertexArrayBuckets,
-          offset
+          offset,
         );
       }
     }
@@ -1168,7 +1168,7 @@ function sortPolylinesIntoBuckets(collection) {
         value = polylineBuckets[material.type] = new PolylineBucket(
           material,
           mode,
-          modelMatrix
+          modelMatrix,
         );
       }
       value.addPolyline(p);
@@ -1236,7 +1236,7 @@ function destroyVertexArrays(collection) {
 
 PolylineCollection.prototype._updatePolyline = function (
   polyline,
-  propertyChanged
+  propertyChanged,
 ) {
   this._polylinesUpdated = true;
   if (!polyline._dirty) {
@@ -1281,7 +1281,7 @@ PolylineBucket.prototype.addPolyline = function (p) {
 PolylineBucket.prototype.updateShader = function (
   context,
   batchTable,
-  useHighlightColor
+  useHighlightColor,
 ) {
   if (defined(this.shaderProgram)) {
     return;
@@ -1362,7 +1362,7 @@ PolylineBucket.prototype.write = function (
   texCoordExpandAndBatchIndexIndex,
   batchTable,
   context,
-  projection
+  projection,
 ) {
   const mode = this.mode;
   const maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
@@ -1409,7 +1409,7 @@ PolylineBucket.prototype.write = function (
           Cartesian3.subtract(
             positions[positionsLength - 1],
             positions[positionsLength - 2],
-            position
+            position,
           );
           Cartesian3.add(positions[positionsLength - 1], position, position);
         }
@@ -1464,17 +1464,17 @@ PolylineBucket.prototype.write = function (
         EncodedCartesian3.writeElements(
           scratchWritePosition,
           positionArray,
-          positionIndex
+          positionIndex,
         );
         EncodedCartesian3.writeElements(
           scratchWritePrevPosition,
           positionArray,
-          positionIndex + 6
+          positionIndex + 6,
         );
         EncodedCartesian3.writeElements(
           scratchWriteNextPosition,
           positionArray,
-          positionIndex + 12
+          positionIndex + 12,
         );
 
         const direction = k - 2 < 0 ? -1.0 : 1.0;
@@ -1482,12 +1482,10 @@ PolylineBucket.prototype.write = function (
           j / (positionsLength - 1); // s tex coord
         texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 1] =
           2 * (k % 2) - 1; // expand direction
-        texCoordExpandAndBatchIndexArray[
-          texCoordExpandAndBatchIndexIndex + 2
-        ] = direction;
-        texCoordExpandAndBatchIndexArray[
-          texCoordExpandAndBatchIndexIndex + 3
-        ] = polylineBatchIndex;
+        texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 2] =
+          direction;
+        texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 3] =
+          polylineBatchIndex;
 
         positionIndex += 6 * 3;
         texCoordExpandAndBatchIndexIndex += 4;
@@ -1510,7 +1508,7 @@ PolylineBucket.prototype.write = function (
         : polyline._boundingVolumeWC;
     const encodedCenter = EncodedCartesian3.fromCartesian(
       boundingSphere.center,
-      scratchUpdatePolylineEncodedCartesian
+      scratchUpdatePolylineEncodedCartesian,
     );
     const high = encodedCenter.high;
     const low = Cartesian4.fromElements(
@@ -1518,7 +1516,7 @@ PolylineBucket.prototype.write = function (
       encodedCenter.low.y,
       encodedCenter.low.z,
       boundingSphere.radius,
-      scratchUpdatePolylineCartesian4
+      scratchUpdatePolylineCartesian4,
     );
 
     const nearFarCartesian = scratchNearFarCartesian2;
@@ -1549,7 +1547,7 @@ const morphVectorScratch = new Cartesian3();
 
 PolylineBucket.prototype.writeForMorph = function (
   positionArray,
-  positionIndex
+  positionIndex,
 ) {
   const modelMatrix = this.modelMatrix;
   const polylines = this.polylines;
@@ -1580,13 +1578,13 @@ PolylineBucket.prototype.writeForMorph = function (
       prevPosition = Matrix4.multiplyByPoint(
         modelMatrix,
         prevPosition,
-        morphPrevPositionScratch
+        morphPrevPositionScratch,
       );
 
       const position = Matrix4.multiplyByPoint(
         modelMatrix,
         positions[j],
-        morphPositionScratch
+        morphPositionScratch,
       );
 
       let nextPosition;
@@ -1598,12 +1596,12 @@ PolylineBucket.prototype.writeForMorph = function (
           Cartesian3.subtract(
             positions[positionsLength - 1],
             positions[positionsLength - 2],
-            nextPosition
+            nextPosition,
           );
           Cartesian3.add(
             positions[positionsLength - 1],
             nextPosition,
-            nextPosition
+            nextPosition,
           );
         }
       } else {
@@ -1613,7 +1611,7 @@ PolylineBucket.prototype.writeForMorph = function (
       nextPosition = Matrix4.multiplyByPoint(
         modelMatrix,
         nextPosition,
-        morphNextPositionScratch
+        morphNextPositionScratch,
       );
 
       const segmentLength = lengths[segmentIndex];
@@ -1633,12 +1631,12 @@ PolylineBucket.prototype.writeForMorph = function (
         EncodedCartesian3.writeElements(
           prevPosition,
           positionArray,
-          positionIndex + 6
+          positionIndex + 6,
         );
         EncodedCartesian3.writeElements(
           nextPosition,
           positionArray,
-          positionIndex + 12
+          positionIndex + 12,
         );
 
         positionIndex += 6 * 3;
@@ -1653,7 +1651,7 @@ PolylineBucket.prototype.updateIndices = function (
   totalIndices,
   vertexBufferOffset,
   vertexArrayBuckets,
-  offset
+  offset,
 ) {
   let vaCount = vertexArrayBuckets.length - 1;
   let bucketLocator = new VertexArrayBucketLocator(0, offset, this);
@@ -1787,21 +1785,21 @@ PolylineBucket.prototype.getSegments = function (polyline, projection) {
     p = Matrix4.multiplyByPoint(modelMatrix, position, p);
     newPositions.push(
       projection.project(
-        ellipsoid.cartesianToCartographic(p, scratchCartographic)
-      )
+        ellipsoid.cartesianToCartographic(p, scratchCartographic),
+      ),
     );
   }
 
   if (newPositions.length > 0) {
     polyline._boundingVolume2D = BoundingSphere.fromPoints(
       newPositions,
-      polyline._boundingVolume2D
+      polyline._boundingVolume2D,
     );
     const center2D = polyline._boundingVolume2D.center;
     polyline._boundingVolume2D.center = new Cartesian3(
       center2D.z,
       center2D.x,
-      center2D.y
+      center2D.y,
     );
   }
 
@@ -1816,7 +1814,7 @@ PolylineBucket.prototype.writeUpdate = function (
   index,
   polyline,
   positionBuffer,
-  projection
+  projection,
 ) {
   const mode = this.mode;
   const maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
@@ -1833,13 +1831,13 @@ PolylineBucket.prototype.writeUpdate = function (
       positionArray.length < positionsArrayLength
     ) {
       positionArray = scratchPositionsArray = new Float32Array(
-        positionsArrayLength
+        positionsArrayLength,
       );
     } else if (positionArray.length > positionsArrayLength) {
       positionArray = new Float32Array(
         positionArray.buffer,
         0,
-        positionsArrayLength
+        positionsArrayLength,
       );
     }
 
@@ -1877,7 +1875,7 @@ PolylineBucket.prototype.writeUpdate = function (
           Cartesian3.subtract(
             positions[positionsLength - 1],
             positions[positionsLength - 2],
-            position
+            position,
           );
           Cartesian3.add(positions[positionsLength - 1], position, position);
         }
@@ -1932,17 +1930,17 @@ PolylineBucket.prototype.writeUpdate = function (
         EncodedCartesian3.writeElements(
           scratchWritePosition,
           positionArray,
-          positionIndex
+          positionIndex,
         );
         EncodedCartesian3.writeElements(
           scratchWritePrevPosition,
           positionArray,
-          positionIndex + 6
+          positionIndex + 6,
         );
         EncodedCartesian3.writeElements(
           scratchWriteNextPosition,
           positionArray,
-          positionIndex + 12
+          positionIndex + 12,
         );
         positionIndex += 6 * 3;
       }
@@ -1950,7 +1948,7 @@ PolylineBucket.prototype.writeUpdate = function (
 
     positionBuffer.copyFromArrayView(
       positionArray,
-      6 * 3 * Float32Array.BYTES_PER_ELEMENT * index
+      6 * 3 * Float32Array.BYTES_PER_ELEMENT * index,
     );
   }
 };

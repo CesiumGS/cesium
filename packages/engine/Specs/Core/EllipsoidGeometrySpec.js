@@ -47,7 +47,7 @@ describe("Core/EllipsoidGeometry", function () {
         vertexFormat: VertexFormat.POSITION_ONLY,
         slicePartitions: 3,
         stackPartitions: 3,
-      })
+      }),
     );
 
     // The vertices are 6x6 because an additional slice and stack are added
@@ -66,7 +66,7 @@ describe("Core/EllipsoidGeometry", function () {
         slicePartitions: 3,
         stackPartitions: 3,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
 
     const numVertices = 36;
@@ -84,7 +84,7 @@ describe("Core/EllipsoidGeometry", function () {
         vertexFormat: VertexFormat.ALL,
         slicePartitions: 3,
         stackPartitions: 3,
-      })
+      }),
     );
 
     const numVertices = 36;
@@ -103,7 +103,7 @@ describe("Core/EllipsoidGeometry", function () {
         vertexFormat: VertexFormat.ALL,
         slicePartitions: 3,
         stackPartitions: 3,
-      })
+      }),
     );
 
     const positions = m.attributes.position.values;
@@ -119,16 +119,16 @@ describe("Core/EllipsoidGeometry", function () {
 
       expect(Cartesian3.magnitude(position)).toEqualEpsilon(
         1.0,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(normal).toEqualEpsilon(
         Cartesian3.normalize(position, new Cartesian3()),
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
       expect(Cartesian3.dot(Cartesian3.UNIT_Z, tangent)).not.toBeLessThan(0.0);
       expect(bitangent).toEqualEpsilon(
         Cartesian3.cross(normal, tangent, new Cartesian3()),
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     }
   });
@@ -140,7 +140,7 @@ describe("Core/EllipsoidGeometry", function () {
         slicePartitions: 3,
         stackPartitions: 3,
         innerRadii: new Cartesian3(0.5, 0.5, 0.5),
-      })
+      }),
     );
 
     const numVertices = 72; // 6 rows * 6 positions * 2 surfaces
@@ -159,7 +159,7 @@ describe("Core/EllipsoidGeometry", function () {
         innerRadii: new Cartesian3(0.5, 0.5, 0.5),
         minimumClock: CesiumMath.toRadians(90.0),
         maximumClock: CesiumMath.toRadians(270.0),
-      })
+      }),
     );
 
     const numVertices = 70;
@@ -179,7 +179,7 @@ describe("Core/EllipsoidGeometry", function () {
         minimumClock: CesiumMath.toRadians(90.0),
         maximumClock: CesiumMath.toRadians(270.0),
         minimumCone: CesiumMath.toRadians(30.0),
-      })
+      }),
     );
 
     const numVertices = 60;
@@ -212,7 +212,7 @@ describe("Core/EllipsoidGeometry", function () {
         innerRadii: new Cartesian3(0.5, 0.5, 0.5),
         minimumCone: CesiumMath.toRadians(60.0),
         maximumCone: CesiumMath.toRadians(140.0),
-      })
+      }),
     );
 
     const positions = m.attributes.position.values;
@@ -248,7 +248,7 @@ describe("Core/EllipsoidGeometry", function () {
         maximumClock: CesiumMath.toRadians(270.0),
         minimumCone: CesiumMath.toRadians(30.0),
         maximumCone: CesiumMath.toRadians(120.0),
-      })
+      }),
     );
 
     const numVertices = 50;
@@ -353,25 +353,8 @@ describe("Core/EllipsoidGeometry", function () {
     stackPartitions: 3,
   });
   const packedInstance = [
-    1.0,
-    2.0,
-    3.0,
-    0.5,
-    0.6,
-    0.7,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.1,
-    0.2,
-    0.3,
-    0.4,
-    3.0,
-    3.0,
-    -1,
+    1.0, 2.0, 3.0, 0.5, 0.6, 0.7, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.2, 0.3,
+    0.4, 3.0, 3.0, -1,
   ];
   createPackableSpecs(EllipsoidGeometry, ellipsoidgeometry, packedInstance);
 });

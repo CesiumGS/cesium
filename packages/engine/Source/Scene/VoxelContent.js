@@ -54,7 +54,7 @@ VoxelContent.fromJson = async function (
   resource,
   json,
   binary,
-  metadataSchema
+  metadataSchema,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("resource", resource);

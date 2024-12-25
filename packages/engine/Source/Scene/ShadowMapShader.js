@@ -10,7 +10,7 @@ ShadowMapShader.getShadowCastShaderKeyword = function (
   isPointLight,
   isTerrain,
   usesDepthTexture,
-  isOpaque
+  isOpaque,
 ) {
   return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque}`;
 };
@@ -18,7 +18,7 @@ ShadowMapShader.getShadowCastShaderKeyword = function (
 ShadowMapShader.createShadowCastVertexShader = function (
   vs,
   isPointLight,
-  isTerrain
+  isTerrain,
 ) {
   const defines = vs.defines.slice(0);
   const sources = vs.sources.slice(0);
@@ -58,7 +58,7 @@ ShadowMapShader.createShadowCastFragmentShader = function (
   fs,
   isPointLight,
   usesDepthTexture,
-  opaque
+  opaque,
 ) {
   const defines = fs.defines.slice(0);
   const sources = fs.sources.slice(0);
@@ -127,7 +127,7 @@ ShadowMapShader.getShadowReceiveShaderKeyword = function (
   shadowMap,
   castShadows,
   isTerrain,
-  hasTerrainNormal
+  hasTerrainNormal,
 ) {
   const usesDepthTexture = shadowMap._usesDepthTexture;
   const polygonOffsetSupported = shadowMap._polygonOffsetSupported;
@@ -143,7 +143,7 @@ ShadowMapShader.getShadowReceiveShaderKeyword = function (
 ShadowMapShader.createShadowReceiveVertexShader = function (
   vs,
   isTerrain,
-  hasTerrainNormal
+  hasTerrainNormal,
 ) {
   const defines = vs.defines.slice(0);
   const sources = vs.sources.slice(0);
@@ -169,7 +169,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
   shadowMap,
   castShadows,
   isTerrain,
-  hasTerrainNormal
+  hasTerrainNormal,
 ) {
   const normalVaryingName = ShaderSource.findNormalVarying(fs);
   const hasNormalVarying =
@@ -189,8 +189,8 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
   const bias = isPointLight
     ? shadowMap._pointBias
     : isTerrain
-    ? shadowMap._terrainBias
-    : shadowMap._primitiveBias;
+      ? shadowMap._terrainBias
+      : shadowMap._primitiveBias;
 
   const defines = fs.defines.slice(0);
   const sources = fs.sources.slice(0);
@@ -199,7 +199,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
   for (let i = 0; i < length; ++i) {
     sources[i] = ShaderSource.replaceMain(
       sources[i],
-      "czm_shadow_receive_main"
+      "czm_shadow_receive_main",
     );
   }
 

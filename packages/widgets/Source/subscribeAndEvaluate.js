@@ -20,7 +20,7 @@ function subscribeAndEvaluate(
   observablePropertyName,
   callback,
   target,
-  event
+  event,
 ) {
   callback.call(target, owner[observablePropertyName]);
   return knockout

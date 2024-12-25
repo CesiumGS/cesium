@@ -127,7 +127,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       scene.renderForSpecs(); // render one frame so the stage is ready
       expect(scene).toRender([255, 255, 0, 255]);
@@ -142,7 +142,7 @@ describe(
           uniforms: {
             inputTexture: "./Data/Images/Green2x2.png",
           },
-        })
+        }),
       );
       return pollToPromise(function () {
         scene.renderForSpecs();
@@ -178,7 +178,7 @@ describe(
             uniforms: {
               inputTexture: image,
             },
-          })
+          }),
         );
         return pollToPromise(function () {
           scene.renderForSpecs();
@@ -214,14 +214,14 @@ describe(
           fragmentShader: `void main() { out_FragColor = vec4(vec3(${
             bgColor / 255
           }), 1.0); }`,
-        })
+        }),
       );
 
       const stage = s.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D depthTexture; void main() { out_FragColor = vec4(1.0); }",
-        })
+        }),
       );
       return pollToPromise(function () {
         s.renderForSpecs();
@@ -249,7 +249,7 @@ describe(
           offset: offset,
           incrementallyLoadTextures: false,
         },
-        scene
+        scene,
       ).then(function (model) {
         const fs =
           "uniform sampler2D colorTexture; \n" +
@@ -264,7 +264,7 @@ describe(
         const stage = scene.postProcessStages.add(
           new PostProcessStage({
             fragmentShader: fs,
-          })
+          }),
         );
         stage.selected = [];
         return pollToPromise(function () {
@@ -289,5 +289,5 @@ describe(
       expect(stage.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

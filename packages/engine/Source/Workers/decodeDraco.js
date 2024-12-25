@@ -37,7 +37,7 @@ function decodeQuantizedDracoTypedArray(
   dracoDecoder,
   dracoAttribute,
   quantization,
-  vertexArrayLength
+  vertexArrayLength,
 ) {
   let vertexArray;
   let attributeData;
@@ -47,7 +47,7 @@ function decodeQuantizedDracoTypedArray(
     dracoDecoder.GetAttributeUInt8ForAllPoints(
       dracoGeometry,
       dracoAttribute,
-      attributeData
+      attributeData,
     );
   } else if (quantization.quantizationBits <= 16) {
     attributeData = new draco.DracoUInt16Array();
@@ -55,7 +55,7 @@ function decodeQuantizedDracoTypedArray(
     dracoDecoder.GetAttributeUInt16ForAllPoints(
       dracoGeometry,
       dracoAttribute,
-      attributeData
+      attributeData,
     );
   } else {
     attributeData = new draco.DracoFloat32Array();
@@ -63,7 +63,7 @@ function decodeQuantizedDracoTypedArray(
     dracoDecoder.GetAttributeFloatForAllPoints(
       dracoGeometry,
       dracoAttribute,
-      attributeData
+      attributeData,
     );
   }
 
@@ -79,7 +79,7 @@ function decodeDracoTypedArray(
   dracoGeometry,
   dracoDecoder,
   dracoAttribute,
-  vertexArrayLength
+  vertexArrayLength,
 ) {
   let vertexArray;
   let attributeData;
@@ -93,7 +93,7 @@ function decodeDracoTypedArray(
       dracoDecoder.GetAttributeInt8ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        attributeData
+        attributeData,
       );
       break;
     case 2: // DT_UINT8
@@ -102,7 +102,7 @@ function decodeDracoTypedArray(
       dracoDecoder.GetAttributeUInt8ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        attributeData
+        attributeData,
       );
       break;
     case 3: // DT_INT16
@@ -111,7 +111,7 @@ function decodeDracoTypedArray(
       dracoDecoder.GetAttributeInt16ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        attributeData
+        attributeData,
       );
       break;
     case 4: // DT_UINT16
@@ -120,7 +120,7 @@ function decodeDracoTypedArray(
       dracoDecoder.GetAttributeUInt16ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        attributeData
+        attributeData,
       );
       break;
     case 5:
@@ -130,7 +130,7 @@ function decodeDracoTypedArray(
       dracoDecoder.GetAttributeInt32ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        attributeData
+        attributeData,
       );
       break;
     case 6:
@@ -140,7 +140,7 @@ function decodeDracoTypedArray(
       dracoDecoder.GetAttributeUInt32ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        attributeData
+        attributeData,
       );
       break;
     case 9:
@@ -150,7 +150,7 @@ function decodeDracoTypedArray(
       dracoDecoder.GetAttributeFloatForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        attributeData
+        attributeData,
       );
       break;
   }
@@ -200,14 +200,14 @@ function decodeAttribute(dracoGeometry, dracoDecoder, dracoAttribute) {
       dracoDecoder,
       dracoAttribute,
       quantization,
-      vertexArrayLength
+      vertexArrayLength,
     );
   } else {
     vertexArray = decodeDracoTypedArray(
       dracoGeometry,
       dracoDecoder,
       dracoAttribute,
-      vertexArrayLength
+      vertexArrayLength,
     );
   }
 
@@ -246,11 +246,11 @@ function decodePointCloud(parameters) {
   const dracoPointCloud = new draco.PointCloud();
   const decodingStatus = dracoDecoder.DecodeBufferToPointCloud(
     buffer,
-    dracoPointCloud
+    dracoPointCloud,
   );
   if (!decodingStatus.ok() || dracoPointCloud.ptr === 0) {
     throw new RuntimeError(
-      `Error decoding draco point cloud: ${decodingStatus.error_msg()}`
+      `Error decoding draco point cloud: ${decodingStatus.error_msg()}`,
     );
   }
 
@@ -265,23 +265,23 @@ function decodePointCloud(parameters) {
       if (propertyName === "POSITION" || propertyName === "NORMAL") {
         const dracoAttributeId = dracoDecoder.GetAttributeId(
           dracoPointCloud,
-          draco[propertyName]
+          draco[propertyName],
         );
         dracoAttribute = dracoDecoder.GetAttribute(
           dracoPointCloud,
-          dracoAttributeId
+          dracoAttributeId,
         );
       } else {
         const attributeId = properties[propertyName];
         dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
           dracoPointCloud,
-          attributeId
+          attributeId,
         );
       }
       result[propertyName] = decodeAttribute(
         dracoPointCloud,
         dracoDecoder,
-        dracoAttribute
+        dracoAttribute,
       );
     }
   }
@@ -316,7 +316,7 @@ function decodePrimitive(parameters) {
   const decodingStatus = dracoDecoder.DecodeBufferToMesh(buffer, dracoGeometry);
   if (!decodingStatus.ok() || dracoGeometry.ptr === 0) {
     throw new RuntimeError(
-      `Error decoding draco mesh geometry: ${decodingStatus.error_msg()}`
+      `Error decoding draco mesh geometry: ${decodingStatus.error_msg()}`,
     );
   }
 
@@ -330,12 +330,12 @@ function decodePrimitive(parameters) {
       const compressedAttribute = compressedAttributes[attributeName];
       const dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
         dracoGeometry,
-        compressedAttribute
+        compressedAttribute,
       );
       attributeData[attributeName] = decodeAttribute(
         dracoGeometry,
         dracoDecoder,
-        dracoAttribute
+        dracoAttribute,
       );
     }
   }

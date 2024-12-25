@@ -48,7 +48,7 @@ function IonResource(endpoint, endpointResource) {
   } else {
     //External imagery assets have additional configuration that can't be represented as a Resource
     throw new RuntimeError(
-      "Ion.createResource does not support external imagery assets; use IonImageryProvider instead."
+      "Ion.createResource does not support external imagery assets; use IonImageryProvider instead.",
     );
   }
 
@@ -106,7 +106,7 @@ if (defined(Object.create)) {
 IonResource.fromAssetId = function (assetId, options) {
   const endpointResource = IonResource._createEndpointResource(
     assetId,
-    options
+    options,
   );
 
   return endpointResource.fetchJson().then(function (endpoint) {
@@ -136,7 +136,7 @@ Object.defineProperties(IonResource.prototype, {
 
       this._credits = IonResource.getCreditsFromEndpoint(
         this._ionEndpoint,
-        this._ionEndpointResource
+        this._ionEndpointResource,
       );
 
       return this._credits;
@@ -148,7 +148,7 @@ Object.defineProperties(IonResource.prototype, {
 IonResource.getCreditsFromEndpoint = function (endpoint, endpointResource) {
   const credits = endpoint.attributions.map(Credit.getIonCredit);
   const defaultTokenCredit = Ion.getDefaultTokenCredit(
-    endpointResource.queryParameters.access_token
+    endpointResource.queryParameters.access_token,
   );
   if (defined(defaultTokenCredit)) {
     credits.push(Credit.clone(defaultTokenCredit));
@@ -164,7 +164,7 @@ IonResource.prototype.clone = function (result) {
   if (!defined(result)) {
     result = new IonResource(
       ionRoot._ionEndpoint,
-      ionRoot._ionEndpointResource
+      ionRoot._ionEndpointResource,
     );
   }
 

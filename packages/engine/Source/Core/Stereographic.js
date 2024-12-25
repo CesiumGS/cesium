@@ -112,7 +112,7 @@ Stereographic.prototype.getLatitude = function (ellipsoid) {
   scratchCartographic.height = 0.0;
   const cartesian = this.ellipsoid.cartographicToCartesian(
     scratchCartographic,
-    scratchCartesian
+    scratchCartesian,
   );
   ellipsoid.cartesianToCartographic(cartesian, scratchCartographic);
   return scratchCartographic.latitude;
@@ -145,19 +145,19 @@ Stereographic.fromCartesian = function (cartesian, result) {
   const ray = scratchProjectPointOntoPlaneRay;
   ray.origin = tangentPlane.ellipsoid.scaleToGeocentricSurface(
     cartesian,
-    ray.origin
+    ray.origin,
   );
   ray.direction = Cartesian3.subtract(
     ray.origin,
     origin,
-    scratchProjectPointOntoPlaneRayDirection
+    scratchProjectPointOntoPlaneRayDirection,
   );
   Cartesian3.normalize(ray.direction, ray.direction);
 
   const intersectionPoint = IntersectionTests.rayPlane(
     ray,
     tangentPlane.plane,
-    scratchProjectPointOntoPlaneCartesian3
+    scratchProjectPointOntoPlaneCartesian3,
   );
   const v = Cartesian3.subtract(intersectionPoint, origin, intersectionPoint);
   const x = Cartesian3.dot(tangentPlane.xAxis, v);
@@ -210,7 +210,7 @@ Stereographic.clone = function (stereographic, result) {
   if (!defined(result)) {
     return new Stereographic(
       stereographic.position,
-      stereographic.tangentPlane
+      stereographic.tangentPlane,
     );
   }
 
@@ -234,14 +234,14 @@ Stereographic.SOUTH_POLE = Object.freeze(new Cartesian3(0.0, 0.0, -0.5));
 Stereographic.NORTH_POLE_TANGENT_PLANE = Object.freeze(
   new EllipsoidTangentPlane(
     Stereographic.NORTH_POLE,
-    Stereographic.HALF_UNIT_SPHERE
-  )
+    Stereographic.HALF_UNIT_SPHERE,
+  ),
 );
 Stereographic.SOUTH_POLE_TANGENT_PLANE = Object.freeze(
   new EllipsoidTangentPlane(
     Stereographic.SOUTH_POLE,
-    Stereographic.HALF_UNIT_SPHERE
-  )
+    Stereographic.HALF_UNIT_SPHERE,
+  ),
 );
 
 export default Stereographic;

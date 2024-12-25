@@ -98,14 +98,14 @@ describe("Scene/BoundingVolumeSemantics", function () {
     it("throws without tileMetadata", function () {
       expect(function () {
         return BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
-          undefined
+          undefined,
         );
       }).toThrowDeveloperError();
     });
 
     it("works if no semantics are present", function () {
       expect(
-        BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(emptyMetadata)
+        BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(emptyMetadata),
       ).toEqual({
         tile: {
           boundingVolume: undefined,
@@ -134,7 +134,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       });
 
       expect(
-        BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(tileMetadata)
+        BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(tileMetadata),
       ).toEqual({
         tile: {
           boundingVolume: undefined,
@@ -161,7 +161,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       });
 
       expect(
-        BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(tileMetadata)
+        BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(tileMetadata),
       ).toEqual({
         tile: {
           boundingVolume: {
@@ -193,7 +193,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
         },
       });
       expect(
-        BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(tileMetadata)
+        BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(tileMetadata),
       ).toEqual({
         tile: {
           boundingVolume: {
@@ -218,7 +218,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       expect(function () {
         return BoundingVolumeSemantics.parseBoundingVolumeSemantic(
           undefined,
-          emptyMetadata
+          emptyMetadata,
         );
       }).toThrowDeveloperError();
     });
@@ -227,7 +227,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       expect(function () {
         return BoundingVolumeSemantics.parseBoundingVolumeSemantic(
           "TILESET",
-          emptyMetadata
+          emptyMetadata,
         );
       }).toThrowDeveloperError();
     });
@@ -236,16 +236,17 @@ describe("Scene/BoundingVolumeSemantics", function () {
       expect(function () {
         return BoundingVolumeSemantics.parseBoundingVolumeSemantic(
           "TILE",
-          undefined
+          undefined,
         );
       }).toThrowDeveloperError();
     });
 
     it("returns undefined if there are no bounding volume semantics", function () {
-      const boundingVolume = BoundingVolumeSemantics.parseBoundingVolumeSemantic(
-        "TILE",
-        emptyMetadata
-      );
+      const boundingVolume =
+        BoundingVolumeSemantics.parseBoundingVolumeSemantic(
+          "TILE",
+          emptyMetadata,
+        );
       expect(boundingVolume).not.toBeDefined();
     });
 
@@ -258,10 +259,11 @@ describe("Scene/BoundingVolumeSemantics", function () {
           },
         },
       });
-      const boundingVolume = BoundingVolumeSemantics.parseBoundingVolumeSemantic(
-        "TILE",
-        tileMetadata
-      );
+      const boundingVolume =
+        BoundingVolumeSemantics.parseBoundingVolumeSemantic(
+          "TILE",
+          tileMetadata,
+        );
       expect(boundingVolume).toEqual({
         box: boundingBox,
       });
@@ -276,10 +278,11 @@ describe("Scene/BoundingVolumeSemantics", function () {
           },
         },
       });
-      const boundingVolume = BoundingVolumeSemantics.parseBoundingVolumeSemantic(
-        "CONTENT",
-        tileMetadata
-      );
+      const boundingVolume =
+        BoundingVolumeSemantics.parseBoundingVolumeSemantic(
+          "CONTENT",
+          tileMetadata,
+        );
       expect(boundingVolume).toEqual({
         region: boundingRegion,
       });
@@ -294,10 +297,11 @@ describe("Scene/BoundingVolumeSemantics", function () {
           },
         },
       });
-      const boundingVolume = BoundingVolumeSemantics.parseBoundingVolumeSemantic(
-        "TILE",
-        tileMetadata
-      );
+      const boundingVolume =
+        BoundingVolumeSemantics.parseBoundingVolumeSemantic(
+          "TILE",
+          tileMetadata,
+        );
       expect(boundingVolume).toEqual({
         sphere: boundingSphere,
       });
@@ -318,7 +322,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       // Box is handled before region
       const box = BoundingVolumeSemantics.parseBoundingVolumeSemantic(
         "TILE",
-        tileMetadata
+        tileMetadata,
       );
       expect(box).toEqual({
         box: boundingBox,
@@ -327,7 +331,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       // region is handled before sphere
       const region = BoundingVolumeSemantics.parseBoundingVolumeSemantic(
         "CONTENT",
-        tileMetadata
+        tileMetadata,
       );
       expect(region).toEqual({
         region: boundingRegion,
@@ -340,7 +344,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       expect(function () {
         return BoundingVolumeSemantics._parseMinimumHeight(
           undefined,
-          emptyMetadata
+          emptyMetadata,
         );
       }).toThrowDeveloperError();
     });
@@ -349,7 +353,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       expect(function () {
         return BoundingVolumeSemantics._parseMinimumHeight(
           "TILESET",
-          emptyMetadata
+          emptyMetadata,
         );
       }).toThrowDeveloperError();
     });
@@ -363,7 +367,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
     it("returns undefined if minimum height not present", function () {
       const height = BoundingVolumeSemantics._parseMinimumHeight(
         "TILE",
-        emptyMetadata
+        emptyMetadata,
       );
       expect(height).not.toBeDefined();
     });
@@ -379,7 +383,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       });
       const height = BoundingVolumeSemantics._parseMinimumHeight(
         "TILE",
-        tileMetadata
+        tileMetadata,
       );
       expect(height).toBe(minimumHeight);
     });
@@ -390,7 +394,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       expect(function () {
         return BoundingVolumeSemantics._parseMaximumHeight(
           undefined,
-          emptyMetadata
+          emptyMetadata,
         );
       }).toThrowDeveloperError();
     });
@@ -399,7 +403,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       expect(function () {
         return BoundingVolumeSemantics._parseMaximumHeight(
           "TILESET",
-          emptyMetadata
+          emptyMetadata,
         );
       }).toThrowDeveloperError();
     });
@@ -413,7 +417,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
     it("returns undefined if maximum height not present", function () {
       const height = BoundingVolumeSemantics._parseMaximumHeight(
         "TILE",
-        emptyMetadata
+        emptyMetadata,
       );
       expect(height).not.toBeDefined();
     });
@@ -429,7 +433,7 @@ describe("Scene/BoundingVolumeSemantics", function () {
       });
       const height = BoundingVolumeSemantics._parseMaximumHeight(
         "CONTENT",
-        tileMetadata
+        tileMetadata,
       );
       expect(height).toBe(maximumHeight);
     });

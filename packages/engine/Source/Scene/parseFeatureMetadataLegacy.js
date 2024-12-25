@@ -60,7 +60,7 @@ function parseFeatureMetadataLegacy(options) {
           metadataTable: metadataTable,
           extras: featureTable.extras,
           extensions: featureTable.extensions,
-        })
+        }),
       );
     }
   }
@@ -80,7 +80,7 @@ function parseFeatureMetadataLegacy(options) {
           propertyTexture: transcodeToPropertyTexture(featureTexture),
           class: schema.classes[featureTexture.class],
           textures: options.textures,
-        })
+        }),
       );
     }
   }
@@ -119,7 +119,7 @@ function transcodeToPropertyTexture(featureTexture) {
       propertyTexture.properties[propertyId] = combine(
         oldProperty.texture,
         property,
-        true
+        true,
       );
     }
   }

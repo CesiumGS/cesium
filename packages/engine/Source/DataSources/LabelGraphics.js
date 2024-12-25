@@ -290,7 +290,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
-    "pixelOffsetScaleByDistance"
+    "pixelOffsetScaleByDistance",
   ),
 
   /**
@@ -311,7 +311,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -321,7 +321,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
 });
 
@@ -379,52 +379,52 @@ LabelGraphics.prototype.merge = function (source) {
   this.scale = defaultValue(this.scale, source.scale);
   this.showBackground = defaultValue(
     this.showBackground,
-    source.showBackground
+    source.showBackground,
   );
   this.backgroundColor = defaultValue(
     this.backgroundColor,
-    source.backgroundColor
+    source.backgroundColor,
   );
   this.backgroundPadding = defaultValue(
     this.backgroundPadding,
-    source.backgroundPadding
+    source.backgroundPadding,
   );
   this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
   this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
   this.horizontalOrigin = defaultValue(
     this.horizontalOrigin,
-    source.horizontalOrigin
+    source.horizontalOrigin,
   );
   this.verticalOrigin = defaultValue(
     this.verticalOrigin,
-    source.verticalOrigin
+    source.verticalOrigin,
   );
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.fillColor = defaultValue(this.fillColor, source.fillColor);
   this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
   this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
   this.translucencyByDistance = defaultValue(
     this.translucencyByDistance,
-    source.translucencyByDistance
+    source.translucencyByDistance,
   );
   this.pixelOffsetScaleByDistance = defaultValue(
     this.pixelOffsetScaleByDistance,
-    source.pixelOffsetScaleByDistance
+    source.pixelOffsetScaleByDistance,
   );
   this.scaleByDistance = defaultValue(
     this.scaleByDistance,
-    source.scaleByDistance
+    source.scaleByDistance,
   );
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
   this.disableDepthTestDistance = defaultValue(
     this.disableDepthTestDistance,
-    source.disableDepthTestDistance
+    source.disableDepthTestDistance,
   );
 };
 export default LabelGraphics;

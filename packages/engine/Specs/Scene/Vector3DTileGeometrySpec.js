@@ -69,7 +69,7 @@ describe(
           });
         }
         const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-          new Color(1.0, 0.0, 0.0, 1.0)
+          new Color(1.0, 0.0, 0.0, 1.0),
         );
         return new Primitive({
           geometryInstances: new GeometryInstance({
@@ -127,7 +127,7 @@ describe(
         reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
         reusableTilesetPrimitive = createPrimitive(
           rectangle,
-          Pass.CESIUM_3D_TILE
+          Pass.CESIUM_3D_TILE,
         );
       });
 
@@ -142,7 +142,7 @@ describe(
         globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
         tilesetPrimitive = new MockPrimitive(
           reusableTilesetPrimitive,
-          Pass.CESIUM_3D_TILE
+          Pass.CESIUM_3D_TILE,
         );
       });
 
@@ -170,7 +170,7 @@ describe(
       function packBoxes(boxes) {
         const length = boxes.length;
         const packedBoxes = new Float32Array(
-          length * Vector3DTileGeometry.packedBoxLength
+          length * Vector3DTileGeometry.packedBoxLength,
         );
         let offset = 0;
         for (let i = 0; i < length; ++i) {
@@ -186,7 +186,7 @@ describe(
       function packCylinders(cylinders) {
         const length = cylinders.length;
         const packedCylinders = new Float32Array(
-          length * Vector3DTileGeometry.packedCylinderLength
+          length * Vector3DTileGeometry.packedCylinderLength,
         );
         let offset = 0;
         for (let i = 0; i < length; ++i) {
@@ -202,7 +202,7 @@ describe(
       function packEllipsoids(ellipsoids) {
         const length = ellipsoids.length;
         const packedEllipsoids = new Float32Array(
-          length * Vector3DTileGeometry.packedEllipsoidLength
+          length * Vector3DTileGeometry.packedEllipsoidLength,
         );
         let offset = 0;
         for (let i = 0; i < length; ++i) {
@@ -218,7 +218,7 @@ describe(
       function packSpheres(spheres) {
         const length = spheres.length;
         const packedSpheres = new Float32Array(
-          length * Vector3DTileGeometry.packedSphereLength
+          length * Vector3DTileGeometry.packedSphereLength,
         );
         let offset = 0;
         for (let i = 0; i < length; ++i) {
@@ -227,7 +227,7 @@ describe(
           Cartesian3.pack(
             Matrix4.getTranslation(sphere.modelMatrix, new Cartesian3()),
             packedSpheres,
-            offset
+            offset,
           );
           offset += Cartesian3.packedLength;
         }
@@ -252,8 +252,8 @@ describe(
               center: center,
               modelMatrix: modelMatrix,
               batchTable: batchTable,
-            })
-          )
+            }),
+          ),
         );
         return loadGeometries(geometry).then(function () {
           scene.camera.setView({
@@ -288,8 +288,8 @@ describe(
               center: center,
               modelMatrix: modelMatrix,
               batchTable: batchTable,
-            })
-          )
+            }),
+          ),
         );
         return loadGeometries(geometry).then(function () {
           let i;
@@ -301,11 +301,11 @@ describe(
             const transform = Matrix4.multiply(
               modelMatrix,
               modelMatrices[i],
-              new Matrix4()
+              new Matrix4(),
             );
             scene.camera.lookAtTransform(
               transform,
-              new Cartesian3(0.0, 0.0, 10.0)
+              new Cartesian3(0.0, 0.0, 10.0),
             );
 
             batchTable.setShow(i, true);
@@ -333,7 +333,7 @@ describe(
         const boxBatchIds = new Uint16Array([0]);
         const bv = new BoundingSphere(
           undefined,
-          Math.sqrt(3.0 * dimensions.x * dimensions.x)
+          Math.sqrt(3.0 * dimensions.x * dimensions.x),
         );
         return verifySingleRender({
           boxes: boxes,
@@ -361,7 +361,7 @@ describe(
         const boxBatchIds = new Uint16Array([0, 1]);
         const bv = new BoundingSphere(
           undefined,
-          Math.sqrt(3.0 * 2.0 * dimensions.x * dimensions.x)
+          Math.sqrt(3.0 * 2.0 * dimensions.x * dimensions.x),
         );
         return verifyMultipleRender(modelMatrices, {
           boxes: boxes,
@@ -383,7 +383,7 @@ describe(
         const cylinderBatchIds = new Uint16Array([0]);
         const bv = new BoundingSphere(
           undefined,
-          Math.sqrt(radius * radius + length * length)
+          Math.sqrt(radius * radius + length * length),
         );
         return verifySingleRender({
           cylinders: cylinders,
@@ -414,7 +414,7 @@ describe(
         const cylinderBatchIds = new Uint16Array([0, 1]);
         const bv = new BoundingSphere(
           undefined,
-          Math.sqrt(2.0 * (radius * radius + length * length))
+          Math.sqrt(2.0 * (radius * radius + length * length)),
         );
         return verifyMultipleRender(modelMatrices, {
           cylinders: cylinders,
@@ -434,7 +434,7 @@ describe(
         const ellipsoidBatchIds = new Uint16Array([0]);
         const bv = new BoundingSphere(
           undefined,
-          Cartesian3.maximumComponent(radii)
+          Cartesian3.maximumComponent(radii),
         );
         return verifySingleRender({
           ellipsoids: ellipsoid,
@@ -462,7 +462,7 @@ describe(
         const ellipsoidBatchIds = new Uint16Array([0, 1]);
         const bv = new BoundingSphere(
           undefined,
-          2.0 * Cartesian3.maximumComponent(radii)
+          2.0 * Cartesian3.maximumComponent(radii),
         );
         return verifyMultipleRender(modelMatrices, {
           ellipsoids: ellipsoids,
@@ -535,7 +535,7 @@ describe(
         const length = 125000.0;
         modelMatrices.push(
           Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
-          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
+          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0)),
         );
         const cylinders = packCylinders([
           {
@@ -554,7 +554,7 @@ describe(
         const radii = new Cartesian3(125000.0, 125000.0, 125000.0);
         modelMatrices.push(
           Matrix4.fromTranslation(new Cartesian3(radii.x, 0.0, 0.0)),
-          Matrix4.fromTranslation(new Cartesian3(-radii.x, 0.0, 0.0))
+          Matrix4.fromTranslation(new Cartesian3(-radii.x, 0.0, 0.0)),
         );
         const ellipsoids = packEllipsoids([
           {
@@ -570,7 +570,7 @@ describe(
 
         modelMatrices.push(
           Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
-          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
+          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0)),
         );
         const spheres = packSpheres([
           {
@@ -621,7 +621,7 @@ describe(
         let length = 125000.0;
         modelMatrices.push(
           Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
-          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
+          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0)),
         );
         const cylinders = packCylinders([
           {
@@ -659,7 +659,7 @@ describe(
             modelMatrix: modelMatrix,
             batchTable: batchTable,
             boundingVolume: bv,
-          })
+          }),
         );
         geometry.forceRebatch = true;
         return loadGeometries(geometry).then(function () {
@@ -672,11 +672,11 @@ describe(
             const transform = Matrix4.multiply(
               modelMatrix,
               modelMatrices[i],
-              new Matrix4()
+              new Matrix4(),
             );
             scene.camera.lookAtTransform(
               transform,
-              new Cartesian3(0.0, 0.0, 10.0)
+              new Cartesian3(0.0, 0.0, 10.0),
             );
 
             batchTable.setShow(i, true);
@@ -709,7 +709,7 @@ describe(
 
         const bv = new BoundingSphere(
           center,
-          Cartesian3.maximumComponent(radii)
+          Cartesian3.maximumComponent(radii),
         );
 
         const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
@@ -725,18 +725,18 @@ describe(
             center: center,
             modelMatrix: modelMatrix,
             batchTable: batchTable,
-          })
+          }),
         );
         return loadGeometries(geometry).then(function () {
           scene.camera.lookAtTransform(
             modelMatrix,
-            new Cartesian3(0.0, 0.0, 1.0)
+            new Cartesian3(0.0, 0.0, 1.0),
           );
           expect(scene).toRender([255, 255, 255, 255]);
 
           scene.camera.lookAtTransform(
             modelMatrix,
-            new Cartesian3(radii.x, 0.0, 1.0)
+            new Cartesian3(radii.x, 0.0, 1.0),
           );
           expect(scene).toRender([255, 0, 0, 255]);
 
@@ -771,7 +771,7 @@ describe(
             modelMatrix: modelMatrix,
             batchTable: batchTable,
             boundingVolume: new BoundingSphere(center, 1000000.0),
-          })
+          }),
         );
         geometry.debugWireframe = true;
         return loadGeometries(geometry).then(function () {
@@ -804,7 +804,7 @@ describe(
 
         const bv = new BoundingSphere(
           center,
-          Cartesian3.maximumComponent(radii)
+          Cartesian3.maximumComponent(radii),
         );
 
         const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
@@ -821,12 +821,12 @@ describe(
             center: center,
             modelMatrix: modelMatrix,
             batchTable: batchTable,
-          })
+          }),
         );
         return loadGeometries(geometry).then(function () {
           scene.camera.lookAtTransform(
             modelMatrix,
-            new Cartesian3(0.0, 0.0, 1.0)
+            new Cartesian3(0.0, 0.0, 1.0),
           );
 
           geometry.classificationType = ClassificationType.CESIUM_3D_TILE;
@@ -880,7 +880,7 @@ describe(
             modelMatrix: modelMatrix,
             batchTable: batchTable,
             boundingVolume: new BoundingSphere(center, 500000.0),
-          })
+          }),
         );
         return loadGeometries(geometry).then(function () {
           scene.camera.setView({
@@ -914,5 +914,5 @@ describe(
       });
     }
   },
-  "WebGL"
+  "WebGL",
 );

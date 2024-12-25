@@ -57,14 +57,14 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.BLUE,
-      })
+      }),
     );
     property.outlineColor.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: Color.RED,
-      })
+      }),
     );
 
     const result = property.getValue(start);
@@ -122,7 +122,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
       property,
       "color",
       property.color,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -131,7 +131,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
       property,
       "color",
       property.color,
-      property.color
+      property.color,
     );
     listener.calls.reset();
 
@@ -145,7 +145,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
       property,
       "outlineColor",
       property.outlineColor,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -154,7 +154,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
       property,
       "outlineColor",
       property.outlineColor,
-      property.outlineColor
+      property.outlineColor,
     );
     listener.calls.reset();
 
@@ -167,7 +167,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
       property,
       "outlineWidth",
       property.outlineWidth,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -176,7 +176,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
       property,
       "outlineWidth",
       property.outlineWidth,
-      property.outlineWidth
+      property.outlineWidth,
     );
     listener.calls.reset();
 
@@ -201,7 +201,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.RED,
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
 
@@ -213,7 +213,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.BLUE,
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
 
@@ -225,7 +225,7 @@ describe("DataSources/PolylineOutlineMaterialProperty", function () {
         start: start,
         stop: stop,
         data: 2.0,
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
   });

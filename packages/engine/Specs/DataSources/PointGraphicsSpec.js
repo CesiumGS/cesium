@@ -5,6 +5,7 @@ import {
   ConstantProperty,
   PointGraphics,
   HeightReference,
+  SplitDirection,
 } from "../../index.js";
 
 describe("DataSources/PointGraphics", function () {
@@ -19,6 +20,7 @@ describe("DataSources/PointGraphics", function () {
       heightReference: HeightReference.RELATIVE_TO_GROUND,
       distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
       disableDepthTestDistance: 10.0,
+      splitDirection: SplitDirection.LEFT,
     };
 
     const point = new PointGraphics(options);
@@ -31,6 +33,7 @@ describe("DataSources/PointGraphics", function () {
     expect(point.heightReference).toBeInstanceOf(ConstantProperty);
     expect(point.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
     expect(point.disableDepthTestDistance).toBeInstanceOf(ConstantProperty);
+    expect(point.splitDirection).toBeInstanceOf(ConstantProperty);
 
     expect(point.color.getValue()).toEqual(options.color);
     expect(point.pixelSize.getValue()).toEqual(options.pixelSize);
@@ -40,11 +43,12 @@ describe("DataSources/PointGraphics", function () {
     expect(point.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
     expect(point.heightReference.getValue()).toEqual(options.heightReference);
     expect(point.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(point.disableDepthTestDistance.getValue()).toEqual(
-      options.disableDepthTestDistance
+      options.disableDepthTestDistance,
     );
+    expect(point.splitDirection.getValue()).toEqual(options.splitDirection);
   });
 
   it("merge assigns unassigned properties", function () {
@@ -56,12 +60,13 @@ describe("DataSources/PointGraphics", function () {
     source.show = new ConstantProperty(true);
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
+    source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
     const target = new PointGraphics();
     target.merge(source);
@@ -73,11 +78,12 @@ describe("DataSources/PointGraphics", function () {
     expect(target.scaleByDistance).toBe(source.scaleByDistance);
     expect(target.heightReference).toBe(source.heightReference);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.disableDepthTestDistance).toBe(
-      source.disableDepthTestDistance
+      source.disableDepthTestDistance,
     );
+    expect(target.splitDirection).toBe(source.splitDirection);
   });
 
   it("merge does not assign assigned properties", function () {
@@ -89,12 +95,13 @@ describe("DataSources/PointGraphics", function () {
     source.show = new ConstantProperty(true);
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
+    source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
     const color = new ConstantProperty(Color.WHITE);
     const pixelSize = new ConstantProperty(1);
@@ -102,12 +109,13 @@ describe("DataSources/PointGraphics", function () {
     const outlineWidth = new ConstantProperty(1);
     const show = new ConstantProperty(true);
     const heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     const distanDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     const disableDepthTestDistance = new ConstantProperty(20.0);
+    const splitDirection = new ConstantProperty(SplitDirection.RIGHT);
 
     const target = new PointGraphics();
     target.color = color;
@@ -119,6 +127,7 @@ describe("DataSources/PointGraphics", function () {
     target.heightReference = heightReference;
     target.distanceDisplayCondition = distanDisplayCondition;
     target.disableDepthTestDistance = disableDepthTestDistance;
+    target.splitDirection = splitDirection;
 
     target.merge(source);
     expect(target.color).toBe(color);
@@ -130,6 +139,7 @@ describe("DataSources/PointGraphics", function () {
     expect(target.heightReference).toBe(heightReference);
     expect(target.distanceDisplayCondition).toBe(distanDisplayCondition);
     expect(target.disableDepthTestDistance).toBe(disableDepthTestDistance);
+    expect(target.splitDirection).toBe(splitDirection);
   });
 
   it("clone works", function () {
@@ -141,12 +151,13 @@ describe("DataSources/PointGraphics", function () {
     source.show = new ConstantProperty(true);
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
+    source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
     const result = source.clone();
     expect(result.color).toBe(source.color);
@@ -157,11 +168,12 @@ describe("DataSources/PointGraphics", function () {
     expect(result.scaleByDistance).toBe(source.scaleByDistance);
     expect(result.heightReference).toBe(source.heightReference);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.disableDepthTestDistance).toBe(
-      source.disableDepthTestDistance
+      source.disableDepthTestDistance,
     );
+    expect(result.splitDirection).toBe(source.splitDirection);
   });
 
   it("merge throws if source undefined", function () {

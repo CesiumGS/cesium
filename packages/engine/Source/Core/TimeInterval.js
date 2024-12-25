@@ -145,7 +145,7 @@ TimeInterval.fromIso8601 = function (options, result) {
   const dates = options.iso8601.split("/");
   if (dates.length !== 2) {
     throw new DeveloperError(
-      "options.iso8601 is an invalid ISO 8601 interval."
+      "options.iso8601 is an invalid ISO 8601 interval.",
     );
   }
   const start = JulianDate.fromIso8601(dates[0]);
@@ -185,7 +185,7 @@ TimeInterval.toIso8601 = function (timeInterval, precision) {
 
   return `${JulianDate.toIso8601(
     timeInterval.start,
-    precision
+    precision,
   )}/${JulianDate.toIso8601(timeInterval.stop, precision)}`;
 };
 
@@ -345,7 +345,7 @@ TimeInterval.contains = function (timeInterval, julianDate) {
 
   const startComparedToDate = JulianDate.compare(
     timeInterval.start,
-    julianDate
+    julianDate,
   );
   if (startComparedToDate === 0) {
     return timeInterval.isStartIncluded;
@@ -416,7 +416,7 @@ TimeInterval.EMPTY = Object.freeze(
     stop: new JulianDate(),
     isStartIncluded: false,
     isStopIncluded: false,
-  })
+  }),
 );
 
 /**

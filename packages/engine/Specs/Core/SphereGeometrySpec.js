@@ -31,7 +31,7 @@ describe("Core/SphereGeometry", function () {
         radius: 1,
         stackPartitions: 3,
         slicePartitions: 3,
-      })
+      }),
     );
 
     // The vertices are 6x6 because an additional slice and stack are added
@@ -50,7 +50,7 @@ describe("Core/SphereGeometry", function () {
         radius: 1,
         stackPartitions: 3,
         slicePartitions: 3,
-      })
+      }),
     );
 
     const numVertices = 36;
@@ -70,7 +70,7 @@ describe("Core/SphereGeometry", function () {
         radius: 1,
         stackPartitions: 3,
         slicePartitions: 3,
-      })
+      }),
     );
 
     const positions = m.attributes.position.values;
@@ -86,16 +86,16 @@ describe("Core/SphereGeometry", function () {
 
       expect(Cartesian3.magnitude(position)).toEqualEpsilon(
         1.0,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(normal).toEqualEpsilon(
         Cartesian3.normalize(position, position),
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
       expect(Cartesian3.dot(Cartesian3.UNIT_Z, tangent)).not.toBeLessThan(0.0);
       expect(bitangent).toEqualEpsilon(
         Cartesian3.cross(normal, tangent, normal),
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     }
   });

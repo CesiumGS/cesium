@@ -100,7 +100,7 @@ function EllipsoidPrimitive(options) {
    * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   this._modelMatrix = new Matrix4();
   this._computedModelMatrix = new Matrix4();
@@ -135,7 +135,7 @@ function EllipsoidPrimitive(options) {
    */
   this.material = defaultValue(
     options.material,
-    Material.fromType(Material.ColorType)
+    Material.fromType(Material.ColorType),
   );
   this._material = undefined;
   this._translucent = undefined;
@@ -164,7 +164,7 @@ function EllipsoidPrimitive(options) {
    */
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
 
   /**
@@ -223,7 +223,7 @@ function getVertexArray(context) {
     BoxGeometry.fromDimensions({
       dimensions: new Cartesian3(2.0, 2.0, 2.0),
       vertexFormat: VertexFormat.POSITION_ONLY,
-    })
+    }),
   );
 
   vertexArray = VertexArray.fromGeometry({
@@ -321,7 +321,7 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
     Matrix4.multiplyByTranslation(
       this.modelMatrix,
       this.center,
-      this._computedModelMatrix
+      this._computedModelMatrix,
     );
     boundingSphereDirty = true;
   }
@@ -332,7 +332,7 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
     BoundingSphere.transform(
       this._boundingSphere,
       this._computedModelMatrix,
-      this._boundingSphere
+      this._boundingSphere,
     );
   }
 
@@ -452,7 +452,7 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
       pickCommand.shaderProgram = this._pickSP;
       pickCommand.uniformMap = combine(
         combine(this._uniforms, this._pickUniforms),
-        this.material._uniforms
+        this.material._uniforms,
       );
       pickCommand.executeInClosestFrustum = translucent;
     }

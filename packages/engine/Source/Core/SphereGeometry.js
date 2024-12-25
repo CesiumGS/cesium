@@ -87,11 +87,11 @@ SphereGeometry.unpack = function (array, startingIndex, result) {
   const ellipsoidGeometry = EllipsoidGeometry.unpack(
     array,
     startingIndex,
-    scratchEllipsoidGeometry
+    scratchEllipsoidGeometry,
   );
   scratchOptions.vertexFormat = VertexFormat.clone(
     ellipsoidGeometry._vertexFormat,
-    scratchOptions.vertexFormat
+    scratchOptions.vertexFormat,
   );
   scratchOptions.stackPartitions = ellipsoidGeometry._stackPartitions;
   scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;

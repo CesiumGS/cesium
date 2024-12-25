@@ -45,7 +45,7 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
     ModelClippingPlanesPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
@@ -69,17 +69,17 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
       edgeColor.r,
       edgeColor.g,
       edgeColor.b,
-      clippingPlanes.edgeWidth
+      clippingPlanes.edgeWidth,
     );
     expect(
-      Color.equals(uniformMap.model_clippingPlanesEdgeStyle(), expectedStyle)
+      Color.equals(uniformMap.model_clippingPlanesEdgeStyle(), expectedStyle),
     ).toBe(true);
 
     expect(
       Matrix4.equals(
         uniformMap.model_clippingPlanesMatrix(),
-        mockModel._clippingPlanesMatrix
-      )
+        mockModel._clippingPlanesMatrix,
+      ),
     ).toBe(true);
 
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
@@ -108,7 +108,7 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
     ModelClippingPlanesPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
@@ -146,7 +146,7 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
     ModelClippingPlanesPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [

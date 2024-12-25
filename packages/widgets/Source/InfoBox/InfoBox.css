@@ -15,14 +15,19 @@
   transform: translate(100%, 0);
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0s 0.2s, opacity 0.2s ease-in, transform 0.2s ease-in;
+  transition:
+    visibility 0s 0.2s,
+    opacity 0.2s ease-in,
+    transform 0.2s ease-in;
 }
 
 .cesium-infoBox-visible {
   transform: translate(0, 0);
   visibility: visible;
   opacity: 1;
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out;
 }
 
 .cesium-infoBox-title {

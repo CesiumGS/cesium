@@ -1,13 +1,185 @@
 # Change Log
 
+### 1.125 - 2025-01-02
+
+##### Fixes :wrench:
+
+- Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
+- Fixed intermittent z-fighting issue. [#12337](https://github.com/CesiumGS/cesium/issues/12337)
+
+### 1.124 - 2024-12-02
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load iModels as 3D Tiles. Use `ITwinPlatform.defaultAccessToken` to set the access token. Use `ITwinData.createTilesetFromIModelId(iModelId)` to load the iModel as a `Cesium3DTileset`. [#12289](https://github.com/CesiumGS/cesium/pull/12289)
+- Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load Reality Data terrain meshes and GeoJSON. Use `ITwinPlatform.defaultAccessToken` to set the access token. Then use `ITwinData.createTilesetForRealityDataId(iTwinId, dataId)` to load terrain meshes as a `Cesium3DTileset` or `ITwinData.createDataSourceForRealityDataId(iTwinId, dataId)` to load GeoJSON or KML files as data sources. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
+- Added `getSample` to `SampledProperty` to get the time of samples. [#12253](https://github.com/CesiumGS/cesium/pull/12253)
+- Added `Entity.trackingReferenceFrame` property to allow tracking entities in various reference frames. [#12194](https://github.com/CesiumGS/cesium/pull/12194), [#12314](https://github.com/CesiumGS/cesium/pull/12314)
+  - `TrackingReferenceFrame.AUTODETECT` (default): uses either VVLH or ENU depending on entity's dynamic. Use `TrackingReferenceFrame.ENU` if your camera orientation flips abruptly from time to time.
+  - `TrackingReferenceFrame.ENU`: uses the entity's local East-North-Up reference frame.
+  - `TrackingReferenceFrame.INERTIAL`: uses the entity's inertial reference frame.
+  - `TrackingReferenceFrame.VELOCITY`: uses entity's `VelocityOrientationProperty` as orientation.
+- Added `GoogleGeocoderService` for standalone usage of Google geocoder. [#12299](https://github.com/CesiumGS/cesium/pull/12299)
+
+##### Breaking Changes :mega:
+
+- `PostProcessStageCollection.ambientOcclusion` has been updated with a new algorithm to provide better results at all scales, with tunable performance cost. To approximate the appearance and performance of the old algorithm, set the following values for `scene.postProcessStages.ambientOcclusion.uniforms`: `{ lengthCap: 0.02, directionCount: 6, stepCount: 8 }`. For best results at long distances, consider setting `Viewer.camera.frustum.near` to `1.0` or more, to improve precision in the depth buffer. [#12316](https://github.com/CesiumGS/cesium/pull/12316)
+- `Rectangle.validate` has been removed.
+
+##### Fixes :wrench:
+
+- Fixed bug where shared external textures from glTF files were not accounted for in resource statistics. [#12331](https://github.com/CesiumGS/cesium/pull/12331)
+- Fixed lag or crashes when loading many models in the same frame. [#12320](https://github.com/CesiumGS/cesium/pull/12320)
+- Fix point cloud filtering performance on certain hardware [#12317](https://github.com/CesiumGS/cesium/pull/12317)
+- Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+- Updated WMS example URL in UrlTemplateImageryProvider documentation to use an active service. [#12323](https://github.com/CesiumGS/cesium/pull/12323)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `createGooglePhotorealistic3DTileset(key)` has been deprecated. Use `createGooglePhotorealistic3DTileset({key})` instead. It will be removed in 1.126.
+
+#### @cesium/widgets
+
+##### Additions :tada:
+
+- Added the ability to choose between Bing and Google geocoders. Updated `Viewer` constructor to also accept `IonGeocoderProvider` [#12299](https://github.com/CesiumGS/cesium/pull/12299)
+
+##### Fixes :wrench:
+
+- Added a `DeveloperError` when `globe` is set to `false` and a `baseLayer` is provided in `Viewer` options. This prevents errors caused by attempting to use a `baseLayer` without a globe. [#12274](https://github.com/CesiumGS/cesium/pull/12274)
+
+### 1.123.1 - 2024-11-07
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added fallback diffuse lighting, `DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS`, that is used when `DynamicEnvironmentMapManager` is disabled or unsupported. [#12292](https://github.com/CesiumGS/cesium/pull/12292)
+- Added `DynamicEnvironmentMapManager.isDynamicUpdateSupported` to check if dynamic environment map updates are supported. [#12292](https://github.com/CesiumGS/cesium/pull/12292)
+
+### 1.123 - 2024-11-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. To approximate previous default lighting, use the following settings:
+
+  ```js
+  const environmentMapManager = model.environmentMapManager; // or tileset.environmentMapManager;
+  environmentMapManager.saturation = 0.35;
+  environmentMapManager.brightness = 1.4;
+  environmentMapManager.gamma = 0.8;
+  environmentMapManager.atmosphereScatteringIntensity = 5.0;
+  environmentMapManager.groundColor =
+    Cesium.Color.fromCssColorString("#001850");
+  ```
+
+- `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager.atmosphereScatteringIntensity` instead. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+- Changed the default `Fog.density` from `0.0002` to `0.0006`. Set `viewer.scene.fog.density = 0.002` to return to the previous behavior. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
+
+##### Additions :tada:
+
+- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. Added `DynamicEnvironmentMapManager` to control lighting parameters. These can be accessed via `Cesium3DTileset.environmentMapManager` and `Model.environmentMapManager`. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+- Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
+- Exposed `Fog.visualDensityScalar` to allow modifying the visual density of fog without affecting the culling aspects. Alongside this, the density calculation was adjusted to make it more smooth across heights. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
+- Update Japan Buildings sandcastle to use Japan Regional Terrain [#12259](https://github.com/CesiumGS/cesium/pull/12259)
+- Moved `Viewer` functionality to `CesiumWidget` to increase usability, see the full list added to the `CesiumWidget` below. No functionality was removed from the `Viewer` but convenience helpers like the `entities` collection were added to the `CesiumWidget`. The `CesiumWidget` should be closer to a drop in replacement for the `Viewer` when not utilizing the extra Viewer widgets. [#11967](https://github.com/CesiumGS/cesium/issues/11967).
+  - New constructor options: `options.shouldAnimate`, `options.automaticallyTrackDataSourceClocks`, `options.dataSources`
+  - New properties: `dataSourceDisplay`, `entities`, `dataSources`, `allowDataSourcesToSuspendAnimation`, `trackedEntity`, `trackedEntityChanged`, `clockTrackedDataSource`
+  - New functions: `zoomTo()`, `flyTo()`
+- Update Bing Maps attribution link [#12265](https://github.com/CesiumGS/cesium/pull/12265)
+
+##### Fixes :wrench:
+
+- Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
+- Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+- Fix error with normalization of corner points for lines and corridors with collinear points. [#12255](https://github.com/CesiumGS/cesium/pull/12255)
+
+##### Fixes :wrench:
+
+- Properly handle `offset` and `scale` properties when picking metadata from property textures. [#12237](https://github.com/CesiumGS/cesium/pull/12237)
+
+### 1.122 - 2024-10-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `CallbackPositionProperty` to allow lazy entity position evaluation. [#12170](https://github.com/CesiumGS/cesium/pull/12170)
+- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
+- Added `Scene.prototype.pickMetadata` and `Scene.prototype.pickMetadataSchema`, enabling experimental support for picking property textures or property attributes [#12075](https://github.com/CesiumGS/cesium/pull/12075)
+- Added experimental support for the `NGA_gpm_local` glTF extension, for GPM 1.2 [#12204](https://github.com/CesiumGS/cesium/pull/12204)
+
+##### Fixes :wrench:
+
+- Fix `Texture` errors when using a `HTMLVideoElement`. [#12219](https://github.com/CesiumGS/cesium/issues/12219)
+- Fixed noise in ambient occlusion post process. [#12201](https://github.com/CesiumGS/cesium/pull/12201)
+- Use first `geometryBuffer` if no best match found in I3SNode. [#12132](https://github.com/CesiumGS/cesium/pull/12132)
+- Update type definitions throughout `Core/` to allow undefined for optional parameters. [#12193](https://github.com/CesiumGS/cesium/pull/12193)
+- Reverts Firefox OIT temporary fix. [#4815](https://github.com/CesiumGS/cesium/pull/4815)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Rectangle.validate` has been deprecated. It will be removed in 1.124.
+
+### 1.121.1 - 2024-09-04
+
+This is an npm-only release to extra source maps included in 1.121
+
+### 1.121 - 2024-09-03
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Enable MSAA by default with 4 samples. To turn MSAA off set `scene.msaaSamples = 1` [#12158](https://github.com/CesiumGS/cesium/pull/12158)
+- Expose the `tonemapper` property of `PostProcessStageCollection` to allow changing the tonemap used when HDR is turned on. This defaults to the [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral) [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+  - The enum `Tonemapper` contains the list of valid tonemap options to use with the `tonemapper` setting
+- Expose the `exposure` property of `PostProcessStageCollection` to allow changing the exposure used for the current HDR tonemap [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+- Added `WaterMask` globe material, which visualizes areas of water or land based on the terrain's water mask. [#12149](https://github.com/CesiumGS/cesium/pull/12149)
+- Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
+- Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
+
+##### Fixes :wrench:
+
+- Update `CameraEventAggregator` to only trigger events for the currently held modifier while dragging. Events are canceled for all modifiers when the mouse is lifted. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
+- Fixed cube-mapping artifacts in image-based lighting. [#12100](https://github.com/CesiumGS/cesium/pull/12100)
+- Fixed specular reflection artifact in PBR direct lighting. [#12116](https://github.com/CesiumGS/cesium/pull/12116)
+- Added multiscattering terms to diffuse BRDF in image-based lighting. [#12118](https://github.com/CesiumGS/cesium/pull/12118)
+- Fixed `CallbackProperty` type not being present on entity position. [#12120](https://github.com/CesiumGS/cesium/pull/12120)
+- Additional TypeScript types export in `package.json` to assist some project configurations using Cesium. [#12122](https://github.com/CesiumGS/cesium/pull/12122)
+- Fixed documentation about default values for Label origins [#12139](https://github.com/CesiumGS/cesium/pull/12139)
+
+##### Breaking Changes :mega:
+
+- Switched the default (non-HDR) tonemapping for models, atmosphere, and globe from ACES to [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral). The widens the gamut of possible colors, and provides more consistent color appearances across renderers. [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+- Switched the default tonemapper when HDR is turned _on_ from ACES to [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral). To preserve the previous behavior set `viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;` [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+- `SceneTransforms.wgs84ToWindowCoordinates` has been removed. Use `SceneTransforms.worldToWindowCoordinates` instead.
+- `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been removed. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
+- Removed `jitter` option from `VoxelPrimitive.js`, `VoxelRenderResources.js`, and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
+- Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
+
 ### 1.120 - 2024-08-01
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Added `Transforms.computeIcrfToMoonFixedMatrix` and `Transforms.computeMoonFixedToIcrfMatrix` to compute the transformations between the Moon's fixed frame and ICRF at a given time.
+- Added `Transforms.computeIcrfToCentralBodyFixedMatrix` to specific the default ICRF to fixed frame transformation to use internally, including for lighting calculations.
+- Added SplitDirection property for display PointPrimitive and Billboard relative to the `Scene.splitPosition`. [#11982](https://github.com/CesiumGS/cesium/pull/11982)
+
 ##### Fixes :wrench:
 
-- Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
 - Fixed environment map LOD selection in image-based lighting. [#12070](https://github.com/CesiumGS/cesium/pull/12070)
+- Corrected calculation of diffuse component in image-based lighting. [#12082](https://github.com/CesiumGS/cesium/pull/12082)
+- Updated specular BRDF for image-based lighting. [#12083](https://github.com/CesiumGS/cesium/pull/12083)
+- Fixed environment map transform for image-based lighting. [#12091](https://github.com/CesiumGS/cesium/pull/12091)
+- Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
+- Prevent Bing Imagery API format issues from throwing errors [#12094](https://github.com/CesiumGS/cesium/pull/12094)
 
 ### 1.119 - 2024-07-01
 
@@ -36,7 +208,7 @@
 ##### Deprecated :hourglass_flowing_sand:
 
 - `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been deprecated. It will be removed in 1.121. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
-- `SceneTransforms.wgs84ToWindowCoordinates` has been deprecated. It will be removed in 1.21. Use `SceneTransforms.worldToWindowCoordinates` instead.
+- `SceneTransforms.wgs84ToWindowCoordinates` has been deprecated. It will be removed in 1.121. Use `SceneTransforms.worldToWindowCoordinates` instead.
 
 #### @cesium/widgets
 
@@ -2085,7 +2257,7 @@ _This is an npm-only release to fix a publishing issue_.
   - This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
   ```javascript
   clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-    tileset.boundingSphere.center
+    tileset.boundingSphere.center,
   );
   ```
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.

@@ -152,7 +152,7 @@ function createVectorTilePolygons(parameters, transferableObjects) {
     const cart = Cartographic.fromRadians(x, y, 0.0, scratchBVCartographic);
     const decodedPosition = ellipsoid.cartographicToCartesian(
       cart,
-      scratchEncodedPosition
+      scratchEncodedPosition,
     );
     Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
   }
@@ -257,13 +257,13 @@ function createVectorTilePolygons(parameters, transferableObjects) {
       const position = Cartesian3.unpack(
         decodedPositions,
         polygonOffset * 3 + j * 3,
-        scratchEncodedPosition
+        scratchEncodedPosition,
       );
       ellipsoid.scaleToGeodeticSurface(position, position);
 
       const carto = ellipsoid.cartesianToCartographic(
         position,
-        scratchBVCartographic
+        scratchBVCartographic,
       );
       const lat = carto.latitude;
       const lon = carto.longitude;
@@ -277,23 +277,23 @@ function createVectorTilePolygons(parameters, transferableObjects) {
       let scaledNormal = Cartesian3.multiplyByScalar(
         normal,
         polygonMinimumHeight,
-        scratchScaledNormal
+        scratchScaledNormal,
       );
       const minHeightPosition = Cartesian3.add(
         position,
         scaledNormal,
-        scratchMinHeightPosition
+        scratchMinHeightPosition,
       );
 
       scaledNormal = Cartesian3.multiplyByScalar(
         normal,
         polygonMaximumHeight,
-        scaledNormal
+        scaledNormal,
       );
       const maxHeightPosition = Cartesian3.add(
         position,
         scaledNormal,
-        scratchMaxHeightPosition
+        scratchMaxHeightPosition,
       );
 
       Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
@@ -319,7 +319,7 @@ function createVectorTilePolygons(parameters, transferableObjects) {
       rectangle,
       minHeight,
       maxHeight,
-      ellipsoid
+      ellipsoid,
     );
 
     let indicesIndex = buffer.indexOffset;
@@ -367,7 +367,7 @@ function createVectorTilePolygons(parameters, transferableObjects) {
 
   batchedIndices = IndexDatatype.createTypedArray(
     batchedPositions.length / 3,
-    batchedIndices
+    batchedIndices,
   );
 
   const batchedIndicesLength = batchedDrawCalls.length;
@@ -388,7 +388,7 @@ function createVectorTilePolygons(parameters, transferableObjects) {
   const packedBuffer = packBuffer(
     indexDatatype,
     boundingVolumes,
-    batchedDrawCalls
+    batchedDrawCalls,
   );
 
   transferableObjects.push(
@@ -397,7 +397,7 @@ function createVectorTilePolygons(parameters, transferableObjects) {
     batchedIndexOffsets.buffer,
     batchedIndexCounts.buffer,
     batchedIds.buffer,
-    packedBuffer.buffer
+    packedBuffer.buffer,
   );
 
   return {

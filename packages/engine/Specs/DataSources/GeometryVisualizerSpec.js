@@ -77,7 +77,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       expect(visualizer.update(time)).toBe(true);
       expect(scene.primitives.length).toBe(0);
@@ -92,7 +92,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -103,7 +103,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -113,10 +113,10 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(primitive.appearance).toBeInstanceOf(PerInstanceColorAppearance);
         expect(primitive.appearance.closed).toBe(true);
@@ -135,7 +135,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -146,7 +146,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -156,7 +156,7 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toBeUndefined();
         expect(primitive.appearance).toBeInstanceOf(MaterialAppearance);
@@ -176,7 +176,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -187,7 +187,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -197,10 +197,10 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(primitive.appearance).toBeInstanceOf(PerInstanceColorAppearance);
         expect(primitive.appearance.closed).toBe(true);
@@ -219,7 +219,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -230,7 +230,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -240,7 +240,7 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toBeUndefined();
         expect(primitive.appearance).toBeInstanceOf(MaterialAppearance);
@@ -260,7 +260,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -272,7 +272,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -282,10 +282,10 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.BLUE)
+          ColorGeometryInstanceAttribute.toValue(Color.BLUE),
         );
         expect(primitive.appearance).toBeInstanceOf(PerInstanceColorAppearance);
 
@@ -303,7 +303,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -315,7 +315,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -354,7 +354,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -365,7 +365,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -384,19 +384,19 @@ describe(
 
     it("Creates and removes geometry classifying terrain", function () {
       return createAndRemoveGeometryWithClassificationType(
-        ClassificationType.TERRAIN
+        ClassificationType.TERRAIN,
       );
     });
 
     it("Creates and removes geometry classifying 3D Tiles", function () {
       return createAndRemoveGeometryWithClassificationType(
-        ClassificationType.CESIUM_3D_TILE
+        ClassificationType.CESIUM_3D_TILE,
       );
     });
 
     it("Creates and removes geometry classifying both terrain and 3D Tiles", function () {
       return createAndRemoveGeometryWithClassificationType(
-        ClassificationType.BOTH
+        ClassificationType.BOTH,
       );
     });
 
@@ -406,7 +406,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -417,7 +417,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -427,10 +427,10 @@ describe(
         let attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(primitive.appearance).toBeInstanceOf(PerInstanceColorAppearance);
 
@@ -441,7 +441,7 @@ describe(
           attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
           expect(attributes.color).toBeUndefined();
           expect(primitive.appearance).toBeInstanceOf(MaterialAppearance);
@@ -464,7 +464,7 @@ describe(
         scene,
         entities,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       let color = Color.BLUE.withAlpha(0.5);
@@ -485,7 +485,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.color).toEqual(
-            ColorGeometryInstanceAttribute.toValue(color)
+            ColorGeometryInstanceAttribute.toValue(color),
           );
 
           color = Color.RED.withAlpha(0.5);
@@ -498,7 +498,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.color).toEqual(
-            ColorGeometryInstanceAttribute.toValue(color)
+            ColorGeometryInstanceAttribute.toValue(color),
           );
 
           entities.remove(entity);
@@ -512,7 +512,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -524,7 +524,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -546,7 +546,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -557,7 +557,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.ellipse = ellipse;
       objects.add(entity);
@@ -580,7 +580,7 @@ describe(
           undefined,
           objects,
           scene.primitives,
-          scene.groundPrimitives
+          scene.groundPrimitives,
         );
       }).toThrowDeveloperError();
     });
@@ -591,7 +591,7 @@ describe(
           scene,
           undefined,
           scene.primitives,
-          scene.groundPrimitives
+          scene.groundPrimitives,
         );
       }).toThrowDeveloperError();
     });
@@ -601,7 +601,7 @@ describe(
         scene,
         new EntityCollection(),
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       expect(function () {
         visualizer.update(undefined);
@@ -614,7 +614,7 @@ describe(
         scene,
         entityCollection,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
       visualizer.destroy();
@@ -627,7 +627,7 @@ describe(
         scene,
         entityCollection,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const destroySpy = jasmine.createSpy("destroy");
@@ -649,7 +649,7 @@ describe(
         scene,
         entityCollection,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const ellipse = new EllipseGraphics();
@@ -679,8 +679,8 @@ describe(
           BoundingSphere.transform(
             attributes.boundingSphere,
             primitive.modelMatrix,
-            new BoundingSphere()
-          )
+            new BoundingSphere(),
+          ),
         );
 
         visualizer.destroy();
@@ -693,7 +693,7 @@ describe(
         scene,
         entityCollection,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const result = new BoundingSphere();
@@ -712,7 +712,7 @@ describe(
         scene,
         entityCollection,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       expect(function () {
@@ -728,7 +728,7 @@ describe(
         scene,
         objects,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const entity = new Entity({
@@ -763,13 +763,13 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity2);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
           expect(attributes.color).toEqual(
-            ColorGeometryInstanceAttribute.toValue(Color.BLUE)
+            ColorGeometryInstanceAttribute.toValue(Color.BLUE),
           );
           expect(primitive.appearance).toBeInstanceOf(
-            PerInstanceColorAppearance
+            PerInstanceColorAppearance,
           );
 
           objects.remove(entity);
@@ -787,7 +787,7 @@ describe(
         scene,
         entities,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const entity = entities.add({
@@ -796,7 +796,7 @@ describe(
           semiMajorAxis: 2,
           semiMinorAxis: 1,
           material: new ColorMaterialProperty(
-            createDynamicProperty(Color.BLUE)
+            createDynamicProperty(Color.BLUE),
           ),
           height: 0,
         },
@@ -808,7 +808,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
 
           entity.show = false;
@@ -820,7 +820,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(false)
+            ShowGeometryInstanceAttribute.toValue(false),
           );
 
           entities.remove(entity);
@@ -834,7 +834,7 @@ describe(
         scene,
         entities,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const entity = entities.add({
@@ -854,7 +854,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
 
           entity.show = false;
@@ -866,7 +866,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(false)
+            ShowGeometryInstanceAttribute.toValue(false),
           );
 
           entities.remove(entity);
@@ -880,7 +880,7 @@ describe(
         scene,
         entities,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const entity = entities.add({
@@ -901,7 +901,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
 
           entity.show = false;
@@ -913,7 +913,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(false)
+            ShowGeometryInstanceAttribute.toValue(false),
           );
 
           entities.remove(entity);
@@ -934,7 +934,7 @@ describe(
         scene,
         entities,
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const blueColor = Color.BLUE.withAlpha(0.5);
@@ -1035,5 +1035,5 @@ describe(
       expect(spy).toHaveBeenCalledOnceWith(FakeUpdater);
     });
   },
-  "WebGL"
+  "WebGL",
 );

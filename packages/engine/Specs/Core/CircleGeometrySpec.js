@@ -43,7 +43,7 @@ describe("Core/CircleGeometry", function () {
         center: Cartesian3.fromDegrees(0, 0),
         granularity: 0.1,
         radius: 1.0,
-      })
+      }),
     );
 
     const numVertices = 16; //rows of 1 + 4 + 6 + 4 + 1
@@ -61,7 +61,7 @@ describe("Core/CircleGeometry", function () {
         center: Cartesian3.fromDegrees(0, 0),
         granularity: 0.1,
         radius: 1.0,
-      })
+      }),
     );
 
     const numVertices = 16;
@@ -83,7 +83,7 @@ describe("Core/CircleGeometry", function () {
         granularity: 0.1,
         radius: 1.0,
         extrudedHeight: 10000,
-      })
+      }),
     );
 
     const numVertices = 48; // 16 top circle + 16 bottom circle + 8 top edge + 8 bottom edge
@@ -101,7 +101,7 @@ describe("Core/CircleGeometry", function () {
         granularity: 0.1,
         radius: 1.0,
         extrudedHeight: 10000,
-      })
+      }),
     );
 
     const numVertices = 48;
@@ -123,7 +123,7 @@ describe("Core/CircleGeometry", function () {
         granularity: 0.1,
         radius: 1.0,
         stRotation: CesiumMath.PI_OVER_TWO,
-      })
+      }),
     );
 
     const positions = m.attributes.position.values;
@@ -183,27 +183,27 @@ describe("Core/CircleGeometry", function () {
     expect(textureCoordinateRotationPoints.length).toEqual(6);
     expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 

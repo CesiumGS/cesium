@@ -88,7 +88,7 @@ function original(a3, a2, a1, a0) {
     1.0,
     2.0 * p,
     p * p - 4.0 * r,
-    -q * q
+    -q * q,
   );
 
   if (cubicRoots.length > 0) {

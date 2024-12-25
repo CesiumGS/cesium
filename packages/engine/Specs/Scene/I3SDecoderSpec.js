@@ -53,22 +53,22 @@ describe("Scene/I3SDecoder", function () {
 
   it("throws with no default geometry schema", async function () {
     await expectAsync(
-      I3SDecoder.decode("mockUrl")
+      I3SDecoder.decode("mockUrl"),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("throws with no geometry data", async function () {
     await expectAsync(
-      I3SDecoder.decode("mockUrl", defaultGeometrySchema)
+      I3SDecoder.decode("mockUrl", defaultGeometrySchema),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("throws if not initialized", async function () {
     spyOn(TaskProcessor.prototype, "initWebAssemblyModule").and.returnValue(
-      Promise.resolve(false)
+      Promise.resolve(false),
     );
     await expectAsync(
-      I3SDecoder.decode("mockUrl", defaultGeometrySchema, geometryDataObb)
+      I3SDecoder.decode("mockUrl", defaultGeometrySchema, geometryDataObb),
     ).toBeRejectedWithError(RuntimeError);
   });
 
@@ -76,7 +76,7 @@ describe("Scene/I3SDecoder", function () {
     const result = await I3SDecoder.decode(
       "mockUrl",
       defaultGeometrySchema,
-      geometryDataObb
+      geometryDataObb,
     );
     expect(result).toBeDefined();
     expect(result.meshData).toBeDefined();
@@ -98,7 +98,7 @@ describe("Scene/I3SDecoder", function () {
     const result = await I3SDecoder.decode(
       "mockUrl",
       defaultGeometrySchema,
-      geometryDataMbs
+      geometryDataMbs,
     );
     expect(result).toBeDefined();
     expect(result.meshData).toBeDefined();
@@ -121,7 +121,7 @@ describe("Scene/I3SDecoder", function () {
       "mockUrl",
       defaultGeometrySchema,
       geometryDataMbs,
-      featureData
+      featureData,
     );
     expect(result).toBeDefined();
     expect(result.meshData).toBeDefined();

@@ -65,10 +65,10 @@ describe("DataSources/CorridorGraphics", function () {
     expect(corridor.cornerType.getValue()).toEqual(options.cornerType);
     expect(corridor.shadows.getValue()).toEqual(options.shadows);
     expect(corridor.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(corridor.classificationType.getValue()).toEqual(
-      options.classificationType
+      options.classificationType,
     );
     expect(corridor.zIndex.getValue()).toEqual(options.zIndex);
   });
@@ -89,10 +89,10 @@ describe("DataSources/CorridorGraphics", function () {
     source.cornerType = new ConstantProperty();
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.classificationType = new ConstantProperty(
-      ClassificationType.TERRAIN
+      ClassificationType.TERRAIN,
     );
     source.zIndex = new ConstantProperty(3);
 
@@ -113,7 +113,7 @@ describe("DataSources/CorridorGraphics", function () {
     expect(target.cornerType).toBe(source.cornerType);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.classificationType).toBe(source.classificationType);
     expect(target.zIndex).toBe(source.zIndex);
@@ -211,7 +211,7 @@ describe("DataSources/CorridorGraphics", function () {
     expect(result.cornerType).toBe(source.cornerType);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.classificationType).toBe(source.classificationType);
     expect(result.zIndex).toBe(source.zIndex);
@@ -241,25 +241,25 @@ describe("DataSources/CorridorGraphics", function () {
       property,
       "cornerType",
       CornerType.BEVELED,
-      CornerType.MITERED
+      CornerType.MITERED,
     );
     testDefinitionChanged(
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     testDefinitionChanged(
       property,
       "classificationType",
       ClassificationType.TERRAIN,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
     );
     testDefinitionChanged(property, "zIndex", 3, 0);
   });

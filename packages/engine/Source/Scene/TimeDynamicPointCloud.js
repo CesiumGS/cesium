@@ -61,7 +61,7 @@ function TimeDynamicPointCloud(options) {
    * @default Matrix4.IDENTITY
    */
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
 
   /**
@@ -306,7 +306,7 @@ function getNextInterval(that, currentInterval) {
   const time = JulianDate.addSeconds(
     clock.currentTime,
     averageLoadTime * multiplier,
-    scratchDate
+    scratchDate,
   );
   let index = intervals.indexOf(time);
 
@@ -404,7 +404,7 @@ function updateAverageLoadTime(that, loadTime) {
   that._runningSamples[that._runningIndex] = loadTime;
   that._runningLength = Math.min(
     that._runningLength + 1,
-    that._runningSamples.length
+    that._runningSamples.length,
   );
   that._runningIndex = (that._runningIndex + 1) % that._runningSamples.length;
   that._runningAverage = that._runningSum / that._runningLength;
@@ -449,7 +449,7 @@ function getGeometricError(that, pointCloud) {
     return shading.baseResolution;
   } else if (defined(pointCloud.boundingSphere)) {
     return CesiumMath.cbrt(
-      pointCloud.boundingSphere.volume() / pointCloud.pointsLength
+      pointCloud.boundingSphere.volume() / pointCloud.pointsLength,
     );
   }
   return 0.0;
@@ -474,7 +474,7 @@ function renderFrame(that, frame, updateState, frameState) {
   pointCloud.modelMatrix = Matrix4.multiplyTransformation(
     that.modelMatrix,
     transform,
-    scratchModelMatrix
+    scratchModelMatrix,
   );
   pointCloud.style = that.style;
   pointCloud.time = updateState.timeSinceLoad;
@@ -556,7 +556,7 @@ function getNearestReadyInterval(
   previousInterval,
   currentInterval,
   updateState,
-  frameState
+  frameState,
 ) {
   let i;
   let interval;
@@ -633,7 +633,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   // For styling
   const timeSinceLoad = Math.max(
     JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000,
-    0.0
+    0.0,
   );
 
   // Update clipping planes
@@ -701,7 +701,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
     previousInterval,
     currentInterval,
     updateState,
-    frameState
+    frameState,
   );
   let frame = getFrame(this, previousInterval);
 
@@ -761,7 +761,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
       frameState,
       lengthBeforeUpdate,
       shading,
-      this.boundingSphere
+      this.boundingSphere,
     );
   }
 };

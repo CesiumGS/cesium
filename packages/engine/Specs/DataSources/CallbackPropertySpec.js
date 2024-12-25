@@ -20,6 +20,19 @@ describe("DataSources/CallbackProperty", function () {
     expect(property.getValue(time, result)).toBe(result);
   });
 
+  it("getValue uses JulianDate.now() if time parameter is undefined", function () {
+    spyOn(JulianDate, "now").and.callThrough();
+
+    const result = "some time independent result";
+    const callback = function (_time, _result) {
+      return result;
+    };
+    const property = new CallbackProperty(callback, true);
+    const actualResult = property.getValue();
+    expect(JulianDate.now).toHaveBeenCalled();
+    expect(actualResult).toBe(result);
+  });
+
   it("isConstant returns correct value", function () {
     const property = new CallbackProperty(function () {}, true);
     expect(property.isConstant).toBe(true);

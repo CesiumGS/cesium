@@ -104,7 +104,7 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
-        "Empty3DTileContent cannot have content metadata"
+        "Empty3DTileContent cannot have content metadata",
       );
       //>>includeEnd('debug');
     },

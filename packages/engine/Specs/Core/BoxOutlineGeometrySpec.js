@@ -29,7 +29,7 @@ describe("Core/BoxOutlineGeometry", function () {
       new BoxOutlineGeometry({
         minimum: new Cartesian3(-1, -2, -3),
         maximum: new Cartesian3(1, 2, 3),
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(8 * 3);
@@ -42,7 +42,7 @@ describe("Core/BoxOutlineGeometry", function () {
         minimum: new Cartesian3(-1, -2, -3),
         maximum: new Cartesian3(1, 2, 3),
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
 
     const numVertices = 8;
@@ -72,7 +72,7 @@ describe("Core/BoxOutlineGeometry", function () {
     const m = BoxOutlineGeometry.createGeometry(
       BoxOutlineGeometry.fromDimensions({
         dimensions: new Cartesian3(1, 2, 3),
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(8 * 3);
@@ -89,7 +89,7 @@ describe("Core/BoxOutlineGeometry", function () {
     const min = new Cartesian3(-1, -2, -3);
     const max = new Cartesian3(1, 2, 3);
     const m = BoxOutlineGeometry.fromAxisAlignedBoundingBox(
-      new AxisAlignedBoundingBox(min, max)
+      new AxisAlignedBoundingBox(min, max),
     );
     expect(m._min).toEqual(min);
     expect(m._max).toEqual(max);
@@ -112,6 +112,6 @@ describe("Core/BoxOutlineGeometry", function () {
       minimum: new Cartesian3(1.0, 2.0, 3.0),
       maximum: new Cartesian3(4.0, 5.0, 6.0),
     }),
-    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, -1.0]
+    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, -1.0],
   );
 });

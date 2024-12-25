@@ -112,5 +112,5 @@ describe(
       expect(sun.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -39,7 +36,7 @@
           Sandcastle.declare(addPointPrimitive);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             color: Cesium.Color.YELLOW,
@@ -51,7 +48,7 @@
           Sandcastle.declare(setPointPrimitiveProperties);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -67,7 +64,7 @@
           Sandcastle.declare(changePointPrimitiveProperties);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
 
           // add() returns a PointPrimitive object containing functions to change
@@ -76,11 +73,7 @@
             pixelSize: 2,
           });
 
-          p.position = Cesium.Cartesian3.fromDegrees(
-            -75.59777,
-            40.03883,
-            300000.0
-          );
+          p.position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0);
           p.pixelSize = 20.0;
           p.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
         }
@@ -89,7 +82,7 @@
           Sandcastle.declare(addMultiplePointPrimitives);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -112,7 +105,7 @@
           Sandcastle.declare(scaleByDistance);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -127,17 +120,12 @@
           Sandcastle.declare(fadeByDistance);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
             pixelSize: 20,
-            translucencyByDistance: new Cesium.NearFarScalar(
-              1.5e2,
-              1.0,
-              1.5e7,
-              0.2
-            ),
+            translucencyByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2),
           });
         }
 
@@ -145,12 +133,10 @@
           Sandcastle.declare(inReferenceFrame);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-          pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-            center
-          );
+          pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
           // center
           pointPrimitives.add({
@@ -184,7 +170,7 @@
           const numPoints = 100000;
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           const base = scene.globe.ellipsoid.radii.x;
           const color = Cesium.Color.LIGHTSKYBLUE;
@@ -194,7 +180,7 @@
             const position = new Cesium.Cartesian3(
               16000000 * Math.random() - 8000000,
               -((4000000 * j) / numPoints + base),
-              2000000 * Math.random() - 1000000
+              2000000 * Math.random() - 1000000,
             );
 
             pointPrimitives.add({

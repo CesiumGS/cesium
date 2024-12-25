@@ -87,23 +87,27 @@ describe(
     }
 
     it("adds define to shader", function () {
-      return loadGltf(boxTexturedBinary, sceneWithWebgl2).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const node = components.nodes[1];
-        const primitive = node.primitives[0];
-        const frameState = sceneWithWebgl2.frameState;
+      return loadGltf(boxTexturedBinary, sceneWithWebgl2).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[1];
+          const primitive = node.primitives[0];
+          const frameState = sceneWithWebgl2.frameState;
 
-        const renderResources = mockRenderResources(primitive);
-        const shaderBuilder = renderResources.shaderBuilder;
+          const renderResources = mockRenderResources(primitive);
+          const shaderBuilder = renderResources.shaderBuilder;
 
-        WireframePipelineStage.process(renderResources, primitive, frameState);
+          WireframePipelineStage.process(
+            renderResources,
+            primitive,
+            frameState,
+          );
 
-        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-          "HAS_WIREFRAME",
-        ]);
-      });
+          ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+            "HAS_WIREFRAME",
+          ]);
+        },
+      );
     });
 
     it("Creates wireframe indices from buffer (WebGL 2)", function () {
@@ -111,64 +115,72 @@ describe(
         return;
       }
 
-      return loadGltf(boxTexturedBinary, sceneWithWebgl2).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const node = components.nodes[1];
-        const primitive = node.primitives[0];
-        const frameState = sceneWithWebgl2.frameState;
+      return loadGltf(boxTexturedBinary, sceneWithWebgl2).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[1];
+          const primitive = node.primitives[0];
+          const frameState = sceneWithWebgl2.frameState;
 
-        const renderResources = mockRenderResources(primitive);
+          const renderResources = mockRenderResources(primitive);
 
-        expect(renderResources.count).toBe(36);
-        expect(renderResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
+          expect(renderResources.count).toBe(36);
+          expect(renderResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
 
-        WireframePipelineStage.process(renderResources, primitive, frameState);
+          WireframePipelineStage.process(
+            renderResources,
+            primitive,
+            frameState,
+          );
 
-        const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
-        const model = renderResources.model;
-        expect(wireframeIndexBuffer).toBeDefined();
-        expect(model._pipelineResources).toEqual([wireframeIndexBuffer]);
-        expect(model.statistics.geometryByteLength).toBe(
-          wireframeIndexBuffer.sizeInBytes
-        );
-        expect(renderResources.primitiveType).toBe(PrimitiveType.LINES);
-        expect(renderResources.count).toBe(72);
-      });
+          const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
+          const model = renderResources.model;
+          expect(wireframeIndexBuffer).toBeDefined();
+          expect(model._pipelineResources).toEqual([wireframeIndexBuffer]);
+          expect(model.statistics.geometryByteLength).toBe(
+            wireframeIndexBuffer.sizeInBytes,
+          );
+          expect(renderResources.primitiveType).toBe(PrimitiveType.LINES);
+          expect(renderResources.count).toBe(72);
+        },
+      );
     });
 
     it("Creates wireframe indices from typedArray (WebGL 1)", function () {
       const options = {
         loadIndicesForWireframe: true,
       };
-      return loadGltf(boxTexturedBinary, scene, options).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const node = components.nodes[1];
-        const primitive = node.primitives[0];
-        const frameState = scene.frameState;
+      return loadGltf(boxTexturedBinary, scene, options).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[1];
+          const primitive = node.primitives[0];
+          const frameState = scene.frameState;
 
-        const renderResources = mockRenderResources(primitive);
+          const renderResources = mockRenderResources(primitive);
 
-        expect(renderResources.count).toBe(36);
-        expect(renderResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
+          expect(renderResources.count).toBe(36);
+          expect(renderResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
 
-        WireframePipelineStage.process(renderResources, primitive, frameState);
+          WireframePipelineStage.process(
+            renderResources,
+            primitive,
+            frameState,
+          );
 
-        const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
-        const model = renderResources.model;
-        expect(wireframeIndexBuffer).toBeDefined();
-        expect(model._pipelineResources).toEqual([wireframeIndexBuffer]);
-        expect(model.statistics.geometryByteLength).toBe(
-          wireframeIndexBuffer.sizeInBytes
-        );
+          const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
+          const model = renderResources.model;
+          expect(wireframeIndexBuffer).toBeDefined();
+          expect(model._pipelineResources).toEqual([wireframeIndexBuffer]);
+          expect(model.statistics.geometryByteLength).toBe(
+            wireframeIndexBuffer.sizeInBytes,
+          );
 
-        expect(renderResources.primitiveType).toBe(PrimitiveType.LINES);
-        expect(renderResources.count).toBe(72);
-      });
+          expect(renderResources.primitiveType).toBe(PrimitiveType.LINES);
+          expect(renderResources.count).toBe(72);
+        },
+      );
     });
   },
-  "WebGL"
+  "WebGL",
 );

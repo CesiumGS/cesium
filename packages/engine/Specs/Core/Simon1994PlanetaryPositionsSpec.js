@@ -1,5 +1,4 @@
 import {
-  defined,
   JulianDate,
   Matrix3,
   Math as CesiumMath,
@@ -83,22 +82,17 @@ describe("Core/Simon1994PlanetaryPositions", function () {
     }
     const angles = [];
     for (i = 0; i < 24; i++) {
-      transformMatrix = Transforms.computeIcrfToFixedMatrix(
+      transformMatrix = Transforms.computeIcrfToCentralBodyFixedMatrix(
         timesOfDay[i],
-        transformMatrix
+        transformMatrix,
       );
-      if (!defined(transformMatrix)) {
-        transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(
+      const position =
+        PlanetaryPositions.computeSunPositionInEarthInertialFrame(
           timesOfDay[i],
-          transformMatrix
         );
-      }
-      const position = PlanetaryPositions.computeSunPositionInEarthInertialFrame(
-        timesOfDay[i]
-      );
       Matrix3.multiplyByVector(transformMatrix, position, position);
       angles.push(
-        CesiumMath.convertLongitudeRange(Math.atan2(position.y, position.x))
+        CesiumMath.convertLongitudeRange(Math.atan2(position.y, position.x)),
       );
     }
     //Expect a clockwise motion.

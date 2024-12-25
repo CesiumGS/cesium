@@ -290,7 +290,7 @@ describe("Scene/BatchTableHierarchy", function () {
     });
     expect(hierarchy.getProperty(0, "items")).toBe(1);
     expect(hierarchy.getProperty(0, "coordinates")).toEqual(
-      new Cartesian2(1, 0)
+      new Cartesian2(1, 0),
     );
     expect(hierarchy.getProperty(0, "boxCount")).toBe(1);
 
@@ -300,13 +300,13 @@ describe("Scene/BatchTableHierarchy", function () {
 
     expect(hierarchy.getProperty(2, "items")).toBe(2);
     expect(hierarchy.getProperty(2, "coordinates")).toEqual(
-      new Cartesian2(1, 2)
+      new Cartesian2(1, 2),
     );
     expect(hierarchy.getProperty(2, "boxCount")).not.toBeDefined();
 
     expect(hierarchy.getProperty(3, "items")).toBe(3);
     expect(hierarchy.getProperty(3, "coordinates")).toEqual(
-      new Cartesian2(3, 2)
+      new Cartesian2(3, 2),
     );
     expect(hierarchy.getProperty(3, "boxCount")).not.toBeDefined();
   });
@@ -319,7 +319,7 @@ describe("Scene/BatchTableHierarchy", function () {
     });
     expect(hierarchy.getProperty(0, "items")).toBe(1);
     expect(hierarchy.getProperty(0, "coordinates")).toEqual(
-      new Cartesian2(1, 0)
+      new Cartesian2(1, 0),
     );
     expect(hierarchy.getProperty(0, "boxCount")).toBe(1);
 
@@ -329,13 +329,13 @@ describe("Scene/BatchTableHierarchy", function () {
 
     expect(hierarchy.getProperty(2, "items")).toBe(2);
     expect(hierarchy.getProperty(2, "coordinates")).toEqual(
-      new Cartesian2(1, 2)
+      new Cartesian2(1, 2),
     );
     expect(hierarchy.getProperty(2, "boxCount")).not.toBeDefined();
 
     expect(hierarchy.getProperty(3, "items")).toBe(3);
     expect(hierarchy.getProperty(3, "coordinates")).toEqual(
-      new Cartesian2(3, 2)
+      new Cartesian2(3, 2),
     );
     expect(hierarchy.getProperty(3, "boxCount")).not.toBeDefined();
   });
@@ -380,7 +380,7 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(hierarchy.getProperty(0, "items")).toBe(5);
 
     expect(hierarchy.getProperty(2, "coordinates")).toEqual(
-      new Cartesian2(1, 2)
+      new Cartesian2(1, 2),
     );
     const position = new Cartesian2(5, 5);
     expect(hierarchy.setProperty(2, "coordinates", position)).toBe(true);
@@ -399,7 +399,7 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(hierarchy.getProperty(0, "items")).toBe(5);
 
     expect(hierarchy.getProperty(2, "coordinates")).toEqual(
-      new Cartesian2(1, 2)
+      new Cartesian2(1, 2),
     );
     const position = new Cartesian2(5, 5);
     expect(hierarchy.setProperty(2, "coordinates", position)).toBe(true);

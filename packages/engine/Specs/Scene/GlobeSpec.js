@@ -48,7 +48,7 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         if (url.indexOf("layer.json") >= 0) {
           Resource._DefaultImplementations.loadWithXhr(
@@ -57,7 +57,7 @@ describe(
             method,
             data,
             headers,
-            deferred
+            deferred,
           );
         } else {
           return oldLoad(
@@ -67,7 +67,7 @@ describe(
             data,
             headers,
             deferred,
-            overrideMimeType
+            overrideMimeType,
           );
         }
       };
@@ -75,7 +75,7 @@ describe(
 
     function returnVertexNormalTileJson() {
       return returnTileJson(
-        "Data/CesiumTerrainTileJson/VertexNormals.tile.json"
+        "Data/CesiumTerrainTileJson/VertexNormals.tile.json",
       );
     }
 
@@ -98,7 +98,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(provider);
 
@@ -121,7 +121,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(provider);
 
@@ -145,7 +145,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(provider);
 
@@ -167,7 +167,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
 
       layerCollection.addImageryProvider(provider);
@@ -193,7 +193,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       const layer = layerCollection.addImageryProvider(provider);
       layerCollection.addImageryProvider(provider);
@@ -232,7 +232,7 @@ describe(
         "made/up/url",
         {
           requestVertexNormals: true,
-        }
+        },
       );
 
       const spyListener = jasmine.createSpy("listener");
@@ -268,7 +268,7 @@ describe(
         "made/up/url",
         {
           requestVertexNormals: true,
-        }
+        },
       );
 
       globe.terrainProvider = terrainProvider;
@@ -286,7 +286,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const imageryProvider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(imageryProvider);
       Resource._Implementations.loadWithXhr = function (
@@ -296,7 +296,7 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         Resource._DefaultImplementations.loadWithXhr(
           "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
@@ -304,7 +304,7 @@ describe(
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       };
 
@@ -314,7 +314,7 @@ describe(
         "made/up/url",
         {
           requestVertexNormals: true,
-        }
+        },
       );
 
       globe.terrainProvider = terrainProvider;
@@ -339,7 +339,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const imageryProvider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(imageryProvider);
       Resource._Implementations.loadWithXhr = function (
@@ -349,7 +349,7 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         Resource._DefaultImplementations.loadWithXhr(
           "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
@@ -357,7 +357,7 @@ describe(
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       };
 
@@ -367,7 +367,7 @@ describe(
         "made/up/url",
         {
           requestVertexNormals: true,
-        }
+        },
       );
 
       globe.terrainProvider = terrainProvider;
@@ -395,7 +395,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const imageryProvider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(imageryProvider);
       Resource._Implementations.loadWithXhr = function (
@@ -405,7 +405,7 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         Resource._DefaultImplementations.loadWithXhr(
           "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
@@ -413,7 +413,7 @@ describe(
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       };
 
@@ -423,7 +423,7 @@ describe(
         "made/up/url",
         {
           requestVertexNormals: true,
-        }
+        },
       );
 
       globe.terrainProvider = terrainProvider;
@@ -445,7 +445,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Blue.png"
+        "Data/Images/Blue.png",
       );
       layerCollection.addImageryProvider(provider);
 
@@ -467,7 +467,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Blue.png"
+        "Data/Images/Blue.png",
       );
       layerCollection.addImageryProvider(provider);
 
@@ -489,7 +489,7 @@ describe(
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Blue.png"
+        "Data/Images/Blue.png",
       );
       layerCollection.addImageryProvider(provider);
 
@@ -541,7 +541,7 @@ describe(
         command = scene.frameState.commandList[0];
         expect(command.count).toBeLessThan(indexCount);
         expect(command.count).toBe(
-          command.owner.data.renderedMesh.indexCountWithoutSkirts
+          command.owner.data.renderedMesh.indexCountWithoutSkirts,
         );
       });
     });
@@ -557,12 +557,12 @@ describe(
         destination: new Cartesian3(
           -524251.65918537375,
           -5316355.5357514685,
-          3400179.253223899
+          3400179.253223899,
         ),
         orientation: new HeadingPitchRoll(
           0.22779127099032603,
           -0.7030060668670961,
-          0.0024147223687949193
+          0.0024147223687949193,
         ),
       });
 
@@ -583,19 +583,19 @@ describe(
         radius * 0.25,
         0.0,
         radius * 2.0,
-        1.0
+        1.0,
       );
 
       scene.camera.setView({
         destination: new Cartesian3(
           -524251.65918537375,
           -5316355.5357514685,
-          3400179.253223899
+          3400179.253223899,
         ),
         orientation: new HeadingPitchRoll(
           0.24245689061958142,
           -0.445653254172905,
-          0.0024147223687949193
+          0.0024147223687949193,
         ),
       });
 
@@ -613,10 +613,10 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -7,40 +7,40 @@ import {
 describe("Scene/MetadataComponentType", function () {
   it("getMinimum", function () {
     expect(MetadataComponentType.getMinimum(MetadataComponentType.INT8)).toBe(
-      -128
+      -128,
     );
     expect(MetadataComponentType.getMinimum(MetadataComponentType.UINT8)).toBe(
-      0
+      0,
     );
     expect(MetadataComponentType.getMinimum(MetadataComponentType.INT16)).toBe(
-      -32768
+      -32768,
     );
     expect(MetadataComponentType.getMinimum(MetadataComponentType.UINT16)).toBe(
-      0
+      0,
     );
     expect(MetadataComponentType.getMinimum(MetadataComponentType.INT32)).toBe(
-      -2147483648
+      -2147483648,
     );
     expect(MetadataComponentType.getMinimum(MetadataComponentType.UINT32)).toBe(
-      0
+      0,
     );
     expect(
-      MetadataComponentType.getMinimum(MetadataComponentType.FLOAT32)
+      MetadataComponentType.getMinimum(MetadataComponentType.FLOAT32),
     ).toBe(-340282346638528859811704183484516925440.0);
     expect(
-      MetadataComponentType.getMinimum(MetadataComponentType.FLOAT64)
+      MetadataComponentType.getMinimum(MetadataComponentType.FLOAT64),
     ).toBe(-Number.MAX_VALUE);
 
     if (FeatureDetection.supportsBigInt()) {
       expect(
-        MetadataComponentType.getMinimum(MetadataComponentType.INT64)
+        MetadataComponentType.getMinimum(MetadataComponentType.INT64),
       ).toBe(
-        BigInt("-9223372036854775808") // eslint-disable-line
+        BigInt("-9223372036854775808"), // eslint-disable-line
       );
       expect(
-        MetadataComponentType.getMinimum(MetadataComponentType.UINT64)
+        MetadataComponentType.getMinimum(MetadataComponentType.UINT64),
       ).toBe(
-        BigInt(0) // eslint-disable-line
+        BigInt(0), // eslint-disable-line
       );
     }
   });
@@ -48,14 +48,14 @@ describe("Scene/MetadataComponentType", function () {
   it("getMinimum returns approximate number for INT64 when BigInt is not supported", function () {
     spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
     expect(MetadataComponentType.getMinimum(MetadataComponentType.INT64)).toBe(
-      -Math.pow(2, 63)
+      -Math.pow(2, 63),
     );
   });
 
   it("getMinimum returns number for UINT64 when BigInt is not supported", function () {
     spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
     expect(MetadataComponentType.getMinimum(MetadataComponentType.UINT64)).toBe(
-      0
+      0,
     );
   });
 
@@ -73,40 +73,40 @@ describe("Scene/MetadataComponentType", function () {
 
   it("getMaximum", function () {
     expect(MetadataComponentType.getMaximum(MetadataComponentType.INT8)).toBe(
-      127
+      127,
     );
     expect(MetadataComponentType.getMaximum(MetadataComponentType.UINT8)).toBe(
-      255
+      255,
     );
     expect(MetadataComponentType.getMaximum(MetadataComponentType.INT16)).toBe(
-      32767
+      32767,
     );
     expect(MetadataComponentType.getMaximum(MetadataComponentType.UINT16)).toBe(
-      65535
+      65535,
     );
     expect(MetadataComponentType.getMaximum(MetadataComponentType.INT32)).toBe(
-      2147483647
+      2147483647,
     );
     expect(MetadataComponentType.getMaximum(MetadataComponentType.UINT32)).toBe(
-      4294967295
+      4294967295,
     );
     expect(
-      MetadataComponentType.getMaximum(MetadataComponentType.FLOAT32)
+      MetadataComponentType.getMaximum(MetadataComponentType.FLOAT32),
     ).toBe(340282346638528859811704183484516925440.0);
     expect(
-      MetadataComponentType.getMaximum(MetadataComponentType.FLOAT64)
+      MetadataComponentType.getMaximum(MetadataComponentType.FLOAT64),
     ).toBe(Number.MAX_VALUE);
 
     if (FeatureDetection.supportsBigInt()) {
       expect(
-        MetadataComponentType.getMaximum(MetadataComponentType.INT64)
+        MetadataComponentType.getMaximum(MetadataComponentType.INT64),
       ).toBe(
-        BigInt("9223372036854775807") // eslint-disable-line
+        BigInt("9223372036854775807"), // eslint-disable-line
       );
       expect(
-        MetadataComponentType.getMaximum(MetadataComponentType.UINT64)
+        MetadataComponentType.getMaximum(MetadataComponentType.UINT64),
       ).toBe(
-        BigInt("18446744073709551615") // eslint-disable-line
+        BigInt("18446744073709551615"), // eslint-disable-line
       );
     }
   });
@@ -114,14 +114,14 @@ describe("Scene/MetadataComponentType", function () {
   it("getMaximum returns approximate number for INT64 when BigInt is not supported", function () {
     spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
     expect(MetadataComponentType.getMaximum(MetadataComponentType.INT64)).toBe(
-      Math.pow(2, 63) - 1
+      Math.pow(2, 63) - 1,
     );
   });
 
   it("getMaximum returns approximate number for UINT64 when BigInt is not supported", function () {
     spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
     expect(MetadataComponentType.getMaximum(MetadataComponentType.UINT64)).toBe(
-      Math.pow(2, 64) - 1
+      Math.pow(2, 64) - 1,
     );
   });
 
@@ -139,34 +139,34 @@ describe("Scene/MetadataComponentType", function () {
 
   it("isIntegerType", function () {
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.INT8)
+      MetadataComponentType.isIntegerType(MetadataComponentType.INT8),
     ).toBe(true);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.UINT8)
+      MetadataComponentType.isIntegerType(MetadataComponentType.UINT8),
     ).toBe(true);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.INT16)
+      MetadataComponentType.isIntegerType(MetadataComponentType.INT16),
     ).toBe(true);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.UINT16)
+      MetadataComponentType.isIntegerType(MetadataComponentType.UINT16),
     ).toBe(true);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.INT32)
+      MetadataComponentType.isIntegerType(MetadataComponentType.INT32),
     ).toBe(true);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.UINT32)
+      MetadataComponentType.isIntegerType(MetadataComponentType.UINT32),
     ).toBe(true);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.INT64)
+      MetadataComponentType.isIntegerType(MetadataComponentType.INT64),
     ).toBe(true);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.UINT64)
+      MetadataComponentType.isIntegerType(MetadataComponentType.UINT64),
     ).toBe(true);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.FLOAT32)
+      MetadataComponentType.isIntegerType(MetadataComponentType.FLOAT32),
     ).toBe(false);
     expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.FLOAT64)
+      MetadataComponentType.isIntegerType(MetadataComponentType.FLOAT64),
     ).toBe(false);
   });
 
@@ -178,34 +178,38 @@ describe("Scene/MetadataComponentType", function () {
 
   it("isUnsignedIntegerType", function () {
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.INT8)
+      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.INT8),
     ).toBe(false);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.UINT8)
+      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.UINT8),
     ).toBe(true);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.INT16)
+      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.INT16),
     ).toBe(false);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.UINT16)
+      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.UINT16),
     ).toBe(true);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.INT32)
+      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.INT32),
     ).toBe(false);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.UINT32)
+      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.UINT32),
     ).toBe(true);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.INT64)
+      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.INT64),
     ).toBe(false);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.UINT64)
+      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.UINT64),
     ).toBe(true);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.FLOAT32)
+      MetadataComponentType.isUnsignedIntegerType(
+        MetadataComponentType.FLOAT32,
+      ),
     ).toBe(false);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.FLOAT64)
+      MetadataComponentType.isUnsignedIntegerType(
+        MetadataComponentType.FLOAT64,
+      ),
     ).toBe(false);
   });
 
@@ -271,7 +275,7 @@ describe("Scene/MetadataComponentType", function () {
     for (let j = 0; j < values.length; ++j) {
       const result = MetadataComponentType.normalize(
         values[j],
-        MetadataComponentType.INT64
+        MetadataComponentType.INT64,
       );
       expect(result).toBe(expectedResults[j]);
     }
@@ -289,7 +293,7 @@ describe("Scene/MetadataComponentType", function () {
     for (let j = 0; j < values.length; ++j) {
       const result = MetadataComponentType.normalize(
         values[j],
-        MetadataComponentType.UINT64
+        MetadataComponentType.UINT64,
       );
       expect(result).toBe(expectedResults[j]);
     }
@@ -381,7 +385,7 @@ describe("Scene/MetadataComponentType", function () {
     for (let i = 0; i < values.length; ++i) {
       const result = MetadataComponentType.unnormalize(
         values[i],
-        MetadataComponentType.INT64
+        MetadataComponentType.INT64,
       );
       expect(result).toBe(expectedResults[i]);
     }
@@ -406,7 +410,7 @@ describe("Scene/MetadataComponentType", function () {
     for (let i = 0; i < values.length; ++i) {
       const result = MetadataComponentType.unnormalize(
         values[i],
-        MetadataComponentType.UINT64
+        MetadataComponentType.UINT64,
       );
       expect(result).toBe(expectedResults[i]);
     }
@@ -414,16 +418,16 @@ describe("Scene/MetadataComponentType", function () {
 
   it("unnormalize clamps values outside the range", function () {
     expect(
-      MetadataComponentType.unnormalize(-1.1, MetadataComponentType.INT8)
+      MetadataComponentType.unnormalize(-1.1, MetadataComponentType.INT8),
     ).toBe(-127);
     expect(
-      MetadataComponentType.unnormalize(-0.1, MetadataComponentType.UINT8)
+      MetadataComponentType.unnormalize(-0.1, MetadataComponentType.UINT8),
     ).toBe(0);
     expect(
-      MetadataComponentType.unnormalize(1.1, MetadataComponentType.INT8)
+      MetadataComponentType.unnormalize(1.1, MetadataComponentType.INT8),
     ).toBe(127);
     expect(
-      MetadataComponentType.unnormalize(1.1, MetadataComponentType.UINT8)
+      MetadataComponentType.unnormalize(1.1, MetadataComponentType.UINT8),
     ).toBe(255);
   });
 
@@ -447,34 +451,34 @@ describe("Scene/MetadataComponentType", function () {
 
   it("getSizeInBytes", function () {
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT8)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT8),
     ).toBe(1);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT8)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT8),
     ).toBe(1);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT16)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT16),
     ).toBe(2);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT16)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT16),
     ).toBe(2);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT32)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT32),
     ).toBe(4);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT32)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT32),
     ).toBe(4);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT64)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT64),
     ).toBe(8);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT64)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT64),
     ).toBe(8);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.FLOAT32)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.FLOAT32),
     ).toBe(4);
     expect(
-      MetadataComponentType.getSizeInBytes(MetadataComponentType.FLOAT64)
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.FLOAT64),
     ).toBe(8);
   });
 
@@ -492,34 +496,34 @@ describe("Scene/MetadataComponentType", function () {
 
   it("fromComponentDatatype", function () {
     expect(
-      MetadataComponentType.fromComponentDatatype(ComponentDatatype.BYTE)
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.BYTE),
     ).toBe(MetadataComponentType.INT8);
     expect(
       MetadataComponentType.fromComponentDatatype(
-        ComponentDatatype.UNSIGNED_BYTE
-      )
+        ComponentDatatype.UNSIGNED_BYTE,
+      ),
     ).toBe(MetadataComponentType.UINT8);
     expect(
-      MetadataComponentType.fromComponentDatatype(ComponentDatatype.SHORT)
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.SHORT),
     ).toBe(MetadataComponentType.INT16);
     expect(
       MetadataComponentType.fromComponentDatatype(
-        ComponentDatatype.UNSIGNED_SHORT
-      )
+        ComponentDatatype.UNSIGNED_SHORT,
+      ),
     ).toBe(MetadataComponentType.UINT16);
     expect(
-      MetadataComponentType.fromComponentDatatype(ComponentDatatype.INT)
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.INT),
     ).toBe(MetadataComponentType.INT32);
     expect(
       MetadataComponentType.fromComponentDatatype(
-        ComponentDatatype.UNSIGNED_INT
-      )
+        ComponentDatatype.UNSIGNED_INT,
+      ),
     ).toBe(MetadataComponentType.UINT32);
     expect(
-      MetadataComponentType.fromComponentDatatype(ComponentDatatype.FLOAT)
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.FLOAT),
     ).toBe(MetadataComponentType.FLOAT32);
     expect(
-      MetadataComponentType.fromComponentDatatype(ComponentDatatype.DOUBLE)
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.DOUBLE),
     ).toBe(MetadataComponentType.FLOAT64);
   });
 
@@ -531,40 +535,40 @@ describe("Scene/MetadataComponentType", function () {
 
   it("toComponentDatatype", function () {
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT8)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT8),
     ).toBe(ComponentDatatype.BYTE);
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT8)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT8),
     ).toBe(ComponentDatatype.UNSIGNED_BYTE);
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT16)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT16),
     ).toBe(ComponentDatatype.SHORT);
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT16)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT16),
     ).toBe(ComponentDatatype.UNSIGNED_SHORT);
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT32)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT32),
     ).toBe(ComponentDatatype.INT);
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT32)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT32),
     ).toBe(ComponentDatatype.UNSIGNED_INT);
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.FLOAT32)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.FLOAT32),
     ).toBe(ComponentDatatype.FLOAT);
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.FLOAT64)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.FLOAT64),
     ).toBe(ComponentDatatype.DOUBLE);
   });
 
   it("toComponentDatatype returns undefined for INT64", function () {
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT64)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT64),
     ).toBeUndefined();
   });
 
   it("toComponentDatatype returns undefined for UINT64", function () {
     expect(
-      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT64)
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT64),
     ).toBeUndefined();
   });
 

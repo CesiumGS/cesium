@@ -112,7 +112,7 @@ function SimplePolylineGeometry(options) {
   this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
   this._granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this._workerName = "createSimplePolylineGeometry";
@@ -263,7 +263,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
 
   const minDistance = CesiumMath.chordLength(
     granularity,
-    ellipsoid.maximumRadius
+    ellipsoid.maximumRadius,
   );
   const perSegmentColors = defined(colors) && !colorsPerVertex;
 
@@ -283,7 +283,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
     if (arcType === ArcType.GEODESIC) {
       subdivisionSize = CesiumMath.chordLength(
         granularity,
-        ellipsoid.maximumRadius
+        ellipsoid.maximumRadius,
       );
       numberOfPointsFunction = PolylinePipeline.numberOfPoints;
       generateArcFunction = PolylinePipeline.generateArc;
@@ -310,7 +310,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
           numberOfPointsFunction(
             positions[i],
             positions[i + 1],
-            subdivisionSize
+            subdivisionSize,
           ) + 1;
       }
 
@@ -348,7 +348,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
       generateArcOptions.positions = positions;
       generateArcOptions.height = heights;
       positionValues = new Float64Array(
-        generateArcFunction(generateArcOptions)
+        generateArcFunction(generateArcOptions),
       );
 
       if (defined(colors)) {
@@ -366,7 +366,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
             c1,
             minDistance,
             colorValues,
-            offset
+            offset,
           );
         }
 
@@ -438,7 +438,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
   const numberOfIndices = (numberOfPositions - 1) * 2;
   const indices = IndexDatatype.createTypedArray(
     numberOfPositions,
-    numberOfIndices
+    numberOfIndices,
   );
 
   let index = 0;

@@ -36,7 +36,7 @@ describe(
         lowFrameRateMessage: "Foo",
       });
       expect(viewer.performanceWatchdog.viewModel.lowFrameRateMessage).toBe(
-        "Foo"
+        "Foo",
       );
     });
 
@@ -46,5 +46,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

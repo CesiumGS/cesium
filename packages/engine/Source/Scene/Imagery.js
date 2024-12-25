@@ -22,7 +22,7 @@ function Imagery(imageryLayer, x, y, level, rectangle) {
     this.parent = imageryLayer.getImageryFromCache(
       parentX,
       parentY,
-      parentLevel
+      parentLevel,
     );
   }
 
@@ -88,7 +88,7 @@ Imagery.prototype.releaseReference = function () {
 Imagery.prototype.processStateMachine = function (
   frameState,
   needGeographicProjection,
-  skipLoading
+  skipLoading,
 ) {
   if (this.state === ImageryState.UNLOADED && !skipLoading) {
     this.state = ImageryState.TRANSITIONING;
@@ -113,7 +113,7 @@ Imagery.prototype.processStateMachine = function (
     this.imageryLayer._reprojectTexture(
       frameState,
       this,
-      needGeographicProjection
+      needGeographicProjection,
     );
   }
 };

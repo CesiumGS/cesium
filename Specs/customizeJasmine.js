@@ -9,7 +9,7 @@ function customizeJasmine(
   webglStub,
   release,
   debugCanvasWidth,
-  debugCanvasHeight
+  debugCanvasHeight,
 ) {
   // set this for uniform test resolution across devices
   window.devicePixelRatio = 1;

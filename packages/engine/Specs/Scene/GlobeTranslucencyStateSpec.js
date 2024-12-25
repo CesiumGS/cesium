@@ -130,7 +130,7 @@ describe("Scene/GlobeTranslucencyState", function () {
       0.0,
       0.5,
       1.0,
-      0.75
+      0.75,
     );
     state.update(scene);
     expect(frontFaceAlphaByDistance.nearValue).toBe(0.25);
@@ -630,22 +630,20 @@ describe("Scene/GlobeTranslucencyState", function () {
       executeCommand,
       framebuffer,
       scene,
-      passState
+      passState,
     );
 
     expect(executeCommand).toHaveBeenCalledWith(
       command.derivedCommands.globeTranslucency.opaqueBackFaceCommand,
       scene,
-      context,
-      passState
+      passState,
     );
     expect(
-      GlobeTranslucencyFramebuffer.prototype.clearClassification
+      GlobeTranslucencyFramebuffer.prototype.clearClassification,
     ).toHaveBeenCalled();
   });
 
   it("does not execute globe commands if there are no commands", function () {
-    const frameState = scene.frameState;
     const context = frameState.context;
     const passState = new PassState(context);
 
@@ -657,7 +655,7 @@ describe("Scene/GlobeTranslucencyState", function () {
       executeCommand,
       framebuffer,
       scene,
-      passState
+      passState,
     );
 
     expect(executeCommand).not.toHaveBeenCalled();
@@ -686,9 +684,8 @@ describe("Scene/GlobeTranslucencyState", function () {
     const frustumCommands = new FrustumCommands();
     frustumCommands.commands[Pass.GLOBE] = globeCommands;
     frustumCommands.indices[Pass.GLOBE] = globeCommands.length;
-    frustumCommands.commands[
-      Pass.TERRAIN_CLASSIFICATION
-    ] = classificationCommands;
+    frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION] =
+      classificationCommands;
     frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION] =
       classificationCommands.length;
 
@@ -697,25 +694,23 @@ describe("Scene/GlobeTranslucencyState", function () {
       executeCommand,
       framebuffer,
       scene,
-      passState
+      passState,
     );
 
     expect(executeCommand).toHaveBeenCalledWith(
       classificationCommand,
       scene,
-      context,
-      passState
+      passState,
     );
     expect(executeCommand).toHaveBeenCalledWith(
       command.derivedCommands.globeTranslucency.depthOnlyFrontFaceCommand,
       scene,
-      context,
-      passState
+      passState,
     );
 
     if (context.depthTexture) {
       expect(
-        GlobeTranslucencyFramebuffer.prototype.packDepth
+        GlobeTranslucencyFramebuffer.prototype.packDepth,
       ).toHaveBeenCalled();
     }
   });

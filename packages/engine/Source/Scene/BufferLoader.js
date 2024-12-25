@@ -32,7 +32,7 @@ function BufferLoader(options) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(typedArray) === defined(resource)) {
     throw new DeveloperError(
-      "One of options.typedArray and options.resource must be defined."
+      "One of options.typedArray and options.resource must be defined.",
     );
   }
   //>>includeEnd('debug');

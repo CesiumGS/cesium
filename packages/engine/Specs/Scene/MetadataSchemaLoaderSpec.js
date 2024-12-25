@@ -74,7 +74,7 @@ describe("Scene/MetadataSchemaLoader", function () {
 
     await expectAsync(schemaLoader.load()).toBeRejectedWithError(
       RuntimeError,
-      "Failed to load schema: https://example.com/schema.json\n404 Not Found"
+      "Failed to load schema: https://example.com/schema.json\n404 Not Found",
     );
   });
 
@@ -96,7 +96,7 @@ describe("Scene/MetadataSchemaLoader", function () {
 
   it("loads external schema", async function () {
     const fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(schemaJson)
+      Promise.resolve(schemaJson),
     );
 
     const schemaLoader = new MetadataSchemaLoader({
@@ -119,7 +119,7 @@ describe("Scene/MetadataSchemaLoader", function () {
 
   it("destroys schema", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(schemaJson)
+      Promise.resolve(schemaJson),
     );
 
     const schemaLoader = new MetadataSchemaLoader({
@@ -140,7 +140,7 @@ describe("Scene/MetadataSchemaLoader", function () {
 
   async function resolveJsonAfterDestroy(rejectPromise) {
     spyOn(Resource.prototype, "fetchJson").and.callFake(() =>
-      rejectPromise ? Promise.reject(new Error()) : Promise.resolve(schemaJson)
+      rejectPromise ? Promise.reject(new Error()) : Promise.resolve(schemaJson),
     );
 
     const schemaLoader = new MetadataSchemaLoader({

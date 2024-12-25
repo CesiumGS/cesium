@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -16,10 +16,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -46,6 +43,7 @@
           animation: false,
           sceneModePicker: false,
           baseLayerPicker: false,
+          geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
         });
         const scene = viewer.scene;
 
@@ -63,7 +61,10 @@
 
         let worldTileset;
         try {
-          worldTileset = await Cesium.createGooglePhotorealistic3DTileset();
+          worldTileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
           scene.primitives.add(worldTileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
@@ -73,9 +74,7 @@
         // Add tileset of proposed new building
         let buildingTileset;
         try {
-          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            1670818
-          );
+          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(1670818);
           scene.primitives.add(buildingTileset);
         } catch (error) {
           console.log(`Error loading building tileset.
@@ -86,7 +85,7 @@
         const cameraOffset = new Cesium.HeadingPitchRange(
           Cesium.Math.toRadians(95.0),
           Cesium.Math.toRadians(-18.0),
-          600.0
+          600.0,
         );
         viewer.zoomTo(buildingTileset, cameraOffset);
 
@@ -108,7 +107,7 @@
                 [-105.00715641889735, 39.751312128419926],
                 [-105.00715641889735, 39.75135429046085],
                 [-105.0077102972673, 39.75198671798765],
-              ].flat(2)
+              ].flat(2),
             ),
           }),
         ];
@@ -150,9 +149,7 @@
         });
 
         // Toggle between default and inverse clipping
-        Sandcastle.addToggleButton("Inverse clipping", false, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Inverse clipping", false, function (checked) {
           worldTileset.clippingPolygons.inverse = checked;
           scene.globe.clippingPolygons.inverse = checked;
         });
@@ -160,24 +157,20 @@
         Sandcastle.addToolbarButton("Remove last polygon", () => {
           if (worldTileset.clippingPolygons.length > 0) {
             worldTileset.clippingPolygons.remove(
-              worldTileset.clippingPolygons.get(
-                worldTileset.clippingPolygons.length - 1
-              )
+              worldTileset.clippingPolygons.get(worldTileset.clippingPolygons.length - 1),
             );
           }
 
           if (scene.globe.clippingPolygons.length > 0) {
             scene.globe.clippingPolygons.remove(
-              scene.globe.clippingPolygons.get(
-                scene.globe.clippingPolygons.length - 1
-              )
+              scene.globe.clippingPolygons.get(scene.globe.clippingPolygons.length - 1),
             );
           }
         });
 
         // Allow clicking new positions to
         viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
-          Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+          Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
         );
         function createPoint(worldPosition) {
           const point = viewer.entities.add({
@@ -194,7 +187,7 @@
             polygon: {
               hierarchy: positionData,
               material: new Cesium.ColorMaterialProperty(
-                Cesium.Color.WHITE.withAlpha(0.7)
+                Cesium.Color.WHITE.withAlpha(0.7),
               ),
             },
           });
@@ -247,13 +240,13 @@
           worldTileset.clippingPolygons.add(
             new Cesium.ClippingPolygon({
               positions: positions,
-            })
+            }),
           );
 
           scene.globe.clippingPolygons.add(
             new Cesium.ClippingPolygon({
               positions: positions,
-            })
+            }),
           );
         }
 

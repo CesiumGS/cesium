@@ -50,8 +50,8 @@ describe(
       expect(uniformMap.model_colorBlend()).toEqual(
         ColorBlendMode.getColorBlend(
           mockModel.colorBlendMode,
-          mockModel.colorBlendAmount
-        )
+          mockModel.colorBlendAmount,
+        ),
       );
     });
 
@@ -82,8 +82,8 @@ describe(
       expect(uniformMap.model_colorBlend()).toEqual(
         ColorBlendMode.getColorBlend(
           mockModel.colorBlendMode,
-          mockModel.colorBlendAmount
-        )
+          mockModel.colorBlendAmount,
+        ),
       );
     });
 
@@ -110,5 +110,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

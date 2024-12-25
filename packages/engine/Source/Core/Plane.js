@@ -38,7 +38,7 @@ function Plane(normal, distance) {
     !CesiumMath.equalsEpsilon(
       Cartesian3.magnitude(normal),
       1.0,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     )
   ) {
     throw new DeveloperError("normal must be normalized.");
@@ -88,7 +88,7 @@ Plane.fromPointNormal = function (point, normal, result) {
     !CesiumMath.equalsEpsilon(
       Cartesian3.magnitude(normal),
       1.0,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     )
   ) {
     throw new DeveloperError("normal must be normalized.");
@@ -129,7 +129,7 @@ Plane.fromCartesian4 = function (coefficients, result) {
     !CesiumMath.equalsEpsilon(
       Cartesian3.magnitude(normal),
       1.0,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     )
   ) {
     throw new DeveloperError("normal must be normalized.");
@@ -187,7 +187,7 @@ Plane.projectPointOntoPlane = function (plane, point, result) {
   const scaledNormal = Cartesian3.multiplyByScalar(
     plane.normal,
     pointDistance,
-    scratchCartesian
+    scratchCartesian,
   );
 
   return Cartesian3.subtract(point, scaledNormal, result);
@@ -214,31 +214,31 @@ Plane.transform = function (plane, transform, result) {
   const distance = plane.distance;
   const inverseTranspose = Matrix4.inverseTranspose(
     transform,
-    scratchInverseTranspose
+    scratchInverseTranspose,
   );
   let planeAsCartesian4 = Cartesian4.fromElements(
     normal.x,
     normal.y,
     normal.z,
     distance,
-    scratchPlaneCartesian4
+    scratchPlaneCartesian4,
   );
   planeAsCartesian4 = Matrix4.multiplyByVector(
     inverseTranspose,
     planeAsCartesian4,
-    planeAsCartesian4
+    planeAsCartesian4,
   );
 
   // Convert the transformed plane to Hessian Normal Form
   const transformedNormal = Cartesian3.fromCartesian4(
     planeAsCartesian4,
-    scratchTransformNormal
+    scratchTransformNormal,
   );
 
   planeAsCartesian4 = Cartesian4.divideByScalar(
     planeAsCartesian4,
     Cartesian3.magnitude(transformedNormal),
-    planeAsCartesian4
+    planeAsCartesian4,
   );
 
   return Plane.fromCartesian4(planeAsCartesian4, result);

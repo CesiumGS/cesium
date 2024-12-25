@@ -45,7 +45,7 @@ describe("Core/Matrix3", function () {
     const tmp = Cartesian3.multiplyByScalar(
       new Cartesian3(0.0, 0.0, 1.0),
       sPiOver4,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
     const expected = new Matrix3(
@@ -57,7 +57,7 @@ describe("Core/Matrix3", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
 
     const returnedResult = Matrix3.fromQuaternion(quaternion);
@@ -73,7 +73,7 @@ describe("Core/Matrix3", function () {
     const tmp = Cartesian3.multiplyByScalar(
       new Cartesian3(0.0, 0.0, 1.0),
       sPiOver4,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
     const expected = new Matrix3(
@@ -85,7 +85,7 @@ describe("Core/Matrix3", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = new Matrix3();
     const returnedResult = Matrix3.fromQuaternion(quaternion, result);
@@ -102,7 +102,7 @@ describe("Core/Matrix3", function () {
     const tmp = Cartesian3.multiplyByScalar(
       new Cartesian3(0.0, 0.0, 1.0),
       sPiOver4,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
     const headingPitchRoll = HeadingPitchRoll.fromQuaternion(quaternion);
@@ -115,7 +115,7 @@ describe("Core/Matrix3", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
 
     const returnedResult = Matrix3.fromHeadingPitchRoll(headingPitchRoll);
@@ -131,7 +131,7 @@ describe("Core/Matrix3", function () {
     const tmp = Cartesian3.multiplyByScalar(
       new Cartesian3(0.0, 0.0, 1.0),
       sPiOver4,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
     const headingPitchRoll = HeadingPitchRoll.fromQuaternion(quaternion);
@@ -144,12 +144,12 @@ describe("Core/Matrix3", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = new Matrix3();
     const returnedResult = Matrix3.fromHeadingPitchRoll(
       headingPitchRoll,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -166,18 +166,18 @@ describe("Core/Matrix3", function () {
       -0.742685314912828,
       -0.642787609686539,
       0.627506871597133,
-      0.439385041770705
+      0.439385041770705,
     );
 
     const headingPitchRoll = new HeadingPitchRoll(
       -CesiumMath.toRadians(10),
       -CesiumMath.toRadians(40),
-      CesiumMath.toRadians(55)
+      CesiumMath.toRadians(55),
     );
     const result = new Matrix3();
     const returnedResult = Matrix3.fromHeadingPitchRoll(
       headingPitchRoll,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -195,7 +195,7 @@ describe("Core/Matrix3", function () {
     const result = new Matrix3();
     const returnedResult = Matrix3.fromScale(
       new Cartesian3(7.0, 8.0, 9.0),
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
@@ -227,7 +227,7 @@ describe("Core/Matrix3", function () {
       -1.0,
       2.0,
       1.0,
-      0.0
+      0.0,
     );
     const left = new Cartesian3(1.0, -2.0, 3.0);
     const returnedResult = Matrix3.fromCrossProduct(left);
@@ -246,7 +246,7 @@ describe("Core/Matrix3", function () {
     crossProductResult = Matrix3.multiply(
       returnedResult,
       right,
-      crossProductResult
+      crossProductResult,
     );
     expect(crossProductResult).toEqual(crossProductExpected);
   });
@@ -261,7 +261,7 @@ describe("Core/Matrix3", function () {
       -1.0,
       2.0,
       1.0,
-      0.0
+      0.0,
     );
     const left = new Cartesian3(1.0, -2.0, 3.0);
     const result = new Matrix3();
@@ -281,7 +281,7 @@ describe("Core/Matrix3", function () {
     crossProductResult = Matrix3.multiply(
       returnedResult,
       right,
-      crossProductResult
+      crossProductResult,
     );
     expect(crossProductResult).toEqual(crossProductExpected);
   });
@@ -289,15 +289,7 @@ describe("Core/Matrix3", function () {
   it("fromArray works without a result parameter", function () {
     const expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     const matrix = Matrix3.fromArray([
-      1.0,
-      4.0,
-      7.0,
-      2.0,
-      5.0,
-      8.0,
-      3.0,
-      6.0,
-      9.0,
+      1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0,
     ]);
     expect(matrix).toEqual(expected);
   });
@@ -308,7 +300,7 @@ describe("Core/Matrix3", function () {
     const matrix = Matrix3.fromArray(
       [1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0],
       0,
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -320,7 +312,7 @@ describe("Core/Matrix3", function () {
     const matrix = Matrix3.fromArray(
       [0.0, 0.0, 0.0, 1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0],
       3,
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -329,15 +321,7 @@ describe("Core/Matrix3", function () {
   it("fromRowMajorArray works without a result parameter", function () {
     const expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     const matrix = Matrix3.fromRowMajorArray([
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
+      1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
     ]);
     expect(matrix).toEqual(expected);
   });
@@ -347,7 +331,7 @@ describe("Core/Matrix3", function () {
     const result = new Matrix3();
     const matrix = Matrix3.fromRowMajorArray(
       [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -356,15 +340,7 @@ describe("Core/Matrix3", function () {
   it("fromColumnMajorArray works without a result parameter", function () {
     const expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     const matrix = Matrix3.fromColumnMajorArray([
-      1.0,
-      4.0,
-      7.0,
-      2.0,
-      5.0,
-      8.0,
-      3.0,
-      6.0,
-      9.0,
+      1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0,
     ]);
     expect(matrix).toEqual(expected);
   });
@@ -374,7 +350,7 @@ describe("Core/Matrix3", function () {
     const result = new Matrix3();
     const matrix = Matrix3.fromColumnMajorArray(
       [1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0],
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -438,7 +414,7 @@ describe("Core/Matrix3", function () {
   it("toArray works without a result parameter", function () {
     const expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
     const returnedResult = Matrix3.toArray(
-      Matrix3.fromColumnMajorArray(expected)
+      Matrix3.fromColumnMajorArray(expected),
     );
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqual(expected);
@@ -449,7 +425,7 @@ describe("Core/Matrix3", function () {
     const result = [];
     const returnedResult = Matrix3.toArray(
       Matrix3.fromColumnMajorArray(expected),
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
@@ -497,7 +473,7 @@ describe("Core/Matrix3", function () {
       matrix,
       0,
       new Cartesian3(10.0, 11.0, 12.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -507,7 +483,7 @@ describe("Core/Matrix3", function () {
       matrix,
       1,
       new Cartesian3(13.0, 14.0, 15.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -517,7 +493,7 @@ describe("Core/Matrix3", function () {
       matrix,
       2,
       new Cartesian3(16.0, 17.0, 18.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -553,7 +529,7 @@ describe("Core/Matrix3", function () {
       matrix,
       0,
       new Cartesian3(10.0, 11.0, 12.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -563,7 +539,7 @@ describe("Core/Matrix3", function () {
       matrix,
       1,
       new Cartesian3(13.0, 14.0, 15.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -573,7 +549,7 @@ describe("Core/Matrix3", function () {
       matrix,
       2,
       new Cartesian3(16.0, 17.0, 18.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -591,7 +567,7 @@ describe("Core/Matrix3", function () {
     const returnedResult = Matrix3.setScale(matrix, newScale, result);
 
     expect(Matrix3.getScale(returnedResult, new Cartesian3())).toEqual(
-      newScale
+      newScale,
     );
     expect(result).toBe(returnedResult);
   });
@@ -608,7 +584,7 @@ describe("Core/Matrix3", function () {
     const returnedResult = Matrix3.setUniformScale(matrix, newScale, result);
 
     expect(Matrix3.getScale(returnedResult, new Cartesian3())).toEqual(
-      new Cartesian3(newScale, newScale, newScale)
+      new Cartesian3(newScale, newScale, newScale),
     );
     expect(result).toBe(returnedResult);
   });
@@ -626,7 +602,7 @@ describe("Core/Matrix3", function () {
     const m = Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0));
     expect(Matrix3.getMaximumScale(m)).toEqualEpsilon(
       4.0,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -645,15 +621,7 @@ describe("Core/Matrix3", function () {
 
   it("getRotation returns matrix without scale", function () {
     const matrix = Matrix3.fromColumnMajorArray([
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
+      1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
     ]);
     const expectedRotation = Matrix3.fromArray([
       1.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
@@ -672,15 +640,7 @@ describe("Core/Matrix3", function () {
 
   it("getRotation does not modify rotation matrix", function () {
     const matrix = Matrix3.fromColumnMajorArray([
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
+      1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
     ]);
     const duplicateMatrix = Matrix3.clone(matrix, new Matrix3());
     const expectedRotation = Matrix3.fromArray([
@@ -763,7 +723,7 @@ describe("Core/Matrix3", function () {
     const expected = Matrix3.multiply(
       m,
       Matrix3.fromScale(scale),
-      new Matrix3()
+      new Matrix3(),
     );
     const result = new Matrix3();
     const returnedResult = Matrix3.multiplyByScale(m, scale, result);
@@ -777,7 +737,7 @@ describe("Core/Matrix3", function () {
     const expected = Matrix3.multiply(
       m,
       Matrix3.fromScale(scale),
-      new Matrix3()
+      new Matrix3(),
     );
     const returnedResult = Matrix3.multiplyByScale(m, scale, m);
     expect(returnedResult).toBe(m);
@@ -790,7 +750,7 @@ describe("Core/Matrix3", function () {
     const expected = Matrix3.multiply(
       m,
       Matrix3.fromUniformScale(scale),
-      new Matrix3()
+      new Matrix3(),
     );
     const result = new Matrix3();
     const returnedResult = Matrix3.multiplyByUniformScale(m, scale, result);
@@ -804,7 +764,7 @@ describe("Core/Matrix3", function () {
     const expected = Matrix3.multiply(
       m,
       Matrix3.fromUniformScale(scale),
-      new Matrix3()
+      new Matrix3(),
     );
     const returnedResult = Matrix3.multiplyByUniformScale(m, scale, m);
     expect(returnedResult).toBe(m);
@@ -842,7 +802,7 @@ describe("Core/Matrix3", function () {
       -6.0,
       -7.0,
       -8.0,
-      -9.0
+      -9.0,
     );
     const result = new Matrix3();
     const returnedResult = Matrix3.negate(matrix, result);
@@ -861,7 +821,7 @@ describe("Core/Matrix3", function () {
       -6.0,
       -7.0,
       -8.0,
-      -9.0
+      -9.0,
     );
     const returnedResult = Matrix3.negate(matrix, matrix);
     expect(matrix).toBe(returnedResult);
@@ -882,7 +842,7 @@ describe("Core/Matrix3", function () {
     const expectedInverse = Matrix3.inverse(matrix, new Matrix3());
     const expectedInverseTranspose = Matrix3.transpose(
       expectedInverse,
-      new Matrix3()
+      new Matrix3(),
     );
     const result = Matrix3.inverseTranspose(matrix, new Matrix3());
     expect(result).toEqual(expectedInverseTranspose);
@@ -914,7 +874,7 @@ describe("Core/Matrix3", function () {
       5.0,
       3.0,
       -3.0,
-      4.0
+      4.0,
     );
     const result = new Matrix3();
     const returnedResult = Matrix3.inverse(matrix, result);
@@ -933,7 +893,7 @@ describe("Core/Matrix3", function () {
       5.0,
       3.0,
       -3.0,
-      4.0
+      4.0,
     );
     const returnedResult = Matrix3.inverse(matrix, matrix);
     expect(matrix).toBe(returnedResult);
@@ -952,41 +912,44 @@ describe("Core/Matrix3", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
 
     const decomposition = Matrix3.computeEigenDecomposition(a);
     expect(decomposition.diagonal).toEqualEpsilon(
       expectedDiagonal,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     let v = Matrix3.getColumn(decomposition.unitary, 0, new Cartesian3());
-    let lambda = Matrix3.getColumn(decomposition.diagonal, 0, new Cartesian3())
-      .x;
+    let lambda = Matrix3.getColumn(
+      decomposition.diagonal,
+      0,
+      new Cartesian3(),
+    ).x;
     expect(
-      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())
+      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3()),
     ).toEqualEpsilon(
       Matrix3.multiplyByVector(a, v, new Cartesian3()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     v = Matrix3.getColumn(decomposition.unitary, 1, new Cartesian3());
     lambda = Matrix3.getColumn(decomposition.diagonal, 1, new Cartesian3()).y;
     expect(
-      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())
+      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3()),
     ).toEqualEpsilon(
       Matrix3.multiplyByVector(a, v, new Cartesian3()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     v = Matrix3.getColumn(decomposition.unitary, 2, new Cartesian3());
     lambda = Matrix3.getColumn(decomposition.diagonal, 2, new Cartesian3()).z;
     expect(
-      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())
+      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3()),
     ).toEqualEpsilon(
       Matrix3.multiplyByVector(a, v, new Cartesian3()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -1002,7 +965,7 @@ describe("Core/Matrix3", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = {
       unitary: new Matrix3(),
@@ -1013,35 +976,38 @@ describe("Core/Matrix3", function () {
     expect(decomposition).toBe(result);
     expect(decomposition.diagonal).toEqualEpsilon(
       expectedDiagonal,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     let v = Matrix3.getColumn(decomposition.unitary, 0, new Cartesian3());
-    let lambda = Matrix3.getColumn(decomposition.diagonal, 0, new Cartesian3())
-      .x;
+    let lambda = Matrix3.getColumn(
+      decomposition.diagonal,
+      0,
+      new Cartesian3(),
+    ).x;
     expect(
-      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())
+      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3()),
     ).toEqualEpsilon(
       Matrix3.multiplyByVector(a, v, new Cartesian3()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     v = Matrix3.getColumn(decomposition.unitary, 1, new Cartesian3());
     lambda = Matrix3.getColumn(decomposition.diagonal, 1, new Cartesian3()).y;
     expect(
-      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())
+      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3()),
     ).toEqualEpsilon(
       Matrix3.multiplyByVector(a, v, new Cartesian3()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     v = Matrix3.getColumn(decomposition.unitary, 2, new Cartesian3());
     lambda = Matrix3.getColumn(decomposition.diagonal, 2, new Cartesian3()).z;
     expect(
-      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())
+      Cartesian3.multiplyByScalar(v, lambda, new Cartesian3()),
     ).toEqualEpsilon(
       Matrix3.multiplyByVector(a, v, new Cartesian3()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -1055,7 +1021,7 @@ describe("Core/Matrix3", function () {
       -6.0,
       -7.0,
       -8.0,
-      -9.0
+      -9.0,
     );
     const expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     const result = new Matrix3();
@@ -1081,7 +1047,7 @@ describe("Core/Matrix3", function () {
       -6.0,
       -7.0,
       -8.0,
-      -9.0
+      -9.0,
     );
     const expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     const returnedResult = Matrix3.abs(matrix, matrix);
@@ -1485,7 +1451,7 @@ describe("Core/Matrix3", function () {
     expect(function () {
       Matrix3.inverse(
         new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        new Matrix3()
+        new Matrix3(),
       );
     }).toThrowDeveloperError();
   });

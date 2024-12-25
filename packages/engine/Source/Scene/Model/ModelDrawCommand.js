@@ -299,7 +299,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
       this._boundingVolume = BoundingSphere.transform(
         this.runtimePrimitive.boundingSphere,
         this._modelMatrix,
-        this._boundingVolume
+        this._boundingVolume,
       );
     },
   },
@@ -413,7 +413,7 @@ function updateModelMatrix2D(drawCommand, frameState) {
   const modelMatrix = drawCommand._modelMatrix;
   drawCommand._modelMatrix2D = Matrix4.clone(
     modelMatrix,
-    drawCommand._modelMatrix2D
+    drawCommand._modelMatrix2D,
   );
 
   // Change the translation's y-component so it appears on the opposite side
@@ -427,7 +427,7 @@ function updateModelMatrix2D(drawCommand, frameState) {
   drawCommand._boundingVolume2D = BoundingSphere.transform(
     drawCommand.runtimePrimitive.boundingSphere,
     drawCommand._modelMatrix2D,
-    drawCommand._boundingVolume2D
+    drawCommand._boundingVolume2D,
   );
 }
 
@@ -537,7 +537,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
         pushCommand(
           tileset._backfaceCommands,
           this._skipLodBackfaceCommand,
-          use2D
+          use2D,
         );
       }
 
@@ -578,7 +578,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
  */
 ModelDrawCommand.prototype.pushSilhouetteCommands = function (
   frameState,
-  result
+  result,
 ) {
   const use2D = shouldUse2DCommands(this, frameState);
   pushCommand(result, this._silhouetteColorCommand, use2D);

@@ -17,7 +17,7 @@ function EarthOrientationParametersSample(
   yPoleWander,
   xPoleOffset,
   yPoleOffset,
-  ut1MinusUtc
+  ut1MinusUtc,
 ) {
   /**
    * The pole wander about the X axis, in radians.

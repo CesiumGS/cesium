@@ -48,7 +48,7 @@ function FullscreenButton(container, fullscreenElement) {
 attr: { title: tooltip },\
 click: command,\
 enable: isFullscreenEnabled,\
-cesiumSvgPath: { path: isFullscreen ? _exitFullScreenPath : _enterFullScreenPath, width: 128, height: 128 }"
+cesiumSvgPath: { path: isFullscreen ? _exitFullScreenPath : _enterFullScreenPath, width: 128, height: 128 }",
   );
 
   container.appendChild(element);

@@ -175,7 +175,7 @@ const opaqueFS =
 InvertClassification.prototype.update = function (
   context,
   numSamples,
-  globeFramebuffer
+  globeFramebuffer,
 ) {
   const texture = this._fbo.getColorTexture();
   const previousFramebufferChanged =
@@ -283,7 +283,7 @@ InvertClassification.prototype.update = function (
           : this._rsDefault,
         uniformMap: this._uniformMap,
         owner: this,
-      }
+      },
     );
     this._classifiedCommand = context.createViewportQuadCommand(
       classifiedFSSource,
@@ -293,7 +293,7 @@ InvertClassification.prototype.update = function (
           : this._rsDefault,
         uniformMap: this._uniformMap,
         owner: this,
-      }
+      },
     );
 
     if (defined(this._translucentCommand)) {
@@ -308,7 +308,7 @@ InvertClassification.prototype.update = function (
           renderState: this._rsUnclassified,
           uniformMap: this._uniformMap,
           owner: this,
-        }
+        },
       );
     }
   }
@@ -316,7 +316,7 @@ InvertClassification.prototype.update = function (
 
 InvertClassification.prototype.prepareTextures = function (
   context,
-  blitStencil
+  blitStencil,
 ) {
   if (this._fbo._numSamples > 1) {
     this._fbo.prepareTextures(context, blitStencil);
@@ -334,7 +334,7 @@ InvertClassification.prototype.clear = function (context, passState) {
 
 InvertClassification.prototype.executeClassified = function (
   context,
-  passState
+  passState,
 ) {
   if (!defined(this._previousFramebuffer)) {
     const framebuffer = passState.framebuffer;
@@ -350,7 +350,7 @@ InvertClassification.prototype.executeClassified = function (
 
 InvertClassification.prototype.executeUnclassified = function (
   context,
-  passState
+  passState,
 ) {
   this._unclassifiedCommand.execute(context, passState);
 };

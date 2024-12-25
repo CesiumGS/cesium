@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -47,7 +44,7 @@
         let modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, length * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create the cylinder geometry.
         let cylinderGeometry = new Cesium.CylinderGeometry({
@@ -63,9 +60,7 @@
           geometry: cylinderGeometry,
           modelMatrix: modelMatrix,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.GREEN
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN),
           },
         });
 
@@ -75,7 +70,7 @@
         modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, length * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create the cylinder geometry.  To create a cone, set the
         // top radius to zero.
@@ -91,9 +86,7 @@
           geometry: cylinderGeometry,
           modelMatrix: modelMatrix,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.RED
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED),
           },
         });
 
@@ -105,7 +98,7 @@
               closed: true,
               translucent: false,
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

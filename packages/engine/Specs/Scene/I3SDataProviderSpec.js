@@ -289,7 +289,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("constructs I3SDataProvider with options", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -298,7 +298,7 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl(
       "mockProviderUrl",
-      i3sOptions
+      i3sOptions,
     );
 
     expect(testProvider.name).toEqual("testProvider");
@@ -328,7 +328,7 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl(
       "mockProviderUrl",
-      i3sOptions
+      i3sOptions,
     );
 
     expect(testProvider.name).toEqual("testProvider");
@@ -345,45 +345,45 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider.sublayers[0].sublayers.length).toEqual(2);
     expect(testProvider.sublayers[0].sublayers[0].name).toEqual("Cat1");
     expect(testProvider.sublayers[0].sublayers[0]._parent.name).toEqual(
-      "Full Model"
+      "Full Model",
     );
     expect(testProvider.sublayers[0].sublayers[0]._parent.modelName).toEqual(
-      "FullModel"
+      "FullModel",
     );
     expect(testProvider.sublayers[0].sublayers[1].name).toEqual("Cat2");
     expect(testProvider.sublayers[0].sublayers[1]._parent.name).toEqual(
-      "Full Model"
+      "Full Model",
     );
     expect(testProvider.sublayers[0].sublayers[1]._parent.modelName).toEqual(
-      "FullModel"
+      "FullModel",
     );
     expect(testProvider.sublayers[0].sublayers[0].sublayers.length).toEqual(3);
     expect(testProvider.sublayers[0].sublayers[0].sublayers[0].name).toEqual(
-      "SubCat1"
+      "SubCat1",
     );
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility
+      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility,
     ).toEqual(false);
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[0]._parent.name
+      testProvider.sublayers[0].sublayers[0].sublayers[0]._parent.name,
     ).toEqual("Cat1");
     expect(testProvider.sublayers[0].sublayers[0].sublayers[1].name).toEqual(
-      "SubCat2"
+      "SubCat2",
     );
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[1].visibility
+      testProvider.sublayers[0].sublayers[0].sublayers[1].visibility,
     ).toEqual(true);
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[1]._parent.name
+      testProvider.sublayers[0].sublayers[0].sublayers[1]._parent.name,
     ).toEqual("Cat1");
     expect(testProvider.sublayers[0].sublayers[0].sublayers[2].name).toEqual(
-      "SubCat3"
+      "SubCat3",
     );
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[2].visibility
+      testProvider.sublayers[0].sublayers[0].sublayers[2].visibility,
     ).toEqual(true);
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[2]._parent.name
+      testProvider.sublayers[0].sublayers[0].sublayers[2]._parent.name,
     ).toEqual("Cat1");
     expect(testProvider.sublayers[0].sublayers[1].sublayers.length).toEqual(0);
   });
@@ -395,7 +395,7 @@ describe("Scene/I3SDataProvider", function () {
       layers: [mockLayerDataTextured],
     };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(providerData)
+      Promise.resolve(providerData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -414,7 +414,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("default options for I3SDataProvider without textured layers", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -433,7 +433,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("manual options for I3SDataProvider without textured layers", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -526,7 +526,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("constructs I3SDataProvider with BSL without sublayers and statistics", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockBSLProviderData2)
+      Promise.resolve(mockBSLProviderData2),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -535,7 +535,7 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl(
       "mockProviderUrl",
-      i3sOptions
+      i3sOptions,
     );
 
     expect(testProvider.sublayers.length).toEqual(0);
@@ -544,7 +544,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("wraps update", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -563,16 +563,16 @@ describe("Scene/I3SDataProvider", function () {
     testProvider.update(frameState);
 
     expect(testProvider._layers[0]._tileset.update).toHaveBeenCalledWith(
-      frameState
+      frameState,
     );
     expect(testProvider._layers[1]._tileset.update).toHaveBeenCalledWith(
-      frameState
+      frameState,
     );
   });
 
   it("wraps prePassesUpdate", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -591,16 +591,16 @@ describe("Scene/I3SDataProvider", function () {
     testProvider.prePassesUpdate(frameState);
 
     expect(
-      testProvider._layers[0]._tileset.prePassesUpdate
+      testProvider._layers[0]._tileset.prePassesUpdate,
     ).toHaveBeenCalledWith(frameState);
     expect(
-      testProvider._layers[1]._tileset.prePassesUpdate
+      testProvider._layers[1]._tileset.prePassesUpdate,
     ).toHaveBeenCalledWith(frameState);
   });
 
   it("wraps postPassesUpdate", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -619,16 +619,16 @@ describe("Scene/I3SDataProvider", function () {
     testProvider.postPassesUpdate(frameState);
 
     expect(
-      testProvider._layers[0]._tileset.postPassesUpdate
+      testProvider._layers[0]._tileset.postPassesUpdate,
     ).toHaveBeenCalledWith(frameState);
     expect(
-      testProvider._layers[1]._tileset.postPassesUpdate
+      testProvider._layers[1]._tileset.postPassesUpdate,
     ).toHaveBeenCalledWith(frameState);
   });
 
   it("wraps updateForPass", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -649,11 +649,11 @@ describe("Scene/I3SDataProvider", function () {
 
     expect(testProvider._layers[0]._tileset.updateForPass).toHaveBeenCalledWith(
       frameState,
-      passState
+      passState,
     );
     expect(testProvider._layers[1]._tileset.updateForPass).toHaveBeenCalledWith(
       frameState,
-      passState
+      passState,
     );
   });
 
@@ -668,7 +668,7 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl(
       "mockProviderUrl",
-      i3sOptions
+      i3sOptions,
     );
 
     // Function should not be called for tilesets that are not yet ready
@@ -683,7 +683,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("isDestroyed returns false for new provider", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -700,7 +700,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("destroys provider", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -727,7 +727,7 @@ describe("Scene/I3SDataProvider", function () {
     const mockBinaryResponse = new ArrayBuffer(1);
 
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -739,7 +739,7 @@ describe("Scene/I3SDataProvider", function () {
     });
 
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(mockBinaryResponse)
+      Promise.resolve(mockBinaryResponse),
     );
 
     const resource = Resource.createIfNeeded("mockBinaryUri");
@@ -751,7 +751,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("loads binary with invalid uri", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -775,13 +775,13 @@ describe("Scene/I3SDataProvider", function () {
 
   it("fromUrl throws without url ", async function () {
     await expectAsync(
-      I3SDataProvider.fromUrl()
+      I3SDataProvider.fromUrl(),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("loads json", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -817,13 +817,13 @@ describe("Scene/I3SDataProvider", function () {
     };
 
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockErrorResponse)
+      Promise.resolve(mockErrorResponse),
     );
 
     const resource = Resource.createIfNeeded("mockJsonUri");
     await expectAsync(I3SDataProvider.loadJson(resource)).toBeRejectedWithError(
       RuntimeError,
-      mockErrorResponse.error
+      mockErrorResponse.error,
     );
   });
 
@@ -833,19 +833,19 @@ describe("Scene/I3SDataProvider", function () {
     };
 
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockErrorResponse)
+      Promise.resolve(mockErrorResponse),
     );
 
     const resource = Resource.createIfNeeded("mockJsonUri");
     await expectAsync(I3SDataProvider.loadJson(resource)).toBeRejectedWithError(
       RuntimeError,
-      mockErrorResponse.error
+      mockErrorResponse.error,
     );
   });
 
   it("loads geoid data", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderDataWithLargeExtent)
+      Promise.resolve(mockProviderDataWithLargeExtent),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -862,20 +862,20 @@ describe("Scene/I3SDataProvider", function () {
       expect(testProvider._geoidDataList[0].height).toEqual(2);
       expect(testProvider._geoidDataList[0].width).toEqual(2);
       expect(testProvider._geoidDataList[0].buffer).toEqual(
-        new Float32Array([0, 1, 2, 3])
+        new Float32Array([0, 1, 2, 3]),
       );
 
       expect(testProvider._geoidDataList[1].height).toEqual(2);
       expect(testProvider._geoidDataList[1].width).toEqual(2);
       expect(testProvider._geoidDataList[1].buffer).toEqual(
-        new Float32Array([4, 5, 6, 7])
+        new Float32Array([4, 5, 6, 7]),
       );
     });
   });
 
   it("loadGeoidData resolves when no geoid provider is given", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -896,7 +896,7 @@ describe("Scene/I3SDataProvider", function () {
     const mockExtent2 = Rectangle.fromDegrees(3, 1, 4, 3);
 
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -938,7 +938,7 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider.layers.length).toEqual(2);
     expect(testProvider.layers[0].rootNode.tile).toBeDefined();
     expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
-      testProvider.layers[0].rootNode
+      testProvider.layers[0].rootNode,
     );
 
     // Expect geoid data to have been loaded
@@ -946,7 +946,7 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider._geoidDataList[0].height).toEqual(2);
     expect(testProvider._geoidDataList[0].width).toEqual(2);
     expect(testProvider._geoidDataList[0].buffer).toEqual(
-      new Float32Array([4, 5, 6, 7])
+      new Float32Array([4, 5, 6, 7]),
     );
   });
 
@@ -966,14 +966,14 @@ describe("Scene/I3SDataProvider", function () {
       {
         name: "testProvider",
         geoidTiledTerrainProvider: mockGeoidProvider,
-      }
+      },
     );
 
     // Layers have been populated and root node is loaded
     expect(testProvider.layers.length).toEqual(1);
     expect(testProvider.layers[0].rootNode.tile).toBeDefined();
     expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
-      testProvider.layers[0].rootNode
+      testProvider.layers[0].rootNode,
     );
 
     // Expect geoid data to have been loaded
@@ -981,7 +981,7 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider._geoidDataList[0].height).toEqual(2);
     expect(testProvider._geoidDataList[0].width).toEqual(2);
     expect(testProvider._geoidDataList[0].buffer).toEqual(
-      new Float32Array([4, 5, 6, 7])
+      new Float32Array([4, 5, 6, 7]),
     );
   });
 
@@ -1008,30 +1008,30 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl(
       "mockProviderUrl",
-      i3sOptions
+      i3sOptions,
     );
 
     expect(testProvider.sublayers[0].sublayers[0].sublayers[0].name).toEqual(
-      "SubCat1"
+      "SubCat1",
     );
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility
+      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility,
     ).toEqual(false);
 
     const spy = spyOn(
       testProvider.sublayers[0].sublayers[0].sublayers[0]._i3sLayers[0],
-      "_updateVisibility"
+      "_updateVisibility",
     );
 
     testProvider.sublayers[0].sublayers[0].sublayers[0].visibility = false;
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility
+      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility,
     ).toEqual(false);
     expect(spy).not.toHaveBeenCalled();
 
     testProvider.sublayers[0].sublayers[0].sublayers[0].visibility = true;
     expect(
-      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility
+      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility,
     ).toEqual(true);
     expect(spy).toHaveBeenCalled();
   });
@@ -1059,7 +1059,7 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl(
       "mockProviderUrl/layers/0/",
-      i3sOptions
+      i3sOptions,
     );
 
     const sublayers = testProvider.sublayers;
@@ -1113,16 +1113,16 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl(
       "mockProviderUrl",
-      i3sOptions
+      i3sOptions,
     );
 
     expect(
       testProvider._attributeStatistics[0].resource.url.includes(
-        `${mockBuildingLayerData.statisticsHRef}/?`
-      )
+        `${mockBuildingLayerData.statisticsHRef}/?`,
+      ),
     ).toEqual(true);
     expect(testProvider._attributeStatistics[0].data).toEqual(
-      mockStatisticsData
+      mockStatisticsData,
     );
 
     const attributes = testProvider.getAttributeNames();
@@ -1137,7 +1137,7 @@ describe("Scene/I3SDataProvider", function () {
     expect(noValues).toEqual([]);
 
     const notExistingValues = testProvider.getAttributeValues(
-      "notExistingAttribute"
+      "notExistingAttribute",
     );
     expect(notExistingValues).toEqual([]);
   });

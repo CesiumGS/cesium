@@ -135,14 +135,14 @@ function getPosition(encoding, mode, projection, vertices, index, result) {
     const ellipsoid = projection.ellipsoid;
     const positionCartographic = ellipsoid.cartesianToCartographic(
       position,
-      scratchCartographic
+      scratchCartographic,
     );
     position = projection.project(positionCartographic, result);
     position = Cartesian3.fromElements(
       position.z,
       position.x,
       position.y,
-      result
+      result,
     );
   }
 
@@ -158,7 +158,7 @@ GlobeSurfaceTile.prototype.pick = function (
   mode,
   projection,
   cullBackFaces,
-  result
+  result,
 ) {
   const mesh = this.renderedMesh;
   if (!defined(mesh)) {
@@ -186,7 +186,7 @@ GlobeSurfaceTile.prototype.pick = function (
       v0,
       v1,
       v2,
-      cullBackFaces
+      cullBackFaces,
     );
     if (defined(t) && t < minT && t >= 0.0) {
       minT = t;
@@ -232,7 +232,7 @@ GlobeSurfaceTile.prototype.freeVertexArray = function () {
 GlobeSurfaceTile.initialize = function (
   tile,
   terrainProvider,
-  imageryLayerCollection
+  imageryLayerCollection,
 ) {
   let surfaceTile = tile.data;
   if (!defined(surfaceTile)) {
@@ -252,7 +252,7 @@ GlobeSurfaceTile.processStateMachine = function (
   imageryLayerCollection,
   quadtree,
   vertexArraysToDestroy,
-  terrainOnly
+  terrainOnly,
 ) {
   GlobeSurfaceTile.initialize(tile, terrainProvider, imageryLayerCollection);
 
@@ -265,7 +265,7 @@ GlobeSurfaceTile.processStateMachine = function (
       terrainProvider,
       imageryLayerCollection,
       quadtree,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
   }
 
@@ -295,7 +295,7 @@ GlobeSurfaceTile.processStateMachine = function (
   const isImageryDoneLoading = surfaceTile.processImagery(
     tile,
     terrainProvider,
-    frameState
+    frameState,
   );
 
   if (isTerrainDoneLoading && isImageryDoneLoading) {
@@ -326,7 +326,7 @@ GlobeSurfaceTile.prototype.processImagery = function (
   tile,
   terrainProvider,
   frameState,
-  skipLoading
+  skipLoading,
 ) {
   const surfaceTile = tile.data;
   let isUpsampledOnly = tile.upsampledFromParent;
@@ -362,7 +362,7 @@ GlobeSurfaceTile.prototype.processImagery = function (
     const thisTileDoneLoading = tileImagery.processStateMachine(
       tile,
       frameState,
-      skipLoading
+      skipLoading,
     );
     isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
@@ -391,7 +391,7 @@ function toggleGeodeticSurfaceNormals(
   surfaceTile,
   enabled,
   ellipsoid,
-  frameState
+  frameState,
 ) {
   const renderedMesh = surfaceTile.renderedMesh;
   const vertexBuffer = renderedMesh.vertices;
@@ -410,7 +410,7 @@ function toggleGeodeticSurfaceNormals(
     encoding.addGeodeticSurfaceNormals(
       vertexBuffer,
       newVertexBuffer,
-      ellipsoid
+      ellipsoid,
     );
   } else {
     encoding.removeGeodeticSurfaceNormals(vertexBuffer, newVertexBuffer);
@@ -425,13 +425,13 @@ function toggleGeodeticSurfaceNormals(
     GlobeSurfaceTile._freeVertexArray(surfaceTile.fill.vertexArray);
     surfaceTile.fill.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(
       frameState.context,
-      renderedMesh
+      renderedMesh,
     );
   } else {
     GlobeSurfaceTile._freeVertexArray(surfaceTile.vertexArray);
     surfaceTile.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(
       frameState.context,
-      renderedMesh
+      renderedMesh,
     );
   }
   GlobeSurfaceTile._freeVertexArray(surfaceTile.wireframeVertexArray);
@@ -440,13 +440,13 @@ function toggleGeodeticSurfaceNormals(
 
 GlobeSurfaceTile.prototype.addGeodeticSurfaceNormals = function (
   ellipsoid,
-  frameState
+  frameState,
 ) {
   toggleGeodeticSurfaceNormals(this, true, ellipsoid, frameState);
 };
 
 GlobeSurfaceTile.prototype.removeGeodeticSurfaceNormals = function (
-  frameState
+  frameState,
 ) {
   toggleGeodeticSurfaceNormals(this, false, undefined, frameState);
 };
@@ -454,7 +454,7 @@ GlobeSurfaceTile.prototype.removeGeodeticSurfaceNormals = function (
 GlobeSurfaceTile.prototype.updateExaggeration = function (
   tile,
   frameState,
-  quadtree
+  quadtree,
 ) {
   const surfaceTile = this;
   const mesh = surfaceTile.renderedMesh;
@@ -507,7 +507,7 @@ function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
   let available = terrainProvider.getTileDataAvailable(
     tile.x,
     tile.y,
-    tile.level
+    tile.level,
   );
 
   if (!defined(available) && defined(tile.parent)) {
@@ -519,7 +519,7 @@ function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         parent.x,
         parent.y,
         tile.x,
-        tile.y
+        tile.y,
       );
     }
   }
@@ -544,7 +544,7 @@ function processTerrainStateMachine(
   terrainProvider,
   imageryLayerCollection,
   quadtree,
-  vertexArraysToDestroy
+  vertexArraysToDestroy,
 ) {
   const surfaceTile = tile.data;
 
@@ -567,7 +567,7 @@ function processTerrainStateMachine(
         imageryLayerCollection,
         quadtree,
         vertexArraysToDestroy,
-        true
+        true,
       );
     }
   }
@@ -580,7 +580,7 @@ function processTerrainStateMachine(
       terrainProvider,
       tile.x,
       tile.y,
-      tile.level
+      tile.level,
     );
   }
 
@@ -590,7 +590,7 @@ function processTerrainStateMachine(
       terrainProvider,
       tile.x,
       tile.y,
-      tile.level
+      tile.level,
     );
   }
 
@@ -601,7 +601,7 @@ function processTerrainStateMachine(
       terrainProvider,
       tile.x,
       tile.y,
-      tile.level
+      tile.level,
     );
   }
 
@@ -613,7 +613,7 @@ function processTerrainStateMachine(
       tile.x,
       tile.y,
       tile.level,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
 
     // Update the tile's exaggeration in case the globe's exaggeration changed while the tile was being processed
@@ -636,7 +636,7 @@ function processTerrainStateMachine(
         surfaceTile._computeWaterMaskTranslationAndScale(
           tile,
           sourceTile,
-          surfaceTile.waterMaskTranslationAndScale
+          surfaceTile.waterMaskTranslationAndScale,
         );
       }
     }
@@ -668,7 +668,7 @@ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
     sourceLevel,
     x,
     y,
-    level
+    level,
   );
   if (!defined(terrainDataPromise)) {
     // The upsample request has been deferred - try again later.
@@ -728,7 +728,7 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
       message,
       x,
       y,
-      level
+      level,
     );
     if (terrainProvider._requestError.retry) {
       doRequest();
@@ -748,7 +748,7 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
       x,
       y,
       level,
-      request
+      request,
     );
 
     // If the request method returns undefined (instead of a promise), the request
@@ -877,11 +877,11 @@ function createResources(
   x,
   y,
   level,
-  vertexArraysToDestroy
+  vertexArraysToDestroy,
 ) {
   surfaceTile.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(
     context,
-    surfaceTile.mesh
+    surfaceTile.mesh,
   );
   surfaceTile.terrainState = TerrainState.READY;
   surfaceTile.fill =
@@ -966,7 +966,7 @@ function createWaterMaskTextureIfNeeded(context, surfaceTile) {
     0.0,
     1.0,
     1.0,
-    surfaceTile.waterMaskTranslationAndScale
+    surfaceTile.waterMaskTranslationAndScale,
   );
 }
 
@@ -988,7 +988,7 @@ GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function (tile) {
 GlobeSurfaceTile.prototype._computeWaterMaskTranslationAndScale = function (
   tile,
   sourceTile,
-  result
+  result,
 ) {
   const sourceTileRectangle = sourceTile.rectangle;
   const tileRectangle = tile.rectangle;

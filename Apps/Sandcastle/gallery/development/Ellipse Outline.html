@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -49,9 +46,7 @@
         const ellipseOutlineInstance = new Cesium.GeometryInstance({
           geometry: ellipseOutlineGeometry,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
           },
         });
 
@@ -75,26 +70,21 @@
         const extrudedEllipseOutlineInstance = new Cesium.GeometryInstance({
           geometry: ellipseOutlineGeometry,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
           },
         });
 
         // Add both ellipse outline instances to primitives.
         scene.primitives.add(
           new Cesium.Primitive({
-            geometryInstances: [
-              ellipseOutlineInstance,
-              extrudedEllipseOutlineInstance,
-            ],
+            geometryInstances: [ellipseOutlineInstance, extrudedEllipseOutlineInstance],
             appearance: new Cesium.PerInstanceColorAppearance({
               flat: true,
               renderState: {
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         ); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

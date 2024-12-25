@@ -16,7 +16,7 @@ const StyleCommandsNeeded = {
  */
 StyleCommandsNeeded.getStyleCommandsNeeded = function (
   featuresLength,
-  translucentFeaturesLength
+  translucentFeaturesLength,
 ) {
   if (translucentFeaturesLength === 0) {
     return StyleCommandsNeeded.ALL_OPAQUE;

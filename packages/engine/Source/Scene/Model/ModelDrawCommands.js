@@ -1,18 +1,28 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import RenderState from "../../Renderer/RenderState.js";
-import VertexArray from "../../Renderer/VertexArray.js";
-import ModelFS from "../../Shaders/Model/ModelFS.js";
-import ModelVS from "../../Shaders/Model/ModelVS.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js";
-import ModelUtility from "./ModelUtility.js";
 import ModelDrawCommand from "./ModelDrawCommand.js";
+import VertexArray from "../../Renderer/VertexArray.js";
+import ModelVS from "../../Shaders/Model/ModelVS.js";
+import ModelFS from "../../Shaders/Model/ModelFS.js";
+import ModelUtility from "./ModelUtility.js";
+import DeveloperError from "../../Core/DeveloperError.js";
+
+/**
+ * Internal functions to build draw commands for models.
+ *
+ * (The core of these functions was taken from `buildDrawCommand.js´,
+ * as of commit hash 7b93161da1cc03bdc796b204e7aa51fb7acebf04)
+ *
+ * @private
+ */
+function ModelDrawCommands() {}
 
 /**
  * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
@@ -21,16 +31,77 @@ import ModelDrawCommand from "./ModelDrawCommand.js";
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
- *
  * @returns {ModelDrawCommand|ClassificationModelDrawCommand} The generated ModelDrawCommand or ClassificationModelDrawCommand.
  *
  * @private
  */
-function buildDrawCommand(primitiveRenderResources, frameState) {
+ModelDrawCommands.buildModelDrawCommand = function (
+  primitiveRenderResources,
+  frameState,
+) {
   const shaderBuilder = primitiveRenderResources.shaderBuilder;
+  const shaderProgram = createShaderProgram(
+    primitiveRenderResources,
+    shaderBuilder,
+    frameState,
+  );
+
+  const command = buildDrawCommandForModel(
+    primitiveRenderResources,
+    shaderProgram,
+    frameState,
+  );
+
+  const model = primitiveRenderResources.model;
+  const hasClassification = defined(model.classificationType);
+  if (hasClassification) {
+    return new ClassificationModelDrawCommand({
+      primitiveRenderResources: primitiveRenderResources,
+      command: command,
+    });
+  }
+
+  return new ModelDrawCommand({
+    primitiveRenderResources: primitiveRenderResources,
+    command: command,
+  });
+};
+
+/**
+ * @private
+ */
+function createShaderProgram(
+  primitiveRenderResources,
+  shaderBuilder,
+  frameState,
+) {
   shaderBuilder.addVertexLines(ModelVS);
   shaderBuilder.addFragmentLines(ModelFS);
 
+  const model = primitiveRenderResources.model;
+  const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  model._pipelineResources.push(shaderProgram);
+  return shaderProgram;
+}
+
+/**
+ * Builds the {@link DrawCommand} that serves as the basis for either creating
+ * a {@link ModelDrawCommand} or a {@link ModelRuntimePrimitive}
+ *
+ * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
+ * @param {ShaderProgram} shaderProgram The shader program
+ * @param {FrameState} frameState The frame state for creating GPU resources.
+ *
+ * @returns {DrawCommand} The generated DrawCommand, to be passed to
+ * the ModelDrawCommand or ClassificationModelDrawCommand
+ *
+ * @private
+ */
+function buildDrawCommandForModel(
+  primitiveRenderResources,
+  shaderProgram,
+  frameState,
+) {
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
 
   const vertexArray = new VertexArray({
@@ -42,9 +113,6 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   const model = primitiveRenderResources.model;
   model._pipelineResources.push(vertexArray);
 
-  const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
-  model._pipelineResources.push(shaderProgram);
-
   const pass = primitiveRenderResources.alphaOptions.pass;
   const sceneGraph = model.sceneGraph;
 
@@ -55,7 +123,7 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     modelMatrix = Matrix4.multiplyTransformation(
       sceneGraph._computedModelMatrix,
       primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4()
+      new Matrix4(),
     );
 
     const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
@@ -68,25 +136,24 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     modelMatrix = Matrix4.multiplyTransformation(
       computedModelMatrix,
       primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4()
+      new Matrix4(),
     );
 
     boundingSphere = BoundingSphere.transform(
       primitiveRenderResources.boundingSphere,
       modelMatrix,
-      primitiveRenderResources.boundingSphere
     );
   }
 
   // Initialize render state with default values
   let renderState = clone(
     RenderState.fromCache(primitiveRenderResources.renderStateOptions),
-    true
+    true,
   );
 
   renderState.cull.face = ModelUtility.getCullFace(
     modelMatrix,
-    primitiveRenderResources.primitiveType
+    primitiveRenderResources.primitiveType,
   );
   renderState = RenderState.fromCache(renderState);
 
@@ -115,24 +182,14 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     count: primitiveRenderResources.count,
     owner: model,
     pickId: pickId,
+    pickMetadataAllowed: true,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,
     castShadows: castShadows,
     receiveShadows: receiveShadows,
   });
-
-  if (hasClassification) {
-    return new ClassificationModelDrawCommand({
-      primitiveRenderResources: primitiveRenderResources,
-      command: command,
-    });
-  }
-
-  return new ModelDrawCommand({
-    primitiveRenderResources: primitiveRenderResources,
-    command: command,
-  });
+  return command;
 }
 
 /**
@@ -158,4 +215,4 @@ function getIndexBuffer(primitiveRenderResources) {
   return indices.buffer;
 }
 
-export default buildDrawCommand;
+export default ModelDrawCommands;

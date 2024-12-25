@@ -33,7 +33,7 @@ describe(
     const center = new Cartesian3(
       1215012.8828876738,
       -4736313.051199594,
-      4081605.22126042
+      4081605.22126042,
     );
 
     const clock = new Clock({
@@ -52,94 +52,34 @@ describe(
 
     const transforms = [
       Matrix4.fromColumnMajorArray([
-        0.968635634376879,
-        0.24848542777253735,
-        0,
-        0,
-        -0.15986460794399626,
-        0.6231776137472074,
-        0.7655670897127491,
-        0,
-        0.190232265775849,
-        -0.7415555636019701,
-        0.6433560687121489,
-        0,
-        1215012.8828876738,
-        -4736313.051199594,
-        4081605.22126042,
-        1,
+        0.968635634376879, 0.24848542777253735, 0, 0, -0.15986460794399626,
+        0.6231776137472074, 0.7655670897127491, 0, 0.190232265775849,
+        -0.7415555636019701, 0.6433560687121489, 0, 1215012.8828876738,
+        -4736313.051199594, 4081605.22126042, 1,
       ]),
       Matrix4.fromColumnMajorArray([
-        0.968634888916237,
-        0.24848833367832227,
-        0,
-        0,
-        -0.1598664774761181,
-        0.6231771341505793,
-        0.7655670897127493,
-        0,
-        0.19023449044168372,
-        -0.7415549929018358,
-        0.6433560687121489,
-        0,
-        1215027.0918213597,
-        -4736309.406139632,
-        4081605.22126042,
-        1,
+        0.968634888916237, 0.24848833367832227, 0, 0, -0.1598664774761181,
+        0.6231771341505793, 0.7655670897127493, 0, 0.19023449044168372,
+        -0.7415549929018358, 0.6433560687121489, 0, 1215027.0918213597,
+        -4736309.406139632, 4081605.22126042, 1,
       ]),
       Matrix4.fromColumnMajorArray([
-        0.9686341434468771,
-        0.24849123958187078,
-        0,
-        0,
-        -0.1598683470068011,
-        0.6231766545483426,
-        0.7655670897127493,
-        0,
-        0.19023671510580634,
-        -0.7415544221950274,
-        0.6433560687121489,
-        0,
-        1215041.3007441103,
-        -4736305.761037043,
-        4081605.22126042,
-        1,
+        0.9686341434468771, 0.24849123958187078, 0, 0, -0.1598683470068011,
+        0.6231766545483426, 0.7655670897127493, 0, 0.19023671510580634,
+        -0.7415544221950274, 0.6433560687121489, 0, 1215041.3007441103,
+        -4736305.761037043, 4081605.22126042, 1,
       ]),
       Matrix4.fromColumnMajorArray([
-        0.9686333979687994,
-        0.24849414548318288,
-        0,
-        0,
-        -0.15987021653604533,
-        0.6231761749404972,
-        0.7655670897127491,
-        0,
-        0.19023893976821685,
-        -0.7415538514815451,
-        0.6433560687121489,
-        0,
-        1215055.5096559257,
-        -4736302.115891827,
-        4081605.22126042,
-        1,
+        0.9686333979687994, 0.24849414548318288, 0, 0, -0.15987021653604533,
+        0.6231761749404972, 0.7655670897127491, 0, 0.19023893976821685,
+        -0.7415538514815451, 0.6433560687121489, 0, 1215055.5096559257,
+        -4736302.115891827, 4081605.22126042, 1,
       ]),
       Matrix4.fromColumnMajorArray([
-        0.9686326524820043,
-        0.2484970513822586,
-        0,
-        0,
-        -0.15987208606385075,
-        0.6231756953270434,
-        0.7655670897127492,
-        0,
-        0.19024116442891523,
-        -0.7415532807613887,
-        0.6433560687121489,
-        0,
-        1215069.7185568055,
-        -4736298.470703985,
-        4081605.22126042,
-        1,
+        0.9686326524820043, 0.2484970513822586, 0, 0, -0.15987208606385075,
+        0.6231756953270434, 0.7655670897127492, 0, 0.19024116442891523,
+        -0.7415532807613887, 0.6433560687121489, 0, 1215069.7185568055,
+        -4736298.470703985, 4081605.22126042, 1,
       ]),
     ];
 
@@ -321,7 +261,7 @@ describe(
         const boundingSphereFrame1 = pointCloud.boundingSphere;
         expect(boundingSphereFrame1).toBeDefined();
         expect(
-          BoundingSphere.equals(boundingSphereFrame0, boundingSphereFrame1)
+          BoundingSphere.equals(boundingSphereFrame0, boundingSphereFrame1),
         ).toBe(false);
       });
     });
@@ -376,7 +316,7 @@ describe(
         const frames = pointCloud._frames;
         const framesLength = frames.length;
         expect(pointCloud.totalMemoryUsageInBytes).toBe(
-          singleFrameMemoryUsage * framesLength
+          singleFrameMemoryUsage * framesLength,
         );
         pointCloud.maximumMemoryUsage = 0;
 
@@ -398,7 +338,7 @@ describe(
         // The loaded frame is the only one loaded
         return loadFrame(pointCloud, 1).then(function () {
           expect(pointCloud.totalMemoryUsageInBytes).toBe(
-            singleFrameMemoryUsage
+            singleFrameMemoryUsage,
           );
           expect(frames[0]).toBeUndefined();
           expect(frames[1].ready).toBe(true);
@@ -493,7 +433,7 @@ describe(
     it("sets clipping planes", function () {
       const modelMatrix = new Transforms.headingPitchRollToFixedFrame(
         center,
-        new HeadingPitchRoll(0, 0, 0)
+        new HeadingPitchRoll(0, 0, 0),
       );
       const clippingPlanesX = new ClippingPlaneCollection({
         modelMatrix: modelMatrix,
@@ -600,7 +540,7 @@ describe(
         clock.currentTime = JulianDate.addSeconds(
           dates[0],
           -10.0,
-          new JulianDate()
+          new JulianDate(),
         );
         scene.renderForSpecs();
         expect(scene.frameState.commandList.length).toBe(0);
@@ -612,7 +552,7 @@ describe(
         clock.currentTime = JulianDate.addSeconds(
           dates[5],
           10.0,
-          new JulianDate()
+          new JulianDate(),
         );
         scene.renderForSpecs();
         expect(scene.frameState.commandList.length).toBe(0);
@@ -773,23 +713,25 @@ describe(
     it("frame failed event is raised from request failure", function () {
       const pointCloud = createTimeDynamicPointCloud();
       let frameRejectedCount = 0;
-      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-        request,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        if (request.toString().includes("PointCloudTimeDynamic")) {
-          deferred.reject("404");
-          // Allow the promise a frame to resolve
-          deferred.promise.catch(function () {
-            frameRejectedCount++;
-          });
-        }
-      });
+      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        function (
+          request,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        ) {
+          if (request.toString().includes("PointCloudTimeDynamic")) {
+            deferred.reject("404");
+            // Allow the promise a frame to resolve
+            deferred.promise.catch(function () {
+              frameRejectedCount++;
+            });
+          }
+        },
+      );
       const spyUpdate = jasmine.createSpy("listener");
       pointCloud.frameFailed.addEventListener(spyUpdate);
 
@@ -855,7 +797,7 @@ describe(
         clock.currentTime = JulianDate.addSeconds(
           dates[0],
           -10.0,
-          new JulianDate()
+          new JulianDate(),
         );
         scene.renderForSpecs();
         expect(spyFrameChanged.calls.count()).toBe(6);
@@ -878,5 +820,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

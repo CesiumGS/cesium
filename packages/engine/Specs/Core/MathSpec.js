@@ -165,21 +165,21 @@ describe("Core/Math", function () {
 
   it("convertLongitudeRange (1)", function () {
     expect(
-      CesiumMath.convertLongitudeRange(CesiumMath.THREE_PI_OVER_TWO)
+      CesiumMath.convertLongitudeRange(CesiumMath.THREE_PI_OVER_TWO),
     ).toEqualEpsilon(-CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON16);
   });
 
   it("convertLongitudeRange (2)", function () {
     expect(CesiumMath.convertLongitudeRange(-Math.PI)).toEqualEpsilon(
       -Math.PI,
-      CesiumMath.EPSILON16
+      CesiumMath.EPSILON16,
     );
   });
 
   it("convertLongitudeRange (3)", function () {
     expect(CesiumMath.convertLongitudeRange(Math.PI)).toEqualEpsilon(
       -Math.PI,
-      CesiumMath.EPSILON16
+      CesiumMath.EPSILON16,
     );
   });
 
@@ -191,13 +191,13 @@ describe("Core/Math", function () {
 
   it("clampToLatitudeRange (1)", function () {
     expect(CesiumMath.clampToLatitudeRange(Math.PI)).toEqual(
-      CesiumMath.PI_OVER_TWO
+      CesiumMath.PI_OVER_TWO,
     );
   });
 
   it("clampToLatitudeRange (2)", function () {
     expect(CesiumMath.clampToLatitudeRange(-Math.PI)).toEqual(
-      -CesiumMath.PI_OVER_TWO
+      -CesiumMath.PI_OVER_TWO,
     );
   });
 
@@ -217,11 +217,11 @@ describe("Core/Math", function () {
     expect(CesiumMath.negativePiToPi(-Math.PI + 0.1)).toEqual(-Math.PI + 0.1);
     expect(CesiumMath.negativePiToPi(+Math.PI + 0.1)).toEqualEpsilon(
       -Math.PI + 0.1,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(CesiumMath.negativePiToPi(-Math.PI - 0.1)).toEqualEpsilon(
       +Math.PI - 0.1,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     expect(CesiumMath.negativePiToPi(+2.0 * Math.PI)).toEqual(0.0);
@@ -249,17 +249,17 @@ describe("Core/Math", function () {
     expect(CesiumMath.zeroToTwoPi(+Math.PI - 1.0)).toEqual(+Math.PI - 1.0);
     expect(CesiumMath.zeroToTwoPi(-Math.PI + 1.0)).toEqualEpsilon(
       +Math.PI + 1.0,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(CesiumMath.zeroToTwoPi(+Math.PI - 0.1)).toEqual(+Math.PI - 0.1);
     expect(CesiumMath.zeroToTwoPi(-Math.PI + 0.1)).toEqualEpsilon(
       +Math.PI + 0.1,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(CesiumMath.zeroToTwoPi(+Math.PI + 0.1)).toEqual(+Math.PI + 0.1);
     expect(CesiumMath.zeroToTwoPi(-Math.PI - 0.1)).toEqualEpsilon(
       +Math.PI - 0.1,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     expect(CesiumMath.zeroToTwoPi(+2.0 * Math.PI)).toEqual(2.0 * Math.PI);
@@ -299,7 +299,7 @@ describe("Core/Math", function () {
     expect(CesiumMath.mod(1.0, -1.0)).toEqual(-0.0);
     expect(CesiumMath.mod(1.1, -1.0)).toEqualEpsilon(
       -0.9,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     expect(CesiumMath.mod(-0.0, -1.0)).toEqual(-0.0);
@@ -308,7 +308,7 @@ describe("Core/Math", function () {
     expect(CesiumMath.mod(-1.0, -1.0)).toEqual(-0.0);
     expect(CesiumMath.mod(-1.1, -1.0)).toEqualEpsilon(
       -0.1,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -325,26 +325,26 @@ describe("Core/Math", function () {
       CesiumMath.equalsEpsilon(
         1.0,
         1.0 + CesiumMath.EPSILON7,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       CesiumMath.equalsEpsilon(
         1.0,
         1.0 + CesiumMath.EPSILON7,
-        CesiumMath.EPSILON9
-      )
+        CesiumMath.EPSILON9,
+      ),
     ).toEqual(false);
 
     expect(CesiumMath.equalsEpsilon(3000000.0, 3000000.0, 0.0)).toEqual(true);
     expect(
-      CesiumMath.equalsEpsilon(3000000.0, 3000000.0, CesiumMath.EPSILON7)
+      CesiumMath.equalsEpsilon(3000000.0, 3000000.0, CesiumMath.EPSILON7),
     ).toEqual(true);
     expect(
-      CesiumMath.equalsEpsilon(3000000.0, 3000000.2, CesiumMath.EPSILON7)
+      CesiumMath.equalsEpsilon(3000000.0, 3000000.2, CesiumMath.EPSILON7),
     ).toEqual(true);
     expect(
-      CesiumMath.equalsEpsilon(3000000.0, 3000000.2, CesiumMath.EPSILON9)
+      CesiumMath.equalsEpsilon(3000000.0, 3000000.2, CesiumMath.EPSILON9),
     ).toEqual(false);
   });
 
@@ -472,29 +472,10 @@ describe("Core/Math", function () {
 
   it("factorial produces the correct results", function () {
     const factorials = [
-      1,
-      1,
-      2,
-      6,
-      24,
-      120,
-      720,
-      5040,
-      40320,
-      362880,
-      3628800,
-      39916800,
-      479001600,
-      6227020800,
-      87178291200,
-      1307674368000,
-      20922789888000,
-      355687428096000,
-      6402373705728000,
-      121645100408832000,
-      2432902008176640000,
-      51090942171709440000,
-      1124000727777607680000,
+      1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800,
+      479001600, 6227020800, 87178291200, 1307674368000, 20922789888000,
+      355687428096000, 6402373705728000, 121645100408832000,
+      2432902008176640000, 51090942171709440000, 1124000727777607680000,
       // eslint-disable-next-line no-loss-of-precision
       25852016738884976640000,
       // eslint-disable-next-line no-loss-of-precision
@@ -723,20 +704,20 @@ describe("Core/Math", function () {
 
   it("chordLength finds the chord length", function () {
     expect(
-      CesiumMath.chordLength(CesiumMath.PI_OVER_THREE, 1.0)
+      CesiumMath.chordLength(CesiumMath.PI_OVER_THREE, 1.0),
     ).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
     expect(
-      CesiumMath.chordLength(CesiumMath.PI_OVER_THREE, 5.0)
+      CesiumMath.chordLength(CesiumMath.PI_OVER_THREE, 5.0),
     ).toEqualEpsilon(5.0, CesiumMath.EPSILON14);
     expect(
-      CesiumMath.chordLength(2.0 * CesiumMath.PI_OVER_THREE, 1.0)
+      CesiumMath.chordLength(2.0 * CesiumMath.PI_OVER_THREE, 1.0),
     ).toEqualEpsilon(Math.sqrt(3.0), CesiumMath.EPSILON14);
     expect(
-      CesiumMath.chordLength(2.0 * CesiumMath.PI_OVER_THREE, 5.0)
+      CesiumMath.chordLength(2.0 * CesiumMath.PI_OVER_THREE, 5.0),
     ).toEqualEpsilon(5.0 * Math.sqrt(3.0), CesiumMath.EPSILON14);
     expect(CesiumMath.chordLength(CesiumMath.PI, 10.0)).toEqualEpsilon(
       2.0 * 10.0,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -779,30 +760,30 @@ describe("Core/Math", function () {
   it("fastApproximateAtan", function () {
     expect(CesiumMath.fastApproximateAtan(0.0)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON3
+      CesiumMath.EPSILON3,
     );
     expect(CesiumMath.fastApproximateAtan(1.0)).toEqualEpsilon(
       CesiumMath.PI_OVER_FOUR,
-      CesiumMath.EPSILON3
+      CesiumMath.EPSILON3,
     );
     expect(CesiumMath.fastApproximateAtan(-1.0)).toEqualEpsilon(
       -CesiumMath.PI_OVER_FOUR,
-      CesiumMath.EPSILON3
+      CesiumMath.EPSILON3,
     );
   });
 
   it("fastApproximateAtan2", function () {
     expect(CesiumMath.fastApproximateAtan2(1.0, 0.0)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON3
+      CesiumMath.EPSILON3,
     );
     expect(CesiumMath.fastApproximateAtan2(1.0, 1.0)).toEqualEpsilon(
       CesiumMath.PI_OVER_FOUR,
-      CesiumMath.EPSILON3
+      CesiumMath.EPSILON3,
     );
     expect(CesiumMath.fastApproximateAtan2(-1.0, 1.0)).toEqualEpsilon(
       CesiumMath.PI_OVER_FOUR + CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON3
+      CesiumMath.EPSILON3,
     );
   });
 

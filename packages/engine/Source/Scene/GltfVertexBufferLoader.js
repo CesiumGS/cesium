@@ -62,7 +62,7 @@ function GltfVertexBufferLoader(options) {
   Check.typeOf.object("options.baseResource", baseResource);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
 
@@ -73,19 +73,19 @@ function GltfVertexBufferLoader(options) {
 
   if (hasBufferViewId === hasDraco) {
     throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined."
+      "One of options.bufferViewId and options.draco must be defined.",
     );
   }
 
   if (hasDraco && !hasAttributeSemantic) {
     throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined."
+      "When options.draco is defined options.attributeSemantic must also be defined.",
     );
   }
 
   if (hasDraco && !hasAccessorId) {
     throw new DeveloperError(
-      "When options.draco is defined options.accessorId must also be defined."
+      "When options.draco is defined options.accessorId must also be defined.",
     );
   }
 
@@ -212,7 +212,7 @@ function getQuantizationInformation(
   dracoQuantization,
   componentDatatype,
   componentCount,
-  type
+  type,
 ) {
   const quantizationBits = dracoQuantization.quantizationBits;
   const normalizationRange = (1 << quantizationBits) - 1;
@@ -237,17 +237,16 @@ function getQuantizationInformation(
       quantization.quantizedVolumeStepSize = dimensions * normalizationDivisor;
     } else {
       quantization.quantizedVolumeOffset = MathType.unpack(
-        dracoQuantization.minValues
+        dracoQuantization.minValues,
       );
       quantization.normalizationRange = MathType.unpack(
-        new Array(componentCount).fill(normalizationRange)
+        new Array(componentCount).fill(normalizationRange),
       );
       const packedDimensions = new Array(componentCount).fill(
-        dracoQuantization.range
+        dracoQuantization.range,
       );
-      quantization.quantizedVolumeDimensions = MathType.unpack(
-        packedDimensions
-      );
+      quantization.quantizedVolumeDimensions =
+        MathType.unpack(packedDimensions);
 
       // Computing the step size
       const packedSteps = packedDimensions.map(function (dimension) {
@@ -307,14 +306,14 @@ function processDraco(vertexBufferLoader) {
       dracoQuantization,
       dracoAttribute.data.componentDatatype,
       dracoAttribute.data.componentsPerAttribute,
-      type
+      type,
     );
   }
 
   vertexBufferLoader._typedArray = new Uint8Array(
     typedArray.buffer,
     typedArray.byteOffset,
-    typedArray.byteLength
+    typedArray.byteLength,
   );
 }
 

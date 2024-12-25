@@ -63,7 +63,7 @@ css: { "cesium-projectionPicker-buttonPerspective": !_orthographic,\
        "cesium-button-disabled" : sceneMode === _sceneMode.SCENE2D || _flightInProgress, \
        "cesium-projectionPicker-selected": dropDownVisible },\
 attr: { title: selectedTooltip },\
-click: toggleDropDown'
+click: toggleDropDown',
   );
   button.innerHTML =
     '\
@@ -83,7 +83,7 @@ css: { "cesium-projectionPicker-visible" : (dropDownVisible && _orthographic),\
        "cesium-projectionPicker-hidden" : !dropDownVisible },\
 attr: { title: tooltipPerspective },\
 click: switchToPerspective,\
-cesiumSvgPath: { path: _perspectivePath, width: 64, height: 64 }'
+cesiumSvgPath: { path: _perspectivePath, width: 64, height: 64 }',
   );
   wrapper.appendChild(perspectiveButton);
 
@@ -99,7 +99,7 @@ css: { "cesium-projectionPicker-visible" : (dropDownVisible && !_orthographic),\
        "cesium-projectionPicker-hidden" : !dropDownVisible},\
 attr: { title: tooltipOrthographic },\
 click: switchToOrthographic,\
-cesiumSvgPath: { path: _orthographicPath, width: 64, height: 64 }'
+cesiumSvgPath: { path: _orthographicPath, width: 64, height: 64 }',
   );
   wrapper.appendChild(orthographicButton);
 

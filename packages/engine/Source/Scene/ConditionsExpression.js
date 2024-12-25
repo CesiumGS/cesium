@@ -73,8 +73,8 @@ function setRuntime(expression, defines) {
     runtimeConditions.push(
       new Statement(
         new Expression(cond, defines),
-        new Expression(condExpression, defines)
-      )
+        new Expression(condExpression, defines),
+      ),
     );
   }
   expression._runtimeConditions = runtimeConditions;
@@ -148,7 +148,7 @@ ConditionsExpression.prototype.getShaderFunction = function (
   functionSignature,
   variableSubstitutionMap,
   shaderState,
-  returnType
+  returnType,
 ) {
   const conditions = this._runtimeConditions;
   if (!defined(conditions) || conditions.length === 0) {
@@ -162,11 +162,11 @@ ConditionsExpression.prototype.getShaderFunction = function (
 
     const condition = statement.condition.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     const expression = statement.expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
 
     // Build the if/else chain from the list of conditions

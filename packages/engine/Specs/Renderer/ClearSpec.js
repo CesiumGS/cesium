@@ -117,7 +117,7 @@ describe(
         expect(
           context.readPixels({
             width: -1,
-          })
+          }),
         ).toEqual([0, 0, 0, 0]);
       }).toThrowDeveloperError();
     });
@@ -127,10 +127,10 @@ describe(
         expect(
           context.readPixels({
             height: -1,
-          })
+          }),
         ).toEqual([0, 0, 0, 0]);
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

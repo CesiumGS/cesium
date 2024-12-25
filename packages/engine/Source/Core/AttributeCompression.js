@@ -121,7 +121,7 @@ AttributeCompression.octDecodeInRange = function (x, y, rangeMax, result) {
   Check.defined("result", result);
   if (x < 0 || x > rangeMax || y < 0 || y > rangeMax) {
     throw new DeveloperError(
-      `x and y must be unsigned normalized integers between 0 and ${rangeMax}`
+      `x and y must be unsigned normalized integers between 0 and ${rangeMax}`,
     );
   }
   //>>includeEnd('debug');
@@ -188,7 +188,7 @@ AttributeCompression.octDecodeFromCartesian4 = function (encoded, result) {
     w > 255
   ) {
     throw new DeveloperError(
-      "x, y, z, and w must be unsigned normalized integers between 0 and 255"
+      "x, y, z, and w must be unsigned normalized integers between 0 and 255",
     );
   }
   //>>includeEnd('debug');
@@ -313,7 +313,7 @@ AttributeCompression.octUnpack = function (packed, v1, v2, v3) {
  *
  */
 AttributeCompression.compressTextureCoordinates = function (
-  textureCoordinates
+  textureCoordinates,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("textureCoordinates", textureCoordinates);
@@ -335,7 +335,7 @@ AttributeCompression.compressTextureCoordinates = function (
  */
 AttributeCompression.decompressTextureCoordinates = function (
   compressed,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("compressed", compressed);
@@ -365,7 +365,7 @@ function zigZagDecode(value) {
 AttributeCompression.zigZagDeltaDecode = function (
   uBuffer,
   vBuffer,
-  heightBuffer
+  heightBuffer,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("uBuffer", uBuffer);
@@ -374,14 +374,14 @@ AttributeCompression.zigZagDeltaDecode = function (
     "uBuffer.length",
     "vBuffer.length",
     uBuffer.length,
-    vBuffer.length
+    vBuffer.length,
   );
   if (defined(heightBuffer)) {
     Check.typeOf.number.equals(
       "uBuffer.length",
       "heightBuffer.length",
       uBuffer.length,
-      heightBuffer.length
+      heightBuffer.length,
     );
   }
   //>>includeEnd('debug');
@@ -422,7 +422,7 @@ AttributeCompression.dequantize = function (
   typedArray,
   componentDatatype,
   type,
-  count
+  count,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("typedArray", typedArray);
@@ -456,13 +456,13 @@ AttributeCompression.dequantize = function (
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(
-        `Cannot dequantize component datatype: ${componentDatatype}`
+        `Cannot dequantize component datatype: ${componentDatatype}`,
       );
     //>>includeEnd('debug');
   }
 
   const dequantizedTypedArray = new Float32Array(
-    count * componentsPerAttribute
+    count * componentsPerAttribute,
   );
 
   for (let i = 0; i < count; i++) {
@@ -470,7 +470,7 @@ AttributeCompression.dequantize = function (
       const index = i * componentsPerAttribute + j;
       dequantizedTypedArray[index] = Math.max(
         typedArray[index] / divisor,
-        -1.0
+        -1.0,
       );
     }
   }
@@ -495,7 +495,7 @@ AttributeCompression.decodeRGB565 = function (typedArray, result) {
       "result.length",
       "typedArray.length * 3",
       result.length,
-      expectedLength
+      expectedLength,
     );
   }
   //>>includeEnd('debug');

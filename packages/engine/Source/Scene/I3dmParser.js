@@ -39,7 +39,7 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      `Only Instanced 3D Model version 1 is supported. Version ${version} is not.`
+      `Only Instanced 3D Model version 1 is supported. Version ${version} is not.`,
     );
   }
   byteOffset += sizeOfUint32;
@@ -50,7 +50,7 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   const featureTableJsonByteLength = view.getUint32(byteOffset, true);
   if (featureTableJsonByteLength === 0) {
     throw new RuntimeError(
-      "featureTableJsonByteLength is zero, the feature table must be defined."
+      "featureTableJsonByteLength is zero, the feature table must be defined.",
     );
   }
   byteOffset += sizeOfUint32;
@@ -67,7 +67,7 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   const gltfFormat = view.getUint32(byteOffset, true);
   if (gltfFormat !== 1 && gltfFormat !== 0) {
     throw new RuntimeError(
-      `Only glTF format 0 (uri) or 1 (embedded) are supported. Format ${gltfFormat} is not.`
+      `Only glTF format 0 (uri) or 1 (embedded) are supported. Format ${gltfFormat} is not.`,
     );
   }
   byteOffset += sizeOfUint32;
@@ -75,14 +75,14 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
-    featureTableJsonByteLength
+    featureTableJsonByteLength,
   );
   byteOffset += featureTableJsonByteLength;
 
   const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
-    featureTableBinaryByteLength
+    featureTableBinaryByteLength,
   );
   byteOffset += featureTableBinaryByteLength;
 
@@ -92,7 +92,7 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
     batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
-      batchTableJsonByteLength
+      batchTableJsonByteLength,
     );
     byteOffset += batchTableJsonByteLength;
 
@@ -101,7 +101,7 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
       batchTableBinary = new Uint8Array(
         arrayBuffer,
         byteOffset,
-        batchTableBinaryByteLength
+        batchTableBinaryByteLength,
       );
       // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
       batchTableBinary = new Uint8Array(batchTableBinary);
@@ -121,10 +121,10 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
     // Create a copy of the glb so that it is 4-byte aligned
     I3dmParser._deprecationWarning(
       "i3dm-glb-unaligned",
-      "The embedded glb is not aligned to a 4-byte boundary."
+      "The embedded glb is not aligned to a 4-byte boundary.",
     );
     gltfView = new Uint8Array(
-      uint8Array.subarray(byteOffset, byteOffset + gltfByteLength)
+      uint8Array.subarray(byteOffset, byteOffset + gltfByteLength),
     );
   }
 

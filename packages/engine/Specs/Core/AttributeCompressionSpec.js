@@ -113,28 +113,28 @@ describe("Core/AttributeCompression", function () {
     expect(function () {
       AttributeCompression.octDecodeFromCartesian4(
         new Cartesian4(256, 0, 0, 0),
-        result
+        result,
       );
     }).toThrowDeveloperError();
 
     expect(function () {
       AttributeCompression.octDecodeFromCartesian4(
         new Cartesian4(0, 256, 0, 0),
-        result
+        result,
       );
     }).toThrowDeveloperError();
 
     expect(function () {
       AttributeCompression.octDecodeFromCartesian4(
         new Cartesian4(0, 0, 256, 0),
-        result
+        result,
       );
     }).toThrowDeveloperError();
 
     expect(function () {
       AttributeCompression.octDecodeFromCartesian4(
         new Cartesian4(0, 0, 0, 256),
-        result
+        result,
       );
     }).toThrowDeveloperError();
   });
@@ -147,93 +147,93 @@ describe("Core/AttributeCompression", function () {
     let normal = new Cartesian3(0.0, 0.0, 1.0);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, 0.0, -1.0);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, 1.0, 0.0);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, -1.0, 0.0);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 0.0, 0.0);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 0.0, 0.0);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 1.0, 1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, -1.0, 1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, -1.0, 1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 1.0, 1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 1.0, -1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, -1.0, -1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 1.0, -1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, -1.0, -1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncode(normal, encoded);
     expect(
-      AttributeCompression.octDecode(encoded.x, encoded.y, result)
+      AttributeCompression.octDecode(encoded.x, encoded.y, result),
     ).toEqualEpsilon(normal, epsilon);
   });
 
@@ -250,8 +250,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, 0.0, -1.0);
@@ -261,8 +261,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, 1.0, 0.0);
@@ -272,8 +272,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, -1.0, 0.0);
@@ -283,8 +283,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 0.0, 0.0);
@@ -294,8 +294,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 0.0, 0.0);
@@ -305,8 +305,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 1.0, 1.0);
@@ -317,8 +317,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, -1.0, 1.0);
@@ -329,8 +329,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, -1.0, 1.0);
@@ -341,8 +341,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 1.0, 1.0);
@@ -353,8 +353,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 1.0, -1.0);
@@ -365,8 +365,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, -1.0, -1.0);
@@ -377,8 +377,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 1.0, -1.0);
@@ -389,8 +389,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, -1.0, -1.0);
@@ -401,8 +401,8 @@ describe("Core/AttributeCompression", function () {
         encoded.x,
         encoded.y,
         rangeMax,
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
   });
 
@@ -414,93 +414,93 @@ describe("Core/AttributeCompression", function () {
     let normal = new Cartesian3(0.0, 0.0, 1.0);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, 0.0, -1.0);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, 1.0, 0.0);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, -1.0, 0.0);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 0.0, 0.0);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 0.0, 0.0);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 1.0, 1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, -1.0, 1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, -1.0, 1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 1.0, 1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 1.0, -1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, -1.0, -1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 1.0, -1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, -1.0, -1.0);
     Cartesian3.normalize(normal, normal);
     AttributeCompression.octEncodeToCartesian4(normal, encoded);
     expect(
-      AttributeCompression.octDecodeFromCartesian4(encoded, result)
+      AttributeCompression.octDecodeFromCartesian4(encoded, result),
     ).toEqualEpsilon(normal, epsilon);
   });
 
@@ -512,48 +512,48 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, 0.0, -1.0);
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, 1.0, 0.0);
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(0.0, -1.0, 0.0);
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 0.0, 0.0);
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 0.0, 0.0);
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 1.0, 1.0);
@@ -561,8 +561,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, -1.0, 1.0);
@@ -570,8 +570,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, -1.0, 1.0);
@@ -579,8 +579,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 1.0, 1.0);
@@ -588,8 +588,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, 1.0, -1.0);
@@ -597,8 +597,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(1.0, -1.0, -1.0);
@@ -606,8 +606,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, 1.0, -1.0);
@@ -615,8 +615,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
 
     normal = new Cartesian3(-1.0, -1.0, -1.0);
@@ -624,8 +624,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(normal),
-        result
-      )
+        result,
+      ),
     ).toEqualEpsilon(normal, epsilon);
   });
 
@@ -639,7 +639,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -648,7 +648,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -657,7 +657,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -666,7 +666,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -675,7 +675,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -684,7 +684,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -694,7 +694,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -704,7 +704,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -714,7 +714,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -724,7 +724,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -734,7 +734,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -744,7 +744,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -754,7 +754,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
 
@@ -764,7 +764,7 @@ describe("Core/AttributeCompression", function () {
     AttributeCompression.octDecode(encoded.x, encoded.y, result1);
     AttributeCompression.octDecodeFloat(
       AttributeCompression.octEncodeFloat(normal),
-      result2
+      result2,
     );
     expect(result1).toEqual(result2);
   });
@@ -794,9 +794,9 @@ describe("Core/AttributeCompression", function () {
     const encoded = AttributeCompression.octEncode(vector, new Cartesian2());
     const encodedFloat = AttributeCompression.octPackFloat(encoded);
     expect(
-      AttributeCompression.octDecodeFloat(encodedFloat, new Cartesian3())
+      AttributeCompression.octDecodeFloat(encodedFloat, new Cartesian3()),
     ).toEqual(
-      AttributeCompression.octDecode(encoded.x, encoded.y, new Cartesian3())
+      AttributeCompression.octDecode(encoded.x, encoded.y, new Cartesian3()),
     );
   });
 
@@ -820,20 +820,20 @@ describe("Core/AttributeCompression", function () {
     expect(decodedX).toEqual(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(x),
-        new Cartesian3()
-      )
+        new Cartesian3(),
+      ),
     );
     expect(decodedY).toEqual(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(y),
-        new Cartesian3()
-      )
+        new Cartesian3(),
+      ),
     );
     expect(decodedZ).toEqual(
       AttributeCompression.octDecodeFloat(
         AttributeCompression.octEncodeFloat(z),
-        new Cartesian3()
-      )
+        new Cartesian3(),
+      ),
     );
   });
 
@@ -843,7 +843,7 @@ describe("Core/AttributeCompression", function () {
         undefined,
         new Cartesian3(),
         new Cartesian3(),
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -854,7 +854,7 @@ describe("Core/AttributeCompression", function () {
         new Cartesian3(),
         undefined,
         new Cartesian3(),
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -865,7 +865,7 @@ describe("Core/AttributeCompression", function () {
         new Cartesian3(),
         new Cartesian3(),
         undefined,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -876,7 +876,7 @@ describe("Core/AttributeCompression", function () {
         new Cartesian3(),
         new Cartesian3(),
         new Cartesian3(),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -887,7 +887,7 @@ describe("Core/AttributeCompression", function () {
         undefined,
         new Cartesian3(),
         new Cartesian3(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -898,7 +898,7 @@ describe("Core/AttributeCompression", function () {
         new Cartesian2(),
         undefined,
         new Cartesian3(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -909,7 +909,7 @@ describe("Core/AttributeCompression", function () {
         new Cartesian2(),
         new Cartesian3(),
         undefined,
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -920,7 +920,7 @@ describe("Core/AttributeCompression", function () {
         new Cartesian2(),
         new Cartesian3(),
         new Cartesian3(),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -930,8 +930,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.decompressTextureCoordinates(
         AttributeCompression.compressTextureCoordinates(coords),
-        new Cartesian2()
-      )
+        new Cartesian2(),
+      ),
     ).toEqualEpsilon(coords, 1.0 / 4096.0);
   });
 
@@ -945,7 +945,7 @@ describe("Core/AttributeCompression", function () {
     expect(function () {
       AttributeCompression.decompressTextureCoordinates(
         undefined,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -961,8 +961,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.decompressTextureCoordinates(
         AttributeCompression.compressTextureCoordinates(coords),
-        new Cartesian2()
-      )
+        new Cartesian2(),
+      ),
     ).toEqual(coords);
   });
 
@@ -971,8 +971,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.decompressTextureCoordinates(
         AttributeCompression.compressTextureCoordinates(coords),
-        new Cartesian2()
-      )
+        new Cartesian2(),
+      ),
     ).toEqual(coords);
   });
 
@@ -981,8 +981,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.decompressTextureCoordinates(
         AttributeCompression.compressTextureCoordinates(coords),
-        new Cartesian2()
-      )
+        new Cartesian2(),
+      ),
     ).toEqualEpsilon(coords, 1.0 / 4095.0);
   });
 
@@ -991,8 +991,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.decompressTextureCoordinates(
         AttributeCompression.compressTextureCoordinates(coords),
-        new Cartesian2()
-      )
+        new Cartesian2(),
+      ),
     ).toEqualEpsilon(coords, 1.0 / 4095.0);
   });
 
@@ -1001,8 +1001,8 @@ describe("Core/AttributeCompression", function () {
     expect(
       AttributeCompression.decompressTextureCoordinates(
         AttributeCompression.compressTextureCoordinates(coords),
-        new Cartesian2()
-      )
+        new Cartesian2(),
+      ),
     ).toEqualEpsilon(coords, 1.0 / 4095.0);
   });
 
@@ -1056,7 +1056,7 @@ describe("Core/AttributeCompression", function () {
     const vBuffer = new Uint16Array(
       encoded.buffer,
       length * Uint16Array.BYTES_PER_ELEMENT,
-      length
+      length,
     );
 
     AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer);
@@ -1079,18 +1079,18 @@ describe("Core/AttributeCompression", function () {
     const encoded = deltaZigZagEncode(
       decodedUBuffer,
       decodedVBuffer,
-      decodedHeightBuffer
+      decodedHeightBuffer,
     );
     const uBuffer = new Uint16Array(encoded.buffer, 0, length);
     const vBuffer = new Uint16Array(
       encoded.buffer,
       length * Uint16Array.BYTES_PER_ELEMENT,
-      length
+      length,
     );
     const heightBuffer = new Uint16Array(
       encoded.buffer,
       2 * length * Uint16Array.BYTES_PER_ELEMENT,
-      length
+      length,
     );
 
     AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
@@ -1116,7 +1116,7 @@ describe("Core/AttributeCompression", function () {
     expect(function () {
       AttributeCompression.zigZagDeltaDecode(
         new Uint16Array(10),
-        new Uint16Array(11)
+        new Uint16Array(11),
       );
     }).toThrowDeveloperError();
   });
@@ -1126,7 +1126,7 @@ describe("Core/AttributeCompression", function () {
       AttributeCompression.zigZagDeltaDecode(
         new Uint16Array(10),
         new Uint16Array(10),
-        new Uint16Array(11)
+        new Uint16Array(11),
       );
     }).toThrowDeveloperError();
   });
@@ -1137,7 +1137,7 @@ describe("Core/AttributeCompression", function () {
         undefined,
         ComponentDatatype.UNSIGNED_BYTE,
         AttributeType.VEC3,
-        1
+        1,
       );
     }).toThrowDeveloperError();
   });
@@ -1148,7 +1148,7 @@ describe("Core/AttributeCompression", function () {
         new Uint8Array([0, 0, 0, 0]),
         undefined,
         AttributeType.VEC3,
-        1
+        1,
       );
     }).toThrowDeveloperError();
   });
@@ -1159,7 +1159,7 @@ describe("Core/AttributeCompression", function () {
         new Uint8Array([0, 0, 0, 0]),
         ComponentDatatype.UNSIGNED_BYTE,
         undefined,
-        1
+        1,
       );
     }).toThrowDeveloperError();
   });
@@ -1170,7 +1170,7 @@ describe("Core/AttributeCompression", function () {
         new Uint8Array([0, 0, 0, 0]),
         ComponentDatatype.UNSIGNED_BYTE,
         AttributeType.VEC3,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -1182,7 +1182,7 @@ describe("Core/AttributeCompression", function () {
       new Int8Array(input),
       ComponentDatatype.BYTE,
       AttributeType.VEC3,
-      3
+      3,
     );
     for (let i = 0; i < input.length; i++) {
       expect(result[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON2);
@@ -1196,7 +1196,7 @@ describe("Core/AttributeCompression", function () {
       new Uint8Array(input),
       ComponentDatatype.UNSIGNED_BYTE,
       AttributeType.VEC3,
-      3
+      3,
     );
     for (let i = 0; i < input.length; i++) {
       expect(result[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON2);
@@ -1210,7 +1210,7 @@ describe("Core/AttributeCompression", function () {
       new Int16Array(input),
       ComponentDatatype.SHORT,
       AttributeType.VEC3,
-      3
+      3,
     );
     for (let i = 0; i < input.length; i++) {
       expect(result[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON5);
@@ -1224,7 +1224,7 @@ describe("Core/AttributeCompression", function () {
       new Uint16Array(input),
       ComponentDatatype.UNSIGNED_SHORT,
       AttributeType.VEC3,
-      3
+      3,
     );
     for (let i = 0; i < input.length; i++) {
       expect(result[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON5);
@@ -1233,14 +1233,7 @@ describe("Core/AttributeCompression", function () {
 
   it("dequantize works with INT", function () {
     const input = [
-      -2147483647,
-      -2147483647,
-      -2147483647,
-      0,
-      0,
-      0,
-      2147483647,
-      2147483647,
+      -2147483647, -2147483647, -2147483647, 0, 0, 0, 2147483647, 2147483647,
       2147483647,
     ];
     const expected = [-1, -1, -1, 0, 0, 0, 1, 1, 1];
@@ -1248,7 +1241,7 @@ describe("Core/AttributeCompression", function () {
       new Int32Array(input),
       ComponentDatatype.INT,
       AttributeType.VEC3,
-      3
+      3,
     );
     for (let i = 0; i < input.length; i++) {
       expect(result[i]).toEqual(expected[i]);
@@ -1257,14 +1250,7 @@ describe("Core/AttributeCompression", function () {
 
   it("dequantize works with UNSIGNED_INT", function () {
     const input = [
-      0,
-      0,
-      0,
-      2147483647,
-      2147483647,
-      2147483647,
-      4294967295,
-      4294967295,
+      0, 0, 0, 2147483647, 2147483647, 2147483647, 4294967295, 4294967295,
       4294967295,
     ];
     const expected = [0, 0, 0, 0.5, 0.5, 0.5, 1, 1, 1];
@@ -1272,7 +1258,7 @@ describe("Core/AttributeCompression", function () {
       new Uint32Array(input),
       ComponentDatatype.UNSIGNED_INT,
       AttributeType.VEC3,
-      3
+      3,
     );
     for (let i = 0; i < input.length; i++) {
       expect(result[i]).toEqual(expected[i]);
@@ -1289,7 +1275,7 @@ describe("Core/AttributeCompression", function () {
     expect(function () {
       return AttributeCompression.decodeRGB565(
         new Uint16Array([0]),
-        new Float32Array(1)
+        new Float32Array(1),
       );
     }).toThrowDeveloperError();
   });

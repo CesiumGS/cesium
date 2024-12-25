@@ -9,12 +9,13 @@ for (const example of gallery) {
 
     await page.goto(example);
 
+    await page.clock.pauseAt(new Date("2023-12-25T14:00:00"));
+
     await page.waitForLoadState("networkidle");
 
-    await page.evaluate(() => window.__clock.tickAsync(1000));
-    await page.evaluate(() => window.__clock.tickAsync(1000));
-    await page.evaluate(() => window.__clock.tickAsync(1000));
-    await page.evaluate(() => window.__clock.tickAsync(1000));
+    await page.clock.runFor(1000);
+    await page.clock.runFor(1000);
+    await page.clock.runFor(1000);
 
     await expect(page).toHaveScreenshot({
       timeout: 20000,

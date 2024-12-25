@@ -40,7 +40,7 @@ function VoxelTraversal(
   types,
   componentTypes,
   keyframeCount,
-  maximumTextureMemoryByteLength
+  maximumTextureMemoryByteLength,
 ) {
   /**
    * TODO: maybe this shouldn't be stored or passed into update function?
@@ -66,7 +66,7 @@ function VoxelTraversal(
       dimensions,
       componentCount,
       componentType,
-      maximumTextureMemoryByteLength
+      maximumTextureMemoryByteLength,
     );
   }
 
@@ -150,16 +150,16 @@ function VoxelTraversal(
     binaryTreeKeyframeWeighting,
     1,
     keyframeCount - 2,
-    0
+    0,
   );
 
   const internalNodeTexelCount = 9;
   const internalNodeTextureDimensionX = 2048;
   const internalNodeTilesPerRow = Math.floor(
-    internalNodeTextureDimensionX / internalNodeTexelCount
+    internalNodeTextureDimensionX / internalNodeTexelCount,
   );
   const internalNodeTextureDimensionY = Math.ceil(
-    maximumTileCount / internalNodeTilesPerRow
+    maximumTileCount / internalNodeTilesPerRow,
   );
 
   /**
@@ -191,7 +191,7 @@ function VoxelTraversal(
    */
   this.internalNodeTexelSizeUv = new Cartesian2(
     1.0 / internalNodeTextureDimensionX,
-    1.0 / internalNodeTextureDimensionY
+    1.0 / internalNodeTextureDimensionY,
   );
 
   /**
@@ -250,7 +250,7 @@ VoxelTraversal.prototype.update = function (
   frameState,
   keyframeLocation,
   recomputeBoundingVolumes,
-  pauseUpdate
+  pauseUpdate,
 ) {
   const primitive = this._primitive;
   const context = frameState.context;
@@ -268,10 +268,10 @@ VoxelTraversal.prototype.update = function (
     const leafNodeTexelCount = 2;
     const leafNodeTextureDimensionX = 1024;
     const leafNodeTilesPerRow = Math.floor(
-      leafNodeTextureDimensionX / leafNodeTexelCount
+      leafNodeTextureDimensionX / leafNodeTexelCount,
     );
     const leafNodeTextureDimensionY = Math.ceil(
-      maximumTileCount / leafNodeTilesPerRow
+      maximumTileCount / leafNodeTilesPerRow,
     );
 
     this.leafNodeTexture = new Texture({
@@ -289,7 +289,7 @@ VoxelTraversal.prototype.update = function (
     this.leafNodeTexelSizeUv = Cartesian2.fromElements(
       1.0 / leafNodeTextureDimensionX,
       1.0 / leafNodeTextureDimensionY,
-      this.leafNodeTexelSizeUv
+      this.leafNodeTexelSizeUv,
     );
     this.leafNodeTilesPerRow = leafNodeTilesPerRow;
   } else if (!useLeafNodes && defined(this.leafNodeTexture)) {
@@ -299,7 +299,7 @@ VoxelTraversal.prototype.update = function (
   this._keyframeLocation = CesiumMath.clamp(
     keyframeLocation,
     0.0,
-    keyframeCount - 1
+    keyframeCount - 1,
   );
 
   if (recomputeBoundingVolumes) {
@@ -325,7 +325,7 @@ VoxelTraversal.prototype.update = function (
       this,
       loadAndUnloadTimeMs,
       generateOctreeTimeMs,
-      totalTimeMs
+      totalTimeMs,
     );
   }
 };
@@ -505,7 +505,7 @@ function loadAndUnload(that, frameState) {
   const previousKeyframe = CesiumMath.clamp(
     Math.floor(that._keyframeLocation),
     0,
-    keyframeCount - 2
+    keyframeCount - 2,
   );
   const nextKeyframe = previousKeyframe + 1;
 
@@ -524,7 +524,7 @@ function loadAndUnload(that, frameState) {
 
     visibilityPlaneMask = spatialNode.visibility(
       frameState,
-      visibilityPlaneMask
+      visibilityPlaneMask,
     );
     if (visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
       return;
@@ -553,7 +553,7 @@ function loadAndUnload(that, frameState) {
           previousKeyframe,
           keyframeNode.keyframe,
           nextKeyframe,
-          that
+          that,
         );
 
       if (
@@ -594,9 +594,8 @@ function loadAndUnload(that, frameState) {
   while (priorityQueue.length > 0) {
     highPriorityKeyframeNode = priorityQueue.removeMaximum();
     highPriorityKeyframeNode.highPriorityFrameNumber = frameNumber;
-    highPriorityKeyframeNodes[
-      highPriorityKeyframeNodeCount
-    ] = highPriorityKeyframeNode;
+    highPriorityKeyframeNodes[highPriorityKeyframeNodeCount] =
+      highPriorityKeyframeNode;
     highPriorityKeyframeNodeCount++;
   }
 
@@ -648,7 +647,7 @@ function loadAndUnload(that, frameState) {
         const discardNode = keyframeNodesInMegatexture[addNodeIndex];
         discardNode.spatialNode.destroyKeyframeNode(
           discardNode,
-          that.megatextures
+          that.megatextures,
         );
       } else {
         addNodeIndex = keyframeNodesInMegatextureCount + addedCount;
@@ -656,7 +655,7 @@ function loadAndUnload(that, frameState) {
       }
       highPriorityKeyframeNode.spatialNode.addKeyframeNodeToMegatextures(
         highPriorityKeyframeNode,
-        that.megatextures
+        that.megatextures,
       );
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
@@ -676,24 +675,24 @@ function loadAndUnload(that, frameState) {
 function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
   const keyframeDifference = Math.min(
     Math.abs(keyframe - previousKeyframe),
-    Math.abs(keyframe - nextKeyframe)
+    Math.abs(keyframe - nextKeyframe),
   );
   const maxKeyframeDifference = Math.max(
     previousKeyframe,
     traversal._keyframeCount - nextKeyframe - 1,
-    1
+    1,
   );
   const keyframeFactor = Math.pow(
     1.0 - keyframeDifference / maxKeyframeDifference,
-    4.0
+    4.0,
   );
   const binaryTreeFactor = Math.exp(
-    -traversal._binaryTreeKeyframeWeighting[keyframe]
+    -traversal._binaryTreeKeyframeWeighting[keyframe],
   );
   return CesiumMath.lerp(
     binaryTreeFactor,
     keyframeFactor,
-    0.15 + 0.85 * keyframeFactor
+    0.15 + 0.85 * keyframeFactor,
   );
 }
 
@@ -708,7 +707,7 @@ function printDebugInformation(
   that,
   loadAndUnloadTimeMs,
   generateOctreeTimeMs,
-  totalTimeMs
+  totalTimeMs,
 ) {
   const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
@@ -783,7 +782,7 @@ function printDebugInformation(
     `ALL: ${totalTimeMsRounded}`;
 
   console.log(
-    `${loadedKeyframeStatistics} || ${loadStateStatistics} || ${timerStatistics}`
+    `${loadedKeyframeStatistics} || ${loadStateStatistics} || ${timerStatistics}`,
   );
 }
 
@@ -855,7 +854,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
     childOctreeIndex,
     childEntryIndex,
     parentOctreeIndex,
-    parentEntryIndex
+    parentEntryIndex,
   ) {
     let hasRenderableChildren = false;
     if (defined(node.children)) {
@@ -887,7 +886,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
           childOctreeIndex,
           childEntryIndex,
           parentOctreeIndex,
-          parentEntryIndex + cc
+          parentEntryIndex + cc,
         );
       }
     } else {
@@ -941,14 +940,14 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
     internalNodeOctreeData,
     9,
     that.internalNodeTilesPerRow,
-    that.internalNodeTexture
+    that.internalNodeTexture,
   );
   if (useLeafNodes) {
     copyToLeafNodeTexture(
       leafNodeOctreeData,
       2,
       that.leafNodeTilesPerRow,
-      that.leafNodeTexture
+      that.leafNodeTexture,
     );
   }
 }
@@ -986,7 +985,7 @@ function copyToInternalNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
   const tileCount = Math.ceil(data.length / texelsPerTile);
   const copyWidth = Math.max(
     1,
-    texelsPerTile * Math.min(tileCount, tilesPerRow)
+    texelsPerTile * Math.min(tileCount, tilesPerRow),
   );
   const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
 
@@ -1028,7 +1027,7 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
   const tileCount = Math.ceil(data.length / datasPerTile);
   const copyWidth = Math.max(
     1,
-    texelsPerTile * Math.min(tileCount, tilesPerRow)
+    texelsPerTile * Math.min(tileCount, tilesPerRow),
   );
   const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
 
@@ -1043,7 +1042,7 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
     const timeLerpCompressed = CesiumMath.clamp(
       Math.floor(65536 * timeLerp),
       0,
-      65535
+      65535,
     );
     textureData[tileIndex * 8 + 0] = (timeLerpCompressed >>> 0) & 0xff;
     textureData[tileIndex * 8 + 1] = (timeLerpCompressed >>> 8) & 0xff;
@@ -1084,7 +1083,7 @@ VoxelTraversal.getApproximateTextureMemoryByteLength = function (
   tileCount,
   dimensions,
   types,
-  componentTypes
+  componentTypes,
 ) {
   let textureMemoryByteLength = 0;
 
@@ -1094,12 +1093,13 @@ VoxelTraversal.getApproximateTextureMemoryByteLength = function (
     const componentType = componentTypes[i];
     const componentCount = MetadataType.getComponentCount(type);
 
-    textureMemoryByteLength += Megatexture.getApproximateTextureMemoryByteLength(
-      tileCount,
-      dimensions,
-      componentCount,
-      componentType
-    );
+    textureMemoryByteLength +=
+      Megatexture.getApproximateTextureMemoryByteLength(
+        tileCount,
+        dimensions,
+        componentCount,
+        componentType,
+      );
   }
 
   return textureMemoryByteLength;

@@ -18,7 +18,7 @@ describe("DataSources/EntityCollection", function () {
     collection,
     added,
     removed,
-    changed
+    changed,
   ) {
     this.timesCalled++;
     this.added = added.slice(0);
@@ -101,7 +101,7 @@ describe("DataSources/EntityCollection", function () {
     const listener = new CollectionListener();
     entityCollection.collectionChanged.addEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
 
     entityCollection.add(entity);
@@ -140,7 +140,7 @@ describe("DataSources/EntityCollection", function () {
 
     entityCollection.collectionChanged.removeEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
   });
 
@@ -213,7 +213,7 @@ describe("DataSources/EntityCollection", function () {
     const listener = new CollectionListener();
     entityCollection.collectionChanged.addEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
 
     entityCollection.suspendEvents();
@@ -260,7 +260,7 @@ describe("DataSources/EntityCollection", function () {
 
     entityCollection.collectionChanged.removeEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
   });
 
@@ -287,7 +287,7 @@ describe("DataSources/EntityCollection", function () {
 
     entityCollection.collectionChanged.addEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
     entityCollection.removeAll();
 
@@ -302,7 +302,7 @@ describe("DataSources/EntityCollection", function () {
 
     entityCollection.collectionChanged.removeEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
   });
 
@@ -318,7 +318,7 @@ describe("DataSources/EntityCollection", function () {
 
     entityCollection.collectionChanged.addEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
 
     entityCollection.suspendEvents();
@@ -342,7 +342,7 @@ describe("DataSources/EntityCollection", function () {
 
     entityCollection.collectionChanged.removeEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
   });
 
@@ -406,13 +406,13 @@ describe("DataSources/EntityCollection", function () {
     entity.availability.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2012-08-01/2012-08-02",
-      })
+      }),
     );
     entity2.availability = new TimeIntervalCollection();
     entity2.availability.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2012-08-05/2012-08-06",
-      })
+      }),
     );
     entity3.availability = undefined;
 
@@ -432,13 +432,13 @@ describe("DataSources/EntityCollection", function () {
     entity.availability.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2012-08-01/9999-12-31T24:00:00Z",
-      })
+      }),
     );
     entity2.availability = new TimeIntervalCollection();
     entity2.availability.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "0000-01-01T00:00:00Z/2012-08-06",
-      })
+      }),
     );
     entity3.availability = undefined;
 

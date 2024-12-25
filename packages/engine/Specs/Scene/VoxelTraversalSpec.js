@@ -36,7 +36,7 @@ describe(
     beforeEach(async function () {
       scene = createScene();
       provider = await Cesium3DTilesVoxelProvider.fromUrl(
-        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       );
 
       camera = scene.camera;
@@ -55,7 +55,7 @@ describe(
         provider.types,
         provider.componentTypes,
         keyframeCount,
-        textureMemory
+        textureMemory,
       );
     });
 
@@ -80,7 +80,7 @@ describe(
       shape.update(
         modelMatrix,
         VoxelEllipsoidShape.DefaultMinBounds,
-        VoxelEllipsoidShape.DefaultMaxBounds
+        VoxelEllipsoidShape.DefaultMaxBounds,
       );
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
@@ -89,14 +89,14 @@ describe(
         scene.frameState,
         keyFrameLocation,
         recomputeBoundingVolumes,
-        pauseUpdate
+        pauseUpdate,
       );
       const newOrientedBoundingBox = rootNode.orientedBoundingBox.clone();
       expect(
         OrientedBoundingBox.equals(
           oldOrientedBoundingBox,
-          newOrientedBoundingBox
-        )
+          newOrientedBoundingBox,
+        ),
       ).toBe(false);
       expect(newOrientedBoundingBox.center.equals(translation)).toBe(true);
     });
@@ -109,11 +109,11 @@ describe(
       const rootNode = traversal.rootNode;
       rootNode.computeScreenSpaceError(
         camera.positionWC,
-        screenSpaceErrorMultiplier
+        screenSpaceErrorMultiplier,
       );
 
       let distanceToCamera = Math.sqrt(
-        rootNode.orientedBoundingBox.distanceSquaredTo(camera.positionWC)
+        rootNode.orientedBoundingBox.distanceSquaredTo(camera.positionWC),
       );
       distanceToCamera = Math.max(distanceToCamera, CesiumMath.EPSILON7);
       const error =
@@ -128,7 +128,7 @@ describe(
 
       const visibilityWhenLookingAtRoot = rootNode.visibility(
         scene.frameState,
-        visibilityPlaneMask
+        visibilityPlaneMask,
       );
       expect(visibilityWhenLookingAtRoot).toBe(CullingVolume.MASK_INSIDE);
       // expect(traversal.isRenderable(rootNode)).toBe(true);
@@ -136,7 +136,7 @@ describe(
       turnCameraAround(scene);
       const visibilityWhenLookingAway = rootNode.visibility(
         scene.frameState,
-        visibilityPlaneMask
+        visibilityPlaneMask,
       );
       expect(visibilityWhenLookingAway).toBe(CullingVolume.MASK_OUTSIDE);
     });
@@ -156,7 +156,7 @@ describe(
           scene.frameState,
           keyFrameLocation,
           recomputeBoundingVolumes,
-          pauseUpdate
+          pauseUpdate,
         );
         scene.renderForSpecs();
         return traversal.megatextures[0].occupiedCount > 0;
@@ -175,7 +175,7 @@ describe(
           scene.frameState,
           keyFrameLocation,
           recomputeBoundingVolumes,
-          pauseUpdate
+          pauseUpdate,
         );
         scene.renderForSpecs();
         return traversal.megatextures[0].occupiedCount > 0;
@@ -200,7 +200,7 @@ describe(
             scene.frameState,
             keyFrameLocation,
             recomputeBoundingVolumes,
-            pauseUpdate
+            pauseUpdate,
           );
         }
         for (let i = 0; i < 10; i++) {
@@ -212,12 +212,12 @@ describe(
       const bottomLeftNearCorner = Cartesian3.fromElements(
         -0.5 - eps,
         -0.5 - eps,
-        -0.5 - eps
+        -0.5 - eps,
       );
       const topRightFarCorner = Cartesian3.fromElements(
         0.5 + eps,
         0.5 + eps,
-        0.5 + eps
+        0.5 + eps,
       );
       scene.camera.position = bottomLeftNearCorner;
       updateTraversalTenTimes();
@@ -245,5 +245,5 @@ describe(
       expect(nodeNoLongerInMegatexture).toBe(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

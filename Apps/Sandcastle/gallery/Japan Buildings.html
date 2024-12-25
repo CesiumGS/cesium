@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -11,10 +11,7 @@
       name="description"
       content="Worldwide 3D buildings with rich metadata from OpenStreetMap."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Showcases, ion Assets"
-    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases, ion Assets" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -40,12 +34,12 @@
         //Sandcastle_Begin
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrain: Cesium.Terrain.fromWorldTerrain(),
+          // Load Japan Regional Terrain
+          terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(2767062),
           baseLayerPicker: false,
           sceneModePicker: false,
           animation: false,
           timeline: false,
-          msaaSamples: 4,
         });
         const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
@@ -64,18 +58,18 @@
           destination: new Cesium.Cartesian3(
             -3558117.165209301,
             3887175.058311886,
-            3582090.381367681
+            3582090.381367681,
           ),
           orientation: {
             direction: new Cesium.Cartesian3(
               0.915045649098936,
               -0.16130516440787898,
-              0.3696919041586574
+              0.3696919041586574,
             ),
             up: new Cesium.Cartesian3(
               -0.20924973638933655,
               0.5937271886242537,
-              0.7769829942214522
+              0.7769829942214522,
             ),
           },
         };
@@ -84,18 +78,18 @@
           destination: new Cesium.Cartesian3(
             -3959788.9678092706,
             3353283.9088315447,
-            3697270.0292328526
+            3697270.0292328526,
           ),
           orientation: {
             direction: new Cesium.Cartesian3(
               0.1473261076519599,
               -0.9210400676146971,
-              0.3605276852787276
+              0.3605276852787276,
             ),
             up: new Cesium.Cartesian3(
               -0.6082716434343354,
               0.20305763470537083,
-              0.7673155835649066
+              0.7673155835649066,
             ),
           },
         };
@@ -104,18 +98,18 @@
           destination: new Cesium.Cartesian3(
             -3746418.0787567603,
             3649244.7209161296,
-            3638967.47570257
+            3638967.47570257,
           ),
           orientation: {
             direction: new Cesium.Cartesian3(
               0.9417381486076588,
               -0.026110036454204615,
-              0.335331963065526
+              0.335331963065526,
             ),
             up: new Cesium.Cartesian3(
               -0.2518896785254185,
               0.6059364940549604,
-              0.7545810460280222
+              0.7545810460280222,
             ),
           },
         };
@@ -124,18 +118,18 @@
           destination: new Cesium.Cartesian3(
             -3644464.457824361,
             2916376.559037763,
-            4333280.277694175
+            4333280.277694175,
           ),
           orientation: {
             direction: new Cesium.Cartesian3(
               -0.3679337542668949,
               -0.8827113216318188,
-              -0.2923105799215557
+              -0.2923105799215557,
             ),
             up: new Cesium.Cartesian3(
               -0.7773373481004832,
               0.11948179734604299,
-              0.6176331818734058
+              0.6176331818734058,
             ),
           },
         };
@@ -144,18 +138,18 @@
           destination: new Cesium.Cartesian3(
             -3720805.8497414757,
             3554280.4145123693,
-            3756470.8341226312
+            3756470.8341226312,
           ),
           orientation: {
             direction: new Cesium.Cartesian3(
               -0.29857010298659575,
               0.04749330012764362,
-              -0.9532052664801844
+              -0.9532052664801844,
             ),
             up: new Cesium.Cartesian3(
               -0.7423221317622432,
               0.6161776077834791,
-              0.2632166566959398
+              0.2632166566959398,
             ),
           },
         };
@@ -164,18 +158,18 @@
           destination: new Cesium.Cartesian3(
             -3938455.040928949,
             3417079.906560689,
-            3662889.160230748
+            3662889.160230748,
           ),
           orientation: {
             direction: new Cesium.Cartesian3(
               0.09245366141098484,
               0.5115481128951291,
-              -0.854266263342487
+              -0.854266263342487,
             ),
             up: new Cesium.Cartesian3(
               -0.6151172847807794,
               0.703996434356258,
-              0.35499260045470854
+              0.35499260045470854,
             ),
           },
         };
@@ -184,18 +178,18 @@
           destination: new Cesium.Cartesian3(
             -3930814.3315207073,
             3422614.91809806,
-            3665138.546010887
+            3665138.546010887,
           ),
           orientation: {
             direction: new Cesium.Cartesian3(
               0.8178889459747928,
               0.5717362258573416,
-              0.06461702635254533
+              0.06461702635254533,
             ),
             up: new Cesium.Cartesian3(
               -0.49123560987022913,
               0.6353948538216464,
-              0.595785997932473
+              0.595785997932473,
             ),
           },
         };
@@ -249,6 +243,7 @@
         // Set up a light to come from the camera to always highlight the buildings
         const cameraLight = new Cesium.DirectionalLight({
           direction: scene.camera.directionWC, // Updated every frame
+          intensity: 2.0,
         });
         scene.globe.enableLighting = true;
         scene.globe.dynamicAtmosphereLightingFromSun = false;
@@ -258,16 +253,14 @@
         scene.preRender.addEventListener(function (scene, time) {
           scene.light.direction = Cesium.Cartesian3.clone(
             scene.camera.directionWC,
-            scene.light.direction
+            scene.light.direction,
           );
         });
 
-        viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
-          (e) => {
-            e.cancel = true;
-            scene.camera.flyTo(hiroshima);
-          }
-        );
+        viewer.homeButton.viewModel.command.beforeExecute.addEventListener((e) => {
+          e.cancel = true;
+          scene.camera.flyTo(hiroshima);
+        });
 
         //Sandcastle_End
       };

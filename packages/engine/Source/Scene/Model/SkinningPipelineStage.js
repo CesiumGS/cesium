@@ -45,7 +45,7 @@ SkinningPipelineStage.process = function (renderResources, primitive) {
   shaderBuilder.addUniform(
     "mat4",
     `u_jointMatrices[${jointMatrices.length}]`,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   shaderBuilder.addVertexLines(SkinningStageVS);
@@ -83,13 +83,13 @@ function addGetSkinningMatrixFunction(shaderBuilder, primitive) {
   shaderBuilder.addFunction(
     SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
     SkinningPipelineStage.FUNCTION_SIGNATURE_GET_SKINNING_MATRIX,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   const initialLine = "mat4 skinnedMatrix = mat4(0);";
   shaderBuilder.addFunctionLines(
     SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
-    [initialLine]
+    [initialLine],
   );
 
   let setIndex;
@@ -103,7 +103,7 @@ function addGetSkinningMatrixFunction(shaderBuilder, primitive) {
       const line = `skinnedMatrix += a_weights_${setIndex}.${component} * u_jointMatrices[int(a_joints_${setIndex}.${component})];`;
       shaderBuilder.addFunctionLines(
         SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
-        [line]
+        [line],
       );
     }
   }
@@ -111,7 +111,7 @@ function addGetSkinningMatrixFunction(shaderBuilder, primitive) {
   const returnLine = "return skinnedMatrix;";
   shaderBuilder.addFunctionLines(
     SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
-    [returnLine]
+    [returnLine],
   );
 }
 

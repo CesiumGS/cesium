@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -47,20 +44,16 @@
         });
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2021-11-09T20:27:37.016064475348684937Z"
+          "2021-11-09T20:27:37.016064475348684937Z",
         );
 
         // Model positioning ===============================================
 
-        const position = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          0
-        );
+        const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0);
         const hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
         const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
           "north",
-          "west"
+          "west",
         );
 
         // Custom Shader Definitions ========================================
@@ -325,12 +318,9 @@
           balloon: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
           drone: "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
           pawns: "../../SampleData/models/CesiumDrone/Pawns.glb",
-          milkTruck:
-            "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
-          groundVehicle:
-            "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
-          pointCloudWave:
-            "../../SampleData/models/PointCloudWave/PointCloudWave.glb",
+          milkTruck: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+          groundVehicle: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+          pointCloudWave: "../../SampleData/models/PointCloudWave/PointCloudWave.glb",
         };
 
         let needsDrag = false;
@@ -404,9 +394,9 @@
                   position,
                   hpr,
                   Cesium.Ellipsoid.WGS84,
-                  fixedFrameTransform
+                  fixedFrameTransform,
                 ),
-              })
+              }),
             );
 
             const removeListener = model.readyEvent.addEventListener(() => {
@@ -462,7 +452,7 @@
             const drag = Cesium.Cartesian3.subtract(
               movement.endPosition,
               dragCenter,
-              scratchDrag
+              scratchDrag,
             );
 
             // Update uniforms

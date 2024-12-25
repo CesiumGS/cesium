@@ -42,7 +42,7 @@ RectangleCollisionChecker.prototype.insert = function (id, rectangle) {
   const withId = RectangleWithId.fromRectangleAndId(
     id,
     rectangle,
-    new RectangleWithId()
+    new RectangleWithId(),
   );
   this._tree.insert(withId);
 };
@@ -68,7 +68,7 @@ RectangleCollisionChecker.prototype.remove = function (id, rectangle) {
   const withId = RectangleWithId.fromRectangleAndId(
     id,
     rectangle,
-    removalScratch
+    removalScratch,
   );
   this._tree.remove(withId, idCompare);
 };
@@ -88,7 +88,7 @@ RectangleCollisionChecker.prototype.collides = function (rectangle) {
   const withId = RectangleWithId.fromRectangleAndId(
     "",
     rectangle,
-    collisionScratch
+    collisionScratch,
   );
   return this._tree.collides(withId);
 };

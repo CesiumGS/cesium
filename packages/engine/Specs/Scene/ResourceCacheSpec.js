@@ -263,7 +263,7 @@ describe("ResourceCache", function () {
   it("destroys resource when reference count reaches 0", function () {
     const destroy = spyOn(
       MetadataSchemaLoader.prototype,
-      "destroy"
+      "destroy",
     ).and.callThrough();
 
     const cacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -373,7 +373,7 @@ describe("ResourceCache", function () {
     expect(
       ResourceCache.getSchemaLoader({
         schema: schemaJson,
-      })
+      }),
     ).toBe(schemaLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -400,7 +400,7 @@ describe("ResourceCache", function () {
         parentResource: bufferParentResource,
         bufferId: 0,
         typedArray: bufferTypedArray,
-      })
+      }),
     ).toBe(bufferLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -411,7 +411,7 @@ describe("ResourceCache", function () {
       ResourceCache.getEmbeddedBufferLoader({
         bufferId: 0,
         typedArray: bufferTypedArray,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -420,7 +420,7 @@ describe("ResourceCache", function () {
       ResourceCache.getEmbeddedBufferLoader({
         parentResource: bufferParentResource,
         typedArray: bufferTypedArray,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -429,7 +429,7 @@ describe("ResourceCache", function () {
       ResourceCache.getEmbeddedBufferLoader({
         parentResource: bufferParentResource,
         bufferId: 0,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -449,7 +449,7 @@ describe("ResourceCache", function () {
     expect(
       ResourceCache.getExternalBufferLoader({
         resource: bufferResource,
-      })
+      }),
     ).toBe(bufferLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -459,7 +459,7 @@ describe("ResourceCache", function () {
     expect(() =>
       ResourceCache.getExternalBufferLoader({
         resource: undefined,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -481,7 +481,7 @@ describe("ResourceCache", function () {
       ResourceCache.getGltfJsonLoader({
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toBe(gltfJsonLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -492,7 +492,7 @@ describe("ResourceCache", function () {
       ResourceCache.getGltfJsonLoader({
         gltfResource: undefined,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -501,7 +501,7 @@ describe("ResourceCache", function () {
       ResourceCache.getGltfJsonLoader({
         gltfResource: gltfResource,
         baseResource: undefined,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -530,7 +530,7 @@ describe("ResourceCache", function () {
         bufferViewId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toBe(bufferViewLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -543,7 +543,7 @@ describe("ResourceCache", function () {
         bufferViewId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -554,7 +554,7 @@ describe("ResourceCache", function () {
         bufferViewId: undefined,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -565,7 +565,7 @@ describe("ResourceCache", function () {
         bufferViewId: 0,
         gltfResource: undefined,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -576,7 +576,7 @@ describe("ResourceCache", function () {
         bufferViewId: 0,
         gltfResource: gltfResource,
         baseResource: undefined,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -606,7 +606,7 @@ describe("ResourceCache", function () {
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toBe(dracoLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -619,7 +619,7 @@ describe("ResourceCache", function () {
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -630,7 +630,7 @@ describe("ResourceCache", function () {
         draco: undefined,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -641,7 +641,7 @@ describe("ResourceCache", function () {
         draco: dracoExtension,
         gltfResource: undefined,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -652,7 +652,7 @@ describe("ResourceCache", function () {
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: undefined,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -689,7 +689,7 @@ describe("ResourceCache", function () {
         frameState: mockFrameState,
         bufferViewId: 0,
         loadBuffer: true,
-      })
+      }),
     ).toBe(vertexBufferLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -732,7 +732,7 @@ describe("ResourceCache", function () {
         attributeSemantic: "POSITION",
         accessorId: 0,
         loadBuffer: true,
-      })
+      }),
     ).toBe(vertexBufferLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -774,7 +774,7 @@ describe("ResourceCache", function () {
         frameState: mockFrameState,
         bufferViewId: 0,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -787,7 +787,7 @@ describe("ResourceCache", function () {
         frameState: mockFrameState,
         bufferViewId: 0,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -800,7 +800,7 @@ describe("ResourceCache", function () {
         frameState: mockFrameState,
         bufferViewId: 0,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -813,7 +813,7 @@ describe("ResourceCache", function () {
         frameState: undefined,
         bufferViewId: 0,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -829,7 +829,7 @@ describe("ResourceCache", function () {
         attributeSemantic: "POSITION",
         accessorId: 0,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -841,7 +841,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         frameState: mockFrameState,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -856,7 +856,7 @@ describe("ResourceCache", function () {
         attributeSemantic: undefined,
         accessorId: 0,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -871,7 +871,7 @@ describe("ResourceCache", function () {
         attributeSemantic: "POSITION",
         accessorId: undefined,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -885,7 +885,7 @@ describe("ResourceCache", function () {
         bufferViewId: 0,
         loadBuffer: false,
         loadTypedArray: false,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -921,7 +921,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         frameState: mockFrameState,
         loadBuffer: true,
-      })
+      }),
     ).toBe(indexBufferLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -962,7 +962,7 @@ describe("ResourceCache", function () {
         frameState: mockFrameState,
         draco: dracoExtension,
         loadBuffer: true,
-      })
+      }),
     ).toBe(indexBufferLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -1002,7 +1002,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         frameState: mockFrameState,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1015,7 +1015,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         frameState: mockFrameState,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1028,7 +1028,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         frameState: mockFrameState,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1041,7 +1041,7 @@ describe("ResourceCache", function () {
         baseResource: undefined,
         frameState: mockFrameState,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1054,7 +1054,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         frameState: undefined,
         loadBuffer: true,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1068,7 +1068,7 @@ describe("ResourceCache", function () {
         frameState: mockFrameState,
         loadBuffer: false,
         loadTypedArray: false,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1097,7 +1097,7 @@ describe("ResourceCache", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toBe(imageLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -1110,7 +1110,7 @@ describe("ResourceCache", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1121,7 +1121,7 @@ describe("ResourceCache", function () {
         imageId: undefined,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1132,7 +1132,7 @@ describe("ResourceCache", function () {
         imageId: 0,
         gltfResource: undefined,
         baseResource: gltfResource,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1143,7 +1143,7 @@ describe("ResourceCache", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: undefined,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1178,7 +1178,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         frameState: mockFrameState,
         supportedImageFormats: new SupportedImageFormats(),
-      })
+      }),
     ).toBe(textureLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
@@ -1218,7 +1218,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
         frameState: mockFrameState,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1231,7 +1231,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
         frameState: mockFrameState,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1244,7 +1244,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
         frameState: mockFrameState,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1257,7 +1257,7 @@ describe("ResourceCache", function () {
         baseResource: undefined,
         supportedImageFormats: new SupportedImageFormats(),
         frameState: mockFrameState,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1270,7 +1270,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         supportedImageFormats: undefined,
         frameState: mockFrameState,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 
@@ -1283,7 +1283,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
         frameState: undefined,
-      })
+      }),
     ).toThrowDeveloperError();
   });
 });

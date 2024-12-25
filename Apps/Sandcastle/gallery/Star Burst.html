@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -97,7 +94,7 @@
           magnitude,
           lines,
           billboardEyeOffsets,
-          labelEyeOffsets
+          labelEyeOffsets,
         ) {
           const x = magnitude * Math.cos(angle);
           const y = magnitude * Math.sin(angle);
@@ -111,7 +108,7 @@
           const diff = Cesium.Cartesian3.subtract(
             entityPosition,
             camera.positionWC,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           const distance = Cesium.Cartesian3.dot(camera.directionWC, diff);
 
@@ -120,12 +117,12 @@
             drawingBufferHeight,
             distance,
             pixelRatio,
-            new Cesium.Cartesian2()
+            new Cesium.Cartesian2(),
           );
           Cesium.Cartesian2.multiplyByScalar(
             offset,
             Cesium.Cartesian2.maximumComponent(dimensions),
-            offset
+            offset,
           );
 
           let labelOffset;
@@ -135,24 +132,16 @@
           entity.billboard.eyeOffset = eyeOffset;
           if (Cesium.defined(entity.label)) {
             labelOffset = entity.label.eyeOffset;
-            entity.label.eyeOffset = new Cesium.Cartesian3(
-              offset.x,
-              offset.y,
-              -10.0
-            );
+            entity.label.eyeOffset = new Cesium.Cartesian3(offset.x, offset.y, -10.0);
           }
 
           const endPoint = Cesium.Matrix4.multiplyByPoint(
             camera.viewMatrix,
             entityPosition,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           Cesium.Cartesian3.add(eyeOffset, endPoint, endPoint);
-          Cesium.Matrix4.multiplyByPoint(
-            camera.inverseViewMatrix,
-            endPoint,
-            endPoint
-          );
+          Cesium.Matrix4.multiplyByPoint(camera.inverseViewMatrix, endPoint, endPoint);
           lines.push(endPoint);
 
           billboardEyeOffsets.push(billboardOffset);
@@ -206,9 +195,7 @@
           while (i < length) {
             let object = billboardEntities[i];
             if (pickedEntities.length === 0) {
-              starBurstState.center = Cesium.Cartesian3.clone(
-                object.primitive.position
-              );
+              starBurstState.center = Cesium.Cartesian3.clone(object.primitive.position);
             }
 
             if (!Cesium.defined(angleIncrease)) {
@@ -229,7 +216,7 @@
               magnitude,
               lines,
               billboardEyeOffsets,
-              labelEyeOffsets
+              labelEyeOffsets,
             );
             pickedEntities.push(object);
 
@@ -246,16 +233,13 @@
                 magnitude,
                 lines,
                 billboardEyeOffsets,
-                labelEyeOffsets
+                labelEyeOffsets,
               );
               pickedEntities.push(object);
             }
 
             angle += angleIncrease;
-            if (
-              reflectedAngle - angleIncrease * 0.5 <
-              angle + angleIncrease * 0.5
-            ) {
+            if (reflectedAngle - angleIncrease * 0.5 < angle + angleIncrease * 0.5) {
               magnitude += magIncrease;
               angle = angleStart;
               angleIncrease = maxDimension / magnitude;
@@ -272,7 +256,7 @@
             starBurstState.maxDimension = Math.max(
               pickedEntity.primitive.width,
               pickedEntity.primitive.height,
-              starBurstState.maxDimension
+              starBurstState.maxDimension,
             );
 
             instances.push(
@@ -284,10 +268,10 @@
                 }),
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    Cesium.Color.WHITE
+                    Cesium.Color.WHITE,
                   ),
                 },
-              })
+              }),
             );
           }
 
@@ -299,7 +283,7 @@
                 translucent: false,
               }),
               asynchronous: false,
-            })
+            }),
           );
 
           viewer.selectedEntity = undefined;
@@ -320,14 +304,14 @@
 
           // Remove the star burst if the mouse exits the screen space circle.
           // If the mouse is inside the circle, show the label of the billboard the mouse is hovering over.
-          const screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(
+          const screenPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
             scene,
-            starBurstState.center
+            starBurstState.center,
           );
           const fromCenter = Cesium.Cartesian2.subtract(
             mousePosition,
             screenPosition,
-            new Cesium.Cartesian2()
+            new Cesium.Cartesian2(),
           );
           const radius = starBurstState.radius;
 
@@ -390,10 +374,7 @@
           }
 
           if (pickedObject !== currentObject) {
-            if (
-              Cesium.defined(pickedObject) &&
-              Cesium.defined(pickedObject.id.label)
-            ) {
+            if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id.label)) {
               if (Cesium.defined(currentObject)) {
                 currentObject.id.label.show = false;
               }

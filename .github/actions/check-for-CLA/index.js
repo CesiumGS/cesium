@@ -47,7 +47,7 @@ const getValuesFromGoogleSheet = async (sheetId, cellRanges) => {
 const checkIfIndividualCLAFound = async () => {
   const response = await getValuesFromGoogleSheet(
     GOOGLE_SHEETS_INFO.individualCLASheetId,
-    "D2:D"
+    "D2:D",
   );
 
   const rows = response.data.values;
@@ -68,7 +68,7 @@ const checkIfIndividualCLAFound = async () => {
 const checkIfCorporateCLAFound = async () => {
   const response = await getValuesFromGoogleSheet(
     GOOGLE_SHEETS_INFO.corporateCLASheetId,
-    "H2:H"
+    "H2:H",
   );
 
   const rows = response.data.values;
@@ -107,9 +107,9 @@ const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
   const commentTemplate = fs.readFileSync(
     join(
       dirname(fileURLToPath(import.meta.url)),
-      "templates/pullRequestComment.hbs"
+      "templates/pullRequestComment.hbs",
     ),
-    "utf-8"
+    "utf-8",
   );
 
   const getCommentFromTemplate = Handlebars.compile(commentTemplate);
@@ -138,7 +138,23 @@ const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
         accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
       },
-    }
+    },
+  );
+};
+
+const addLabelToPullRequest = async () => {
+  const octokit = new Octokit();
+
+  return octokit.request(
+    `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/labels`,
+    {
+      labels: ["PR - Needs Signed CLA"],
+      headers: {
+        authorization: `bearer ${PULL_REQUST_INFO.gitHubToken}`,
+        accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
   );
 };
 
@@ -153,6 +169,9 @@ const main = async () => {
   }
 
   await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
+  if (!hasSignedCLA) {
+    await addLabelToPullRequest();
+  }
 };
 
 main();

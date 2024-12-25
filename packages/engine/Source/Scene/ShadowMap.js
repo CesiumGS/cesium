@@ -331,15 +331,15 @@ function createRenderStates(shadowMap) {
   const colorMask = !shadowMap._usesDepthTexture;
   shadowMap._primitiveRenderState = createRenderState(
     colorMask,
-    shadowMap._primitiveBias
+    shadowMap._primitiveBias,
   );
   shadowMap._terrainRenderState = createRenderState(
     colorMask,
-    shadowMap._terrainBias
+    shadowMap._terrainBias,
   );
   shadowMap._pointRenderState = createRenderState(
     colorMask,
-    shadowMap._pointBias
+    shadowMap._pointBias,
   );
 }
 
@@ -715,7 +715,7 @@ function resize(shadowMap, size) {
       size,
       size,
       size,
-      size
+      size,
     );
   }
 
@@ -724,7 +724,7 @@ function resize(shadowMap, size) {
     0,
     0,
     textureSize.x,
-    textureSize.y
+    textureSize.y,
   );
 
   // Transforms shadow coordinates [0, 1] into the pass's region of the texture
@@ -751,7 +751,7 @@ function resize(shadowMap, size) {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
   }
 }
@@ -988,20 +988,20 @@ function applyDebugSettings(shadowMap, frameState) {
         uniformScale,
         uniformScale,
         uniformScale,
-        scratchScale
+        scratchScale,
       );
       const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
         translation,
         rotation,
         scale,
-        scratchMatrix
+        scratchMatrix,
       );
 
       shadowMap._debugLightFrustum =
         shadowMap._debugLightFrustum && shadowMap._debugLightFrustum.destroy();
       shadowMap._debugLightFrustum = createDebugPointLight(
         modelMatrix,
-        Color.YELLOW
+        Color.YELLOW,
       );
     }
     shadowMap._debugLightFrustum.update(frameState);
@@ -1057,7 +1057,7 @@ const scaleBiasMatrix = new Matrix4(
   0.0,
   0.0,
   0.0,
-  1.0
+  1.0,
 );
 
 ShadowMapCamera.prototype.getViewProjection = function () {
@@ -1067,7 +1067,7 @@ ShadowMapCamera.prototype.getViewProjection = function () {
   Matrix4.multiply(
     scaleBiasMatrix,
     this.viewProjectionMatrix,
-    this.viewProjectionMatrix
+    this.viewProjectionMatrix,
   );
   return this.viewProjectionMatrix;
 };
@@ -1121,7 +1121,7 @@ function computeCascades(shadowMap, frameState) {
     for (i = 0; i < numberOfCascades; ++i) {
       cascadeDistances[i] = Math.min(
         cascadeDistances[i],
-        shadowMap._maximumCascadeDistances[i]
+        shadowMap._maximumCascadeDistances[i],
       );
     }
 
@@ -1159,16 +1159,16 @@ function computeCascades(shadowMap, frameState) {
     const viewProjection = Matrix4.multiply(
       cascadeSubFrustum.projectionMatrix,
       sceneCamera.viewMatrix,
-      scratchMatrix
+      scratchMatrix,
     );
     const inverseViewProjection = Matrix4.inverse(
       viewProjection,
-      scratchMatrix
+      scratchMatrix,
     );
     const shadowMapMatrix = Matrix4.multiply(
       shadowViewProjection,
       inverseViewProjection,
-      scratchMatrix
+      scratchMatrix,
     );
 
     // Project each corner from camera NDC space to shadow map texture space. Min and max will be from 0 to 1.
@@ -1176,19 +1176,19 @@ function computeCascades(shadowMap, frameState) {
       Number.MAX_VALUE,
       Number.MAX_VALUE,
       Number.MAX_VALUE,
-      scratchMin
+      scratchMin,
     );
     const max = Cartesian3.fromElements(
       -Number.MAX_VALUE,
       -Number.MAX_VALUE,
       -Number.MAX_VALUE,
-      scratchMax
+      scratchMax,
     );
 
     for (let k = 0; k < 8; ++k) {
       const corner = Cartesian4.clone(
         frustumCornersNDC[k],
-        scratchFrustumCorners[k]
+        scratchFrustumCorners[k],
       );
       Matrix4.multiplyByVector(shadowMapMatrix, corner, corner);
       Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
@@ -1219,7 +1219,7 @@ function computeCascades(shadowMap, frameState) {
     pass.cullingVolume = cascadeCamera.frustum.computeCullingVolume(
       position,
       direction,
-      up
+      up,
     );
 
     // Transforms from eye space to the cascade's texture space
@@ -1227,7 +1227,7 @@ function computeCascades(shadowMap, frameState) {
     Matrix4.multiply(
       cascadeCamera.getViewProjection(),
       sceneCamera.inverseViewMatrix,
-      cascadeMatrix
+      cascadeMatrix,
     );
     Matrix4.multiply(pass.textureOffsets, cascadeMatrix, cascadeMatrix);
   }
@@ -1246,7 +1246,7 @@ function fitShadowMapToScene(shadowMap, frameState) {
   const viewProjection = Matrix4.multiply(
     sceneCamera.frustum.projectionMatrix,
     sceneCamera.viewMatrix,
-    scratchMatrix
+    scratchMatrix,
   );
   const inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
 
@@ -1264,7 +1264,7 @@ function fitShadowMapToScene(shadowMap, frameState) {
     0.0,
     0.0,
     0.0,
-    scratchTranslation
+    scratchTranslation,
   );
 
   let lightView = Matrix4.computeView(
@@ -1272,12 +1272,12 @@ function fitShadowMapToScene(shadowMap, frameState) {
     lightDir,
     lightUp,
     lightRight,
-    scratchLightView
+    scratchLightView,
   );
   const cameraToLight = Matrix4.multiply(
     lightView,
     inverseViewProjection,
-    scratchMatrix
+    scratchMatrix,
   );
 
   // Project each corner from NDC space to light view space, and calculate a min and max in light view space
@@ -1285,19 +1285,19 @@ function fitShadowMapToScene(shadowMap, frameState) {
     Number.MAX_VALUE,
     Number.MAX_VALUE,
     Number.MAX_VALUE,
-    scratchMin
+    scratchMin,
   );
   const max = Cartesian3.fromElements(
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
-    scratchMax
+    scratchMax,
   );
 
   for (let i = 0; i < 8; ++i) {
     const corner = Cartesian4.clone(
       frustumCornersNDC[i],
-      scratchFrustumCorners[i]
+      scratchFrustumCorners[i],
     );
     Matrix4.multiplyByVector(cameraToLight, corner, corner);
     Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
@@ -1336,11 +1336,11 @@ function fitShadowMapToScene(shadowMap, frameState) {
   Matrix4.inverse(lightView, shadowMapCamera.inverseViewMatrix);
   Matrix4.getTranslation(
     shadowMapCamera.inverseViewMatrix,
-    shadowMapCamera.positionWC
+    shadowMapCamera.positionWC,
   );
   frameState.mapProjection.ellipsoid.cartesianToCartographic(
     shadowMapCamera.positionWC,
-    shadowMapCamera.positionCartographic
+    shadowMapCamera.positionCartographic,
   );
   Cartesian3.clone(lightDir, shadowMapCamera.directionWC);
   Cartesian3.clone(lightUp, shadowMapCamera.upWC);
@@ -1385,10 +1385,11 @@ function computeOmnidirectional(shadowMap, frameState) {
   for (let i = 0; i < 6; ++i) {
     const camera = shadowMap._passes[i].camera;
     camera.positionWC = shadowMap._shadowMapCamera.positionWC;
-    camera.positionCartographic = frameState.mapProjection.ellipsoid.cartesianToCartographic(
-      camera.positionWC,
-      camera.positionCartographic
-    );
+    camera.positionCartographic =
+      frameState.mapProjection.ellipsoid.cartesianToCartographic(
+        camera.positionWC,
+        camera.positionCartographic,
+      );
     camera.directionWC = directions[i];
     camera.upWC = ups[i];
     camera.rightWC = rights[i];
@@ -1398,7 +1399,7 @@ function computeOmnidirectional(shadowMap, frameState) {
       camera.directionWC,
       camera.upWC,
       camera.rightWC,
-      camera.viewMatrix
+      camera.viewMatrix,
     );
     Matrix4.inverse(camera.viewMatrix, camera.inverseViewMatrix);
 
@@ -1427,13 +1428,14 @@ function checkVisibility(shadowMap, frameState) {
     }
 
     // If the light source is below the horizon then the shadow map is out of view
-    const surfaceNormal = frameState.mapProjection.ellipsoid.geodeticSurfaceNormal(
-      sceneCamera.positionWC,
-      scratchCartesian1
-    );
+    const surfaceNormal =
+      frameState.mapProjection.ellipsoid.geodeticSurfaceNormal(
+        sceneCamera.positionWC,
+        scratchCartesian1,
+      );
     const lightDirection = Cartesian3.negate(
       shadowMapCamera.directionWC,
-      scratchCartesian2
+      scratchCartesian2,
     );
     const dot = Cartesian3.dot(surfaceNormal, lightDirection);
     if (shadowMap.fadingEnabled) {
@@ -1443,7 +1445,7 @@ function checkVisibility(shadowMap, frameState) {
       shadowMap._darkness = CesiumMath.lerp(
         1.0,
         shadowMap.darkness,
-        darknessAmount
+        darknessAmount,
       );
     } else {
       shadowMap._darkness = shadowMap.darkness;
@@ -1477,9 +1479,9 @@ function checkVisibility(shadowMap, frameState) {
       Cartesian3.multiplyByScalar(
         shadowMapCamera.directionWC,
         frustumRadius,
-        scratchCenter
+        scratchCenter,
       ),
-      scratchCenter
+      scratchCenter,
     );
     boundingSphere.center = frustumCenter;
     boundingSphere.radius = frustumRadius;
@@ -1513,7 +1515,7 @@ function updateCameras(shadowMap, frameState) {
   Matrix4.multiplyByPointAsVector(
     camera.viewMatrix,
     shadowMapCamera.directionWC,
-    lightDirection
+    lightDirection,
   );
   Cartesian3.normalize(lightDirection, lightDirection);
   Cartesian3.negate(lightDirection, lightDirection);
@@ -1522,7 +1524,7 @@ function updateCameras(shadowMap, frameState) {
   Matrix4.multiplyByPoint(
     camera.viewMatrix,
     shadowMapCamera.positionWC,
-    shadowMap._lightPositionEC
+    shadowMap._lightPositionEC,
   );
   shadowMap._lightPositionEC.w = shadowMap._pointLightRadius;
 
@@ -1534,7 +1536,7 @@ function updateCameras(shadowMap, frameState) {
     // Push the far plane slightly further than the near plane to avoid degenerate frustum
     near = Math.min(
       frameState.shadowState.nearPlane,
-      shadowMap.maximumDistance
+      shadowMap.maximumDistance,
     );
     far = Math.min(frameState.shadowState.farPlane, shadowMap.maximumDistance);
     far = Math.max(far, near + 1.0);
@@ -1584,11 +1586,8 @@ ShadowMap.prototype.update = function (frameState) {
       const position = shadowMapCamera.positionWC;
       const direction = shadowMapCamera.directionWC;
       const up = shadowMapCamera.upWC;
-      this._shadowMapCullingVolume = shadowMapCamera.frustum.computeCullingVolume(
-        position,
-        direction,
-        up
-      );
+      this._shadowMapCullingVolume =
+        shadowMapCamera.frustum.computeCullingVolume(position, direction, up);
 
       if (this._passes.length === 1) {
         // Since there is only one pass, use the shadow map camera as the pass camera.
@@ -1596,7 +1595,7 @@ ShadowMap.prototype.update = function (frameState) {
       }
     } else {
       this._shadowMapCullingVolume = CullingVolume.fromBoundingSphere(
-        this._boundingSphere
+        this._boundingSphere,
       );
     }
   }
@@ -1608,7 +1607,7 @@ ShadowMap.prototype.update = function (frameState) {
     Matrix4.multiply(
       this._shadowMapCamera.getViewProjection(),
       inverseView,
-      this._shadowMapMatrix
+      this._shadowMapMatrix,
     );
   }
 
@@ -1630,8 +1629,8 @@ function combineUniforms(shadowMap, uniforms, isTerrain) {
   const bias = shadowMap._isPointLight
     ? shadowMap._pointBias
     : isTerrain
-    ? shadowMap._terrainBias
-    : shadowMap._primitiveBias;
+      ? shadowMap._terrainBias
+      : shadowMap._primitiveBias;
 
   const mapUniforms = {
     shadowMap_texture: function () {
@@ -1668,7 +1667,7 @@ function combineUniforms(shadowMap, uniforms, isTerrain) {
         texelStepSize.y,
         bias.depthBias,
         bias.normalShadingSmooth,
-        this.combinedUniforms1
+        this.combinedUniforms1,
       );
     },
     shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness: function () {
@@ -1677,7 +1676,7 @@ function combineUniforms(shadowMap, uniforms, isTerrain) {
         shadowMap._distance,
         shadowMap.maximumDistance,
         shadowMap._darkness,
-        this.combinedUniforms2
+        this.combinedUniforms2,
       );
     },
 
@@ -1694,7 +1693,7 @@ function createCastDerivedCommand(
   command,
   context,
   oldShaderId,
-  result
+  result,
 ) {
   let castShader;
   let castRenderState;
@@ -1725,11 +1724,11 @@ function createCastDerivedCommand(
       isPointLight,
       isTerrain,
       usesDepthTexture,
-      isOpaque
+      isOpaque,
     );
     castShader = context.shaderCache.getDerivedShaderProgram(
       shaderProgram,
-      keyword
+      keyword,
     );
     if (!defined(castShader)) {
       const vertexShaderSource = shaderProgram.vertexShaderSource;
@@ -1738,13 +1737,13 @@ function createCastDerivedCommand(
       const castVS = ShadowMapShader.createShadowCastVertexShader(
         vertexShaderSource,
         isPointLight,
-        isTerrain
+        isTerrain,
       );
       const castFS = ShadowMapShader.createShadowCastFragmentShader(
         fragmentShaderSource,
         isPointLight,
         usesDepthTexture,
-        isOpaque
+        isOpaque,
       );
 
       castShader = context.shaderCache.createDerivedShaderProgram(
@@ -1754,7 +1753,7 @@ function createCastDerivedCommand(
           vertexShaderSource: castVS,
           fragmentShaderSource: castFS,
           attributeLocations: shaderProgram._attributeLocations,
-        }
+        },
       );
     }
 
@@ -1789,7 +1788,7 @@ ShadowMap.createReceiveDerivedCommand = function (
   command,
   shadowsDirty,
   context,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = {};
@@ -1818,7 +1817,7 @@ ShadowMap.createReceiveDerivedCommand = function (
 
     result.receiveCommand = DrawCommand.shallowClone(
       command,
-      result.receiveCommand
+      result.receiveCommand,
     );
     result.castShadows = false;
     result.receiveShadows = true;
@@ -1840,24 +1839,24 @@ ShadowMap.createReceiveDerivedCommand = function (
         lightShadowMaps[0],
         command.castShadows,
         isTerrain,
-        hasTerrainNormal
+        hasTerrainNormal,
       );
       receiveShader = context.shaderCache.getDerivedShaderProgram(
         shaderProgram,
-        keyword
+        keyword,
       );
       if (!defined(receiveShader)) {
         const receiveVS = ShadowMapShader.createShadowReceiveVertexShader(
           vertexShaderSource,
           isTerrain,
-          hasTerrainNormal
+          hasTerrainNormal,
         );
         const receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(
           fragmentShaderSource,
           lightShadowMaps[0],
           command.castShadows,
           isTerrain,
-          hasTerrainNormal
+          hasTerrainNormal,
         );
 
         receiveShader = context.shaderCache.createDerivedShaderProgram(
@@ -1867,14 +1866,14 @@ ShadowMap.createReceiveDerivedCommand = function (
             vertexShaderSource: receiveVS,
             fragmentShaderSource: receiveFS,
             attributeLocations: shaderProgram._attributeLocations,
-          }
+          },
         );
       }
 
       receiveUniformMap = combineUniforms(
         lightShadowMaps[0],
         command.uniformMap,
-        isTerrain
+        isTerrain,
       );
     }
 
@@ -1892,7 +1891,7 @@ ShadowMap.createCastDerivedCommand = function (
   command,
   shadowsDirty,
   context,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = {};
@@ -1916,7 +1915,7 @@ ShadowMap.createCastDerivedCommand = function (
         command,
         context,
         oldShaderId,
-        castCommands[i]
+        castCommands[i],
       );
     }
 

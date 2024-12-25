@@ -14,7 +14,7 @@ function IauOrientationParameters(
   rightAscension,
   declination,
   rotation,
-  rotationRate
+  rotationRate,
 ) {
   /**
    * The right ascension of the north pole of the body with respect to

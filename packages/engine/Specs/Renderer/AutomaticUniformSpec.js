@@ -41,13 +41,13 @@ describe(
       position,
       direction,
       right,
-      up
+      up,
     ) {
       return {
         viewMatrix: defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)),
         inverseViewMatrix: Matrix4.inverseTransformation(
           defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)),
-          new Matrix4()
+          new Matrix4(),
         ),
         frustum: {
           near: 1.0,
@@ -58,11 +58,11 @@ describe(
           right: 1.0,
           projectionMatrix: defaultValue(
             projection,
-            Matrix4.clone(Matrix4.IDENTITY)
+            Matrix4.clone(Matrix4.IDENTITY),
           ),
           infiniteProjectionMatrix: defaultValue(
             infiniteProjection,
-            Matrix4.clone(Matrix4.IDENTITY)
+            Matrix4.clone(Matrix4.IDENTITY),
           ),
           computeCullingVolume: function () {
             return undefined;
@@ -75,7 +75,7 @@ describe(
         positionWC: defaultValue(position, Cartesian3.clone(Cartesian3.ZERO)),
         directionWC: defaultValue(
           direction,
-          Cartesian3.clone(Cartesian3.UNIT_Z)
+          Cartesian3.clone(Cartesian3.UNIT_Z),
         ),
         rightWC: defaultValue(right, Cartesian3.clone(Cartesian3.UNIT_X)),
         upWC: defaultValue(up, Cartesian3.clone(Cartesian3.UNIT_Y)),
@@ -179,7 +179,7 @@ describe(
         13.0,
         14.0,
         15.0,
-        16.0
+        16.0,
       );
       expect({
         context: context,
@@ -213,7 +213,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -244,10 +244,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -286,10 +286,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -328,10 +328,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -369,10 +369,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -410,10 +410,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -452,10 +452,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -494,10 +494,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -536,10 +536,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -579,10 +579,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -622,10 +622,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -663,9 +663,9 @@ describe(
             0.0,
             0.0,
             0.0,
-            1.0
-          )
-        )
+            1.0,
+          ),
+        ),
       );
       frameState.mode = SceneMode.SCENE2D;
 
@@ -707,9 +707,9 @@ describe(
             0.0,
             0.0,
             0.0,
-            1.0
-          )
-        )
+            1.0,
+          ),
+        ),
       );
       const frustum = new OrthographicFrustum();
       frustum.aspectRatio = 1.0;
@@ -757,10 +757,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -799,10 +799,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -829,7 +829,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -860,10 +860,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -890,7 +890,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -921,10 +921,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -951,7 +951,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -965,8 +965,8 @@ describe(
       us.update(
         createFrameState(
           context,
-          createMockCamera(Matrix4.clone(Matrix4.IDENTITY))
-        )
+          createMockCamera(Matrix4.clone(Matrix4.IDENTITY)),
+        ),
       );
 
       const fs =
@@ -993,7 +993,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1007,8 +1007,8 @@ describe(
       us.update(
         createFrameState(
           context,
-          createMockCamera(Matrix4.clone(Matrix4.IDENTITY))
-        )
+          createMockCamera(Matrix4.clone(Matrix4.IDENTITY)),
+        ),
       );
 
       const fs =
@@ -1035,7 +1035,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1066,7 +1066,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1084,10 +1084,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1127,7 +1127,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1145,10 +1145,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1188,7 +1188,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1206,10 +1206,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1237,7 +1237,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1268,7 +1268,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1286,10 +1286,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1317,7 +1317,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1348,7 +1348,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1366,10 +1366,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1397,7 +1397,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1428,7 +1428,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             undefined,
             new Matrix4(
@@ -1447,10 +1447,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1478,7 +1478,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1512,7 +1512,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1546,7 +1546,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1580,7 +1580,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1614,7 +1614,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1632,9 +1632,9 @@ describe(
             undefined,
             undefined,
             undefined,
-            new Cartesian3(-1000.0, 0.0, 100000.0)
-          )
-        )
+            new Cartesian3(-1000.0, 0.0, 100000.0),
+          ),
+        ),
       );
 
       const fs =
@@ -1795,8 +1795,8 @@ describe(
           // Provide position and direction because the default position of (0, 0, 0)
           // will lead to a divide by zero when updating fog below.
           new Cartesian3(1.0, 0.0, 0.0),
-          new Cartesian3(0.0, 1.0, 0.0)
-        )
+          new Cartesian3(0.0, 1.0, 0.0),
+        ),
       );
       const fog = new Fog();
       fog.density = 0.1;
@@ -1825,8 +1825,8 @@ describe(
           // Provide position and direction because the default position of (0, 0, 0)
           // will lead to a divide by zero when updating fog below
           new Cartesian3(1.0, 0.0, 0.0),
-          new Cartesian3(0.0, 1.0, 0.0)
-        )
+          new Cartesian3(0.0, 1.0, 0.0),
+        ),
       );
       const fog = new Fog();
       fog.minimumBrightness = 0.25;
@@ -2446,5 +2446,5 @@ describe(
       }).contextToRender();
     });
   },
-  "WebGL"
+  "WebGL",
 );

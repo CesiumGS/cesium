@@ -168,7 +168,7 @@ ComponentDatatype.fromTypedArray = function (array) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "array must be an Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, or Float64Array."
+    "array must be an Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, or Float64Array.",
   );
   //>>includeEnd('debug');
 };
@@ -213,7 +213,7 @@ ComponentDatatype.validate = function (componentDatatype) {
  */
 ComponentDatatype.createTypedArray = function (
   componentDatatype,
-  valuesOrLength
+  valuesOrLength,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(componentDatatype)) {
@@ -263,7 +263,7 @@ ComponentDatatype.createArrayBufferView = function (
   componentDatatype,
   buffer,
   byteOffset,
-  length
+  length,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(componentDatatype)) {
@@ -278,7 +278,7 @@ ComponentDatatype.createArrayBufferView = function (
   length = defaultValue(
     length,
     (buffer.byteLength - byteOffset) /
-      ComponentDatatype.getSizeInBytes(componentDatatype)
+      ComponentDatatype.getSizeInBytes(componentDatatype),
   );
 
   switch (componentDatatype) {

@@ -67,7 +67,7 @@ StyleExpression.prototype.getShaderFunction = function (
   functionSignature,
   variableSubstitutionMap,
   shaderState,
-  returnType
+  returnType,
 ) {
   DeveloperError.throwInstantiationError();
 };

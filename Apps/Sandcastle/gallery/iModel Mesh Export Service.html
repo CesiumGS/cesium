@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Demonstrate loading iModel data from the iTwin platform."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
+    <title>iModel Mesh Export Service</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div id="checkbox"></div>
+      <div id="layers"></div>
+      <div id="camera-shortcuts"></div>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const serviceResponse = await fetch("https://api.cesium.com/itwin/token");
+        const { access_token: token } = await serviceResponse.json();
+
+        Cesium.ITwinPlatform.defaultAccessToken = token;
+
+        // Set up viewer
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+          animation: false,
+          sceneModePicker: false,
+          geocoder: false,
+          homeButton: false,
+        });
+        const scene = viewer.scene;
+        scene.globe.show = true;
+
+        let selectedFeature;
+        let picking = false;
+
+        Sandcastle.addToggleButton(
+          "Feature selection on hover",
+          false,
+          function (checked) {
+            picking = checked;
+            if (!picking) {
+              unselectFeature(selectedFeature);
+            }
+          },
+          "checkbox",
+        );
+
+        // HTML overlay for showing feature name on mouseover
+        const nameOverlay = document.createElement("div");
+        viewer.container.appendChild(nameOverlay);
+        nameOverlay.className = "backdrop";
+        nameOverlay.style.display = "none";
+        nameOverlay.style.position = "absolute";
+        nameOverlay.style.bottom = "0";
+        nameOverlay.style.left = "0";
+        nameOverlay.style["pointer-events"] = "none";
+        nameOverlay.style.padding = "4px";
+        nameOverlay.style.backgroundColor = "black";
+        nameOverlay.style.whiteSpace = "pre-line";
+        nameOverlay.style.fontSize = "12px";
+
+        function selectFeature(feature, movement) {
+          feature.color = Cesium.Color.clone(
+            Cesium.Color.fromCssColorString("#eeff41"),
+            feature.color,
+          );
+          selectedFeature = feature;
+
+          nameOverlay.style.display = "block";
+          nameOverlay.style.bottom = `${
+            viewer.canvas.clientHeight - movement.endPosition.y
+          }px`;
+          nameOverlay.style.left = `${movement.endPosition.x}px`;
+          const element = feature.getProperty("element");
+          const subcategory = feature.getProperty("subcategory");
+          const message = `Element ID: ${element}
+      Subcategory: ${subcategory}
+      Feature ID: ${feature.featureId}`;
+          nameOverlay.textContent = message;
+        }
+
+        function unselectFeature(feature) {
+          if (!Cesium.defined(feature)) {
+            return;
+          }
+
+          feature.color = Cesium.Color.clone(Cesium.Color.WHITE, feature.color);
+          selectedFeature = undefined;
+          nameOverlay.style.display = "none";
+        }
+
+        // Create tilesets using the iModel ids
+        const surroundingArea = await Cesium.ITwinData.createTilesetFromIModelId(
+          "f856f57d-3d28-4265-9c4f-5e60c0662c15",
+        );
+        const station = await Cesium.ITwinData.createTilesetFromIModelId(
+          "669dde67-eb69-4e0b-bcf2-f722eee94746",
+        );
+        // Change how highlighting with the feature selection changes the color
+        surroundingArea.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
+        station.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
+        // Add the tilesets to the viewer
+        scene.primitives.add(surroundingArea);
+        scene.primitives.add(station);
+
+        // Create tileset of the reality data mesh
+        const iTwinId = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
+        const realityMeshId = "85897090-3bcc-470b-bec7-20bb639cc1b9";
+        const realityMesh = await Cesium.ITwinData.createTilesetForRealityDataId(
+          iTwinId,
+          realityMeshId,
+        );
+        scene.primitives.add(realityMesh);
+
+        Sandcastle.addToolbarButton(
+          "Toggle Surrounding Area",
+          () => (surroundingArea.show = !surroundingArea.show),
+          "layers",
+        );
+        Sandcastle.addToolbarButton(
+          "Toggle Station Model",
+          () => (station.show = !station.show),
+          "layers",
+        );
+        Sandcastle.addToolbarButton(
+          "Toggle Reality Mesh",
+          () => (realityMesh.show = !realityMesh.show),
+          "layers",
+        );
+
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        handler.setInputAction(function (movement) {
+          if (!picking) {
+            return;
+          }
+          unselectFeature(selectedFeature);
+
+          const feature = scene.pick(movement.endPosition);
+
+          if (feature instanceof Cesium.Cesium3DTileFeature) {
+            selectFeature(feature, movement);
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        const birdsEyeView = {
+          destination: new Cesium.Cartesian3(
+            1255923.367096007,
+            -4734564.543879414,
+            4072623.4624344883,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            6.283185307179586,
+            -0.5002442676148875,
+            6.283185307179586,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        Sandcastle.addToolbarButton(
+          "Birdseye view",
+          function () {
+            surroundingArea.show = true;
+            viewer.scene.camera.flyTo(birdsEyeView);
+            togglePhotosphere(false);
+          },
+          "camera-shortcuts",
+        );
+
+        const stationView = {
+          destination: new Cesium.Cartesian3(
+            1255783.605894154,
+            -4732864.394472763,
+            4073433.975291202,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            5.646321670432638,
+            -0.4736439399770642,
+            0.00001691713303575426,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        viewer.scene.camera.flyTo(stationView);
+        Sandcastle.addToolbarButton(
+          "Focus station",
+          function () {
+            viewer.scene.camera.flyTo(stationView);
+            togglePhotosphere(false);
+          },
+          "camera-shortcuts",
+        );
+
+        let photoSphereModeEnabled = false;
+        function togglePhotosphere(forceMode) {
+          const shouldBeEnabled = forceMode ?? !photoSphereModeEnabled;
+          if (shouldBeEnabled) {
+            // enable photosphere mode
+            scene.screenSpaceCameraController.enableRotate = false;
+            scene.screenSpaceCameraController.enableZoom = false;
+            scene.screenSpaceCameraController.enableTranslate = false;
+            scene.screenSpaceCameraController.enableTilt = false;
+            scene.screenSpaceCameraController.lookEventTypes = {
+              eventType: Cesium.CameraEventType.LEFT_DRAG,
+            };
+            photoSphereModeEnabled = true;
+          } else {
+            // disable photosphere mode
+            scene.screenSpaceCameraController.enableRotate = true;
+            scene.screenSpaceCameraController.enableZoom = true;
+            scene.screenSpaceCameraController.enableTranslate = true;
+            scene.screenSpaceCameraController.enableTilt = true;
+            scene.screenSpaceCameraController.lookEventTypes = {
+              eventType: Cesium.CameraEventType.LEFT_DRAG,
+              modifier: Cesium.KeyboardEventModifier.SHIFT,
+            };
+            photoSphereModeEnabled = false;
+          }
+        }
+        document
+          .querySelector("#camera-shortcuts")
+          .appendChild(document.createElement("br"));
+        const stationPlatform = {
+          destination: new Cesium.Cartesian3(
+            1255658.5108288145,
+            -4732744.54716761,
+            4073467.5995740294,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.08605615778136055,
+            -0.08195800893456417,
+            3.644617292408725e-7,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        Sandcastle.addToolbarButton(
+          "Station Platform",
+          function () {
+            surroundingArea.show = false;
+            viewer.scene.camera.flyTo(stationPlatform);
+            togglePhotosphere(true);
+          },
+          "camera-shortcuts",
+        );
+
+        const stationAtrium = {
+          destination: new Cesium.Cartesian3(
+            1255653.7753397836,
+            -4732735.669421007,
+            4073492.4182837387,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.27348916684631064,
+            -0.1626949521764165,
+            6.2831852466344875,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        Sandcastle.addToolbarButton(
+          "Station Atrium",
+          function () {
+            surroundingArea.show = false;
+            viewer.scene.camera.flyTo(stationAtrium);
+            togglePhotosphere(true);
+          },
+          "camera-shortcuts",
+        );
+
+        const stationRoof = {
+          destination: new Cesium.Cartesian3(
+            1255656.4324382306,
+            -4732754.952130925,
+            4073483.76683067,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.16147447018420547,
+            -0.015285346878300077,
+            6.28297051403236,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        Sandcastle.addToolbarButton(
+          "Station Roof",
+          function () {
+            surroundingArea.show = false;
+            viewer.scene.camera.flyTo(stationRoof);
+            togglePhotosphere(true);
+          },
+          "camera-shortcuts",
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>

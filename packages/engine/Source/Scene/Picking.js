@@ -19,6 +19,7 @@ import Camera from "./Camera.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
+import MetadataPicking from "./MetadataPicking.js";
 import PickDepth from "./PickDepth.js";
 import PrimitiveCollection from "./PrimitiveCollection.js";
 import SceneMode from "./SceneMode.js";
@@ -59,7 +60,7 @@ function Picking(scene) {
   this._pickOffscreenView = new View(
     scene,
     pickOffscreenCamera,
-    pickOffscreenViewport
+    pickOffscreenViewport,
   );
 }
 
@@ -88,7 +89,7 @@ function getPickOrthographicCullingVolume(
   drawingBufferPosition,
   width,
   height,
-  viewport
+  viewport,
 ) {
   const camera = scene.camera;
   let frustum = camera.frustum;
@@ -107,7 +108,7 @@ function getPickOrthographicCullingVolume(
 
   const transform = Matrix4.clone(
     camera.transform,
-    scratchOrthoPickVolumeMatrix4
+    scratchOrthoPickVolumeMatrix4,
   );
   camera._setTransform(Matrix4.IDENTITY);
 
@@ -128,7 +129,7 @@ function getPickOrthographicCullingVolume(
     viewport.height,
     1.0,
     1.0,
-    scratchOrthoPixelSize
+    scratchOrthoPixelSize,
   );
 
   const ortho = scratchOrthoPickingFrustum;
@@ -150,7 +151,7 @@ function getPickPerspectiveCullingVolume(
   drawingBufferPosition,
   width,
   height,
-  viewport
+  viewport,
 ) {
   const camera = scene.camera;
   const frustum = camera.frustum;
@@ -174,7 +175,7 @@ function getPickPerspectiveCullingVolume(
     viewport.height,
     1.0,
     1.0,
-    scratchPerspPixelSize
+    scratchPerspPixelSize,
   );
   const pickWidth = pixelSize.x * width * 0.5;
   const pickHeight = pixelSize.y * height * 0.5;
@@ -190,7 +191,7 @@ function getPickPerspectiveCullingVolume(
   return offCenter.computeCullingVolume(
     camera.positionWC,
     camera.directionWC,
-    camera.upWC
+    camera.upWC,
   );
 }
 
@@ -199,7 +200,7 @@ function getPickCullingVolume(
   drawingBufferPosition,
   width,
   height,
-  viewport
+  viewport,
 ) {
   const frustum = scene.camera.frustum;
   if (
@@ -211,7 +212,7 @@ function getPickCullingVolume(
       drawingBufferPosition,
       width,
       height,
-      viewport
+      viewport,
     );
   }
 
@@ -220,21 +221,46 @@ function getPickCullingVolume(
     drawingBufferPosition,
     width,
     height,
-    viewport
+    viewport,
   );
 }
 
-// pick rectangle width and height, assumed odd
-let scratchRectangleWidth = 3.0;
-let scratchRectangleHeight = 3.0;
-let scratchRectangle = new BoundingRectangle(
-  0.0,
-  0.0,
-  scratchRectangleWidth,
-  scratchRectangleHeight
-);
+// Pick position and rectangle, used in all picking functions,
+// filled in computePickingDrawingBufferRectangle and passed
+// the the FrameBuffer begin/end methods
+const scratchRectangle = new BoundingRectangle(0.0, 0.0, 3.0, 3.0);
 const scratchPosition = new Cartesian2();
+
+// Dummy color that is passed to updateAndExecuteCommands in
+// all picking functions, used as the "background color"
 const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
+
+/**
+ * Compute the rectangle that describes the part of the drawing buffer
+ * that is relevant for picking.
+ *
+ * @param {number} drawingBufferHeight The height of the drawing buffer
+ * @param {Cartesian2} position The position inside the drawing buffer
+ * @param {number|undefined} width The width of the rectangle, assumed to
+ * be an odd integer number, default : 3.0
+ * @param {number|undefined} height The height of the rectangle. If unspecified,
+ * height will default to the value of <code>width</code>
+ * @param {BoundingRectangle} result The result rectangle
+ * @returns {BoundingRectangle} The result rectangle
+ */
+function computePickingDrawingBufferRectangle(
+  drawingBufferHeight,
+  position,
+  width,
+  height,
+  result,
+) {
+  result.width = defaultValue(width, 3.0);
+  result.height = defaultValue(height, result.width);
+  result.x = position.x - (result.width - 1.0) * 0.5;
+  result.y = drawingBufferHeight - position.y - (result.height - 1.0) * 0.5;
+  return result;
+}
 
 /**
  * Returns an object with a <code>primitive</code> property that contains the first (top) primitive in the scene
@@ -254,9 +280,6 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
-  scratchRectangleWidth = defaultValue(width, 3.0);
-  scratchRectangleHeight = defaultValue(height, scratchRectangleWidth);
-
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
 
@@ -273,7 +296,14 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
     scene,
     windowPosition,
-    scratchPosition
+    scratchPosition,
+  );
+  const drawingBufferRectangle = computePickingDrawingBufferRectangle(
+    context.drawingBufferHeight,
+    drawingBufferPosition,
+    width,
+    height,
+    scratchRectangle,
   );
 
   scene.jobScheduler.disableThisFrame();
@@ -282,9 +312,9 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   frameState.cullingVolume = getPickCullingVolume(
     scene,
     drawingBufferPosition,
-    scratchRectangleWidth,
-    scratchRectangleHeight,
-    viewport
+    drawingBufferRectangle.width,
+    drawingBufferRectangle.height,
+    viewport,
   );
   frameState.invertClassification = false;
   frameState.passes.pick = true;
@@ -294,20 +324,12 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
 
   scene.updateEnvironment();
 
-  scratchRectangle.x =
-    drawingBufferPosition.x - (scratchRectangleWidth - 1.0) * 0.5;
-  scratchRectangle.y =
-    scene.drawingBufferHeight -
-    drawingBufferPosition.y -
-    (scratchRectangleHeight - 1.0) * 0.5;
-  scratchRectangle.width = scratchRectangleWidth;
-  scratchRectangle.height = scratchRectangleHeight;
-  passState = pickFramebuffer.begin(scratchRectangle, viewport);
+  passState = pickFramebuffer.begin(drawingBufferRectangle, viewport);
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const object = pickFramebuffer.end(scratchRectangle);
+  const object = pickFramebuffer.end(drawingBufferRectangle);
   context.endFrame();
   return object;
 };
@@ -327,14 +349,11 @@ Picking.prototype.pickVoxelCoordinate = function (
   scene,
   windowPosition,
   width,
-  height
+  height,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
-
-  scratchRectangleWidth = defaultValue(width, 3.0);
-  scratchRectangleHeight = defaultValue(height, scratchRectangleWidth);
 
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
@@ -352,7 +371,14 @@ Picking.prototype.pickVoxelCoordinate = function (
   const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
     scene,
     windowPosition,
-    scratchPosition
+    scratchPosition,
+  );
+  const drawingBufferRectangle = computePickingDrawingBufferRectangle(
+    context.drawingBufferHeight,
+    drawingBufferPosition,
+    width,
+    height,
+    scratchRectangle,
   );
 
   scene.jobScheduler.disableThisFrame();
@@ -361,9 +387,9 @@ Picking.prototype.pickVoxelCoordinate = function (
   frameState.cullingVolume = getPickCullingVolume(
     scene,
     drawingBufferPosition,
-    scratchRectangleWidth,
-    scratchRectangleHeight,
-    viewport
+    drawingBufferRectangle.width,
+    drawingBufferRectangle.height,
+    viewport,
   );
   frameState.invertClassification = false;
   frameState.passes.pickVoxel = true;
@@ -373,23 +399,146 @@ Picking.prototype.pickVoxelCoordinate = function (
 
   scene.updateEnvironment();
 
-  scratchRectangle.x =
-    drawingBufferPosition.x - (scratchRectangleWidth - 1.0) * 0.5;
-  scratchRectangle.y =
-    scene.drawingBufferHeight -
-    drawingBufferPosition.y -
-    (scratchRectangleHeight - 1.0) * 0.5;
-  scratchRectangle.width = scratchRectangleWidth;
-  scratchRectangle.height = scratchRectangleHeight;
-  passState = pickFramebuffer.begin(scratchRectangle, viewport);
+  passState = pickFramebuffer.begin(drawingBufferRectangle, viewport);
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const voxelInfo = pickFramebuffer.readVoxelInfo(scratchRectangle);
+  const voxelInfo = pickFramebuffer.readCenterPixel(drawingBufferRectangle);
   context.endFrame();
   return voxelInfo;
 };
+
+/**
+ * Pick a metadata value at the given window position.
+ *
+ * The given `pickedMetadataInfo` defines the metadata value that is
+ * supposed to be picked.
+ *
+ * The return type will depend on the type of the metadata property
+ * that is picked. Given the current limitations of the types that
+ * are supported for metadata picking, the return type will be one
+ * of the following:
+ *
+ * - For `SCALAR`, the return type will be a `number`
+ * - For `SCALAR` arrays, the return type will be a `number[]`
+ * - For `VEC2`, the return type will be a `Cartesian2`
+ * - For `VEC3`, the return type will be a `Cartesian3`
+ * - For `VEC4`, the return type will be a `Cartesian4`
+ *
+ * Future implementations may additionally return `string`- or
+ * `boolean` types, and `MATn` values as `MatrixN` objects,
+ * and arrays of the respective types.
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {PickedMetadataInfo} pickedMetadataInfo Information about the picked metadata.
+ * @returns {MetadataValue|undefined} The metadata value, or `undefined`
+ * when no matching metadata value could be picked at the given position
+ *
+ * @private
+ */
+Picking.prototype.pickMetadata = function (
+  scene,
+  windowPosition,
+  pickedMetadataInfo,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  Check.typeOf.object("pickedMetadataInfo", pickedMetadataInfo);
+  //>>includeEnd('debug');
+
+  const { context, frameState, defaultView } = scene;
+  const { viewport, pickFramebuffer } = defaultView;
+
+  scene.view = defaultView;
+
+  viewport.x = 0;
+  viewport.y = 0;
+  viewport.width = context.drawingBufferWidth;
+  viewport.height = context.drawingBufferHeight;
+
+  let passState = defaultView.passState;
+  passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
+
+  const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
+    scene,
+    windowPosition,
+    scratchPosition,
+  );
+  const drawingBufferRectangle = computePickingDrawingBufferRectangle(
+    context.drawingBufferHeight,
+    drawingBufferPosition,
+    1.0,
+    1.0,
+    scratchRectangle,
+  );
+
+  scene.jobScheduler.disableThisFrame();
+
+  scene.updateFrameState();
+  frameState.cullingVolume = getPickCullingVolume(
+    scene,
+    drawingBufferPosition,
+    drawingBufferRectangle.width,
+    drawingBufferRectangle.height,
+    viewport,
+  );
+  frameState.invertClassification = false;
+
+  frameState.passes.pick = true;
+  frameState.tilesetPassState = pickTilesetPassState;
+
+  // Insert the information about the picked metadata property
+  // into the frame state, so that the `Scene.updateDerivedCommands`
+  // call can detect any changes in the picked metadata description,
+  // and update the derived commands for the new picked metadata
+  // property
+  frameState.pickingMetadata = true;
+  frameState.pickedMetadataInfo = pickedMetadataInfo;
+  context.uniformState.update(frameState);
+
+  scene.updateEnvironment();
+
+  passState = pickFramebuffer.begin(drawingBufferRectangle, viewport);
+
+  scene.updateAndExecuteCommands(passState, scratchColorZero);
+
+  // When OIT is enabled, then the resolveFrameBuffers function
+  // will juggle around several frame buffers, and eventually use
+  // the "environmentState.originalFramebuffer" instead of the
+  // picking frame buffer. Skipping a million questions, just
+  // switch OIT off here:
+  const oldOIT = scene._environmentState.useOIT;
+  scene._environmentState.useOIT = false;
+  scene.resolveFramebuffers(passState);
+  scene._environmentState.useOIT = oldOIT;
+
+  const rawMetadataPixel = pickFramebuffer.readCenterPixel(
+    drawingBufferRectangle,
+  );
+  context.endFrame();
+
+  frameState.pickingMetadata = false;
+
+  const metadataValue = MetadataPicking.decodeMetadataValues(
+    pickedMetadataInfo.classProperty,
+    pickedMetadataInfo.metadataProperty,
+    rawMetadataPixel,
+  );
+
+  return metadataValue;
+};
+
+/**
+ * @typedef {object} PickedMetadataInfo
+ *
+ * Information about metadata that is supposed to be picked
+ *
+ * @property {string|undefined} schemaId The optional ID of the metadata schema
+ * @property {string} className The name of the metadata class
+ * @property {string} propertyName The name of the metadata property
+ * @property {MetadataClassProperty} classProperty The metadata class property
+ */
 
 function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
   // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
@@ -414,7 +563,7 @@ function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
     drawingBufferPosition,
     1,
     1,
-    viewport
+    viewport,
   );
   frameState.tilesetPassState = pickTilesetPassState;
 
@@ -423,7 +572,7 @@ function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
   passState = pickDepthFramebuffer.update(
     context,
     drawingBufferPosition,
-    viewport
+    viewport,
   );
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
@@ -440,7 +589,7 @@ const scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 Picking.prototype.pickPositionWorldCoordinates = function (
   scene,
   windowPosition,
-  result
+  result,
 ) {
   if (!scene.useDepthPicking) {
     return undefined;
@@ -450,7 +599,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
   Check.defined("windowPosition", windowPosition);
   if (!scene.context.depthTexture) {
     throw new DeveloperError(
-      "Picking from the depth buffer is not supported. Check pickPositionSupported."
+      "Picking from the depth buffer is not supported. Check pickPositionSupported.",
     );
   }
   //>>includeEnd('debug');
@@ -472,7 +621,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
   const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
     scene,
     windowPosition,
-    scratchPosition
+    scratchPosition,
   );
   if (scene.pickTranslucentDepth) {
     renderTranslucentDepthForPick(scene, drawingBufferPosition);
@@ -495,14 +644,14 @@ Picking.prototype.pickPositionWorldCoordinates = function (
     frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
   }
 
-  const frustumCommandsList = defaultView.frustumCommandsList;
+  const { frustumCommandsList } = defaultView;
   const numFrustums = frustumCommandsList.length;
   for (let i = 0; i < numFrustums; ++i) {
     const pickDepth = this.getPickDepth(scene, i);
     const depth = pickDepth.getDepth(
       context,
       drawingBufferPosition.x,
-      drawingBufferPosition.y
+      drawingBufferPosition.y,
     );
     if (!defined(depth)) {
       continue;
@@ -529,7 +678,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
         scene,
         drawingBufferPosition,
         depth,
-        result
+        result,
       );
 
       if (scene.mode === SceneMode.SCENE2D) {
@@ -610,7 +759,7 @@ function drillPick(limit, pickCallback) {
           hasShowAttribute = true;
           attributes.show = ShowGeometryInstanceAttribute.toValue(
             false,
-            attributes.show
+            attributes.show,
           );
           pickedAttributes.push(attributes);
         }
@@ -641,7 +790,7 @@ function drillPick(limit, pickCallback) {
     attributes = pickedAttributes[i];
     attributes.show = ShowGeometryInstanceAttribute.toValue(
       true,
-      attributes.show
+      attributes.show,
     );
   }
 
@@ -657,7 +806,7 @@ Picking.prototype.drillPick = function (
   windowPosition,
   limit,
   width,
-  height
+  height,
 ) {
   const that = this;
   const pickCallback = function () {
@@ -707,7 +856,7 @@ function updateOffscreenCameraFromRay(picking, ray, width, camera) {
   return camera.frustum.computeCullingVolume(
     camera.positionWC,
     camera.directionWC,
-    camera.upWC
+    camera.upWC,
   );
 }
 
@@ -721,7 +870,7 @@ function updateMostDetailedRayPick(picking, scene, rayPick) {
     picking,
     ray,
     width,
-    camera
+    camera,
   );
 
   const tilesetPassState = mostDetailedPreloadTilesetPassState;
@@ -781,7 +930,7 @@ function launchMostDetailedRayPick(
   ray,
   objectsToExclude,
   width,
-  callback
+  callback,
 ) {
   const tilesets = [];
   getTilesets(scene.primitives, objectsToExclude, tilesets);
@@ -818,7 +967,7 @@ function getRayIntersection(
   objectsToExclude,
   width,
   requirePosition,
-  mostDetailed
+  mostDetailed,
 ) {
   const { context, frameState } = scene;
   const uniformState = context.uniformState;
@@ -828,9 +977,15 @@ function getRayIntersection(
 
   updateOffscreenCameraFromRay(picking, ray, width, view.camera);
 
-  scratchRectangle = BoundingRectangle.clone(view.viewport, scratchRectangle);
+  const drawingBufferRectangle = BoundingRectangle.clone(
+    view.viewport,
+    scratchRectangle,
+  );
 
-  const passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
+  const passState = view.pickFramebuffer.begin(
+    drawingBufferRectangle,
+    view.viewport,
+  );
 
   scene.jobScheduler.disableThisFrame();
 
@@ -852,10 +1007,11 @@ function getRayIntersection(
   scene.resolveFramebuffers(passState);
 
   let position;
-  const object = view.pickFramebuffer.end(scratchRectangle);
+  const object = view.pickFramebuffer.end(drawingBufferRectangle);
 
   if (scene.context.depthTexture) {
-    const numFrustums = view.frustumCommandsList.length;
+    const { frustumCommandsList } = view;
+    const numFrustums = frustumCommandsList.length;
     for (let i = 0; i < numFrustums; ++i) {
       const pickDepth = picking.getPickDepth(scene, i);
       const depth = pickDepth.getDepth(context, 0, 0);
@@ -863,7 +1019,7 @@ function getRayIntersection(
         continue;
       }
       if (depth > 0.0 && depth < 1.0) {
-        const renderedFrustum = view.frustumCommandsList[i];
+        const renderedFrustum = frustumCommandsList[i];
         const near =
           renderedFrustum.near *
           (i !== 0 ? scene.opaqueFrustumNearOffset : 1.0);
@@ -897,7 +1053,7 @@ function getRayIntersections(
   objectsToExclude,
   width,
   requirePosition,
-  mostDetailed
+  mostDetailed,
 ) {
   const pickCallback = function () {
     return getRayIntersection(
@@ -907,7 +1063,7 @@ function getRayIntersections(
       objectsToExclude,
       width,
       requirePosition,
-      mostDetailed
+      mostDetailed,
     );
   };
   return drillPick(limit, pickCallback);
@@ -920,7 +1076,7 @@ function pickFromRay(
   objectsToExclude,
   width,
   requirePosition,
-  mostDetailed
+  mostDetailed,
 ) {
   const results = getRayIntersections(
     picking,
@@ -930,7 +1086,7 @@ function pickFromRay(
     objectsToExclude,
     width,
     requirePosition,
-    mostDetailed
+    mostDetailed,
   );
   if (results.length > 0) {
     return results[0];
@@ -945,7 +1101,7 @@ function drillPickFromRay(
   objectsToExclude,
   width,
   requirePosition,
-  mostDetailed
+  mostDetailed,
 ) {
   return getRayIntersections(
     picking,
@@ -955,7 +1111,7 @@ function drillPickFromRay(
     objectsToExclude,
     width,
     requirePosition,
-    mostDetailed
+    mostDetailed,
   );
 }
 
@@ -982,7 +1138,7 @@ Picking.prototype.pickFromRay = function (scene, ray, objectsToExclude, width) {
   Check.defined("ray", ray);
   if (scene.mode !== SceneMode.SCENE3D) {
     throw new DeveloperError(
-      "Ray intersections are only supported in 3D mode."
+      "Ray intersections are only supported in 3D mode.",
     );
   }
   //>>includeEnd('debug');
@@ -995,13 +1151,13 @@ Picking.prototype.drillPickFromRay = function (
   ray,
   limit,
   objectsToExclude,
-  width
+  width,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("ray", ray);
   if (scene.mode !== SceneMode.SCENE3D) {
     throw new DeveloperError(
-      "Ray intersections are only supported in 3D mode."
+      "Ray intersections are only supported in 3D mode.",
     );
   }
   //>>includeEnd('debug');
@@ -1014,7 +1170,7 @@ Picking.prototype.drillPickFromRay = function (
     objectsToExclude,
     width,
     false,
-    false
+    false,
   );
 };
 
@@ -1022,13 +1178,13 @@ Picking.prototype.pickFromRayMostDetailed = function (
   scene,
   ray,
   objectsToExclude,
-  width
+  width,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("ray", ray);
   if (scene.mode !== SceneMode.SCENE3D) {
     throw new DeveloperError(
-      "Ray intersections are only supported in 3D mode."
+      "Ray intersections are only supported in 3D mode.",
     );
   }
   //>>includeEnd('debug');
@@ -1054,10 +1210,10 @@ Picking.prototype.pickFromRayMostDetailed = function (
           objectsToExclude,
           width,
           false,
-          true
+          true,
         );
-      }
-    )
+      },
+    ),
   );
 };
 
@@ -1066,13 +1222,13 @@ Picking.prototype.drillPickFromRayMostDetailed = function (
   ray,
   limit,
   objectsToExclude,
-  width
+  width,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("ray", ray);
   if (scene.mode !== SceneMode.SCENE3D) {
     throw new DeveloperError(
-      "Ray intersections are only supported in 3D mode."
+      "Ray intersections are only supported in 3D mode.",
     );
   }
   //>>includeEnd('debug');
@@ -1099,10 +1255,10 @@ Picking.prototype.drillPickFromRayMostDetailed = function (
           objectsToExclude,
           width,
           false,
-          true
+          true,
         );
-      }
-    )
+      },
+    ),
   );
 };
 
@@ -1116,12 +1272,12 @@ function getRayForSampleHeight(scene, cartographic) {
   const height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
   const surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(
     cartographic,
-    scratchSurfaceNormal
+    scratchSurfaceNormal,
   );
   const surfacePosition = Cartographic.toCartesian(
     cartographic,
     ellipsoid,
-    scratchSurfacePosition
+    scratchSurfacePosition,
   );
   const surfaceRay = scratchSurfaceRay;
   surfaceRay.origin = surfacePosition;
@@ -1137,7 +1293,7 @@ function getRayForClampToHeight(scene, cartesian) {
   const cartographic = Cartographic.fromCartesian(
     cartesian,
     ellipsoid,
-    scratchCartographic
+    scratchCartographic,
   );
   return getRayForSampleHeight(scene, cartographic);
 }
@@ -1147,7 +1303,7 @@ function getHeightFromCartesian(scene, cartesian) {
   const cartographic = Cartographic.fromCartesian(
     cartesian,
     ellipsoid,
-    scratchCartographic
+    scratchCartographic,
   );
   return cartographic.height;
 }
@@ -1157,7 +1313,7 @@ function sampleHeightMostDetailed(
   scene,
   cartographic,
   objectsToExclude,
-  width
+  width,
 ) {
   const ray = getRayForSampleHeight(scene, cartographic);
   return launchMostDetailedRayPick(
@@ -1174,12 +1330,12 @@ function sampleHeightMostDetailed(
         objectsToExclude,
         width,
         true,
-        true
+        true,
       );
       if (defined(pickResult)) {
         return getHeightFromCartesian(scene, pickResult.position);
       }
-    }
+    },
   );
 }
 
@@ -1189,7 +1345,7 @@ function clampToHeightMostDetailed(
   cartesian,
   objectsToExclude,
   width,
-  result
+  result,
 ) {
   const ray = getRayForClampToHeight(scene, cartesian);
   return launchMostDetailedRayPick(
@@ -1206,12 +1362,12 @@ function clampToHeightMostDetailed(
         objectsToExclude,
         width,
         true,
-        true
+        true,
       );
       if (defined(pickResult)) {
         return Cartesian3.clone(pickResult.position, result);
       }
-    }
+    },
   );
 }
 
@@ -1219,7 +1375,7 @@ Picking.prototype.sampleHeight = function (
   scene,
   position,
   objectsToExclude,
-  width
+  width,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("position", position);
@@ -1228,7 +1384,7 @@ Picking.prototype.sampleHeight = function (
   }
   if (!scene.sampleHeightSupported) {
     throw new DeveloperError(
-      "sampleHeight requires depth texture support. Check sampleHeightSupported."
+      "sampleHeight requires depth texture support. Check sampleHeightSupported.",
     );
   }
   //>>includeEnd('debug');
@@ -1241,7 +1397,7 @@ Picking.prototype.sampleHeight = function (
     objectsToExclude,
     width,
     true,
-    false
+    false,
   );
   if (defined(pickResult)) {
     return getHeightFromCartesian(scene, pickResult.position);
@@ -1253,7 +1409,7 @@ Picking.prototype.clampToHeight = function (
   cartesian,
   objectsToExclude,
   width,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesian", cartesian);
@@ -1262,7 +1418,7 @@ Picking.prototype.clampToHeight = function (
   }
   if (!scene.clampToHeightSupported) {
     throw new DeveloperError(
-      "clampToHeight requires depth texture support. Check clampToHeightSupported."
+      "clampToHeight requires depth texture support. Check clampToHeightSupported.",
     );
   }
   //>>includeEnd('debug');
@@ -1275,7 +1431,7 @@ Picking.prototype.clampToHeight = function (
     objectsToExclude,
     width,
     true,
-    false
+    false,
   );
   if (defined(pickResult)) {
     return Cartesian3.clone(pickResult.position, result);
@@ -1286,18 +1442,18 @@ Picking.prototype.sampleHeightMostDetailed = function (
   scene,
   positions,
   objectsToExclude,
-  width
+  width,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("positions", positions);
   if (scene.mode !== SceneMode.SCENE3D) {
     throw new DeveloperError(
-      "sampleHeightMostDetailed is only supported in 3D mode."
+      "sampleHeightMostDetailed is only supported in 3D mode.",
     );
   }
   if (!scene.sampleHeightSupported) {
     throw new DeveloperError(
-      "sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported."
+      "sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.",
     );
   }
   //>>includeEnd('debug');
@@ -1313,7 +1469,7 @@ Picking.prototype.sampleHeightMostDetailed = function (
       scene,
       positions[i],
       objectsToExclude,
-      width
+      width,
     );
   }
   return deferPromiseUntilPostRender(
@@ -1324,7 +1480,7 @@ Picking.prototype.sampleHeightMostDetailed = function (
         positions[i].height = heights[i];
       }
       return positions;
-    })
+    }),
   );
 };
 
@@ -1332,18 +1488,18 @@ Picking.prototype.clampToHeightMostDetailed = function (
   scene,
   cartesians,
   objectsToExclude,
-  width
+  width,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesians", cartesians);
   if (scene.mode !== SceneMode.SCENE3D) {
     throw new DeveloperError(
-      "clampToHeightMostDetailed is only supported in 3D mode."
+      "clampToHeightMostDetailed is only supported in 3D mode.",
     );
   }
   if (!scene.clampToHeightSupported) {
     throw new DeveloperError(
-      "clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported."
+      "clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.",
     );
   }
   //>>includeEnd('debug');
@@ -1360,7 +1516,7 @@ Picking.prototype.clampToHeightMostDetailed = function (
       cartesians[i],
       objectsToExclude,
       width,
-      cartesians[i]
+      cartesians[i],
     );
   }
   return deferPromiseUntilPostRender(
@@ -1371,7 +1527,7 @@ Picking.prototype.clampToHeightMostDetailed = function (
         cartesians[i] = clampedCartesians[i];
       }
       return cartesians;
-    })
+    }),
   );
 };
 

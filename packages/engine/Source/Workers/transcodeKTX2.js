@@ -59,7 +59,7 @@ function transcode(parameters, transferableObjects) {
       supportedTargetFormats,
       transcoderModule,
       transferableObjects,
-      result
+      result,
     );
   } else {
     transferableObjects.push(data.buffer);
@@ -107,19 +107,19 @@ function parseUncompressed(header, result) {
         faceView = new Uint8Array(
           levelBuffer.buffer,
           faceByteOffset,
-          faceLength
+          faceLength,
         );
       } else if (PixelDatatype.sizeInBytes(datatype) === 2) {
         faceView = new Uint16Array(
           levelBuffer.buffer,
           faceByteOffset,
-          faceLength
+          faceLength,
         );
       } else {
         faceView = new Float32Array(
           levelBuffer.buffer,
           faceByteOffset,
-          faceLength
+          faceLength,
         );
       }
 
@@ -140,7 +140,7 @@ function transcodeCompressed(
   supportedTargetFormats,
   transcoderModule,
   transferableObjects,
-  result
+  result,
 ) {
   const ktx2File = new transcoderModule.KTX2File(data);
   let width = ktx2File.getWidth();
@@ -190,7 +190,7 @@ function transcodeCompressed(
       transcoderFormat = BasisFormat.cTFBC7_RGBA;
     } else {
       throw new RuntimeError(
-        "No transcoding format target available for ETC1S compressed ktx2."
+        "No transcoding format target available for ETC1S compressed ktx2.",
       );
     }
   } else if (dfd.colorModel === colorModelUASTC) {
@@ -224,7 +224,7 @@ function transcodeCompressed(
         : BasisFormat.cTFPVRTC1_4_RGB;
     } else {
       throw new RuntimeError(
-        "No transcoding format target available for UASTC compressed ktx2."
+        "No transcoding format target available for UASTC compressed ktx2.",
       );
     }
   }
@@ -248,7 +248,7 @@ function transcodeCompressed(
       i, // level index
       0, // layer index
       0, // face index
-      transcoderFormat.value
+      transcoderFormat.value,
     );
     const dst = new Uint8Array(dstSize);
 
@@ -260,7 +260,7 @@ function transcodeCompressed(
       transcoderFormat.value,
       0, // get_alpha_for_opaque_formats
       -1, // channel0
-      -1 // channel1
+      -1, // channel1
     );
 
     if (!defined(transcoded)) {

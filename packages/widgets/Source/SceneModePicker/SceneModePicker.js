@@ -77,7 +77,7 @@ css: { "cesium-sceneModePicker-button2D": sceneMode === _sceneMode.SCENE2D,\
        "cesium-sceneModePicker-buttonColumbusView": sceneMode === _sceneMode.COLUMBUS_VIEW,\
        "cesium-sceneModePicker-selected": dropDownVisible },\
 attr: { title: selectedTooltip },\
-click: toggleDropDown'
+click: toggleDropDown',
   );
   button.innerHTML =
     '\
@@ -98,7 +98,7 @@ css: { "cesium-sceneModePicker-visible" : (dropDownVisible && (sceneMode !== _sc
        "cesium-sceneModePicker-hidden" : !dropDownVisible },\
 attr: { title: tooltip3D },\
 click: morphTo3D,\
-cesiumSvgPath: { path: _globePath, width: 64, height: 64 }'
+cesiumSvgPath: { path: _globePath, width: 64, height: 64 }',
   );
   wrapper.appendChild(morphTo3DButton);
 
@@ -114,7 +114,7 @@ css: { "cesium-sceneModePicker-visible" : (dropDownVisible && (sceneMode !== _sc
        "cesium-sceneModePicker-hidden" : !dropDownVisible },\
 attr: { title: tooltip2D },\
 click: morphTo2D,\
-cesiumSvgPath: { path: _flatMapPath, width: 64, height: 64 }'
+cesiumSvgPath: { path: _flatMapPath, width: 64, height: 64 }',
   );
   wrapper.appendChild(morphTo2DButton);
 
@@ -130,7 +130,7 @@ css: { "cesium-sceneModePicker-visible" : (dropDownVisible && (sceneMode !== _sc
        "cesium-sceneModePicker-hidden" : !dropDownVisible},\
 attr: { title: tooltipColumbusView },\
 click: morphToColumbusView,\
-cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }'
+cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }',
   );
   wrapper.appendChild(morphToCVButton);
 

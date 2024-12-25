@@ -10,12 +10,14 @@ import createBillboardPointCallback from "../Scene/createBillboardPointCallback.
 import HeightReference from "../Scene/HeightReference.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
+import SplitDirection from "../Scene/SplitDirection.js";
 
 const defaultColor = Color.WHITE;
 const defaultOutlineColor = Color.BLACK;
 const defaultOutlineWidth = 0.0;
 const defaultPixelSize = 1.0;
 const defaultDisableDepthTestDistance = 0.0;
+const defaultSplitDirection = SplitDirection.NONE;
 
 const colorScratch = new Color();
 const positionScratch = new Cartesian3();
@@ -54,7 +56,7 @@ function PointVisualizer(entityCluster, entityCollection) {
 
   entityCollection.collectionChanged.addEventListener(
     PointVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   this._cluster = entityCluster;
@@ -88,7 +90,7 @@ PointVisualizer.prototype.update = function (time) {
     const heightReference = Property.getValueOrDefault(
       pointGraphics._heightReference,
       time,
-      HeightReference.NONE
+      HeightReference.NONE,
     );
     let show =
       entity.isShowing &&
@@ -99,7 +101,7 @@ PointVisualizer.prototype.update = function (time) {
       position = Property.getValueOrUndefined(
         entity._position,
         time,
-        positionScratch
+        positionScratch,
       );
       show = defined(position);
     }
@@ -153,44 +155,49 @@ PointVisualizer.prototype.update = function (time) {
       pointPrimitive.scaleByDistance = Property.getValueOrUndefined(
         pointGraphics._scaleByDistance,
         time,
-        scaleByDistanceScratch
+        scaleByDistanceScratch,
       );
       pointPrimitive.translucencyByDistance = Property.getValueOrUndefined(
         pointGraphics._translucencyByDistance,
         time,
-        translucencyByDistanceScratch
+        translucencyByDistanceScratch,
       );
       pointPrimitive.color = Property.getValueOrDefault(
         pointGraphics._color,
         time,
         defaultColor,
-        colorScratch
+        colorScratch,
       );
       pointPrimitive.outlineColor = Property.getValueOrDefault(
         pointGraphics._outlineColor,
         time,
         defaultOutlineColor,
-        outlineColorScratch
+        outlineColorScratch,
       );
       pointPrimitive.outlineWidth = Property.getValueOrDefault(
         pointGraphics._outlineWidth,
         time,
-        defaultOutlineWidth
+        defaultOutlineWidth,
       );
       pointPrimitive.pixelSize = Property.getValueOrDefault(
         pointGraphics._pixelSize,
         time,
-        defaultPixelSize
+        defaultPixelSize,
       );
       pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(
         pointGraphics._distanceDisplayCondition,
         time,
-        distanceDisplayConditionScratch
+        distanceDisplayConditionScratch,
       );
       pointPrimitive.disableDepthTestDistance = Property.getValueOrDefault(
         pointGraphics._disableDepthTestDistance,
         time,
-        defaultDisableDepthTestDistance
+        defaultDisableDepthTestDistance,
+      );
+      pointPrimitive.splitDirection = Property.getValueOrDefault(
+        pointGraphics._splitDirection,
+        time,
+        defaultSplitDirection,
       );
     } else if (defined(billboard)) {
       billboard.show = true;
@@ -198,22 +205,27 @@ PointVisualizer.prototype.update = function (time) {
       billboard.scaleByDistance = Property.getValueOrUndefined(
         pointGraphics._scaleByDistance,
         time,
-        scaleByDistanceScratch
+        scaleByDistanceScratch,
       );
       billboard.translucencyByDistance = Property.getValueOrUndefined(
         pointGraphics._translucencyByDistance,
         time,
-        translucencyByDistanceScratch
+        translucencyByDistanceScratch,
       );
       billboard.distanceDisplayCondition = Property.getValueOrUndefined(
         pointGraphics._distanceDisplayCondition,
         time,
-        distanceDisplayConditionScratch
+        distanceDisplayConditionScratch,
       );
       billboard.disableDepthTestDistance = Property.getValueOrDefault(
         pointGraphics._disableDepthTestDistance,
         time,
-        defaultDisableDepthTestDistance
+        defaultDisableDepthTestDistance,
+      );
+      billboard.splitDirection = Property.getValueOrDefault(
+        pointGraphics._splitDirection,
+        time,
+        defaultSplitDirection,
       );
       billboard.heightReference = heightReference;
 
@@ -221,20 +233,20 @@ PointVisualizer.prototype.update = function (time) {
         pointGraphics._color,
         time,
         defaultColor,
-        colorScratch
+        colorScratch,
       );
       const newOutlineColor = Property.getValueOrDefault(
         pointGraphics._outlineColor,
         time,
         defaultOutlineColor,
-        outlineColorScratch
+        outlineColorScratch,
       );
       const newOutlineWidth = Math.round(
         Property.getValueOrDefault(
           pointGraphics._outlineWidth,
           time,
-          defaultOutlineWidth
-        )
+          defaultOutlineWidth,
+        ),
       );
       let newPixelSize = Math.max(
         1,
@@ -242,9 +254,9 @@ PointVisualizer.prototype.update = function (time) {
           Property.getValueOrDefault(
             pointGraphics._pixelSize,
             time,
-            defaultPixelSize
-          )
-        )
+            defaultPixelSize,
+          ),
+        ),
       );
 
       if (newOutlineWidth > 0) {
@@ -288,8 +300,8 @@ PointVisualizer.prototype.update = function (time) {
             cssColor,
             cssOutlineColor,
             newOutlineWidth,
-            newPixelSize
-          )
+            newPixelSize,
+          ),
         );
       }
 
@@ -333,7 +345,7 @@ PointVisualizer.prototype.getBoundingSphere = function (entity, result) {
   if (defined(item.pointPrimitive)) {
     result.center = Cartesian3.clone(
       item.pointPrimitive.position,
-      result.center
+      result.center,
     );
   } else {
     const billboard = item.billboard;
@@ -362,7 +374,7 @@ PointVisualizer.prototype.isDestroyed = function () {
 PointVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     PointVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   const entities = this._entityCollection.values;
   for (let i = 0; i < entities.length; i++) {
@@ -375,7 +387,7 @@ PointVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
   removed,
-  changed
+  changed,
 ) {
   let i;
   let entity;

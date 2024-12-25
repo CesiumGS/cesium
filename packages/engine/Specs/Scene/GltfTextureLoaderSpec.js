@@ -235,7 +235,7 @@ describe(
 
     it("load throws if image fails to load", async function () {
       spyOn(Resource.prototype, "fetchImage").and.callFake(() =>
-        Promise.reject(new Error("404 Not Found"))
+        Promise.reject(new Error("404 Not Found")),
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -249,13 +249,13 @@ describe(
 
       await expectAsync(textureLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load texture\nFailed to load image: image.png\n404 Not Found"
+        "Failed to load texture\nFailed to load image: image.png\n404 Not Found",
       );
     });
 
     it("loads texture", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       // Simulate JobScheduler not being ready for a few frames
@@ -263,15 +263,14 @@ describe(
       let processCallsCount = 0;
       const jobScheduler = scene.frameState.jobScheduler;
       const originalJobSchedulerExecute = jobScheduler.execute;
-      spyOn(JobScheduler.prototype, "execute").and.callFake(function (
-        job,
-        jobType
-      ) {
-        if (processCallsCount++ >= processCallsTotal) {
-          return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
-        }
-        return false;
-      });
+      spyOn(JobScheduler.prototype, "execute").and.callFake(
+        function (job, jobType) {
+          if (processCallsCount++ >= processCallsTotal) {
+            return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
+          }
+          return false;
+        },
+      );
 
       const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
@@ -291,13 +290,13 @@ describe(
       expect(textureLoader.texture.width).toBe(1);
       expect(textureLoader.texture.height).toBe(1);
       expect(ResourceCache.statistics.texturesByteLength).toBe(
-        textureLoader.texture.sizeInBytes
+        textureLoader.texture.sizeInBytes,
       );
     });
 
     it("creates texture synchronously", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -404,18 +403,18 @@ describe(
         compressedTextureNoMipmap: true,
       });
       expect(textureLoader.texture.sampler.minificationFilter).toBe(
-        TextureMinificationFilter.NEAREST
+        TextureMinificationFilter.NEAREST,
       );
     });
 
     it("generates mipmap if sampler requires it", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       const generateMipmap = spyOn(
         Texture.prototype,
-        "generateMipmap"
+        "generateMipmap",
       ).and.callThrough();
 
       const textureLoader = new GltfTextureLoader({
@@ -437,7 +436,7 @@ describe(
 
     it("generates power-of-two texture if sampler requires it", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(imageNpot)
+        Promise.resolve(imageNpot),
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -458,7 +457,7 @@ describe(
 
     it("does not generate power-of-two texture if sampler does not require it", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(imageNpot)
+        Promise.resolve(imageNpot),
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -479,17 +478,17 @@ describe(
 
     it("destroys texture loader", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       const unloadImage = spyOn(
         GltfImageLoader.prototype,
-        "unload"
+        "unload",
       ).and.callThrough();
 
       const destroyTexture = spyOn(
         Texture.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const textureLoader = new GltfTextureLoader({
@@ -525,7 +524,7 @@ describe(
             } else {
               resolve(image);
             }
-          })
+          }),
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -555,5 +554,5 @@ describe(
       return resolveImageAfterDestroy(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

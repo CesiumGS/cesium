@@ -26,18 +26,18 @@ describe("Scene/PointCloudShading", function () {
     pointCloudShading = new PointCloudShading(options);
     expect(pointCloudShading.attenuation).toEqual(false);
     expect(pointCloudShading.geometricErrorScale).toEqual(
-      options.geometricErrorScale
+      options.geometricErrorScale,
     );
     expect(pointCloudShading.maximumAttenuation).toEqual(
-      options.maximumAttenuation
+      options.maximumAttenuation,
     );
     expect(pointCloudShading.baseResolution).toEqual(options.baseResolution);
     expect(pointCloudShading.eyeDomeLighting).toEqual(true);
     expect(pointCloudShading.eyeDomeLightingStrength).toEqual(
-      options.eyeDomeLightingStrength
+      options.eyeDomeLightingStrength,
     );
     expect(pointCloudShading.eyeDomeLightingRadius).toEqual(
-      options.eyeDomeLightingRadius
+      options.eyeDomeLightingRadius,
     );
     expect(pointCloudShading.backFaceCulling).toEqual(options.backFaceCulling);
     expect(pointCloudShading.normalShading).toEqual(options.normalShading);

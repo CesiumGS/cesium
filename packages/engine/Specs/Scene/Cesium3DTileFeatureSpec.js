@@ -37,34 +37,34 @@ describe(
           -0.01,
           -0.01,
           0.01,
-          0.01
+          0.01,
         );
         const ellipsoid = Ellipsoid.WGS84;
         scene.camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)),
-          new Cartesian3(0.0, 0.0, 0.01)
+          new Cartesian3(0.0, 0.0, 0.01),
         );
         return Cesium3DTilesTester.loadTileset(
           scene,
           vectorPolylinesWithBatchIds,
           {
             vectorKeepDecodedPositions: true,
-          }
+          },
         ).then(function (tileset) {
           const feature = tileset.root.children[0].content.getFeature(0);
           const polylinePositions = feature.polylinePositions;
           expect(polylinePositions.length).toBe(60);
           expect(polylinePositions[0]).toEqualEpsilon(
             6378136.806372941,
-            CesiumMath.EPSILON7
+            CesiumMath.EPSILON7,
           );
           expect(polylinePositions[1]).toEqualEpsilon(
             -1113.194885441724,
-            CesiumMath.EPSILON7
+            CesiumMath.EPSILON7,
           );
           expect(polylinePositions[2]).toEqualEpsilon(
             1105.675261474196,
-            CesiumMath.EPSILON7
+            CesiumMath.EPSILON7,
           );
         });
       });
@@ -104,7 +104,7 @@ describe(
 
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithMetadataUrl
+          tilesetWithMetadataUrl,
         ).then(function (result) {
           tileset = result;
         });
@@ -134,14 +134,14 @@ describe(
       it("getPropertyInherited returns content property by semantic", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("HIGHLIGHT_COLOR")).toEqual(
-          new Cartesian4(255, 0, 0, 1.0)
+          new Cartesian4(255, 0, 0, 1.0),
         );
       });
 
       it("getPropertyInherited returns content property", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("HIGHLIGHT_COLOR")).toEqual(
-          new Cartesian4(255, 0, 0, 1.0)
+          new Cartesian4(255, 0, 0, 1.0),
         );
         expect(feature.getPropertyInherited("triangleCount")).toBe(15000);
       });
@@ -149,14 +149,14 @@ describe(
       it("getPropertyInherited returns tile property by semantic", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("COLOR")).toEqual(
-          new Cartesian4(255, 255, 0, 1.0)
+          new Cartesian4(255, 255, 0, 1.0),
         );
       });
 
       it("getPropertyInherited returns tile property", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("color")).toEqual(
-          new Cartesian4(255, 255, 0, 1.0)
+          new Cartesian4(255, 255, 0, 1.0),
         );
         expect(feature.getPropertyInherited("population")).toBe(50);
       });
@@ -164,7 +164,7 @@ describe(
       it("getPropertyInherited returns default value", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("defaultColor")).toEqual(
-          new Cartesian4(255, 255, 255, 255)
+          new Cartesian4(255, 255, 255, 255),
         );
       });
 
@@ -173,7 +173,7 @@ describe(
         expect(feature.getPropertyInherited("averageTemperature")).toEqual(24);
         feature = new Cesium3DTileFeature(childContents["ur.b3dm"], 0);
         expect(
-          feature.getPropertyInherited("averageTemperature")
+          feature.getPropertyInherited("averageTemperature"),
         ).not.toBeDefined();
       });
 
@@ -196,7 +196,7 @@ describe(
       it("getPropertyInherited returns tileset property by semantic", function () {
         const feature = new Cesium3DTileFeature(parentContent, 0);
         expect(feature.getPropertyInherited("DATE_ISO_8601")).toBe(
-          "2021-04-07"
+          "2021-04-07",
         );
         expect(feature.getPropertyInherited("AUTHOR")).toBe("Cesium");
       });
@@ -207,8 +207,8 @@ describe(
           new Cartesian3(
             -1.3196816996258511,
             0.6988767486400521,
-            45.78600543644279
-          )
+            45.78600543644279,
+          ),
         );
         expect(feature.getPropertyInherited("date")).toBe("2021-04-07");
         expect(feature.getPropertyInherited("author")).toBe("Cesium");
@@ -220,7 +220,7 @@ describe(
         // content metadata is more specific than tile metadata so this returns
         // red not cyan
         expect(feature.getPropertyInherited("highlightColor")).toEqual(
-          new Cartesian4(255, 0, 0, 1.0)
+          new Cartesian4(255, 0, 0, 1.0),
         );
 
         // content metadata is more specific than tileset metadata so this returns
@@ -230,7 +230,7 @@ describe(
         // tile metadata is more specific than tileset metadata so this returns
         // yellow not magenta
         expect(feature.getPropertyInherited("color")).toEqual(
-          new Cartesian4(255, 255, 0, 1.0)
+          new Cartesian4(255, 255, 0, 1.0),
         );
 
         // group metadata is more specific than tileset metadata, so this returns
@@ -254,7 +254,7 @@ describe(
 
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithMetadataExtensionUrl
+          tilesetWithMetadataExtensionUrl,
         ).then(function (result) {
           tileset = result;
         });
@@ -284,14 +284,14 @@ describe(
       it("getPropertyInherited returns content property by semantic", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("HIGHLIGHT_COLOR")).toEqual(
-          new Cartesian4(255, 0, 0, 1.0)
+          new Cartesian4(255, 0, 0, 1.0),
         );
       });
 
       it("getPropertyInherited returns content property", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("HIGHLIGHT_COLOR")).toEqual(
-          new Cartesian4(255, 0, 0, 1.0)
+          new Cartesian4(255, 0, 0, 1.0),
         );
         expect(feature.getPropertyInherited("triangleCount")).toBe(15000);
       });
@@ -299,14 +299,14 @@ describe(
       it("getPropertyInherited returns tile property by semantic", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("COLOR")).toEqual(
-          new Cartesian4(255, 255, 0, 1.0)
+          new Cartesian4(255, 255, 0, 1.0),
         );
       });
 
       it("getPropertyInherited returns tile property", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("color")).toEqual(
-          new Cartesian4(255, 255, 0, 1.0)
+          new Cartesian4(255, 255, 0, 1.0),
         );
         expect(feature.getPropertyInherited("population")).toBe(50);
       });
@@ -314,7 +314,7 @@ describe(
       it("getPropertyInherited returns default value", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("defaultColor")).toEqual(
-          new Cartesian4(255, 255, 255, 255)
+          new Cartesian4(255, 255, 255, 255),
         );
       });
 
@@ -337,7 +337,7 @@ describe(
       it("getPropertyInherited returns tileset property by semantic", function () {
         const feature = new Cesium3DTileFeature(parentContent, 0);
         expect(feature.getPropertyInherited("DATE_ISO_8601")).toBe(
-          "2021-04-07"
+          "2021-04-07",
         );
         expect(feature.getPropertyInherited("AUTHOR")).toBe("Cesium");
       });
@@ -348,8 +348,8 @@ describe(
           new Cartesian3(
             -1.3196816996258511,
             0.6988767486400521,
-            45.78600543644279
-          )
+            45.78600543644279,
+          ),
         );
         expect(feature.getPropertyInherited("date")).toBe("2021-04-07");
         expect(feature.getPropertyInherited("author")).toBe("Cesium");
@@ -361,7 +361,7 @@ describe(
         // content metadata is more specific than tile metadata so this returns
         // red not cyan
         expect(feature.getPropertyInherited("highlightColor")).toEqual(
-          new Cartesian4(255, 0, 0, 1.0)
+          new Cartesian4(255, 0, 0, 1.0),
         );
 
         // content metadata is more specific than tileset metadata so this returns
@@ -371,7 +371,7 @@ describe(
         // tile metadata is more specific than tileset metadata so this returns
         // yellow not magenta
         expect(feature.getPropertyInherited("color")).toEqual(
-          new Cartesian4(255, 255, 0, 1.0)
+          new Cartesian4(255, 255, 0, 1.0),
         );
 
         // group metadata is more specific than tileset metadata, so this returns
@@ -392,13 +392,13 @@ describe(
 
           const center = Cartesian3.fromRadians(
             centerLongitude,
-            centerLatitude
+            centerLatitude,
           );
           scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
 
           return Cesium3DTilesTester.loadTileset(
             scene,
-            tilesetWithSubtreeMetadataUrl
+            tilesetWithSubtreeMetadataUrl,
           ).then(function (result) {
             tilesetWithSubtree = result;
           });
@@ -436,7 +436,7 @@ describe(
         it("getPropertyInherited returns subtree property by semantic at child level", function () {
           const feature = new Cesium3DTileFeature(
             subtreeChildContents["content/1/0/0.b3dm"],
-            0
+            0,
           );
           expect(feature.getPropertyInherited("AUTHOR")).toEqual("Cesium");
         });
@@ -444,7 +444,7 @@ describe(
         it("getPropertyInherited returns subtree property at root level", function () {
           const feature = new Cesium3DTileFeature(
             subtreeChildContents["content/1/0/0.b3dm"],
-            0
+            0,
           );
           expect(feature.getPropertyInherited("author")).toEqual("Cesium");
           expect(feature.getPropertyInherited("credits")).toEqual([
@@ -463,7 +463,7 @@ describe(
         it("getPropertyInherited returns tile property that is shared by subtree at child level", function () {
           const childFeature = new Cesium3DTileFeature(
             subtreeChildContents["content/1/0/0.b3dm"],
-            0
+            0,
           );
           const rootFeature = new Cesium3DTileFeature(subtreeRootContent, 0);
 
@@ -489,12 +489,12 @@ describe(
 
           const center = Cartesian3.fromRadians(
             centerLongitude,
-            centerLatitude
+            centerLatitude,
           );
           scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
           return Cesium3DTilesTester.loadTileset(
             scene,
-            tilesetWithImplicitContentMetadataUrl
+            tilesetWithImplicitContentMetadataUrl,
           ).then(function (result) {
             tilesetWithImplicitContentMetadata = result;
           });
@@ -518,13 +518,13 @@ describe(
           const rootFeature = new Cesium3DTileFeature(subtreeRootContent, 0);
           const childFeature = new Cesium3DTileFeature(
             subtreeChildContents["content/1/0/0.b3dm"],
-            0
+            0,
           );
           expect(rootFeature.getPropertyInherited("_BUILDING_HEIGHT")).toEqual(
-            10
+            10,
           );
           expect(childFeature.getPropertyInherited("_BUILDING_HEIGHT")).toEqual(
-            20
+            20,
           );
         });
 
@@ -532,45 +532,45 @@ describe(
           const rootFeature = new Cesium3DTileFeature(subtreeRootContent, 0);
           expect(rootFeature.getPropertyInherited("height")).toEqual(10);
           expect(rootFeature.getPropertyInherited("color")).toEqual(
-            new Cartesian3(255, 255, 255)
+            new Cartesian3(255, 255, 255),
           );
         });
 
         it("getPropertyInherited returns content property by semantic for different contents", function () {
           const childFeature = new Cesium3DTileFeature(
             subtreeChildContents["content/1/0/0.b3dm"],
-            0
+            0,
           );
           const secondChildFeature = new Cesium3DTileFeature(
             subtreeChildContents["content/1/1/1.b3dm"],
-            0
+            0,
           );
           expect(childFeature.getPropertyInherited("_BUILDING_HEIGHT")).toEqual(
-            20
+            20,
           );
           expect(
-            secondChildFeature.getPropertyInherited("_BUILDING_HEIGHT")
+            secondChildFeature.getPropertyInherited("_BUILDING_HEIGHT"),
           ).toEqual(40);
         });
 
         it("getPropertyInherited returns content property for different contents", function () {
           const childFeature = new Cesium3DTileFeature(
             subtreeChildContents["content/1/0/0.b3dm"],
-            0
+            0,
           );
           const secondChildFeature = new Cesium3DTileFeature(
             subtreeChildContents["content/1/1/1.b3dm"],
-            0
+            0,
           );
 
           expect(childFeature.getPropertyInherited("height")).toEqual(20);
           expect(secondChildFeature.getPropertyInherited("height")).toEqual(40);
 
           expect(childFeature.getPropertyInherited("color")).toEqual(
-            new Cartesian3(255, 0, 0)
+            new Cartesian3(255, 0, 0),
           );
           expect(secondChildFeature.getPropertyInherited("color")).toEqual(
-            new Cartesian3(0, 0, 255)
+            new Cartesian3(0, 0, 255),
           );
         });
 
@@ -582,5 +582,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

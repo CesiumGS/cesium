@@ -45,7 +45,7 @@ function Matrix3(
   column2Row1,
   column0Row2,
   column1Row2,
-  column2Row2
+  column2Row2,
 ) {
   this[0] = defaultValue(column0Row0, 0.0);
   this[1] = defaultValue(column0Row1, 0.0);
@@ -145,7 +145,7 @@ Matrix3.packArray = function (array, result) {
   } else if (!Array.isArray(result) && result.length !== resultLength) {
     //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
-      "If result is a typed array, it must have exactly array.length * 9 elements"
+      "If result is a typed array, it must have exactly array.length * 9 elements",
     );
     //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
@@ -209,7 +209,7 @@ Matrix3.clone = function (matrix, result) {
       matrix[7],
       matrix[2],
       matrix[5],
-      matrix[8]
+      matrix[8],
     );
   }
   result[0] = matrix[0];
@@ -286,7 +286,7 @@ Matrix3.fromRowMajorArray = function (values, result) {
       values[5],
       values[6],
       values[7],
-      values[8]
+      values[8],
     );
   }
   result[0] = values[0];
@@ -496,7 +496,7 @@ Matrix3.fromCrossProduct = function (vector, result) {
       -vector.x,
       -vector.y,
       vector.x,
-      0.0
+      0.0,
     );
   }
 
@@ -543,7 +543,7 @@ Matrix3.fromRotationX = function (angle, result) {
       -sinAngle,
       0.0,
       sinAngle,
-      cosAngle
+      cosAngle,
     );
   }
 
@@ -591,7 +591,7 @@ Matrix3.fromRotationY = function (angle, result) {
       0.0,
       -sinAngle,
       0.0,
-      cosAngle
+      cosAngle,
     );
   }
 
@@ -639,7 +639,7 @@ Matrix3.fromRotationZ = function (angle, result) {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
   }
 
@@ -942,13 +942,13 @@ Matrix3.getScale = function (matrix, result) {
   //>>includeEnd('debug');
 
   result.x = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn)
+    Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn),
   );
   result.y = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[3], matrix[4], matrix[5], scratchColumn)
+    Cartesian3.fromElements(matrix[3], matrix[4], matrix[5], scratchColumn),
   );
   result.z = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[6], matrix[7], matrix[8], scratchColumn)
+    Cartesian3.fromElements(matrix[6], matrix[7], matrix[8], scratchColumn),
   );
   return result;
 };
@@ -1371,7 +1371,7 @@ function shurDecomposition(matrix, result) {
   // find pivot (rotAxis) based on max diagonal of matrix
   for (let i = 0; i < 3; ++i) {
     const temp = Math.abs(
-      matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])]
+      matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])],
     );
     if (temp > maxDiagonal) {
       rotAxis = i;
@@ -1468,7 +1468,7 @@ Matrix3.computeEigenDecomposition = function (matrix, result) {
 
   const unitaryMatrix = (result.unitary = Matrix3.clone(
     Matrix3.IDENTITY,
-    result.unitary
+    result.unitary,
   ));
   const diagMatrix = (result.diagonal = Matrix3.clone(matrix, result.diagonal));
 
@@ -1608,7 +1608,7 @@ Matrix3.inverseTranspose = function (matrix, result) {
 
   return Matrix3.inverse(
     Matrix3.transpose(matrix, scratchTransposeMatrix),
-    result
+    result,
   );
 };
 
@@ -1673,7 +1673,7 @@ Matrix3.equalsEpsilon = function (left, right, epsilon) {
  * @constant
  */
 Matrix3.IDENTITY = Object.freeze(
-  new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
+  new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
 );
 
 /**
@@ -1683,7 +1683,7 @@ Matrix3.IDENTITY = Object.freeze(
  * @constant
  */
 Matrix3.ZERO = Object.freeze(
-  new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
 );
 
 /**

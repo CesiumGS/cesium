@@ -78,12 +78,12 @@ describe(
       options.boundingVolume = BoundingSphere.transform(
         boundingSphere,
         options.modelMatrix,
-        boundingSphere
+        boundingSphere,
       );
 
       options.renderState = defaultValue(
         options.renderState,
-        RenderState.fromCache()
+        RenderState.fromCache(),
       );
 
       options.pass = Pass.OPAQUE;
@@ -96,7 +96,7 @@ describe(
       command,
       expectedPass,
       expectedStencilFunction,
-      testForPicking
+      testForPicking,
     ) {
       testForPicking = defaultValue(testForPicking, false);
 
@@ -136,7 +136,7 @@ describe(
       };
       expect(renderState.stencilTest).toEqual(expectedStencilTest);
       expect(renderState.stencilMask).toEqual(
-        StencilConstants.CLASSIFICATION_MASK
+        StencilConstants.CLASSIFICATION_MASK,
       );
 
       expect(renderState.depthTest).toEqual({
@@ -150,7 +150,7 @@ describe(
     // that is not in BlendingState.PRE_MULTIPLIED_ALPHA_BLEND.
     const expectedColorCommandBlending = clone(
       BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
-      true
+      true,
     );
     expectedColorCommandBlending.color = noColor;
 
@@ -192,7 +192,7 @@ describe(
 
       expect(renderState.stencilTest).toEqual(expectedStencilTest);
       expect(renderState.stencilMask).toEqual(
-        StencilConstants.CLASSIFICATION_MASK
+        StencilConstants.CLASSIFICATION_MASK,
       );
       expect(renderState.depthTest.enabled).toEqual(false);
       expect(renderState.depthMask).toEqual(false);
@@ -215,7 +215,7 @@ describe(
       commandList,
       expectedPass,
       expectedStencilFunction,
-      testForPicking
+      testForPicking,
     ) {
       const batchLengths = drawCommand.batchLengths;
       const batchOffsets = drawCommand.batchOffsets;
@@ -233,7 +233,7 @@ describe(
           stencilDepthCommand,
           expectedPass,
           expectedStencilFunction,
-          testForPicking
+          testForPicking,
         );
 
         const colorCommand = commandList[i * 2 + 1];
@@ -275,7 +275,7 @@ describe(
 
       expect(drawCommand.command).toBe(command);
       expect(drawCommand.runtimePrimitive).toBe(
-        renderResources.runtimePrimitive
+        renderResources.runtimePrimitive,
       );
       expect(drawCommand.model).toBe(renderResources.model);
 
@@ -294,7 +294,7 @@ describe(
         drawCommand,
         commandList,
         expectedPass,
-        expectedStencilFunction
+        expectedStencilFunction,
       );
 
       expect(drawCommand._commandList3DTiles.length).toBe(0);
@@ -316,7 +316,7 @@ describe(
 
       expect(drawCommand.command).toBe(command);
       expect(drawCommand.runtimePrimitive).toBe(
-        renderResources.runtimePrimitive
+        renderResources.runtimePrimitive,
       );
       expect(drawCommand.model).toBe(renderResources.model);
 
@@ -324,7 +324,7 @@ describe(
       expect(drawCommand.boundingVolume).toBe(command.boundingVolume);
 
       expect(drawCommand.classificationType).toBe(
-        ClassificationType.CESIUM_3D_TILE
+        ClassificationType.CESIUM_3D_TILE,
       );
       expect(drawCommand._classifiesTerrain).toBe(false);
       expect(drawCommand._classifies3DTiles).toBe(true);
@@ -337,7 +337,7 @@ describe(
         drawCommand,
         commandList,
         expectedPass,
-        expectedStencilFunction
+        expectedStencilFunction,
       );
 
       expect(drawCommand._commandListTerrain.length).toBe(0);
@@ -359,7 +359,7 @@ describe(
 
       expect(drawCommand.command).toBe(command);
       expect(drawCommand.runtimePrimitive).toBe(
-        renderResources.runtimePrimitive
+        renderResources.runtimePrimitive,
       );
       expect(drawCommand.model).toBe(renderResources.model);
 
@@ -378,7 +378,7 @@ describe(
         drawCommand,
         commandList,
         expectedPass,
-        expectedStencilFunction
+        expectedStencilFunction,
       );
 
       commandList = drawCommand._commandList3DTiles;
@@ -389,7 +389,7 @@ describe(
         drawCommand,
         commandList,
         expectedPass,
-        expectedStencilFunction
+        expectedStencilFunction,
       );
 
       expect(drawCommand._commandListIgnoreShow.length).toBe(0);
@@ -411,7 +411,7 @@ describe(
 
       expect(drawCommand.command).toBe(command);
       expect(drawCommand.runtimePrimitive).toBe(
-        renderResources.runtimePrimitive
+        renderResources.runtimePrimitive,
       );
       expect(drawCommand.model).toBe(renderResources.model);
 
@@ -470,7 +470,7 @@ describe(
           commandList,
           expectedPass,
           expectedStencilFunction,
-          testForPicking
+          testForPicking,
         );
 
         expect(drawCommand._commandListTerrain.length).toBe(6);
@@ -496,7 +496,7 @@ describe(
         });
 
         expect(drawCommand.classificationType).toBe(
-          ClassificationType.CESIUM_3D_TILE
+          ClassificationType.CESIUM_3D_TILE,
         );
         expect(drawCommand._classifiesTerrain).toBe(false);
         expect(drawCommand._classifies3DTiles).toBe(true);
@@ -512,7 +512,7 @@ describe(
           commandList,
           expectedPass,
           expectedStencilFunction,
-          testForPicking
+          testForPicking,
         );
 
         expect(drawCommand._commandList3DTiles.length).toBe(6);
@@ -551,7 +551,7 @@ describe(
           commandList,
           expectedPass,
           expectedStencilFunction,
-          testForPicking
+          testForPicking,
         );
 
         commandList = drawCommand._commandList3DTilesPicking;
@@ -563,7 +563,7 @@ describe(
           commandList,
           expectedPass,
           expectedStencilFunction,
-          testForPicking
+          testForPicking,
         );
 
         expect(drawCommand._commandListTerrain.length).toBe(6);
@@ -623,7 +623,7 @@ describe(
           drawCommand,
           commandListTerrain,
           expectedPass,
-          expectedStencilFunction
+          expectedStencilFunction,
         );
 
         const commandList3DTiles = commandList.slice(6, 12);
@@ -634,7 +634,7 @@ describe(
           drawCommand,
           commandList3DTiles,
           expectedPass,
-          expectedStencilFunction
+          expectedStencilFunction,
         );
       });
 
@@ -662,7 +662,7 @@ describe(
           drawCommand,
           commandListTerrain,
           expectedPass,
-          expectedStencilFunction
+          expectedStencilFunction,
         );
 
         const commandList3DTiles = commandList.slice(6, 12);
@@ -673,7 +673,7 @@ describe(
           drawCommand,
           commandList3DTiles,
           expectedPass,
-          expectedStencilFunction
+          expectedStencilFunction,
         );
       });
 
@@ -705,7 +705,7 @@ describe(
           commandListTerrain,
           expectedPass,
           expectedStencilFunction,
-          testForPicking
+          testForPicking,
         );
 
         const commandList3DTiles = commandList.slice(6, 12);
@@ -717,7 +717,7 @@ describe(
           commandList3DTiles,
           expectedPass,
           expectedStencilFunction,
-          testForPicking
+          testForPicking,
         );
       });
 
@@ -740,7 +740,7 @@ describe(
           mockFrameStateWithInvertedClassification.commandList;
         drawCommand.pushCommands(
           mockFrameStateWithInvertedClassification,
-          commandList
+          commandList,
         );
         expect(commandList.length).toBe(9);
 
@@ -752,7 +752,7 @@ describe(
           drawCommand,
           commandList3DTiles,
           expectedPass,
-          expectedStencilFunction
+          expectedStencilFunction,
         );
 
         const length = commandListIgnoreShow.length;
@@ -767,7 +767,7 @@ describe(
           verifyStencilDepthCommand(
             ignoreShowCommand,
             expectedPass,
-            expectedStencilFunction
+            expectedStencilFunction,
           );
         }
       });
@@ -791,7 +791,7 @@ describe(
           mockFrameStateWithInvertedClassification.commandList;
         drawCommand.pushCommands(
           mockFrameStateWithInvertedClassification,
-          commandList
+          commandList,
         );
 
         expect(commandList.length).toBe(6);
@@ -837,5 +837,5 @@ describe(
       }
     });
   },
-  "WebGL"
+  "WebGL",
 );

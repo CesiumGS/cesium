@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -22,10 +22,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -53,7 +50,7 @@
             "../../SampleData/Cesium3DTiles/Classification/PointCloud/tileset.json",
             {
               classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-            }
+            },
           );
           viewer.scene.primitives.add(classificationTileset);
 
@@ -78,12 +75,12 @@
           destination: new Cesium.Cartesian3(
             4401744.644145314,
             225051.41078911052,
-            4595420.374784433
+            4595420.374784433,
           ),
           orientation: new Cesium.HeadingPitchRoll(
             5.646733805039757,
             -0.276607153839886,
-            6.281110875400085
+            6.281110875400085,
           ),
         });
 
@@ -94,9 +91,7 @@
         };
 
         // Color a feature yellow on hover.
-        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(
-          movement
-        ) {
+        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
           // If a feature was previously highlighted, undo the highlight
           if (Cesium.defined(highlighted.feature)) {
             highlighted.feature.color = highlighted.originalColor;
@@ -113,8 +108,8 @@
           highlighted.feature = pickedFeature;
           Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
           pickedFeature.color = Cesium.Color.YELLOW.withAlpha(0.5);
-        },
-        Cesium.ScreenSpaceEventType.MOUSE_MOVE); //Sandcastle_End
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;

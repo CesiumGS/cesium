@@ -121,5 +121,5 @@ describe(
       expect(cache.isDestroyed()).toEqual(false);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -153,7 +153,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
           x: 0,
           y: 0,
           level: 0,
-        })
+        }),
       )
         .then(function () {
           const swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -206,7 +206,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
                 CesiumMath.equalsEpsilon(
                   v,
                   rectangle.south,
-                  CesiumMath.EPSILON7
+                  CesiumMath.EPSILON7,
                 )
               ) {
                 ++south;
@@ -214,7 +214,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
                 CesiumMath.equalsEpsilon(
                   v,
                   rectangle.north,
-                  CesiumMath.EPSILON7
+                  CesiumMath.EPSILON7,
                 )
               ) {
                 ++north;
@@ -329,7 +329,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
               encoding.decodePosition(mesh.vertices, i, cartesian);
               wgs84.cartesianToCartographic(cartesian, cartographic);
               cartographic.longitude = CesiumMath.convertLongitudeRange(
-                cartographic.longitude
+                cartographic.longitude,
               );
               expect(Rectangle.contains(rectangle, cartographic)).toBe(true);
             } else {
@@ -396,7 +396,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
 
     it("clamps coordinates if given a position outside the mesh", function () {
       expect(mesh.interpolateHeight(rectangle, 0.0, 0.0)).toBe(
-        mesh.interpolateHeight(rectangle, rectangle.east, rectangle.south)
+        mesh.interpolateHeight(rectangle, rectangle.east, rectangle.south),
       );
     });
 

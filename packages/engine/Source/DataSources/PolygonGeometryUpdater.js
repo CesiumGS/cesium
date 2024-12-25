@@ -79,7 +79,7 @@ function PolygonGeometryUpdater(entity, scene) {
 
 if (defined(Object.create)) {
   PolygonGeometryUpdater.prototype = Object.create(
-    GroundGeometryUpdater.prototype
+    GroundGeometryUpdater.prototype,
   );
   PolygonGeometryUpdater.prototype.constructor = PolygonGeometryUpdater;
 }
@@ -98,7 +98,7 @@ PolygonGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -112,11 +112,12 @@ PolygonGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
       isAvailable &&
         entity.isShowing &&
         this._showProperty.getValue(time) &&
-        this._fillProperty.getValue(time)
+        this._fillProperty.getValue(time),
     ),
-    distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-      this._distanceDisplayConditionProperty.getValue(time)
-    ),
+    distanceDisplayCondition:
+      DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+        this._distanceDisplayConditionProperty.getValue(time),
+      ),
     offset: undefined,
     color: undefined,
   };
@@ -140,8 +141,8 @@ PolygonGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -168,14 +169,14 @@ PolygonGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
  * @exception {DeveloperError} This instance does not represent an outlined geometry.
  */
 PolygonGeometryUpdater.prototype.createOutlineGeometryInstance = function (
-  time
+  time,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
 
   if (!this._outlineEnabled) {
     throw new DeveloperError(
-      "This instance does not represent an outlined geometry."
+      "This instance does not represent an outlined geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -187,23 +188,23 @@ PolygonGeometryUpdater.prototype.createOutlineGeometryInstance = function (
     this._outlineColorProperty,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
 
   const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
         this._showProperty.getValue(time) &&
-        this._showOutlineProperty.getValue(time)
+        this._showOutlineProperty.getValue(time),
     ),
     color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-    distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-      distanceDisplayCondition
-    ),
+    distanceDisplayCondition:
+      DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+        distanceDisplayCondition,
+      ),
     offset: undefined,
   };
 
@@ -213,8 +214,8 @@ PolygonGeometryUpdater.prototype.createOutlineGeometryInstance = function (
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -234,7 +235,7 @@ PolygonGeometryUpdater.prototype.createOutlineGeometryInstance = function (
 PolygonGeometryUpdater.prototype._computeCenter = function (time, result) {
   const hierarchy = Property.getValueOrUndefined(
     this._entity.polygon.hierarchy,
-    time
+    time,
   );
   if (!defined(hierarchy)) {
     return;
@@ -248,7 +249,7 @@ PolygonGeometryUpdater.prototype._computeCenter = function (time, result) {
   const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
   const positions2D = tangentPlane.projectPointsOntoPlane(
     positions,
-    scratch2DPositions
+    scratch2DPositions,
   );
 
   const length = positions2D.length;
@@ -283,7 +284,7 @@ PolygonGeometryUpdater.prototype._isOnTerrain = function (entity, polygon) {
   const onTerrain = GroundGeometryUpdater.prototype._isOnTerrain.call(
     this,
     entity,
-    polygon
+    polygon,
   );
   const perPositionHeightProperty = polygon.perPositionHeight;
   const perPositionHeightEnabled =
@@ -316,7 +317,7 @@ PolygonGeometryUpdater.prototype._isDynamic = function (entity, polygon) {
 
 PolygonGeometryUpdater.prototype._setStaticOptions = function (
   entity,
-  polygon
+  polygon,
 ) {
   const isColorMaterial =
     this._materialProperty instanceof ColorMaterialProperty;
@@ -329,31 +330,31 @@ PolygonGeometryUpdater.prototype._setStaticOptions = function (
   const hierarchyValue = polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE);
   let heightValue = Property.getValueOrUndefined(
     polygon.height,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   const heightReferenceValue = Property.getValueOrDefault(
     polygon.heightReference,
     Iso8601.MINIMUM_VALUE,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   let extrudedHeightValue = Property.getValueOrUndefined(
     polygon.extrudedHeight,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   const extrudedHeightReferenceValue = Property.getValueOrDefault(
     polygon.extrudedHeightReference,
     Iso8601.MINIMUM_VALUE,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   const perPositionHeightValue = Property.getValueOrDefault(
     polygon.perPositionHeight,
     Iso8601.MINIMUM_VALUE,
-    false
+    false,
   );
 
   heightValue = GroundGeometryUpdater.getGeometryHeight(
     heightValue,
-    heightReferenceValue
+    heightReferenceValue,
   );
 
   let offsetAttribute;
@@ -377,56 +378,57 @@ PolygonGeometryUpdater.prototype._setStaticOptions = function (
       heightValue,
       heightReferenceValue,
       extrudedHeightValue,
-      extrudedHeightReferenceValue
+      extrudedHeightReferenceValue,
     );
   }
 
   options.polygonHierarchy = hierarchyValue;
   options.granularity = Property.getValueOrUndefined(
     polygon.granularity,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.stRotation = Property.getValueOrUndefined(
     polygon.stRotation,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.perPositionHeight = perPositionHeightValue;
   options.closeTop = Property.getValueOrDefault(
     polygon.closeTop,
     Iso8601.MINIMUM_VALUE,
-    true
+    true,
   );
   options.closeBottom = Property.getValueOrDefault(
     polygon.closeBottom,
     Iso8601.MINIMUM_VALUE,
-    true
+    true,
   );
   options.offsetAttribute = offsetAttribute;
   options.height = heightValue;
   options.arcType = Property.getValueOrDefault(
     polygon.arcType,
     Iso8601.MINIMUM_VALUE,
-    ArcType.GEODESIC
+    ArcType.GEODESIC,
   );
   options.textureCoordinates = Property.getValueOrUndefined(
     polygon.textureCoordinates,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
 
   extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(
     extrudedHeightValue,
-    extrudedHeightReferenceValue
+    extrudedHeightReferenceValue,
   );
   if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
     const rectangle = PolygonGeometry.computeRectangleFromPositions(
       options.polygonHierarchy.positions,
       options.ellipsoid,
       options.arcType,
-      scratchRectangle
+      scratchRectangle,
     );
-    extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(
-      rectangle
-    ).minimumTerrainHeight;
+    extrudedHeightValue =
+      ApproximateTerrainHeights.getMinimumMaximumHeights(
+        rectangle,
+      ).minimumTerrainHeight;
   }
 
   options.extrudedHeight = extrudedHeightValue;
@@ -451,27 +453,28 @@ PolygonGeometryUpdater.DynamicGeometryUpdater = DyanmicPolygonGeometryUpdater;
 function DyanmicPolygonGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 }
 
 if (defined(Object.create)) {
   DyanmicPolygonGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
-  DyanmicPolygonGeometryUpdater.prototype.constructor = DyanmicPolygonGeometryUpdater;
+  DyanmicPolygonGeometryUpdater.prototype.constructor =
+    DyanmicPolygonGeometryUpdater;
 }
 
 DyanmicPolygonGeometryUpdater.prototype._isHidden = function (
   entity,
   polygon,
-  time
+  time,
 ) {
   return (
     !defined(this._options.polygonHierarchy) ||
@@ -482,38 +485,38 @@ DyanmicPolygonGeometryUpdater.prototype._isHidden = function (
 DyanmicPolygonGeometryUpdater.prototype._setOptions = function (
   entity,
   polygon,
-  time
+  time,
 ) {
   const options = this._options;
 
   options.polygonHierarchy = Property.getValueOrUndefined(
     polygon.hierarchy,
-    time
+    time,
   );
 
   let heightValue = Property.getValueOrUndefined(polygon.height, time);
   const heightReferenceValue = Property.getValueOrDefault(
     polygon.heightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   const extrudedHeightReferenceValue = Property.getValueOrDefault(
     polygon.extrudedHeightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   let extrudedHeightValue = Property.getValueOrUndefined(
     polygon.extrudedHeight,
-    time
+    time,
   );
   const perPositionHeightValue = Property.getValueOrUndefined(
     polygon.perPositionHeight,
-    time
+    time,
   );
 
   heightValue = GroundGeometryUpdater.getGeometryHeight(
     heightValue,
-    extrudedHeightReferenceValue
+    extrudedHeightReferenceValue,
   );
 
   let offsetAttribute;
@@ -538,7 +541,7 @@ DyanmicPolygonGeometryUpdater.prototype._setOptions = function (
       heightValue,
       heightReferenceValue,
       extrudedHeightValue,
-      extrudedHeightReferenceValue
+      extrudedHeightReferenceValue,
     );
   }
 
@@ -546,40 +549,41 @@ DyanmicPolygonGeometryUpdater.prototype._setOptions = function (
   options.stRotation = Property.getValueOrUndefined(polygon.stRotation, time);
   options.textureCoordinates = Property.getValueOrUndefined(
     polygon.textureCoordinates,
-    time
+    time,
   );
   options.perPositionHeight = Property.getValueOrUndefined(
     polygon.perPositionHeight,
-    time
+    time,
   );
   options.closeTop = Property.getValueOrDefault(polygon.closeTop, time, true);
   options.closeBottom = Property.getValueOrDefault(
     polygon.closeBottom,
     time,
-    true
+    true,
   );
   options.offsetAttribute = offsetAttribute;
   options.height = heightValue;
   options.arcType = Property.getValueOrDefault(
     polygon.arcType,
     time,
-    ArcType.GEODESIC
+    ArcType.GEODESIC,
   );
 
   extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(
     extrudedHeightValue,
-    extrudedHeightReferenceValue
+    extrudedHeightReferenceValue,
   );
   if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
     const rectangle = PolygonGeometry.computeRectangleFromPositions(
       options.polygonHierarchy.positions,
       options.ellipsoid,
       options.arcType,
-      scratchRectangle
+      scratchRectangle,
     );
-    extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(
-      rectangle
-    ).minimumTerrainHeight;
+    extrudedHeightValue =
+      ApproximateTerrainHeights.getMinimumMaximumHeights(
+        rectangle,
+      ).minimumTerrainHeight;
   }
 
   options.extrudedHeight = extrudedHeightValue;

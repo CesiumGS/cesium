@@ -9,7 +9,7 @@ describe("Core/LinearApproximation", function () {
       3.0,
       xTable,
       yTable,
-      2
+      2,
     );
 
     expect(results.length).toEqual(2);
@@ -27,7 +27,7 @@ describe("Core/LinearApproximation", function () {
       xTable,
       yTable,
       2,
-      result
+      result,
     );
 
     expect(result).toBe(results);
@@ -44,7 +44,7 @@ describe("Core/LinearApproximation", function () {
       80.0,
       xTable2,
       yTable2,
-      3
+      3,
     );
 
     expect(results.length).toEqual(3);
@@ -61,7 +61,7 @@ describe("Core/LinearApproximation", function () {
       40,
       xTable3,
       yTable3,
-      1
+      1,
     );
 
     expect(results.length).toEqual(1);

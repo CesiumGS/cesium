@@ -70,5 +70,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

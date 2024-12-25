@@ -205,7 +205,7 @@ describe("Scene/ImplicitMetadataView", function () {
     metadataQuadtree = new ImplicitTileset(
       tilesetResource,
       implicitQuadtreeJson,
-      metadataSchema
+      metadataSchema,
     );
 
     rootCoordinates = new ImplicitTileCoordinates({
@@ -231,16 +231,15 @@ describe("Scene/ImplicitMetadataView", function () {
   let secondTreeView;
 
   beforeEach(async function () {
-    const results = ImplicitTilingTester.generateSubtreeBuffers(
-      subtreeDescription
-    );
+    const results =
+      ImplicitTilingTester.generateSubtreeBuffers(subtreeDescription);
 
     subtree = await ImplicitSubtree.fromSubtreeJson(
       subtreeResource,
       undefined,
       results.subtreeBuffer,
       metadataQuadtree,
-      rootCoordinates
+      rootCoordinates,
     );
 
     tileView = new ImplicitMetadataView({
@@ -419,7 +418,7 @@ describe("Scene/ImplicitMetadataView", function () {
 
   it("getProperty returns the property value for the metadata table", function () {
     expect(tileView.getProperty("highlightColor")).toEqual(
-      new Cartesian3(255, 0, 0)
+      new Cartesian3(255, 0, 0),
     );
     expect(tileView.getProperty("buildingCount")).toBe(100);
 
@@ -432,10 +431,10 @@ describe("Scene/ImplicitMetadataView", function () {
 
   it("getProperty returns the correct value for metadata table views that point to the same table", function () {
     expect(tileView.getProperty("highlightColor")).toEqual(
-      new Cartesian3(255, 0, 0)
+      new Cartesian3(255, 0, 0),
     );
     expect(secondTileView.getProperty("highlightColor")).toEqual(
-      new Cartesian3(255, 255, 0)
+      new Cartesian3(255, 255, 0),
     );
 
     expect(buildingView.getProperty("buildingType")).toEqual("Residential");
@@ -500,17 +499,17 @@ describe("Scene/ImplicitMetadataView", function () {
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
     expect(tileView.getPropertyBySemantic("_AREA")).not.toBeDefined();
     expect(
-      buildingView.getPropertyBySemantic("_HIGHLIGHT_COLOR")
+      buildingView.getPropertyBySemantic("_HIGHLIGHT_COLOR"),
     ).not.toBeDefined();
     expect(treeView.getPropertyBySemantic("_BUILDING_TYPE")).not.toBeDefined();
   });
 
   it("getPropertyBySemantic returns the property value", function () {
     expect(tileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(255, 0, 0)
+      new Cartesian3(255, 0, 0),
     );
     expect(buildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Residential"
+      "Residential",
     );
     expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Oak");
   });
@@ -522,52 +521,52 @@ describe("Scene/ImplicitMetadataView", function () {
 
   it("getPropertyBySemantic returns correct values for metadata table views that point to the same table", function () {
     expect(tileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(255, 0, 0)
+      new Cartesian3(255, 0, 0),
     );
     expect(secondTileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(255, 255, 0)
+      new Cartesian3(255, 255, 0),
     );
 
     expect(buildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Residential"
+      "Residential",
     );
     expect(secondBuildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Commercial"
+      "Commercial",
     );
 
     expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Oak");
     expect(secondTreeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual(
-      "Pine"
+      "Pine",
     );
   });
 
   it("setPropertyBySemantic sets property value", function () {
     expect(tileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(255, 0, 0)
+      new Cartesian3(255, 0, 0),
     );
     expect(
       tileView.setPropertyBySemantic(
         "_HIGHLIGHT_COLOR",
-        new Cartesian3(0, 0, 0)
-      )
+        new Cartesian3(0, 0, 0),
+      ),
     ).toBe(true);
     expect(tileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(0, 0, 0)
+      new Cartesian3(0, 0, 0),
     );
 
     expect(buildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Residential"
+      "Residential",
     );
     expect(buildingView.setPropertyBySemantic("_BUILDING_TYPE", "Other")).toBe(
-      true
+      true,
     );
     expect(buildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Other"
+      "Other",
     );
 
     expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Oak");
     expect(treeView.setPropertyBySemantic("_TREE_SPECIES", "Chestnut")).toBe(
-      true
+      true,
     );
     expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Chestnut");
   });
@@ -584,41 +583,41 @@ describe("Scene/ImplicitMetadataView", function () {
 
   it("setPropertyBySemantic sets the correct value for metadata table views that point to the same table", function () {
     expect(tileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(255, 0, 0)
+      new Cartesian3(255, 0, 0),
     );
     expect(
       tileView.setPropertyBySemantic(
         "_HIGHLIGHT_COLOR",
-        new Cartesian3(0, 0, 0)
-      )
+        new Cartesian3(0, 0, 0),
+      ),
     ).toBe(true);
     expect(tileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(0, 0, 0)
+      new Cartesian3(0, 0, 0),
     );
     expect(secondTileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(255, 255, 0)
+      new Cartesian3(255, 255, 0),
     );
 
     expect(buildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Residential"
+      "Residential",
     );
     expect(buildingView.setPropertyBySemantic("_BUILDING_TYPE", "Other")).toBe(
-      true
+      true,
     );
     expect(buildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Other"
+      "Other",
     );
     expect(secondBuildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Commercial"
+      "Commercial",
     );
 
     expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Oak");
     expect(treeView.setPropertyBySemantic("_TREE_SPECIES", "Chestnut")).toBe(
-      true
+      true,
     );
     expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Chestnut");
     expect(secondTreeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual(
-      "Pine"
+      "Pine",
     );
   });
 
@@ -627,14 +626,14 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(
       buildingView.setPropertyBySemantic(
         "_HIGHLIGHT_COLOR",
-        new Cartesian3(255, 0, 0)
-      )
+        new Cartesian3(255, 0, 0),
+      ),
     ).toBe(false);
     expect(
       treeView.setPropertyBySemantic(
         "_HIGHLIGHT_COLOR",
-        new Cartesian3(255, 0, 0)
-      )
+        new Cartesian3(255, 0, 0),
+      ),
     ).toBe(false);
   });
 });

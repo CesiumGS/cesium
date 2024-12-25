@@ -37,34 +37,34 @@ describe(
           greenImage = image;
           greenGuid = createGuid();
         }),
-        Resource.fetchImage("./Data/Images/Green1x4.png").then(function (
-          image
-        ) {
-          tallGreenImage = image;
-          tallGreenGuid = createGuid();
-        }),
+        Resource.fetchImage("./Data/Images/Green1x4.png").then(
+          function (image) {
+            tallGreenImage = image;
+            tallGreenGuid = createGuid();
+          },
+        ),
         Resource.fetchImage("./Data/Images/Blue.png").then(function (image) {
           blueImage = image;
           blueGuid = createGuid();
         }),
-        Resource.fetchImage("./Data/Images/Red16x16.png").then(function (
-          image
-        ) {
-          bigRedImage = image;
-          bigRedGuid = createGuid();
-        }),
-        Resource.fetchImage("./Data/Images/Blue10x10.png").then(function (
-          image
-        ) {
-          bigBlueImage = image;
-          bigBlueGuid = createGuid();
-        }),
-        Resource.fetchImage("./Data/Images/Green4x4.png").then(function (
-          image
-        ) {
-          bigGreenImage = image;
-          bigGreenGuid = createGuid();
-        }),
+        Resource.fetchImage("./Data/Images/Red16x16.png").then(
+          function (image) {
+            bigRedImage = image;
+            bigRedGuid = createGuid();
+          },
+        ),
+        Resource.fetchImage("./Data/Images/Blue10x10.png").then(
+          function (image) {
+            bigBlueImage = image;
+            bigBlueGuid = createGuid();
+          },
+        ),
+        Resource.fetchImage("./Data/Images/Green4x4.png").then(
+          function (image) {
+            bigGreenImage = image;
+            bigGreenGuid = createGuid();
+          },
+        ),
       ]);
     });
 
@@ -331,53 +331,53 @@ describe(
       expect(c0.y).toEqualEpsilon(2.0 / atlasHeight, CesiumMath.EPSILON16);
       expect(c0.width).toEqualEpsilon(
         greenImage.width / atlasWidth,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
       expect(c0.height).toEqualEpsilon(
         greenImage.height / atlasHeight,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
 
       expect(c1.x).toEqualEpsilon(
         (greenImage.width + 2 * atlas.borderWidthInPixels) / atlasWidth,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
       expect(c1.y).toEqualEpsilon(2.0 / atlasHeight, CesiumMath.EPSILON16);
       expect(c1.width).toEqualEpsilon(
         blueImage.width / atlasWidth,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
       expect(c1.height).toEqualEpsilon(
         blueImage.width / atlasHeight,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
 
       expect(c2.x).toEqualEpsilon(2.0 / atlasWidth, CesiumMath.EPSILON16);
       expect(c2.y).toEqualEpsilon(
         (bigRedImage.height + atlas.borderWidthInPixels) / atlasHeight,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
       expect(c2.width).toEqualEpsilon(
         bigRedImage.width / atlasWidth,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
       expect(c2.height).toEqualEpsilon(
         bigRedImage.height / atlasHeight,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
 
       expect(c3.x).toEqualEpsilon(2.0 / atlasWidth, CesiumMath.EPSILON16);
       expect(c3.y).toEqualEpsilon(
         (greenImage.height + 2 * atlas.borderWidthInPixels) / atlasHeight,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
       expect(c3.width).toEqualEpsilon(
         bigBlueImage.width / atlasWidth,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
       expect(c3.height).toEqualEpsilon(
         bigBlueImage.height / atlasHeight,
-        CesiumMath.EPSILON16
+        CesiumMath.EPSILON16,
       );
     });
 
@@ -553,10 +553,10 @@ describe(
       expect(texture.height).toEqual(atlasHeight);
 
       expect(coordinates[greenIndex].x).toEqual(
-        atlas.borderWidthInPixels / atlasWidth
+        atlas.borderWidthInPixels / atlasWidth,
       );
       expect(coordinates[greenIndex].y).toEqual(
-        atlas.borderWidthInPixels / atlasHeight
+        atlas.borderWidthInPixels / atlasHeight,
       );
       expect(coordinates[greenIndex].width).toEqual(1.0 / atlasWidth);
       expect(coordinates[greenIndex].height).toEqual(1.0 / atlasHeight);
@@ -610,10 +610,10 @@ describe(
           expect(coordinates[index].x).toEqual(0.0 / atlasWidth);
           expect(coordinates[index].y).toEqual(0.0 / atlasHeight);
           expect(coordinates[index].width).toEqual(
-            tallGreenImage.width / atlasWidth
+            tallGreenImage.width / atlasWidth,
           );
           expect(coordinates[index].height).toEqual(
-            tallGreenImage.height / atlasHeight
+            tallGreenImage.height / atlasHeight,
           );
         });
     });
@@ -700,19 +700,19 @@ describe(
 
       const index1 = await atlas.addSubRegion(
         greenGuid,
-        new BoundingRectangle(0.0, 0.0, 0.5, 0.5)
+        new BoundingRectangle(0.0, 0.0, 0.5, 0.5),
       );
       const index2 = await atlas.addSubRegion(
         greenGuid,
-        new BoundingRectangle(0.0, 0.5, 0.5, 0.5)
+        new BoundingRectangle(0.0, 0.5, 0.5, 0.5),
       );
       const index3 = await atlas.addSubRegion(
         greenGuid,
-        new BoundingRectangle(0.5, 0.0, 0.5, 0.5)
+        new BoundingRectangle(0.5, 0.0, 0.5, 0.5),
       );
       const index4 = await atlas.addSubRegion(
         greenGuid,
-        new BoundingRectangle(0.5, 0.5, 0.5, 0.5)
+        new BoundingRectangle(0.5, 0.5, 0.5, 0.5),
       );
 
       expect(atlas.numberOfImages).toEqual(5);
@@ -755,19 +755,19 @@ describe(
 
       const index1 = await atlas.addSubRegion(
         greenGuid,
-        new BoundingRectangle(0.0, 0.0, 0.5, 0.5)
+        new BoundingRectangle(0.0, 0.0, 0.5, 0.5),
       );
       const index2 = await atlas.addSubRegion(
         greenGuid,
-        new BoundingRectangle(0.0, 0.5, 0.5, 0.5)
+        new BoundingRectangle(0.0, 0.5, 0.5, 0.5),
       );
       const index3 = await atlas.addSubRegion(
         greenGuid,
-        new BoundingRectangle(0.5, 0.0, 0.5, 0.5)
+        new BoundingRectangle(0.5, 0.0, 0.5, 0.5),
       );
       const index4 = await atlas.addSubRegion(
         greenGuid,
-        new BoundingRectangle(0.5, 0.5, 0.5, 0.5)
+        new BoundingRectangle(0.5, 0.5, 0.5, 0.5),
       );
 
       expect(atlas.numberOfImages).toEqual(5);
@@ -914,5 +914,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

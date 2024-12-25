@@ -40,7 +40,7 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         polylinePositions: [new Cartesian3()],
         shapePositions: shape,
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
   });
@@ -54,7 +54,7 @@ describe("Core/PolylineVolumeGeometry", function () {
           Cartesian2.UNIT_X,
           Cartesian2.UNIT_X,
         ],
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
   });
@@ -64,14 +64,11 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -35.0,
+          90.0, -30.0, 90.0, -35.0,
         ]),
         cornerType: CornerType.MITERED,
         shapePositions: shape,
-      })
+      }),
     );
 
     // 6 positions * 4 box positions * 2 to duplicate for normals + 4 positions * 2 ends
@@ -85,14 +82,11 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -35.0,
+          90.0, -30.0, 90.0, -35.0,
         ]),
         cornerType: CornerType.MITERED,
         shapePositions: shape.reverse(),
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(56 * 3);
@@ -104,14 +98,11 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_NORMAL_AND_ST,
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -35.0,
+          90.0, -30.0, 90.0, -35.0,
         ]),
         cornerType: CornerType.MITERED,
         shapePositions: shape,
-      })
+      }),
     );
 
     const numVertices = 56;
@@ -128,14 +119,11 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.ALL,
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -35.0,
+          90.0, -30.0, 90.0, -35.0,
         ]),
         cornerType: CornerType.MITERED,
         shapePositions: shape,
-      })
+      }),
     );
 
     const numVertices = 56;
@@ -153,16 +141,11 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          91.0,
-          -31.0,
+          90.0, -30.0, 90.0, -31.0, 91.0, -31.0,
         ]),
         cornerType: CornerType.MITERED,
         shapePositions: shape,
-      })
+      }),
     );
 
     // (3 duplicates * 2 ends + 2 duplicates * 2 middle points + 4 duplicates * 1 corner) * 4 box positions
@@ -176,16 +159,11 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0,
         ]),
         cornerType: CornerType.MITERED,
         shapePositions: shape,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(56 * 3);
@@ -197,18 +175,11 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
-          89.0,
-          -32.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0, 89.0, -32.0,
         ]),
         cornerType: CornerType.ROUNDED,
         shapePositions: shape,
-      })
+      }),
     );
 
     const corners = 36 * 4 * 4; // positions * 4 for shape * 4 for normal duplication
@@ -223,18 +194,11 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
-          89.0,
-          -32.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0, 89.0, -32.0,
         ]),
         cornerType: CornerType.BEVELED,
         shapePositions: shape,
-      })
+      }),
     );
 
     const corners = 4 * 4; // 4 for shape * 4 for normal duplication
@@ -249,25 +213,14 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArrayHeights([
-          2.00571672577652,
-          52.7781459942399,
-          500,
-          1.99188457974115,
-          52.7764958852886,
-          500,
-          2.01325961458495,
-          52.7674170680511,
-          500,
-          1.98708058340534,
-          52.7733979856253,
-          500,
-          2.00634853946644,
-          52.7650460748473,
-          500,
+          2.00571672577652, 52.7781459942399, 500, 1.99188457974115,
+          52.7764958852886, 500, 2.01325961458495, 52.7674170680511, 500,
+          1.98708058340534, 52.7733979856253, 500, 2.00634853946644,
+          52.7650460748473, 500,
         ]),
         cornerType: CornerType.BEVELED,
         shapePositions: shape,
-      })
+      }),
     );
 
     // (8 positions * 3 duplications + 1 duplication * 6 corners) * 4 for shape
@@ -281,17 +234,12 @@ describe("Core/PolylineVolumeGeometry", function () {
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
-          -67.655,
-          0.0,
-          -67.655,
-          15.0,
-          -67.655,
-          20.0,
+          -67.655, 0.0, -67.655, 15.0, -67.655, 20.0,
         ]),
         cornerType: CornerType.BEVELED,
         shapePositions: shape,
         granularity: Math.PI / 6.0,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(32 * 3); // 4 positions * 2 for duplication * 4 for shape
@@ -317,34 +265,8 @@ describe("Core/PolylineVolumeGeometry", function () {
     granularity: 0.1,
   });
   const packedInstance = [
-    3.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    3.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    1.0,
-    1.0,
-    1.0,
-    1.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    2.0,
-    0.1,
+    3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 3.0, 0.0, 0.0, 1.0, 0.0,
+    0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.1,
   ];
   createPackableSpecs(PolylineVolumeGeometry, volume, packedInstance);
 });

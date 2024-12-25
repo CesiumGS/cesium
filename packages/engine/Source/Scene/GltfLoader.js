@@ -29,6 +29,9 @@ import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
+import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 const {
   Attribute,
@@ -260,6 +263,7 @@ function GltfLoader(options) {
   this._geometryLoaders = [];
   this._geometryCallbacks = [];
   this._structuralMetadataLoader = undefined;
+  this._meshPrimitiveGpmLoader = undefined;
   this._loadResourcesPromise = undefined;
   this._resourcesLoaded = false;
   this._texturesLoaded = false;
@@ -471,6 +475,25 @@ function processLoaders(loader, frameState) {
     ready = ready && metadataReady;
   }
 
+  const meshPrimitiveGpmLoader = loader._meshPrimitiveGpmLoader;
+  if (defined(meshPrimitiveGpmLoader)) {
+    const metadataReady = meshPrimitiveGpmLoader.process(frameState);
+    if (metadataReady) {
+      if (defined(loader._components.structuralMetadata)) {
+        oneTimeWarning(
+          "structural-metadata-gpm",
+          "The model defines both the 'EXT_structural_metadata' extension and the " +
+            "'NGA_gpm_local' extension. The data from the 'EXT_structural_metadata' " +
+            "extension will be replaced with the data from the 'NGA_gpm_local' extension, " +
+            "and will no longer be available for styling and picking.",
+        );
+      }
+      loader._components.structuralMetadata =
+        meshPrimitiveGpmLoader.structuralMetadata;
+    }
+    ready = ready && metadataReady;
+  }
+
   if (ready) {
     // Geometry requires further processing
     loader._state = GltfLoaderState.POST_PROCESSING;
@@ -665,7 +688,7 @@ function getVertexBufferLoader(
   draco,
   loadBuffer,
   loadTypedArray,
-  frameState
+  frameState,
 ) {
   const gltf = loader.gltfJson;
   const accessor = gltf.accessors[accessorId];
@@ -694,7 +717,7 @@ function getIndexBufferLoader(
   draco,
   loadBuffer,
   loadTypedArray,
-  frameState
+  frameState,
 ) {
   const indexBufferLoader = ResourceCache.getIndexBufferLoader({
     gltf: loader.gltfJson,
@@ -741,13 +764,13 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
       componentType,
       bufferViewTypedArray.buffer,
       bufferViewTypedArray.byteOffset + byteOffset,
-      componentsLength
+      componentsLength,
     );
   }
 
   const accessorTypedArray = ComponentDatatype.createTypedArray(
     componentType,
-    componentsLength
+    componentsLength,
   );
 
   const dataView = new DataView(bufferViewTypedArray.buffer);
@@ -761,7 +784,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
       byteOffset,
       componentCount,
       componentByteLength,
-      components
+      components,
     );
     for (let j = 0; j < componentCount; ++j) {
       accessorTypedArray[i * componentCount + j] = components[j];
@@ -796,9 +819,8 @@ function loadAccessorValues(accessor, typedArray, values, useQuaternion) {
     }
   } else {
     const MathType = AttributeType.getMathType(accessorType);
-    const numberOfComponents = AttributeType.getNumberOfComponents(
-      accessorType
-    );
+    const numberOfComponents =
+      AttributeType.getNumberOfComponents(accessorType);
 
     for (let i = 0; i < accessorCount; i++) {
       values[i] = MathType.unpack(typedArray, i * numberOfComponents);
@@ -813,7 +835,7 @@ async function loadAccessorBufferView(
   bufferViewLoader,
   accessor,
   useQuaternion,
-  values
+  values,
 ) {
   // Save a link to the gltfJson, which is removed after bufferViewLoader.load()
   const { gltfJson } = loader;
@@ -826,7 +848,7 @@ async function loadAccessorBufferView(
   const typedArray = getPackedTypedArray(
     gltfJson,
     accessor,
-    bufferViewLoader.typedArray
+    bufferViewLoader.typedArray,
   );
 
   useQuaternion = defaultValue(useQuaternion, false);
@@ -844,7 +866,7 @@ function loadAccessor(loader, accessor, useQuaternion) {
       bufferViewLoader,
       accessor,
       useQuaternion,
-      values
+      values,
     );
     loader._loaderPromises.push(promise);
 
@@ -919,7 +941,7 @@ function dequantizeMinMax(attribute, VectorType) {
 function setQuantizationFromWeb3dQuantizedAttributes(
   extension,
   attribute,
-  MathType
+  MathType,
 ) {
   const decodeMatrix = extension.decodeMatrix;
   const decodedMin = fromArray(MathType, extension.decodedMin);
@@ -940,35 +962,35 @@ function setQuantizationFromWeb3dQuantizedAttributes(
   } else if (decodeMatrix.length === 9) {
     quantization.quantizedVolumeOffset = new Cartesian2(
       decodeMatrix[6],
-      decodeMatrix[7]
+      decodeMatrix[7],
     );
     quantization.quantizedVolumeStepSize = new Cartesian2(
       decodeMatrix[0],
-      decodeMatrix[4]
+      decodeMatrix[4],
     );
   } else if (decodeMatrix.length === 16) {
     quantization.quantizedVolumeOffset = new Cartesian3(
       decodeMatrix[12],
       decodeMatrix[13],
-      decodeMatrix[14]
+      decodeMatrix[14],
     );
     quantization.quantizedVolumeStepSize = new Cartesian3(
       decodeMatrix[0],
       decodeMatrix[5],
-      decodeMatrix[10]
+      decodeMatrix[10],
     );
   } else if (decodeMatrix.length === 25) {
     quantization.quantizedVolumeOffset = new Cartesian4(
       decodeMatrix[20],
       decodeMatrix[21],
       decodeMatrix[22],
-      decodeMatrix[23]
+      decodeMatrix[23],
     );
     quantization.quantizedVolumeStepSize = new Cartesian4(
       decodeMatrix[0],
       decodeMatrix[6],
       decodeMatrix[12],
-      decodeMatrix[18]
+      decodeMatrix[18],
     );
   }
 
@@ -998,7 +1020,7 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
     setQuantizationFromWeb3dQuantizedAttributes(
       accessor.extensions.WEB3D_quantized_attributes,
       attribute,
-      MathType
+      MathType,
     );
   }
 
@@ -1012,7 +1034,7 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   // However, for KHR_mesh_quantization, min and max must be dequantized for
   // normalized values, else the bounding sphere will be computed incorrectly.
   const hasKhrMeshQuantization = gltf.extensionsRequired?.includes(
-    "KHR_mesh_quantization"
+    "KHR_mesh_quantization",
   );
 
   if (hasKhrMeshQuantization && normalized && isQuantizable) {
@@ -1074,7 +1096,7 @@ function finalizeDracoAttribute(
   attribute,
   vertexBufferLoader,
   loadBuffer,
-  loadTypedArray
+  loadTypedArray,
 ) {
   // The accessor's byteOffset and byteStride should be ignored for draco.
   // Each attribute is tightly packed in its own buffer after decode.
@@ -1093,7 +1115,7 @@ function finalizeDracoAttribute(
 
     attribute.typedArray = ComponentDatatype.createArrayBufferView(
       componentDatatype,
-      vertexBufferLoader.typedArray.buffer
+      vertexBufferLoader.typedArray.buffer,
     );
   }
 }
@@ -1104,7 +1126,7 @@ function finalizeAttribute(
   attribute,
   vertexBufferLoader,
   loadBuffer,
-  loadTypedArray
+  loadTypedArray,
 ) {
   if (loadBuffer) {
     attribute.buffer = vertexBufferLoader.buffer;
@@ -1115,7 +1137,7 @@ function finalizeAttribute(
     attribute.typedArray = getPackedTypedArray(
       gltf,
       accessor,
-      bufferViewTypedArray
+      bufferViewTypedArray,
     );
 
     if (!loadBuffer) {
@@ -1135,7 +1157,7 @@ function loadAttribute(
   draco,
   loadBuffer,
   loadTypedArray,
-  frameState
+  frameState,
 ) {
   const gltf = loader.gltfJson;
   const accessor = gltf.accessors[accessorId];
@@ -1155,7 +1177,7 @@ function loadAttribute(
     accessorId,
     name,
     modelSemantic,
-    setIndex
+    setIndex,
   );
 
   if (!defined(draco) && !defined(bufferViewId)) {
@@ -1169,7 +1191,7 @@ function loadAttribute(
     draco,
     loadBuffer,
     loadTypedArray,
-    frameState
+    frameState,
   );
 
   const index = loader._geometryLoaders.length;
@@ -1189,7 +1211,7 @@ function loadAttribute(
         attribute,
         vertexBufferLoader,
         loadBuffer,
-        loadTypedArray
+        loadTypedArray,
       );
     } else {
       finalizeAttribute(
@@ -1198,7 +1220,7 @@ function loadAttribute(
         attribute,
         vertexBufferLoader,
         loadBuffer,
-        loadTypedArray
+        loadTypedArray,
       );
     }
   };
@@ -1213,7 +1235,7 @@ function loadVertexAttribute(
   draco,
   hasInstances,
   needsPostProcessing,
-  frameState
+  frameState,
 ) {
   const modelSemantic = semanticInfo.modelSemantic;
 
@@ -1259,7 +1281,7 @@ function loadVertexAttribute(
     draco,
     loadBuffer,
     loadTypedArray,
-    frameState
+    frameState,
   );
 
   const attributePlan = new PrimitiveLoadPlan.AttributeLoadPlan(attribute);
@@ -1274,7 +1296,7 @@ function loadInstancedAttribute(
   accessorId,
   attributes,
   gltfSemantic,
-  frameState
+  frameState,
 ) {
   const accessors = loader.gltfJson.accessors;
   const hasRotation = defined(attributes.ROTATION);
@@ -1286,7 +1308,7 @@ function loadInstancedAttribute(
   const semanticInfo = getSemanticInfo(
     loader,
     InstanceAttributeSemantic,
-    gltfSemantic
+    gltfSemantic,
   );
   const modelSemantic = semanticInfo.modelSemantic;
 
@@ -1331,7 +1353,7 @@ function loadInstancedAttribute(
     undefined,
     loadBuffer,
     loadTypedArray,
-    frameState
+    frameState,
   );
 }
 
@@ -1341,7 +1363,7 @@ function loadIndices(
   draco,
   hasFeatureIds,
   needsPostProcessing,
-  frameState
+  frameState,
 ) {
   const accessor = loader.gltfJson.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
@@ -1384,7 +1406,7 @@ function loadIndices(
     draco,
     loadBuffer,
     loadTypedArray,
-    frameState
+    frameState,
   );
 
   const index = loader._geometryLoaders.length;
@@ -1486,14 +1508,14 @@ function loadSpecularGlossiness(loader, specularGlossinessInfo, frameState) {
     specularGlossiness.diffuseTexture = loadTexture(
       loader,
       diffuseTexture,
-      frameState
+      frameState,
     );
   }
   if (defined(specularGlossinessTexture)) {
     specularGlossiness.specularGlossinessTexture = loadTexture(
       loader,
       specularGlossinessTexture,
-      frameState
+      frameState,
     );
   }
   specularGlossiness.diffuseFactor = fromArray(Cartesian4, diffuseFactor);
@@ -1525,14 +1547,14 @@ function loadMetallicRoughness(loader, metallicRoughnessInfo, frameState) {
     metallicRoughness.baseColorTexture = loadTexture(
       loader,
       baseColorTexture,
-      frameState
+      frameState,
     );
   }
   if (defined(metallicRoughnessTexture)) {
     metallicRoughness.metallicRoughnessTexture = loadTexture(
       loader,
       metallicRoughnessTexture,
-      frameState
+      frameState,
     );
   }
   metallicRoughness.baseColorFactor = fromArray(Cartesian4, baseColorFactor);
@@ -1558,7 +1580,7 @@ function loadSpecular(loader, specularInfo, frameState) {
     specular.specularColorTexture = loadTexture(
       loader,
       specularColorTexture,
-      frameState
+      frameState,
     );
   }
   specular.specularFactor = specularFactor;
@@ -1579,7 +1601,7 @@ function loadAnisotropy(loader, anisotropyInfo, frameState) {
     anisotropy.anisotropyTexture = loadTexture(
       loader,
       anisotropyTexture,
-      frameState
+      frameState,
     );
   }
   anisotropy.anisotropyStrength = anisotropyStrength;
@@ -1602,21 +1624,21 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
     clearcoat.clearcoatTexture = loadTexture(
       loader,
       clearcoatTexture,
-      frameState
+      frameState,
     );
   }
   if (defined(clearcoatRoughnessTexture)) {
     clearcoat.clearcoatRoughnessTexture = loadTexture(
       loader,
       clearcoatRoughnessTexture,
-      frameState
+      frameState,
     );
   }
   if (defined(clearcoatNormalTexture)) {
     clearcoat.clearcoatNormalTexture = loadTexture(
       loader,
       clearcoatNormalTexture,
-      frameState
+      frameState,
     );
   }
   clearcoat.clearcoatFactor = clearcoatFactor;
@@ -1639,7 +1661,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
 
   const extensions = defaultValue(
     gltfMaterial.extensions,
-    defaultValue.EMPTY_OBJECT
+    defaultValue.EMPTY_OBJECT,
   );
   const pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
   const pbrSpecular = extensions.KHR_materials_specular;
@@ -1653,14 +1675,14 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     material.specularGlossiness = loadSpecularGlossiness(
       loader,
       pbrSpecularGlossiness,
-      frameState
+      frameState,
     );
   } else {
     if (defined(pbrMetallicRoughness)) {
       material.metallicRoughness = loadMetallicRoughness(
         loader,
         pbrMetallicRoughness,
-        frameState
+        frameState,
       );
     }
     if (defined(pbrSpecular) && !material.unlit) {
@@ -1679,7 +1701,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     material.emissiveTexture = loadTexture(
       loader,
       gltfMaterial.emissiveTexture,
-      frameState
+      frameState,
     );
   }
   // Normals aren't used for classification, so don't load the normal texture.
@@ -1687,14 +1709,14 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     material.normalTexture = loadTexture(
       loader,
       gltfMaterial.normalTexture,
-      frameState
+      frameState,
     );
   }
   if (defined(gltfMaterial.occlusionTexture)) {
     material.occlusionTexture = loadTexture(
       loader,
       gltfMaterial.occlusionTexture,
-      frameState
+      frameState,
     );
   }
   material.emissiveFactor = fromArray(Cartesian3, gltfMaterial.emissiveFactor);
@@ -1722,7 +1744,7 @@ function loadFeatureIdAttributeLegacy(
   gltfFeatureIdAttribute,
   featureTableId,
   featureCount,
-  positionalLabel
+  positionalLabel,
 ) {
   const featureIdAttribute = new FeatureIdAttribute();
   const featureIds = gltfFeatureIdAttribute.featureIds;
@@ -1753,7 +1775,7 @@ function loadFeatureIdImplicitRangeLegacy(
   gltfFeatureIdAttribute,
   featureTableId,
   featureCount,
-  positionalLabel
+  positionalLabel,
 ) {
   const featureIdRange = new FeatureIdImplicitRange();
   const featureIds = gltfFeatureIdAttribute.featureIds;
@@ -1775,7 +1797,7 @@ function loadFeatureIdTexture(
   loader,
   gltfFeatureIdTexture,
   frameState,
-  positionalLabel
+  positionalLabel,
 ) {
   const featureIdTexture = new FeatureIdTexture();
 
@@ -1790,7 +1812,7 @@ function loadFeatureIdTexture(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST // Feature ID textures require nearest sampling
+    Sampler.NEAREST, // Feature ID textures require nearest sampling
   );
 
   // Though the new channel index is more future-proof, this implementation
@@ -1814,7 +1836,7 @@ function loadFeatureIdTextureLegacy(
   featureTableId,
   frameState,
   featureCount,
-  positionalLabel
+  positionalLabel,
 ) {
   const featureIdTexture = new FeatureIdTexture();
   const featureIds = gltfFeatureIdTexture.featureIds;
@@ -1825,7 +1847,7 @@ function loadFeatureIdTextureLegacy(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST // Feature ID textures require nearest sampling
+    Sampler.NEAREST, // Feature ID textures require nearest sampling
   );
 
   featureIdTexture.textureReader.channels = featureIds.channels;
@@ -1839,7 +1861,7 @@ function loadMorphTarget(
   target,
   needsPostProcessing,
   primitiveLoadPlan,
-  frameState
+  frameState,
 ) {
   const morphTarget = new MorphTarget();
 
@@ -1856,7 +1878,7 @@ function loadMorphTarget(
     const semanticInfo = getSemanticInfo(
       loader,
       VertexAttributeSemantic,
-      semantic
+      semantic,
     );
 
     const attributePlan = loadVertexAttribute(
@@ -1866,7 +1888,7 @@ function loadMorphTarget(
       draco,
       hasInstances,
       needsPostProcessing,
-      frameState
+      frameState,
     );
     morphTarget.attributes.push(attributePlan.attribute);
 
@@ -1897,13 +1919,13 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     primitive.material = loadMaterial(
       loader,
       loader.gltfJson.materials[materialId],
-      frameState
+      frameState,
     );
   }
 
   const extensions = defaultValue(
     gltfPrimitive.extensions,
-    defaultValue.EMPTY_OBJECT
+    defaultValue.EMPTY_OBJECT,
   );
 
   let needsPostProcessing = false;
@@ -1914,7 +1936,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     primitivePlan.outlineIndices = loadPrimitiveOutline(
       loader,
       outlineExtension,
-      primitivePlan
+      primitivePlan,
     );
   }
 
@@ -1932,7 +1954,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       const semanticInfo = getSemanticInfo(
         loader,
         VertexAttributeSemantic,
-        semantic
+        semantic,
       );
 
       const modelSemantic = semanticInfo.modelSemantic;
@@ -1951,7 +1973,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
         draco,
         hasInstances,
         needsPostProcessing,
-        frameState
+        frameState,
       );
 
       primitivePlan.attributePlans.push(attributePlan);
@@ -1969,8 +1991,8 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
           targets[i],
           needsPostProcessing,
           primitivePlan,
-          frameState
-        )
+          frameState,
+        ),
       );
     }
   }
@@ -1983,7 +2005,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       draco,
       hasFeatureIds,
       needsPostProcessing,
-      frameState
+      frameState,
     );
 
     if (defined(indicesPlan)) {
@@ -2009,7 +2031,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       loader,
       primitive,
       featureMetadataLegacy,
-      frameState
+      frameState,
     );
   }
 
@@ -2023,7 +2045,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   const primitiveType = gltfPrimitive.mode;
   if (loadForClassification && primitiveType !== PrimitiveType.TRIANGLES) {
     throw new RuntimeError(
-      "Only triangle meshes can be used for classification."
+      "Only triangle meshes can be used for classification.",
     );
   }
   primitive.primitiveType = primitiveType;
@@ -2043,7 +2065,7 @@ function loadPrimitiveFeatures(
   loader,
   primitive,
   meshFeaturesExtension,
-  frameState
+  frameState,
 ) {
   let featureIdsArray;
   if (
@@ -2065,7 +2087,7 @@ function loadPrimitiveFeatures(
         loader,
         featureIds,
         frameState,
-        label
+        label,
       );
     } else if (defined(featureIds.attribute)) {
       featureIdComponent = loadFeatureIdAttribute(featureIds, label);
@@ -2084,7 +2106,7 @@ function loadPrimitiveFeaturesLegacy(
   loader,
   primitive,
   metadataExtension,
-  frameState
+  frameState,
 ) {
   // For looking up the featureCount for each set of feature IDs
   const { featureTables } = loader.gltfJson.extensions.EXT_feature_metadata;
@@ -2097,9 +2119,8 @@ function loadPrimitiveFeaturesLegacy(
     for (let i = 0; i < featureIdAttributes.length; ++i) {
       const featureIdAttribute = featureIdAttributes[i];
       const featureTableId = featureIdAttribute.featureTable;
-      const propertyTableId = loader._sortedPropertyTableIds.indexOf(
-        featureTableId
-      );
+      const propertyTableId =
+        loader._sortedPropertyTableIds.indexOf(featureTableId);
       const featureCount = featureTables[featureTableId].count;
       const label = `featureId_${nextFeatureIdIndex}`;
       nextFeatureIdIndex++;
@@ -2110,14 +2131,14 @@ function loadPrimitiveFeaturesLegacy(
           featureIdAttribute,
           propertyTableId,
           featureCount,
-          label
+          label,
         );
       } else {
         featureIdComponent = loadFeatureIdImplicitRangeLegacy(
           featureIdAttribute,
           propertyTableId,
           featureCount,
-          label
+          label,
         );
       }
       primitive.featureIds.push(featureIdComponent);
@@ -2130,9 +2151,8 @@ function loadPrimitiveFeaturesLegacy(
     for (let i = 0; i < featureIdTextures.length; ++i) {
       const featureIdTexture = featureIdTextures[i];
       const featureTableId = featureIdTexture.featureTable;
-      const propertyTableId = loader._sortedPropertyTableIds.indexOf(
-        featureTableId
-      );
+      const propertyTableId =
+        loader._sortedPropertyTableIds.indexOf(featureTableId);
       const featureCount = featureTables[featureTableId].count;
       const featureIdLabel = `featureId_${nextFeatureIdIndex}`;
       nextFeatureIdIndex++;
@@ -2143,7 +2163,7 @@ function loadPrimitiveFeaturesLegacy(
         propertyTableId,
         frameState,
         featureCount,
-        featureIdLabel
+        featureIdLabel,
       );
       // Feature ID textures are added after feature ID attributes in the list
       primitive.featureIds.push(featureIdComponent);
@@ -2179,7 +2199,7 @@ function loadPrimitiveMetadataLegacy(loader, primitive, metadataExtension) {
     primitive.propertyTextureIds = metadataExtension.featureTextures.map(
       function (id) {
         return loader._sortedFeatureTextureIds.indexOf(id);
-      }
+      },
     );
   }
 }
@@ -2201,15 +2221,15 @@ function loadInstances(loader, nodeExtensions, frameState) {
           accessorId,
           attributes,
           semantic,
-          frameState
-        )
+          frameState,
+        ),
       );
     }
   }
 
   const instancingExtExtensions = defaultValue(
     instancingExtension.extensions,
-    defaultValue.EMPTY_OBJECT
+    defaultValue.EMPTY_OBJECT,
   );
   const instanceFeatures = nodeExtensions.EXT_instance_features;
   const featureMetadataLegacy = instancingExtExtensions.EXT_feature_metadata;
@@ -2221,7 +2241,7 @@ function loadInstances(loader, nodeExtensions, frameState) {
       loader.gltfJson,
       instances,
       featureMetadataLegacy,
-      loader._sortedPropertyTableIds
+      loader._sortedPropertyTableIds,
     );
   }
 
@@ -2255,7 +2275,7 @@ function loadInstanceFeaturesLegacy(
   gltf,
   instances,
   metadataExtension,
-  sortedPropertyTableIds
+  sortedPropertyTableIds,
 ) {
   // For looking up the featureCount for each set of feature IDs
   const featureTables = gltf.extensions.EXT_feature_metadata.featureTables;
@@ -2275,14 +2295,14 @@ function loadInstanceFeaturesLegacy(
           featureIdAttribute,
           propertyTableId,
           featureCount,
-          label
+          label,
         );
       } else {
         featureIdComponent = loadFeatureIdImplicitRangeLegacy(
           featureIdAttribute,
           propertyTableId,
           featureCount,
-          label
+          label,
         );
       }
       instances.featureIds.push(featureIdComponent);
@@ -2310,7 +2330,7 @@ function loadNode(loader, gltfNode, frameState) {
 
   const nodeExtensions = defaultValue(
     gltfNode.extensions,
-    defaultValue.EMPTY_OBJECT
+    defaultValue.EMPTY_OBJECT,
   );
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
@@ -2318,7 +2338,7 @@ function loadNode(loader, gltfNode, frameState) {
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
       throw new RuntimeError(
-        "Models with the EXT_mesh_gpu_instancing extension cannot be used for classification."
+        "Models with the EXT_mesh_gpu_instancing extension cannot be used for classification.",
       );
     }
     node.instances = loadInstances(loader, nodeExtensions, frameState);
@@ -2338,8 +2358,8 @@ function loadNode(loader, gltfNode, frameState) {
           loader,
           primitives[i],
           defined(node.instances),
-          frameState
-        )
+          frameState,
+        ),
       );
     }
 
@@ -2401,7 +2421,7 @@ function loadSkin(loader, gltfSkin, nodes) {
     skin.inverseBindMatrices = loadAccessor(loader, accessor);
   } else {
     skin.inverseBindMatrices = new Array(jointIds.length).fill(
-      Matrix4.IDENTITY
+      Matrix4.IDENTITY,
     );
   }
 
@@ -2437,7 +2457,7 @@ async function loadStructuralMetadata(
   loader,
   extension,
   extensionLegacy,
-  frameState
+  frameState,
 ) {
   const structuralMetadataLoader = new GltfStructuralMetadataLoader({
     gltf: loader.gltfJson,
@@ -2453,6 +2473,20 @@ async function loadStructuralMetadata(
   return structuralMetadataLoader.load();
 }
 
+async function loadMeshPrimitiveGpm(loader, gltf, extension, frameState) {
+  const meshPrimitiveGpmLoader = new GltfMeshPrimitiveGpmLoader({
+    gltf: gltf,
+    extension: extension,
+    gltfResource: loader._gltfResource,
+    baseResource: loader._baseResource,
+    supportedImageFormats: loader._supportedImageFormats,
+    frameState: frameState,
+    asynchronous: loader._asynchronous,
+  });
+  loader._meshPrimitiveGpmLoader = meshPrimitiveGpmLoader;
+  return meshPrimitiveGpmLoader.load();
+}
+
 function loadAnimationSampler(loader, gltfSampler) {
   const animationSampler = new AnimationSampler();
   const accessors = loader.gltfJson.accessors;
@@ -2463,7 +2497,7 @@ function loadAnimationSampler(loader, gltfSampler) {
   const gltfInterpolation = gltfSampler.interpolation;
   animationSampler.interpolation = defaultValue(
     InterpolationType[gltfInterpolation],
-    InterpolationType.LINEAR
+    InterpolationType.LINEAR,
   );
 
   const outputAccessor = accessors[gltfSampler.output];
@@ -2657,11 +2691,11 @@ function parse(loader, frameState) {
     const center = Cartesian3.fromArray(
       cesiumRtcExtension.center,
       0,
-      scratchCenter
+      scratchCenter,
     );
     components.transform = Matrix4.fromTranslation(
       center,
-      components.transform
+      components.transform,
     );
   }
 
@@ -2676,9 +2710,41 @@ function parse(loader, frameState) {
       loader,
       structuralMetadataExtension,
       featureMetadataExtensionLegacy,
-      frameState
+      frameState,
     );
     loader._loaderPromises.push(promise);
+  }
+
+  // Load NGA_gpm_local from root object
+  const gpmExtension = extensions.NGA_gpm_local;
+  if (defined(gpmExtension)) {
+    const gltfGpmLocal = GltfGpmLoader.load(gpmExtension);
+    loader._components.extensions["NGA_gpm_local"] = gltfGpmLocal;
+  }
+
+  // Load NGA_gpm_local from mesh primitives
+  const meshes = gltf.meshes;
+  if (defined(meshes)) {
+    for (const mesh of meshes) {
+      const primitives = mesh.primitives;
+      if (defined(primitives)) {
+        for (const primitive of primitives) {
+          const primitiveExtensions = primitive.extensions;
+          if (defined(primitiveExtensions)) {
+            const meshPrimitiveGpmExtension = primitiveExtensions.NGA_gpm_local;
+            if (defined(meshPrimitiveGpmExtension)) {
+              const promise = loadMeshPrimitiveGpm(
+                loader,
+                gltf,
+                meshPrimitiveGpmExtension,
+                frameState,
+              );
+              loader._loaderPromises.push(promise);
+            }
+          }
+        }
+      }
+    }
   }
 
   // Gather promises and handle any errors
@@ -2745,6 +2811,16 @@ function unloadStructuralMetadata(loader) {
   }
 }
 
+function unloadMeshPrimitiveGpm(loader) {
+  if (
+    defined(loader._meshPrimitiveGpmLoader) &&
+    !loader._meshPrimitiveGpmLoader.isDestroyed()
+  ) {
+    loader._meshPrimitiveGpmLoader.destroy();
+    loader._meshPrimitiveGpmLoader = undefined;
+  }
+}
+
 /**
  * Returns whether the resource has been unloaded.
  * @private
@@ -2768,6 +2844,7 @@ GltfLoader.prototype.unload = function () {
   unloadGeometry(this);
   unloadGeneratedAttributes(this);
   unloadStructuralMetadata(this);
+  unloadMeshPrimitiveGpm(this);
 
   this._components = undefined;
   this._typedArray = undefined;

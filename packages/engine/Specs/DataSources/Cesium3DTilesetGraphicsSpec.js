@@ -16,7 +16,7 @@ describe("DataSources/Cesium3DTilesetGraphics", function () {
     expect(model.uri.getValue()).toEqual(options.uri);
     expect(model.show.getValue()).toEqual(options.show);
     expect(model.maximumScreenSpaceError.getValue()).toEqual(
-      options.maximumScreenSpaceError
+      options.maximumScreenSpaceError,
     );
   });
 

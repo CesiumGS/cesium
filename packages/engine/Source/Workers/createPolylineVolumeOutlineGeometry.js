@@ -4,19 +4,19 @@ import PolylineVolumeOutlineGeometry from "../Core/PolylineVolumeOutlineGeometry
 
 function createPolylineVolumeOutlineGeometry(
   polylineVolumeOutlineGeometry,
-  offset
+  offset,
 ) {
   if (defined(offset)) {
     polylineVolumeOutlineGeometry = PolylineVolumeOutlineGeometry.unpack(
       polylineVolumeOutlineGeometry,
-      offset
+      offset,
     );
   }
   polylineVolumeOutlineGeometry._ellipsoid = Ellipsoid.clone(
-    polylineVolumeOutlineGeometry._ellipsoid
+    polylineVolumeOutlineGeometry._ellipsoid,
   );
   return PolylineVolumeOutlineGeometry.createGeometry(
-    polylineVolumeOutlineGeometry
+    polylineVolumeOutlineGeometry,
   );
 }
 export default createPolylineVolumeOutlineGeometry;

@@ -1,52 +1,64 @@
 /**
  * A tonemapping algorithm when rendering with high dynamic range.
  *
- * @enum {number}
- * @private
+ * @enum {string}
  */
 const Tonemapper = {
   /**
-   * Use the Reinhard tonemapping operator.
+   * Use the Reinhard tonemapping.
    *
-   * @type {number}
+   * @type {string}
    * @constant
    */
-  REINHARD: 0,
+  REINHARD: "REINHARD",
 
   /**
-   * Use the modified Reinhard tonemapping operator.
+   * Use the modified Reinhard tonemapping.
    *
-   * @type {number}
+   * @type {string}
    * @constant
    */
-  MODIFIED_REINHARD: 1,
+  MODIFIED_REINHARD: "MODIFIED_REINHARD",
 
   /**
-   * Use the Filmic tonemapping operator.
+   * Use the Filmic tonemapping.
    *
-   * @type {number}
+   * @type {string}
    * @constant
    */
-  FILMIC: 2,
+  FILMIC: "FILMIC",
 
   /**
-   * Use the ACES tonemapping operator.
+   * Use the ACES tonemapping.
    *
-   * @type {number}
+   * @type {string}
    * @constant
    */
-  ACES: 3,
+  ACES: "ACES",
 
   /**
-   * @private
+   * Use the PBR Neutral tonemapping {@link https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral|from Khronos}.
+   *
+   * @type {string}
+   * @constant
    */
-  validate: function (tonemapper) {
-    return (
-      tonemapper === Tonemapper.REINHARD ||
-      tonemapper === Tonemapper.MODIFIED_REINHARD ||
-      tonemapper === Tonemapper.FILMIC ||
-      tonemapper === Tonemapper.ACES
-    );
-  },
+  PBR_NEUTRAL: "PBR_NEUTRAL",
 };
+
+/**
+ * Validate whether the provided value is a known Tonemapper type
+ * @private
+ *
+ * @param {string} tonemapper
+ */
+export function validateTonemapper(tonemapper) {
+  return (
+    tonemapper === Tonemapper.REINHARD ||
+    tonemapper === Tonemapper.MODIFIED_REINHARD ||
+    tonemapper === Tonemapper.FILMIC ||
+    tonemapper === Tonemapper.ACES ||
+    tonemapper === Tonemapper.PBR_NEUTRAL
+  );
+}
+
 export default Object.freeze(Tonemapper);

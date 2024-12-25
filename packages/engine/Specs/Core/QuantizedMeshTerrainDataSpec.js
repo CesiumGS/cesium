@@ -46,13 +46,13 @@ describe("Core/QuantizedMeshTerrainData", function () {
       interceptCoordinate1,
       interceptCoordinate2,
       otherCoordinate1,
-      otherCoordinate2
+      otherCoordinate2,
     ) {
       return CesiumMath.lerp(
         otherCoordinate1,
         otherCoordinate2,
         (0.5 - interceptCoordinate1) /
-          (interceptCoordinate2 - interceptCoordinate1)
+          (interceptCoordinate2 - interceptCoordinate1),
       );
     }
 
@@ -103,7 +103,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
       const tilingScheme = new GeographicTilingScheme();
 
       return Promise.resolve(
-        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 }),
       )
         .then(function () {
           const swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -199,7 +199,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
       const tilingScheme = new GeographicTilingScheme();
 
       return Promise.resolve(
-        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 }),
       )
         .then(function () {
           const swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -268,7 +268,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
       const tilingScheme = new GeographicTilingScheme();
       return Promise.resolve(
-        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 }),
       )
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -297,7 +297,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
             uBuffer,
             vBuffer,
             horizontalIntercept(0.0, 0.0, 0.125, 0.75) * 2.0,
-            0.0
+            0.0,
           );
           expect(v40).not.toBe(-1);
           const v42 = findVertexWithCoordinates(
@@ -307,23 +307,23 @@ describe("Core/QuantizedMeshTerrainData", function () {
               0.5,
               verticalIntercept(1.0, 0.0, 0.125, 0.75),
               0.125,
-              0.75
+              0.75,
             ) * 2.0,
-            0.0
+            0.0,
           );
           expect(v42).not.toBe(-1);
           const v402 = findVertexWithCoordinates(
             uBuffer,
             vBuffer,
             horizontalIntercept(0.5, 0.0, 0.125, 0.75) * 2.0,
-            0.0
+            0.0,
           );
           expect(v402).not.toBe(-1);
           const v43 = findVertexWithCoordinates(
             uBuffer,
             vBuffer,
             1.0,
-            verticalIntercept(1.0, 1.0, 0.125, 0.75) * 2.0 - 1.0
+            verticalIntercept(1.0, 1.0, 0.125, 0.75) * 2.0 - 1.0,
           );
           expect(v43).not.toBe(-1);
 
@@ -379,7 +379,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
       const tilingScheme = new GeographicTilingScheme();
       return Promise.resolve(
-        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 }),
       )
         .then(function () {
           const nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -421,7 +421,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
             uBuffer,
             vBuffer,
             horizontalIntercept(0.0, 0.0, 0.5, 0.75) * 2.0,
-            0.0
+            0.0,
           );
           expect(v40).not.toBe(-1);
           expect(upsampleResults[0]._westIndices.length).toBe(2);
@@ -438,7 +438,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
             uBuffer,
             vBuffer,
             horizontalIntercept(1.0, 0.0, 0.5, 0.75) * 0.5,
-            0.0
+            0.0,
           );
           expect(v42).not.toBe(-1);
           expect(upsampleResults[1]._westIndices.length).toBe(3);
@@ -566,7 +566,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
           expect(mesh.minimumHeight).toBe(data._minimumHeight);
           expect(mesh.maximumHeight).toBe(data._maximumHeight);
           expect(mesh.boundingSphere3D.radius).toBe(
-            data._boundingSphere.radius
+            data._boundingSphere.radius,
           );
           expect(mesh.encoding.exaggeration).toBe(2.0);
         });
@@ -700,7 +700,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
       });
 
       expect(mesh.interpolateHeight(rectangle, 0.0, 0.0)).toBe(
-        mesh.interpolateHeight(rectangle, rectangle.east, rectangle.south)
+        mesh.interpolateHeight(rectangle, rectangle.east, rectangle.south),
       );
     });
 
@@ -713,20 +713,11 @@ describe("Core/QuantizedMeshTerrainData", function () {
         quantizedVertices: new Uint16Array([
           // order is sw nw se ne
           // u
-          0,
-          0,
-          32767,
-          32767,
+          0, 0, 32767, 32767,
           // v
-          0,
-          32767,
-          0,
-          32767,
+          0, 32767, 0, 32767,
           // heights
-          16384,
-          0,
-          32767,
-          16384,
+          16384, 0, 32767, 16384,
         ]),
         indices: new Uint16Array([0, 3, 1, 0, 2, 3]),
         boundingSphere: new BoundingSphere(),
@@ -776,20 +767,11 @@ describe("Core/QuantizedMeshTerrainData", function () {
         quantizedVertices: new Uint16Array([
           // order is sw nw se ne
           // u
-          0,
-          0,
-          32767,
-          32767,
+          0, 0, 32767, 32767,
           // v
-          0,
-          32767,
-          0,
-          32767,
+          0, 32767, 0, 32767,
           // heights
-          16384,
-          0,
-          32767,
-          16384,
+          16384, 0, 32767, 16384,
         ]),
         indices: new Uint16Array([0, 3, 1, 0, 2, 3]),
         boundingSphere: new BoundingSphere(),
@@ -837,20 +819,11 @@ describe("Core/QuantizedMeshTerrainData", function () {
         quantizedVertices: new Uint16Array([
           // order is sw nw se ne
           // u
-          0,
-          0,
-          32767,
-          32767,
+          0, 0, 32767, 32767,
           // v
-          0,
-          32767,
-          0,
-          32767,
+          0, 32767, 0, 32767,
           // heights
-          16384,
-          0,
-          32767,
-          16384,
+          16384, 0, 32767, 16384,
         ]),
         indices: new Uint16Array([0, 3, 1, 0, 2, 3]),
         boundingSphere: new BoundingSphere(),
@@ -878,20 +851,11 @@ describe("Core/QuantizedMeshTerrainData", function () {
         quantizedVertices: new Uint16Array([
           // order is sw nw se ne
           // u
-          0,
-          0,
-          32767,
-          32767,
+          0, 0, 32767, 32767,
           // v
-          0,
-          32767,
-          0,
-          32767,
+          0, 32767, 0, 32767,
           // heights
-          16384,
-          0,
-          32767,
-          16384,
+          16384, 0, 32767, 16384,
         ]),
         indices: new Uint16Array([0, 3, 1, 0, 2, 3]),
         boundingSphere: new BoundingSphere(),
@@ -920,20 +884,11 @@ describe("Core/QuantizedMeshTerrainData", function () {
         quantizedVertices: new Uint16Array([
           // order is sw nw se ne
           // u
-          0,
-          0,
-          32767,
-          32767,
+          0, 0, 32767, 32767,
           // v
-          0,
-          32767,
-          0,
-          32767,
+          0, 32767, 0, 32767,
           // heights
-          16384,
-          0,
-          32767,
-          16384,
+          16384, 0, 32767, 16384,
         ]),
         indices: new Uint16Array([0, 3, 1, 0, 2, 3]),
         boundingSphere: new BoundingSphere(),
@@ -962,20 +917,11 @@ describe("Core/QuantizedMeshTerrainData", function () {
         quantizedVertices: new Uint16Array([
           // order is sw nw se ne
           // u
-          0,
-          0,
-          32767,
-          32767,
+          0, 0, 32767, 32767,
           // v
-          0,
-          32767,
-          0,
-          32767,
+          0, 32767, 0, 32767,
           // heights
-          16384,
-          0,
-          32767,
-          16384,
+          16384, 0, 32767, 16384,
         ]),
         indices: new Uint16Array([0, 3, 1, 0, 2, 3]),
         boundingSphere: new BoundingSphere(),
@@ -1004,20 +950,11 @@ describe("Core/QuantizedMeshTerrainData", function () {
         quantizedVertices: new Uint16Array([
           // order is sw nw se ne
           // u
-          0,
-          0,
-          32767,
-          32767,
+          0, 0, 32767, 32767,
           // v
-          0,
-          32767,
-          0,
-          32767,
+          0, 32767, 0, 32767,
           // heights
-          16384,
-          0,
-          32767,
-          16384,
+          16384, 0, 32767, 16384,
         ]),
         indices: new Uint16Array([0, 3, 1, 0, 2, 3]),
         boundingSphere: new BoundingSphere(),

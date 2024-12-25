@@ -44,13 +44,13 @@ describe(
       -0.0001,
       -0.0001,
       0.0001,
-      0.0001
+      0.0001,
     );
     const offscreenRectangle = Rectangle.fromDegrees(
       -45.0002,
       -1.0002,
       -45.0001,
-      -1.0001
+      -1.0001,
     );
     let primitiveRay;
     let offscreenRay;
@@ -145,7 +145,7 @@ describe(
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         url,
-        options
+        options,
       );
       // The tilesets used in these tests have transforms that are not
       // what we want for our camera setup. Re-position the tileset
@@ -243,15 +243,14 @@ describe(
       });
 
       it("picks a voxel coordinate from a VoxelPrimitive", async function () {
-        const provider = await Cesium3DTilesVoxelProvider.fromUrl(
-          voxelTilesetUrl
-        );
+        const provider =
+          await Cesium3DTilesVoxelProvider.fromUrl(voxelTilesetUrl);
         const primitive = new VoxelPrimitive({ provider });
         scene.primitives.add(primitive);
         scene.renderForSpecs();
         const voxelCoordinate = scene._picking.pickVoxelCoordinate(
           scene,
-          new Cartesian2(0, 0)
+          new Cartesian2(0, 0),
         );
         expect(voxelCoordinate).toEqual(new Uint8Array(4));
       });
@@ -265,11 +264,10 @@ describe(
       });
 
       it("picks a voxel cell from a VoxelPrimitive", async function () {
-        const provider = await Cesium3DTilesVoxelProvider.fromUrl(
-          voxelTilesetUrl
-        );
+        const provider =
+          await Cesium3DTilesVoxelProvider.fromUrl(voxelTilesetUrl);
         const modelMatrix = Matrix4.fromUniformScale(
-          Ellipsoid.WGS84.maximumRadius
+          Ellipsoid.WGS84.maximumRadius,
         );
         const primitive = new VoxelPrimitive({ provider, modelMatrix });
         scene.primitives.add(primitive);
@@ -385,7 +383,7 @@ describe(
             geometryInstances: [instance1, instance2, instance3],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         expect(scene).toDrillPickAndCall(function (pickedObjects) {
@@ -423,7 +421,7 @@ describe(
             geometryInstances: [instance1, instance2],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         expect(scene).toDrillPickAndCall(function (pickedObjects) {
@@ -467,7 +465,7 @@ describe(
             geometryInstances: [instance1, instance2, instance3],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         expect(scene).toDrillPickAndCall(function (pickedObjects) {
@@ -533,7 +531,7 @@ describe(
           expect(result.object).toBeUndefined();
           expect(result.position).toBeDefined();
           expect(result.position.x).toBeGreaterThan(
-            Ellipsoid.WGS84.minimumRadius
+            Ellipsoid.WGS84.minimumRadius,
           );
           expect(result.position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
           expect(result.position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
@@ -552,7 +550,7 @@ describe(
             const expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
             expect(position).toEqualEpsilon(
               expectedPosition,
-              CesiumMath.EPSILON5
+              CesiumMath.EPSILON5,
             );
           }
         }, primitiveRay);
@@ -601,7 +599,7 @@ describe(
             expect(result.object.primitive).toBe(rectangle1);
           },
           primitiveRay,
-          [rectangle2, rectangle3, rectangle4]
+          [rectangle2, rectangle3, rectangle4],
         );
 
         // Tests that rectangle4 does not get un-hidden
@@ -623,7 +621,7 @@ describe(
           },
           primitiveRay,
           [],
-          0.01
+          0.01,
         );
       });
 
@@ -635,7 +633,7 @@ describe(
           },
           primitiveRay,
           [],
-          0.1
+          0.1,
         );
         expect(scene).toPickFromRayAndCall(
           function (result) {
@@ -643,7 +641,7 @@ describe(
           },
           primitiveRay,
           [],
-          1.0
+          1.0,
         );
       });
 
@@ -683,7 +681,7 @@ describe(
             const expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
             expect(position).toEqualEpsilon(
               expectedPosition,
-              CesiumMath.EPSILON5
+              CesiumMath.EPSILON5,
             );
           } else {
             expect(position).toBeUndefined();
@@ -706,11 +704,11 @@ describe(
             const rectangleCenter2 = Cartesian3.fromRadians(0.0, 0.0, 1.0);
             expect(results[0].position).toEqualEpsilon(
               rectangleCenter2,
-              CesiumMath.EPSILON5
+              CesiumMath.EPSILON5,
             );
             expect(results[1].position).toEqualEpsilon(
               rectangleCenter1,
-              CesiumMath.EPSILON5
+              CesiumMath.EPSILON5,
             );
           } else {
             expect(results[0].position).toBeUndefined();
@@ -791,7 +789,7 @@ describe(
             geometryInstances: [instance1, instance2, instance3],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         expect(scene).toDrillPickFromRayAndCall(function (results) {
@@ -829,7 +827,7 @@ describe(
             geometryInstances: [instance1, instance2],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         expect(scene).toDrillPickFromRayAndCall(function (results) {
@@ -873,7 +871,7 @@ describe(
             geometryInstances: [instance1, instance2, instance3],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         expect(scene).toDrillPickFromRayAndCall(function (results) {
@@ -897,7 +895,7 @@ describe(
             expect(results[2].object.primitive).toEqual(rectangle2);
           },
           primitiveRay,
-          3
+          3,
         );
       });
 
@@ -915,7 +913,7 @@ describe(
           },
           primitiveRay,
           2,
-          [rectangle5, rectangle3]
+          [rectangle5, rectangle3],
         );
       });
 
@@ -927,7 +925,7 @@ describe(
           },
           primitiveRay,
           [],
-          0.1
+          0.1,
         );
         expect(scene).toDrillPickFromRayAndCall(
           function (result) {
@@ -936,7 +934,7 @@ describe(
           primitiveRay,
           Number.POSITIVE_INFINITY,
           [],
-          1.0
+          1.0,
         );
       });
 
@@ -1038,7 +1036,7 @@ describe(
             expect(height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
           },
           cartographic,
-          [rectangle2, rectangle3]
+          [rectangle2, rectangle3],
         );
       });
 
@@ -1083,7 +1081,7 @@ describe(
           },
           cartographic,
           [],
-          0.1
+          0.1,
         );
         expect(scene).toSampleHeightAndCall(
           function (height) {
@@ -1091,7 +1089,7 @@ describe(
           },
           cartographic,
           [],
-          1.0
+          1.0,
         );
       });
 
@@ -1188,7 +1186,7 @@ describe(
           const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
           expect(cartesian).toEqualEpsilon(
             expectedCartesian,
-            CesiumMath.EPSILON5
+            CesiumMath.EPSILON5,
           );
         }, cartesian);
       });
@@ -1205,7 +1203,7 @@ describe(
           const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0, 1.0);
           expect(cartesian).toEqualEpsilon(
             expectedCartesian,
-            CesiumMath.EPSILON5
+            CesiumMath.EPSILON5,
           );
         }, cartesian);
       });
@@ -1236,11 +1234,11 @@ describe(
             const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
             expect(cartesian).toEqualEpsilon(
               expectedCartesian,
-              CesiumMath.EPSILON5
+              CesiumMath.EPSILON5,
             );
           },
           cartesian,
-          [rectangle2, rectangle3]
+          [rectangle2, rectangle3],
         );
       });
 
@@ -1259,7 +1257,7 @@ describe(
         expect(scene).toClampToHeightAndCall(function (clampedCartesian) {
           expect(clampedCartesian).toEqualEpsilon(
             cartesian,
-            CesiumMath.EPSILON3
+            CesiumMath.EPSILON3,
           );
         }, cartesian);
 
@@ -1267,7 +1265,7 @@ describe(
         expect(scene).toClampToHeightAndCall(function (clampedCartesian) {
           expect(clampedCartesian).toEqualEpsilon(
             cartesian,
-            CesiumMath.EPSILON3
+            CesiumMath.EPSILON3,
           );
         }, cartesian);
 
@@ -1290,7 +1288,7 @@ describe(
           },
           cartesian,
           [],
-          0.1
+          0.1,
         );
         expect(scene).toClampToHeightAndCall(
           function (clampedCartesian) {
@@ -1298,7 +1296,7 @@ describe(
           },
           cartesian,
           [],
-          1.0
+          1.0,
         );
       });
 
@@ -1458,7 +1456,7 @@ describe(
         const objectsToExclude = [tileset];
         const result = await pickFromRayMostDetailed(
           primitiveRay,
-          objectsToExclude
+          objectsToExclude,
         );
         expect(result).toBeUndefined();
       });
@@ -1490,7 +1488,7 @@ describe(
           const expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
           expect(position).toEqualEpsilon(
             expectedPosition,
-            CesiumMath.EPSILON5
+            CesiumMath.EPSILON5,
           );
         }
       });
@@ -1604,7 +1602,7 @@ describe(
           const expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
           expect(position).toEqualEpsilon(
             expectedPosition,
-            CesiumMath.EPSILON5
+            CesiumMath.EPSILON5,
           );
         } else {
           expect(position).toBeUndefined();
@@ -1630,11 +1628,11 @@ describe(
           const rectangleCenter2 = Cartesian3.fromRadians(0.0, 0.0, 1.0);
           expect(results[0].position).toEqualEpsilon(
             rectangleCenter2,
-            CesiumMath.EPSILON5
+            CesiumMath.EPSILON5,
           );
           expect(results[1].position).toEqualEpsilon(
             rectangleCenter1,
-            CesiumMath.EPSILON5
+            CesiumMath.EPSILON5,
           );
         } else {
           expect(results[0].position).toBeUndefined();
@@ -1726,7 +1724,7 @@ describe(
             geometryInstances: [instance1, instance2, instance3],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         scene.camera.setView({ destination: offscreenRectangle });
@@ -1767,7 +1765,7 @@ describe(
             geometryInstances: [instance1, instance2],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         scene.camera.setView({ destination: offscreenRectangle });
@@ -1814,7 +1812,7 @@ describe(
             geometryInstances: [instance1, instance2, instance3],
             asynchronous: false,
             appearance: new EllipsoidSurfaceAppearance(),
-          })
+          }),
         );
 
         scene.camera.setView({ destination: offscreenRectangle });
@@ -1869,14 +1867,14 @@ describe(
           primitiveRay,
           1,
           [],
-          0.1
+          0.1,
         );
         expect(result1.length).toBe(0);
         const result2 = await drillPickFromRayMostDetailed(
           primitiveRay,
           1,
           [],
-          1.0
+          1.0,
         );
         expect(result2.length).toBe(1);
       });
@@ -1910,9 +1908,8 @@ describe(
 
         const cartographics = [new Cartographic(0.0, 0.0)];
         await createTileset(batchedTilesetUrl);
-        const updatedCartographics = await sampleHeightMostDetailed(
-          cartographics
-        );
+        const updatedCartographics =
+          await sampleHeightMostDetailed(cartographics);
         const height = updatedCartographics[0].height;
         expect(height).toBeGreaterThan(0.0);
         expect(height).toBeLessThan(20.0); // Rough height of tile
@@ -1934,9 +1931,8 @@ describe(
           new Cartographic(0.0002, 0.0002),
         ];
         await createGlobe();
-        const updatedCartographics = await sampleHeightMostDetailed(
-          cartographics
-        );
+        const updatedCartographics =
+          await sampleHeightMostDetailed(cartographics);
         expect(updatedCartographics).toBe(cartographics);
         expect(updatedCartographics.length).toBe(3);
         let previousHeight;
@@ -1960,9 +1956,8 @@ describe(
         const cartographics = [new Cartographic(0.0, 0.0)];
         scene.camera.setView({ destination: offscreenRectangle });
         await createGlobe();
-        const updatedCartographics = await sampleHeightMostDetailed(
-          cartographics
-        );
+        const updatedCartographics =
+          await sampleHeightMostDetailed(cartographics);
         expect(updatedCartographics[0].height).toBeUndefined();
       });
 
@@ -1980,9 +1975,8 @@ describe(
           new Cartographic(-2.0, -2.0),
         ];
         scene.camera.setView({ destination: offscreenRectangle });
-        const updatedCartographics = await sampleHeightMostDetailed(
-          cartographics
-        );
+        const updatedCartographics =
+          await sampleHeightMostDetailed(cartographics);
         expect(updatedCartographics[0].height).toBeDefined();
         expect(updatedCartographics[1].height).toBeDefined();
         expect(updatedCartographics[2].height).toBeUndefined(); // No primitive occupies this space
@@ -2000,9 +1994,8 @@ describe(
           new Cartographic(0.0000005, 0.0000005),
         ];
         scene.camera.setView({ destination: offscreenRectangle });
-        const updatedCartographics = await sampleHeightMostDetailed(
-          cartographics
-        );
+        const updatedCartographics =
+          await sampleHeightMostDetailed(cartographics);
         let previousHeight;
         for (let i = 0; i < 3; ++i) {
           const height = updatedCartographics[i].height;
@@ -2020,12 +2013,11 @@ describe(
         createSmallRectangle(1.0);
         const cartographics = [new Cartographic(0.0, 0.0)];
         scene.camera.setView({ destination: offscreenRectangle });
-        const updatedCartographics = await sampleHeightMostDetailed(
-          cartographics
-        );
+        const updatedCartographics =
+          await sampleHeightMostDetailed(cartographics);
         expect(updatedCartographics[0].height).toEqualEpsilon(
           1.0,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
       });
 
@@ -2046,12 +2038,12 @@ describe(
         scene.camera.setView({ destination: offscreenRectangle });
         const updatedCartographics = await sampleHeightMostDetailed(
           cartographics,
-          [rectangle1, rectangle3]
+          [rectangle1, rectangle3],
         );
         expect(updatedCartographics[0].height).toBeUndefined(); // This rectangle was excluded
         expect(updatedCartographics[1].height).toEqualEpsilon(
           0.0,
-          CesiumMath.EPSILON2
+          CesiumMath.EPSILON2,
         );
         expect(updatedCartographics[2].height).toBeUndefined(); // No primitive occupies this space
       });
@@ -2071,18 +2063,17 @@ describe(
         });
 
         scene.camera.setView({ destination: offscreenRectangle });
-        let updatedCartographics = await sampleHeightMostDetailed(
-          cartographics
-        );
+        let updatedCartographics =
+          await sampleHeightMostDetailed(cartographics);
         expect(updatedCartographics[0].height).toEqualEpsilon(
           height,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
         point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
         updatedCartographics = await sampleHeightMostDetailed(cartographics);
         expect(updatedCartographics[0].height).toEqualEpsilon(
           0.0,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
         rectangle.show = false;
         updatedCartographics = await sampleHeightMostDetailed(cartographics);
@@ -2100,13 +2091,13 @@ describe(
         const updatedCartographics1 = await sampleHeightMostDetailed(
           cartographics1,
           [],
-          0.1
+          0.1,
         );
         expect(updatedCartographics1[0].height).toBeUndefined();
         const updatedCartographics2 = await sampleHeightMostDetailed(
           cartographics2,
           [],
-          1.0
+          1.0,
         );
         expect(updatedCartographics2[0].height).toBeDefined();
       });
@@ -2117,9 +2108,8 @@ describe(
         }
 
         const cartographics = [];
-        const updatedCartographics = await sampleHeightMostDetailed(
-          cartographics
-        );
+        const updatedCartographics =
+          await sampleHeightMostDetailed(cartographics);
         expect(updatedCartographics.length).toBe(0);
       });
 
@@ -2274,7 +2264,7 @@ describe(
         for (let i = 0; i < 3; ++i) {
           expect(updatedCartesians[i]).toEqualEpsilon(
             expectedCartesians[i],
-            CesiumMath.EPSILON5
+            CesiumMath.EPSILON5,
           );
           expect(updatedCartesians[i]).not.toEqual(previousCartesian);
           previousCartesian = updatedCartesians[i];
@@ -2293,7 +2283,7 @@ describe(
         const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0, 1.0);
         expect(updatedCartesians[0]).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON5
+          CesiumMath.EPSILON5,
         );
       });
 
@@ -2317,12 +2307,12 @@ describe(
           rectangle3,
         ]);
         const expectedCartesian = Cartographic.toCartesian(
-          Rectangle.center(offscreenRectangle)
+          Rectangle.center(offscreenRectangle),
         );
         expect(updatedCartesians[0]).toBeUndefined(); // This rectangle was excluded
         expect(updatedCartesians[1]).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON2
+          CesiumMath.EPSILON2,
         );
         expect(updatedCartesians[2]).toBeUndefined(); // No primitive occupies this space
       });
@@ -2348,13 +2338,13 @@ describe(
         let updatedCartesians = await clampToHeightMostDetailed(cartesians1);
         expect(updatedCartesians[0]).toEqualEpsilon(
           cartesian,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
         point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
         updatedCartesians = await clampToHeightMostDetailed(cartesians2);
         expect(updatedCartesians[0]).toEqualEpsilon(
           cartesian,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
         rectangle.show = false;
         updatedCartesians = await clampToHeightMostDetailed(cartesians3);
@@ -2373,13 +2363,13 @@ describe(
         const clampedCartesians1 = await clampToHeightMostDetailed(
           cartesians1,
           [],
-          0.1
+          0.1,
         );
         expect(clampedCartesians1[0]).toBeUndefined();
         const clampedCartesians2 = await clampToHeightMostDetailed(
           cartesians2,
           [],
-          1.0
+          1.0,
         );
         expect(clampedCartesians2[0]).toBeDefined();
       });
@@ -2454,14 +2444,10 @@ describe(
       createSmallRectangle(0.0);
       const offscreenRectanglePrimitive = createRectangle(
         0.0,
-        offscreenRectangle
+        offscreenRectangle,
       );
-      offscreenRectanglePrimitive.appearance.material.uniforms.color = new Color(
-        1.0,
-        0.0,
-        0.0,
-        1.0
-      );
+      offscreenRectanglePrimitive.appearance.material.uniforms.color =
+        new Color(1.0, 0.0, 0.0, 1.0);
 
       scene.camera.setView({ destination: offscreenRectangle });
 
@@ -2478,18 +2464,18 @@ describe(
         const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
         expect(cartesian).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON5
+          CesiumMath.EPSILON5,
         );
       }, cartesian);
 
       // Call pickPosition
       expect(scene).toPickPositionAndCall(function (cartesian) {
         const expectedCartesian = Cartographic.toCartesian(
-          Rectangle.center(offscreenRectangle)
+          Rectangle.center(offscreenRectangle),
         );
         expect(cartesian).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON5
+          CesiumMath.EPSILON5,
         );
       });
 
@@ -2498,7 +2484,7 @@ describe(
         const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
         expect(cartesian).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON5
+          CesiumMath.EPSILON5,
         );
       }, cartesian);
 
@@ -2510,17 +2496,13 @@ describe(
         const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
         expect(cartesian).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON5
+          CesiumMath.EPSILON5,
         );
       }, cartesian);
 
       // Call pickPosition on translucent primitive and returns undefined
-      offscreenRectanglePrimitive.appearance.material.uniforms.color = new Color(
-        1.0,
-        0.0,
-        0.0,
-        0.5
-      );
+      offscreenRectanglePrimitive.appearance.material.uniforms.color =
+        new Color(1.0, 0.0, 0.0, 0.5);
       scene.renderForSpecs();
       expect(scene).toPickPositionAndCall(function (cartesian) {
         expect(cartesian).toBeUndefined();
@@ -2531,7 +2513,7 @@ describe(
         const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
         expect(cartesian).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON5
+          CesiumMath.EPSILON5,
         );
       }, cartesian);
 
@@ -2540,11 +2522,11 @@ describe(
       scene.renderForSpecs();
       expect(scene).toPickPositionAndCall(function (cartesian) {
         const expectedCartesian = Cartographic.toCartesian(
-          Rectangle.center(offscreenRectangle)
+          Rectangle.center(offscreenRectangle),
         );
         expect(cartesian).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON5
+          CesiumMath.EPSILON5,
         );
       });
 
@@ -2569,7 +2551,7 @@ describe(
         const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
         expect(cartesian).toEqualEpsilon(
           expectedCartesian,
-          CesiumMath.EPSILON5
+          CesiumMath.EPSILON5,
         );
       }, cartesian);
 
@@ -2583,5 +2565,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

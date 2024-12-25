@@ -55,7 +55,7 @@ describe("Core/FrustumOutlineGeometry", function () {
         frustum: frustum,
         origin: Cartesian3.ZERO,
         orientation: Quaternion.IDENTITY,
-      })
+      }),
     );
 
     const numVertices = 8;
@@ -82,6 +82,6 @@ describe("Core/FrustumOutlineGeometry", function () {
       orientation: Quaternion.IDENTITY,
       vertexFormat: VertexFormat.POSITION_ONLY,
     }),
-    [0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]
+    [0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
   );
 });

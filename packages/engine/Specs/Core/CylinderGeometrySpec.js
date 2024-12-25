@@ -49,7 +49,7 @@ describe("Core/CylinderGeometry", function () {
         topRadius: 1,
         bottomRadius: 1,
         slices: 3,
-      })
+      }),
     );
 
     const numVertices = 12; // (3 top + 3 bottom) * 2 to duplicate for sides
@@ -67,7 +67,7 @@ describe("Core/CylinderGeometry", function () {
         bottomRadius: 1,
         slices: 3,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
 
     const numVertices = 12;
@@ -87,7 +87,7 @@ describe("Core/CylinderGeometry", function () {
         topRadius: 1,
         bottomRadius: 1,
         slices: 3,
-      })
+      }),
     );
 
     const numVertices = 12;
@@ -108,7 +108,7 @@ describe("Core/CylinderGeometry", function () {
         topRadius: 0,
         bottomRadius: 1,
         slices: 3,
-      })
+      }),
     );
 
     const numVertices = 12; //(3 top 3 bottom) duplicated
@@ -125,7 +125,7 @@ describe("Core/CylinderGeometry", function () {
         topRadius: 1,
         bottomRadius: 0,
         slices: 3,
-      })
+      }),
     );
 
     const numVertices = 12; //(3 top 3 bottom) duplicated
@@ -175,7 +175,7 @@ describe("Core/CylinderGeometry", function () {
       expect(geometry2).toBeUndefined();
       expect(geometry3).toBeUndefined();
       expect(geometry4).toBeUndefined();
-    }
+    },
   );
 
   const cylinder = new CylinderGeometry({
@@ -186,17 +186,7 @@ describe("Core/CylinderGeometry", function () {
     slices: 3,
   });
   const packedInstance = [
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    1.0,
-    0.0,
-    3.0,
-    -1.0,
+    1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 3.0, -1.0,
   ];
   createPackableSpecs(CylinderGeometry, cylinder, packedInstance);
 });

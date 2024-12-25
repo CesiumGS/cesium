@@ -93,7 +93,7 @@ ClearCommand.ALL = Object.freeze(
     color: new Color(0.0, 0.0, 0.0, 0.0),
     depth: 1.0,
     stencil: 0.0,
-  })
+  }),
 );
 
 ClearCommand.prototype.execute = function (context, passState) {

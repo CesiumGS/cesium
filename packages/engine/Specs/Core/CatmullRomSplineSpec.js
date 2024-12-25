@@ -47,7 +47,7 @@ describe("Core/CatmullRomSpline", function () {
     const end = Cartesian3.subtract(
       points[points.length - 1],
       points[points.length - 2],
-      new Cartesian3()
+      new Cartesian3(),
     );
     const crs = new CatmullRomSpline({
       points: points,
@@ -71,13 +71,13 @@ describe("Core/CatmullRomSpline", function () {
         Cartesian3.subtract(
           Cartesian3.multiplyByScalar(controlPoint1, 2.0, start),
           controlPoint2,
-          start
+          start,
         ),
         controlPoint0,
-        start
+        start,
       ),
       0.5,
-      start
+      start,
     );
 
     const controlPointn0 = Cartesian3.clone(points[points.length - 1]);
@@ -90,13 +90,13 @@ describe("Core/CatmullRomSpline", function () {
         Cartesian3.subtract(
           controlPointn0,
           Cartesian3.multiplyByScalar(controlPointn1, 2.0, end),
-          end
+          end,
         ),
         controlPointn2,
-        end
+        end,
       ),
       0.5,
-      end
+      end,
     );
 
     const crs = new CatmullRomSpline({
@@ -142,8 +142,8 @@ describe("Core/CatmullRomSpline", function () {
         Cartesian3.multiplyByScalar(
           Cartesian3.subtract(points[i + 1], points[i - 1], new Cartesian3()),
           0.5,
-          new Cartesian3()
-        )
+          new Cartesian3(),
+        ),
       );
     }
     tangents.push(crs.lastTangent);
@@ -158,7 +158,7 @@ describe("Core/CatmullRomSpline", function () {
     for (let j = times[0]; j <= times[points.length - 1]; j = j + granularity) {
       expect(hs.evaluate(j)).toEqualEpsilon(
         crs.evaluate(j),
-        CesiumMath.EPSILON4
+        CesiumMath.EPSILON4,
       );
     }
   });
@@ -186,7 +186,7 @@ describe("Core/CatmullRomSpline", function () {
 
     const t = (times[0] + times[1]) * 0.5;
     expect(crs.evaluate(t)).toEqual(
-      Cartesian3.lerp(points[0], points[1], t, new Cartesian3())
+      Cartesian3.lerp(points[0], points[1], t, new Cartesian3()),
     );
   });
 
@@ -204,7 +204,7 @@ describe("Core/CatmullRomSpline", function () {
     const actual = crs.evaluate(t, result);
     expect(actual).toBe(result);
     expect(actual).toEqual(
-      Cartesian3.lerp(points[0], points[1], t, new Cartesian3())
+      Cartesian3.lerp(points[0], points[1], t, new Cartesian3()),
     );
   });
 });

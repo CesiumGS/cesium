@@ -53,7 +53,7 @@ function BoxGeometry(options) {
     options.offsetAttribute === GeometryOffsetAttribute.TOP
   ) {
     throw new DeveloperError(
-      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry."
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -167,12 +167,12 @@ BoxGeometry.pack = function (value, array, startingIndex) {
   Cartesian3.pack(
     value._maximum,
     array,
-    startingIndex + Cartesian3.packedLength
+    startingIndex + Cartesian3.packedLength,
   );
   VertexFormat.pack(
     value._vertexFormat,
     array,
-    startingIndex + 2 * Cartesian3.packedLength
+    startingIndex + 2 * Cartesian3.packedLength,
   );
   array[
     startingIndex + 2 * Cartesian3.packedLength + VertexFormat.packedLength
@@ -210,12 +210,12 @@ BoxGeometry.unpack = function (array, startingIndex, result) {
   const max = Cartesian3.unpack(
     array,
     startingIndex + Cartesian3.packedLength,
-    scratchMax
+    scratchMax,
   );
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex + 2 * Cartesian3.packedLength,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   const offsetAttribute =
     array[
@@ -885,7 +885,7 @@ BoxGeometry.getUnitBox = function () {
       BoxGeometry.fromDimensions({
         dimensions: new Cartesian3(1.0, 1.0, 1.0),
         vertexFormat: VertexFormat.POSITION_ONLY,
-      })
+      }),
     );
   }
   return unitBoxGeometry;

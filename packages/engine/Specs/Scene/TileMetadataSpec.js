@@ -144,31 +144,25 @@ describe("Scene/TileMetadata", function () {
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
     expect(
-      tileMetadata.getPropertyBySemantic("HORIZON_OCCLUSION_POINT")
+      tileMetadata.getPropertyBySemantic("HORIZON_OCCLUSION_POINT"),
     ).not.toBeDefined();
   });
 
   it("getPropertyBySemantic returns the property value", function () {
     expect(tileMetadata.getPropertyBySemantic("COLOR")).toEqual([
-      1.0,
-      0.5,
-      0.0,
+      1.0, 0.5, 0.0,
     ]);
   });
 
   it("setPropertyBySemantic sets property value", function () {
     expect(tileMetadata.getPropertyBySemantic("COLOR")).toEqual([
-      1.0,
-      0.5,
-      0.0,
+      1.0, 0.5, 0.0,
     ]);
     expect(tileMetadata.setPropertyBySemantic("COLOR", [0.0, 0.0, 0.0])).toBe(
-      true
+      true,
     );
     expect(tileMetadata.getPropertyBySemantic("COLOR")).toEqual([
-      0.0,
-      0.0,
-      0.0,
+      0.0, 0.0, 0.0,
     ]);
   });
 

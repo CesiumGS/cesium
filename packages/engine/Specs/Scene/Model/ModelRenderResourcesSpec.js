@@ -25,7 +25,7 @@ describe(
             enabled: true,
             func: DepthFunction.LESS_OR_EQUAL,
           },
-        })
+        }),
       );
 
       expect(modelResources.model).toBe(mockModel);
@@ -35,9 +35,9 @@ describe(
       expect(modelResources.hasSkipLevelOfDetail).toBe(false);
       ShaderBuilderTester.expectHasFragmentDefines(
         modelResources.shaderBuilder,
-        []
+        [],
       );
     });
   },
-  "WebGL"
+  "WebGL",
 );

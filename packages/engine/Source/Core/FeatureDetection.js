@@ -104,7 +104,7 @@ function isInternetExplorer() {
       }
     } else if (theNavigator.appName === "Netscape") {
       fields = /Trident\/.*rv:([0-9]{1,}[\.0-9]{0,})/.exec(
-        theNavigator.userAgent
+        theNavigator.userAgent,
       );
       if (fields !== null) {
         isInternetExplorerResult = true;
@@ -200,7 +200,7 @@ function supportsImageRenderingPixelated() {
     const canvas = document.createElement("canvas");
     canvas.setAttribute(
       "style",
-      "image-rendering: -moz-crisp-edges;" + "image-rendering: pixelated;"
+      "image-rendering: -moz-crisp-edges;" + "image-rendering: pixelated;",
     );
     //canvas.style.imageRendering will be undefined, null or an empty string on unsupported browsers.
     const tmp = canvas.style.imageRendering;
@@ -222,7 +222,7 @@ function supportsWebP() {
   //>>includeStart('debug', pragmas.debug);
   if (!supportsWebP.initialized) {
     throw new DeveloperError(
-      "You must call FeatureDetection.supportsWebP.initialize and wait for the promise to resolve before calling FeatureDetection.supportsWebP"
+      "You must call FeatureDetection.supportsWebP.initialize and wait for the promise to resolve before calling FeatureDetection.supportsWebP",
     );
   }
   //>>includeEnd('debug');
@@ -271,7 +271,7 @@ if (typeof ArrayBuffer !== "undefined") {
     Int32Array,
     Uint32Array,
     Float32Array,
-    Float64Array
+    Float64Array,
   );
 
   if (typeof Uint8ClampedArray !== "undefined") {

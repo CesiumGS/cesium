@@ -55,7 +55,7 @@ describe(
         });
       }
       const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 0.0, 1.0, 1.0)
+        new Color(0.0, 0.0, 1.0, 1.0),
       );
       depthColor = depthColorAttribute.value;
       return new Primitive({
@@ -117,7 +117,7 @@ describe(
       reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
       reusableTilesetPrimitive = createPrimitive(
         rectangle,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
     });
 
@@ -134,7 +134,7 @@ describe(
       globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
       tilesetPrimitive = new MockPrimitive(
         reusableTilesetPrimitive,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
 
       const center = Rectangle.center(rectangle);
@@ -144,7 +144,7 @@ describe(
       const dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 1.0, 0.0, 1.0)
+        new Color(1.0, 1.0, 0.0, 1.0),
       );
       boxColor = boxColorAttribute.value;
       boxInstance = new GeometryInstance({
@@ -291,7 +291,7 @@ describe(
       primitive = scene.primitives.add(
         new ClassificationPrimitive({
           geometryInstances: boxInstance,
-        })
+        }),
       );
       primitive.show = false;
 
@@ -438,7 +438,7 @@ describe(
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
       const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -492,13 +492,14 @@ describe(
 
       const invertedColor = new Array(4);
       invertedColor[0] = Color.floatToByte(
-        Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red
+        Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red,
       );
       invertedColor[1] = Color.floatToByte(
-        Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green
+        Color.byteToFloat(depthColor[1]) *
+          scene.invertClassificationColor.green,
       );
       invertedColor[2] = Color.floatToByte(
-        Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue
+        Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue,
       );
       invertedColor[3] = 255;
 
@@ -539,17 +540,17 @@ describe(
       invertedColor[0] = Color.floatToByte(
         Color.byteToFloat(depthColor[0]) *
           scene.invertClassificationColor.red *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[1] = Color.floatToByte(
         Color.byteToFloat(depthColor[1]) *
           scene.invertClassificationColor.green *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[2] = Color.floatToByte(
         Color.byteToFloat(depthColor[2]) *
           scene.invertClassificationColor.blue *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[3] = 255;
 
@@ -845,7 +846,7 @@ describe(
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
       const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -855,7 +856,7 @@ describe(
         id: "box1",
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(0.0, 1.0, 1.0, 1.0)
+            new Color(0.0, 1.0, 1.0, 1.0),
           ),
         },
       });
@@ -872,7 +873,7 @@ describe(
         id: "box2",
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(1.0, 0.0, 1.0, 1.0)
+            new Color(1.0, 0.0, 1.0, 1.0),
           ),
         },
       });
@@ -912,7 +913,7 @@ describe(
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
       const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -922,7 +923,7 @@ describe(
         id: "box1",
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(0.0, 1.0, 1.0, 1.0)
+            new Color(0.0, 1.0, 1.0, 1.0),
           ),
         },
       });
@@ -988,7 +989,7 @@ describe(
       });
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
 
       expect(function () {
@@ -1125,7 +1126,7 @@ describe(
       verifyClassificationPrimitiveRender(primitive, boxColor);
 
       expect(
-        primitive.getGeometryInstanceAttributes("unknown")
+        primitive.getGeometryInstanceAttributes("unknown"),
       ).not.toBeDefined();
     });
 
@@ -1181,5 +1182,5 @@ describe(
       scene.primitives.destroyPrimitives = true;
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -115,7 +115,7 @@ describe("Scene/I3SLayer", function () {
 
   async function createMockI3SProvider(layerData, options) {
     spyOn(I3SDataProvider, "loadJson").and.returnValue(
-      Promise.resolve(layerData)
+      Promise.resolve(layerData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async (url, options) => {
       const tileset = new Cesium3DTileset(options);
@@ -125,17 +125,17 @@ describe("Scene/I3SLayer", function () {
     });
     const mockI3SProvider = await I3SDataProvider.fromUrl(
       "mockProviderUrl?testQuery=test",
-      options
+      options,
     );
     spyOn(I3SDataProvider.prototype, "loadGeoidData").and.returnValue(
-      Promise.resolve()
+      Promise.resolve(),
     );
     return mockI3SProvider;
   }
 
   it("constructs I3SLayer from url", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData);
@@ -202,14 +202,14 @@ describe("Scene/I3SLayer", function () {
 
   it("constructs I3SLayer from id", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData2);
     const testLayer = new I3SLayer(
       mockI3SProvider,
       layerData2,
-      mockI3SProvider
+      mockI3SProvider,
     );
     expect(testLayer.data).toEqual(layerData2);
 
@@ -237,7 +237,7 @@ describe("Scene/I3SLayer", function () {
 
   it("constructs I3SLayer from single layer url", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData2);
@@ -253,7 +253,7 @@ describe("Scene/I3SLayer", function () {
 
   it("loads root node", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData);
@@ -261,14 +261,14 @@ describe("Scene/I3SLayer", function () {
     expect(testLayer.rootNode).toBeDefined();
     expect(testLayer.rootNode.data.index).toEqual(rootNodePageEntry.index);
     expect(testLayer.rootNode.data.children).toEqual(
-      rootNodePageEntry.children
+      rootNodePageEntry.children,
     );
     expect(testLayer.rootNode.data.obb).toEqual(rootNodePageEntry.obb);
   });
 
   it("creates 3d tileset", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData);
@@ -288,7 +288,7 @@ describe("Scene/I3SLayer", function () {
       maximumScreenSpaceError: 8,
     };
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
 
     await createMockI3SProvider(layerData, {
@@ -296,13 +296,13 @@ describe("Scene/I3SLayer", function () {
     });
     expect(Cesium3DTileset.fromUrl).toHaveBeenCalledWith(
       jasmine.any(String),
-      cesium3dTilesetOptions
+      cesium3dTilesetOptions,
     );
   });
 
   it("load i3s layer rejects unsupported spatial reference", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
     const invalidLayerData = {
       layerType: "3DObject",
@@ -319,16 +319,16 @@ describe("Scene/I3SLayer", function () {
       spatialReference: { wkid: 3857 },
     };
     await expectAsync(
-      createMockI3SProvider(invalidLayerData)
+      createMockI3SProvider(invalidLayerData),
     ).toBeRejectedWithError(
       RuntimeError,
-      `Unsupported spatial reference: ${invalidLayerData.spatialReference.wkid}`
+      `Unsupported spatial reference: ${invalidLayerData.spatialReference.wkid}`,
     );
   });
 
   it("creates 3d tileset with outline color from symbology", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData2, {
@@ -349,7 +349,7 @@ describe("Scene/I3SLayer", function () {
       outlineColor: new Color(0.5, 0.5, 0.5, 0.5),
     };
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodePageResult)
+      Promise.resolve(nodePageResult),
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData2, {

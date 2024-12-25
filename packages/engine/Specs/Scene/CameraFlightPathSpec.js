@@ -101,7 +101,7 @@ describe(
       flight.update({ time: 0.0 });
       expect(camera.position).toEqualEpsilon(
         startPosition,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(camera.heading).toEqualEpsilon(startHeading, CesiumMath.EPSILON12);
       expect(camera.pitch).toEqualEpsilon(startPitch, CesiumMath.EPSILON12);
@@ -136,7 +136,7 @@ describe(
       flight.update({ time: 0.0 });
       expect(camera.position).toEqualEpsilon(
         startPosition,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
 
       flight.update({ time: duration });
@@ -153,7 +153,7 @@ describe(
       camera.right = Cartesian3.cross(
         camera.direction,
         camera.up,
-        new Cartesian3()
+        new Cartesian3(),
       );
 
       const startPosition = Cartesian3.clone(camera.position);
@@ -162,10 +162,10 @@ describe(
       const destination = Cartesian3.add(
         startPosition,
         new Cartesian3(-6e5 * Math.PI, 6e5 * CesiumMath.PI_OVER_FOUR, 100.0),
-        new Cartesian3()
+        new Cartesian3(),
       );
       const endPosition = projection.ellipsoid.cartographicToCartesian(
-        projection.unproject(destination)
+        projection.unproject(destination),
       );
 
       const duration = 5.0;
@@ -177,7 +177,7 @@ describe(
       flight.update({ time: 0.0 });
       expect(camera.position).toEqualEpsilon(
         startPosition,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
 
       flight.update({ time: duration });
@@ -194,7 +194,7 @@ describe(
       camera.right = Cartesian3.cross(
         camera.direction,
         camera.up,
-        new Cartesian3()
+        new Cartesian3(),
       );
       camera.frustum = createOrthographicFrustum();
 
@@ -205,10 +205,10 @@ describe(
       const destination = Cartesian3.add(
         startPosition,
         new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0),
-        new Cartesian3()
+        new Cartesian3(),
       );
       const endPosition = projection.ellipsoid.cartographicToCartesian(
-        projection.unproject(destination)
+        projection.unproject(destination),
       );
 
       const duration = 5.0;
@@ -220,29 +220,29 @@ describe(
       flight.update({ time: 0.0 });
       expect(camera.position).toEqualEpsilon(
         startPosition,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(camera.frustum.right - camera.frustum.left).toEqualEpsilon(
         startHeight,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
 
       flight.update({ time: duration });
       expect(camera.position.x).toEqualEpsilon(
         destination.x,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
       expect(camera.position.y).toEqualEpsilon(
         destination.y,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
       expect(camera.position.z).toEqualEpsilon(
         startPosition.z,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
       expect(camera.frustum.right - camera.frustum.left).toEqualEpsilon(
         destination.z,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     });
 
@@ -253,7 +253,7 @@ describe(
       const end = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(start, new Cartesian3()),
         mag - 1000000.0,
-        new Cartesian3()
+        new Cartesian3(),
       );
 
       const duration = 3.0;
@@ -314,7 +314,7 @@ describe(
       flight.complete();
       expect(scene.camera.position).toEqualEpsilon(
         destination,
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
     });
 
@@ -328,7 +328,7 @@ describe(
       camera.right = Cartesian3.cross(
         camera.direction,
         camera.up,
-        new Cartesian3()
+        new Cartesian3(),
       );
       camera.frustum = createOrthographicFrustum();
       camera.update(scene.mode);
@@ -336,12 +336,12 @@ describe(
       const destination = Cartesian3.clone(camera.position);
       destination.z = Math.max(
         frustum.right - frustum.left,
-        frustum.top - frustum.bottom
+        frustum.top - frustum.bottom,
       );
 
       const projection = scene.mapProjection;
       const endPosition = projection.ellipsoid.cartographicToCartesian(
-        projection.unproject(destination)
+        projection.unproject(destination),
       );
 
       const flight = CameraFlightPath.createTween(scene, {
@@ -387,7 +387,7 @@ describe(
 
       const projection = scene.mapProjection;
       const endPosition = projection.ellipsoid.cartographicToCartesian(
-        projection.unproject(camera.position)
+        projection.unproject(camera.position),
       );
 
       const flight = CameraFlightPath.createTween(scene, {
@@ -407,7 +407,7 @@ describe(
       camera.right = Cartesian3.cross(
         camera.direction,
         camera.up,
-        new Cartesian3()
+        new Cartesian3(),
       );
       camera.frustum = createOrthographicFrustum();
 
@@ -419,10 +419,10 @@ describe(
       const destination = Cartesian3.add(
         startPosition,
         new Cartesian3(-6e5 * Math.PI, 6e5 * CesiumMath.PI_OVER_FOUR, 100.0),
-        new Cartesian3()
+        new Cartesian3(),
       );
       const endPosition = projection.ellipsoid.cartographicToCartesian(
-        projection.unproject(destination)
+        projection.unproject(destination),
       );
 
       const flight = CameraFlightPath.createTween(scene, {
@@ -434,15 +434,15 @@ describe(
       flight.complete();
       expect(camera.position.x).toEqualEpsilon(
         destination.x,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
       expect(camera.position.y).toEqualEpsilon(
         destination.y,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
       expect(camera.frustum.right - camera.frustum.left).toEqualEpsilon(
         destination.z,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     });
 
@@ -456,7 +456,7 @@ describe(
       camera.right = Cartesian3.cross(
         camera.direction,
         camera.up,
-        new Cartesian3()
+        new Cartesian3(),
       );
 
       const startPosition = Cartesian3.clone(camera.position);
@@ -465,10 +465,10 @@ describe(
       const destination = Cartesian3.add(
         startPosition,
         new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0),
-        new Cartesian3()
+        new Cartesian3(),
       );
       const endPosition = projection.ellipsoid.cartographicToCartesian(
-        projection.unproject(destination)
+        projection.unproject(destination),
       );
 
       const flight = CameraFlightPath.createTween(scene, {
@@ -603,7 +603,7 @@ describe(
       flight.update({ time: duration / 2.0 });
       expect(camera.pitch).toEqualEpsilon(
         -CesiumMath.PI_OVER_TWO,
-        CesiumMath.EPSILON4
+        CesiumMath.EPSILON4,
       );
     });
 
@@ -695,7 +695,7 @@ describe(
         flight.update({ time: i });
         maximumHeight = Math.max(
           maximumHeight,
-          camera.positionCartographic.height
+          camera.positionCartographic.height,
         );
       }
 
@@ -717,5 +717,5 @@ describe(
       }
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -23,7 +23,7 @@ const NodeStatisticsPipelineStage = {
 NodeStatisticsPipelineStage.process = function (
   renderResources,
   node,
-  frameState
+  frameState,
 ) {
   const statistics = renderResources.model.statistics;
   const instances = node.instances;

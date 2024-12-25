@@ -10,7 +10,7 @@ import {
 describe("Scene/I3SField", function () {
   async function createMockProvider(url, layerData, geoidDataList) {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(layerData)
+      Promise.resolve(layerData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -28,7 +28,7 @@ describe("Scene/I3SField", function () {
     const provider = await createMockProvider(
       providerUrl,
       layerData,
-      geoidDataList
+      geoidDataList,
     );
     const mockI3SLayer = provider.layers[0];
     mockI3SLayer._geometryDefinitions = [
@@ -181,20 +181,20 @@ describe("Scene/I3SField", function () {
   it("create field for root node loaded from uri", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
     const field = new I3SField(rootNode, { key: "test_key" });
     expect(
-      field.resource.url.includes("mockUrl/attributes/test_key/0?")
+      field.resource.url.includes("mockUrl/attributes/test_key/0?"),
     ).toEqual(true);
   });
 
   it("get field values", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
@@ -211,7 +211,7 @@ describe("Scene/I3SField", function () {
   it("get body offset for objectIds", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
@@ -225,7 +225,7 @@ describe("Scene/I3SField", function () {
   it("get body offset for unsupported property", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
@@ -239,7 +239,7 @@ describe("Scene/I3SField", function () {
   it("validate field header with invalid attribute buffer size", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
@@ -254,7 +254,7 @@ describe("Scene/I3SField", function () {
   it("validate field body with empty header", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
@@ -269,7 +269,7 @@ describe("Scene/I3SField", function () {
   it("validate field body with invalid attribute buffer", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
@@ -287,7 +287,7 @@ describe("Scene/I3SField", function () {
   it("validate field body with invalid offset", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
@@ -302,7 +302,7 @@ describe("Scene/I3SField", function () {
   it("validate field body with missing property", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
@@ -317,7 +317,7 @@ describe("Scene/I3SField", function () {
   it("load field with unavailable resource", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const spy = spyOn(Resource.prototype, "fetchArrayBuffer");
     spy.and.callFake(function () {
@@ -343,11 +343,11 @@ describe("Scene/I3SField", function () {
   it("load field with invalid header", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     spyOn(
       mockI3SLayerWithoutNodePages._dataProvider,
-      "_loadBinary"
+      "_loadBinary",
     ).and.callFake(function () {
       return Promise.resolve(new ArrayBuffer(1));
     });
@@ -364,11 +364,11 @@ describe("Scene/I3SField", function () {
   it("load field with invalid body", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     spyOn(
       mockI3SLayerWithoutNodePages._dataProvider,
-      "_loadBinary"
+      "_loadBinary",
     ).and.callFake(function () {
       return Promise.resolve(new ArrayBuffer(1));
     });
@@ -386,12 +386,12 @@ describe("Scene/I3SField", function () {
   it("load field with valid buffer", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const text = "Pass";
     spyOn(
       mockI3SLayerWithoutNodePages._dataProvider,
-      "_loadBinary"
+      "_loadBinary",
     ).and.callFake(function () {
       const buffer = new ArrayBuffer(text.length + 3);
       const view = new Uint8Array(buffer);

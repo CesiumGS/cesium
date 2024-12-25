@@ -158,5 +158,5 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
   },
-  "WebGL"
+  "WebGL",
 );

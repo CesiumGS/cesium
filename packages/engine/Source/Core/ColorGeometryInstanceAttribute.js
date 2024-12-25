@@ -131,7 +131,7 @@ ColorGeometryInstanceAttribute.fromColor = function (color) {
     color.red,
     color.green,
     color.blue,
-    color.alpha
+    color.alpha,
   );
 };
 

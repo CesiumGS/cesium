@@ -21,7 +21,7 @@ describe("Core/RectangleGeometry", function () {
         vertexFormat: VertexFormat.POSITION_ONLY,
         rectangle: rectangle,
         granularity: 1.0,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
     const length = positions.length;
@@ -30,20 +30,20 @@ describe("Core/RectangleGeometry", function () {
     expect(m.indices.length).toEqual(8 * 3);
 
     const expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(
-      Rectangle.northwest(rectangle)
+      Rectangle.northwest(rectangle),
     );
     const expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(
-      Rectangle.southeast(rectangle)
+      Rectangle.southeast(rectangle),
     );
     expect(
-      new Cartesian3(positions[0], positions[1], positions[2])
+      new Cartesian3(positions[0], positions[1], positions[2]),
     ).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
     expect(
       new Cartesian3(
         positions[length - 3],
         positions[length - 2],
-        positions[length - 1]
-      )
+        positions[length - 1],
+      ),
     ).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON9);
   });
 
@@ -53,7 +53,7 @@ describe("Core/RectangleGeometry", function () {
       new RectangleGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         rectangle: rectangle,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
     const length = positions.length;
@@ -62,20 +62,20 @@ describe("Core/RectangleGeometry", function () {
     expect(m.indices.length).toEqual(8 * 3);
 
     const expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(
-      Rectangle.northwest(rectangle)
+      Rectangle.northwest(rectangle),
     );
     const expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(
-      Rectangle.southeast(rectangle)
+      Rectangle.southeast(rectangle),
     );
     expect(
-      new Cartesian3(positions[0], positions[1], positions[2])
+      new Cartesian3(positions[0], positions[1], positions[2]),
     ).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON8);
     expect(
       new Cartesian3(
         positions[length - 3],
         positions[length - 2],
-        positions[length - 1]
-      )
+        positions[length - 1],
+      ),
     ).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON8);
   });
 
@@ -85,7 +85,7 @@ describe("Core/RectangleGeometry", function () {
       new RectangleGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         rectangle: rectangle,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
     expect(positions.length).toEqual(5 * 3);
@@ -98,7 +98,7 @@ describe("Core/RectangleGeometry", function () {
       new RectangleGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         rectangle: rectangle,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
     expect(positions.length).toEqual(5 * 3);
@@ -111,7 +111,7 @@ describe("Core/RectangleGeometry", function () {
         vertexFormat: VertexFormat.ALL,
         rectangle: new Rectangle(-2.0, -1.0, 0.0, 1.0),
         granularity: 1.0,
-      })
+      }),
     );
     const numVertices = 9; // 8 around edge + 1 in middle
     const numTriangles = 8; // 4 squares * 2 triangles per square
@@ -132,7 +132,7 @@ describe("Core/RectangleGeometry", function () {
         rectangle: rectangle,
         rotation: angle,
         granularity: 1.0,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
     const length = positions.length;
@@ -145,15 +145,15 @@ describe("Core/RectangleGeometry", function () {
     const projectedSECorner = projection.project(unrotatedSECorner);
     const rotation = Matrix2.fromRotation(angle);
     const rotatedSECornerCartographic = projection.unproject(
-      Matrix2.multiplyByVector(rotation, projectedSECorner, new Cartesian2())
+      Matrix2.multiplyByVector(rotation, projectedSECorner, new Cartesian2()),
     );
     const rotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(
-      rotatedSECornerCartographic
+      rotatedSECornerCartographic,
     );
     const actual = new Cartesian3(
       positions[length - 3],
       positions[length - 2],
-      positions[length - 1]
+      positions[length - 1],
     );
     expect(actual).toEqualEpsilon(rotatedSECorner, CesiumMath.EPSILON6);
   });
@@ -165,7 +165,7 @@ describe("Core/RectangleGeometry", function () {
         rectangle: rectangle,
         rotation: CesiumMath.PI,
         granularity: 1.0,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
     const length = positions.length;
@@ -174,10 +174,10 @@ describe("Core/RectangleGeometry", function () {
     expect(m.indices.length).toEqual(8 * 3);
 
     const unrotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(
-      Rectangle.northwest(rectangle)
+      Rectangle.northwest(rectangle),
     );
     const unrotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(
-      Rectangle.southeast(rectangle)
+      Rectangle.southeast(rectangle),
     );
 
     let actual = new Cartesian3(positions[0], positions[1], positions[2]);
@@ -186,7 +186,7 @@ describe("Core/RectangleGeometry", function () {
     actual = new Cartesian3(
       positions[length - 3],
       positions[length - 2],
-      positions[length - 1]
+      positions[length - 1],
     );
     expect(actual).toEqualEpsilon(unrotatedNWCorner, CesiumMath.EPSILON8);
   });
@@ -200,7 +200,7 @@ describe("Core/RectangleGeometry", function () {
         rectangle: rectangle,
         stRotation: angle,
         granularity: 1.0,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
     const st = m.attributes.st.values;
@@ -224,7 +224,7 @@ describe("Core/RectangleGeometry", function () {
         rotation: angle,
         stRotation: angle,
         granularity: 1.0,
-      })
+      }),
     );
     const st = m.attributes.st.values;
 
@@ -252,10 +252,10 @@ describe("Core/RectangleGeometry", function () {
             -CesiumMath.PI_OVER_TWO,
             1,
             CesiumMath.PI_OVER_TWO,
-            CesiumMath.PI_OVER_TWO
+            CesiumMath.PI_OVER_TWO,
           ),
           rotation: CesiumMath.PI_OVER_TWO,
-        })
+        }),
       );
     }).toThrowDeveloperError();
   });
@@ -267,7 +267,7 @@ describe("Core/RectangleGeometry", function () {
           -CesiumMath.PI_OVER_TWO,
           CesiumMath.PI_OVER_TWO,
           CesiumMath.PI_OVER_TWO,
-          -CesiumMath.PI_OVER_TWO
+          -CesiumMath.PI_OVER_TWO,
         ),
       });
     }).toThrowDeveloperError();
@@ -281,7 +281,7 @@ describe("Core/RectangleGeometry", function () {
         rectangle: rectangle,
         granularity: 1.0,
         extrudedHeight: 2,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -296,7 +296,7 @@ describe("Core/RectangleGeometry", function () {
         vertexFormat: VertexFormat.POSITION_ONLY,
         rectangle: rectangle,
         extrudedHeight: 2,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -311,7 +311,7 @@ describe("Core/RectangleGeometry", function () {
         vertexFormat: VertexFormat.POSITION_ONLY,
         rectangle: rectangle,
         extrudedHeight: 2,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -326,7 +326,7 @@ describe("Core/RectangleGeometry", function () {
         rectangle: new Rectangle(-2.0, -1.0, 0.0, 1.0),
         granularity: 1.0,
         extrudedHeight: 2,
-      })
+      }),
     );
     const numVertices = 42;
     const numTriangles = 32;
@@ -348,7 +348,7 @@ describe("Core/RectangleGeometry", function () {
         rotation: angle,
         granularity: 1.0,
         extrudedHeight: 2,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
     const length = positions.length;
@@ -361,10 +361,10 @@ describe("Core/RectangleGeometry", function () {
     const projectedSECorner = projection.project(unrotatedSECorner);
     const rotation = Matrix2.fromRotation(angle);
     const rotatedSECornerCartographic = projection.unproject(
-      Matrix2.multiplyByVector(rotation, projectedSECorner, new Cartesian2())
+      Matrix2.multiplyByVector(rotation, projectedSECorner, new Cartesian2()),
     );
     const rotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(
-      rotatedSECornerCartographic
+      rotatedSECornerCartographic,
     );
     const actual = new Cartesian3(positions[51], positions[52], positions[53]);
     expect(actual).toEqualEpsilon(rotatedSECorner, CesiumMath.EPSILON6);
@@ -378,7 +378,7 @@ describe("Core/RectangleGeometry", function () {
         rectangle: rectangle,
         granularity: 1.0,
         extrudedHeight: CesiumMath.EPSILON14,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -396,7 +396,7 @@ describe("Core/RectangleGeometry", function () {
         rectangle: rectangle,
         granularity: 1.0,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -418,7 +418,7 @@ describe("Core/RectangleGeometry", function () {
         granularity: 1.0,
         extrudedHeight: 2,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -443,7 +443,7 @@ describe("Core/RectangleGeometry", function () {
         granularity: 1.0,
         extrudedHeight: 2,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -506,19 +506,19 @@ describe("Core/RectangleGeometry", function () {
     const r = geometry.rectangle;
     expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(
       1.414213562373095,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(
       -1.414213562373095,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(
       1.414213562373095,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(
       -1.4142135623730951,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -537,27 +537,27 @@ describe("Core/RectangleGeometry", function () {
     expect(textureCoordinateRotationPoints.length).toEqual(6);
     expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     geometry = new RectangleGeometry({
@@ -571,27 +571,27 @@ describe("Core/RectangleGeometry", function () {
     expect(textureCoordinateRotationPoints.length).toEqual(6);
     expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -634,7 +634,7 @@ describe("Core/RectangleGeometry", function () {
           rectangle: Rectangle.MAX_VALUE,
           granularity: 1.0,
           rotation: 0,
-        })
+        }),
       );
     }).not.toThrowDeveloperError();
   });
@@ -644,7 +644,7 @@ describe("Core/RectangleGeometry", function () {
       Math.PI - 0.005,
       CesiumMath.PI_OVER_SIX + 0.02,
       0.01 - Math.PI,
-      CesiumMath.PI_OVER_SIX + 0.04
+      CesiumMath.PI_OVER_SIX + 0.04,
     );
 
     const geometry = new RectangleGeometry({
@@ -664,26 +664,8 @@ describe("Core/RectangleGeometry", function () {
     ellipsoid: Ellipsoid.UNIT_SPHERE,
   });
   const packedInstance = [
-    -2.0,
-    -1.0,
-    0.0,
-    1.0,
-    1.0,
-    1.0,
-    1.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -1,
+    -2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, -1,
   ];
   createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
 });

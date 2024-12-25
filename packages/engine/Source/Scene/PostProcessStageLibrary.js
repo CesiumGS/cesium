@@ -14,6 +14,7 @@ import DepthOfField from "../Shaders/PostProcessStages/DepthOfField.js";
 import DepthView from "../Shaders/PostProcessStages/DepthView.js";
 import EdgeDetection from "../Shaders/PostProcessStages/EdgeDetection.js";
 import FilmicTonemapping from "../Shaders/PostProcessStages/FilmicTonemapping.js";
+import PbrNeutralTonemapping from "../Shaders/PostProcessStages/PbrNeutralTonemapping.js";
 import FXAA from "../Shaders/PostProcessStages/FXAA.js";
 import GaussianBlur1D from "../Shaders/PostProcessStages/GaussianBlur1D.js";
 import LensFlare from "../Shaders/PostProcessStages/LensFlare.js";
@@ -475,27 +476,19 @@ PostProcessStageLibrary.createBloomStage = function () {
  * surface receives light and regardless of the light's position.
  * </p>
  * <p>
- * The uniforms have the following properties: <code>intensity</code>, <code>bias</code>, <code>lengthCap</code>,
- * <code>stepSize</code>, <code>frustumLength</code>, <code>randomTexture</code>, <code>ambientOcclusionOnly</code>,
- * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code>.
- * </p>
+ * The uniforms have the following properties:
  * <ul>
  * <li><code>intensity</code> is a scalar value used to lighten or darken the shadows exponentially. Higher values make the shadows darker. The default value is <code>3.0</code>.</li>
  * <li><code>bias</code> is a scalar value representing an angle in radians. If the dot product between the normal of the sample and the vector to the camera is less than this value,
  * sampling stops in the current direction. This is used to remove shadows from near planar edges. The default value is <code>0.1</code>.</li>
  * <li><code>lengthCap</code> is a scalar value representing a length in meters. If the distance from the current sample to first sample is greater than this value,
  * sampling stops in the current direction. The default value is <code>0.26</code>.</li>
- * <li><code>stepSize</code> is a scalar value indicating the distance to the next texel sample in the current direction. The default value is <code>1.95</code>.</li>
- * <li><code>frustumLength</code> is a scalar value in meters. If the current fragment has a distance from the camera greater than this value, ambient occlusion is not computed for the fragment.
- * The default value is <code>1000.0</code>.</li>
+ * <li><code>directionCount</code> is the number of directions along which the ray marching will search for occluders. The default value is <code>8</code>.</li>
+ * <li><code>stepCount</code> is the number of steps the ray marching will take along each direction. The default value is <code>32</code>.</li>
  * <li><code>randomTexture</code> is a texture where the red channel is a random value in [0.0, 1.0]. The default value is <code>undefined</code>. This texture needs to be set.</li>
  * <li><code>ambientOcclusionOnly</code> is a boolean value. When <code>true</code>, only the shadows generated are written to the output. When <code>false</code>, the input texture is modulated
  * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.</li>
  * </ul>
- * <p>
- * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
- * The blur is applied to the shadows generated from the image to make them smoother.
- * </p>
  * @return {PostProcessStageComposite} A post-process stage that applies an ambient occlusion effect.
  *
  * @private
@@ -508,16 +501,10 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       intensity: 3.0,
       bias: 0.1,
       lengthCap: 0.26,
-      stepSize: 1.95,
-      frustumLength: 1000.0,
+      directionCount: 8,
+      stepCount: 32,
       randomTexture: undefined,
     },
-  });
-  const blur = createBlur("czm_ambient_occlusion_blur");
-  blur.uniforms.stepSize = 0.86;
-  const generateAndBlur = new PostProcessStageComposite({
-    name: "czm_ambient_occlusion_generate_blur",
-    stages: [generate, blur],
   });
 
   const ambientOcclusionModulate = new PostProcessStage({
@@ -525,7 +512,7 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
     fragmentShader: AmbientOcclusionModulate,
     uniforms: {
       ambientOcclusionOnly: false,
-      ambientOcclusionTexture: generateAndBlur.name,
+      ambientOcclusionTexture: generate.name,
     },
   });
 
@@ -555,20 +542,20 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
         generate.uniforms.lengthCap = value;
       },
     },
-    stepSize: {
+    directionCount: {
       get: function () {
-        return generate.uniforms.stepSize;
+        return generate.uniforms.directionCount;
       },
       set: function (value) {
-        generate.uniforms.stepSize = value;
+        generate.uniforms.directionCount = value;
       },
     },
-    frustumLength: {
+    stepCount: {
       get: function () {
-        return generate.uniforms.frustumLength;
+        return generate.uniforms.stepCount;
       },
       set: function (value) {
-        generate.uniforms.frustumLength = value;
+        generate.uniforms.stepCount = value;
       },
     },
     randomTexture: {
@@ -577,30 +564,6 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       },
       set: function (value) {
         generate.uniforms.randomTexture = value;
-      },
-    },
-    delta: {
-      get: function () {
-        return blur.uniforms.delta;
-      },
-      set: function (value) {
-        blur.uniforms.delta = value;
-      },
-    },
-    sigma: {
-      get: function () {
-        return blur.uniforms.sigma;
-      },
-      set: function (value) {
-        blur.uniforms.sigma = value;
-      },
-    },
-    blurStepSize: {
-      get: function () {
-        return blur.uniforms.stepSize;
-      },
-      set: function (value) {
-        blur.uniforms.stepSize = value;
       },
     },
     ambientOcclusionOnly: {
@@ -615,7 +578,7 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
 
   return new PostProcessStageComposite({
     name: "czm_ambient_occlusion",
-    stages: [generateAndBlur, ambientOcclusionModulate],
+    stages: [generate, ambientOcclusionModulate],
     inputPreviousStageTexture: false,
     uniforms: uniforms,
   });
@@ -660,7 +623,7 @@ PostProcessStageLibrary.createFXAAStage = function () {
  * @private
  */
 PostProcessStageLibrary.createAcesTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += AcesTonemapping;
@@ -669,6 +632,7 @@ PostProcessStageLibrary.createAcesTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
+      exposure: 1.0,
     },
   });
 };
@@ -680,7 +644,7 @@ PostProcessStageLibrary.createAcesTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createFilmicTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += FilmicTonemapping;
@@ -689,6 +653,28 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
+      exposure: 1.0,
+    },
+  });
+};
+
+/**
+ * Creates a post-process stage that applies filmic tonemapping operator.
+ * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
+ * @return {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
+ * @private
+ */
+PostProcessStageLibrary.createPbrNeutralTonemappingStage = function (
+  useAutoExposure,
+) {
+  let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
+  fs += PbrNeutralTonemapping;
+  return new PostProcessStage({
+    name: "czm_pbr_neutral",
+    fragmentShader: fs,
+    uniforms: {
+      autoExposure: undefined,
+      exposure: 1.0,
     },
   });
 };
@@ -700,7 +686,7 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createReinhardTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += ReinhardTonemapping;
@@ -709,6 +695,7 @@ PostProcessStageLibrary.createReinhardTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
+      exposure: 1.0,
     },
   });
 };
@@ -720,7 +707,7 @@ PostProcessStageLibrary.createReinhardTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += ModifiedReinhardTonemapping;
@@ -730,6 +717,7 @@ PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function (
     uniforms: {
       white: Color.WHITE,
       autoExposure: undefined,
+      exposure: 1.0,
     },
   });
 };

@@ -22,7 +22,7 @@
       {
         log: print(d1),
       },
-      "*"
+      "*",
     );
   };
 
@@ -33,7 +33,7 @@
       {
         warn: defined(d1) ? d1.toString() : "undefined",
       },
-      "*"
+      "*",
     );
   };
 
@@ -45,7 +45,7 @@
         {
           error: "undefined",
         },
-        "*"
+        "*",
       );
       return;
     }
@@ -75,7 +75,7 @@
             try {
               lineNumber = parseInt(
                 stack.substring(lineStart + 1, lineEnd1),
-                10
+                10,
               );
             } catch (ex) {}
             /*eslint-enable no-empty*/
@@ -90,14 +90,14 @@
           error: errorMsg,
           lineNumber: lineNumber,
         },
-        "*"
+        "*",
       );
     } else {
       window.parent.postMessage(
         {
           error: errorMsg,
         },
-        "*"
+        "*",
       );
     }
   };
@@ -129,7 +129,7 @@
           url: url,
           lineNumber: lineNumber,
         },
-        "*"
+        "*",
       );
     } else {
       window.parent.postMessage(
@@ -137,7 +137,7 @@
           error: errorMsg,
           url: url,
         },
-        "*"
+        "*",
       );
     }
     console.originalError.apply(console, [errorMsg]);
@@ -187,7 +187,7 @@
             {
               highlight: Sandcastle.registered[i].lineNumber,
             },
-            "*"
+            "*",
           );
           return;
         }
@@ -197,7 +197,7 @@
       {
         highlight: 0,
       },
-      "*"
+      "*",
     );
   };
 })();

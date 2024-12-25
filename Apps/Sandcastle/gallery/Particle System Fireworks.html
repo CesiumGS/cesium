@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -42,7 +39,7 @@
         Cesium.Math.setRandomNumberSeed(315);
 
         const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-          Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
+          Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         );
         const emitterInitialLocation = new Cesium.Cartesian3(0.0, 0.0, 100.0);
 
@@ -76,44 +73,40 @@
           const position = Cesium.Cartesian3.add(
             emitterInitialLocation,
             offset,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           const emitterModelMatrix = Cesium.Matrix4.fromTranslation(
             position,
-            emitterModelMatrixScratch
+            emitterModelMatrixScratch,
           );
           const particleToWorld = Cesium.Matrix4.multiply(
             modelMatrix,
             emitterModelMatrix,
-            new Cesium.Matrix4()
+            new Cesium.Matrix4(),
           );
           const worldToParticle = Cesium.Matrix4.inverseTransformation(
             particleToWorld,
-            particleToWorld
+            particleToWorld,
           );
 
           const size = Cesium.Math.randomBetween(
             minimumExplosionSize,
-            maximumExplosionSize
+            maximumExplosionSize,
           );
           const particlePositionScratch = new Cesium.Cartesian3();
           const force = function (particle) {
             const position = Cesium.Matrix4.multiplyByPoint(
               worldToParticle,
               particle.position,
-              particlePositionScratch
+              particlePositionScratch,
             );
             if (Cesium.Cartesian3.magnitudeSquared(position) >= size * size) {
-              Cesium.Cartesian3.clone(
-                Cesium.Cartesian3.ZERO,
-                particle.velocity
-              );
+              Cesium.Cartesian3.clone(Cesium.Cartesian3.ZERO, particle.velocity);
             }
           };
 
           const normalSize =
-            (size - minimumExplosionSize) /
-            (maximumExplosionSize - minimumExplosionSize);
+            (size - minimumExplosionSize) / (maximumExplosionSize - minimumExplosionSize);
           const minLife = 0.3;
           const maxLife = 1.0;
           const life = normalSize * (maxLife - minLife) + minLife;
@@ -133,7 +126,7 @@
               updateCallback: force,
               modelMatrix: modelMatrix,
               emitterModelMatrix: emitterModelMatrix,
-            })
+            }),
           );
         }
 
@@ -176,9 +169,7 @@
           const y = Cesium.Math.randomBetween(yMin, yMax);
           const z = Cesium.Math.randomBetween(zMin, zMax);
           const offset = new Cesium.Cartesian3(x, y, z);
-          const color = Cesium.Color.fromRandom(
-            colorOptions[i % colorOptions.length]
-          );
+          const color = Cesium.Color.fromRandom(colorOptions[i % colorOptions.length]);
 
           const bursts = [];
           for (let j = 0; j < 3; ++j) {
@@ -187,7 +178,7 @@
                 time: Cesium.Math.nextRandomNumber() * lifetime,
                 minimum: burstSize,
                 maximum: burstSize,
-              })
+              }),
             );
           }
 
@@ -202,14 +193,12 @@
         const toFireworks = Cesium.Cartesian3.subtract(
           emitterInitialLocation,
           cameraOffset,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
         Cesium.Cartesian3.normalize(toFireworks, toFireworks);
         const angle =
           Cesium.Math.PI_OVER_TWO -
-          Math.acos(
-            Cesium.Cartesian3.dot(toFireworks, Cesium.Cartesian3.UNIT_Z)
-          );
+          Math.acos(Cesium.Cartesian3.dot(toFireworks, Cesium.Cartesian3.UNIT_Z));
         camera.lookUp(angle);
         //Sandcastle_End
       };

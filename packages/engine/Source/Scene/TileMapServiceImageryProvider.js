@@ -81,7 +81,7 @@ TileMapServiceImageryProvider._requestMetadata = async function (
   options,
   tmsResource,
   xmlResource,
-  provider
+  provider,
 ) {
   // Try to load remaining parameters from XML
   try {
@@ -91,13 +91,13 @@ TileMapServiceImageryProvider._requestMetadata = async function (
       options,
       tmsResource,
       xmlResource,
-      provider
+      provider,
     );
   } catch (e) {
     if (e instanceof RequestErrorEvent) {
       return TileMapServiceImageryProvider._metadataFailure(
         options,
-        tmsResource
+        tmsResource,
       );
     }
 
@@ -143,7 +143,7 @@ TileMapServiceImageryProvider.fromUrl = async function (url, options) {
   const metadata = await TileMapServiceImageryProvider._requestMetadata(
     options,
     tmsResource,
-    xmlResource
+    xmlResource,
   );
 
   return new TileMapServiceImageryProvider(metadata);
@@ -151,9 +151,10 @@ TileMapServiceImageryProvider.fromUrl = async function (url, options) {
 
 if (defined(Object.create)) {
   TileMapServiceImageryProvider.prototype = Object.create(
-    UrlTemplateImageryProvider.prototype
+    UrlTemplateImageryProvider.prototype,
   );
-  TileMapServiceImageryProvider.prototype.constructor = TileMapServiceImageryProvider;
+  TileMapServiceImageryProvider.prototype.constructor =
+    TileMapServiceImageryProvider;
 }
 
 /**
@@ -179,18 +180,18 @@ function confineRectangleToTilingScheme(rectangle, tilingScheme) {
 function calculateSafeMinimumDetailLevel(
   tilingScheme,
   rectangle,
-  minimumLevel
+  minimumLevel,
 ) {
   // Check the number of tiles at the minimum level.  If it's more than four,
   // try requesting the lower levels anyway, because starting at the higher minimum
   // level will cause too many tiles to be downloaded and rendered.
   const swTile = tilingScheme.positionToTileXY(
     Rectangle.southwest(rectangle),
-    minimumLevel
+    minimumLevel,
   );
   const neTile = tilingScheme.positionToTileXY(
     Rectangle.northeast(rectangle),
-    minimumLevel
+    minimumLevel,
   );
   const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
@@ -215,7 +216,7 @@ TileMapServiceImageryProvider._metadataSuccess = function (
   options,
   tmsResource,
   xmlResource,
-  provider
+  provider,
 ) {
   const tileFormatRegex = /tileformat/i;
   const tileSetRegex = /tileset/i;
@@ -254,7 +255,7 @@ TileMapServiceImageryProvider._metadataSuccess = function (
         undefined,
         provider,
         provider.errorEvent,
-        message
+        message,
       );
     }
 
@@ -263,23 +264,23 @@ TileMapServiceImageryProvider._metadataSuccess = function (
 
   const fileExtension = defaultValue(
     options.fileExtension,
-    format.getAttribute("extension")
+    format.getAttribute("extension"),
   );
   const tileWidth = defaultValue(
     options.tileWidth,
-    parseInt(format.getAttribute("width"), 10)
+    parseInt(format.getAttribute("width"), 10),
   );
   const tileHeight = defaultValue(
     options.tileHeight,
-    parseInt(format.getAttribute("height"), 10)
+    parseInt(format.getAttribute("height"), 10),
   );
   let minimumLevel = defaultValue(
     options.minimumLevel,
-    parseInt(tilesetsList[0].getAttribute("order"), 10)
+    parseInt(tilesetsList[0].getAttribute("order"), 10),
   );
   const maximumLevel = defaultValue(
     options.maximumLevel,
-    parseInt(tilesetsList[tilesetsList.length - 1].getAttribute("order"), 10)
+    parseInt(tilesetsList[tilesetsList.length - 1].getAttribute("order"), 10),
   );
   const tilingSchemeName = tilesets.getAttribute("profile");
   let tilingScheme = options.tilingScheme;
@@ -306,7 +307,7 @@ TileMapServiceImageryProvider._metadataSuccess = function (
           undefined,
           provider,
           provider.errorEvent,
-          message
+          message,
         );
       }
 
@@ -329,20 +330,20 @@ TileMapServiceImageryProvider._metadataSuccess = function (
     if (flipXY) {
       swXY = new Cartesian2(
         parseFloat(bbox.getAttribute("miny")),
-        parseFloat(bbox.getAttribute("minx"))
+        parseFloat(bbox.getAttribute("minx")),
       );
       neXY = new Cartesian2(
         parseFloat(bbox.getAttribute("maxy")),
-        parseFloat(bbox.getAttribute("maxx"))
+        parseFloat(bbox.getAttribute("maxx")),
       );
     } else {
       swXY = new Cartesian2(
         parseFloat(bbox.getAttribute("minx")),
-        parseFloat(bbox.getAttribute("miny"))
+        parseFloat(bbox.getAttribute("miny")),
       );
       neXY = new Cartesian2(
         parseFloat(bbox.getAttribute("maxx")),
-        parseFloat(bbox.getAttribute("maxy"))
+        parseFloat(bbox.getAttribute("maxy")),
       );
     }
 
@@ -368,7 +369,7 @@ TileMapServiceImageryProvider._metadataSuccess = function (
       sw.longitude,
       sw.latitude,
       ne.longitude,
-      ne.latitude
+      ne.latitude,
     );
   }
 
@@ -378,7 +379,7 @@ TileMapServiceImageryProvider._metadataSuccess = function (
   minimumLevel = calculateSafeMinimumDetailLevel(
     tilingScheme,
     rectangle,
-    minimumLevel
+    minimumLevel,
   );
 
   const templateResource = tmsResource.getDerivedResource({
@@ -408,7 +409,7 @@ TileMapServiceImageryProvider._metadataSuccess = function (
  */
 TileMapServiceImageryProvider._metadataFailure = function (
   options,
-  tmsResource
+  tmsResource,
 ) {
   // Can't load XML, still allow options and defaults
   const fileExtension = defaultValue(options.fileExtension, "png");
@@ -427,7 +428,7 @@ TileMapServiceImageryProvider._metadataFailure = function (
   const minimumLevel = calculateSafeMinimumDetailLevel(
     tilingScheme,
     rectangle,
-    options.minimumLevel
+    options.minimumLevel,
   );
 
   const templateResource = tmsResource.getDerivedResource({

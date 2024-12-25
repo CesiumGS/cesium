@@ -41,7 +41,7 @@ function GetFeatureInfoFormat(type, format, callback) {
     //>>includeStart('debug', pragmas.debug);
     else {
       throw new DeveloperError(
-        'format is required when type is not "json", "xml", "html", or "text".'
+        'format is required when type is not "json", "xml", "html", or "text".',
       );
     }
     //>>includeEnd('debug');
@@ -62,7 +62,7 @@ function GetFeatureInfoFormat(type, format, callback) {
     //>>includeStart('debug', pragmas.debug);
     else {
       throw new DeveloperError(
-        'callback is required when type is not "json", "xml", "html", or "text".'
+        'callback is required when type is not "json", "xml", "html", or "text".',
       );
     }
     //>>includeEnd('debug');
@@ -125,7 +125,7 @@ function xmlToFeatureInfo(xml) {
   } else if (documentElement.localName === "ServiceExceptionReport") {
     // This looks like a WMS server error, so no features picked.
     throw new RuntimeError(
-      new XMLSerializer().serializeToString(documentElement)
+      new XMLSerializer().serializeToString(documentElement),
     );
   } else if (documentElement.localName === "msGMLOutput") {
     return msGmlToFeatureInfo(xml);
@@ -142,7 +142,7 @@ function mapInfoXmlToFeatureInfo(xml) {
 
   const features = multiFeatureCollection.getElementsByTagNameNS(
     mapInfoMxpNamespace,
-    "Feature"
+    "Feature",
   );
   for (let featureIndex = 0; featureIndex < features.length; ++featureIndex) {
     const feature = features[featureIndex];
@@ -151,7 +151,7 @@ function mapInfoXmlToFeatureInfo(xml) {
 
     const propertyElements = feature.getElementsByTagNameNS(
       mapInfoMxpNamespace,
-      "Val"
+      "Val",
     );
     for (
       let propertyIndex = 0;
@@ -201,14 +201,14 @@ function esriXmlToFeatureInfo(xml) {
       }
 
       result.push(
-        imageryLayerFeatureInfoFromDataAndProperties(feature, properties)
+        imageryLayerFeatureInfoFromDataAndProperties(feature, properties),
       );
     }
   } else {
     // Thredds format -- looks like esri, but instead of containing FIELDS, contains FeatureInfo element
     const featureInfoElements = featureInfoResponse.getElementsByTagNameNS(
       "*",
-      "FeatureInfo"
+      "FeatureInfo",
     );
     for (
       let featureInfoElementIndex = 0;
@@ -235,8 +235,8 @@ function esriXmlToFeatureInfo(xml) {
       result.push(
         imageryLayerFeatureInfoFromDataAndProperties(
           featureInfoElement,
-          properties
-        )
+          properties,
+        ),
       );
     }
   }
@@ -251,7 +251,7 @@ function gmlToFeatureInfo(xml) {
 
   const featureMembers = featureCollection.getElementsByTagNameNS(
     gmlNamespace,
-    "featureMember"
+    "featureMember",
   );
   for (
     let featureIndex = 0;
@@ -263,7 +263,7 @@ function gmlToFeatureInfo(xml) {
     const properties = {};
     getGmlPropertiesRecursively(featureMember, properties);
     result.push(
-      imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties)
+      imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties),
     );
   }
 
@@ -288,7 +288,7 @@ function msGmlToFeatureInfo(xml) {
   }
   if (!defined(layer)) {
     throw new RuntimeError(
-      "Unable to find first child of the feature info xml document"
+      "Unable to find first child of the feature info xml document",
     );
   }
   const featureMembers = layer.childNodes;
@@ -302,7 +302,7 @@ function msGmlToFeatureInfo(xml) {
       const properties = {};
       getGmlPropertiesRecursively(featureMember, properties);
       result.push(
-        imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties)
+        imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties),
       );
     }
   }
@@ -364,7 +364,8 @@ function unknownXmlToFeatureInfo(xml) {
 }
 
 const emptyBodyRegex = /<body>\s*<\/body>/im;
-const wmsServiceExceptionReportRegex = /<ServiceExceptionReport([\s\S]*)<\/ServiceExceptionReport>/im;
+const wmsServiceExceptionReportRegex =
+  /<ServiceExceptionReport([\s\S]*)<\/ServiceExceptionReport>/im;
 const titleRegex = /<title>([\s\S]*)<\/title>/im;
 
 function textToFeatureInfo(text) {

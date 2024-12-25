@@ -37,14 +37,14 @@ const ModelColorPipelineStage = {
 ModelColorPipelineStage.process = function (
   renderResources,
   model,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine(
     "HAS_MODEL_COLOR",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addFragmentLines(ModelColorStageFS);
 
@@ -69,7 +69,7 @@ ModelColorPipelineStage.process = function (
   shaderBuilder.addUniform(
     "vec4",
     ModelColorPipelineStage.COLOR_UNIFORM_NAME,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   stageUniforms[ModelColorPipelineStage.COLOR_UNIFORM_NAME] = function () {
     return model.color;
@@ -79,20 +79,19 @@ ModelColorPipelineStage.process = function (
   shaderBuilder.addUniform(
     "float",
     ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
-  stageUniforms[
-    ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME
-  ] = function () {
-    return ColorBlendMode.getColorBlend(
-      model.colorBlendMode,
-      model.colorBlendAmount
-    );
-  };
+  stageUniforms[ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME] =
+    function () {
+      return ColorBlendMode.getColorBlend(
+        model.colorBlendMode,
+        model.colorBlendAmount,
+      );
+    };
 
   renderResources.uniformMap = combine(
     stageUniforms,
-    renderResources.uniformMap
+    renderResources.uniformMap,
   );
 };
 

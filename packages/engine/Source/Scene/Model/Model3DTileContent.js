@@ -152,6 +152,47 @@ Object.defineProperties(Model3DTileContent.prototype, {
   },
 });
 
+/**
+ * Returns an array containing the `texture.id` values for all textures
+ * that are part of this content.
+ *
+ * @returns {string[]} The texture IDs
+ */
+Model3DTileContent.prototype.getTextureIds = function () {
+  return this._model.statistics.getTextureIds();
+};
+
+/**
+ * Returns the length, in bytes, of the texture data for the texture with
+ * the given ID that is part of this content, or `undefined` if this
+ * content does not contain the texture with the given ID.
+ *
+ * @param {string} textureId The texture ID
+ * @returns {number|undefined} The texture byte length
+ */
+Model3DTileContent.prototype.getTextureByteLengthById = function (textureId) {
+  return this._model.statistics.getTextureByteLengthById(textureId);
+};
+
+/**
+ * Returns the object that was created for the given extension.
+ *
+ * The given name may be the name of a glTF extension, like `"EXT_example_extension"`.
+ * If the specified extension was present in the root of the underlying glTF asset,
+ * and a loader for the specified extension has processed the extension data, then
+ * this will return the model representation of the extension.
+ *
+ * @param {string} extensionName The name of the extension
+ * @returns {object|undefined} The object, or `undefined`
+ *
+ * @private
+ */
+Model3DTileContent.prototype.getExtension = function (extensionName) {
+  const model = this._model;
+  const extension = model.getExtension(extensionName);
+  return extension;
+};
+
 Model3DTileContent.prototype.getFeature = function (featureId) {
   const model = this._model;
   const featureTableId = model.featureTableId;
@@ -159,7 +200,7 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(featureTableId)) {
     throw new DeveloperError(
-      "No feature ID set is selected. Make sure Cesium3DTileset.featureIdLabel or Cesium3DTileset.instanceFeatureIdLabel is defined"
+      "No feature ID set is selected. Make sure Cesium3DTileset.featureIdLabel or Cesium3DTileset.instanceFeatureIdLabel is defined",
     );
   }
   //>>includeEnd('debug');
@@ -169,7 +210,7 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(featureTable)) {
     throw new DeveloperError(
-      "No feature table found for the selected feature ID set"
+      "No feature table found for the selected feature ID set",
     );
   }
   //>>includeEnd('debug');
@@ -180,7 +221,7 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
     throw new DeveloperError(
       `featureId is required and must be between 0 and featuresLength - 1 (${
         featuresLength - 1
-      }).`
+      }).`,
     );
   }
   //>>includeEnd('debug');
@@ -242,6 +283,11 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
       tilesetClippingPlanes.enabled && tile._isClipped
         ? tilesetClippingPlanes
         : undefined;
+  }
+
+  const tilesetEnvironmentMapManager = tileset.environmentMapManager;
+  if (model.environmentMapManager !== tilesetClippingPlanes) {
+    model._environmentMapManager = tilesetEnvironmentMapManager;
   }
 
   // If the model references a different ClippingPlaneCollection from the tileset,
@@ -309,7 +355,7 @@ Model3DTileContent.fromGltf = async function (tileset, tile, resource, gltf) {
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
 
   const classificationType = tileset.vectorClassificationOnly
@@ -329,7 +375,7 @@ Model3DTileContent.fromB3dm = async function (
   tile,
   resource,
   arrayBuffer,
-  byteOffset
+  byteOffset,
 ) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
@@ -343,7 +389,7 @@ Model3DTileContent.fromB3dm = async function (
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
 
   const classificationType = tileset.vectorClassificationOnly
@@ -363,7 +409,7 @@ Model3DTileContent.fromI3dm = async function (
   tile,
   resource,
   arrayBuffer,
-  byteOffset
+  byteOffset,
 ) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
@@ -377,7 +423,7 @@ Model3DTileContent.fromI3dm = async function (
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
 
   const model = await Model.fromI3dm(modelOptions);
@@ -391,7 +437,7 @@ Model3DTileContent.fromPnts = async function (
   tile,
   resource,
   arrayBuffer,
-  byteOffset
+  byteOffset,
 ) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
@@ -405,7 +451,7 @@ Model3DTileContent.fromPnts = async function (
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
   const model = await Model.fromPnts(modelOptions);
   content._model = model;
@@ -417,7 +463,7 @@ Model3DTileContent.fromGeoJson = async function (
   tileset,
   tile,
   resource,
-  geoJson
+  geoJson,
 ) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
@@ -430,7 +476,7 @@ Model3DTileContent.fromGeoJson = async function (
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
   const model = await Model.fromGeoJson(modelOptions);
   content._model = model;
@@ -463,7 +509,7 @@ Model3DTileContent.prototype.pick = function (ray, frameState, result) {
     verticalExaggeration,
     relativeHeight,
     Ellipsoid.WGS84,
-    result
+    result,
   );
 };
 

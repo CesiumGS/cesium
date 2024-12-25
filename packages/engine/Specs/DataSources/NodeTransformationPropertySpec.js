@@ -45,7 +45,7 @@ describe("DataSources/NodeTransformationProperty", function () {
     const property = new NodeTransformationProperty();
     property.translation = new ConstantProperty(Cartesian3.UNIT_Y);
     property.rotation = new ConstantProperty(
-      new Quaternion(0.5, 0.5, 0.5, 0.5)
+      new Quaternion(0.5, 0.5, 0.5, 0.5),
     );
     property.scale = new ConstantProperty(Cartesian3.UNIT_X);
 
@@ -68,21 +68,21 @@ describe("DataSources/NodeTransformationProperty", function () {
         start: start,
         stop: stop,
         data: Cartesian3.UNIT_Y,
-      })
+      }),
     );
     property.rotation.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: new Quaternion(0.5, 0.5, 0.5, 0.5),
-      })
+      }),
     );
     property.scale.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: Cartesian3.UNIT_X,
-      })
+      }),
     );
 
     expect(property.isConstant).toBe(false);
@@ -97,7 +97,7 @@ describe("DataSources/NodeTransformationProperty", function () {
     const property = new NodeTransformationProperty();
     property.translation = new ConstantProperty(Cartesian3.UNIT_Y);
     property.rotation = new ConstantProperty(
-      new Quaternion(0.5, 0.5, 0.5, 0.5)
+      new Quaternion(0.5, 0.5, 0.5, 0.5),
     );
     property.scale = new ConstantProperty(Cartesian3.UNIT_X);
 
@@ -150,19 +150,19 @@ describe("DataSources/NodeTransformationProperty", function () {
       property,
       "rotation",
       Cartesian3.UNIT_X,
-      Cartesian3.ZERO
+      Cartesian3.ZERO,
     );
     testDefinitionChanged(
       property,
       "translation",
       new Quaternion(0.5, 0.5, 0.5, 0.5),
-      Quaternion.ZERO
+      Quaternion.ZERO,
     );
     testDefinitionChanged(
       property,
       "scale",
       Cartesian3.UNIT_X,
-      Cartesian3.ZERO
+      Cartesian3.ZERO,
     );
   });
 });

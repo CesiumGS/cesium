@@ -67,7 +67,7 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
       const axis = Cartesian3.subtract(
         childOrientedBoundingBox.center,
         orientedBoundingBox.center,
-        scratchAxis
+        scratchAxis,
       );
       const axisLength = Cartesian3.magnitude(axis);
       Cartesian3.divideByScalar(axis, axisLength, axis);

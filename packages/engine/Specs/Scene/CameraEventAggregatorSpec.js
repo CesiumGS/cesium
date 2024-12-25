@@ -46,7 +46,7 @@ describe("Scene/CameraEventAggregator", function () {
         canvas,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseDown(canvas, options);
@@ -59,7 +59,7 @@ describe("Scene/CameraEventAggregator", function () {
         canvas,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseUp(canvas, options);
@@ -72,7 +72,7 @@ describe("Scene/CameraEventAggregator", function () {
         canvas,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseMove(canvas, options);
@@ -144,7 +144,7 @@ describe("Scene/CameraEventAggregator", function () {
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition, true);
     movement = handler.getMovement(
       CameraEventType.RIGHT_DRAG,
-      KeyboardEventModifier.SHIFT
+      KeyboardEventModifier.SHIFT,
     );
     expect(movement).toBeDefined();
     expect(movement.startPosition).toEqual(startPosition);
@@ -248,7 +248,7 @@ describe("Scene/CameraEventAggregator", function () {
 
   it("getButtonPressTime", function () {
     expect(
-      handler.getButtonPressTime(CameraEventType.LEFT_DRAG)
+      handler.getButtonPressTime(CameraEventType.LEFT_DRAG),
     ).toBeUndefined();
 
     const options = {
@@ -268,7 +268,7 @@ describe("Scene/CameraEventAggregator", function () {
 
   it("getButtonReleaseTime", function () {
     expect(
-      handler.getButtonReleaseTime(CameraEventType.LEFT_DRAG)
+      handler.getButtonReleaseTime(CameraEventType.LEFT_DRAG),
     ).toBeUndefined();
 
     const options = {

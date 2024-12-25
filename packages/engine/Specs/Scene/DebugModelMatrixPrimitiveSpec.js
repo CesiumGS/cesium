@@ -62,7 +62,7 @@ describe(
       scene.primitives.add(
         new DebugModelMatrixPrimitive({
           show: false,
-        })
+        }),
       );
       expect(scene).toRender([0, 0, 0, 255]);
     });
@@ -71,7 +71,7 @@ describe(
       const p = scene.primitives.add(
         new DebugModelMatrixPrimitive({
           id: "id",
-        })
+        }),
       );
 
       expect(scene).toPickAndCall(function (result) {
@@ -87,5 +87,5 @@ describe(
       expect(p.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

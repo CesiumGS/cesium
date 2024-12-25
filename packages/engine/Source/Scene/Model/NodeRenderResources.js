@@ -76,7 +76,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    */
   this.renderStateOptions = clone(
     modelRenderResources.renderStateOptions,
-    true
+    true,
   );
 
   /**

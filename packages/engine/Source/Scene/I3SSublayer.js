@@ -129,7 +129,7 @@ I3SSublayer._fromData = async function (
   dataProvider,
   buildingLayerUrl,
   sublayerData,
-  parent
+  parent,
 ) {
   const sublayer = new I3SSublayer(dataProvider, parent, sublayerData);
   if (sublayer._data.layerType === "group") {
@@ -141,7 +141,7 @@ I3SSublayer._fromData = async function (
           dataProvider,
           buildingLayerUrl,
           sublayers[i],
-          sublayer
+          sublayer,
         );
         promises.push(promise);
       }
@@ -154,7 +154,7 @@ I3SSublayer._fromData = async function (
     }
   } else if (sublayer._data.layerType === "3DObject") {
     const sublayerUrl = buildingLayerUrl.concat(
-      `/sublayers/${sublayer._data.id}`
+      `/sublayers/${sublayer._data.id}`,
     );
     const resource = new Resource({ url: sublayerUrl });
     resource.setQueryParameters(dataProvider.resource.queryParameters);
@@ -167,7 +167,7 @@ I3SSublayer._fromData = async function (
   } else {
     // Filter other scene layer types out
     console.log(
-      `${sublayer._data.layerType} layer ${sublayer._data.name} is skipped as not supported.`
+      `${sublayer._data.layerType} layer ${sublayer._data.name} is skipped as not supported.`,
     );
   }
   return sublayer;

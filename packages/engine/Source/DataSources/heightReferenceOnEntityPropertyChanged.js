@@ -7,14 +7,14 @@ function heightReferenceOnEntityPropertyChanged(
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   GeometryUpdater.prototype._onEntityPropertyChanged.call(
     this,
     entity,
     propertyName,
     newValue,
-    oldValue
+    oldValue,
   );
   if (this._observedPropertyNames.indexOf(propertyName) === -1) {
     return;
@@ -35,12 +35,12 @@ function heightReferenceOnEntityPropertyChanged(
   if (defined(heightReferenceProperty)) {
     const centerPosition = new CallbackProperty(
       this._computeCenter.bind(this),
-      !this._dynamic
+      !this._dynamic,
     );
     this._terrainOffsetProperty = new TerrainOffsetProperty(
       this._scene,
       centerPosition,
-      heightReferenceProperty
+      heightReferenceProperty,
     );
   }
 }

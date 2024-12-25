@@ -68,7 +68,7 @@ describe("Core/EllipseGeometry", function () {
         granularity: 0.1,
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(16 * 3); // rows of 1 + 4 + 6 + 4 + 1
@@ -85,7 +85,7 @@ describe("Core/EllipseGeometry", function () {
         granularity: 0.1,
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
-      })
+      }),
     );
 
     const numVertices = 16;
@@ -108,7 +108,7 @@ describe("Core/EllipseGeometry", function () {
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
         stRotation: CesiumMath.PI_OVER_TWO,
-      })
+      }),
     );
 
     const positions = m.attributes.position.values;
@@ -135,7 +135,7 @@ describe("Core/EllipseGeometry", function () {
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
         extrudedHeight: 50000,
-      })
+      }),
     );
 
     const numVertices = 48; // 16 top + 16 bottom + 8 top edge + 8 bottom edge
@@ -154,7 +154,7 @@ describe("Core/EllipseGeometry", function () {
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
 
     const numVertices = 16;
@@ -177,7 +177,7 @@ describe("Core/EllipseGeometry", function () {
         semiMinorAxis: 1.0,
         extrudedHeight: 50000,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
 
     const numVertices = 48;
@@ -203,7 +203,7 @@ describe("Core/EllipseGeometry", function () {
         semiMinorAxis: 1.0,
         extrudedHeight: 50000,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
 
     const numVertices = 48;
@@ -225,7 +225,7 @@ describe("Core/EllipseGeometry", function () {
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
         extrudedHeight: 50000,
-      })
+      }),
     );
 
     const numVertices = 48;
@@ -296,7 +296,7 @@ describe("Core/EllipseGeometry", function () {
     const sv = EllipseGeometry.createShadowVolume(
       m,
       minHeightFunc,
-      maxHeightFunc
+      maxHeightFunc,
     );
 
     expect(sv._center.equals(m._center)).toBe(true);
@@ -310,7 +310,7 @@ describe("Core/EllipseGeometry", function () {
     expect(sv._height).toBe(maxHeightFunc());
 
     expect(sv._vertexFormat.bitangent).toBe(
-      VertexFormat.POSITION_ONLY.bitangent
+      VertexFormat.POSITION_ONLY.bitangent,
     );
     expect(sv._vertexFormat.color).toBe(VertexFormat.POSITION_ONLY.color);
     expect(sv._vertexFormat.normal).toBe(VertexFormat.POSITION_ONLY.normal);
@@ -344,7 +344,7 @@ describe("Core/EllipseGeometry", function () {
     r = ellipse.rectangle;
     expect(r.north).toEqualEpsilon(
       CesiumMath.PI_OVER_TWO - CesiumMath.EPSILON7,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(r.south).toEqualEpsilon(1.570483806950967, CesiumMath.EPSILON7);
     expect(r.east).toEqualEpsilon(CesiumMath.PI, CesiumMath.EPSILON7);
@@ -399,27 +399,27 @@ describe("Core/EllipseGeometry", function () {
     expect(textureCoordinateRotationPoints.length).toEqual(6);
     expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     ellipse = new EllipseGeometry({
@@ -433,27 +433,27 @@ describe("Core/EllipseGeometry", function () {
     expect(textureCoordinateRotationPoints.length).toEqual(6);
     expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 

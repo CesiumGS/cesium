@@ -17,7 +17,7 @@ function TextureAtlasNode(
   topRight,
   childNode1,
   childNode2,
-  imageIndex
+  imageIndex,
 ) {
   this.bottomLeft = defaultValue(bottomLeft, Cartesian2.ZERO);
   this.topRight = defaultValue(topRight, Cartesian2.ZERO);
@@ -60,7 +60,7 @@ function TextureAtlas(options) {
   }
   if (borderWidthInPixels < 0) {
     throw new DeveloperError(
-      "borderWidthInPixels must be greater than or equal to zero."
+      "borderWidthInPixels must be greater than or equal to zero.",
     );
   }
   if (initialSize.x < 1 || initialSize.y < 1) {
@@ -172,23 +172,23 @@ function resizeAtlas(textureAtlas, image) {
     // Create new node structure, putting the old root node in the bottom left.
     const nodeBottomRight = new TextureAtlasNode(
       new Cartesian2(oldAtlasWidth + borderWidthInPixels, borderWidthInPixels),
-      new Cartesian2(atlasWidth, oldAtlasHeight)
+      new Cartesian2(atlasWidth, oldAtlasHeight),
     );
     const nodeBottomHalf = new TextureAtlasNode(
       new Cartesian2(),
       new Cartesian2(atlasWidth, oldAtlasHeight),
       textureAtlas._root,
-      nodeBottomRight
+      nodeBottomRight,
     );
     const nodeTopHalf = new TextureAtlasNode(
       new Cartesian2(borderWidthInPixels, oldAtlasHeight + borderWidthInPixels),
-      new Cartesian2(atlasWidth, atlasHeight)
+      new Cartesian2(atlasWidth, atlasHeight),
     );
     const nodeMain = new TextureAtlasNode(
       new Cartesian2(),
       new Cartesian2(atlasWidth, atlasHeight),
       nodeBottomHalf,
-      nodeTopHalf
+      nodeTopHalf,
     );
 
     // Resize texture coordinates.
@@ -245,7 +245,7 @@ function resizeAtlas(textureAtlas, image) {
     });
     textureAtlas._root = new TextureAtlasNode(
       new Cartesian2(borderWidthInPixels, borderWidthInPixels),
-      new Cartesian2(initialWidth, initialHeight)
+      new Cartesian2(initialWidth, initialHeight),
     );
   }
 }
@@ -284,7 +284,7 @@ function findNode(textureAtlas, node, image) {
     if (widthDifference > heightDifference) {
       node.childNode1 = new TextureAtlasNode(
         new Cartesian2(node.bottomLeft.x, node.bottomLeft.y),
-        new Cartesian2(node.bottomLeft.x + image.width, node.topRight.y)
+        new Cartesian2(node.bottomLeft.x + image.width, node.topRight.y),
       );
       // Only make a second child if the border gives enough space.
       const childNode2BottomLeftX =
@@ -292,7 +292,7 @@ function findNode(textureAtlas, node, image) {
       if (childNode2BottomLeftX < node.topRight.x) {
         node.childNode2 = new TextureAtlasNode(
           new Cartesian2(childNode2BottomLeftX, node.bottomLeft.y),
-          new Cartesian2(node.topRight.x, node.topRight.y)
+          new Cartesian2(node.topRight.x, node.topRight.y),
         );
       }
     }
@@ -300,7 +300,7 @@ function findNode(textureAtlas, node, image) {
     else {
       node.childNode1 = new TextureAtlasNode(
         new Cartesian2(node.bottomLeft.x, node.bottomLeft.y),
-        new Cartesian2(node.topRight.x, node.bottomLeft.y + image.height)
+        new Cartesian2(node.topRight.x, node.bottomLeft.y + image.height),
       );
       // Only make a second child if the border gives enough space.
       const childNode2BottomLeftY =
@@ -308,7 +308,7 @@ function findNode(textureAtlas, node, image) {
       if (childNode2BottomLeftY < node.topRight.y) {
         node.childNode2 = new TextureAtlasNode(
           new Cartesian2(node.bottomLeft.x, childNode2BottomLeftY),
-          new Cartesian2(node.topRight.x, node.topRight.y)
+          new Cartesian2(node.topRight.x, node.topRight.y),
         );
       }
     }

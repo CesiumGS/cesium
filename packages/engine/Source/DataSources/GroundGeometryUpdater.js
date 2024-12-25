@@ -87,14 +87,14 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   GeometryUpdater.prototype._onEntityPropertyChanged.call(
     this,
     entity,
     propertyName,
     newValue,
-    oldValue
+    oldValue,
   );
   if (this._observedPropertyNames.indexOf(propertyName) === -1) {
     return;
@@ -127,13 +127,13 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
   ) {
     const centerPosition = new CallbackProperty(
       this._computeCenter.bind(this),
-      !this._dynamic
+      !this._dynamic,
     );
     this._terrainOffsetProperty = new TerrainOffsetProperty(
       this._scene,
       centerPosition,
       heightReferenceProperty,
-      extrudedHeightReferenceProperty
+      extrudedHeightReferenceProperty,
     );
   }
 };
@@ -178,7 +178,7 @@ GroundGeometryUpdater.getGeometryHeight = function (height, heightReference) {
  */
 GroundGeometryUpdater.getGeometryExtrudedHeight = function (
   extrudedHeight,
-  extrudedHeightReference
+  extrudedHeightReference,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("extrudedHeightReference", extrudedHeightReference);
@@ -208,7 +208,7 @@ GroundGeometryUpdater.computeGeometryOffsetAttribute = function (
   height,
   heightReference,
   extrudedHeight,
-  extrudedHeightReference
+  extrudedHeightReference,
 ) {
   if (!defined(height) || !defined(heightReference)) {
     heightReference = HeightReference.NONE;

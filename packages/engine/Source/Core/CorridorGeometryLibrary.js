@@ -37,11 +37,11 @@ function computeRoundCorner(
   startPoint,
   endPoint,
   cornerType,
-  leftIsOutside
+  leftIsOutside,
 ) {
   const angle = Cartesian3.angleBetween(
     Cartesian3.subtract(startPoint, cornerPoint, scratch1),
-    Cartesian3.subtract(endPoint, cornerPoint, scratch2)
+    Cartesian3.subtract(endPoint, cornerPoint, scratch2),
   );
   const granularity =
     cornerType === CornerType.BEVELED
@@ -61,14 +61,14 @@ function computeRoundCorner(
       Quaternion.fromAxisAngle(
         Cartesian3.negate(cornerPoint, scratch1),
         angle / granularity,
-        quaterion
+        quaterion,
       ),
-      rotMatrix
+      rotMatrix,
     );
   } else {
     m = Matrix3.fromQuaternion(
       Quaternion.fromAxisAngle(cornerPoint, angle / granularity, quaterion),
-      rotMatrix
+      rotMatrix,
     );
   }
 
@@ -93,7 +93,7 @@ function addEndCaps(calculatedPositions) {
   startPoint = Cartesian3.fromArray(
     calculatedPositions[1],
     leftEdge.length - 3,
-    startPoint
+    startPoint,
   );
   endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
   cornerPoint = Cartesian3.midpoint(startPoint, endPoint, cornerPoint);
@@ -102,7 +102,7 @@ function addEndCaps(calculatedPositions) {
     startPoint,
     endPoint,
     CornerType.ROUNDED,
-    false
+    false,
   );
 
   const length = calculatedPositions.length - 1;
@@ -111,7 +111,7 @@ function addEndCaps(calculatedPositions) {
   startPoint = Cartesian3.fromArray(
     rightEdge,
     rightEdge.length - 3,
-    startPoint
+    startPoint,
   );
   endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
   cornerPoint = Cartesian3.midpoint(startPoint, endPoint, cornerPoint);
@@ -120,7 +120,7 @@ function addEndCaps(calculatedPositions) {
     startPoint,
     endPoint,
     CornerType.ROUNDED,
-    false
+    false,
   );
 
   return [firstEndCap, lastEndCap];
@@ -130,7 +130,7 @@ function computeMiteredCorner(
   position,
   leftCornerDirection,
   lastPoint,
-  leftIsOutside
+  leftIsOutside,
 ) {
   let cornerPoint = scratch1;
   if (leftIsOutside) {
@@ -138,7 +138,7 @@ function computeMiteredCorner(
   } else {
     leftCornerDirection = Cartesian3.negate(
       leftCornerDirection,
-      leftCornerDirection
+      leftCornerDirection,
     );
     cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
   }
@@ -184,7 +184,7 @@ CorridorGeometryLibrary.addAttribute = function (
   attribute,
   value,
   front,
-  back
+  back,
 ) {
   const x = value.x;
   const y = value.y;
@@ -232,7 +232,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
 
   forward = Cartesian3.normalize(
     Cartesian3.subtract(nextPosition, position, forward),
-    forward
+    forward,
   );
   normal = ellipsoid.geodeticSurfaceNormal(position, normal);
   left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
@@ -254,17 +254,13 @@ CorridorGeometryLibrary.computePositions = function (params) {
     nextPosition = positions[i + 1];
     forward = Cartesian3.normalize(
       Cartesian3.subtract(nextPosition, position, forward),
-      forward
-    );
-    cornerDirection = Cartesian3.normalize(
-      Cartesian3.add(forward, backward, cornerDirection),
-      cornerDirection
+      forward,
     );
 
     const forwardProjection = Cartesian3.multiplyByScalar(
       normal,
       Cartesian3.dot(forward, normal),
-      scratchForwardProjection
+      scratchForwardProjection,
     );
     Cartesian3.subtract(forward, forwardProjection, forwardProjection);
     Cartesian3.normalize(forwardProjection, forwardProjection);
@@ -272,7 +268,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
     const backwardProjection = Cartesian3.multiplyByScalar(
       normal,
       Cartesian3.dot(backward, normal),
-      scratchBackwardProjection
+      scratchBackwardProjection,
     );
     Cartesian3.subtract(backward, backwardProjection, backwardProjection);
     Cartesian3.normalize(backwardProjection, backwardProjection);
@@ -280,19 +276,23 @@ CorridorGeometryLibrary.computePositions = function (params) {
     const doCorner = !CesiumMath.equalsEpsilon(
       Math.abs(Cartesian3.dot(forwardProjection, backwardProjection)),
       1.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     if (doCorner) {
+      cornerDirection = Cartesian3.normalize(
+        Cartesian3.add(forward, backward, cornerDirection),
+        cornerDirection,
+      );
       cornerDirection = Cartesian3.cross(
         cornerDirection,
         normal,
-        cornerDirection
+        cornerDirection,
       );
       cornerDirection = Cartesian3.cross(
         normal,
         cornerDirection,
-        cornerDirection
+        cornerDirection,
       );
       cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
       const scalar =
@@ -300,31 +300,31 @@ CorridorGeometryLibrary.computePositions = function (params) {
         Math.max(
           0.25,
           Cartesian3.magnitude(
-            Cartesian3.cross(cornerDirection, backward, scratch1)
-          )
+            Cartesian3.cross(cornerDirection, backward, scratch1),
+          ),
         );
       const leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(
         forward,
         backward,
         position,
-        ellipsoid
+        ellipsoid,
       );
       cornerDirection = Cartesian3.multiplyByScalar(
         cornerDirection,
         scalar,
-        cornerDirection
+        cornerDirection,
       );
       if (leftIsOutside) {
         rightPos = Cartesian3.add(position, cornerDirection, rightPos);
         center = Cartesian3.add(
           rightPos,
           Cartesian3.multiplyByScalar(left, width, center),
-          center
+          center,
         );
         leftPos = Cartesian3.add(
           rightPos,
           Cartesian3.multiplyByScalar(left, width * 2, leftPos),
-          leftPos
+          leftPos,
         );
         scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
         scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
@@ -337,7 +337,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
           subdividedPositions,
           left,
           width,
-          calculatedPositions
+          calculatedPositions,
         );
         if (saveAttributes) {
           calculatedLefts.push(left.x, left.y, left.z);
@@ -346,17 +346,17 @@ CorridorGeometryLibrary.computePositions = function (params) {
         startPoint = Cartesian3.clone(leftPos, startPoint);
         left = Cartesian3.normalize(
           Cartesian3.cross(normal, forward, left),
-          left
+          left,
         );
         leftPos = Cartesian3.add(
           rightPos,
           Cartesian3.multiplyByScalar(left, width * 2, leftPos),
-          leftPos
+          leftPos,
         );
         previousPos = Cartesian3.add(
           rightPos,
           Cartesian3.multiplyByScalar(left, width, previousPos),
-          previousPos
+          previousPos,
         );
         if (
           cornerType === CornerType.ROUNDED ||
@@ -368,7 +368,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
               startPoint,
               leftPos,
               cornerType,
-              leftIsOutside
+              leftIsOutside,
             ),
           });
         } else {
@@ -377,7 +377,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
               position,
               Cartesian3.negate(cornerDirection, cornerDirection),
               leftPos,
-              leftIsOutside
+              leftIsOutside,
             ),
           });
         }
@@ -387,17 +387,17 @@ CorridorGeometryLibrary.computePositions = function (params) {
           leftPos,
           Cartesian3.negate(
             Cartesian3.multiplyByScalar(left, width, center),
-            center
+            center,
           ),
-          center
+          center,
         );
         rightPos = Cartesian3.add(
           leftPos,
           Cartesian3.negate(
             Cartesian3.multiplyByScalar(left, width * 2, rightPos),
-            rightPos
+            rightPos,
           ),
-          rightPos
+          rightPos,
         );
         scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
         scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
@@ -410,7 +410,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
           subdividedPositions,
           left,
           width,
-          calculatedPositions
+          calculatedPositions,
         );
         if (saveAttributes) {
           calculatedLefts.push(left.x, left.y, left.z);
@@ -419,23 +419,23 @@ CorridorGeometryLibrary.computePositions = function (params) {
         startPoint = Cartesian3.clone(rightPos, startPoint);
         left = Cartesian3.normalize(
           Cartesian3.cross(normal, forward, left),
-          left
+          left,
         );
         rightPos = Cartesian3.add(
           leftPos,
           Cartesian3.negate(
             Cartesian3.multiplyByScalar(left, width * 2, rightPos),
-            rightPos
+            rightPos,
           ),
-          rightPos
+          rightPos,
         );
         previousPos = Cartesian3.add(
           leftPos,
           Cartesian3.negate(
             Cartesian3.multiplyByScalar(left, width, previousPos),
-            previousPos
+            previousPos,
           ),
-          previousPos
+          previousPos,
         );
         if (
           cornerType === CornerType.ROUNDED ||
@@ -447,7 +447,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
               startPoint,
               rightPos,
               cornerType,
-              leftIsOutside
+              leftIsOutside,
             ),
           });
         } else {
@@ -456,7 +456,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
               position,
               cornerDirection,
               rightPos,
-              leftIsOutside
+              leftIsOutside,
             ),
           });
         }
@@ -478,7 +478,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
     subdividedPositions,
     left,
     width,
-    calculatedPositions
+    calculatedPositions,
   );
   if (saveAttributes) {
     calculatedLefts.push(left.x, left.y, left.z);

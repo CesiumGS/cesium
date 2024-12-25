@@ -59,7 +59,7 @@ describe(
         });
       }
       const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 0.0, 1.0, 1.0)
+        new Color(0.0, 0.0, 1.0, 1.0),
       );
       depthColor = depthColorAttribute.value;
       return new Primitive({
@@ -124,12 +124,12 @@ describe(
         -180 + CesiumMath.EPSILON4,
         -90 + CesiumMath.EPSILON4,
         180 - CesiumMath.EPSILON4,
-        90 - CesiumMath.EPSILON4
+        90 - CesiumMath.EPSILON4,
       );
       reusableGlobePrimitive = createPrimitive(bigRectangle, Pass.GLOBE);
       reusableTilesetPrimitive = createPrimitive(
         bigRectangle,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
 
       return GroundPrimitive.initializeTerrainHeights();
@@ -153,11 +153,11 @@ describe(
       globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
       tilesetPrimitive = new MockPrimitive(
         reusableTilesetPrimitive,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
 
       const rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 1.0, 0.0, 1.0)
+        new Color(1.0, 1.0, 0.0, 1.0),
       );
       rectColor = rectColorAttribute.value;
       rectangleInstance = new GeometryInstance({
@@ -335,7 +335,7 @@ describe(
           geometryInstances: rectangleInstance,
           asynchronous: false,
           show: false,
-        })
+        }),
       );
 
       await pollToPromise(() => {
@@ -434,7 +434,7 @@ describe(
       }
 
       const rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 1.0, 0.0, 1.0)
+        new Color(1.0, 1.0, 0.0, 1.0),
       );
       const bigIdlRectangle = Rectangle.fromDegrees(176.0, 30.0, -176.0, 34.0);
       const bigIdlRectangleInstance = new GeometryInstance({
@@ -471,13 +471,13 @@ describe(
       }
 
       const rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 1.0, 0.0, 1.0)
+        new Color(1.0, 1.0, 0.0, 1.0),
       );
       const smallIdlRectangle = Rectangle.fromDegrees(
         179.6,
         30.0,
         -179.6,
-        30.9
+        30.9,
       );
       const smallIdlRectangleInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -549,15 +549,15 @@ describe(
           -180 + CesiumMath.EPSILON4,
           -90 + CesiumMath.EPSILON4,
           180 - CesiumMath.EPSILON4,
-          90 - CesiumMath.EPSILON4
+          90 - CesiumMath.EPSILON4,
         );
         largeSceneReusableGlobePrimitive = createPrimitive(
           bigRectangle,
-          Pass.GLOBE
+          Pass.GLOBE,
         );
         largeSceneReusableTilesetPrimitive = createPrimitive(
           bigRectangle,
-          Pass.CESIUM_3D_TILE
+          Pass.CESIUM_3D_TILE,
         );
       });
       afterAll(function () {
@@ -578,11 +578,11 @@ describe(
 
         const largeSceneGlobePrimitive = new MockPrimitive(
           largeSceneReusableGlobePrimitive,
-          Pass.GLOBE
+          Pass.GLOBE,
         );
         const largeSceneTilesetPrimitive = new MockPrimitive(
           largeSceneReusableTilesetPrimitive,
-          Pass.CESIUM_3D_TILE
+          Pass.CESIUM_3D_TILE,
         );
 
         largeScene.primitives.add(largeSceneGlobePrimitive);
@@ -626,7 +626,7 @@ describe(
         }
 
         const rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-          new Color(0.0, 1.0, 1.0, 1.0)
+          new Color(0.0, 1.0, 1.0, 1.0),
         );
         const rectangleInstance1 = new GeometryInstance({
           geometry: new RectangleGeometry({
@@ -635,7 +635,7 @@ describe(
               rectangle.west,
               rectangle.south,
               rectangle.east,
-              (rectangle.north + rectangle.south) * 0.5
+              (rectangle.north + rectangle.south) * 0.5,
             ),
           }),
           id: "rectangle1",
@@ -650,7 +650,7 @@ describe(
               rectangle.west,
               (rectangle.north + rectangle.south) * 0.5,
               rectangle.east,
-              rectangle.north
+              rectangle.north,
             ),
           }),
           id: "rectangle2",
@@ -685,7 +685,7 @@ describe(
           west,
           south,
           west + radians,
-          south + radians
+          south + radians,
         );
         const smallRectanglePrimitive = new GroundPrimitive({
           geometryInstances: new GeometryInstance({
@@ -706,7 +706,7 @@ describe(
         verifyLargerScene(
           smallRectanglePrimitive,
           [255, 255, 255, 255],
-          smallRectangle
+          smallRectangle,
         );
       });
 
@@ -728,7 +728,7 @@ describe(
           west,
           south,
           west + radians,
-          south + radians
+          south + radians,
         );
         const largeRectanglePrimitive = new GroundPrimitive({
           geometryInstances: new GeometryInstance({
@@ -749,7 +749,7 @@ describe(
         verifyLargerScene(
           largeRectanglePrimitive,
           [255, 255, 255, 255],
-          largeRectangle
+          largeRectangle,
         );
       });
 
@@ -784,7 +784,7 @@ describe(
         verifyLargerScene(
           largeRectanglePrimitive,
           [255, 255, 255, 255],
-          largeRectangle
+          largeRectangle,
         );
       });
     });
@@ -798,7 +798,7 @@ describe(
       scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
 
       rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(
-        true
+        true,
       );
 
       primitive = new GroundPrimitive({
@@ -810,13 +810,14 @@ describe(
 
       const invertedColor = new Array(4);
       invertedColor[0] = Color.floatToByte(
-        Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red
+        Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red,
       );
       invertedColor[1] = Color.floatToByte(
-        Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green
+        Color.byteToFloat(depthColor[1]) *
+          scene.invertClassificationColor.green,
       );
       invertedColor[2] = Color.floatToByte(
-        Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue
+        Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue,
       );
       invertedColor[3] = 255;
 
@@ -845,7 +846,7 @@ describe(
       scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 0.25);
 
       rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(
-        true
+        true,
       );
 
       primitive = new GroundPrimitive({
@@ -859,17 +860,17 @@ describe(
       invertedColor[0] = Color.floatToByte(
         Color.byteToFloat(depthColor[0]) *
           scene.invertClassificationColor.red *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[1] = Color.floatToByte(
         Color.byteToFloat(depthColor[1]) *
           scene.invertClassificationColor.green *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[2] = Color.floatToByte(
         Color.byteToFloat(depthColor[2]) *
           scene.invertClassificationColor.blue *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[3] = 255;
 
@@ -977,7 +978,7 @@ describe(
       }
 
       rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(
-        true
+        true,
       );
 
       primitive = new GroundPrimitive({
@@ -1016,7 +1017,7 @@ describe(
       const rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
 
       const rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 1.0, 0.0, 1.0)
+        new Color(1.0, 1.0, 0.0, 1.0),
       );
       const rectInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -1026,10 +1027,8 @@ describe(
         id: "rect",
         attributes: {
           color: rectColorAttribute,
-          distanceDisplayCondition: new DistanceDisplayConditionGeometryInstanceAttribute(
-            near,
-            far
-          ),
+          distanceDisplayCondition:
+            new DistanceDisplayConditionGeometryInstanceAttribute(near, far),
         },
       });
 
@@ -1043,26 +1042,30 @@ describe(
       scene.camera.setView({ destination: rect });
       scene.renderForSpecs();
 
-      const boundingSphere = primitive.getGeometryInstanceAttributes("rect")
-        .boundingSphere;
+      const boundingSphere =
+        primitive.getGeometryInstanceAttributes("rect").boundingSphere;
       const center = boundingSphere.center;
       const radius = boundingSphere.radius;
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius)
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius),
       );
       expect(scene).toRender([0, 0, 255, 255]);
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0)
+        new HeadingPitchRange(
+          0.0,
+          -CesiumMath.PI_OVER_TWO,
+          radius + near + 1.0,
+        ),
       );
       expect(scene).notToRender([0, 0, 255, 255]);
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 1.0)
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 1.0),
       );
       expect(scene).toRender([0, 0, 255, 255]);
     });
@@ -1254,7 +1257,7 @@ describe(
       });
 
       let rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
       const rectangleInstance1 = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -1263,7 +1266,7 @@ describe(
             rectangle.west,
             rectangle.south,
             rectangle.east,
-            (rectangle.north + rectangle.south) * 0.5
+            (rectangle.north + rectangle.south) * 0.5,
           ),
         }),
         id: "rectangle1",
@@ -1272,7 +1275,7 @@ describe(
         },
       });
       rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 1.0, 0.0, 1.0)
+        new Color(1.0, 1.0, 0.0, 1.0),
       );
       const rectangleInstance2 = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -1281,7 +1284,7 @@ describe(
             rectangle.west,
             (rectangle.north + rectangle.south) * 0.5,
             rectangle.east,
-            rectangle.north
+            rectangle.north,
           ),
         }),
         id: "rectangle2",
@@ -1306,7 +1309,7 @@ describe(
       }
 
       const rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
       const rectangleInstance1 = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -1315,7 +1318,7 @@ describe(
             rectangle.west,
             rectangle.south,
             rectangle.east,
-            (rectangle.north + rectangle.south) * 0.5
+            (rectangle.north + rectangle.south) * 0.5,
           ),
         }),
         id: "rectangle1",
@@ -1330,7 +1333,7 @@ describe(
             rectangle.west,
             (rectangle.north + rectangle.south) * 0.5,
             rectangle.east,
-            rectangle.north
+            rectangle.north,
           ),
         }),
         id: "rectangle2",
@@ -1430,7 +1433,7 @@ describe(
       verifyGroundPrimitiveRender(primitive, rectColor);
 
       expect(
-        primitive.getGeometryInstanceAttributes("unknown")
+        primitive.getGeometryInstanceAttributes("unknown"),
       ).not.toBeDefined();
     });
 
@@ -1511,5 +1514,5 @@ describe(
       ApproximateTerrainHeights._terrainHeights = terrainHeights;
     });
   },
-  "WebGL"
+  "WebGL",
 );

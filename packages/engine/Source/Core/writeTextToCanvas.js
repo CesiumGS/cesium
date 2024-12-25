@@ -134,7 +134,7 @@ function writeTextToCanvas(text, options) {
   const strokeWidth = defaultValue(options.strokeWidth, 1);
   const backgroundColor = defaultValue(
     options.backgroundColor,
-    Color.TRANSPARENT
+    Color.TRANSPARENT,
   );
   const padding = defaultValue(options.padding, 0);
   const doublePadding = padding * 2.0;

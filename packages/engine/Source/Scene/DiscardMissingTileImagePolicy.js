@@ -113,7 +113,7 @@ DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function (image) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._isReady) {
     throw new DeveloperError(
-      "shouldDiscardImage must not be called before the discard policy is ready."
+      "shouldDiscardImage must not be called before the discard policy is ready.",
     );
   }
   //>>includeEnd('debug');

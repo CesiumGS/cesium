@@ -47,7 +47,7 @@ function createGeometryFromPolygon(
   projectPointTo2D,
   normal,
   tangent,
-  bitangent
+  bitangent,
 ) {
   const positions = polygon.positions;
   let indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
@@ -59,7 +59,7 @@ function createGeometryFromPolygon(
 
   const newIndices = IndexDatatype.createTypedArray(
     positions.length,
-    indices.length
+    indices.length,
   );
   newIndices.set(indices);
 
@@ -68,7 +68,7 @@ function createGeometryFromPolygon(
     let rotation = Quaternion.fromAxisAngle(
       normal,
       stRotation,
-      quaternionScratch
+      quaternionScratch,
     );
     textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrix);
 
@@ -76,21 +76,21 @@ function createGeometryFromPolygon(
       rotation = Quaternion.fromAxisAngle(
         normal,
         -stRotation,
-        quaternionScratch
+        quaternionScratch,
       );
       const tangentRotation = Matrix3.fromQuaternion(
         rotation,
-        tangentRotationScratch
+        tangentRotationScratch,
       );
 
       tangent = Cartesian3.normalize(
         Matrix3.multiplyByVector(tangentRotation, tangent, tangent),
-        tangent
+        tangent,
       );
       if (vertexFormat.bitangent) {
         bitangent = Cartesian3.normalize(
           Cartesian3.cross(normal, tangent, bitangent),
-          bitangent
+          bitangent,
         );
       }
     }
@@ -141,7 +141,7 @@ function createGeometryFromPolygon(
         const p = Matrix3.multiplyByVector(
           textureMatrix,
           position,
-          scratchPosition
+          scratchPosition,
         );
         const st = projectPointTo2D(p, stScratch);
         Cartesian2.subtract(st, stOrigin, st);
@@ -259,7 +259,7 @@ function CoplanarPolygonGeometry(options) {
   this._polygonHierarchy = polygonHierarchy;
   this._stRotation = defaultValue(options.stRotation, 0.0);
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default)
+    defaultValue(options.ellipsoid, Ellipsoid.default),
   );
   this._workerName = "createCoplanarPolygonGeometry";
   this._textureCoordinates = textureCoordinates;
@@ -271,14 +271,14 @@ function CoplanarPolygonGeometry(options) {
   this.packedLength =
     PolygonGeometryLibrary.computeHierarchyPackedLength(
       polygonHierarchy,
-      Cartesian3
+      Cartesian3,
     ) +
     VertexFormat.packedLength +
     Ellipsoid.packedLength +
     (defined(textureCoordinates)
       ? PolygonGeometryLibrary.computeHierarchyPackedLength(
           textureCoordinates,
-          Cartesian2
+          Cartesian2,
         )
       : 1) +
     2;
@@ -350,7 +350,7 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
     value._polygonHierarchy,
     array,
     startingIndex,
-    Cartesian3
+    Cartesian3,
   );
 
   Ellipsoid.pack(value._ellipsoid, array, startingIndex);
@@ -365,7 +365,7 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
       value._textureCoordinates,
       array,
       startingIndex,
-      Cartesian2
+      Cartesian2,
     );
   } else {
     array[startingIndex++] = -1.0;
@@ -398,7 +398,7 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
     startingIndex,
-    Cartesian3
+    Cartesian3,
   );
   startingIndex = polygonHierarchy.startingIndex;
   delete polygonHierarchy.startingIndex;
@@ -409,7 +409,7 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
 
@@ -420,7 +420,7 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
       : PolygonGeometryLibrary.unpackPolygonHierarchy(
           array,
           startingIndex,
-          Cartesian2
+          Cartesian2,
         );
   if (defined(textureCoordinates)) {
     startingIndex = textureCoordinates.startingIndex;
@@ -461,7 +461,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
   outerPositions = arrayRemoveDuplicates(
     outerPositions,
     Cartesian3.equalsEpsilon,
-    true
+    true,
   );
   if (outerPositions.length < 3) {
     return;
@@ -473,12 +473,13 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
   let axis1 = axis1Scratch;
   const axis2 = axis2Scratch;
 
-  const validGeometry = CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments(
-    outerPositions,
-    centerScratch,
-    axis1,
-    axis2
-  );
+  const validGeometry =
+    CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments(
+      outerPositions,
+      centerScratch,
+      axis1,
+      axis2,
+    );
   if (!validGeometry) {
     return undefined;
   }
@@ -490,12 +491,12 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
     !Cartesian3.equalsEpsilon(
       centerScratch,
       Cartesian3.ZERO,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     )
   ) {
     const surfaceNormal = polygonGeometry._ellipsoid.geodeticSurfaceNormal(
       centerScratch,
-      surfaceNormalScratch
+      surfaceNormalScratch,
     );
     if (Cartesian3.dot(normal, surfaceNormal) < 0) {
       normal = Cartesian3.negate(normal, normal);
@@ -503,16 +504,18 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
     }
   }
 
-  const projectPoints = CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction(
-    centerScratch,
-    axis1,
-    axis2
-  );
-  const projectPoint = CoplanarPolygonGeometryLibrary.createProjectPointTo2DFunction(
-    centerScratch,
-    axis1,
-    axis2
-  );
+  const projectPoints =
+    CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction(
+      centerScratch,
+      axis1,
+      axis2,
+    );
+  const projectPoint =
+    CoplanarPolygonGeometryLibrary.createProjectPointTo2DFunction(
+      centerScratch,
+      axis1,
+      axis2,
+    );
 
   if (vertexFormat.tangent) {
     tangent = Cartesian3.clone(axis1, tangent);
@@ -525,7 +528,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
     polygonHierarchy,
     hasTextureCoordinates,
     projectPoints,
-    false
+    false,
   );
   const hierarchy = results.hierarchy;
   const polygons = results.polygons;
@@ -539,7 +542,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
         textureCoordinates,
         true,
         dummyFunction,
-        false
+        false,
       ).polygons
     : undefined;
 
@@ -554,7 +557,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
     projectPoint,
     outerPositions,
     stRotation,
-    scratchBR
+    scratchBR,
   );
 
   const geometries = [];
@@ -569,7 +572,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
         projectPoint,
         normal,
         tangent,
-        bitangent
+        bitangent,
       ),
     });
 
@@ -578,11 +581,11 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const geometry = GeometryPipeline.combineInstances(geometries)[0];
   geometry.attributes.position.values = new Float64Array(
-    geometry.attributes.position.values
+    geometry.attributes.position.values,
   );
   geometry.indices = IndexDatatype.createTypedArray(
     geometry.attributes.position.values.length / 3,
-    geometry.indices
+    geometry.indices,
   );
 
   const attributes = geometry.attributes;

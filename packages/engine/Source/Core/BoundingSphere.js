@@ -123,13 +123,13 @@ BoundingSphere.fromPoints = function (positions, result) {
 
   // Compute x-, y-, and z-spans (Squared distances b/n each component's min. and max.).
   const xSpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(xMax, xMin, fromPointsScratch)
+    Cartesian3.subtract(xMax, xMin, fromPointsScratch),
   );
   const ySpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(yMax, yMin, fromPointsScratch)
+    Cartesian3.subtract(yMax, yMin, fromPointsScratch),
   );
   const zSpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(zMax, zMin, fromPointsScratch)
+    Cartesian3.subtract(zMax, zMin, fromPointsScratch),
   );
 
   // Set the diameter endpoints to the largest span.
@@ -155,7 +155,7 @@ BoundingSphere.fromPoints = function (positions, result) {
 
   // Calculate the radius of the initial sphere found by Ritter's algorithm
   let radiusSquared = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(diameter2, ritterCenter, fromPointsScratch)
+    Cartesian3.subtract(diameter2, ritterCenter, fromPointsScratch),
   );
   let ritterRadius = Math.sqrt(radiusSquared);
 
@@ -173,7 +173,7 @@ BoundingSphere.fromPoints = function (positions, result) {
   const naiveCenter = Cartesian3.midpoint(
     minBoxPt,
     maxBoxPt,
-    fromPointsNaiveCenterScratch
+    fromPointsNaiveCenterScratch,
   );
 
   // Begin 2nd pass to find naive radius and modify the ritter sphere.
@@ -183,7 +183,7 @@ BoundingSphere.fromPoints = function (positions, result) {
 
     // Find the furthest point from the naive center to calculate the naive radius.
     const r = Cartesian3.magnitude(
-      Cartesian3.subtract(currentPos, naiveCenter, fromPointsScratch)
+      Cartesian3.subtract(currentPos, naiveCenter, fromPointsScratch),
     );
     if (r > naiveRadius) {
       naiveRadius = r;
@@ -191,7 +191,7 @@ BoundingSphere.fromPoints = function (positions, result) {
 
     // Make adjustments to the Ritter Sphere to include all points.
     const oldCenterToPointSquared = Cartesian3.magnitudeSquared(
-      Cartesian3.subtract(currentPos, ritterCenter, fromPointsScratch)
+      Cartesian3.subtract(currentPos, ritterCenter, fromPointsScratch),
     );
     if (oldCenterToPointSquared > radiusSquared) {
       const oldCenterToPoint = Math.sqrt(oldCenterToPointSquared);
@@ -243,7 +243,7 @@ BoundingSphere.fromRectangle2D = function (rectangle, projection, result) {
     projection,
     0.0,
     0.0,
-    result
+    result,
   );
 };
 
@@ -263,7 +263,7 @@ BoundingSphere.fromRectangleWithHeights2D = function (
   projection,
   minimumHeight,
   maximumHeight,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = new BoundingSphere();
@@ -285,11 +285,11 @@ BoundingSphere.fromRectangleWithHeights2D = function (
 
   const lowerLeft = projection.project(
     fromRectangle2DSouthwest,
-    fromRectangle2DLowerLeft
+    fromRectangle2DLowerLeft,
   );
   const upperRight = projection.project(
     fromRectangle2DNortheast,
-    fromRectangle2DUpperRight
+    fromRectangle2DUpperRight,
   );
 
   const width = upperRight.x - lowerLeft.x;
@@ -321,7 +321,7 @@ BoundingSphere.fromRectangle3D = function (
   rectangle,
   ellipsoid,
   surfaceHeight,
-  result
+  result,
 ) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   surfaceHeight = defaultValue(surfaceHeight, 0.0);
@@ -340,7 +340,7 @@ BoundingSphere.fromRectangle3D = function (
     rectangle,
     ellipsoid,
     surfaceHeight,
-    fromRectangle3DScratch
+    fromRectangle3DScratch,
   );
   return BoundingSphere.fromPoints(positions, result);
 };
@@ -448,13 +448,13 @@ BoundingSphere.fromVertices = function (positions, center, stride, result) {
 
   // Compute x-, y-, and z-spans (Squared distances b/n each component's min. and max.).
   const xSpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(xMax, xMin, fromPointsScratch)
+    Cartesian3.subtract(xMax, xMin, fromPointsScratch),
   );
   const ySpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(yMax, yMin, fromPointsScratch)
+    Cartesian3.subtract(yMax, yMin, fromPointsScratch),
   );
   const zSpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(zMax, zMin, fromPointsScratch)
+    Cartesian3.subtract(zMax, zMin, fromPointsScratch),
   );
 
   // Set the diameter endpoints to the largest span.
@@ -480,7 +480,7 @@ BoundingSphere.fromVertices = function (positions, center, stride, result) {
 
   // Calculate the radius of the initial sphere found by Ritter's algorithm
   let radiusSquared = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(diameter2, ritterCenter, fromPointsScratch)
+    Cartesian3.subtract(diameter2, ritterCenter, fromPointsScratch),
   );
   let ritterRadius = Math.sqrt(radiusSquared);
 
@@ -498,7 +498,7 @@ BoundingSphere.fromVertices = function (positions, center, stride, result) {
   const naiveCenter = Cartesian3.midpoint(
     minBoxPt,
     maxBoxPt,
-    fromPointsNaiveCenterScratch
+    fromPointsNaiveCenterScratch,
   );
 
   // Begin 2nd pass to find naive radius and modify the ritter sphere.
@@ -510,7 +510,7 @@ BoundingSphere.fromVertices = function (positions, center, stride, result) {
 
     // Find the furthest point from the naive center to calculate the naive radius.
     const r = Cartesian3.magnitude(
-      Cartesian3.subtract(currentPos, naiveCenter, fromPointsScratch)
+      Cartesian3.subtract(currentPos, naiveCenter, fromPointsScratch),
     );
     if (r > naiveRadius) {
       naiveRadius = r;
@@ -518,7 +518,7 @@ BoundingSphere.fromVertices = function (positions, center, stride, result) {
 
     // Make adjustments to the Ritter Sphere to include all points.
     const oldCenterToPointSquared = Cartesian3.magnitudeSquared(
-      Cartesian3.subtract(currentPos, ritterCenter, fromPointsScratch)
+      Cartesian3.subtract(currentPos, ritterCenter, fromPointsScratch),
     );
     if (oldCenterToPointSquared > radiusSquared) {
       const oldCenterToPoint = Math.sqrt(oldCenterToPointSquared);
@@ -568,7 +568,7 @@ BoundingSphere.fromVertices = function (positions, center, stride, result) {
 BoundingSphere.fromEncodedCartesianVertices = function (
   positionsHigh,
   positionsLow,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = new BoundingSphere();
@@ -637,13 +637,13 @@ BoundingSphere.fromEncodedCartesianVertices = function (
 
   // Compute x-, y-, and z-spans (Squared distances b/n each component's min. and max.).
   const xSpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(xMax, xMin, fromPointsScratch)
+    Cartesian3.subtract(xMax, xMin, fromPointsScratch),
   );
   const ySpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(yMax, yMin, fromPointsScratch)
+    Cartesian3.subtract(yMax, yMin, fromPointsScratch),
   );
   const zSpan = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(zMax, zMin, fromPointsScratch)
+    Cartesian3.subtract(zMax, zMin, fromPointsScratch),
   );
 
   // Set the diameter endpoints to the largest span.
@@ -669,7 +669,7 @@ BoundingSphere.fromEncodedCartesianVertices = function (
 
   // Calculate the radius of the initial sphere found by Ritter's algorithm
   let radiusSquared = Cartesian3.magnitudeSquared(
-    Cartesian3.subtract(diameter2, ritterCenter, fromPointsScratch)
+    Cartesian3.subtract(diameter2, ritterCenter, fromPointsScratch),
   );
   let ritterRadius = Math.sqrt(radiusSquared);
 
@@ -687,7 +687,7 @@ BoundingSphere.fromEncodedCartesianVertices = function (
   const naiveCenter = Cartesian3.midpoint(
     minBoxPt,
     maxBoxPt,
-    fromPointsNaiveCenterScratch
+    fromPointsNaiveCenterScratch,
   );
 
   // Begin 2nd pass to find naive radius and modify the ritter sphere.
@@ -699,7 +699,7 @@ BoundingSphere.fromEncodedCartesianVertices = function (
 
     // Find the furthest point from the naive center to calculate the naive radius.
     const r = Cartesian3.magnitude(
-      Cartesian3.subtract(currentPos, naiveCenter, fromPointsScratch)
+      Cartesian3.subtract(currentPos, naiveCenter, fromPointsScratch),
     );
     if (r > naiveRadius) {
       naiveRadius = r;
@@ -707,7 +707,7 @@ BoundingSphere.fromEncodedCartesianVertices = function (
 
     // Make adjustments to the Ritter Sphere to include all points.
     const oldCenterToPointSquared = Cartesian3.magnitudeSquared(
-      Cartesian3.subtract(currentPos, ritterCenter, fromPointsScratch)
+      Cartesian3.subtract(currentPos, ritterCenter, fromPointsScratch),
     );
     if (oldCenterToPointSquared > radiusSquared) {
       const oldCenterToPoint = Math.sqrt(oldCenterToPointSquared);
@@ -835,7 +835,7 @@ BoundingSphere.fromBoundingSpheres = function (boundingSpheres, result) {
     radius = Math.max(
       radius,
       Cartesian3.distance(center, tmp.center, fromBoundingSpheresScratch) +
-        tmp.radius
+        tmp.radius,
     );
   }
   result.radius = radius;
@@ -856,7 +856,7 @@ const fromOrientedBoundingBoxScratchW = new Cartesian3();
  */
 BoundingSphere.fromOrientedBoundingBox = function (
   orientedBoundingBox,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("orientedBoundingBox", orientedBoundingBox);
@@ -901,11 +901,11 @@ BoundingSphere.fromTransformation = function (transformation, result) {
 
   const center = Matrix4.getTranslation(
     transformation,
-    scratchFromTransformationCenter
+    scratchFromTransformationCenter,
   );
   const scale = Matrix4.getScale(
     transformation,
-    scratchFromTransformationScale
+    scratchFromTransformationScale,
   );
   const radius = 0.5 * Cartesian3.magnitude(scale);
   result.center = Cartesian3.clone(center, result.center);
@@ -1022,7 +1022,7 @@ BoundingSphere.union = function (left, right, result) {
   const toRightCenter = Cartesian3.subtract(
     rightCenter,
     leftCenter,
-    unionScratch
+    unionScratch,
   );
   const centerSeparation = Cartesian3.magnitude(toRightCenter);
 
@@ -1046,7 +1046,7 @@ BoundingSphere.union = function (left, right, result) {
   const center = Cartesian3.multiplyByScalar(
     toRightCenter,
     (-leftRadius + halfDistanceBetweenTangentPoints) / centerSeparation,
-    unionScratchCenter
+    unionScratchCenter,
   );
   Cartesian3.add(center, leftCenter, center);
   Cartesian3.clone(center, result.center);
@@ -1073,7 +1073,7 @@ BoundingSphere.expand = function (sphere, point, result) {
   result = BoundingSphere.clone(sphere, result);
 
   const radius = Cartesian3.magnitude(
-    Cartesian3.subtract(point, result.center, expandScratch)
+    Cartesian3.subtract(point, result.center, expandScratch),
   );
   if (radius > result.radius) {
     result.radius = radius;
@@ -1134,7 +1134,7 @@ BoundingSphere.transform = function (sphere, transform, result) {
   result.center = Matrix4.multiplyByPoint(
     transform,
     sphere.center,
-    result.center
+    result.center,
   );
   result.radius = Matrix4.getMaximumScale(transform) * sphere.radius;
 
@@ -1165,7 +1165,7 @@ BoundingSphere.distanceSquaredTo = function (sphere, cartesian) {
   const diff = Cartesian3.subtract(
     sphere.center,
     cartesian,
-    distanceSquaredToScratch
+    distanceSquaredToScratch,
   );
 
   const distance = Cartesian3.magnitude(diff) - sphere.radius;
@@ -1204,7 +1204,7 @@ BoundingSphere.transformWithoutScale = function (sphere, transform, result) {
   result.center = Matrix4.multiplyByPoint(
     transform,
     sphere.center,
-    result.center
+    result.center,
   );
   result.radius = sphere.radius;
 
@@ -1229,7 +1229,7 @@ BoundingSphere.computePlaneDistances = function (
   sphere,
   position,
   direction,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("sphere", sphere);
@@ -1244,7 +1244,7 @@ BoundingSphere.computePlaneDistances = function (
   const toCenter = Cartesian3.subtract(
     sphere.center,
     position,
-    scratchCartesian3
+    scratchCartesian3,
   );
   const mag = Cartesian3.dot(direction, toCenter);
 
@@ -1296,7 +1296,7 @@ BoundingSphere.projectTo2D = function (sphere, projection, result) {
   const east = Cartesian3.cross(
     Cartesian3.UNIT_Z,
     normal,
-    projectTo2DEastScratch
+    projectTo2DEastScratch,
   );
   Cartesian3.normalize(east, east);
   const north = Cartesian3.cross(normal, east, projectTo2DNorthScratch);
@@ -1359,7 +1359,7 @@ BoundingSphere.projectTo2D = function (sphere, projection, result) {
     Cartesian3.add(center, position, position);
     const cartographic = ellipsoid.cartesianToCartographic(
       position,
-      projectTo2DCartographicScratch
+      projectTo2DCartographicScratch,
     );
     projection.project(cartographic, position);
   }
@@ -1381,7 +1381,7 @@ BoundingSphere.projectTo2D = function (sphere, projection, result) {
 /**
  * Determines whether or not a sphere is hidden from view by the occluder.
  *
- * @param {BoundingSphere} sphere The bounding sphere surrounding the occludee object.
+ * @param {BoundingSphere} sphere The bounding sphere surrounding the occluded object.
  * @param {Occluder} occluder The occluder.
  * @returns {boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
  */
@@ -1455,13 +1455,13 @@ BoundingSphere.prototype.distanceSquaredTo = function (cartesian) {
 BoundingSphere.prototype.computePlaneDistances = function (
   position,
   direction,
-  result
+  result,
 ) {
   return BoundingSphere.computePlaneDistances(
     this,
     position,
     direction,
-    result
+    result,
   );
 };
 

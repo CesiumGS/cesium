@@ -198,7 +198,7 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
         removePragmas: removePragmas,
         sourcemap: sourcemap,
       });
-    }
+    },
   );
 
   gulp.watch(
@@ -209,7 +209,7 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
     async () => {
       createCombinedSpecList();
       await specs.rebuild();
-    }
+    },
   );
 
   gulp.watch(
@@ -219,7 +219,7 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
     },
     async () => {
       await specs.rebuild();
-    }
+    },
   );
 
   process.on("SIGINT", () => {
@@ -264,7 +264,7 @@ export async function buildTs() {
       directory === "engine" ? processEngineSource : undefined,
       // Handle engine's module naming exceptions
       directory === "engine" ? processEngineModules : undefined,
-      importModules
+      importModules,
     );
     importModules[directory] = workspaceModules;
   }
@@ -346,31 +346,31 @@ export async function prepare() {
   // Copy Draco3D files from node_modules into Source
   copyFileSync(
     "node_modules/draco3d/draco_decoder.wasm",
-    "packages/engine/Source/ThirdParty/draco_decoder.wasm"
+    "packages/engine/Source/ThirdParty/draco_decoder.wasm",
   );
 
   // Copy pako and zip.js worker files to Source/ThirdParty
   copyFileSync(
     "node_modules/pako/dist/pako_inflate.min.js",
-    "packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js"
+    "packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js",
   );
   copyFileSync(
     "node_modules/pako/dist/pako_deflate.min.js",
-    "packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js"
+    "packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js",
   );
   copyFileSync(
     "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
-    "packages/engine/Source/ThirdParty/Workers/z-worker-pako.js"
+    "packages/engine/Source/ThirdParty/Workers/z-worker-pako.js",
   );
 
   // Copy prism.js and prism.css files into Tools
   copyFileSync(
     "node_modules/prismjs/prism.js",
-    "Tools/jsdoc/cesium_template/static/javascript/prism.js"
+    "Tools/jsdoc/cesium_template/static/javascript/prism.js",
   );
   copyFileSync(
     "node_modules/prismjs/themes/prism.min.css",
-    "Tools/jsdoc/cesium_template/static/styles/prism.css"
+    "Tools/jsdoc/cesium_template/static/styles/prism.css",
   );
 
   // Copy jasmine runner files into Specs
@@ -398,7 +398,7 @@ export async function buildDocs() {
         CESIUM_VERSION: version,
         CESIUM_PACKAGES: packageJson.workspaces,
       }),
-    }
+    },
   );
 
   const stream = gulp
@@ -438,7 +438,7 @@ export const websiteRelease = gulp.series(
     });
   },
   combineForSandcastle,
-  buildDocs
+  buildDocs,
 );
 
 export const buildRelease = gulp.series(
@@ -462,12 +462,12 @@ export const buildRelease = gulp.series(
       node: true,
       sourcemap: false,
     });
-  }
+  },
 );
 
 export const release = gulp.series(
   buildRelease,
-  gulp.parallel(buildTs, buildDocs)
+  gulp.parallel(buildTs, buildDocs),
 );
 
 export const postversion = async function () {
@@ -494,7 +494,7 @@ export const postversion = async function () {
     const packageJson = require(packageJsonPath);
     if (!Object.hasOwn(packageJson.dependencies, workspace)) {
       console.log(
-        `Skipping update for ${workspace} as it is not a dependency.`
+        `Skipping update for ${workspace} as it is not a dependency.`,
       );
       return;
     }
@@ -557,7 +557,7 @@ async function pruneScriptsForZip(packageJsonPath) {
   // Write to a temporary package.json file.
   const noPreparePackageJson = join(
     dirname(packageJsonPath),
-    "package.noprepare.json"
+    "package.noprepare.json",
   );
   await writeFile(noPreparePackageJson, JSON.stringify(contentsJson, null, 2));
 
@@ -573,10 +573,10 @@ export const makeZip = gulp.series(release, async function createZipFile() {
 
   const packageJsonSrc = await pruneScriptsForZip("package.json");
   const enginePackageJsonSrc = await pruneScriptsForZip(
-    "packages/engine/package.json"
+    "packages/engine/package.json",
   );
   const widgetsPackageJsonSrc = await pruneScriptsForZip(
-    "packages/widgets/package.json"
+    "packages/widgets/package.json",
   );
 
   const src = gulp
@@ -586,7 +586,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
         if (file.basename === "index.release") {
           file.basename = "index";
         }
-      })
+      }),
     )
     .pipe(enginePackageJsonSrc)
     .pipe(widgetsPackageJsonSrc)
@@ -596,7 +596,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
         if (file.basename === "package.noprepare") {
           file.basename = "package";
         }
-      })
+      }),
     )
     .pipe(
       gulp.src(
@@ -617,8 +617,8 @@ export const makeZip = gulp.series(release, async function createZipFile() {
         {
           encoding: false,
           base: ".",
-        }
-      )
+        },
+      ),
     )
     .pipe(
       gulp.src(
@@ -656,8 +656,8 @@ export const makeZip = gulp.series(release, async function createZipFile() {
         {
           encoding: false,
           base: ".",
-        }
-      )
+        },
+      ),
     )
     .pipe(
       gulpTap(function (file) {
@@ -667,7 +667,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
         if (file.isDirectory()) {
           file.stat.mode = parseInt("40777", 8);
         }
-      })
+      }),
     )
     .pipe(gulpZip(`Cesium-${version}.zip`))
     .pipe(gulp.dest("."));
@@ -732,7 +732,7 @@ async function setStatus(state, targetUrl, description, context) {
         Authorization: `token ${process.env.GITHUB_TOKEN}`,
         "User-Agent": "Cesium",
       },
-    }
+    },
   );
 
   const result = await response.json();
@@ -782,7 +782,7 @@ export async function runCoverage(options) {
           try {
             const generatedCode = instrumenter.instrumentSync(
               source,
-              args.path
+              args.path,
             );
 
             return { contents: generatedCode };
@@ -793,7 +793,7 @@ export async function runCoverage(options) {
               },
             };
           }
-        }
+        },
       );
     },
   };
@@ -913,7 +913,7 @@ export async function runCoverage(options) {
         ],
       },
     },
-    { promiseConfig: true, throwErrors: true }
+    { promiseConfig: true, throwErrors: true },
   );
 
   return new Promise((resolve, reject) => {
@@ -921,7 +921,7 @@ export async function runCoverage(options) {
       let html = "<!doctype html><html><body><ul>";
       folders.forEach(function (folder) {
         html += `<li><a href="${encodeURIComponent(
-          folder
+          folder,
         )}/index.html">${folder}</a></li>`;
       });
       html += "</ul></body></html>";
@@ -1006,7 +1006,7 @@ export async function test() {
     workspace = workspace.replaceAll(`@${scope}/`, ``);
   }
 
-  if (!isProduction) {
+  if (!isProduction && !release) {
     console.log("Building specs...");
     await buildCesium({
       iife: true,
@@ -1112,7 +1112,7 @@ export async function test() {
         ],
       },
     },
-    { promiseConfig: true, throwErrors: true }
+    { promiseConfig: true, throwErrors: true },
   );
 
   return new Promise((resolve, reject) => {
@@ -1144,7 +1144,7 @@ function generateTypeScriptDefinitions(
   configurationPath,
   processSourceFunc,
   processModulesFunc,
-  importModules
+  importModules,
 ) {
   // Run JSDoc with tsd-jsdoc to generate an initial definition file.
   execSync(`npx jsdoc --configure ${configurationPath}`, {
@@ -1192,23 +1192,30 @@ function generateTypeScriptDefinitions(
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       // eslint-disable-next-line no-unused-vars
-      (match, p1) => `= WebGLConstants.${p1}`
+      (match, p1) => `= WebGLConstants.${p1}`,
     )
     // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
-      /defined\(value: any\): boolean/gm,
-      "defined<Type>(value: Type): value is NonNullable<Type>"
+      /\n?export function defined\(value: any\): boolean;/gm,
+      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+        .toString()
+        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
+        .replace("export default", "export")}`,
     )
+    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`
+      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+        .toString()
+        .replace(/export default.*\n?/, "")
+        .replace("const Check", "export const Check")}`,
     )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
     .replace(
       "raiseEvent(...arguments: Parameters<Listener>[]): void;",
-      "raiseEvent(...arguments: Parameters<Listener>): void;"
+      "raiseEvent(...arguments: Parameters<Listener>): void;",
     );
 
   // Wrap the source to actually be inside of a declared cesium module
@@ -1222,10 +1229,10 @@ ${source}
     let imports = "";
     Object.keys(importModules).forEach((workspace) => {
       const workspaceModules = Array.from(importModules[workspace]).filter(
-        (importModule) => source.indexOf(importModule) !== -1
+        (importModule) => source.indexOf(importModule) !== -1,
       );
       imports += `import { ${workspaceModules.join(
-        ",\n"
+        ",\n",
       )} } from "@${scope}/${workspace}";\n`;
     });
     source = imports + source;
@@ -1255,7 +1262,7 @@ function processEngineSource(definitionsPath, source) {
   const node = typeScript.createSourceFile(
     definitionsPath,
     source,
-    typeScript.ScriptTarget.Latest
+    typeScript.ScriptTarget.Latest,
   );
   let firstNode;
   node.forEachChild((child) => {
@@ -1276,7 +1283,7 @@ function processEngineSource(definitionsPath, source) {
   newSource += printer.printNode(
     typeScript.EmitHint.Unspecified,
     firstNode,
-    node
+    node,
   );
   newSource += "\n\n";
   node.forEachChild((child) => {
@@ -1287,7 +1294,7 @@ function processEngineSource(definitionsPath, source) {
       newSource += printer.printNode(
         typeScript.EmitHint.Unspecified,
         child,
-        node
+        node,
       );
       newSource += "\n\n";
     }
@@ -1325,7 +1332,7 @@ function createTypeScriptDefinitions() {
   const node = typeScript.createSourceFile(
     "Source/Cesium.d.ts",
     source,
-    typeScript.ScriptTarget.Latest
+    typeScript.ScriptTarget.Latest,
   );
   let firstNode;
   node.forEachChild((child) => {
@@ -1346,7 +1353,7 @@ function createTypeScriptDefinitions() {
   newSource += printer.printNode(
     typeScript.EmitHint.Unspecified,
     firstNode,
-    node
+    node,
   );
   newSource += "\n\n";
   node.forEachChild((child) => {
@@ -1357,7 +1364,7 @@ function createTypeScriptDefinitions() {
       newSource += printer.printNode(
         typeScript.EmitHint.Unspecified,
         child,
-        node
+        node,
       );
       newSource += "\n\n";
     }
@@ -1399,23 +1406,30 @@ function createTypeScriptDefinitions() {
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       // eslint-disable-next-line no-unused-vars
-      (match, p1) => `= WebGLConstants.${p1}`
+      (match, p1) => `= WebGLConstants.${p1}`,
     )
     // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
-      /defined\(value: any\): boolean/gm,
-      "defined<Type>(value: Type): value is NonNullable<Type>"
+      /\n?export function defined\(value: any\): boolean;/gm,
+      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+        .toString()
+        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
+        .replace("export default", "export")}`,
     )
+    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`
+      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+        .toString()
+        .replace(/export default.*\n?/, "")
+        .replace("const Check", "export const Check")}`,
     )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 to have rest parameter expand tuple
     .replace(
       "raiseEvent(...arguments: Parameters<Listener>[]): void;",
-      "raiseEvent(...arguments: Parameters<Listener>): void;"
+      "raiseEvent(...arguments: Parameters<Listener>): void;",
     );
 
   // Wrap the source to actually be inside of a declared cesium module
@@ -1463,7 +1477,7 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
           module.name,
           discoveredDependencies,
           module.license,
-          module.notes
+          module.notes,
         );
 
         if (result) {
@@ -1478,7 +1492,7 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
             module.name,
             discoveredDependencies,
             module.license,
-            module.notes
+            module.notes,
           );
 
           if (result) {
@@ -1490,7 +1504,7 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
         discoveredDependencies.push(module.name);
         return module;
       }
-    })
+    }),
   );
 }
 
@@ -1507,7 +1521,7 @@ async function getLicenseDataFromPackage(
   packageName,
   discoveredDependencies,
   licenseOverride,
-  notes
+  notes,
 ) {
   if (
     !packageJson.dependencies[packageName] &&
@@ -1532,7 +1546,7 @@ async function getLicenseDataFromPackage(
 
   if (!contents) {
     return Promise.reject(
-      new Error(`Unable to read ${packageName} license information`)
+      new Error(`Unable to read ${packageName} license information`),
     );
   }
 
@@ -1576,7 +1590,7 @@ export async function buildThirdParty() {
   // Generate ThirdParty.json from ThirdParty.extra.json and package.json
   const licenseInfo = await getLicenseDataFromThirdPartyExtra(
     "ThirdParty.extra.json",
-    discoveredDependencies
+    discoveredDependencies,
   );
 
   licenseJson = licenseJson.concat(licenseInfo);
@@ -1607,7 +1621,7 @@ async function buildSandcastle() {
     ],
     {
       encoding: false,
-    }
+    },
   );
 
   if (isProduction) {
@@ -1617,15 +1631,15 @@ async function buildSandcastle() {
         gulpReplace(
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>'
-        )
+            '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>',
+        ),
       )
       .pipe(
         gulpReplace(
           '    <script type="module" src="load-cesium-es6.js"></script>',
           '    <script src="CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "CesiumUnminified/";</script>'
-        )
+            '    <script>window.CESIUM_BASE_URL = "CesiumUnminified/";</script>',
+        ),
       )
       // Fix relative paths for new location
       .pipe(gulpReplace("../../../Build", ".."))
@@ -1637,7 +1651,7 @@ async function buildSandcastle() {
       .pipe(gulpReplace("../Apps/Sandcastle", "."))
       .pipe(gulpReplace("../../SampleData", "../SampleData"))
       .pipe(
-        gulpReplace("../../Build/Documentation", "/learn/cesiumjs/ref-doc/")
+        gulpReplace("../../Build/Documentation", "/learn/cesiumjs/ref-doc/"),
       )
       .pipe(gulp.dest("Build/Sandcastle"));
   } else {
@@ -1647,15 +1661,15 @@ async function buildSandcastle() {
         gulpReplace(
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>'
-        )
+            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>',
+        ),
       )
       .pipe(
         gulpReplace(
           '    <script type="module" src="load-cesium-es6.js"></script>',
           '    <script src="../../CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "../../CesiumUnminified/";</script>'
-        )
+            '    <script>window.CESIUM_BASE_URL = "../../CesiumUnminified/";</script>',
+        ),
       )
       // Fix relative paths for new location
       .pipe(gulpReplace("../../../Build", "../../.."))
@@ -1672,7 +1686,7 @@ async function buildSandcastle() {
     {
       base: "Apps/Sandcastle",
       encoding: false,
-    }
+    },
   );
   if (isProduction) {
     imageStream = imageStream.pipe(gulp.dest("Build/Sandcastle"));
@@ -1700,8 +1714,8 @@ async function buildSandcastle() {
       gulpReplace(
         '    <script type="module" src="load-cesium-es6.js"></script>',
         '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
-          '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>'
-      )
+          '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>',
+      ),
     )
     .pipe(gulpReplace("../../Build", "."))
     .pipe(gulp.dest("Build/Sandcastle"));
@@ -1765,7 +1779,7 @@ async function buildCesiumViewer() {
       ],
       {
         encoding: false,
-      }
+      },
     )
     .pipe(
       gulp.src(
@@ -1780,8 +1794,8 @@ async function buildCesiumViewer() {
           base: "Build/Cesium",
           nodir: true,
           encoding: false,
-        }
-      )
+        },
+      ),
     )
     .pipe(gulp.src(["web.config"]))
     .pipe(gulp.dest(cesiumViewerOutputDirectory));

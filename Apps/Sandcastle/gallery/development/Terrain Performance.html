@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -96,7 +93,7 @@
                 statistics.numberOfActiveRequestsEver
               } requests, min/max/avg frame FPS ${minFrameRate}/${maxFrameRate}/${
                 sumFrameRate / frameRateSamples
-              }`
+              }`,
             );
             scene.postRender.removeEventListener(viewReady);
           }
@@ -106,22 +103,22 @@
           camera.position = new Cesium.Cartesian3(
             302950.1757410969,
             5637093.359233209,
-            2976894.491577989
+            2976894.491577989,
           );
           camera.direction = new Cesium.Cartesian3(
             -0.9648960658153797,
             -0.24110066659365145,
-            -0.10414437451009724
+            -0.10414437451009724,
           );
           camera.right = new Cesium.Cartesian3(
             -0.02152846103178338,
             0.46781654381873394,
-            -0.8835633574877908
+            -0.8835633574877908,
           );
           camera.up = new Cesium.Cartesian3(
             -0.26174817580950865,
             0.8503047394302772,
-            0.456584868959543
+            0.456584868959543,
           );
           flightComplete = true;
         }
@@ -130,22 +127,22 @@
           camera.position = new Cesium.Cartesian3(
             301989.1870802739,
             5637745.915399717,
-            2977153.0443453398
+            2977153.0443453398,
           );
           camera.direction = new Cesium.Cartesian3(
             0.021398841015326783,
             -0.8909524564021135,
-            -0.45359211857597476
+            -0.45359211857597476,
           );
           camera.right = new Cesium.Cartesian3(
             0.21237352569072232,
             0.4473925820246778,
-            -0.8687562161705573
+            -0.8687562161705573,
           );
           camera.up = new Cesium.Cartesian3(
             -0.9769542339275126,
             0.07774058129659328,
-            -0.19878839712310903
+            -0.19878839712310903,
           );
           flightComplete = true;
         }
@@ -154,22 +151,22 @@
           camera.position = new Cesium.Cartesian3(
             302760.41072832496,
             5637092.977453635,
-            2977284.6758398763
+            2977284.6758398763,
           );
           camera.direction = new Cesium.Cartesian3(
             -0.7254568510163212,
             -0.3330925403210976,
-            -0.6022970337764594
+            -0.6022970337764594,
           );
           camera.right = new Cesium.Cartesian3(
             0.4750641658993092,
             0.39087207931336604,
-            -0.7883736778277414
+            -0.7883736778277414,
           );
           camera.up = new Cesium.Cartesian3(
             -0.49802248502640617,
             0.8580608237157107,
-            0.12532049797395203
+            0.12532049797395203,
           );
           flightComplete = true;
         }
@@ -178,7 +175,7 @@
           const position = new Cesium.Cartesian3(
             302955.90876054496,
             5639614.4908250235,
-            2981096.1048591887
+            2981096.1048591887,
           );
           camera.flyTo({
             destination: position,
@@ -193,36 +190,31 @@
           camera.position = new Cesium.Cartesian3(
             302950.1757410969,
             5637093.359233209,
-            2976894.491577989
+            2976894.491577989,
           );
           camera.direction = new Cesium.Cartesian3(
             -0.9648960658153797,
             -0.24110066659365145,
-            -0.10414437451009724
+            -0.10414437451009724,
           );
           camera.right = new Cesium.Cartesian3(
             -0.02152846103178338,
             0.46781654381873394,
-            -0.8835633574877908
+            -0.8835633574877908,
           );
           camera.up = new Cesium.Cartesian3(
             -0.26174817580950865,
             0.8503047394302772,
-            0.456584868959543
+            0.456584868959543,
           );
 
-          const startCartographic = Cesium.Cartographic.fromCartesian(
-            camera.position
-          );
+          const startCartographic = Cesium.Cartographic.fromCartesian(camera.position);
           let longitude = startCartographic.longitude;
           const endLongitude = longitude + 0.01;
           const latitude = startCartographic.latitude;
           const height = startCartographic.height;
           let startTime = window.performance.now();
-          const removeCallback = scene.preRender.addEventListener(function (
-            scene,
-            time
-          ) {
+          const removeCallback = scene.preRender.addEventListener(function (scene, time) {
             const endTime = window.performance.now();
             const delta = endTime - startTime;
             startTime = endTime;
@@ -231,11 +223,7 @@
               flightComplete = true;
               removeCallback();
             }
-            camera.position = Cesium.Cartesian3.fromRadians(
-              longitude,
-              latitude,
-              height
-            );
+            camera.position = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
           });
         }
 

@@ -55,7 +55,7 @@ function GltfIndexBufferLoader(options) {
   Check.typeOf.object("options.baseResource", baseResource);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
   //>>includeEnd('debug');
@@ -222,7 +222,7 @@ async function loadFromBufferView(indexBufferLoader) {
     const bufferViewTypedArray = bufferViewLoader.typedArray;
     indexBufferLoader._typedArray = createIndicesTypedArray(
       indexBufferLoader,
-      bufferViewTypedArray
+      bufferViewTypedArray,
     );
     indexBufferLoader._state = ResourceLoaderState.PROCESSING;
     return indexBufferLoader;
@@ -254,7 +254,7 @@ function createIndicesTypedArray(indexBufferLoader, bufferViewTypedArray) {
     byteOffset = 0;
     deprecationWarning(
       "index-buffer-unaligned",
-      `The index array is not aligned to a ${indexSize}-byte boundary.`
+      `The index array is not aligned to a ${indexSize}-byte boundary.`,
     );
   }
 
@@ -287,7 +287,7 @@ function CreateIndexBufferJob() {
 CreateIndexBufferJob.prototype.set = function (
   typedArray,
   indexDatatype,
-  context
+  context,
 ) {
   this.typedArray = typedArray;
   this.indexDatatype = indexDatatype;
@@ -298,7 +298,7 @@ CreateIndexBufferJob.prototype.execute = function () {
   this.buffer = createIndexBuffer(
     this.typedArray,
     this.indexDatatype,
-    this.context
+    this.context,
   );
 };
 

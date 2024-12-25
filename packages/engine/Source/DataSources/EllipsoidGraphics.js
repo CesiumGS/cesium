@@ -241,7 +241,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 });
 
@@ -298,7 +298,7 @@ EllipsoidGraphics.prototype.merge = function (source) {
   this.maximumCone = defaultValue(this.maximumCone, source.maximumCone);
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.fill = defaultValue(this.fill, source.fill);
   this.material = defaultValue(this.material, source.material);
@@ -307,17 +307,17 @@ EllipsoidGraphics.prototype.merge = function (source) {
   this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
   this.stackPartitions = defaultValue(
     this.stackPartitions,
-    source.stackPartitions
+    source.stackPartitions,
   );
   this.slicePartitions = defaultValue(
     this.slicePartitions,
-    source.slicePartitions
+    source.slicePartitions,
   );
   this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
 };
 export default EllipsoidGraphics;

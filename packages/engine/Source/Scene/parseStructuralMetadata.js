@@ -52,7 +52,7 @@ function parseStructuralMetadata(options) {
           metadataTable: metadataTable,
           extras: propertyTable.extras,
           extensions: propertyTable.extensions,
-        })
+        }),
       );
     }
   }
@@ -68,7 +68,7 @@ function parseStructuralMetadata(options) {
           propertyTexture: propertyTexture,
           class: schema.classes[propertyTexture.class],
           textures: options.textures,
-        })
+        }),
       );
     }
   }
@@ -83,7 +83,7 @@ function parseStructuralMetadata(options) {
           name: propertyAttribute.name,
           class: schema.classes[propertyAttribute.class],
           propertyAttribute: propertyAttribute,
-        })
+        }),
       );
     }
   }

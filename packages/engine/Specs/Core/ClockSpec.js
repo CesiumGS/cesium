@@ -10,7 +10,7 @@ describe("Core/Clock", function () {
   it("sets default parameters when constructed", function () {
     const clock = new Clock();
     expect(clock.stopTime).toEqual(
-      JulianDate.addDays(clock.startTime, 1, new JulianDate())
+      JulianDate.addDays(clock.startTime, 1, new JulianDate()),
     );
     expect(clock.startTime).toEqual(clock.currentTime);
     expect(clock.multiplier).toEqual(1.0);
@@ -225,7 +225,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -233,7 +233,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -258,7 +258,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -266,7 +266,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -291,7 +291,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -299,7 +299,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -324,7 +324,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -332,7 +332,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -361,7 +361,7 @@ describe("Core/Clock", function () {
     currentTime = JulianDate.addSeconds(
       currentTime,
       multiplier,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(currentTime).toEqual(clock.tick());
     expect(clock.currentTime).toEqual(currentTime);
@@ -504,8 +504,8 @@ describe("Core/Clock", function () {
         JulianDate.addSeconds(
           JulianDate.fromDate(baseDate),
           1.0,
-          new JulianDate()
-        )
+          new JulianDate(),
+        ),
       );
     });
 
@@ -597,8 +597,8 @@ describe("Core/Clock", function () {
         JulianDate.addSeconds(
           JulianDate.fromDate(baseDate),
           2.0,
-          new JulianDate()
-        )
+          new JulianDate(),
+        ),
       );
     });
 
@@ -629,8 +629,8 @@ describe("Core/Clock", function () {
         JulianDate.addSeconds(
           JulianDate.fromDate(baseDate),
           1.0,
-          new JulianDate()
-        )
+          new JulianDate(),
+        ),
       );
 
       jasmine.clock().tick(1000);
@@ -641,8 +641,8 @@ describe("Core/Clock", function () {
         JulianDate.addSeconds(
           JulianDate.fromDate(baseDate),
           2.0,
-          new JulianDate()
-        )
+          new JulianDate(),
+        ),
       );
 
       clock.currentTime = start;
@@ -661,8 +661,8 @@ describe("Core/Clock", function () {
         JulianDate.addSeconds(
           JulianDate.fromDate(baseDate),
           1.0,
-          new JulianDate()
-        )
+          new JulianDate(),
+        ),
       );
     });
   });

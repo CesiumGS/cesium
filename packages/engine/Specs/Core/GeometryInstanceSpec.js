@@ -18,15 +18,7 @@ describe("Core/GeometryInstance", function () {
           componentDatatype: ComponentDatatype.DOUBLE,
           componentsPerAttribute: 3,
           values: new Float64Array([
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0,
           ]),
         }),
       },
@@ -37,7 +29,7 @@ describe("Core/GeometryInstance", function () {
     const modelMatrix = Matrix4.multiplyByTranslation(
       Matrix4.IDENTITY,
       new Cartesian3(0.0, 0.0, 9000000.0),
-      new Matrix4()
+      new Matrix4(),
     );
     const attributes = {
       color: new GeometryInstanceAttribute({

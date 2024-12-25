@@ -39,7 +39,7 @@ function HomeButton(container, scene, duration) {
     "\
 attr: { title: tooltip },\
 click: command,\
-cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }"
+cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }",
   );
 
   container.appendChild(element);

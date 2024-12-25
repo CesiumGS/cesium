@@ -82,12 +82,12 @@ describe("DataSources/ModelGraphics", function () {
     expect(model.minimumPixelSize.getValue()).toEqual(options.minimumPixelSize);
     expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
     expect(model.incrementallyLoadTextures.getValue()).toEqual(
-      options.incrementallyLoadTextures
+      options.incrementallyLoadTextures,
     );
     expect(model.shadows.getValue()).toEqual(options.shadows);
     expect(model.heightReference.getValue()).toEqual(options.heightReference);
     expect(model.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(model.silhouetteColor.getValue()).toEqual(options.silhouetteColor);
     expect(model.silhouetteSize.getValue()).toEqual(options.silhouetteSize);
@@ -95,27 +95,27 @@ describe("DataSources/ModelGraphics", function () {
     expect(model.colorBlendMode.getValue()).toEqual(options.colorBlendMode);
     expect(model.colorBlendAmount.getValue()).toEqual(options.colorBlendAmount);
     expect(model.clippingPlanes.getValue().planes).toEqual(
-      options.clippingPlanes.planes
+      options.clippingPlanes.planes,
     );
     expect(model.customShader.getValue()).toEqual(options.customShader);
     expect(model.imageBasedLightingFactor.getValue()).toEqual(
-      options.imageBasedLightingFactor
+      options.imageBasedLightingFactor,
     );
     expect(model.lightColor.getValue()).toEqual(options.lightColor);
     expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
     expect(model.clampAnimations.getValue()).toEqual(options.clampAnimations);
 
     let actualNodeTransformations = model.nodeTransformations.getValue(
-      new JulianDate()
+      new JulianDate(),
     );
     let expectedNodeTransformations = options.nodeTransformations;
 
     // by default toEqual requires constructors to match.  for the purposes of this test, we only care about the structure.
     actualNodeTransformations = JSON.parse(
-      JSON.stringify(actualNodeTransformations)
+      JSON.stringify(actualNodeTransformations),
     );
     expectedNodeTransformations = JSON.parse(
-      JSON.stringify(expectedNodeTransformations)
+      JSON.stringify(expectedNodeTransformations),
     );
     expect(actualNodeTransformations).toEqual(expectedNodeTransformations);
 
@@ -138,13 +138,13 @@ describe("DataSources/ModelGraphics", function () {
     source.incrementallyLoadTextures = new ConstantProperty(true);
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     source.silhouetteColor = new ConstantProperty(
-      new Color(1.0, 0.0, 0.0, 1.0)
+      new Color(1.0, 0.0, 0.0, 1.0),
     );
     source.silhouetteSize = new ConstantProperty(3.0);
     source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
@@ -153,7 +153,7 @@ describe("DataSources/ModelGraphics", function () {
     source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
     source.customShader = new ConstantProperty(new CustomShader());
     source.imageBasedLightingFactor = new ConstantProperty(
-      new Cartesian2(0.5, 0.5)
+      new Cartesian2(0.5, 0.5),
     );
     source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
     source.runAnimations = new ConstantProperty(true);
@@ -182,12 +182,12 @@ describe("DataSources/ModelGraphics", function () {
     expect(target.minimumPixelSize).toBe(source.minimumPixelSize);
     expect(target.maximumScale).toBe(source.maximumScale);
     expect(target.incrementallyLoadTextures).toBe(
-      source.incrementallyLoadTextures
+      source.incrementallyLoadTextures,
     );
     expect(target.shadows).toBe(source.shadows);
     expect(target.heightReference).toBe(source.heightReference);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.silhouetteColor).toEqual(source.silhouetteColor);
     expect(target.silhouetteSize).toEqual(source.silhouetteSize);
@@ -197,7 +197,7 @@ describe("DataSources/ModelGraphics", function () {
     expect(target.clippingPlanes).toBe(source.clippingPlanes);
     expect(target.customShader).toBe(source.customShader);
     expect(target.imageBasedLightingFactor).toBe(
-      source.imageBasedLightingFactor
+      source.imageBasedLightingFactor,
     );
     expect(target.lightColor).toBe(source.lightColor);
     expect(target.runAnimations).toBe(source.runAnimations);
@@ -216,10 +216,10 @@ describe("DataSources/ModelGraphics", function () {
     source.incrementallyLoadTextures = new ConstantProperty(true);
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     source.silhouetteColor = new ConstantProperty(new Color());
     source.silhouetteSize = new ConstantProperty(1.0);
@@ -229,7 +229,7 @@ describe("DataSources/ModelGraphics", function () {
     source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
     source.customShader = new ConstantProperty(new CustomShader());
     source.imageBasedLightingFactor = new ConstantProperty(
-      new Cartesian2(0.5, 0.5)
+      new Cartesian2(0.5, 0.5),
     );
     source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
     source.runAnimations = new ConstantProperty(true);
@@ -250,10 +250,10 @@ describe("DataSources/ModelGraphics", function () {
     const incrementallyLoadTextures = new ConstantProperty(true);
     const shadows = new ConstantProperty(ShadowMode.ENABLED);
     const heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     const distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     const silhouetteColor = new ConstantProperty(new Color());
     const silhouetteSize = new ConstantProperty(1.0);
@@ -263,7 +263,7 @@ describe("DataSources/ModelGraphics", function () {
     const clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
     const customShader = new ConstantProperty(new CustomShader());
     const imageBasedLightingFactor = new ConstantProperty(
-      new Cartesian2(0.5, 0.5)
+      new Cartesian2(0.5, 0.5),
     );
     const lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
     const runAnimations = new ConstantProperty(true);
@@ -336,10 +336,10 @@ describe("DataSources/ModelGraphics", function () {
     source.incrementallyLoadTextures = new ConstantProperty(true);
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     source.silhouetteColor = new ConstantProperty(new Color());
     source.silhouetteSize = new ConstantProperty(2.0);
@@ -349,7 +349,7 @@ describe("DataSources/ModelGraphics", function () {
     source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
     source.customShader = new ConstantProperty(new CustomShader());
     source.imageBasedLightingFactor = new ConstantProperty(
-      new Cartesian2(0.5, 0.5)
+      new Cartesian2(0.5, 0.5),
     );
     source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
     source.runAnimations = new ConstantProperty(true);
@@ -370,12 +370,12 @@ describe("DataSources/ModelGraphics", function () {
     expect(result.minimumPixelSize).toBe(source.minimumPixelSize);
     expect(result.maximumScale).toBe(source.maximumScale);
     expect(result.incrementallyLoadTextures).toBe(
-      source.incrementallyLoadTextures
+      source.incrementallyLoadTextures,
     );
     expect(result.shadows).toBe(source.shadows);
     expect(result.heightReference).toBe(source.heightReference);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.silhouetteColor).toEqual(source.silhouetteColor);
     expect(result.silhouetteSize).toEqual(source.silhouetteSize);
@@ -385,7 +385,7 @@ describe("DataSources/ModelGraphics", function () {
     expect(result.clippingPlanes).toBe(source.clippingPlanes);
     expect(result.customShader).toBe(source.customShader);
     expect(result.imageBasedLightingFactor).toBe(
-      source.imageBasedLightingFactor
+      source.imageBasedLightingFactor,
     );
     expect(result.lightColor).toBe(source.lightColor);
     expect(result.runAnimations).toBe(source.runAnimations);

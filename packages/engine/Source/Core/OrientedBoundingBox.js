@@ -108,7 +108,7 @@ OrientedBoundingBox.unpack = function (array, startingIndex, result) {
   Matrix3.unpack(
     array,
     startingIndex + Cartesian3.packedLength,
-    result.halfAxes
+    result.halfAxes,
   );
   return result;
 };
@@ -197,7 +197,7 @@ OrientedBoundingBox.fromPoints = function (positions, result) {
 
   const eigenDecomposition = Matrix3.computeEigenDecomposition(
     covarianceMatrix,
-    scratchEigenResult
+    scratchEigenResult,
   );
   const rotation = Matrix3.clone(eigenDecomposition.unitary, result.halfAxes);
 
@@ -253,7 +253,7 @@ function fromPlaneExtents(
   maximumY,
   minimumZ,
   maximumZ,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -265,7 +265,7 @@ function fromPlaneExtents(
     !defined(maximumZ)
   ) {
     throw new DeveloperError(
-      "all extents (minimum/maximum X/Y/Z) are required."
+      "all extents (minimum/maximum X/Y/Z) are required.",
     );
   }
   //>>includeEnd('debug');
@@ -345,7 +345,7 @@ OrientedBoundingBox.fromRectangle = function (
   minimumHeight,
   maximumHeight,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(rectangle)) {
@@ -362,11 +362,11 @@ OrientedBoundingBox.fromRectangle = function (
     !CesiumMath.equalsEpsilon(
       ellipsoid.radii.x,
       ellipsoid.radii.y,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     )
   ) {
     throw new DeveloperError(
-      "Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)"
+      "Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)",
     );
   }
   //>>includeEnd('debug');
@@ -381,11 +381,11 @@ OrientedBoundingBox.fromRectangle = function (
     // The bounding box will be aligned with the tangent plane at the center of the rectangle.
     const tangentPointCartographic = Rectangle.center(
       rectangle,
-      scratchRectangleCenterCartographic
+      scratchRectangleCenterCartographic,
     );
     const tangentPoint = ellipsoid.cartographicToCartesian(
       tangentPointCartographic,
-      scratchRectangleCenter
+      scratchRectangleCenter,
     );
     const tangentPlane = new EllipsoidTangentPlane(tangentPoint, ellipsoid);
     plane = tangentPlane.plane;
@@ -402,79 +402,79 @@ OrientedBoundingBox.fromRectangle = function (
       lonCenter,
       rectangle.north,
       maximumHeight,
-      scratchPerimeterCartographicNC
+      scratchPerimeterCartographicNC,
     );
     const perimeterCartographicNW = Cartographic.fromRadians(
       rectangle.west,
       rectangle.north,
       maximumHeight,
-      scratchPerimeterCartographicNW
+      scratchPerimeterCartographicNW,
     );
     const perimeterCartographicCW = Cartographic.fromRadians(
       rectangle.west,
       latCenter,
       maximumHeight,
-      scratchPerimeterCartographicCW
+      scratchPerimeterCartographicCW,
     );
     const perimeterCartographicSW = Cartographic.fromRadians(
       rectangle.west,
       rectangle.south,
       maximumHeight,
-      scratchPerimeterCartographicSW
+      scratchPerimeterCartographicSW,
     );
     const perimeterCartographicSC = Cartographic.fromRadians(
       lonCenter,
       rectangle.south,
       maximumHeight,
-      scratchPerimeterCartographicSC
+      scratchPerimeterCartographicSC,
     );
 
     const perimeterCartesianNC = ellipsoid.cartographicToCartesian(
       perimeterCartographicNC,
-      scratchPerimeterCartesianNC
+      scratchPerimeterCartesianNC,
     );
     let perimeterCartesianNW = ellipsoid.cartographicToCartesian(
       perimeterCartographicNW,
-      scratchPerimeterCartesianNW
+      scratchPerimeterCartesianNW,
     );
     const perimeterCartesianCW = ellipsoid.cartographicToCartesian(
       perimeterCartographicCW,
-      scratchPerimeterCartesianCW
+      scratchPerimeterCartesianCW,
     );
     let perimeterCartesianSW = ellipsoid.cartographicToCartesian(
       perimeterCartographicSW,
-      scratchPerimeterCartesianSW
+      scratchPerimeterCartesianSW,
     );
     const perimeterCartesianSC = ellipsoid.cartographicToCartesian(
       perimeterCartographicSC,
-      scratchPerimeterCartesianSC
+      scratchPerimeterCartesianSC,
     );
 
     const perimeterProjectedNC = tangentPlane.projectPointToNearestOnPlane(
       perimeterCartesianNC,
-      scratchPerimeterProjectedNC
+      scratchPerimeterProjectedNC,
     );
     const perimeterProjectedNW = tangentPlane.projectPointToNearestOnPlane(
       perimeterCartesianNW,
-      scratchPerimeterProjectedNW
+      scratchPerimeterProjectedNW,
     );
     const perimeterProjectedCW = tangentPlane.projectPointToNearestOnPlane(
       perimeterCartesianCW,
-      scratchPerimeterProjectedCW
+      scratchPerimeterProjectedCW,
     );
     const perimeterProjectedSW = tangentPlane.projectPointToNearestOnPlane(
       perimeterCartesianSW,
-      scratchPerimeterProjectedSW
+      scratchPerimeterProjectedSW,
     );
     const perimeterProjectedSC = tangentPlane.projectPointToNearestOnPlane(
       perimeterCartesianSC,
-      scratchPerimeterProjectedSC
+      scratchPerimeterProjectedSC,
     );
 
     minX = Math.min(
       perimeterProjectedNW.x,
       perimeterProjectedCW.x,
-      perimeterProjectedSW.x
+      perimeterProjectedSW.x,
     );
     maxX = -minX; // symmetrical
 
@@ -482,19 +482,20 @@ OrientedBoundingBox.fromRectangle = function (
     minY = Math.min(perimeterProjectedSW.y, perimeterProjectedSC.y);
 
     // Compute minimum Z using the rectangle at minimum height, since it will be deeper than the maximum height
-    perimeterCartographicNW.height = perimeterCartographicSW.height = minimumHeight;
+    perimeterCartographicNW.height = perimeterCartographicSW.height =
+      minimumHeight;
     perimeterCartesianNW = ellipsoid.cartographicToCartesian(
       perimeterCartographicNW,
-      scratchPerimeterCartesianNW
+      scratchPerimeterCartesianNW,
     );
     perimeterCartesianSW = ellipsoid.cartographicToCartesian(
       perimeterCartographicSW,
-      scratchPerimeterCartesianSW
+      scratchPerimeterCartesianSW,
     );
 
     minZ = Math.min(
       Plane.getPointDistance(plane, perimeterCartesianNW),
-      Plane.getPointDistance(plane, perimeterCartesianSW)
+      Plane.getPointDistance(plane, perimeterCartesianSW),
     );
     maxZ = maximumHeight; // Since the tangent plane touches the surface at height = 0, this is okay
 
@@ -509,7 +510,7 @@ OrientedBoundingBox.fromRectangle = function (
       maxY,
       minZ,
       maxZ,
-      result
+      result,
     );
   }
 
@@ -519,11 +520,11 @@ OrientedBoundingBox.fromRectangle = function (
   const latitudeNearestToEquator = fullyAboveEquator
     ? rectangle.south
     : fullyBelowEquator
-    ? rectangle.north
-    : 0.0;
+      ? rectangle.north
+      : 0.0;
   const centerLongitude = Rectangle.center(
     rectangle,
-    scratchRectangleCenterCartographic
+    scratchRectangleCenterCartographic,
   ).longitude;
 
   // Plane is located at the rectangle's center longitude and the rectangle's latitude that is closest to the equator. It rotates around the Z axis.
@@ -533,7 +534,7 @@ OrientedBoundingBox.fromRectangle = function (
     latitudeNearestToEquator,
     maximumHeight,
     ellipsoid,
-    scratchPlaneOrigin
+    scratchPlaneOrigin,
   );
   planeOrigin.z = 0.0; // center the plane on the equator to simpify plane normal calculation
   const isPole =
@@ -546,7 +547,7 @@ OrientedBoundingBox.fromRectangle = function (
   const planeXAxis = Cartesian3.cross(
     planeNormal,
     planeYAxis,
-    scratchPlaneXAxis
+    scratchPlaneXAxis,
   );
   plane = Plane.fromPointNormal(planeOrigin, planeNormal, scratchPlane);
 
@@ -556,15 +557,15 @@ OrientedBoundingBox.fromRectangle = function (
     latitudeNearestToEquator,
     maximumHeight,
     ellipsoid,
-    scratchHorizonCartesian
+    scratchHorizonCartesian,
   );
   maxX = Cartesian3.dot(
     Plane.projectPointOntoPlane(
       plane,
       horizonCartesian,
-      scratchHorizonProjected
+      scratchHorizonProjected,
     ),
-    planeXAxis
+    planeXAxis,
   );
   minX = -maxX; // symmetrical
 
@@ -574,14 +575,14 @@ OrientedBoundingBox.fromRectangle = function (
     rectangle.north,
     fullyBelowEquator ? minimumHeight : maximumHeight,
     ellipsoid,
-    scratchMaxY
+    scratchMaxY,
   ).z;
   minY = Cartesian3.fromRadians(
     0.0,
     rectangle.south,
     fullyAboveEquator ? minimumHeight : maximumHeight,
     ellipsoid,
-    scratchMinY
+    scratchMinY,
   ).z;
 
   const farZ = Cartesian3.fromRadians(
@@ -589,7 +590,7 @@ OrientedBoundingBox.fromRectangle = function (
     latitudeNearestToEquator,
     maximumHeight,
     ellipsoid,
-    scratchZ
+    scratchZ,
   );
   minZ = Plane.getPointDistance(plane, farZ);
   maxZ = 0.0; // plane origin starts at maxZ already
@@ -606,7 +607,7 @@ OrientedBoundingBox.fromRectangle = function (
     maxY,
     minZ,
     maxZ,
-    result
+    result,
   );
 };
 
@@ -631,7 +632,7 @@ OrientedBoundingBox.fromTransformation = function (transformation, result) {
   result.halfAxes = Matrix3.multiplyByScalar(
     result.halfAxes,
     0.5,
-    result.halfAxes
+    result.halfAxes,
   );
   return result;
 };
@@ -690,17 +691,17 @@ OrientedBoundingBox.intersectPlane = function (box, plane) {
     Math.abs(
       normalX * halfAxes[Matrix3.COLUMN0ROW0] +
         normalY * halfAxes[Matrix3.COLUMN0ROW1] +
-        normalZ * halfAxes[Matrix3.COLUMN0ROW2]
+        normalZ * halfAxes[Matrix3.COLUMN0ROW2],
     ) +
     Math.abs(
       normalX * halfAxes[Matrix3.COLUMN1ROW0] +
         normalY * halfAxes[Matrix3.COLUMN1ROW1] +
-        normalZ * halfAxes[Matrix3.COLUMN1ROW2]
+        normalZ * halfAxes[Matrix3.COLUMN1ROW2],
     ) +
     Math.abs(
       normalX * halfAxes[Matrix3.COLUMN2ROW0] +
         normalY * halfAxes[Matrix3.COLUMN2ROW1] +
-        normalZ * halfAxes[Matrix3.COLUMN2ROW2]
+        normalZ * halfAxes[Matrix3.COLUMN2ROW2],
     );
   const distanceToPlane = Cartesian3.dot(normal, center) + plane.distance;
 
@@ -893,7 +894,7 @@ OrientedBoundingBox.computePlaneDistances = function (
   box,
   position,
   direction,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(box)) {
@@ -1116,7 +1117,7 @@ OrientedBoundingBox.computeTransformation = function (box, result) {
   const rotationScale = Matrix3.multiplyByUniformScale(
     box.halfAxes,
     2.0,
-    scratchRotationScale
+    scratchRotationScale,
   );
   return Matrix4.fromRotationTranslation(rotationScale, translation, result);
 };
@@ -1142,7 +1143,7 @@ OrientedBoundingBox.isOccluded = function (box, occluder) {
 
   const sphere = BoundingSphere.fromOrientedBoundingBox(
     box,
-    scratchBoundingSphere
+    scratchBoundingSphere,
   );
 
   return !occluder.isBoundingSphereVisible(sphere);
@@ -1191,13 +1192,13 @@ OrientedBoundingBox.prototype.distanceSquaredTo = function (cartesian) {
 OrientedBoundingBox.prototype.computePlaneDistances = function (
   position,
   direction,
-  result
+  result,
 ) {
   return OrientedBoundingBox.computePlaneDistances(
     this,
     position,
     direction,
-    result
+    result,
   );
 };
 

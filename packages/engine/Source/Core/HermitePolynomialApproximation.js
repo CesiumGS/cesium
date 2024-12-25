@@ -11,7 +11,7 @@ function calculateCoefficientTerm(
   xTable,
   derivOrder,
   termOrder,
-  reservedIndices
+  reservedIndices,
 ) {
   let result = 0;
   let reserved;
@@ -35,7 +35,7 @@ function calculateCoefficientTerm(
           xTable,
           derivOrder - 1,
           termOrder,
-          reservedIndices
+          reservedIndices,
         );
         reservedIndices.splice(reservedIndices.length - 1, 1);
       }
@@ -81,7 +81,7 @@ const HermitePolynomialApproximation = {
  */
 HermitePolynomialApproximation.getRequiredDataPoints = function (
   degree,
-  inputOrder
+  inputOrder,
 ) {
   inputOrder = defaultValue(inputOrder, 0);
 
@@ -118,7 +118,7 @@ HermitePolynomialApproximation.interpolateOrderZero = function (
   xTable,
   yTable,
   yStride,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = new Array(yStride);
@@ -219,7 +219,7 @@ HermitePolynomialApproximation.interpolate = function (
   yStride,
   inputOrder,
   outputOrder,
-  result
+  result,
 ) {
   const resultLength = yStride * (outputOrder + 1);
   if (!defined(result)) {
@@ -249,7 +249,7 @@ HermitePolynomialApproximation.interpolate = function (
     xTable,
     yTable,
     yStride,
-    inputOrder
+    inputOrder,
   );
   const reservedIndices = [];
 
@@ -264,7 +264,7 @@ HermitePolynomialApproximation.interpolate = function (
         xTable,
         d,
         i,
-        reservedIndices
+        reservedIndices,
       );
       const dimTwo = Math.floor((i * (1 - i)) / 2) + zIndiceslength * i;
 
@@ -285,7 +285,7 @@ function fillCoefficientList(
   xTable,
   yTable,
   yStride,
-  inputOrder
+  inputOrder,
 ) {
   let j;
   let index;

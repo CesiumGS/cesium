@@ -33,20 +33,20 @@ describe("Core/DistanceDisplayCondition", function () {
     expect(
       DistanceDisplayCondition.equals(
         dc,
-        new DistanceDisplayCondition(10.0, 100.0)
-      )
+        new DistanceDisplayCondition(10.0, 100.0),
+      ),
     ).toEqual(true);
     expect(
       DistanceDisplayCondition.equals(
         dc,
-        new DistanceDisplayCondition(11.0, 100.0)
-      )
+        new DistanceDisplayCondition(11.0, 100.0),
+      ),
     ).toEqual(false);
     expect(
       DistanceDisplayCondition.equals(
         dc,
-        new DistanceDisplayCondition(10.0, 101.0)
-      )
+        new DistanceDisplayCondition(10.0, 101.0),
+      ),
     ).toEqual(false);
     expect(DistanceDisplayCondition.equals(dc, undefined)).toEqual(false);
   });
@@ -104,6 +104,6 @@ describe("Core/DistanceDisplayCondition", function () {
   createPackableSpecs(
     DistanceDisplayCondition,
     new DistanceDisplayCondition(1, 2),
-    [1, 2]
+    [1, 2],
   );
 });

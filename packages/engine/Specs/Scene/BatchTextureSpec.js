@@ -257,5 +257,5 @@ describe(
       expect(batchTexture.getColor(0, result)).toEqual(Color.YELLOW);
     });
   },
-  "WebGL"
+  "WebGL",
 );

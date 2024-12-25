@@ -24,7 +24,7 @@ function Cesium3DTilesInspector(container, scene) {
   performanceContainer.setAttribute("data-bind", "visible: performance");
   const viewModel = new Cesium3DTilesInspectorViewModel(
     scene,
-    performanceContainer
+    performanceContainer,
   );
 
   this._viewModel = viewModel;
@@ -39,7 +39,7 @@ function Cesium3DTilesInspector(container, scene) {
   element.className = "cesium-cesiumInspector cesium-3DTilesInspector";
   element.setAttribute(
     "data-bind",
-    'css: { "cesium-cesiumInspector-visible" : inspectorVisible, "cesium-cesiumInspector-hidden" : !inspectorVisible}'
+    'css: { "cesium-cesiumInspector-visible" : inspectorVisible, "cesium-cesiumInspector-hidden" : !inspectorVisible}',
   );
   container.appendChild(element);
 
@@ -56,43 +56,43 @@ function Cesium3DTilesInspector(container, scene) {
     panel,
     "Tileset",
     "tilesetVisible",
-    "toggleTileset"
+    "toggleTileset",
   );
   const displayPanelContents = createSection(
     panel,
     "Display",
     "displayVisible",
-    "toggleDisplay"
+    "toggleDisplay",
   );
   const updatePanelContents = createSection(
     panel,
     "Update",
     "updateVisible",
-    "toggleUpdate"
+    "toggleUpdate",
   );
   const loggingPanelContents = createSection(
     panel,
     "Logging",
     "loggingVisible",
-    "toggleLogging"
+    "toggleLogging",
   );
   const tileDebugLabelsPanelContents = createSection(
     panel,
     "Tile Debug Labels",
     "tileDebugLabelsVisible",
-    "toggleTileDebugLabels"
+    "toggleTileDebugLabels",
   );
   const stylePanelContents = createSection(
     panel,
     "Style",
     "styleVisible",
-    "toggleStyle"
+    "toggleStyle",
   );
   const optimizationPanelContents = createSection(
     panel,
     "Optimization",
     "optimizationVisible",
-    "toggleOptimization"
+    "toggleOptimization",
   );
 
   const properties = document.createElement("div");
@@ -106,10 +106,10 @@ function Cesium3DTilesInspector(container, scene) {
   properties.appendChild(propertiesField);
   tilesetPanelContents.appendChild(properties);
   tilesetPanelContents.appendChild(
-    createButton("Pick Tileset", "togglePickTileset", "pickActive")
+    createButton("Pick Tileset", "togglePickTileset", "pickActive"),
   );
   tilesetPanelContents.appendChild(
-    createButton("Trim Tiles Cache", "trimTilesCache")
+    createButton("Trim Tiles Cache", "trimTilesCache"),
   );
   tilesetPanelContents.appendChild(createCheckbox("Enable Picking", "picking"));
 
@@ -118,71 +118,77 @@ function Cesium3DTilesInspector(container, scene) {
     createCheckbox(
       "Wireframe",
       "wireframe",
-      "_tileset === undefined || hasEnabledWireframe"
-    )
+      "_tileset === undefined || hasEnabledWireframe",
+    ),
   );
 
   // Create warning text when the Wireframe checkbox is disabled
   const warningText = document.createElement("p");
   warningText.setAttribute(
     "data-bind",
-    "visible: _tileset !== undefined && !hasEnabledWireframe"
+    "visible: _tileset !== undefined && !hasEnabledWireframe",
   );
   warningText.setAttribute(
     "class",
-    "cesium-3DTilesInspector-disabledElementsInfo"
+    "cesium-3DTilesInspector-disabledElementsInfo",
   );
   warningText.innerText =
     "Set enableDebugWireframe to true in the tileset constructor to enable this option.";
   wireframeCheckbox.appendChild(warningText);
 
   displayPanelContents.appendChild(
-    createCheckbox("Bounding Volumes", "showBoundingVolumes")
+    createCheckbox("Bounding Volumes", "showBoundingVolumes"),
   );
   displayPanelContents.appendChild(
-    createCheckbox("Content Volumes", "showContentBoundingVolumes")
+    createCheckbox("Content Volumes", "showContentBoundingVolumes"),
   );
   displayPanelContents.appendChild(
-    createCheckbox("Request Volumes", "showRequestVolumes")
+    createCheckbox("Request Volumes", "showRequestVolumes"),
   );
 
   displayPanelContents.appendChild(
-    createCheckbox("Point Cloud Shading", "pointCloudShading")
+    createCheckbox("Point Cloud Shading", "pointCloudShading"),
   );
   const pointCloudShadingContainer = document.createElement("div");
   pointCloudShadingContainer.setAttribute(
     "data-bind",
-    "visible: pointCloudShading"
+    "visible: pointCloudShading",
   );
   pointCloudShadingContainer.appendChild(
-    createRangeInput("Geometric Error Scale", "geometricErrorScale", 0, 2, 0.01)
+    createRangeInput(
+      "Geometric Error Scale",
+      "geometricErrorScale",
+      0,
+      2,
+      0.01,
+    ),
   );
   pointCloudShadingContainer.appendChild(
-    createRangeInput("Maximum Attenuation", "maximumAttenuation", 0, 32, 1)
+    createRangeInput("Maximum Attenuation", "maximumAttenuation", 0, 32, 1),
   );
   pointCloudShadingContainer.appendChild(
-    createRangeInput("Base Resolution", "baseResolution", 0, 1, 0.01)
+    createRangeInput("Base Resolution", "baseResolution", 0, 1, 0.01),
   );
   pointCloudShadingContainer.appendChild(
-    createCheckbox("Eye Dome Lighting (EDL)", "eyeDomeLighting")
+    createCheckbox("Eye Dome Lighting (EDL)", "eyeDomeLighting"),
   );
   displayPanelContents.appendChild(pointCloudShadingContainer);
 
   const edlContainer = document.createElement("div");
   edlContainer.setAttribute("data-bind", "visible: eyeDomeLighting");
   edlContainer.appendChild(
-    createRangeInput("EDL Strength", "eyeDomeLightingStrength", 0, 2.0, 0.1)
+    createRangeInput("EDL Strength", "eyeDomeLightingStrength", 0, 2.0, 0.1),
   );
   edlContainer.appendChild(
-    createRangeInput("EDL Radius", "eyeDomeLightingRadius", 0, 4.0, 0.1)
+    createRangeInput("EDL Radius", "eyeDomeLightingRadius", 0, 4.0, 0.1),
   );
   pointCloudShadingContainer.appendChild(edlContainer);
 
   updatePanelContents.appendChild(
-    createCheckbox("Freeze Frame", "freezeFrame")
+    createCheckbox("Freeze Frame", "freezeFrame"),
   );
   updatePanelContents.appendChild(
-    createCheckbox("Dynamic Screen Space Error", "dynamicScreenSpaceError")
+    createCheckbox("Dynamic Screen Space Error", "dynamicScreenSpaceError"),
   );
   const sseContainer = document.createElement("div");
   sseContainer.appendChild(
@@ -191,14 +197,14 @@ function Cesium3DTilesInspector(container, scene) {
       "maximumScreenSpaceError",
       0,
       128,
-      1
-    )
+      1,
+    ),
   );
   updatePanelContents.appendChild(sseContainer);
   const dynamicScreenSpaceErrorContainer = document.createElement("div");
   dynamicScreenSpaceErrorContainer.setAttribute(
     "data-bind",
-    "visible: dynamicScreenSpaceError"
+    "visible: dynamicScreenSpaceError",
   );
   dynamicScreenSpaceErrorContainer.appendChild(
     createRangeInput(
@@ -207,8 +213,8 @@ function Cesium3DTilesInspector(container, scene) {
       0,
       1,
       0.005,
-      "dynamicScreenSpaceErrorDensity"
-    )
+      "dynamicScreenSpaceErrorDensity",
+    ),
   );
   dynamicScreenSpaceErrorContainer.appendChild(
     createRangeInput(
@@ -216,43 +222,43 @@ function Cesium3DTilesInspector(container, scene) {
       "dynamicScreenSpaceErrorFactor",
       1,
       32,
-      0.1
-    )
+      0.1,
+    ),
   );
   updatePanelContents.appendChild(dynamicScreenSpaceErrorContainer);
 
   loggingPanelContents.appendChild(
-    createCheckbox("Performance", "performance")
+    createCheckbox("Performance", "performance"),
   );
   loggingPanelContents.appendChild(performanceContainer);
   loggingPanelContents.appendChild(
-    createCheckbox("Statistics", "showStatistics")
+    createCheckbox("Statistics", "showStatistics"),
   );
   const statistics = document.createElement("div");
   statistics.className = "cesium-3dTilesInspector-statistics";
   statistics.setAttribute(
     "data-bind",
-    "html: statisticsText, visible: showStatistics"
+    "html: statisticsText, visible: showStatistics",
   );
   loggingPanelContents.appendChild(statistics);
   loggingPanelContents.appendChild(
-    createCheckbox("Pick Statistics", "showPickStatistics")
+    createCheckbox("Pick Statistics", "showPickStatistics"),
   );
   const pickStatistics = document.createElement("div");
   pickStatistics.className = "cesium-3dTilesInspector-statistics";
   pickStatistics.setAttribute(
     "data-bind",
-    "html: pickStatisticsText, visible: showPickStatistics"
+    "html: pickStatisticsText, visible: showPickStatistics",
   );
   loggingPanelContents.appendChild(pickStatistics);
   loggingPanelContents.appendChild(
-    createCheckbox("Resource Cache Statistics", "showResourceCacheStatistics")
+    createCheckbox("Resource Cache Statistics", "showResourceCacheStatistics"),
   );
   const resourceCacheStatistics = document.createElement("div");
   resourceCacheStatistics.className = "cesium-3dTilesInspector-statistics";
   resourceCacheStatistics.setAttribute(
     "data-bind",
-    "html: resourceCacheStatisticsText, visible: showResourceCacheStatistics"
+    "html: resourceCacheStatisticsText, visible: showResourceCacheStatistics",
   );
   loggingPanelContents.appendChild(resourceCacheStatistics);
 
@@ -265,13 +271,13 @@ function Cesium3DTilesInspector(container, scene) {
     "options: colorBlendModes, " +
       'optionsText: "text", ' +
       'optionsValue: "value", ' +
-      "value: colorBlendMode"
+      "value: colorBlendMode",
   );
   stylePanelEditor.appendChild(blendDropdown);
   const styleEditor = document.createElement("textarea");
   styleEditor.setAttribute(
     "data-bind",
-    "textInput: styleString, event: { keydown: styleEditorKeyPress }"
+    "textInput: styleString, event: { keydown: styleEditorKeyPress }",
   );
   stylePanelEditor.className = "cesium-cesiumInspector-styleEditor";
   stylePanelEditor.appendChild(styleEditor);
@@ -283,25 +289,25 @@ function Cesium3DTilesInspector(container, scene) {
   stylePanelEditor.appendChild(errorBox);
 
   tileDebugLabelsPanelContents.appendChild(
-    createCheckbox("Show Picked Only", "showOnlyPickedTileDebugLabel")
+    createCheckbox("Show Picked Only", "showOnlyPickedTileDebugLabel"),
   );
   tileDebugLabelsPanelContents.appendChild(
-    createCheckbox("Geometric Error", "showGeometricError")
+    createCheckbox("Geometric Error", "showGeometricError"),
   );
   tileDebugLabelsPanelContents.appendChild(
-    createCheckbox("Rendering Statistics", "showRenderingStatistics")
+    createCheckbox("Rendering Statistics", "showRenderingStatistics"),
   );
   tileDebugLabelsPanelContents.appendChild(
-    createCheckbox("Memory Usage (MB)", "showMemoryUsage")
+    createCheckbox("Memory Usage (MB)", "showMemoryUsage"),
   );
   tileDebugLabelsPanelContents.appendChild(createCheckbox("Url", "showUrl"));
 
   optimizationPanelContents.appendChild(
-    createCheckbox("Skip Tile LODs", "skipLevelOfDetail")
+    createCheckbox("Skip Tile LODs", "skipLevelOfDetail"),
   );
   const skipScreenSpaceErrorFactorContainer = document.createElement("div");
   skipScreenSpaceErrorFactorContainer.appendChild(
-    createRangeInput("Skip SSE Factor", "skipScreenSpaceErrorFactor", 1, 50, 1)
+    createRangeInput("Skip SSE Factor", "skipScreenSpaceErrorFactor", 1, 50, 1),
   );
   optimizationPanelContents.appendChild(skipScreenSpaceErrorFactorContainer);
   const baseScreenSpaceError = document.createElement("div");
@@ -311,23 +317,23 @@ function Cesium3DTilesInspector(container, scene) {
       "baseScreenSpaceError",
       0,
       4096,
-      1
-    )
+      1,
+    ),
   );
   optimizationPanelContents.appendChild(baseScreenSpaceError);
   const skipLevelsContainer = document.createElement("div");
   skipLevelsContainer.appendChild(
-    createRangeInput("Min. levels to skip", "skipLevels", 0, 10, 1)
+    createRangeInput("Min. levels to skip", "skipLevels", 0, 10, 1),
   );
   optimizationPanelContents.appendChild(skipLevelsContainer);
   optimizationPanelContents.appendChild(
     createCheckbox(
       "Load only tiles that meet the max SSE.",
-      "immediatelyLoadDesiredLevelOfDetail"
-    )
+      "immediatelyLoadDesiredLevelOfDetail",
+    ),
   );
   optimizationPanelContents.appendChild(
-    createCheckbox("Load siblings of visible tiles", "loadSiblings")
+    createCheckbox("Load siblings of visible tiles", "loadSiblings"),
   );
 
   knockout.applyBindings(viewModel, element);

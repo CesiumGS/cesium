@@ -15,7 +15,7 @@ describe("Scene/processVoxelProperties", function () {
     scene = createScene();
 
     provider = await Cesium3DTilesVoxelProvider.fromUrl(
-      "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+      "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
     );
   });
 
@@ -46,7 +46,7 @@ describe("Scene/processVoxelProperties", function () {
       shaderBuilder,
       "PropertyStatistics_a",
       "PropertyStatistics_a",
-      propertyStatisticsFields
+      propertyStatisticsFields,
     );
 
     // Check for Statistics struct
@@ -55,7 +55,7 @@ describe("Scene/processVoxelProperties", function () {
       shaderBuilder,
       "Statistics",
       "Statistics",
-      statisticsFields
+      statisticsFields,
     );
 
     // Check for Metadata struct
@@ -64,7 +64,7 @@ describe("Scene/processVoxelProperties", function () {
       shaderBuilder,
       "Metadata",
       "Metadata",
-      metadataFields
+      metadataFields,
     );
 
     // Check for VoxelProperty structs
@@ -78,7 +78,7 @@ describe("Scene/processVoxelProperties", function () {
       shaderBuilder,
       "VoxelProperty_a",
       "VoxelProperty_a",
-      voxelPropertyFields
+      voxelPropertyFields,
     );
 
     // Check for Voxel struct
@@ -100,7 +100,7 @@ describe("Scene/processVoxelProperties", function () {
       shaderBuilder,
       "Voxel",
       "Voxel",
-      voxelFields
+      voxelFields,
     );
 
     // Check for FragmentInput struct
@@ -109,7 +109,7 @@ describe("Scene/processVoxelProperties", function () {
       shaderBuilder,
       "FragmentInput",
       "FragmentInput",
-      fragmentInputFields
+      fragmentInputFields,
     );
 
     // Check for Properties struct
@@ -118,7 +118,7 @@ describe("Scene/processVoxelProperties", function () {
       shaderBuilder,
       "Properties",
       "Properties",
-      propertiesFields
+      propertiesFields,
     );
 
     // Check clearProperties function

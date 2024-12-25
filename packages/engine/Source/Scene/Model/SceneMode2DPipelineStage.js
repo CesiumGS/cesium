@@ -52,11 +52,11 @@ const SceneMode2DPipelineStage = {
 SceneMode2DPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
-    VertexAttributeSemantic.POSITION
+    VertexAttributeSemantic.POSITION,
   );
 
   const shaderBuilder = renderResources.shaderBuilder;
@@ -66,13 +66,13 @@ SceneMode2DPipelineStage.process = function (
   const computedModelMatrix = Matrix4.multiplyTransformation(
     modelMatrix,
     nodeComputedTransform,
-    scratchModelMatrix
+    scratchModelMatrix,
   );
 
   const boundingSphere2D = computeBoundingSphere2D(
     renderResources,
     computedModelMatrix,
-    frameState
+    frameState,
   );
 
   const runtimePrimitive = renderResources.runtimePrimitive;
@@ -92,7 +92,7 @@ SceneMode2DPipelineStage.process = function (
       positionAttribute,
       computedModelMatrix,
       boundingSphere2D,
-      frameState
+      frameState,
     );
 
     // Since this buffer will persist even if the pipeline is re-run,
@@ -110,14 +110,14 @@ SceneMode2DPipelineStage.process = function (
   shaderBuilder.addDefine(
     "USE_2D_POSITIONS",
     undefined,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   shaderBuilder.addUniform("mat4", "u_modelView2D", ShaderDestination.VERTEX);
 
   const modelMatrix2D = Matrix4.fromTranslation(
     boundingSphere2D.center,
-    new Matrix4()
+    new Matrix4(),
   );
 
   const context = frameState.context;
@@ -126,7 +126,7 @@ SceneMode2DPipelineStage.process = function (
       return Matrix4.multiplyTransformation(
         context.uniformState.view,
         modelMatrix2D,
-        scratchModelView2D
+        scratchModelView2D,
       );
     },
   };
@@ -142,31 +142,31 @@ function computeBoundingSphere2D(renderResources, modelMatrix, frameState) {
   const transformedPositionMin = Matrix4.multiplyByPoint(
     modelMatrix,
     renderResources.positionMin,
-    scratchProjectedMin
+    scratchProjectedMin,
   );
 
   const projectedMin = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     transformedPositionMin,
-    transformedPositionMin
+    transformedPositionMin,
   );
 
   const transformedPositionMax = Matrix4.multiplyByPoint(
     modelMatrix,
     renderResources.positionMax,
-    scratchProjectedMax
+    scratchProjectedMax,
   );
 
   const projectedMax = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     transformedPositionMax,
-    transformedPositionMax
+    transformedPositionMax,
   );
 
   return BoundingSphere.fromCornerPoints(
     projectedMin,
     projectedMax,
-    new BoundingSphere()
+    new BoundingSphere(),
   );
 }
 
@@ -184,17 +184,17 @@ function dequantizePositionsTypedArray(typedArray, quantization) {
     const initialPosition = Cartesian3.fromArray(
       typedArray,
       i,
-      scratchPosition
+      scratchPosition,
     );
     const scaledPosition = Cartesian3.multiplyComponents(
       initialPosition,
       quantizedVolumeStepSize,
-      initialPosition
+      initialPosition,
     );
     const dequantizedPosition = Cartesian3.add(
       scaledPosition,
       quantizedVolumeOffset,
-      scaledPosition
+      scaledPosition,
     );
 
     dequantizedArray[i] = dequantizedPosition.x;
@@ -209,14 +209,14 @@ function createPositionsTypedArrayFor2D(
   attribute,
   modelMatrix,
   referencePoint,
-  frameState
+  frameState,
 ) {
   let result;
   if (defined(attribute.quantization)) {
     // Dequantize the positions if necessary.
     result = dequantizePositionsTypedArray(
       attribute.typedArray,
-      attribute.quantization
+      attribute.quantization,
     );
   } else {
     result = attribute.typedArray.slice();
@@ -241,19 +241,19 @@ function createPositionsTypedArrayFor2D(
     const transformedPosition = Matrix4.multiplyByPoint(
       modelMatrix,
       initialPosition,
-      initialPosition
+      initialPosition,
     );
 
     const projectedPosition = SceneTransforms.computeActualEllipsoidPosition(
       frameState,
       transformedPosition,
-      transformedPosition
+      transformedPosition,
     );
 
     const relativePosition = Cartesian3.subtract(
       projectedPosition,
       referencePoint,
-      projectedPosition
+      projectedPosition,
     );
 
     result[i] = relativePosition.x;
@@ -268,7 +268,7 @@ function createPositionBufferFor2D(
   positionAttribute,
   modelMatrix,
   boundingSphere2D,
-  frameState
+  frameState,
 ) {
   // Force the scene mode to be CV. In 2D, projected positions will have
   // an x-coordinate of 0, which eliminates the height data that is
@@ -284,7 +284,7 @@ function createPositionBufferFor2D(
     positionAttribute,
     modelMatrix,
     referencePoint,
-    frameStateCV
+    frameStateCV,
   );
 
   // Put the resulting data in a GPU buffer.

@@ -125,24 +125,24 @@ function computeAttributes(options) {
       let rotation = Quaternion.fromAxisAngle(
         rotationAxis,
         stRotation,
-        appendTextureCoordinatesQuaternion
+        appendTextureCoordinatesQuaternion,
       );
       textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrix);
 
       rotation = Quaternion.fromAxisAngle(
         rotationAxis,
         -stRotation,
-        appendTextureCoordinatesQuaternion
+        appendTextureCoordinatesQuaternion,
       );
       tangentRotationMatrix = Matrix3.fromQuaternion(
         rotation,
-        tangentRotationMatrix
+        tangentRotationMatrix,
       );
     } else {
       textureMatrix = Matrix3.clone(Matrix3.IDENTITY, textureMatrix);
       tangentRotationMatrix = Matrix3.clone(
         Matrix3.IDENTITY,
-        tangentRotationMatrix
+        tangentRotationMatrix,
       );
     }
 
@@ -160,7 +160,7 @@ function computeAttributes(options) {
       const position = Cartesian3.fromArray(
         flatPositions,
         i,
-        appendTextureCoordinatesCartesian3
+        appendTextureCoordinatesCartesian3,
       );
 
       if (vertexFormat.st) {
@@ -168,7 +168,7 @@ function computeAttributes(options) {
           let p = Matrix3.multiplyByVector(
             textureMatrix,
             position,
-            scratchPosition
+            scratchPosition,
           );
           p = ellipsoid.scaleToGeodeticSurface(p, p);
           const st = projectTo2d([p], appendTextureCoordinatesCartesian2)[0];
@@ -206,7 +206,7 @@ function computeAttributes(options) {
               const p2 = Cartesian3.fromArray(
                 flatPositions,
                 i + length,
-                p2Scratch
+                p2Scratch,
               );
               if (perPositionHeight) {
                 adjustPosHeightsForNormal(position, p1, p2, ellipsoid);
@@ -215,7 +215,7 @@ function computeAttributes(options) {
               Cartesian3.subtract(p2, position, p2);
               normal = Cartesian3.normalize(
                 Cartesian3.cross(p2, p1, normal),
-                normal
+                normal,
               );
               recomputeNormal = false;
             }
@@ -231,7 +231,7 @@ function computeAttributes(options) {
             if (vertexFormat.tangent) {
               tangent = Cartesian3.normalize(
                 Cartesian3.cross(bitangent, normal, tangent),
-                tangent
+                tangent,
               );
             }
           }
@@ -242,29 +242,29 @@ function computeAttributes(options) {
               scratchPerPosNormal = Cartesian3.fromArray(
                 normals,
                 attrIndex,
-                scratchPerPosNormal
+                scratchPerPosNormal,
               );
               scratchPerPosTangent = Cartesian3.cross(
                 Cartesian3.UNIT_Z,
                 scratchPerPosNormal,
-                scratchPerPosTangent
+                scratchPerPosTangent,
               );
               scratchPerPosTangent = Cartesian3.normalize(
                 Matrix3.multiplyByVector(
                   tangentRotationMatrix,
                   scratchPerPosTangent,
-                  scratchPerPosTangent
+                  scratchPerPosTangent,
                 ),
-                scratchPerPosTangent
+                scratchPerPosTangent,
               );
               if (vertexFormat.bitangent) {
                 scratchPerPosBitangent = Cartesian3.normalize(
                   Cartesian3.cross(
                     scratchPerPosNormal,
                     scratchPerPosTangent,
-                    scratchPerPosBitangent
+                    scratchPerPosBitangent,
                   ),
-                  scratchPerPosBitangent
+                  scratchPerPosBitangent,
                 );
               }
             }
@@ -272,12 +272,12 @@ function computeAttributes(options) {
             tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
             tangent = Cartesian3.normalize(
               Matrix3.multiplyByVector(tangentRotationMatrix, tangent, tangent),
-              tangent
+              tangent,
             );
             if (vertexFormat.bitangent) {
               bitangent = Cartesian3.normalize(
                 Cartesian3.cross(normal, tangent, bitangent),
-                bitangent
+                bitangent,
               );
             }
           }
@@ -435,7 +435,7 @@ function createGeometryFromPositionsExtruded(
   closeTop,
   closeBottom,
   vertexFormat,
-  arcType
+  arcType,
 ) {
   const geos = {
     walls: [],
@@ -450,7 +450,7 @@ function createGeometryFromPositionsExtruded(
       granularity,
       perPositionHeight,
       vertexFormat,
-      arcType
+      arcType,
     );
 
     const edgePoints = topGeo.attributes.position.values;
@@ -465,7 +465,7 @@ function createGeometryFromPositionsExtruded(
 
       newIndices = IndexDatatype.createTypedArray(
         numPositions,
-        indices.length * 2
+        indices.length * 2,
       );
       newIndices.set(indices);
       const ilength = indices.length;
@@ -486,7 +486,7 @@ function createGeometryFromPositionsExtruded(
       if (perPositionHeight && vertexFormat.normal) {
         const normals = topGeo.attributes.normal.values;
         topGeo.attributes.normal.values = new Float32Array(
-          topBottomPositions.length
+          topBottomPositions.length,
         );
         topGeo.attributes.normal.values.set(normals);
       }
@@ -520,7 +520,7 @@ function createGeometryFromPositionsExtruded(
   const tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
   let positions2D = tangentPlane.projectPointsOntoPlane(
     outerRing,
-    createGeometryFromPositionsExtrudedPositions
+    createGeometryFromPositionsExtrudedPositions,
   );
 
   let windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
@@ -534,12 +534,12 @@ function createGeometryFromPositionsExtruded(
     ellipsoid,
     granularity,
     perPositionHeight,
-    arcType
+    arcType,
   );
   geos.walls.push(
     new GeometryInstance({
       geometry: wallGeo,
-    })
+    }),
   );
 
   const holes = hierarchy.holes;
@@ -547,7 +547,7 @@ function createGeometryFromPositionsExtruded(
     let hole = holes[i];
     positions2D = tangentPlane.projectPointsOntoPlane(
       hole,
-      createGeometryFromPositionsExtrudedPositions
+      createGeometryFromPositionsExtrudedPositions,
     );
 
     windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
@@ -561,12 +561,12 @@ function createGeometryFromPositionsExtruded(
       ellipsoid,
       granularity,
       perPositionHeight,
-      arcType
+      arcType,
     );
     geos.walls.push(
       new GeometryInstance({
         geometry: wallGeo,
-      })
+      }),
     );
   }
 
@@ -675,7 +675,7 @@ function PolygonGeometry(options) {
     defined(options.height)
   ) {
     throw new DeveloperError(
-      "Cannot use both options.perPositionHeight and options.height"
+      "Cannot use both options.perPositionHeight and options.height",
     );
   }
   if (
@@ -684,7 +684,7 @@ function PolygonGeometry(options) {
     options.arcType !== ArcType.RHUMB
   ) {
     throw new DeveloperError(
-      "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB."
+      "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.",
     );
   }
   //>>includeEnd('debug');
@@ -694,7 +694,7 @@ function PolygonGeometry(options) {
   const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   const stRotation = defaultValue(options.stRotation, 0.0);
   const textureCoordinates = options.textureCoordinates;
@@ -737,14 +737,14 @@ function PolygonGeometry(options) {
   this.packedLength =
     PolygonGeometryLibrary.computeHierarchyPackedLength(
       polygonHierarchy,
-      Cartesian3
+      Cartesian3,
     ) +
     Ellipsoid.packedLength +
     VertexFormat.packedLength +
     (textureCoordinates
       ? PolygonGeometryLibrary.computeHierarchyPackedLength(
           textureCoordinates,
-          Cartesian2
+          Cartesian2,
         )
       : 1) +
     12;
@@ -831,7 +831,7 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
     value._polygonHierarchy,
     array,
     startingIndex,
-    Cartesian3
+    Cartesian3,
   );
 
   Ellipsoid.pack(value._ellipsoid, array, startingIndex);
@@ -856,7 +856,7 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
       value._textureCoordinates,
       array,
       startingIndex,
-      Cartesian2
+      Cartesian2,
     );
   } else {
     array[startingIndex++] = -1.0;
@@ -890,7 +890,7 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
     startingIndex,
-    Cartesian3
+    Cartesian3,
   );
   startingIndex = polygonHierarchy.startingIndex;
   delete polygonHierarchy.startingIndex;
@@ -901,7 +901,7 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
 
@@ -922,7 +922,7 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
       : PolygonGeometryLibrary.unpackPolygonHierarchy(
           array,
           startingIndex,
-          Cartesian2
+          Cartesian2,
         );
   if (defined(textureCoordinates)) {
     startingIndex = textureCoordinates.startingIndex;
@@ -966,7 +966,7 @@ function expandRectangle(
   ellipsoid,
   arcType,
   polygon,
-  result
+  result,
 ) {
   const longitude = polar.longitude;
   const lonAdjusted =
@@ -988,7 +988,7 @@ function expandRectangle(
     const segment = Cartesian2.subtract(
       lastPolar.position,
       polar.position,
-      scratchCartesian0
+      scratchCartesian0,
     );
     const t =
       Cartesian2.dot(lastPolar.position, segment) /
@@ -997,7 +997,7 @@ function expandRectangle(
       const projected = Cartesian2.add(
         lastPolar.position,
         Cartesian2.multiplyByScalar(segment, -t, segment),
-        scratchCartesian1
+        scratchCartesian1,
       );
       const closestPolar = Stereographic.clone(lastPolar, scratchPolarClosest);
       closestPolar.position = projected;
@@ -1050,7 +1050,7 @@ PolygonGeometry.computeRectangleFromPositions = function (
   positions,
   ellipsoid,
   arcType,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("positions", positions);
@@ -1077,12 +1077,12 @@ PolygonGeometry.computeRectangleFromPositions = function (
   const positionsLength = positions.length;
   let lastPolarPosition = Stereographic.fromCartesian(
     positions[0],
-    scratchPolarPrevious
+    scratchPolarPrevious,
   );
   for (let i = 1; i < positionsLength; i++) {
     const polarPosition = Stereographic.fromCartesian(
       positions[i],
-      scratchPolar
+      scratchPolar,
     );
     expandRectangle(
       polarPosition,
@@ -1090,7 +1090,7 @@ PolygonGeometry.computeRectangleFromPositions = function (
       ellipsoid,
       arcType,
       polygon,
-      result
+      result,
     );
 
     lastPolarPosition = Stereographic.clone(polarPosition, lastPolarPosition);
@@ -1102,7 +1102,7 @@ PolygonGeometry.computeRectangleFromPositions = function (
     ellipsoid,
     arcType,
     polygon,
-    result
+    result,
   );
 
   if (result.east - result.west > polygon.eastOverIdl - polygon.westOverIdl) {
@@ -1122,7 +1122,7 @@ PolygonGeometry.computeRectangleFromPositions = function (
     CesiumMath.equalsEpsilon(
       Math.abs(polygon.northAngle),
       CesiumMath.TWO_PI,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     )
   ) {
     result.north = CesiumMath.PI_OVER_TWO;
@@ -1134,7 +1134,7 @@ PolygonGeometry.computeRectangleFromPositions = function (
     CesiumMath.equalsEpsilon(
       Math.abs(polygon.southAngle),
       CesiumMath.TWO_PI,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     )
   ) {
     result.south = -CesiumMath.PI_OVER_TWO;
@@ -1150,7 +1150,7 @@ function getTangentPlane(rectangle, positions, ellipsoid) {
   if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
     const polar = Stereographic.fromCartesian(
       positions[0],
-      scratchPolarForPlane
+      scratchPolarForPlane,
     );
     return polar.tangentPlane;
   }
@@ -1173,11 +1173,11 @@ function createProjectTo2d(rectangle, outerPositions, ellipsoid) {
         for (let i = 0; i < positions.length; ++i) {
           const cartographic = ellipsoid.cartesianToCartographic(
             positions[i],
-            scratchCartographicCyllindrical
+            scratchCartographicCyllindrical,
           );
           results[i] = new Cartesian2(
             cartographic.longitude / CesiumMath.PI,
-            cartographic.latitude / CesiumMath.PI_OVER_TWO
+            cartographic.latitude / CesiumMath.PI_OVER_TWO,
           );
         }
 
@@ -1191,7 +1191,7 @@ function createProjectTo2d(rectangle, outerPositions, ellipsoid) {
     // Use a local tangent plane for smaller extents
     const tangentPlane = EllipsoidTangentPlane.fromPoints(
       outerPositions,
-      ellipsoid
+      ellipsoid,
     );
     return tangentPlane.projectPointsOntoPlane(positions, results);
   };
@@ -1205,7 +1205,7 @@ function createProjectPositionTo2d(rectangle, outerRing, ellipsoid) {
       if (rectangle.south < 0 && rectangle.north > 0) {
         const cartographic = ellipsoid.cartesianToCartographic(
           position,
-          scratchCartographicCyllindrical
+          scratchCartographicCyllindrical,
         );
         if (!defined(result)) {
           result = new Cartesian2();
@@ -1238,7 +1238,7 @@ function createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight) {
         polygons,
         ellipsoid,
         arcType,
-        results
+        results,
       );
     }
 
@@ -1251,21 +1251,21 @@ function computeBoundingRectangle(outerRing, rectangle, ellipsoid, stRotation) {
     return BoundingRectangle.fromRectangle(
       rectangle,
       undefined,
-      scratchBoundingRectangle
+      scratchBoundingRectangle,
     );
   }
 
   const outerPositions = outerRing;
   const tangentPlane = EllipsoidTangentPlane.fromPoints(
     outerPositions,
-    ellipsoid
+    ellipsoid,
   );
   return PolygonGeometryLibrary.computeBoundingRectangle(
     tangentPlane.plane.normal,
     tangentPlane.projectPointOntoPlane.bind(tangentPlane),
     outerPositions,
     stRotation,
-    scratchBoundingRectangle
+    scratchBoundingRectangle,
   );
 }
 
@@ -1301,7 +1301,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     createProjectTo2d(rectangle, outerPositions, ellipsoid),
     !perPositionHeight,
     ellipsoid,
-    createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight)
+    createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight),
   );
 
   const hierarchy = results.hierarchy;
@@ -1317,7 +1317,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         true,
         dummyFunction,
         false,
-        ellipsoid
+        ellipsoid,
       ).polygons
     : undefined;
 
@@ -1330,7 +1330,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     outerRing,
     rectangle,
     ellipsoid,
-    stRotation
+    stRotation,
   );
 
   const geometries = [];
@@ -1377,7 +1377,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         closeTop,
         closeBottom,
         vertexFormat,
-        arcType
+        arcType,
       );
 
       let topAndBottom;
@@ -1388,25 +1388,27 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
           height,
           extrudedHeight,
           ellipsoid,
-          perPositionHeight
+          perPositionHeight,
         );
       } else if (closeTop) {
         topAndBottom = splitGeometry.topAndBottom;
-        topAndBottom.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
-          topAndBottom.geometry.attributes.position.values,
-          height,
-          ellipsoid,
-          !perPositionHeight
-        );
+        topAndBottom.geometry.attributes.position.values =
+          PolygonPipeline.scaleToGeodeticHeight(
+            topAndBottom.geometry.attributes.position.values,
+            height,
+            ellipsoid,
+            !perPositionHeight,
+          );
         options.geometry = topAndBottom.geometry;
       } else if (closeBottom) {
         topAndBottom = splitGeometry.topAndBottom;
-        topAndBottom.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
-          topAndBottom.geometry.attributes.position.values,
-          extrudedHeight,
-          ellipsoid,
-          true
-        );
+        topAndBottom.geometry.attributes.position.values =
+          PolygonPipeline.scaleToGeodeticHeight(
+            topAndBottom.geometry.attributes.position.values,
+            extrudedHeight,
+            ellipsoid,
+            true,
+          );
         options.geometry = topAndBottom.geometry;
       }
       if (closeTop || closeBottom) {
@@ -1424,7 +1426,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
           height,
           extrudedHeight,
           ellipsoid,
-          perPositionHeight
+          perPositionHeight,
         );
         wall.geometry = computeAttributes(options);
         geometries.push(wall);
@@ -1440,15 +1442,16 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
           granularity,
           perPositionHeight,
           vertexFormat,
-          arcType
+          arcType,
         ),
       });
-      geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
-        geometryInstance.geometry.attributes.position.values,
-        height,
-        ellipsoid,
-        !perPositionHeight
-      );
+      geometryInstance.geometry.attributes.position.values =
+        PolygonPipeline.scaleToGeodeticHeight(
+          geometryInstance.geometry.attributes.position.values,
+          height,
+          ellipsoid,
+          !perPositionHeight,
+        );
       options.geometry = geometryInstance.geometry;
 
       geometryInstance.geometry = computeAttributes(options);
@@ -1461,13 +1464,12 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
             ? 0
             : 1;
         const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
-        geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute(
-          {
+        geometryInstance.geometry.attributes.applyOffset =
+          new GeometryAttribute({
             componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
             componentsPerAttribute: 1,
             values: applyOffset,
-          }
-        );
+          });
       }
 
       geometries.push(geometryInstance);
@@ -1476,16 +1478,16 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const geometry = GeometryPipeline.combineInstances(geometries)[0];
   geometry.attributes.position.values = new Float64Array(
-    geometry.attributes.position.values
+    geometry.attributes.position.values,
   );
   geometry.indices = IndexDatatype.createTypedArray(
     geometry.attributes.position.values.length / 3,
-    geometry.indices
+    geometry.indices,
   );
 
   const attributes = geometry.attributes;
   const boundingSphere = BoundingSphere.fromVertices(
-    attributes.position.values
+    attributes.position.values,
   );
 
   if (!vertexFormat.position) {
@@ -1507,7 +1509,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 PolygonGeometry.createShadowVolume = function (
   polygonGeometry,
   minHeightFunc,
-  maxHeightFunc
+  maxHeightFunc,
 ) {
   const granularity = polygonGeometry._granularity;
   const ellipsoid = polygonGeometry._ellipsoid;
@@ -1541,7 +1543,7 @@ function textureCoordinateRotationPoints(polygonGeometry) {
     positions,
     stRotation,
     ellipsoid,
-    boundingRectangle
+    boundingRectangle,
   );
 }
 
@@ -1556,7 +1558,7 @@ Object.defineProperties(PolygonGeometry.prototype, {
         this._rectangle = PolygonGeometry.computeRectangleFromPositions(
           positions,
           this._ellipsoid,
-          this._arcType
+          this._arcType,
         );
       }
 
@@ -1570,9 +1572,8 @@ Object.defineProperties(PolygonGeometry.prototype, {
   textureCoordinateRotationPoints: {
     get: function () {
       if (!defined(this._textureCoordinateRotationPoints)) {
-        this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(
-          this
-        );
+        this._textureCoordinateRotationPoints =
+          textureCoordinateRotationPoints(this);
       }
       return this._textureCoordinateRotationPoints;
     },

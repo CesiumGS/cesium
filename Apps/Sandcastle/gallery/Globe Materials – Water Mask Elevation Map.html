@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Apply materials to the globe." />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div id="zoomButtons"></div>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain({
+            requestVertexNormals: true, // Needed for hillshading
+            requestWaterMask: true, // Needed to distinguish land from water
+          }),
+          timeline: false,
+          animation: false,
+        });
+
+        // Create a globe material for shading elevation only on land
+        const customElevationMaterial = new Cesium.Material({
+          fabric: {
+            type: "ElevationLand",
+            materials: {
+              waterMaskMaterial: {
+                type: "WaterMask",
+              },
+              elevationRampMaterial: {
+                type: "ElevationRamp",
+              },
+            },
+            components: {
+              diffuse: "elevationRampMaterial.diffuse",
+              alpha: "1.0 - waterMaskMaterial.alpha", // We'll need the inverse of the watermask to shade land
+            },
+          },
+          translucent: false,
+        });
+
+        const minHeight = -414.0; // approximate dead sea elevation
+        const maxHeight = 8777.0; // approximate everest elevation
+        const elevationRamp = [0.0, 0.045, 0.45, 0.5, 0.55, 1.0];
+        function getColorRamp() {
+          const ramp = document.createElement("canvas");
+          ramp.width = 100;
+          ramp.height = 1;
+          const ctx = ramp.getContext("2d");
+
+          const values = elevationRamp;
+
+          const grd = ctx.createLinearGradient(0, 0, 100, 0);
+
+          // See https://gis.stackexchange.com/questions/25099/choosing-colour-ramp-to-use-for-elevation
+          grd.addColorStop(values[0], "#344f31");
+          grd.addColorStop(values[1], "#5b8742");
+          grd.addColorStop(values[2], "#e6daa5");
+          grd.addColorStop(values[3], "#fdc771");
+          grd.addColorStop(values[4], "#b99d89");
+          grd.addColorStop(values[5], "#f0f0f0");
+
+          ctx.fillStyle = grd;
+          ctx.fillRect(0, 0, 100, 1);
+
+          return ramp;
+        }
+
+        const globe = viewer.scene.globe;
+        const material = customElevationMaterial;
+        const shadingUniforms = material.materials.elevationRampMaterial.uniforms;
+        shadingUniforms.minimumHeight = minHeight;
+        shadingUniforms.maximumHeight = maxHeight;
+        shadingUniforms.image = getColorRamp();
+
+        globe.material = material;
+        globe.showWaterEffect = false;
+        globe.enableLighting = true;
+        globe.maximumScreenSpaceError = 0.5; // Load higher resolution tiles for more detailed shading
+
+        // Light the scene with a hillshade effect similar to https://pro.arcgis.com/en/pro-app/latest/tool-reference/3d-analyst/how-hillshade-works.htm
+        const scene = viewer.scene;
+        scene.light = new Cesium.DirectionalLight({
+          direction: new Cesium.Cartesian3(1, 0, 0), // Updated every frame
+        });
+
+        // Update the light position base on the camera
+        const scratchNormal = new Cesium.Cartesian3();
+        scene.preRender.addEventListener(function (scene, time) {
+          const surfaceNormal = globe.ellipsoid.geodeticSurfaceNormal(
+            scene.camera.positionWC,
+            scratchNormal,
+          );
+          const negativeNormal = Cesium.Cartesian3.negate(surfaceNormal, surfaceNormal);
+          scene.light.direction = Cesium.Cartesian3.normalize(
+            Cesium.Cartesian3.add(negativeNormal, scene.camera.rightWC, surfaceNormal),
+            scene.light.direction,
+          );
+        });
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

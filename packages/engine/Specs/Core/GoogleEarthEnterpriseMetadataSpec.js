@@ -13,13 +13,13 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   it("tileXYToQuadKey", function () {
     expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(1, 0, 0)).toEqual("2");
     expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(1, 2, 1)).toEqual(
-      "02"
+      "02",
     );
     expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(3, 5, 2)).toEqual(
-      "021"
+      "021",
     );
     expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(4, 7, 2)).toEqual(
-      "100"
+      "100",
     );
   });
 
@@ -113,42 +113,41 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     let index = 0;
     spyOn(
       GoogleEarthEnterpriseMetadata.prototype,
-      "getQuadTreePacket"
+      "getQuadTreePacket",
     ).and.callFake(function (quadKey, version, request) {
       quadKey = defaultValue(quadKey, "") + index.toString();
       this._tileInfo[quadKey] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,
-        1
+        1,
       );
       index = (index + 1) % 4;
 
       return Promise.resolve();
     });
 
-    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(
-      "http://test.server"
-    );
+    const metadata =
+      await GoogleEarthEnterpriseMetadata.fromUrl("http://test.server");
     const request = new Request({
       throttle: true,
     });
     const tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
     await metadata.populateSubtree(tileXY.x, tileXY.y, tileXY.level, request);
     expect(
-      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket.calls.count()
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket.calls.count(),
     ).toEqual(4);
     expect(
-      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket,
     ).toHaveBeenCalledWith("", 1);
     expect(
-      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket,
     ).toHaveBeenCalledWith("0", 1, request);
     expect(
-      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket,
     ).toHaveBeenCalledWith("01", 1, request);
     expect(
-      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket,
     ).toHaveBeenCalledWith("012", 1, request);
 
     const tileInfo = metadata._tileInfo;
@@ -162,32 +161,34 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     const baseurl = "http://fake.fake.invalid/";
 
     let req = 0;
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(responseType).toEqual("arraybuffer");
-      if (req === 0) {
-        expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
-        deferred.reject(); // Reject dbRoot request and use defaults
-      } else {
-        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/GoogleEarthEnterprise/gee.metadata",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred
-        );
-      }
-      ++req;
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(responseType).toEqual("arraybuffer");
+        if (req === 0) {
+          expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
+          deferred.reject(); // Reject dbRoot request and use defaults
+        } else {
+          expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
+          Resource._DefaultImplementations.loadWithXhr(
+            "Data/GoogleEarthEnterprise/gee.metadata",
+            responseType,
+            method,
+            data,
+            headers,
+            deferred,
+          );
+        }
+        ++req;
+      },
+    );
 
     const provider = await GoogleEarthEnterpriseMetadata.fromUrl(baseurl);
 
@@ -215,32 +216,34 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     });
 
     let req = 0;
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(responseType).toEqual("arraybuffer");
-      if (req === 0) {
-        expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
-        deferred.reject(); // Reject dbRoot request and use defaults
-      } else {
-        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/GoogleEarthEnterprise/gee.metadata",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred
-        );
-      }
-      ++req;
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(responseType).toEqual("arraybuffer");
+        if (req === 0) {
+          expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
+          deferred.reject(); // Reject dbRoot request and use defaults
+        } else {
+          expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
+          Resource._DefaultImplementations.loadWithXhr(
+            "Data/GoogleEarthEnterprise/gee.metadata",
+            responseType,
+            method,
+            data,
+            headers,
+            deferred,
+          );
+        }
+        ++req;
+      },
+    );
 
     const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(resource);
 
@@ -264,10 +267,10 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   it("fromUrl rejects on error", async function () {
     const url = "host.invalid/";
     await expectAsync(
-      GoogleEarthEnterpriseMetadata.fromUrl(url)
+      GoogleEarthEnterpriseMetadata.fromUrl(url),
     ).toBeRejectedWithError(
       RuntimeError,
-      new RegExp("Request has failed. Status Code: 404")
+      new RegExp("Request has failed. Status Code: 404"),
     );
   });
 });

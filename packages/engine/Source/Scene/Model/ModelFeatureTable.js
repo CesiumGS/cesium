@@ -167,7 +167,7 @@ ModelFeatureTable.prototype.update = function (frameState) {
 
   const currentStyleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
     this._featuresLength,
-    this._batchTexture.translucentFeaturesLength
+    this._batchTexture.translucentFeaturesLength,
   );
 
   if (this._styleCommandsNeeded !== currentStyleCommandsNeeded) {
@@ -214,7 +214,7 @@ ModelFeatureTable.prototype.hasProperty = function (featureId, propertyName) {
 
 ModelFeatureTable.prototype.hasPropertyBySemantic = function (
   featureId,
-  propertyName
+  propertyName,
 ) {
   return this._propertyTable.hasPropertyBySemantic(featureId, propertyName);
 };
@@ -225,7 +225,7 @@ ModelFeatureTable.prototype.getProperty = function (featureId, name) {
 
 ModelFeatureTable.prototype.getPropertyBySemantic = function (
   featureId,
-  semantic
+  semantic,
 ) {
   return this._propertyTable.getPropertyBySemantic(featureId, semantic);
 };
@@ -266,13 +266,13 @@ ModelFeatureTable.prototype.applyStyle = function (style) {
     const color = defined(style.color)
       ? defaultValue(
           style.color.evaluateColor(feature, scratchColor),
-          BatchTexture.DEFAULT_COLOR_VALUE
+          BatchTexture.DEFAULT_COLOR_VALUE,
         )
       : BatchTexture.DEFAULT_COLOR_VALUE;
     const show = defined(style.show)
       ? defaultValue(
           style.show.evaluate(feature),
-          BatchTexture.DEFAULT_SHOW_VALUE
+          BatchTexture.DEFAULT_SHOW_VALUE,
         )
       : BatchTexture.DEFAULT_SHOW_VALUE;
 

@@ -83,68 +83,68 @@ function registerListeners(screenSpaceEventHandler) {
       screenSpaceEventHandler,
       "pointerdown",
       element,
-      handlePointerDown
+      handlePointerDown,
     );
     registerListener(
       screenSpaceEventHandler,
       "pointerup",
       element,
-      handlePointerUp
+      handlePointerUp,
     );
     registerListener(
       screenSpaceEventHandler,
       "pointermove",
       element,
-      handlePointerMove
+      handlePointerMove,
     );
     registerListener(
       screenSpaceEventHandler,
       "pointercancel",
       element,
-      handlePointerUp
+      handlePointerUp,
     );
   } else {
     registerListener(
       screenSpaceEventHandler,
       "mousedown",
       element,
-      handleMouseDown
+      handleMouseDown,
     );
     registerListener(
       screenSpaceEventHandler,
       "mouseup",
       alternateElement,
-      handleMouseUp
+      handleMouseUp,
     );
     registerListener(
       screenSpaceEventHandler,
       "mousemove",
       alternateElement,
-      handleMouseMove
+      handleMouseMove,
     );
     registerListener(
       screenSpaceEventHandler,
       "touchstart",
       element,
-      handleTouchStart
+      handleTouchStart,
     );
     registerListener(
       screenSpaceEventHandler,
       "touchend",
       alternateElement,
-      handleTouchEnd
+      handleTouchEnd,
     );
     registerListener(
       screenSpaceEventHandler,
       "touchmove",
       alternateElement,
-      handleTouchMove
+      handleTouchMove,
     );
     registerListener(
       screenSpaceEventHandler,
       "touchcancel",
       alternateElement,
-      handleTouchEnd
+      handleTouchEnd,
     );
   }
 
@@ -152,7 +152,7 @@ function registerListeners(screenSpaceEventHandler) {
     screenSpaceEventHandler,
     "dblclick",
     element,
-    handleDblClick
+    handleDblClick,
   );
 
   // detect available wheel event
@@ -223,7 +223,7 @@ function handleMouseDown(screenSpaceEventHandler, event) {
   const position = getPosition(
     screenSpaceEventHandler,
     event,
-    screenSpaceEventHandler._primaryPosition
+    screenSpaceEventHandler._primaryPosition,
   );
   Cartesian2.clone(position, screenSpaceEventHandler._primaryStartPosition);
   Cartesian2.clone(position, screenSpaceEventHandler._primaryPreviousPosition);
@@ -232,7 +232,7 @@ function handleMouseDown(screenSpaceEventHandler, event) {
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
-    modifier
+    modifier,
   );
 
   if (defined(action)) {
@@ -255,24 +255,24 @@ function cancelMouseEvent(
   screenSpaceEventHandler,
   screenSpaceEventType,
   clickScreenSpaceEventType,
-  event
+  event,
 ) {
   const modifier = getModifier(event);
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
-    modifier
+    modifier,
   );
   const clickAction = screenSpaceEventHandler.getInputAction(
     clickScreenSpaceEventType,
-    modifier
+    modifier,
   );
 
   if (defined(action) || defined(clickAction)) {
     const position = getPosition(
       screenSpaceEventHandler,
       event,
-      screenSpaceEventHandler._primaryPosition
+      screenSpaceEventHandler._primaryPosition,
     );
 
     if (defined(action)) {
@@ -287,7 +287,7 @@ function cancelMouseEvent(
         checkPixelTolerance(
           startPosition,
           position,
-          screenSpaceEventHandler._clickPixelTolerance
+          screenSpaceEventHandler._clickPixelTolerance,
         )
       ) {
         Cartesian2.clone(position, mouseClickEvent.position);
@@ -318,7 +318,7 @@ function handleMouseUp(screenSpaceEventHandler, event) {
       screenSpaceEventHandler,
       ScreenSpaceEventType.LEFT_UP,
       ScreenSpaceEventType.LEFT_CLICK,
-      event
+      event,
     );
     screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false;
   }
@@ -327,7 +327,7 @@ function handleMouseUp(screenSpaceEventHandler, event) {
       screenSpaceEventHandler,
       ScreenSpaceEventType.MIDDLE_UP,
       ScreenSpaceEventType.MIDDLE_CLICK,
-      event
+      event,
     );
     screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] = false;
   }
@@ -336,7 +336,7 @@ function handleMouseUp(screenSpaceEventHandler, event) {
       screenSpaceEventHandler,
       ScreenSpaceEventType.RIGHT_UP,
       ScreenSpaceEventType.RIGHT_CLICK,
-      event
+      event,
     );
     screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] = false;
   }
@@ -357,13 +357,13 @@ function handleMouseMove(screenSpaceEventHandler, event) {
   const position = getPosition(
     screenSpaceEventHandler,
     event,
-    screenSpaceEventHandler._primaryPosition
+    screenSpaceEventHandler._primaryPosition,
   );
   const previousPosition = screenSpaceEventHandler._primaryPreviousPosition;
 
   const action = screenSpaceEventHandler.getInputAction(
     ScreenSpaceEventType.MOUSE_MOVE,
-    modifier
+    modifier,
   );
 
   if (defined(action)) {
@@ -402,7 +402,7 @@ function handleDblClick(screenSpaceEventHandler, event) {
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
-    modifier
+    modifier,
   );
 
   if (defined(action)) {
@@ -445,7 +445,7 @@ function handleWheel(screenSpaceEventHandler, event) {
   const modifier = getModifier(event);
   const action = screenSpaceEventHandler.getInputAction(
     ScreenSpaceEventType.WHEEL,
-    modifier
+    modifier,
   );
 
   if (defined(action)) {
@@ -471,7 +471,7 @@ function handleTouchStart(screenSpaceEventHandler, event) {
     identifier = touch.identifier;
     positions.set(
       identifier,
-      getPosition(screenSpaceEventHandler, touch, new Cartesian2())
+      getPosition(screenSpaceEventHandler, touch, new Cartesian2()),
     );
   }
 
@@ -484,7 +484,7 @@ function handleTouchStart(screenSpaceEventHandler, event) {
     identifier = touch.identifier;
     previousPositions.set(
       identifier,
-      Cartesian2.clone(positions.get(identifier))
+      Cartesian2.clone(positions.get(identifier)),
     );
   }
 }
@@ -556,13 +556,13 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.LEFT_UP,
-      modifier
+      modifier,
     );
 
     if (defined(action)) {
       Cartesian2.clone(
         screenSpaceEventHandler._primaryPosition,
-        touchEndEvent.position
+        touchEndEvent.position,
       );
 
       action(touchEndEvent);
@@ -572,7 +572,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
       // releasing single touch, check for CLICK
       clickAction = screenSpaceEventHandler.getInputAction(
         ScreenSpaceEventType.LEFT_CLICK,
-        modifier
+        modifier,
       );
 
       if (defined(clickAction)) {
@@ -583,12 +583,12 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
           checkPixelTolerance(
             startPosition,
             endPosition,
-            screenSpaceEventHandler._clickPixelTolerance
+            screenSpaceEventHandler._clickPixelTolerance,
           )
         ) {
           Cartesian2.clone(
             screenSpaceEventHandler._primaryPosition,
-            touchClickEvent.position
+            touchClickEvent.position,
           );
 
           clickAction(touchClickEvent);
@@ -607,7 +607,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.PINCH_END,
-      modifier
+      modifier,
     );
 
     if (defined(action)) {
@@ -622,14 +622,14 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
     Cartesian2.clone(position, screenSpaceEventHandler._primaryStartPosition);
     Cartesian2.clone(
       position,
-      screenSpaceEventHandler._primaryPreviousPosition
+      screenSpaceEventHandler._primaryPreviousPosition,
     );
 
     screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = true;
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.LEFT_DOWN,
-      modifier
+      modifier,
     );
 
     if (defined(action)) {
@@ -645,7 +645,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
         clickAction = screenSpaceEventHandler.getInputAction(
           ScreenSpaceEventType.RIGHT_CLICK,
-          modifier
+          modifier,
         );
 
         if (defined(clickAction)) {
@@ -656,12 +656,12 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
             checkPixelTolerance(
               startPosition,
               endPosition,
-              screenSpaceEventHandler._holdPixelTolerance
+              screenSpaceEventHandler._holdPixelTolerance,
             )
           ) {
             Cartesian2.clone(
               screenSpaceEventHandler._primaryPosition,
-              touchHoldEvent.position
+              touchHoldEvent.position,
             );
 
             clickAction(touchHoldEvent);
@@ -679,7 +679,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.PINCH_START,
-      modifier
+      modifier,
     );
 
     if (defined(action)) {
@@ -724,7 +724,7 @@ function handleTouchMove(screenSpaceEventHandler, event) {
     identifier = touch.identifier;
     Cartesian2.clone(
       positions.get(identifier),
-      previousPositions.get(identifier)
+      previousPositions.get(identifier),
     );
   }
 }
@@ -763,7 +763,7 @@ function fireTouchMoveEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.MOUSE_MOVE,
-      modifier
+      modifier,
     );
 
     if (defined(action)) {
@@ -781,7 +781,7 @@ function fireTouchMoveEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.PINCH_MOVE,
-      modifier
+      modifier,
     );
     if (defined(action)) {
       const position1 = positions.values[0];
@@ -805,23 +805,23 @@ function fireTouchMoveEvents(screenSpaceEventHandler, event) {
       Cartesian2.fromElements(
         0.0,
         prevDist,
-        touchPinchMovementEvent.distance.startPosition
+        touchPinchMovementEvent.distance.startPosition,
       );
       Cartesian2.fromElements(
         0.0,
         dist,
-        touchPinchMovementEvent.distance.endPosition
+        touchPinchMovementEvent.distance.endPosition,
       );
 
       Cartesian2.fromElements(
         prevAngle,
         prevCY,
-        touchPinchMovementEvent.angleAndHeight.startPosition
+        touchPinchMovementEvent.angleAndHeight.startPosition,
       );
       Cartesian2.fromElements(
         angle,
         cY,
-        touchPinchMovementEvent.angleAndHeight.endPosition
+        touchPinchMovementEvent.angleAndHeight.endPosition,
       );
 
       action(touchPinchMovementEvent);
@@ -838,7 +838,7 @@ function handlePointerDown(screenSpaceEventHandler, event) {
     const identifier = event.pointerId;
     positions.set(
       identifier,
-      getPosition(screenSpaceEventHandler, event, new Cartesian2())
+      getPosition(screenSpaceEventHandler, event, new Cartesian2()),
     );
 
     fireTouchEvents(screenSpaceEventHandler, event);
@@ -846,7 +846,7 @@ function handlePointerDown(screenSpaceEventHandler, event) {
     const previousPositions = screenSpaceEventHandler._previousPositions;
     previousPositions.set(
       identifier,
-      Cartesian2.clone(positions.get(identifier))
+      Cartesian2.clone(positions.get(identifier)),
     );
   } else {
     handleMouseDown(screenSpaceEventHandler, event);
@@ -885,7 +885,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
     const previousPositions = screenSpaceEventHandler._previousPositions;
     Cartesian2.clone(
       positions.get(identifier),
-      previousPositions.get(identifier)
+      previousPositions.get(identifier),
     );
   } else {
     handleMouseMove(screenSpaceEventHandler, event);
@@ -988,7 +988,8 @@ function ScreenSpaceEventHandler(element) {
   };
   this._isPinching = false;
   this._isTouchHolding = false;
-  this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
+  this._lastSeenTouchEvent =
+    -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
 
   this._primaryStartPosition = new Cartesian2();
   this._primaryPosition = new Cartesian2();
@@ -1025,7 +1026,7 @@ function ScreenSpaceEventHandler(element) {
 ScreenSpaceEventHandler.prototype.setInputAction = function (
   action,
   type,
-  modifier
+  modifier,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(action)) {
@@ -1075,7 +1076,7 @@ ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifier) {
  */
 ScreenSpaceEventHandler.prototype.removeInputAction = function (
   type,
-  modifier
+  modifier,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(type)) {

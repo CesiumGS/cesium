@@ -46,22 +46,24 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   });
 
   function stubJSONCall(baseUrl, result, withProxy, token) {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      deferred.resolve(JSON.stringify(result));
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        deferred.resolve(JSON.stringify(result));
+      },
+    );
   }
 
   it("conforms to ImageryProvider interface", function () {
     expect(ArcGisMapServerImageryProvider).toConformToInterface(
-      ImageryProvider
+      ImageryProvider,
     );
   });
 
@@ -100,9 +102,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
   it("fromUrl throws if url is not provided", async function () {
     await expectAsync(
-      ArcGisMapServerImageryProvider.fromUrl()
+      ArcGisMapServerImageryProvider.fromUrl(),
     ).toBeRejectedWithDeveloperError(
-      "url is required, actual value was undefined"
+      "url is required, actual value was undefined",
     );
   });
 
@@ -134,10 +136,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
     await expectAsync(
-      ArcGisMapServerImageryProvider.fromUrl(baseUrl)
+      ArcGisMapServerImageryProvider.fromUrl(baseUrl),
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while accessing //tiledArcGisMapServer.invalid/"
+      "An error occurred while accessing //tiledArcGisMapServer.invalid/",
     );
   });
 
@@ -180,10 +182,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     stubJSONCall(baseUrl, unsupportedWKIDResult);
 
     await expectAsync(
-      ArcGisMapServerImageryProvider.fromUrl(baseUrl)
+      ArcGisMapServerImageryProvider.fromUrl(baseUrl),
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while accessing //tiledArcGisMapServer.invalid/: Tile spatial reference WKID 1234 is not supported."
+      "An error occurred while accessing //tiledArcGisMapServer.invalid/: Tile spatial reference WKID 1234 is not supported.",
     );
   });
 
@@ -235,10 +237,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     stubJSONCall(baseUrl, unsupportedFullExtentWKIDResult);
 
     await expectAsync(
-      ArcGisMapServerImageryProvider.fromUrl(baseUrl)
+      ArcGisMapServerImageryProvider.fromUrl(baseUrl),
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while accessing //tiledArcGisMapServer.invalid/: fullExtent.spatialReference WKID 1234 is not supported."
+      "An error occurred while accessing //tiledArcGisMapServer.invalid/: fullExtent.spatialReference WKID 1234 is not supported.",
     );
   });
 
@@ -254,7 +256,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.credit).toBeDefined();
     expect(provider.tileDiscardPolicy).toBeInstanceOf(
-      DiscardMissingTileImagePolicy
+      DiscardMissingTileImagePolicy,
     );
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
     expect(provider.usingPrecachedTiles).toEqual(true);
@@ -263,15 +265,15 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
   it("fromBasemapType throws without style", async function () {
     await expectAsync(
-      ArcGisMapServerImageryProvider.fromBasemapType()
+      ArcGisMapServerImageryProvider.fromBasemapType(),
     ).toBeRejectedWithDeveloperError(
-      "style is required, actual value was undefined"
+      "style is required, actual value was undefined",
     );
   });
 
   it("fromBasemapType throws with unknown style", async function () {
     await expectAsync(
-      ArcGisMapServerImageryProvider.fromBasemapType("unknown")
+      ArcGisMapServerImageryProvider.fromBasemapType("unknown"),
     ).toBeRejectedWithDeveloperError("Unsupported basemap type: unknown");
   });
 
@@ -282,7 +284,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       ArcGisBaseMapType.SATELLITE,
       {
         token: "myToken",
-      }
+      },
     );
 
     expect(provider.url).toContain(expectedUrl);
@@ -295,16 +297,16 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     const expectedUrl = ArcGisMapService.defaultWorldImageryServer;
     stubJSONCall(expectedUrl, webMercatorResult);
     const provider = await ArcGisMapServerImageryProvider.fromBasemapType(
-      ArcGisBaseMapType.SATELLITE
+      ArcGisBaseMapType.SATELLITE,
     );
 
     expect(provider.url).toContain(expectedUrl);
     expect(provider.token).toBeDefined();
     expect(provider.credit.html).toContain(
-      "This application is using a default ArcGIS access token."
+      "This application is using a default ArcGIS access token.",
     );
     expect(provider.getTileCredits(0, 0, 0)[0].html).toEqual(
-      "Test copyright text"
+      "Test copyright text",
     );
   });
 
@@ -323,7 +325,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.credit).toBeDefined();
     expect(provider.tileDiscardPolicy).toBeInstanceOf(
-      DiscardMissingTileImagePolicy
+      DiscardMissingTileImagePolicy,
     );
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
     expect(provider.usingPrecachedTiles).toEqual(true);
@@ -332,14 +334,14 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       const url = request.url;
       if (/^blob:/.test(url)) {
         Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred
+          deferred,
         );
       } else {
         expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
@@ -348,7 +350,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       }
     };
@@ -360,7 +362,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
@@ -371,7 +373,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
@@ -428,7 +430,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.credit).toBeDefined();
     expect(provider.tileDiscardPolicy).toBeInstanceOf(
-      DiscardMissingTileImagePolicy
+      DiscardMissingTileImagePolicy,
     );
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
     expect(provider.usingPrecachedTiles).toEqual(true);
@@ -436,7 +438,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
@@ -447,7 +449,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           deferred,
           true,
           false,
-          true
+          true,
         );
       } else {
         expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
@@ -456,7 +458,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       }
     };
@@ -468,7 +470,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
@@ -479,7 +481,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
@@ -500,7 +502,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.credit).toBeDefined();
     expect(provider.tileDiscardPolicy).toBeInstanceOf(
-      DiscardMissingTileImagePolicy
+      DiscardMissingTileImagePolicy,
     );
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
     expect(provider.usingPrecachedTiles).toEqual(true);
@@ -531,7 +533,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       const uri = new Uri(request.url);
       const params = queryToObject(uri.query());
@@ -540,7 +542,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       uriWithoutQuery.query("");
 
       expect(uriWithoutQuery.toString()).toEqual(
-        getAbsoluteUri(`${baseUrl}export`)
+        getAbsoluteUri(`${baseUrl}export`),
       );
 
       expect(params.f).toEqual("image");
@@ -554,7 +556,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       Resource._DefaultImplementations.createImage(
         new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
-        deferred
+        deferred,
       );
     };
 
@@ -594,7 +596,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         copyrightText: "Test copyright text",
       },
       undefined,
-      token
+      token,
     );
 
     const provider = await ArcGisMapServerImageryProvider.fromUrl(baseUrl, {
@@ -616,7 +618,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.credit).toBeDefined();
     expect(provider.tileDiscardPolicy).toBeUndefined();
     expect(provider.rectangle).toEqual(
-      Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0)
+      Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0),
     );
     expect(provider.usingPrecachedTiles).toBe(false);
     expect(provider.enablePickFeatures).toBe(false);
@@ -625,7 +627,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       const uri = new Uri(request.url);
       const params = queryToObject(uri.query());
@@ -634,7 +636,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       uriWithoutQuery.query("");
 
       expect(uriWithoutQuery.toString()).toEqual(
-        getAbsoluteUri(`${baseUrl}export`)
+        getAbsoluteUri(`${baseUrl}export`),
       );
 
       expect(params.f).toEqual("image");
@@ -650,7 +652,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       Resource._DefaultImplementations.createImage(
         new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
-        deferred
+        deferred,
       );
     };
 
@@ -672,7 +674,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     const expectedTileUrl = getAbsoluteUri(
       `${baseUrl}tile/0/0/0?${objectToQuery({
         token: token,
-      })}`
+      })}`,
     );
 
     expect(provider.url).toEqual(baseUrl);
@@ -684,7 +686,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.credit).toBeDefined();
     expect(provider.tileDiscardPolicy).toBeInstanceOf(
-      DiscardMissingTileImagePolicy
+      DiscardMissingTileImagePolicy,
     );
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
     expect(provider.usingPrecachedTiles).toEqual(true);
@@ -693,7 +695,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
@@ -704,7 +706,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           deferred,
           true,
           false,
-          true
+          true,
         );
       } else {
         expect(url).toEqual(expectedTileUrl);
@@ -713,7 +715,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       }
     };
@@ -725,7 +727,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       expect(url).toEqual(expectedTileUrl);
 
@@ -736,7 +738,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
@@ -797,16 +799,16 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     const projection = new WebMercatorProjection();
     const sw = projection.unproject(
-      new Cartesian2(1.1148026611962173e7, -6443518.758206591)
+      new Cartesian2(1.1148026611962173e7, -6443518.758206591),
     );
     const ne = projection.unproject(
-      new Cartesian2(1.8830976498143446e7, -265936.19697360107)
+      new Cartesian2(1.8830976498143446e7, -265936.19697360107),
     );
     const rectangle = new Rectangle(
       sw.longitude,
       sw.latitude,
       ne.longitude,
-      ne.latitude
+      ne.latitude,
     );
     expect(provider.rectangle).toEqual(rectangle);
   });
@@ -865,10 +867,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.rectangle.west).toBeGreaterThanOrEqual(-Math.PI);
     expect(provider.rectangle.east).toBeLessThanOrEqual(Math.PI);
     expect(provider.rectangle.south).toBeGreaterThanOrEqual(
-      -WebMercatorProjection.MaximumLatitude
+      -WebMercatorProjection.MaximumLatitude,
     );
     expect(provider.rectangle.north).toBeLessThanOrEqual(
-      WebMercatorProjection.MaximumLatitude
+      WebMercatorProjection.MaximumLatitude,
     );
   });
 
@@ -923,7 +925,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     expect(provider.url).toEqual(baseUrl);
     expect(provider.rectangle).toEqual(
-      Rectangle.fromDegrees(-123.4, -23.2, 100.7, 45.2)
+      Rectangle.fromDegrees(-123.4, -23.2, 100.7, 45.2),
     );
   });
 
@@ -975,10 +977,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     stubJSONCall(baseUrl, unknownSpatialReferenceResult);
 
     await expectAsync(
-      ArcGisMapServerImageryProvider.fromUrl(baseUrl)
+      ArcGisMapServerImageryProvider.fromUrl(baseUrl),
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while accessing //tiledArcGisMapServer.invalid/: Tile spatial reference WKID 1234 is not supported."
+      "An error occurred while accessing //tiledArcGisMapServer.invalid/: Tile spatial reference WKID 1234 is not supported.",
     );
   });
 
@@ -989,7 +991,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         "made/up/map/server",
         {
           usePreCachedTilesIfAvailable: false,
-        }
+        },
       );
 
       Resource._Implementations.loadWithXhr = function (
@@ -999,7 +1001,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("identify");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1009,7 +1011,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1021,8 +1023,8 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       expect(firstResult.description).toContain("Hummock Grasses");
       expect(firstResult.position).toEqual(
         new WebMercatorProjection().unproject(
-          new Cartesian3(1.481682457042425e7, -2710890.117898505)
-        )
+          new Cartesian3(1.481682457042425e7, -2710890.117898505),
+        ),
       );
     });
 
@@ -1032,7 +1034,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         "made/up/map/server",
         {
           usePreCachedTilesIfAvailable: false,
-        }
+        },
       );
 
       Resource._Implementations.loadWithXhr = function (
@@ -1042,7 +1044,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("identify");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1052,7 +1054,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
       return provider
@@ -1064,7 +1066,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
           expect(firstResult.description).toContain("Hummock Grasses");
           expect(firstResult.position).toEqual(
-            Cartographic.fromDegrees(123.45, -34.2)
+            Cartographic.fromDegrees(123.45, -34.2),
           );
         });
     });
@@ -1076,7 +1078,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         {
           usePreCachedTilesIfAvailable: false,
           enablePickFeatures: false,
-        }
+        },
       );
 
       expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
@@ -1089,7 +1091,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         {
           usePreCachedTilesIfAvailable: false,
           enablePickFeatures: true,
-        }
+        },
       );
 
       provider.enablePickFeatures = false;
@@ -1103,7 +1105,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         {
           usePreCachedTilesIfAvailable: false,
           enablePickFeatures: false,
-        }
+        },
       );
 
       provider.enablePickFeatures = true;
@@ -1115,7 +1117,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("identify");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1125,7 +1127,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1142,7 +1144,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         const uri = new Uri(url);
         const query = queryToObject(uri.query());
@@ -1155,7 +1157,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1164,7 +1166,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         {
           usePreCachedTilesIfAvailable: false,
           layers: "someLayer,anotherLayerYay",
-        }
+        },
       );
 
       const pickResult = await provider.pickFeatures(0, 0, 0, 0.5, 0.5);

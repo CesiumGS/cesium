@@ -45,7 +45,7 @@ describe("Scene/GlobeSurfaceTile", function () {
     processor = new TerrainTileProcessor(
       frameState,
       mockTerrain,
-      imageryLayerCollection
+      imageryLayerCollection,
     );
   });
 
@@ -72,10 +72,10 @@ describe("Scene/GlobeSurfaceTile", function () {
 
       return processor.process([rootTile.southwestChild]).then(function () {
         expect(rootTile.southwestChild.state).toBe(
-          QuadtreeTileLoadState.LOADING
+          QuadtreeTileLoadState.LOADING,
         );
         expect(rootTile.southwestChild.data.terrainState).toBe(
-          TerrainState.UNLOADED
+          TerrainState.UNLOADED,
         );
       });
     });
@@ -85,10 +85,10 @@ describe("Scene/GlobeSurfaceTile", function () {
 
       return processor.process([rootTile.southwestChild]).then(function () {
         expect(rootTile.southwestChild.state).toBe(
-          QuadtreeTileLoadState.LOADING
+          QuadtreeTileLoadState.LOADING,
         );
         expect(rootTile.southwestChild.data.terrainState).toBe(
-          TerrainState.FAILED
+          TerrainState.FAILED,
         );
       });
     });
@@ -135,7 +135,7 @@ describe("Scene/GlobeSurfaceTile", function () {
         expect(TileProviderError.reportError.calls.count()).toBe(1);
         // Test that message argument is defined.
         expect(TileProviderError.reportError.calls.argsFor(0)[3]).toContain(
-          "RuntimeError: requestTileGeometry failed as requested."
+          "RuntimeError: requestTileGeometry failed as requested.",
         );
       });
     });
@@ -151,10 +151,10 @@ describe("Scene/GlobeSurfaceTile", function () {
         .process([rootTile, rootTile.southwestChild])
         .then(function () {
           expect(rootTile.data.terrainData.wasCreatedByUpsampling()).toBe(
-            false
+            false,
           );
           expect(
-            rootTile.southwestChild.data.terrainData.wasCreatedByUpsampling()
+            rootTile.southwestChild.data.terrainData.wasCreatedByUpsampling(),
           ).toBe(true);
         });
     });
@@ -196,7 +196,7 @@ describe("Scene/GlobeSurfaceTile", function () {
           expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
           expect(rootTile.upsampledFromParent).toBe(false);
           expect(rootTile.southwestChild.state).toBe(
-            QuadtreeTileLoadState.DONE
+            QuadtreeTileLoadState.DONE,
           );
           expect(rootTile.southwestChild.upsampledFromParent).toBe(true);
         });
@@ -224,7 +224,7 @@ describe("Scene/GlobeSurfaceTile", function () {
           expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
           expect(rootTile.upsampledFromParent).toBe(false);
           expect(rootTile.southwestChild.state).toBe(
-            QuadtreeTileLoadState.DONE
+            QuadtreeTileLoadState.DONE,
           );
           expect(rootTile.southwestChild.upsampledFromParent).toBe(false);
         });
@@ -252,7 +252,7 @@ describe("Scene/GlobeSurfaceTile", function () {
           expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
           expect(rootTile.upsampledFromParent).toBe(false);
           expect(rootTile.southwestChild.state).toBe(
-            QuadtreeTileLoadState.DONE
+            QuadtreeTileLoadState.DONE,
           );
           expect(rootTile.southwestChild.upsampledFromParent).toBe(false);
         });
@@ -290,7 +290,7 @@ describe("Scene/GlobeSurfaceTile", function () {
         .process([rootTile, rootTile.southwestChild])
         .then(function () {
           expect(rootTile.data.waterMaskTexture).toBe(
-            rootTile.southwestChild.data.waterMaskTexture
+            rootTile.southwestChild.data.waterMaskTexture,
           );
         });
     });
@@ -316,7 +316,7 @@ describe("Scene/GlobeSurfaceTile", function () {
         .then(function () {
           expect(rootTile.southwestChild.data.waterMaskTexture).toBeDefined();
           expect(
-            rootTile.southwestChild.data.waterMaskTranslationAndScale
+            rootTile.southwestChild.data.waterMaskTranslationAndScale,
           ).toEqual(new Cartesian4(0.0, 0.0, 0.5, 0.5));
         });
     });
@@ -356,18 +356,17 @@ describe("Scene/GlobeSurfaceTile", function () {
           new Cartesian3(
             -5052039.459789615,
             2561172.040315167,
-            -2936276.999965875
+            -2936276.999965875,
           ),
           new Cartesian3(
             0.5036332963145244,
             0.6648033332898124,
-            0.5517155343926082
-          )
+            0.5517155343926082,
+          ),
         );
         const pickResult = tile.data.pick(ray, undefined, undefined, true);
-        const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
-          pickResult
-        );
+        const cartographic =
+          Ellipsoid.WGS84.cartesianToCartographic(pickResult);
         expect(cartographic.height).toBeGreaterThan(-500.0);
       });
 
@@ -396,7 +395,7 @@ describe("Scene/GlobeSurfaceTile", function () {
             ray,
             undefined,
             undefined,
-            cullBackFaces
+            cullBackFaces,
           );
           expect(pickResult.x).toBeGreaterThan(0.0);
         });
@@ -425,13 +424,13 @@ describe("Scene/GlobeSurfaceTile", function () {
             ray,
             undefined,
             undefined,
-            cullBackFaces
+            cullBackFaces,
           );
           expect(pickResult.x).toBeGreaterThan(0.0);
         });
       });
     },
-    "WebGL"
+    "WebGL",
   );
 
   describe("eligibleForUnloading", function () {

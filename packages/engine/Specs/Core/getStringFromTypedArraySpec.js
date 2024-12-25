@@ -17,7 +17,7 @@ describe("Core/getStringFromTypedArray", function () {
 
   it("converts a typed array to string when forced to use fromCharCode", function () {
     spyOn(getStringFromTypedArray, "decode").and.callFake(
-      getStringFromTypedArray.decodeWithFromCharCode
+      getStringFromTypedArray.decodeWithFromCharCode,
     );
 
     verifyString();
@@ -63,7 +63,7 @@ describe("Core/getStringFromTypedArray", function () {
 
   it("Unicode 2-byte characters work with decodeWithFromCharCode forced", function () {
     spyOn(getStringFromTypedArray, "decode").and.callFake(
-      getStringFromTypedArray.decodeWithFromCharCode
+      getStringFromTypedArray.decodeWithFromCharCode,
     );
 
     const arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
@@ -77,7 +77,7 @@ describe("Core/getStringFromTypedArray", function () {
 
   it("Unicode 3-byte characters work with decodeWithFromCharCode forced", function () {
     spyOn(getStringFromTypedArray, "decode").and.callFake(
-      getStringFromTypedArray.decodeWithFromCharCode
+      getStringFromTypedArray.decodeWithFromCharCode,
     );
 
     const arr = new Uint8Array([224, 162, 160]);
@@ -91,7 +91,7 @@ describe("Core/getStringFromTypedArray", function () {
 
   it("Unicode 4-byte characters work with decodeWithFromCharCode forced", function () {
     spyOn(getStringFromTypedArray, "decode").and.callFake(
-      getStringFromTypedArray.decodeWithFromCharCode
+      getStringFromTypedArray.decodeWithFromCharCode,
     );
 
     const arr = new Uint8Array([240, 144, 138, 129]);

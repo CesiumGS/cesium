@@ -5,7 +5,8 @@ describe("Renderer/ShaderSource", function () {
     webgl2: true,
   };
 
-  const fragColorDeclarationRegex = /layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g;
+  const fragColorDeclarationRegex =
+    /layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g;
 
   it("combines #defines", function () {
     const source = new ShaderSource({
@@ -108,7 +109,7 @@ describe("Renderer/ShaderSource", function () {
     });
 
     expect(source.getCacheKey()).toBe(
-      "A,B,C:in:false:void main() { out_FragColor = vec4(1.0); }"
+      "A,B,C:in:false:void main() { out_FragColor = vec4(1.0); }",
     );
   });
 
@@ -132,7 +133,7 @@ describe("Renderer/ShaderSource", function () {
     });
 
     expect(source.getCacheKey()).toBe(
-      ":undefined:true:vec4 getColor() { return vec4(1.0, 0.0, 0.0, 1.0); }\nvoid main() { out_FragColor = getColor(); }"
+      ":undefined:true:vec4 getColor() { return vec4(1.0, 0.0, 0.0, 1.0); }\nvoid main() { out_FragColor = getColor(); }",
     );
   });
 

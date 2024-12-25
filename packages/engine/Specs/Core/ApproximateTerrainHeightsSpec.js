@@ -23,15 +23,15 @@ describe("Core/ApproximateTerrainHeights", function () {
 
   it("getMinimumMaximumHeights computes minimum and maximum terrain heights", function () {
     const result = ApproximateTerrainHeights.getMinimumMaximumHeights(
-      Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0)
+      Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0),
     );
     expect(result.minimumTerrainHeight).toEqualEpsilon(
       -5269.86,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
     expect(result.maximumTerrainHeight).toEqualEpsilon(
       -28.53,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 
@@ -46,7 +46,7 @@ describe("Core/ApproximateTerrainHeights", function () {
     ApproximateTerrainHeights._terrainHeights = undefined;
     expect(function () {
       return ApproximateTerrainHeights.getMinimumMaximumHeights(
-        Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0)
+        Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0),
       );
     });
     ApproximateTerrainHeights._terrainHeights = heights;
@@ -54,19 +54,19 @@ describe("Core/ApproximateTerrainHeights", function () {
 
   it("getBoundingSphere computes a bounding sphere", function () {
     const result = ApproximateTerrainHeights.getBoundingSphere(
-      Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0)
+      Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0),
     );
     expect(result.center).toEqualEpsilon(
       new Cartesian3(
         -3183013.849117281,
         -5403772.559109628,
-        1154581.5821590829
+        1154581.5821590829,
       ),
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
     expect(result.radius).toEqualEpsilon(
       77884.16321007285,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 
@@ -81,7 +81,7 @@ describe("Core/ApproximateTerrainHeights", function () {
     ApproximateTerrainHeights._terrainHeights = undefined;
     expect(function () {
       return ApproximateTerrainHeights.getBoundingSphere(
-        Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0)
+        Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0),
       );
     });
     ApproximateTerrainHeights._terrainHeights = heights;

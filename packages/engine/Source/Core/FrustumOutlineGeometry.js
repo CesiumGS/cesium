@@ -134,14 +134,14 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
     frustum = PerspectiveFrustum.unpack(
       array,
       startingIndex,
-      scratchPackPerspective
+      scratchPackPerspective,
     );
     startingIndex += PerspectiveFrustum.packedLength;
   } else {
     frustum = OrthographicFrustum.unpack(
       array,
       startingIndex,
-      scratchPackOrthographic
+      scratchPackOrthographic,
     );
     startingIndex += OrthographicFrustum.packedLength;
   }
@@ -151,7 +151,7 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
   const orientation = Quaternion.unpack(
     array,
     startingIndex,
-    scratchPackQuaternion
+    scratchPackQuaternion,
   );
   startingIndex += Quaternion.packedLength;
   const drawNearPlane = array[startingIndex] === 1.0;
@@ -196,7 +196,7 @@ FrustumOutlineGeometry.createGeometry = function (frustumGeometry) {
     orientation,
     frustumType,
     frustum,
-    positions
+    positions,
   );
 
   const attributes = new GeometryAttributes({

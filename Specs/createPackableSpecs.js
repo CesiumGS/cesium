@@ -65,13 +65,13 @@ function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
         packedInstance,
         0,
         0,
-        packedForInterpolation
+        packedForInterpolation,
       );
       const value = packable.unpackInterpolationResult(
         packedForInterpolation,
         packedInstance,
         0,
-        0
+        0,
       );
       const result = packable.unpack(packedInstance);
       expect(value).toEqual(result);

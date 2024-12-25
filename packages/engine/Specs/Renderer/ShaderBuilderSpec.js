@@ -16,7 +16,7 @@ describe(
     function checkVertexShader(
       shaderProgram,
       expectedDefines,
-      expectedSources
+      expectedSources,
     ) {
       // the ShaderBuilder joins the generated lines with \n
       // to avoid creating #line 0 at every line. We need to do the same here
@@ -31,7 +31,7 @@ describe(
     function checkFragmentShader(
       shaderProgram,
       expectedDefines,
-      expectedSources
+      expectedSources,
     ) {
       // the ShaderBuilder joins the generated lines with \n
       // to avoid creating #line 0 at every line. We need to do the same here
@@ -87,18 +87,18 @@ describe(
       shaderBuilder.addDefine(
         "USE_FRAGMENT_SHADING",
         1,
-        ShaderDestination.BOTH
+        ShaderDestination.BOTH,
       );
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         ["POINT_SIZE 2", "USE_FRAGMENT_SHADING 1"],
-        []
+        [],
       );
       checkFragmentShader(
         shaderProgram,
         ["PI 3.1415", "USE_FRAGMENT_SHADING 1"],
-        []
+        [],
       );
     });
 
@@ -116,7 +116,7 @@ describe(
         return shaderBuilder.addStruct(
           undefined,
           "TestStruct",
-          ShaderDestination.FRAGMENT
+          ShaderDestination.FRAGMENT,
         );
       }).toThrowDeveloperError();
     });
@@ -127,7 +127,7 @@ describe(
         return shaderBuilder.addStruct(
           {},
           "TestStruct",
-          ShaderDestination.FRAGMENT
+          ShaderDestination.FRAGMENT,
         );
       }).toThrowDeveloperError();
     });
@@ -138,7 +138,7 @@ describe(
         return shaderBuilder.addStruct(
           "testStruct",
           undefined,
-          ShaderDestination.FRAGMENT
+          ShaderDestination.FRAGMENT,
         );
       }).toThrowDeveloperError();
     });
@@ -149,7 +149,7 @@ describe(
         return shaderBuilder.addStruct(
           "testStruct",
           {},
-          ShaderDestination.FRAGMENT
+          ShaderDestination.FRAGMENT,
         );
       }).toThrowDeveloperError();
     });
@@ -173,24 +173,24 @@ describe(
       shaderBuilder.addStruct(
         "structVS",
         "TestStruct",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       shaderBuilder.addStruct(
         "structFS",
         "TestStruct",
-        ShaderDestination.FRAGMENT
+        ShaderDestination.FRAGMENT,
       );
 
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],
-        ["struct TestStruct", "{", "    float _empty;", "};"]
+        ["struct TestStruct", "{", "    float _empty;", "};"],
       );
       checkFragmentShader(
         shaderProgram,
         [],
-        ["struct TestStruct", "{", "    float _empty;", "};"]
+        ["struct TestStruct", "{", "    float _empty;", "};"],
       );
     });
 
@@ -199,7 +199,7 @@ describe(
       shaderBuilder.addStruct(
         "structVS",
         "TestStruct",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addStructField(undefined, "vec3", "positionMC");
@@ -211,7 +211,7 @@ describe(
       shaderBuilder.addStruct(
         "structVS",
         "TestStruct",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addStructField(-1, "vec3", "positionMC");
@@ -223,13 +223,13 @@ describe(
       shaderBuilder.addStruct(
         "structVS",
         "TestStruct",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addStructField(
           "structVS",
           undefined,
-          "positionMC"
+          "positionMC",
         );
       }).toThrowDeveloperError();
     });
@@ -239,7 +239,7 @@ describe(
       shaderBuilder.addStruct(
         "structVS",
         "TestStruct",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addStructField("structVS", -1, "positionMC");
@@ -251,7 +251,7 @@ describe(
       shaderBuilder.addStruct(
         "structVS",
         "TestStruct",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addStructField("structVS", "vec3", undefined);
@@ -263,7 +263,7 @@ describe(
       shaderBuilder.addStruct(
         "structVS",
         "TestStruct",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addStructField("structVS", "vec3", -1);
@@ -275,12 +275,12 @@ describe(
       shaderBuilder.addStruct(
         "structVS",
         "TestStruct",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       shaderBuilder.addStruct(
         "structFS",
         "TestStruct",
-        ShaderDestination.FRAGMENT
+        ShaderDestination.FRAGMENT,
       );
 
       shaderBuilder.addStructField("structVS", "vec3", "positionMC");
@@ -291,7 +291,7 @@ describe(
       checkVertexShader(
         shaderProgram,
         [],
-        ["struct TestStruct", "{", "    vec3 positionMC;", "};"]
+        ["struct TestStruct", "{", "    vec3 positionMC;", "};"],
       );
       checkFragmentShader(
         shaderProgram,
@@ -302,7 +302,7 @@ describe(
           "    vec3 positionMC;",
           "    float temperature;",
           "};",
-        ]
+        ],
       );
     });
 
@@ -313,7 +313,7 @@ describe(
         return shaderBuilder.addFunction(
           undefined,
           signature,
-          ShaderDestination.FRAGMENT
+          ShaderDestination.FRAGMENT,
         );
       }).toThrowDeveloperError();
     });
@@ -324,7 +324,7 @@ describe(
         return shaderBuilder.addFunction(
           {},
           signature,
-          ShaderDestination.FRAGMENT
+          ShaderDestination.FRAGMENT,
         );
       }).toThrowDeveloperError();
     });
@@ -335,7 +335,7 @@ describe(
         return shaderBuilder.addFunction(
           "testFunction",
           undefined,
-          ShaderDestination.FRAGMENT
+          ShaderDestination.FRAGMENT,
         );
       }).toThrowDeveloperError();
     });
@@ -346,7 +346,7 @@ describe(
         return shaderBuilder.addFunction(
           "testFunction",
           -1,
-          ShaderDestination.FRAGMENT
+          ShaderDestination.FRAGMENT,
         );
       }).toThrowDeveloperError();
     });
@@ -370,12 +370,12 @@ describe(
       shaderBuilder.addFunction(
         "testFunctionVS",
         signature,
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       shaderBuilder.addFunction(
         "testFunctionFS",
         signature,
-        ShaderDestination.FRAGMENT
+        ShaderDestination.FRAGMENT,
       );
 
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
@@ -388,7 +388,7 @@ describe(
       shaderBuilder.addFunction(
         "testFunctionVS",
         signature,
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addFunctionLines(undefined, "return 1.0;");
@@ -400,7 +400,7 @@ describe(
       shaderBuilder.addFunction(
         "testFunctionVS",
         signature,
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addFunctionLines(-1, "return 1.0;");
@@ -412,7 +412,7 @@ describe(
       shaderBuilder.addFunction(
         "testFunctionVS",
         signature,
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addFunctionLines("testFunctionVS", undefined);
@@ -424,7 +424,7 @@ describe(
       shaderBuilder.addFunction(
         "testFunctionVS",
         signature,
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       expect(function () {
         return shaderBuilder.addFunctionLines("testFunctionVS", -1);
@@ -436,12 +436,12 @@ describe(
       shaderBuilder.addFunction(
         "testFunctionVS",
         signature,
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       shaderBuilder.addFunction(
         "testFunctionFS",
         signature,
-        ShaderDestination.FRAGMENT
+        ShaderDestination.FRAGMENT,
       );
 
       shaderBuilder.addFunctionLines("testFunctionVS", [
@@ -456,12 +456,12 @@ describe(
       checkVertexShader(
         shaderProgram,
         [],
-        [signature, "{", "    v_color = vec3(0.0);", "    return 1.0;", "}"]
+        [signature, "{", "    v_color = vec3(0.0);", "    return 1.0;", "}"],
       );
       checkFragmentShader(
         shaderProgram,
         [],
-        [signature, "{", "    return 1.0 - step(0.3, radius);", "}"]
+        [signature, "{", "    return 1.0 - step(0.3, radius);", "}"],
       );
     });
 
@@ -470,12 +470,12 @@ describe(
       shaderBuilder.addFunction(
         "testFunctionVS",
         signature,
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       shaderBuilder.addFunction(
         "testFunctionFS",
         signature,
-        ShaderDestination.FRAGMENT
+        ShaderDestination.FRAGMENT,
       );
 
       shaderBuilder.addFunctionLines("testFunctionVS", "return 1.0;");
@@ -485,12 +485,12 @@ describe(
       checkVertexShader(
         shaderProgram,
         [],
-        [signature, "{", "    return 1.0;", "}"]
+        [signature, "{", "    return 1.0;", "}"],
       );
       checkFragmentShader(
         shaderProgram,
         [],
-        [signature, "{", "    return 2.0;", "}"]
+        [signature, "{", "    return 2.0;", "}"],
       );
     });
 
@@ -527,24 +527,24 @@ describe(
       shaderBuilder.addUniform(
         "vec3",
         "u_gridDimensions",
-        ShaderDestination.VERTEX
+        ShaderDestination.VERTEX,
       );
       shaderBuilder.addUniform(
         "vec2",
         "u_mousePosition",
-        ShaderDestination.FRAGMENT
+        ShaderDestination.FRAGMENT,
       );
       shaderBuilder.addUniform("float", "u_time", ShaderDestination.BOTH);
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],
-        ["uniform vec3 u_gridDimensions;", "uniform float u_time;"]
+        ["uniform vec3 u_gridDimensions;", "uniform float u_time;"],
       );
       checkFragmentShader(
         shaderProgram,
         [],
-        ["uniform vec2 u_mousePosition;", "uniform float u_time;"]
+        ["uniform vec2 u_mousePosition;", "uniform float u_time;"],
       );
     });
 
@@ -593,7 +593,7 @@ describe(
       const normalLocation = shaderBuilder.addAttribute("vec3", "a_normal");
       const positionLocation = shaderBuilder.setPositionAttribute(
         "vec3",
-        "a_position"
+        "a_position",
       );
       expect(positionLocation).toBe(0);
       expect(normalLocation).toBe(1);
@@ -614,7 +614,7 @@ describe(
       const shaderBuilder = new ShaderBuilder();
       const positionLocation = shaderBuilder.setPositionAttribute(
         "vec3",
-        "a_position"
+        "a_position",
       );
       expect(positionLocation).toBe(0);
       expect(function () {
@@ -724,10 +724,10 @@ describe(
 
       const expectedVaryings = ["vec2 v_uv;"];
       const expectedVertexVaryings = expectedVaryings.map(
-        (varying) => `out ${varying}`
+        (varying) => `out ${varying}`,
       );
       const expectedFragmentVaryings = expectedVaryings.map(
-        (varying) => `in ${varying}`
+        (varying) => `in ${varying}`,
       );
 
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
@@ -837,24 +837,24 @@ describe(
 
       const expectedVaryings = ["vec2 v_uv;"];
       const expectedVertexVaryings = expectedVaryings.map(
-        (varying) => `out ${varying}`
+        (varying) => `out ${varying}`,
       );
       const expectedFragmentVaryings = expectedVaryings.map(
-        (varying) => `in ${varying}`
+        (varying) => `in ${varying}`,
       );
 
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],
-        expectedAttributes.concat(expectedVertexVaryings, vertexLines)
+        expectedAttributes.concat(expectedVertexVaryings, vertexLines),
       );
       checkFragmentShader(
         shaderProgram,
         ["BLUE_TINT 0.5"],
-        expectedFragmentVaryings.concat(fragmentLines)
+        expectedFragmentVaryings.concat(fragmentLines),
       );
     });
   },
-  "WebGL"
+  "WebGL",
 );

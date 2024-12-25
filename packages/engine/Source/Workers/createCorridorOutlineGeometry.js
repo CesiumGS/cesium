@@ -6,11 +6,11 @@ function createCorridorOutlineGeometry(corridorOutlineGeometry, offset) {
   if (defined(offset)) {
     corridorOutlineGeometry = CorridorOutlineGeometry.unpack(
       corridorOutlineGeometry,
-      offset
+      offset,
     );
   }
   corridorOutlineGeometry._ellipsoid = Ellipsoid.clone(
-    corridorOutlineGeometry._ellipsoid
+    corridorOutlineGeometry._ellipsoid,
   );
   return CorridorOutlineGeometry.createGeometry(corridorOutlineGeometry);
 }

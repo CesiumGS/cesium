@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -22,10 +22,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -54,7 +51,7 @@
             classificationTilesetUrl,
             {
               classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-            }
+            },
           );
           classificationTileset.style = new Cesium.Cesium3DTileStyle({
             color: "rgba(255, 0, 0, 0.5)",
@@ -66,16 +63,14 @@
             classificationTilesetUrl,
             {
               show: false,
-            }
+            },
           );
           nonClassificationTileset.style = new Cesium.Cesium3DTileStyle({
             color: "rgba(255, 0, 0, 0.5)",
           });
           viewer.scene.primitives.add(nonClassificationTileset);
 
-          Sandcastle.addToggleButton("Show classification", true, function (
-            checked
-          ) {
+          Sandcastle.addToggleButton("Show classification", true, function (checked) {
             classificationTileset.show = checked;
             nonClassificationTileset.show = !checked;
           });

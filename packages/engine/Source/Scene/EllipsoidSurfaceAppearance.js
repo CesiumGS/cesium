@@ -72,16 +72,16 @@ function EllipsoidSurfaceAppearance(options) {
 
   this._vertexShaderSource = defaultValue(
     options.vertexShaderSource,
-    EllipsoidSurfaceAppearanceVS
+    EllipsoidSurfaceAppearanceVS,
   );
   this._fragmentShaderSource = defaultValue(
     options.fragmentShaderSource,
-    EllipsoidSurfaceAppearanceFS
+    EllipsoidSurfaceAppearanceFS,
   );
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     !aboveGround,
-    options.renderState
+    options.renderState,
   );
   this._closed = false;
 

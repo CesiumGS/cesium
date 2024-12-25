@@ -53,7 +53,7 @@ const FeatureIdPipelineStage = {
 FeatureIdPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   declareStructsAndFunctions(shaderBuilder);
@@ -75,12 +75,12 @@ function declareStructsAndFunctions(shaderBuilder) {
   shaderBuilder.addStruct(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
   shaderBuilder.addStruct(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // declare the initializeFeatureIds() function. The details may differ
@@ -88,12 +88,12 @@ function declareStructsAndFunctions(shaderBuilder) {
   shaderBuilder.addFunction(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
     FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
   shaderBuilder.addFunction(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
     FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // declare the initializeFeatureIdAliases() function. The details may differ
@@ -101,19 +101,19 @@ function declareStructsAndFunctions(shaderBuilder) {
   shaderBuilder.addFunction(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
     FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
   shaderBuilder.addFunction(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
     FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // declare the setFeatureIdVaryings() function in the vertex shader only
   shaderBuilder.addFunction(
     FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS,
     FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_ID_VARYINGS,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 }
 
@@ -135,7 +135,7 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
         variableName,
         count,
         instanceDivisor,
-        frameState
+        frameState,
       );
     }
 
@@ -150,7 +150,7 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
   const featureIdsArray = primitive.featureIds;
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
-    VertexAttributeSemantic.POSITION
+    VertexAttributeSemantic.POSITION,
   );
   const count = positionAttribute.count;
 
@@ -168,7 +168,7 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
         variableName,
         count,
         undefined,
-        frameState
+        frameState,
       );
     } else {
       processTexture(renderResources, featureIds, variableName, i, frameState);
@@ -185,7 +185,7 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
 function processInstanceAttribute(
   renderResources,
   featureIdAttribute,
-  variableName
+  variableName,
 ) {
   // Add a field to the FeatureIds struct.
   // Example:
@@ -198,12 +198,12 @@ function processInstanceAttribute(
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
     "int",
-    variableName
+    variableName,
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
     "int",
-    variableName
+    variableName,
   );
 
   // Initialize the field from the corresponding attribute.
@@ -218,11 +218,11 @@ function processInstanceAttribute(
 
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
-    [vertexLine]
+    [vertexLine],
   );
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
-    [fragmentLine]
+    [fragmentLine],
   );
 
   // Instanced attributes don't normally need varyings, so add one here
@@ -233,7 +233,7 @@ function processInstanceAttribute(
   // v_instanceFeatureId_n = a_instanceFeatureId_n;
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS,
-    [`${varyingName} = ${attributeName};`]
+    [`${varyingName} = ${attributeName};`],
   );
 }
 
@@ -249,12 +249,12 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
     "int",
-    variableName
+    variableName,
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
     "int",
-    variableName
+    variableName,
   );
 
   // Initialize the field from the corresponding attribute.
@@ -269,11 +269,11 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   ];
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
-    initializationLines
+    initializationLines,
   );
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
-    initializationLines
+    initializationLines,
   );
 }
 
@@ -283,7 +283,7 @@ function processImplicitRange(
   variableName,
   count,
   instanceDivisor,
-  frameState
+  frameState,
 ) {
   // Generate a vertex attribute for the implicit IDs since WebGL 1 does not
   // support gl_VertexID
@@ -292,7 +292,7 @@ function processImplicitRange(
     implicitFeatureIds,
     count,
     instanceDivisor,
-    frameState
+    frameState,
   );
 
   // Declare the vertex attribute in the shader
@@ -316,12 +316,12 @@ function processImplicitRange(
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
     "int",
-    variableName
+    variableName,
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
     "int",
-    variableName
+    variableName,
   );
 
   // The varying needs initialization in the vertex shader
@@ -329,7 +329,7 @@ function processImplicitRange(
   // v_implicit_featureId_n = a_implicit_featureId_n;
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS,
-    [`${implicitVaryingName} = ${implicitAttributeName};`]
+    [`${implicitVaryingName} = ${implicitAttributeName};`],
   );
 
   // Initialize the field from the generated attribute/varying.
@@ -338,11 +338,11 @@ function processImplicitRange(
   // featureIds.featureId_n = v_implicit_featureId_n; (FS)
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
-    [`featureIds.${variableName} = int(czm_round(${implicitAttributeName}));`]
+    [`featureIds.${variableName} = int(czm_round(${implicitAttributeName}));`],
   );
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
-    [`featureIds.${variableName} = int(czm_round(${implicitVaryingName}));`]
+    [`featureIds.${variableName} = int(czm_round(${implicitVaryingName}));`],
   );
 }
 
@@ -351,7 +351,7 @@ function processTexture(
   featureIdTexture,
   variableName,
   index,
-  frameState
+  frameState,
 ) {
   // Create the feature ID texture uniform. The index matches the index from
   // the featureIds array, even if this is not consecutive.
@@ -361,7 +361,7 @@ function processTexture(
   uniformMap[uniformName] = function () {
     return defaultValue(
       textureReader.texture,
-      frameState.context.defaultTexture
+      frameState.context.defaultTexture,
     );
   };
 
@@ -378,14 +378,14 @@ function processTexture(
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
     "int",
-    variableName
+    variableName,
   );
 
   // Declare the uniform in the fragment shader
   shaderBuilder.addUniform(
     "sampler2D",
     uniformName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // Get a GLSL expression for the texture coordinates
@@ -401,7 +401,7 @@ function processTexture(
     shaderBuilder.addUniform(
       "mat3",
       transformUniformName,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap[transformUniformName] = function () {
       return transform;
@@ -421,7 +421,7 @@ function processTexture(
 
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
-    [initializationLine]
+    [initializationLine],
   );
 }
 
@@ -439,13 +439,13 @@ function addAlias(renderResources, variableName, alias, shaderDestination) {
     shaderBuilder.addStructField(
       FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
       "int",
-      alias
+      alias,
     );
   }
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
     "int",
-    alias
+    alias,
   );
 
   // Initialize the field from the original variable
@@ -456,12 +456,12 @@ function addAlias(renderResources, variableName, alias, shaderDestination) {
   if (updateVS) {
     shaderBuilder.addFunctionLines(
       FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
-      initializationLines
+      initializationLines,
     );
   }
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
-    initializationLines
+    initializationLines,
   );
 }
 
@@ -470,7 +470,7 @@ function generateImplicitFeatureIdAttribute(
   implicitFeatureIds,
   count,
   instanceDivisor,
-  frameState
+  frameState,
 ) {
   const model = renderResources.model;
   let vertexBuffer;
@@ -478,7 +478,7 @@ function generateImplicitFeatureIdAttribute(
   if (defined(implicitFeatureIds.repeat)) {
     const typedArray = generateImplicitFeatureIdTypedArray(
       implicitFeatureIds,
-      count
+      count,
     );
     vertexBuffer = Buffer.createVertexBuffer({
       context: frameState.context,

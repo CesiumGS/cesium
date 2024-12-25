@@ -89,7 +89,7 @@ PinBuilder.prototype.fromMakiIconId = function (id, color, size) {
     undefined,
     color,
     size,
-    this._cache
+    this._cache,
   );
 };
 

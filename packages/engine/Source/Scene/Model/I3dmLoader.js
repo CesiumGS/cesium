@@ -79,17 +79,17 @@ function I3dmLoader(options) {
   const asynchronous = defaultValue(options.asynchronous, true);
   const incrementallyLoadTextures = defaultValue(
     options.incrementallyLoadTextures,
-    true
+    true,
   );
   const upAxis = defaultValue(options.upAxis, Axis.Y);
   const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
   const loadAttributesAsTypedArray = defaultValue(
     options.loadAttributesAsTypedArray,
-    false
+    false,
   );
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
-    false
+    false,
   );
   const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
   const enablePick = defaultValue(options.enablePick, false);
@@ -207,7 +207,7 @@ I3dmLoader.prototype.load = function () {
   // Generate the feature table.
   const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
-    featureTableBinary
+    featureTableBinary,
   );
   this._featureTable = featureTable;
 
@@ -216,7 +216,7 @@ I3dmLoader.prototype.load = function () {
   featureTable.featuresLength = instancesLength;
   if (!defined(instancesLength)) {
     throw new RuntimeError(
-      "Feature table global property: INSTANCES_LENGTH must be defined"
+      "Feature table global property: INSTANCES_LENGTH must be defined",
     );
   }
   this._instancesLength = instancesLength;
@@ -225,7 +225,7 @@ I3dmLoader.prototype.load = function () {
   const rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
-    3
+    3,
   );
   if (defined(rtcCenter)) {
     this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
@@ -324,7 +324,7 @@ I3dmLoader.prototype.process = function (frameState) {
   components.transform = Matrix4.multiplyTransformation(
     this._transform,
     components.transform,
-    components.transform
+    components.transform,
   );
 
   createInstances(this, components, frameState);
@@ -385,7 +385,7 @@ function createInstances(loader, components, frameState) {
   const rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
-    3
+    3,
   );
 
   const eastNorthUp = featureTable.getGlobalProperty("EAST_NORTH_UP");
@@ -438,7 +438,7 @@ function createInstances(loader, components, frameState) {
       Cartesian3.subtract(
         instancePositions[i],
         positionBoundingSphere.center,
-        positionScratch
+        positionScratch,
       );
 
       translationTypedArray[3 * i + 0] = positionScratch.x;
@@ -449,7 +449,7 @@ function createInstances(loader, components, frameState) {
     // Set the center of the bounding sphere as the RTC center transform.
     const centerTransform = Matrix4.fromTranslation(
       positionBoundingSphere.center,
-      transformScratch
+      transformScratch,
     );
 
     // Combine the center transform and the CESIUM_RTC transform from the glTF.
@@ -458,7 +458,7 @@ function createInstances(loader, components, frameState) {
     components.transform = Matrix4.multiplyTransformation(
       centerTransform,
       components.transform,
-      components.transform
+      components.transform,
     );
   }
 
@@ -470,7 +470,7 @@ function createInstances(loader, components, frameState) {
       Cartesian3.add(
         instancePosition,
         Cartesian3.unpack(rtcCenter),
-        instancePosition
+        instancePosition,
       );
     }
 
@@ -486,7 +486,7 @@ function createInstances(loader, components, frameState) {
         instanceNormalRight,
         instanceNormalForward,
         instanceRotation,
-        instanceTransform
+        instanceTransform,
       );
       Quaternion.pack(instanceQuaternion, instanceQuaternionArray, 0);
       rotationTypedArray[4 * i + 0] = instanceQuaternionArray[0];
@@ -509,7 +509,7 @@ function createInstances(loader, components, frameState) {
       "BATCH_ID",
       ComponentDatatype.UNSIGNED_SHORT,
       1,
-      i
+      i,
     );
     if (!defined(batchId)) {
       // If BATCH_ID semantic is undefined, batchId is just the instance number
@@ -676,35 +676,35 @@ function getPositions(featureTable, instancesLength) {
     return featureTable.getPropertyArray(
       "POSITION",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
   } else if (featureTable.hasProperty("POSITION_QUANTIZED")) {
     // Handle quantized positions.
     const quantizedPositions = featureTable.getPropertyArray(
       "POSITION_QUANTIZED",
       ComponentDatatype.UNSIGNED_SHORT,
-      3
+      3,
     );
 
     const quantizedVolumeOffset = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_OFFSET",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
     if (!defined(quantizedVolumeOffset)) {
       throw new RuntimeError(
-        "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions."
+        "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.",
       );
     }
 
     const quantizedVolumeScale = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_SCALE",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
     if (!defined(quantizedVolumeScale)) {
       throw new RuntimeError(
-        "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions."
+        "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.",
       );
     }
 
@@ -723,7 +723,7 @@ function getPositions(featureTable, instancesLength) {
     // eslint-disable-next-line no-else-return
   } else {
     throw new RuntimeError(
-      "Either POSITION or POSITION_QUANTIZED must be defined for each instance."
+      "Either POSITION or POSITION_QUANTIZED must be defined for each instance.",
     );
   }
 }
@@ -739,7 +739,7 @@ function processRotation(
   instanceNormalRight,
   instanceNormalForward,
   instanceRotation,
-  instanceTransform
+  instanceTransform,
 ) {
   // Get the instance rotation
   const normalUp = featureTable.getProperty(
@@ -747,20 +747,20 @@ function processRotation(
     ComponentDatatype.FLOAT,
     3,
     i,
-    propertyScratch1
+    propertyScratch1,
   );
   const normalRight = featureTable.getProperty(
     "NORMAL_RIGHT",
     ComponentDatatype.FLOAT,
     3,
     i,
-    propertyScratch2
+    propertyScratch2,
   );
   let hasCustomOrientation = false;
   if (defined(normalUp)) {
     if (!defined(normalRight)) {
       throw new RuntimeError(
-        "To define a custom orientation, both NORMAL_UP and NORMAL_RIGHT must be defined."
+        "To define a custom orientation, both NORMAL_UP and NORMAL_RIGHT must be defined.",
       );
     }
     Cartesian3.unpack(normalUp, 0, instanceNormalUp);
@@ -772,39 +772,39 @@ function processRotation(
       ComponentDatatype.UNSIGNED_SHORT,
       2,
       i,
-      propertyScratch1
+      propertyScratch1,
     );
     const octNormalRight = featureTable.getProperty(
       "NORMAL_RIGHT_OCT32P",
       ComponentDatatype.UNSIGNED_SHORT,
       2,
       i,
-      propertyScratch2
+      propertyScratch2,
     );
     if (defined(octNormalUp)) {
       if (!defined(octNormalRight)) {
         throw new RuntimeError(
-          "To define a custom orientation with oct-encoded vectors, both NORMAL_UP_OCT32P and NORMAL_RIGHT_OCT32P must be defined."
+          "To define a custom orientation with oct-encoded vectors, both NORMAL_UP_OCT32P and NORMAL_RIGHT_OCT32P must be defined.",
         );
       }
       AttributeCompression.octDecodeInRange(
         octNormalUp[0],
         octNormalUp[1],
         65535,
-        instanceNormalUp
+        instanceNormalUp,
       );
       AttributeCompression.octDecodeInRange(
         octNormalRight[0],
         octNormalRight[1],
         65535,
-        instanceNormalRight
+        instanceNormalRight,
       );
       hasCustomOrientation = true;
     } else if (eastNorthUp) {
       Transforms.eastNorthUpToFixedFrame(
         instancePosition,
         Ellipsoid.WGS84,
-        instanceTransform
+        instanceTransform,
       );
       Matrix4.getMatrix3(instanceTransform, instanceRotation);
     } else {
@@ -815,21 +815,21 @@ function processRotation(
     Cartesian3.cross(
       instanceNormalRight,
       instanceNormalUp,
-      instanceNormalForward
+      instanceNormalForward,
     );
     Cartesian3.normalize(instanceNormalForward, instanceNormalForward);
     Matrix3.setColumn(
       instanceRotation,
       0,
       instanceNormalRight,
-      instanceRotation
+      instanceRotation,
     );
     Matrix3.setColumn(instanceRotation, 1, instanceNormalUp, instanceRotation);
     Matrix3.setColumn(
       instanceRotation,
       2,
       instanceNormalForward,
-      instanceRotation
+      instanceRotation,
     );
   }
   Quaternion.fromRotationMatrix(instanceRotation, instanceQuaternion);
@@ -841,7 +841,7 @@ function processScale(featureTable, i, instanceScale) {
     "SCALE",
     ComponentDatatype.FLOAT,
     1,
-    i
+    i,
   );
   if (defined(scale)) {
     Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
@@ -851,7 +851,7 @@ function processScale(featureTable, i, instanceScale) {
     ComponentDatatype.FLOAT,
     3,
     i,
-    propertyScratch1
+    propertyScratch1,
   );
   if (defined(nonUniformScale)) {
     instanceScale.x *= nonUniformScale[0];

@@ -34,6 +34,7 @@ import SlopeRampMaterial from "../Shaders/Materials/SlopeRampMaterial.js";
 import StripeMaterial from "../Shaders/Materials/StripeMaterial.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
+import WaterMaskMaterial from "../Shaders/Materials/WaterMaskMaterial.js";
 import WaterMaterial from "../Shaders/Materials/Water.js";
 
 /**
@@ -219,6 +220,11 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *      <li><code>heights</code>: image of heights sorted from lowest to highest.</li>
  *      <li><code>colors</code>: image of colors at the corresponding heights.</li>
  * </ul>
+ * <li>WaterMask</li>
+ * <ul>
+ *      <li><code>waterColor</code>: diffuse color and alpha for the areas covered by water.</li>
+ *      <li><code>landColor</code>: diffuse color and alpha for the areas covered by land.</li>
+ * </ul>
  * </ul>
  * </ul>
  * </div>
@@ -233,7 +239,6 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
  * @param {object} options.fabric The fabric JSON used to generate the material.
- *ructor
  *
  * @exception {DeveloperError} fabric: uniform has invalid type.
  * @exception {DeveloperError} fabric: uniforms and materials cannot share the same property.
@@ -245,7 +250,6 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @exception {DeveloperError} strict: shader source does not use material.
  *
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
  *
  * @example
@@ -306,11 +310,11 @@ function Material(options) {
 
   this._minificationFilter = defaultValue(
     options.minificationFilter,
-    TextureMinificationFilter.LINEAR
+    TextureMinificationFilter.LINEAR,
   );
   this._magnificationFilter = defaultValue(
     options.magnificationFilter,
-    TextureMagnificationFilter.LINEAR
+    TextureMagnificationFilter.LINEAR,
   );
 
   this._strict = undefined;
@@ -586,13 +590,13 @@ function initializeMaterial(options, result) {
   result._strict = defaultValue(options.strict, false);
   result._count = defaultValue(options.count, 0);
   result._template = clone(
-    defaultValue(options.fabric, defaultValue.EMPTY_OBJECT)
+    defaultValue(options.fabric, defaultValue.EMPTY_OBJECT),
   );
   result._template.uniforms = clone(
-    defaultValue(result._template.uniforms, defaultValue.EMPTY_OBJECT)
+    defaultValue(result._template.uniforms, defaultValue.EMPTY_OBJECT),
   );
   result._template.materials = clone(
-    defaultValue(result._template.materials, defaultValue.EMPTY_OBJECT)
+    defaultValue(result._template.materials, defaultValue.EMPTY_OBJECT),
   );
 
   result.type = defined(result._template.type)
@@ -705,7 +709,7 @@ function checkForTemplateErrors(material) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(components) && defined(template.source)) {
     throw new DeveloperError(
-      "fabric: cannot have source and components in the same template."
+      "fabric: cannot have source and components in the same template.",
     );
   }
   //>>includeEnd('debug');
@@ -716,7 +720,7 @@ function checkForTemplateErrors(material) {
     components,
     componentProperties,
     invalidNameError,
-    true
+    true,
   );
 
   // Make sure uniforms and materials do not share any of the same names.
@@ -1002,7 +1006,7 @@ function createUniform(material, uniformId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(uniformType)) {
     throw new DeveloperError(
-      `fabric: uniform '${uniformId}' has invalid type.`
+      `fabric: uniform '${uniformId}' has invalid type.`,
     );
   }
   //>>includeEnd('debug');
@@ -1013,7 +1017,7 @@ function createUniform(material, uniformId) {
     //>>includeStart('debug', pragmas.debug);
     if (replacedTokenCount === 0 && strict) {
       throw new DeveloperError(
-        `strict: shader source does not use channels '${uniformId}'.`
+        `strict: shader source does not use channels '${uniformId}'.`,
       );
     }
     //>>includeEnd('debug');
@@ -1034,7 +1038,7 @@ function createUniform(material, uniformId) {
 
     // Add uniform declaration to source code.
     const uniformDeclarationRegex = new RegExp(
-      `uniform\\s+${uniformType}\\s+${uniformId}\\s*;`
+      `uniform\\s+${uniformType}\\s+${uniformId}\\s*;`,
     );
     if (!uniformDeclarationRegex.test(material.shaderSource)) {
       const uniformDeclaration = `uniform ${uniformType} ${uniformId};`;
@@ -1046,7 +1050,7 @@ function createUniform(material, uniformId) {
     //>>includeStart('debug', pragmas.debug);
     if (replacedTokenCount === 1 && strict) {
       throw new DeveloperError(
-        `strict: shader source does not use uniform '${uniformId}'.`
+        `strict: shader source does not use uniform '${uniformId}'.`,
       );
     }
     //>>includeEnd('debug');
@@ -1069,7 +1073,7 @@ function createUniform(material, uniformId) {
       material._uniforms[newUniformId] = function () {
         return matrixMap[uniformType].fromColumnMajorArray(
           material.uniforms[uniformId],
-          scratchMatrix
+          scratchMatrix,
         );
       };
     } else {
@@ -1146,11 +1150,11 @@ function createSubMaterials(material) {
       material._uniforms = combine(
         material._uniforms,
         subMaterial._uniforms,
-        true
+        true,
       );
       material.materials[subMaterialId] = subMaterial;
       material._translucentFunctions = material._translucentFunctions.concat(
-        subMaterial._translucentFunctions
+        subMaterial._translucentFunctions,
       );
 
       // Make the material's czm_getMaterial unique by appending the sub-material type.
@@ -1164,12 +1168,12 @@ function createSubMaterials(material) {
       const tokensReplacedCount = replaceToken(
         material,
         subMaterialId,
-        materialMethodCall
+        materialMethodCall,
       );
       //>>includeStart('debug', pragmas.debug);
       if (tokensReplacedCount === 0 && strict) {
         throw new DeveloperError(
-          `strict: shader source does not use material '${subMaterialId}'.`
+          `strict: shader source does not use material '${subMaterialId}'.`,
         );
       }
       //>>includeEnd('debug');
@@ -1186,17 +1190,16 @@ function replaceToken(material, token, newToken, excludePeriod) {
   const suffixChars = "([\\w])?";
   const prefixChars = `([\\w${excludePeriod ? "." : ""}])?`;
   const regExp = new RegExp(prefixChars + token + suffixChars, "g");
-  material.shaderSource = material.shaderSource.replace(regExp, function (
-    $0,
-    $1,
-    $2
-  ) {
-    if ($1 || $2) {
-      return $0;
-    }
-    count += 1;
-    return newToken;
-  });
+  material.shaderSource = material.shaderSource.replace(
+    regExp,
+    function ($0, $1, $2) {
+      if ($1 || $2) {
+        return $0;
+      }
+      count += 1;
+      return newToken;
+    },
+  );
   return count;
 }
 
@@ -1737,6 +1740,24 @@ Material._materialCache.addMaterial(Material.ElevationBandType, {
     source: ElevationBandMaterial,
   },
   translucent: true,
+});
+
+/**
+ * Gets the name of the water mask material.
+ * @type {string}
+ * @readonly
+ */
+Material.WaterMaskType = "WaterMask";
+Material._materialCache.addMaterial(Material.WaterMaskType, {
+  fabric: {
+    type: Material.WaterMaskType,
+    source: WaterMaskMaterial,
+    uniforms: {
+      waterColor: new Color(1.0, 1.0, 1.0, 1.0),
+      landColor: new Color(0.0, 0.0, 0.0, 0.0),
+    },
+  },
+  translucent: false,
 });
 
 export default Material;

@@ -28,7 +28,7 @@ describe("Scene/Cesium3DTilesVoxelProvider", function () {
     expect(provider.globalTransform).toEqual(Matrix4.IDENTITY);
     expect(provider.shapeTransform).toEqualEpsilon(
       Matrix4.fromScale(Ellipsoid.WGS84.radii),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(provider.shape).toEqual(VoxelShapeType.ELLIPSOID);
     expect(provider.minBounds).toEqual(new Cartesian3(0.0, 0.0, -1.0));

@@ -81,7 +81,7 @@ describe("Core/HermiteSpline", function () {
       return Cartesian3.add(
         Cartesian3.add(Cartesian3.add(p0, p1, p0), p2, p0),
         p3,
-        p0
+        p0,
       );
     };
   }
@@ -120,7 +120,7 @@ describe("Core/HermiteSpline", function () {
     for (let i = 0.0; i < 1.0; i = i + granularity) {
       expect(hs.evaluate(i)).toEqualEpsilon(
         interpolate(i),
-        CesiumMath.EPSILON3
+        CesiumMath.EPSILON3,
       );
     }
   });
@@ -191,7 +191,7 @@ describe("Core/HermiteSpline", function () {
       tangents[i] = Cartesian3.multiplyByScalar(
         Cartesian3.subtract(points[i + 1], points[i - 1], new Cartesian3()),
         0.5,
-        new Cartesian3()
+        new Cartesian3(),
       );
     }
     tangents[tangents.length - 1] = new Cartesian3(1165345, 112641, 47281);
@@ -200,7 +200,7 @@ describe("Core/HermiteSpline", function () {
       points[0],
       tangents[0],
       points[1],
-      tangents[1]
+      tangents[1],
     );
     const hs = HermiteSpline.createC1({
       times: times,
@@ -212,7 +212,7 @@ describe("Core/HermiteSpline", function () {
     for (let j = times[0]; j < times[1]; j = j + granularity) {
       expect(hs.evaluate(j)).toEqualEpsilon(
         interpolate(j),
-        CesiumMath.EPSILON3
+        CesiumMath.EPSILON3,
       );
     }
   });
@@ -263,7 +263,7 @@ describe("Core/HermiteSpline", function () {
       points[0],
       p0Tangent,
       points[1],
-      p1Tangent
+      p1Tangent,
     );
     const hs = HermiteSpline.createNaturalCubic({
       points: points,
@@ -274,7 +274,7 @@ describe("Core/HermiteSpline", function () {
     for (let i = times[0]; i < times[1]; i = i + granularity) {
       expect(hs.evaluate(i)).toEqualEpsilon(
         interpolate(i),
-        CesiumMath.EPSILON3
+        CesiumMath.EPSILON3,
       );
     }
   });
@@ -347,7 +347,7 @@ describe("Core/HermiteSpline", function () {
       points[0],
       p0Tangent,
       points[1],
-      p1Tangent
+      p1Tangent,
     );
     const hs = HermiteSpline.createClampedCubic({
       points: points,
@@ -360,7 +360,7 @@ describe("Core/HermiteSpline", function () {
     for (let i = points[0].time; i < points[1].time; i = i + granularity) {
       expect(hs.evaluate(i)).toEqualEpsilon(
         interpolate(i),
-        CesiumMath.EPSILON3
+        CesiumMath.EPSILON3,
       );
     }
   });
@@ -473,7 +473,7 @@ describe("Core/HermiteSpline", function () {
     const expected = new Quaternion(0.0, 0.0, -0.54567, 0.81546);
     point = hs.evaluate(0.75);
     expect(Quaternion.equalsEpsilon(point, expected, CesiumMath.EPSILON4)).toBe(
-      true
+      true,
     );
   });
 
@@ -502,7 +502,7 @@ describe("Core/HermiteSpline", function () {
 
     const t = (times[0] + times[1]) * 0.5;
     expect(hs.evaluate(t)).toEqual(
-      Cartesian3.lerp(points[0], points[1], t, new Cartesian3())
+      Cartesian3.lerp(points[0], points[1], t, new Cartesian3()),
     );
   });
 
@@ -517,7 +517,7 @@ describe("Core/HermiteSpline", function () {
 
     const t = (times[0] + times[1]) * 0.5;
     expect(hs.evaluate(t)).toEqual(
-      Cartesian3.lerp(points[0], points[1], t, new Cartesian3())
+      Cartesian3.lerp(points[0], points[1], t, new Cartesian3()),
     );
   });
 });

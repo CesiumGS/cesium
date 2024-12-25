@@ -4,15 +4,11 @@ vec3 computeIBL(vec3 position, vec3 normal, vec3 lightDirection, vec3 lightColor
     #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
         // Environment maps were provided, use them for IBL
         vec3 viewDirection = -normalize(position);
-        vec3 iblColor = textureIBL(viewDirection, normal, lightDirection, material);
-    #else
-        // Use procedural IBL if there are no environment maps
-        vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
-        float maximumComponent = czm_maximumComponent(lightColorHdr);
-        vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
-        vec3 iblColor = clampedLightColor * imageBasedLighting;
+        vec3 iblColor = textureIBL(viewDirection, normal, material);
+        return iblColor;
     #endif
-    return iblColor * material.occlusion;
+    
+    return vec3(0.0);
 }
 #endif
 
@@ -34,30 +30,16 @@ vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirect
 
     // compute specular reflection from direct lighting
     float roughness = material.clearcoatRoughness;
-    float directStrength = computeDirectSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, roughness);
+    float alphaRoughness = roughness * roughness;
+    float directStrength = computeDirectSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, alphaRoughness);
     vec3 directReflection = F * directStrength * NdotL;
     vec3 color = lightColorHdr * directReflection;
 
     #ifdef SPECULAR_IBL
         // Find the direction in which to sample the environment map
-        vec3 cubeDir = normalize(model_iblReferenceFrameMatrix * normalize(reflect(-viewDirection, normal)));
-        vec3 iblColor = computeSpecularIBL(cubeDir, NdotV, NdotV, f0, roughness);
+        vec3 reflectMC = normalize(model_iblReferenceFrameMatrix * reflect(-viewDirection, normal));
+        vec3 iblColor = computeSpecularIBL(reflectMC, NdotV, f0, roughness);
         color += iblColor * material.occlusion;
-    #elif defined(USE_IBL_LIGHTING)
-        vec3 positionWC = vec3(czm_inverseView * vec4(position, 1.0));
-        vec3 reflectionWC = normalize(czm_inverseViewRotation * normalize(reflect(viewDirection, normal)));
-        vec3 skyMetrics = getProceduralSkyMetrics(positionWC, reflectionWC);
-
-        vec3 specularIrradiance = getProceduralSpecularIrradiance(reflectionWC, skyMetrics, roughness);
-        vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
-        vec3 specularColor = czm_srgbToLinear(f0 * brdfLut.x + brdfLut.y);
-        vec3 iblColor = specularIrradiance * specularColor * model_iblFactor.y;
-        #ifdef USE_SUN_LUMINANCE
-            iblColor *= getSunLuminance(positionWC, normal, lightDirection);
-        #endif
-        float maximumComponent = czm_maximumComponent(lightColorHdr);
-        vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
-        color += clampedLightColor* iblColor * material.occlusion;
     #endif
 
     float clearcoatFactor = material.clearcoatFactor;
@@ -119,7 +101,7 @@ void lightingStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         // tonemapping. However, if HDR is not enabled, we must tonemap else large
         // values may be clamped to 1.0
         #ifndef HDR
-            color = czm_acesTonemapping(color);
+            color = czm_pbrNeutralTonemapping(color);
         #endif
     #else // unlit
         vec3 color = material.diffuse;

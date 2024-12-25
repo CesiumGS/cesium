@@ -166,12 +166,12 @@ ImplicitMetadataView.prototype.getPropertyBySemantic = function (semantic) {
 
 ImplicitMetadataView.prototype.setPropertyBySemantic = function (
   semantic,
-  value
+  value,
 ) {
   return this._metadataTable.setPropertyBySemantic(
     this._entityId,
     semantic,
-    value
+    value,
   );
 };
 

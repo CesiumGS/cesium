@@ -4,7 +4,7 @@ import Resource from "../Core/Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "AAPTxy8BH1VEsoebNVZXo8HurEOF051kAEKlhkOhBEc9BmRcs5cw5x8CvIyg2oiotXJmY_GjoEUuuKAUvdWxusIx25kUy2AttkOs0FgosGzFJSsjafpWC40GiE5hiD0FLNSh3kxIW6w-5qqUQCEAwGY1t4yH7Fj-PjrkjPfSpw0_r2xF3lKLd0_LSmPWXCkYhqV1O67tWLNImHyr7SurJ92sA5YIG1pMJKEQU3Qv5k18p0g.AT1_sGbfSYDL";
+  "AAPTxy8BH1VEsoebNVZXo8HurEOF051kAEKlhkOhBEc9BmSrZYLHFXe7j_lQcsSJKc8-7rwh0IFSNWLGZErkzXRnYjMjURTz-hGiKMEeAJIZBG7uiYEn0Mt1rrwlJGIpirZQC4iO428519DlO3QC9DnRBqLXGTBhirgoU7-Z2209sy87s49kw6NOC8_Eew6nCLf-pZ883DRPRyAYH7LC8cvRLInud0EdndtUFa4y83TamrA.AT1_ahjrWDrq";
 /**
  * Default options for accessing the ArcGIS image tile service.
  *
@@ -32,8 +32,7 @@ ArcGisMapService.defaultAccessToken = defaultAccessToken;
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer
  */
 ArcGisMapService.defaultWorldImageryServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
 });
 
 /**
@@ -43,8 +42,7 @@ ArcGisMapService.defaultWorldImageryServer = new Resource({
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer
  */
 ArcGisMapService.defaultWorldHillshadeServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
 });
 
 /**
@@ -54,8 +52,7 @@ ArcGisMapService.defaultWorldHillshadeServer = new Resource({
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer
  */
 ArcGisMapService.defaultWorldOceanServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
 });
 
 /**

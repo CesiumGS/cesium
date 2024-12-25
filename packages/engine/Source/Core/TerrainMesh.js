@@ -47,7 +47,7 @@ function TerrainMesh(
   westIndicesSouthToNorth,
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
-  northIndicesWestToEast
+  northIndicesWestToEast,
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.

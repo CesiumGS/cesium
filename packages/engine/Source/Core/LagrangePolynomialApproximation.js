@@ -37,7 +37,7 @@ LagrangePolynomialApproximation.interpolateOrderZero = function (
   xTable,
   yTable,
   yStride,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = new Array(yStride);

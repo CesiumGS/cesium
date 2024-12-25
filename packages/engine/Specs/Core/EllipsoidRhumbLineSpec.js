@@ -32,7 +32,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     expect(function () {
       const rhumb = new EllipsoidRhumbLine(
         new Cartographic(Math.PI, Math.PI),
-        new Cartographic(0, Math.PI)
+        new Cartographic(0, Math.PI),
       );
       return rhumb.interpolateUsingSurfaceDistance(0);
     }).toThrowDeveloperError();
@@ -64,7 +64,7 @@ describe("Core/EllipsoidRhumbLine", function () {
       start,
       heading,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     expect(start).toEqual(rhumb.start);
     expect(distance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON6);
@@ -84,7 +84,7 @@ describe("Core/EllipsoidRhumbLine", function () {
       heading,
       distance,
       ellipsoid,
-      scratch
+      scratch,
     );
     expect(rhumb).toBe(scratch);
     expect(rhumb.ellipsoid).toBe(ellipsoid);
@@ -120,7 +120,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     const start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
     const end = new Cartographic(
       CesiumMath.PI_OVER_TWO,
-      CesiumMath.PI_OVER_TWO
+      CesiumMath.PI_OVER_TWO,
     );
     const rhumb = new EllipsoidRhumbLine();
     rhumb.setEndPoints(start, end);
@@ -136,7 +136,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb.heading,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -169,7 +169,7 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb.heading,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
 
     start = new Cartographic(3 * CesiumMath.PI_OVER_TWO, 0.3);
@@ -177,7 +177,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     const rhumb2 = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(-CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb2.heading,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -201,7 +201,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO * 6).toEqualEpsilon(
       rhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -213,7 +213,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(thirtyDegrees * 6).toEqualEpsilon(
       rhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -227,47 +227,47 @@ describe("Core/EllipsoidRhumbLine", function () {
     const westEastRhumb = new EllipsoidRhumbLine(
       fortyFiveWest,
       fortyFiveEast,
-      ellipsoid
+      ellipsoid,
     );
     const southNorthRhumb = new EllipsoidRhumbLine(
       fortyFiveSouth,
       fortyFiveNorth,
-      ellipsoid
+      ellipsoid,
     );
     const eastWestRhumb = new EllipsoidRhumbLine(
       fortyFiveEast,
       fortyFiveWest,
-      ellipsoid
+      ellipsoid,
     );
     const northSouthRhumb = new EllipsoidRhumbLine(
       fortyFiveNorth,
       fortyFiveSouth,
-      ellipsoid
+      ellipsoid,
     );
     expect(CesiumMath.PI_OVER_TWO * 6).toEqualEpsilon(
       westEastRhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(CesiumMath.PI_OVER_TWO * 6).toEqualEpsilon(
       southNorthRhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(westEastRhumb.surfaceDistance).toEqualEpsilon(
       southNorthRhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
 
     expect(CesiumMath.PI_OVER_TWO * 6).toEqualEpsilon(
       eastWestRhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(CesiumMath.PI_OVER_TWO * 6).toEqualEpsilon(
       northSouthRhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(eastWestRhumb.surfaceDistance).toEqualEpsilon(
       northSouthRhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -280,7 +280,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     const distance = Math.cos(fortyfiveDegrees) * CesiumMath.PI_OVER_TWO * 6;
     expect(distance).toEqualEpsilon(
       rhumb.surfaceDistance,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -294,7 +294,7 @@ describe("Core/EllipsoidRhumbLine", function () {
         initial,
         fifteenDegrees,
         0.0,
-        ellipsoid
+        ellipsoid,
       );
       return rhumb.interpolateUsingSurfaceDistance(0);
     }).toThrowDeveloperError();
@@ -310,14 +310,14 @@ describe("Core/EllipsoidRhumbLine", function () {
       initial,
       fifteenDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     const rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
 
     expect(fifteenDegrees).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(distance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -330,14 +330,14 @@ describe("Core/EllipsoidRhumbLine", function () {
       initial,
       fifteenDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     const rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
 
     expect(fifteenDegrees).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(distance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -357,65 +357,65 @@ describe("Core/EllipsoidRhumbLine", function () {
       initial,
       eightyNineDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     let rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       eightyNinePointNineDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       ninetyDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       ninetyPointOneDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       ninetyPointZeroTwoDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -434,65 +434,65 @@ describe("Core/EllipsoidRhumbLine", function () {
       initial,
       eightyNineDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     let rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       eightyNinePointNineDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       ninetyDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       ninetyPointOneDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       ninetyPointZeroTwoDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -507,13 +507,13 @@ describe("Core/EllipsoidRhumbLine", function () {
       initial,
       CesiumMath.PI_OVER_TWO,
       distance,
-      ellipsoid
+      ellipsoid,
     );
 
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -529,21 +529,21 @@ describe("Core/EllipsoidRhumbLine", function () {
       initial,
       3.0 * CesiumMath.PI_OVER_TWO,
       distance,
-      ellipsoid
+      ellipsoid,
     );
 
     expect(-CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb1.heading,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(distance).toEqualEpsilon(
       rhumb1.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
 
     const rhumb3 = new EllipsoidRhumbLine(final, initial, ellipsoid);
@@ -551,20 +551,20 @@ describe("Core/EllipsoidRhumbLine", function () {
       final,
       CesiumMath.PI_OVER_TWO,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb3.heading,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(distance).toEqualEpsilon(
       rhumb3.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
     expect(rhumb3.heading).toEqualEpsilon(rhumb4.heading, CesiumMath.EPSILON12);
     expect(rhumb3.surfaceDistance).toEqualEpsilon(
       rhumb4.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -579,11 +579,11 @@ describe("Core/EllipsoidRhumbLine", function () {
     expect(0.0).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
     expect(geodesic.startHeading).toEqualEpsilon(
       rhumb.heading,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(geodesic.surfaceDistance).toEqualEpsilon(
       rhumb.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -597,15 +597,15 @@ describe("Core/EllipsoidRhumbLine", function () {
     const geodesic = new EllipsoidGeodesic(initial, final, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb.heading,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(geodesic.startHeading).toEqualEpsilon(
       rhumb.heading,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(geodesic.surfaceDistance).toEqualEpsilon(
       rhumb.surfaceDistance,
-      CesiumMath.EPSILON4
+      CesiumMath.EPSILON4,
     ); // Due to computational difference, slightly larger tolerance
   });
 
@@ -622,14 +622,14 @@ describe("Core/EllipsoidRhumbLine", function () {
       initial,
       eightyDegrees,
       distance,
-      ellipsoid
+      ellipsoid,
     );
     const rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
 
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -644,11 +644,11 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(halfway.longitude).toEqualEpsilon(
       interpolatedPoint.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(halfway.latitude).toEqualEpsilon(
       interpolatedPoint.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -665,11 +665,11 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(halfway.longitude).toEqualEpsilon(
       interpolatedPoint.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(halfway.latitude).toEqualEpsilon(
       interpolatedPoint.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -685,7 +685,7 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(start.longitude).toEqualEpsilon(
       first.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(start.latitude).toEqualEpsilon(first.latitude, CesiumMath.EPSILON12);
     expect(end.longitude).toEqualEpsilon(last.longitude, CesiumMath.EPSILON12);
@@ -704,11 +704,11 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       midpoint.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       midpoint.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -723,7 +723,7 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(start.longitude).toEqualEpsilon(
       first.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(start.latitude).toEqualEpsilon(first.latitude, CesiumMath.EPSILON12);
     expect(end.longitude).toEqualEpsilon(last.longitude, CesiumMath.EPSILON12);
@@ -741,11 +741,11 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       midpoint.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       midpoint.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -761,11 +761,11 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       midpoint.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       midpoint.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -781,11 +781,11 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       midpoint.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       midpoint.latitude,
-      CesiumMath.EPSILON3
+      CesiumMath.EPSILON3,
     );
   });
 
@@ -801,11 +801,11 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       result.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       result.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -824,11 +824,11 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       result.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       result.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -840,50 +840,50 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
     const midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
-      midpointUsingInterpolation.longitude
+      midpointUsingInterpolation.longitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         midpointUsingInterpolation,
         midpointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
 
     let pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
     let pointUsingIntersection = rhumb.findIntersectionWithLongitude(
-      pointUsingInterpolation.longitude
+      pointUsingInterpolation.longitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         pointUsingInterpolation,
         pointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
 
     pointUsingInterpolation = rhumb.interpolateUsingFraction(0.75);
     pointUsingIntersection = rhumb.findIntersectionWithLongitude(
-      pointUsingInterpolation.longitude
+      pointUsingInterpolation.longitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         pointUsingInterpolation,
         pointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
 
     pointUsingInterpolation = rhumb.interpolateUsingFraction(1.1);
     pointUsingIntersection = rhumb.findIntersectionWithLongitude(
-      pointUsingInterpolation.longitude
+      pointUsingInterpolation.longitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         pointUsingInterpolation,
         pointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
   });
 
@@ -900,16 +900,16 @@ describe("Core/EllipsoidRhumbLine", function () {
       Cartographic.equalsEpsilon(
         idlIntersection1,
         idlIntersection2,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
     expect(idlIntersection1.longitude).toEqualEpsilon(
       Math.PI,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(idlIntersection2.longitude).toEqualEpsilon(
       Math.PI,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     rhumb.setEndPoints(end, start);
@@ -921,16 +921,16 @@ describe("Core/EllipsoidRhumbLine", function () {
       Cartographic.equalsEpsilon(
         idlIntersection1,
         idlIntersection2,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
     expect(idlIntersection1.longitude).toEqualEpsilon(
       -Math.PI,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(idlIntersection2.longitude).toEqualEpsilon(
       -Math.PI,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -942,14 +942,14 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
     const midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
-      midpointUsingInterpolation.longitude
+      midpointUsingInterpolation.longitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         midpointUsingInterpolation,
         midpointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
   });
 
@@ -961,7 +961,7 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
     const midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
-      midpointUsingInterpolation.longitude
+      midpointUsingInterpolation.longitude,
     );
 
     expect(midpointUsingIntersection).not.toBeDefined();
@@ -973,13 +973,12 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     const rhumb = new EllipsoidRhumbLine(start, end);
 
-    const midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
-      thirtyDegrees
-    );
+    const midpointUsingIntersection =
+      rhumb.findIntersectionWithLongitude(thirtyDegrees);
 
     expect(midpointUsingIntersection.latitude).toEqualEpsilon(
       CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -991,50 +990,50 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
     const midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
-      midpointUsingInterpolation.latitude
+      midpointUsingInterpolation.latitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         midpointUsingInterpolation,
         midpointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
 
     let pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
     let pointUsingIntersection = rhumb.findIntersectionWithLatitude(
-      pointUsingInterpolation.latitude
+      pointUsingInterpolation.latitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         pointUsingInterpolation,
         pointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
 
     pointUsingInterpolation = rhumb.interpolateUsingFraction(0.75);
     pointUsingIntersection = rhumb.findIntersectionWithLatitude(
-      pointUsingInterpolation.latitude
+      pointUsingInterpolation.latitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         pointUsingInterpolation,
         pointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
 
     pointUsingInterpolation = rhumb.interpolateUsingFraction(1.1);
     pointUsingIntersection = rhumb.findIntersectionWithLatitude(
-      pointUsingInterpolation.latitude
+      pointUsingInterpolation.latitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         pointUsingInterpolation,
         pointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
   });
 
@@ -1046,7 +1045,7 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
     const midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
-      midpointUsingInterpolation.latitude
+      midpointUsingInterpolation.latitude,
     );
 
     expect(midpointUsingIntersection).not.toBeDefined();
@@ -1060,14 +1059,14 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
     const midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
-      midpointUsingInterpolation.latitude
+      midpointUsingInterpolation.latitude,
     );
     expect(
       Cartographic.equalsEpsilon(
         midpointUsingInterpolation,
         midpointUsingIntersection,
-        CesiumMath.EPSILON12
-      )
+        CesiumMath.EPSILON12,
+      ),
     ).toBe(true);
   });
 
@@ -1075,12 +1074,12 @@ describe("Core/EllipsoidRhumbLine", function () {
     const p0 = new Cartesian3(
       899411.2767873341,
       -5079219.747324299,
-      3738850.924729517
+      3738850.924729517,
     );
     const p1 = new Cartesian3(
       899411.0994891181,
       -5079219.778719673,
-      3738850.9247295167
+      3738850.9247295167,
     );
 
     const ellipsoid = Ellipsoid.WGS84;

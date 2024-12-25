@@ -13,7 +13,7 @@ CylinderGeometryLibrary.computePositions = function (
   topRadius,
   bottomRadius,
   slices,
-  fill
+  fill,
 ) {
   const topZ = length * 0.5;
   const bottomZ = -topZ;
