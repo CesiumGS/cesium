@@ -4,12 +4,13 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import BufferLoader from "./BufferLoader.js";
 import GltfBufferViewLoader from "./GltfBufferViewLoader.js";
+import GltfDefaultVertexBufferLoader from "./GltfDefaultVertexBufferLoader.js";
 import GltfDracoLoader from "./GltfDracoLoader.js";
+import GltfDracoVertexBufferLoader from "./GltfDracoVertexBufferLoader.js";
 import GltfImageLoader from "./GltfImageLoader.js";
 import GltfIndexBufferLoader from "./GltfIndexBufferLoader.js";
 import GltfJsonLoader from "./GltfJsonLoader.js";
 import GltfTextureLoader from "./GltfTextureLoader.js";
-import GltfUtil from "./GltfUtil.js";
 import GltfVertexBufferLoader from "./GltfVertexBufferLoader.js";
 import MetadataSchemaLoader from "./MetadataSchemaLoader.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
@@ -396,10 +397,8 @@ ResourceCache.getDracoLoader = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {FrameState} options.frameState The frame state.
- * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {object} [options.draco] The Draco extension object.
  * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
- * @param {number} [options.accessorId] The accessor ID.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
@@ -411,17 +410,15 @@ ResourceCache.getDracoLoader = function (options) {
  * @returns {GltfVertexBufferLoader} The cached vertex buffer loader.
  * @private
  */
-ResourceCache.getVertexBufferLoader = function (options) {
+ResourceCache.getDracoVertexBufferLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const {
     gltf,
     gltfResource,
     baseResource,
     frameState,
-    bufferViewId,
     draco,
     attributeSemantic,
-    accessorId,
     asynchronous = true,
     dequantize = false,
     loadBuffer = false,
@@ -439,42 +436,15 @@ ResourceCache.getVertexBufferLoader = function (options) {
     );
   }
 
-  const hasBufferViewId = defined(bufferViewId);
-  const hasDraco = GltfUtil.hasDracoCompression(draco, attributeSemantic);
-  const hasAttributeSemantic = defined(attributeSemantic);
-  const hasAccessorId = defined(accessorId);
-
-  if (hasBufferViewId === hasDraco) {
-    throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined.",
-    );
-  }
-
-  if (hasDraco && !hasAttributeSemantic) {
-    throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined.",
-    );
-  }
-
-  if (hasDraco && !hasAccessorId) {
-    throw new DeveloperError(
-      "When options.draco is defined options.haAccessorId must also be defined.",
-    );
-  }
-
-  if (hasDraco) {
-    Check.typeOf.object("options.draco", draco);
-    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
-    Check.typeOf.number("options.accessorId", accessorId);
-  }
+  Check.typeOf.object("options.draco", draco);
+  Check.typeOf.string("options.attributeSemantic", attributeSemantic);
   //>>includeEnd('debug');
 
-  const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+  const cacheKey = ResourceCacheKey.getDracoVertexBufferCacheKey({
     gltf: gltf,
     gltfResource: gltfResource,
     baseResource: baseResource,
     frameState: frameState,
-    bufferViewId: bufferViewId,
     draco: draco,
     attributeSemantic: attributeSemantic,
     dequantize: dequantize,
@@ -487,15 +457,88 @@ ResourceCache.getVertexBufferLoader = function (options) {
     return vertexBufferLoader;
   }
 
-  vertexBufferLoader = new GltfVertexBufferLoader({
+  vertexBufferLoader = new GltfDracoVertexBufferLoader({
+    resourceCache: ResourceCache,
+    gltf: gltf,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    draco: draco,
+    attributeSemantic: attributeSemantic,
+    cacheKey: cacheKey,
+    asynchronous: asynchronous,
+    dequantize: dequantize,
+    loadBuffer: loadBuffer,
+    loadTypedArray: loadTypedArray,
+  });
+
+  return ResourceCache.add(vertexBufferLoader);
+};
+
+/**
+ * Gets an existing glTF vertex buffer from the cache, or creates a new loader if one does not already exist.
+ *
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {FrameState} options.frameState The frame state.
+ * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
+ * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
+ * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
+ *
+ * @returns {GltfDefaultVertexBufferLoader} The cached vertex buffer loader.
+ * @private
+ */
+ResourceCache.getDefaultVertexBufferLoader = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const {
+    gltf,
+    gltfResource,
+    baseResource,
+    frameState,
+    bufferViewId,
+    asynchronous = true,
+    dequantize = false,
+    loadBuffer = false,
+    loadTypedArray = false,
+  } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.frameState", frameState);
+  if (!loadBuffer && !loadTypedArray) {
+    throw new DeveloperError(
+      "At least one of loadBuffer and loadTypedArray must be true.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  const cacheKey = ResourceCacheKey.getDefaultVertexBufferCacheKey({
+    gltf: gltf,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    frameState: frameState,
+    bufferViewId: bufferViewId,
+    dequantize: dequantize,
+    loadBuffer: loadBuffer,
+    loadTypedArray: loadTypedArray,
+  });
+
+  let vertexBufferLoader = ResourceCache.get(cacheKey);
+  if (defined(vertexBufferLoader)) {
+    return vertexBufferLoader;
+  }
+
+  vertexBufferLoader = new GltfDefaultVertexBufferLoader({
     resourceCache: ResourceCache,
     gltf: gltf,
     gltfResource: gltfResource,
     baseResource: baseResource,
     bufferViewId: bufferViewId,
-    draco: draco,
-    attributeSemantic: attributeSemantic,
-    accessorId: accessorId,
     cacheKey: cacheKey,
     asynchronous: asynchronous,
     dequantize: dequantize,

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import ArticulationStageType from "../Core/ArticulationStageType.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -1117,18 +1119,9 @@ function finalizeAttribute(
   }
 }
 
-function loadAttribute(
-  loader,
-  accessorId,
-  semanticInfo,
-  draco,
-  loadBuffer,
-  loadTypedArray,
-  frameState,
-) {
+function loadAttribute(loader, accessorId, semanticInfo) {
   const gltf = loader.gltfJson;
   const accessor = gltf.accessors[accessorId];
-  const bufferViewId = accessor.bufferView;
 
   const gltfSemantic = semanticInfo.gltfSemantic;
   const renamedSemantic = semanticInfo.renamedSemantic;
@@ -1146,47 +1139,6 @@ function loadAttribute(
     modelSemantic,
     setIndex,
   );
-
-  if (!defined(draco) && !defined(bufferViewId)) {
-    return attribute;
-  }
-
-  const vertexBufferLoader = getVertexBufferLoader(
-    loader,
-    accessorId,
-    gltfSemantic,
-    draco,
-    loadBuffer,
-    loadTypedArray,
-    frameState,
-  );
-
-  const index = loader._geometryLoaders.length;
-  loader._geometryLoaders.push(vertexBufferLoader);
-  const promise = vertexBufferLoader.load();
-  loader._loaderPromises.push(promise);
-  // This can only execute once vertexBufferLoader.process() has run and returns true
-  // Save this finish callback by the loader index so it can be called
-  // in process().
-  loader._geometryCallbacks[index] = () => {
-    if (GltfUtil.hasDracoCompression(draco, gltfSemantic)) {
-      finalizeDracoAttribute(
-        attribute,
-        vertexBufferLoader,
-        loadBuffer,
-        loadTypedArray,
-      );
-    } else {
-      finalizeAttribute(
-        gltf,
-        accessor,
-        attribute,
-        vertexBufferLoader,
-        loadBuffer,
-        loadTypedArray,
-      );
-    }
-  };
 
   return attribute;
 }
@@ -1246,6 +1198,45 @@ function loadVertexAttribute(
     loadTypedArray,
     frameState,
   );
+
+  {
+    const vertexBufferLoader = getVertexBufferLoader(
+      loader,
+      accessorId,
+      gltfSemantic,
+      draco,
+      loadBuffer,
+      loadTypedArray,
+      frameState,
+    );
+
+    const index = loader._geometryLoaders.length;
+    loader._geometryLoaders.push(vertexBufferLoader);
+    const promise = vertexBufferLoader.load();
+    loader._loaderPromises.push(promise);
+    // This can only execute once vertexBufferLoader.process() has run and returns true
+    // Save this finish callback by the loader index so it can be called
+    // in process().
+    loader._geometryCallbacks[index] = () => {
+      if (GltfUtil.hasDracoCompression(draco, gltfSemantic)) {
+        finalizeDracoAttribute(
+          attribute,
+          vertexBufferLoader,
+          loadBuffer,
+          loadTypedArray,
+        );
+      } else {
+        finalizeAttribute(
+          gltf,
+          accessor,
+          attribute,
+          vertexBufferLoader,
+          loadBuffer,
+          loadTypedArray,
+        );
+      }
+    };
+  }
 
   const attributePlan = new PrimitiveLoadPlan.AttributeLoadPlan(attribute);
   attributePlan.loadBuffer = outputBuffer;
@@ -1929,15 +1920,20 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
         hasFeatureIds = true;
       }
 
-      const attributePlan = loadVertexAttribute(
-        loader,
-        accessorId,
-        semanticInfo,
-        draco,
-        hasInstances,
-        needsPostProcessing,
-        frameState,
-      );
+      let attributePlan;
+      if (defined(draco)) {
+        // TODO Handle draco
+      } else {
+        attributePlan = loadVertexAttribute(
+          loader,
+          accessorId,
+          semanticInfo,
+          draco,
+          hasInstances,
+          needsPostProcessing,
+          frameState,
+        );
+      }
 
       primitivePlan.attributePlans.push(attributePlan);
       primitive.attributes.push(attributePlan.attribute);
