@@ -4,6 +4,7 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MorphTargetsStageVS from "../../Shaders/Model/MorphTargetsStageVS.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * The morph targets pipeline stage processes the morph targets and weights of a primitive.
@@ -68,6 +69,11 @@ MorphTargetsPipelineStage.process = function (renderResources, primitive) {
         semantic !== VertexAttributeSemantic.NORMAL &&
         semantic !== VertexAttributeSemantic.TANGENT
       ) {
+        oneTimeWarning(
+          "morph-target-unsupported-semantic",
+          `Cesium does not support ${semantic} morph targets`,
+        );
+
         continue;
       }
 
