@@ -2901,7 +2901,7 @@ function update3D(controller) {
 
 const scratchAdjustHeightTransform = new Matrix4();
 const scratchAdjustHeightCartographic = new Cartographic();
-const transformOrigin = new Cartesian3();
+const percentRadius = new Cartesian3();
 
 function adjustHeightForTerrain(controller, cameraChanged) {
   controller._adjustedHeightForTerrain = true;
@@ -2914,7 +2914,7 @@ function adjustHeightForTerrain(controller, cameraChanged) {
   }
 
   const camera = scene.camera;
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
+  let ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
   const projection = scene.mapProjection;
 
   let transform;
@@ -2927,6 +2927,24 @@ function adjustHeightForTerrain(controller, cameraChanged) {
 
   const cartographic = scratchAdjustHeightCartographic;
   if (mode === SceneMode.SCENE3D) {
+    if (defined(transform))
+    {
+      //scale position to another ellipsoid according to percentage of geocentric length 
+      //in the condition of transform camera
+      const percentR=Math.sqrt(
+        camera.position.x*camera.position.x*ellipsoid.oneOverRadiiSquared.x+
+        camera.position.y*camera.position.y*ellipsoid.oneOverRadiiSquared.y+
+        camera.position.z*camera.position.z*ellipsoid.oneOverRadiiSquared.z
+      );
+  
+      if(percentR<0.99)
+      {
+        percentRadius.x=ellipsoid.radii.x*percentR;
+        percentRadius.y=ellipsoid.radii.y*percentR;
+        percentRadius.z=ellipsoid.radii.z*percentR;
+        ellipsoid=Ellipsoid.fromCartesian3(percentRadius);
+      }
+    }
     ellipsoid.cartesianToCartographic(camera.position, cartographic);
   } else {
     projection.unproject(camera.position, cartographic);
@@ -2934,38 +2952,31 @@ function adjustHeightForTerrain(controller, cameraChanged) {
 
   let heightUpdated = false;
   if (cartographic.height < controller._minimumCollisionTerrainHeight) {
-    let transformOriginLen = Infinity;
-    if (defined(transform)) {
-      Matrix4.getTranslation(transform, transformOrigin);
-      transformOriginLen = Cartesian3.magnitude(transformOrigin);
-    }
-    if (transformOriginLen > controller._minimumCollisionTerrainHeight) {
-      const globeHeight = controller._scene.globeHeight;
-      if (defined(globeHeight)) {
-        const height = globeHeight + controller.minimumZoomDistance;
-        const difference = globeHeight - controller._lastGlobeHeight;
-        const percentDifference = difference / controller._lastGlobeHeight;
+    const globeHeight = controller._scene.globeHeight;
+    if (defined(globeHeight)) {
+      const height = globeHeight + controller.minimumZoomDistance;
+      const difference = globeHeight - controller._lastGlobeHeight;
+      const percentDifference = difference / controller._lastGlobeHeight;
 
-        // Unless the camera has been moved by user input, to avoid big jumps during tile loads
-        // only make height updates when the globe height has been fairly stable across several frames
-        if (
-          cartographic.height < height &&
-          (cameraChanged || Math.abs(percentDifference) <= 0.1)
-        ) {
-          cartographic.height = height;
-          if (mode === SceneMode.SCENE3D) {
-            ellipsoid.cartographicToCartesian(cartographic, camera.position);
-          } else {
-            projection.project(cartographic, camera.position);
-          }
-          heightUpdated = true;
-        }
-
-        if (cameraChanged || Math.abs(percentDifference) <= 0.1) {
-          controller._lastGlobeHeight = globeHeight;
+      // Unless the camera has been moved by user input, to avoid big jumps during tile loads
+      // only make height updates when the globe height has been fairly stable across several frames
+      if (
+        cartographic.height < height &&
+        (cameraChanged || Math.abs(percentDifference) <= 0.1)
+      ) {
+        cartographic.height = height;
+        if (mode === SceneMode.SCENE3D) {
+          ellipsoid.cartographicToCartesian(cartographic, camera.position);
         } else {
-          controller._lastGlobeHeight += difference * 0.1;
+          projection.project(cartographic, camera.position);
         }
+        heightUpdated = true;
+      }
+
+      if (cameraChanged || Math.abs(percentDifference) <= 0.1) {
+        controller._lastGlobeHeight = globeHeight;
+      } else {
+        controller._lastGlobeHeight += difference * 0.1;
       }
     }
   }
