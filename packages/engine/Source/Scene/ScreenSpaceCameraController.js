@@ -2928,12 +2928,18 @@ function adjustHeightForTerrain(controller, cameraChanged) {
   const cartographic = scratchAdjustHeightCartographic;
   if (mode === SceneMode.SCENE3D) {
     if (defined(transform)) {
-      //scale position to another ellipsoid according to percentage of geocentric length 
+      //scale position to another ellipsoid according to percentage of geocentric length
       //in the condition of transform camera
       const percentR = Math.sqrt(
-        camera.position.x * camera.position.x * ellipsoid.oneOverRadiiSquared.x +
-        camera.position.y * camera.position.y * ellipsoid.oneOverRadiiSquared.y +
-        camera.position.z * camera.position.z * ellipsoid.oneOverRadiiSquared.z
+        camera.position.x *
+          camera.position.x *
+          ellipsoid.oneOverRadiiSquared.x +
+          camera.position.y *
+            camera.position.y *
+            ellipsoid.oneOverRadiiSquared.y +
+          camera.position.z *
+            camera.position.z *
+            ellipsoid.oneOverRadiiSquared.z,
       );
 
       if (percentR < 0.99) {
