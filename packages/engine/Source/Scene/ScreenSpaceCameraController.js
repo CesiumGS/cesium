@@ -2931,18 +2931,18 @@ function adjustHeightForTerrain(controller, cameraChanged) {
     {
       //scale position to another ellipsoid according to percentage of geocentric length 
       //in the condition of transform camera
-      const percentR=Math.sqrt(
-        camera.position.x*camera.position.x*ellipsoid.oneOverRadiiSquared.x+
-        camera.position.y*camera.position.y*ellipsoid.oneOverRadiiSquared.y+
-        camera.position.z*camera.position.z*ellipsoid.oneOverRadiiSquared.z
+      const percentR = Math.sqrt(
+        camera.position.x * camera.position.x * ellipsoid.oneOverRadiiSquared.x +
+        camera.position.y * camera.position.y * ellipsoid.oneOverRadiiSquared.y +
+        camera.position.z * camera.position.z * ellipsoid.oneOverRadiiSquared.z
       );
   
-      if(percentR<0.99)
+      if(percentR < 0.99)
       {
-        percentRadius.x=ellipsoid.radii.x*percentR;
-        percentRadius.y=ellipsoid.radii.y*percentR;
-        percentRadius.z=ellipsoid.radii.z*percentR;
-        ellipsoid=Ellipsoid.fromCartesian3(percentRadius);
+        percentRadius.x = ellipsoid.radii.x * percentR;
+        percentRadius.y = ellipsoid.radii.y * percentR;
+        percentRadius.z = ellipsoid.radii.z * percentR;
+        ellipsoid = Ellipsoid.fromCartesian3(percentRadius);
       }
     }
     ellipsoid.cartesianToCartographic(camera.position, cartographic);
