@@ -2914,7 +2914,7 @@ function adjustHeightForTerrain(controller, cameraChanged) {
   }
 
   const camera = scene.camera;
-  let ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
   const projection = scene.mapProjection;
 
   let transform;
@@ -2947,8 +2947,9 @@ function adjustHeightForTerrain(controller, cameraChanged) {
             camera.position.z *
             ellipsoid.oneOverRadiiSquared.z,
       );
-      if (percentR > 1 - CesiumMath.EPSILON4) percentR = 1;
-      else {
+      if (percentR > 1 - CesiumMath.EPSILON4) {
+        percentR = 1;
+      } else {
         percentRadius.x = ellipsoid.radii.x * percentR;
         percentRadius.y = ellipsoid.radii.y * percentR;
         percentRadius.z = ellipsoid.radii.z * percentR;
