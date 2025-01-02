@@ -6,13 +6,13 @@
 
 ##### Additions :tada:
 
-- Expanded the integration with the [iTwin Platform](https://developer.bentley.com/) to load GeoJSON and KML data from the Reality Management API. Use `ITwinData.createDataSourceForRealityDataId(iTwinId, realityDataId)` to load data as the corresponding Data Source. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
-- Added `environmentMapOptions` to `ModelGraphics`. For performance reasons, the environment map will not update if the entity position changes by default. If environment map updates based on entity position are desired, ensure to provide an appropriate `environmentMapOptions.maximumPositionEpsilon` value. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
+- Expanded integration with the [iTwin Platform](https://developer.bentley.com/) to load GeoJSON and KML data from the Reality Management API. Use `ITwinData.createDataSourceForRealityDataId` to load data as either GeoJSON or KML`. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
+- Added `environmentMapOptions` to `ModelGraphics`. For performance reasons by default, the environment map will not update if the entity position change. If environment map updates based on entity position are desired, provide an appropriate `environmentMapOptions.maximumPositionEpsilon` value. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
 
 ##### Fixes :wrench:
 
-- Reduced memory usage and peformance bottlenecks when using environment maps with models. [#12356](https://github.com/CesiumGS/cesium/issues/12356)
-- Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
+- Reduced memory usage and performance bottlenecks when using environment maps with models. [#12356](https://github.com/CesiumGS/cesium/issues/12356)
+- Fixed `JulianDate` to always generate valid ISO strings for fractional milliseconds. [#12345](https://github.com/CesiumGS/cesium/pull/12345)
 - Fixed intermittent z-fighting issue. [#12337](https://github.com/CesiumGS/cesium/issues/12337)
 
 ### 1.124 - 2024-12-02
