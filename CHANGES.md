@@ -6,7 +6,7 @@
 
 ##### Fixes :wrench:
 
-- Added `environmentMapOptions` to `Entity`'s constructor options with EnvironmentMap disabled by default to allow long distance `Entity` jumps without performance drop. If EnvironmentMap needs to be enabled, ensure to provide a `maximumPositionEpsilon` threshold value large enough with your entity movements use case. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
+- Added `environmentMapOptions` to `ModelGraphics`. For performance reasons, the environment map will not update if the entity position changes by default. If environment map updates based on entity position are desired, ensure to provide an appropriate `environmentMapOptions.maximumPositionEpsilon` value. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
 - Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
 - Fixed intermittent z-fighting issue. [#12337](https://github.com/CesiumGS/cesium/issues/12337)
 

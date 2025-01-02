@@ -243,9 +243,7 @@ async function createTileset(resource, tilesetHash, entity, primitives) {
   };
 
   try {
-    const tileset = await Cesium3DTileset.fromUrl(resource, {
-      environmentMapOptions: entity._environmentMapOptions,
-    });
+    const tileset = await Cesium3DTileset.fromUrl(resource);
     tileset.id = entity;
     primitives.add(tileset);
 
