@@ -2,9 +2,12 @@
 
 ### 1.125 - 2025-01-02
 
-##### Fixes :wrench:
+##### Additions :tada:
 
 - Expanded the integration with the [iTwin Platform](https://developer.bentley.com/) to load GeoJSON and KML data from the Reality Management API. Use `ITwinData.createDataSourceForRealityDataId(iTwinId, realityDataId)` to load data as the corresponding Data Source. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
+
+##### Fixes :wrench:
+
 - Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
 - Fixed intermittent z-fighting issue. [#12337](https://github.com/CesiumGS/cesium/issues/12337)
 
