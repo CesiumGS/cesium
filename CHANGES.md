@@ -4,6 +4,7 @@
 
 ##### Fixes :wrench:
 
+- Expanded the integration with the [iTwin Platform](https://developer.bentley.com/) to load GeoJSON and KML data from the Reality Management API. Use `ITwinData.createDataSourceForRealityDataId(iTwinId, realityDataId)` to load data as the corresponding Data Source. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
 - Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
 - Fixed intermittent z-fighting issue. [#12337](https://github.com/CesiumGS/cesium/issues/12337)
 
@@ -14,7 +15,7 @@
 ##### Additions :tada:
 
 - Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load iModels as 3D Tiles. Use `ITwinPlatform.defaultAccessToken` to set the access token. Use `ITwinData.createTilesetFromIModelId(iModelId)` to load the iModel as a `Cesium3DTileset`. [#12289](https://github.com/CesiumGS/cesium/pull/12289)
-- Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load Reality Data terrain meshes and GeoJSON. Use `ITwinPlatform.defaultAccessToken` to set the access token. Then use `ITwinData.createTilesetForRealityDataId(iTwinId, dataId)` to load terrain meshes as a `Cesium3DTileset` or `ITwinData.createDataSourceForRealityDataId(iTwinId, dataId)` to load GeoJSON or KML files as data sources. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
+- Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load Reality Data terrain meshes. Use `ITwinPlatform.defaultAccessToken` to set the access token. Then use `ITwinData.createTilesetForRealityDataId(iTwinId, dataId)` to load terrain meshes as a `Cesium3DTileset` [#12334](https://github.com/CesiumGS/cesium/pull/12334)
 - Added `getSample` to `SampledProperty` to get the time of samples. [#12253](https://github.com/CesiumGS/cesium/pull/12253)
 - Added `Entity.trackingReferenceFrame` property to allow tracking entities in various reference frames. [#12194](https://github.com/CesiumGS/cesium/pull/12194), [#12314](https://github.com/CesiumGS/cesium/pull/12314)
   - `TrackingReferenceFrame.AUTODETECT` (default): uses either VVLH or ENU depending on entity's dynamic. Use `TrackingReferenceFrame.ENU` if your camera orientation flips abruptly from time to time.
