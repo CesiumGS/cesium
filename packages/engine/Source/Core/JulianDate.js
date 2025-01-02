@@ -10,7 +10,7 @@ import TimeStandard from "./TimeStandard.js";
 
 const gregorianDateScratch = new GregorianDate();
 const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-const daysInLeapFeburary = 29;
+const daysInLeapFebruary = 29;
 
 function compareLeapSecondDates(leapSecond, dateToFind) {
   return JulianDate.compare(leapSecond.julianDate, dateToFind.julianDate);
@@ -430,7 +430,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     month > 12 ||
     day < 1 ||
     ((month !== 2 || !inLeapYear) && day > daysInMonth[month - 1]) ||
-    (inLeapYear && month === 2 && day > daysInLeapFeburary)
+    (inLeapYear && month === 2 && day > daysInLeapFebruary)
   ) {
     throw new DeveloperError(iso8601ErrorMessage);
   }
@@ -542,7 +542,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     day++;
   }
 
-  tmp = inLeapYear && month === 2 ? daysInLeapFeburary : daysInMonth[month - 1];
+  tmp = inLeapYear && month === 2 ? daysInLeapFebruary : daysInMonth[month - 1];
   while (day > tmp) {
     day -= tmp;
     month++;
@@ -553,7 +553,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     }
 
     tmp =
-      inLeapYear && month === 2 ? daysInLeapFeburary : daysInMonth[month - 1];
+      inLeapYear && month === 2 ? daysInLeapFebruary : daysInMonth[month - 1];
   }
 
   //If UTC offset is at the beginning/end of the day, minutes can be negative.
@@ -575,7 +575,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     }
 
     tmp =
-      inLeapYear && month === 2 ? daysInLeapFeburary : daysInMonth[month - 1];
+      inLeapYear && month === 2 ? daysInLeapFebruary : daysInMonth[month - 1];
     day += tmp;
   }
 
@@ -784,8 +784,15 @@ JulianDate.toIso8601 = function (julianDate, precision) {
   let millisecondStr;
 
   if (!defined(precision) && millisecond !== 0) {
-    //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
-    millisecondStr = (millisecond * 0.01).toString().replace(".", "");
+    // Forces milliseconds into a number with at least 3 digits.
+    const millisecondHundreds = millisecond * 0.01;
+    // Below 1e-6, toString returns scientific notation, so it should be replaced by toFixed with appropriate number of digits.
+    // 20 digits is a trade-off choice guided by JavaScript's Number representation accuracy (15-17 decimal digits for most numbers).
+    // Using toFixed(20) ensures capturing enough precision while avoiding inaccuracies due to floating-point limitations.
+    millisecondStr =
+      millisecondHundreds < 1e-6
+        ? millisecondHundreds.toFixed(20).replace(".", "").replace(/0+$/, "")
+        : millisecondHundreds.toString().replace(".", "");
     return `${year.toString().padStart(4, "0")}-${month
       .toString()
       .padStart(2, "0")}-${day.toString().padStart(2, "0")}T${hour
