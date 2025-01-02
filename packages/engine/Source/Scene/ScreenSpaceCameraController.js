@@ -2919,6 +2919,11 @@ function adjustHeightForTerrain(controller, cameraChanged) {
 
   let transform;
   let mag;
+  let percentR = 1;
+  percentRadius.x = ellipsoid.radii.x;
+  percentRadius.y = ellipsoid.radii.y;
+  percentRadius.z = ellipsoid.radii.z;
+
   if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
     transform = Matrix4.clone(camera.transform, scratchAdjustHeightTransform);
     mag = Cartesian3.magnitude(camera.position);
@@ -2927,10 +2932,11 @@ function adjustHeightForTerrain(controller, cameraChanged) {
 
   const cartographic = scratchAdjustHeightCartographic;
   if (mode === SceneMode.SCENE3D) {
+    ellipsoid.cartesianToCartographic(camera.position, cartographic);
     if (defined(transform)) {
       //scale position to another ellipsoid according to percentage of geocentric length
       //in the condition of transform camera
-      const percentR = Math.sqrt(
+      percentR = Math.sqrt(
         camera.position.x *
           camera.position.x *
           ellipsoid.oneOverRadiiSquared.x +
@@ -2941,15 +2947,13 @@ function adjustHeightForTerrain(controller, cameraChanged) {
             camera.position.z *
             ellipsoid.oneOverRadiiSquared.z,
       );
-
-      if (percentR < 0.99) {
+      if (percentR > 1 - CesiumMath.EPSILON4) percentR = 1;
+      else {
         percentRadius.x = ellipsoid.radii.x * percentR;
         percentRadius.y = ellipsoid.radii.y * percentR;
         percentRadius.z = ellipsoid.radii.z * percentR;
-        ellipsoid = Ellipsoid.fromCartesian3(percentRadius);
       }
     }
-    ellipsoid.cartesianToCartographic(camera.position, cartographic);
   } else {
     projection.unproject(camera.position, cartographic);
   }
@@ -2968,9 +2972,12 @@ function adjustHeightForTerrain(controller, cameraChanged) {
         cartographic.height < height &&
         (cameraChanged || Math.abs(percentDifference) <= 0.1)
       ) {
-        cartographic.height = height;
+        cartographic.height = height * percentR;
         if (mode === SceneMode.SCENE3D) {
-          ellipsoid.cartographicToCartesian(cartographic, camera.position);
+          Ellipsoid.fromCartesian3(percentRadius).cartographicToCartesian(
+            cartographic,
+            camera.position,
+          );
         } else {
           projection.project(cartographic, camera.position);
         }
