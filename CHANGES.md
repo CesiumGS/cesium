@@ -1,5 +1,20 @@
 # Change Log
 
+### 1.125 - 2025-01-02
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Expanded integration with the [iTwin Platform](https://developer.bentley.com/) to load GeoJSON and KML data from the Reality Management API. Use `ITwinData.createDataSourceForRealityDataId` to load data as either GeoJSON or KML`. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
+- Added `environmentMapOptions` to `ModelGraphics`. For performance reasons by default, the environment map will not update if the entity position change. If environment map updates based on entity position are desired, provide an appropriate `environmentMapOptions.maximumPositionEpsilon` value. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
+
+##### Fixes :wrench:
+
+- Reduced memory usage and performance bottlenecks when using environment maps with models. [#12356](https://github.com/CesiumGS/cesium/issues/12356)
+- Fixed `JulianDate` to always generate valid ISO strings for fractional milliseconds. [#12345](https://github.com/CesiumGS/cesium/pull/12345)
+- Fixed intermittent z-fighting issue. [#12337](https://github.com/CesiumGS/cesium/issues/12337)
+
 ### 1.124 - 2024-12-02
 
 #### @cesium/engine
@@ -7,6 +22,7 @@
 ##### Additions :tada:
 
 - Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load iModels as 3D Tiles. Use `ITwinPlatform.defaultAccessToken` to set the access token. Use `ITwinData.createTilesetFromIModelId(iModelId)` to load the iModel as a `Cesium3DTileset`. [#12289](https://github.com/CesiumGS/cesium/pull/12289)
+- Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load Reality Data terrain meshes. Use `ITwinPlatform.defaultAccessToken` to set the access token. Then use `ITwinData.createTilesetForRealityDataId(iTwinId, dataId)` to load terrain meshes as a `Cesium3DTileset` [#12334](https://github.com/CesiumGS/cesium/pull/12334)
 - Added `getSample` to `SampledProperty` to get the time of samples. [#12253](https://github.com/CesiumGS/cesium/pull/12253)
 - Added `Entity.trackingReferenceFrame` property to allow tracking entities in various reference frames. [#12194](https://github.com/CesiumGS/cesium/pull/12194), [#12314](https://github.com/CesiumGS/cesium/pull/12314)
   - `TrackingReferenceFrame.AUTODETECT` (default): uses either VVLH or ENU depending on entity's dynamic. Use `TrackingReferenceFrame.ENU` if your camera orientation flips abruptly from time to time.
@@ -89,9 +105,6 @@
 - Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
 - Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 - Fix error with normalization of corner points for lines and corridors with collinear points. [#12255](https://github.com/CesiumGS/cesium/pull/12255)
-
-##### Fixes :wrench:
-
 - Properly handle `offset` and `scale` properties when picking metadata from property textures. [#12237](https://github.com/CesiumGS/cesium/pull/12237)
 
 ### 1.122 - 2024-10-01

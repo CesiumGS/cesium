@@ -487,6 +487,8 @@ describe(
         }),
       );
       expect(root.contentFailed).toBeTrue();
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
     it("handles failed tile requests", async function () {
