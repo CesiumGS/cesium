@@ -2,14 +2,17 @@
 
 ### 1.125 - 2025-01-02
 
+#### @cesium/engine
+
 ##### Additions :tada:
 
 - Expanded the integration with the [iTwin Platform](https://developer.bentley.com/) to load GeoJSON and KML data from the Reality Management API. Use `ITwinData.createDataSourceForRealityDataId(iTwinId, realityDataId)` to load data as the corresponding Data Source. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
+- Added `environmentMapOptions` to `ModelGraphics`. For performance reasons, the environment map will not update if the entity position changes by default. If environment map updates based on entity position are desired, ensure to provide an appropriate `environmentMapOptions.maximumPositionEpsilon` value. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
 
 ##### Fixes :wrench:
 
 - Reduced memory usage and peformance bottlenecks when using environment maps with models. [#12356](https://github.com/CesiumGS/cesium/issues/12356)
-- Fixed JulianDate to always generate valid ISO strings for fractional milliseconds. [#12345](https://github.com/CesiumGS/cesium/pull/12345)
+- Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
 - Fixed intermittent z-fighting issue. [#12337](https://github.com/CesiumGS/cesium/issues/12337)
 
 ### 1.124 - 2024-12-02
@@ -102,9 +105,6 @@
 - Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
 - Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 - Fix error with normalization of corner points for lines and corridors with collinear points. [#12255](https://github.com/CesiumGS/cesium/pull/12255)
-
-##### Fixes :wrench:
-
 - Properly handle `offset` and `scale` properties when picking metadata from property textures. [#12237](https://github.com/CesiumGS/cesium/pull/12237)
 
 ### 1.122 - 2024-10-01
