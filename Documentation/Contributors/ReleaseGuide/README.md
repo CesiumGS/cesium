@@ -1,6 +1,6 @@
 # Release Guide
 
-We release Cesium on the first work day of every month. [This file](../../../.slackbot.yml) outlines the release schedule and the developer responsible for each month's release.
+We release Cesium on the first work day of every month. The [Release Schedule](./ReleaseSchedule.md) outlines the release schedule and the developer responsible for each month's release.
 
 There is no release manager; instead, our community shares the responsibility. Any committer can create the release for a given month, and at any point, they can pass the responsibility to someone else, or someone else can ask for it. This spreads knowledge, avoids stratification, avoids a single point of failure, and is beautifully unstructured ([more info](https://community.cesium.com/t/cesium-releases/45)).
 
