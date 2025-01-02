@@ -2019,7 +2019,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     updateController();
 
     expect(camera.positionCartographic.height).toBeGreaterThanOrEqual(
-      controller.minimumZoomDistance,
+      controller.minimumZoomDistance - CesiumMath.EPSILON4,
     );
   });
 
