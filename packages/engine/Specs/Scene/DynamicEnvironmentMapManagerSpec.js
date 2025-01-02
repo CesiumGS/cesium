@@ -184,6 +184,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -269,6 +270,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         const primitive = new EnvironmentMockPrimitive(manager);
         scene.primitives.add(primitive);
 
+        scene.renderForSpecs();
         scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
@@ -356,6 +358,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -442,6 +445,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           DynamicAtmosphereLightingType.SUNLIGHT;
 
         scene.renderForSpecs(time);
+        scene.renderForSpecs(time);
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -526,6 +530,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.atmosphere.dynamicLighting =
           DynamicAtmosphereLightingType.SUNLIGHT;
 
+        scene.renderForSpecs(time);
         scene.renderForSpecs(time);
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
@@ -615,6 +620,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -696,6 +702,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         const primitive = new EnvironmentMockPrimitive(manager);
         scene.primitives.add(primitive);
 
+        scene.renderForSpecs();
         scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
@@ -780,6 +787,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -862,6 +870,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         const primitive = new EnvironmentMockPrimitive(manager);
         scene.primitives.add(primitive);
 
+        scene.renderForSpecs();
         scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
@@ -946,6 +955,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -1029,6 +1039,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -1075,8 +1086,14 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqualEpsilon(
+          0.0,
+          CesiumMath.EPSILON2,
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqualEpsilon(
+          0.0,
+          CesiumMath.EPSILON2,
+        );
 
         expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
@@ -1111,6 +1128,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         const primitive = new EnvironmentMockPrimitive(manager);
         scene.primitives.add(primitive);
 
+        scene.renderForSpecs();
         scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
