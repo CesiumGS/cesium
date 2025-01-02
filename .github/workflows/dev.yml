@@ -42,7 +42,7 @@ jobs:
       - name: build
         run: npm run build
       - name: coverage (firefox)
-        run: npm run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+        run: npm run coverage -- --browsers FirefoxHeadless --failTaskOnError --suppressPassed
       - name: upload coverage artifacts
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
@@ -59,7 +59,7 @@ jobs:
       - name: release build
         run: npm run make-zip
       - name: release tests (chrome)
-        run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+        run: npm run test -- --browsers ChromeHeadless --failTaskOnError --release --suppressPassed
       - name: cloc
         run: npm run cloc
   node-18:
