@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.126 - 2025-02-03
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed error when resetting `Cesium3DTileset.modelMatrix` to its initial value. [#12409](https://github.com/CesiumGS/cesium/pull/12409)
+
 ### 1.125 - 2025-01-02
 
 #### @cesium/engine
