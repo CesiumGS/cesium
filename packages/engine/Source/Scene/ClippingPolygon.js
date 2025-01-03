@@ -117,8 +117,8 @@ ClippingPolygon.clone = function (polygon, result) {
  * Compares the provided ClippingPolygons and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
- * @param {Plane} left The first polygon.
- * @param {Plane} right The second polygon.
+ * @param {ClippingPolygon} left The first polygon.
+ * @param {ClippingPolygon} right The second polygon.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 ClippingPolygon.equals = function (left, right) {
