@@ -1650,3 +1650,11 @@ ModelComponents.Clearcoat = Clearcoat;
 ModelComponents.Material = Material;
 
 export default ModelComponents;
+export {
+  Attribute,
+  Indices,
+  Primitive,
+  AnimationChannel,
+  Components,
+  TextureReader,
+};

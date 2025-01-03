@@ -11,7 +11,7 @@ import Property from "./Property.js";
  * A {@link Property} whose value is a key-value mapping of property names to the computed value of other properties.
  *
  * @alias PropertyBag
- * @implements Record<string, any>
+ * @extends Record<string, any>
  * @constructor
  *
  * @param {object} [value] An object, containing key-value mapping of property names to properties.
@@ -268,9 +268,8 @@ function propertiesEqual(a, b) {
  */
 PropertyBag.prototype.equals = function (other) {
   return (
-    this === other || //
-    (other instanceof PropertyBag && //
-      propertiesEqual(this, other))
+    this === other ||
+    (other instanceof PropertyBag && propertiesEqual(this, other))
   );
 };
 export default PropertyBag;

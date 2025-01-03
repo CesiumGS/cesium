@@ -28,6 +28,7 @@ function createMaterialProperty(value) {
 
 /**
  * @private
+ * @returns {Property}
  */
 function createMaterialPropertyDescriptor(name, configurable) {
   return createPropertyDescriptor(name, configurable, createMaterialProperty);

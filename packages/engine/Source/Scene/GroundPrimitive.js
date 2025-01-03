@@ -49,6 +49,7 @@ const GroundPrimitiveUniformMap = {
  *
  * @alias GroundPrimitive
  * @constructor
+ * @this {GroundPrimitive}
  *
  * @param {object} [options] Object with the following properties:
  * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.

@@ -57,6 +57,7 @@ function createConstantProperty(value) {
  * This is broken into two functions because the Chrome profiler does a better
  * job of optimizing lookups if it notices that the string is constant throughout the function.
  * @private
+ * @returns {Property}
  */
 function createPropertyDescriptor(name, configurable, createPropertyCallback) {
   //Safari 8.0.3 has a JavaScript bug that causes it to confuse two variables and treat them as the same.

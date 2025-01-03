@@ -110,3 +110,4 @@ DoublyLinkedList.prototype.splice = function (node, nextNode) {
   nextNode.previous = node;
 };
 export default DoublyLinkedList;
+export { DoublyLinkedListNode };

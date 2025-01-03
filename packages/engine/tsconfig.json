@@ -1,0 +1,19 @@
+{
+    "include": ["index.js"],
+    "exclude": [
+        "Source/Assets/**/*", 
+        "Source/Core/Check.js",
+        "Source/Core/defined.js",
+        "Source/Shaders/**/*", 
+        "Source/ThirdParty/**/*", 
+        "Source/Workers/**/*"
+    ],
+    "compilerOptions": {
+      "allowJs": true,
+      "declaration": true,
+      "emitDeclarationOnly": true,
+      "outDir": "Build/types/",
+      "declarationMap": true,
+      "types": ["node"]
+    }
+  }
