@@ -511,7 +511,7 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  * Create a new imagery layer from an asynchronous imagery provider. The layer will handle any asynchronous loads or errors, and begin rendering the imagery layer once ready.
  *
  * @param {Promise<ImageryProvider>} imageryProviderPromise A promise which resolves to a imagery provider
- * @param {ImageryLayer.ConstructorOptions} options An object describing initialization options
+ * @param {ImageryLayer.ConstructorOptions} [options] An object describing initialization options
  * @returns {ImageryLayer} The created imagery layer.
  *
  * @example
