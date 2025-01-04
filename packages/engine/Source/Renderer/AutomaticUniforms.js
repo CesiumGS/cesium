@@ -1488,11 +1488,11 @@ const AutomaticUniforms = {
    *
    * @example
    * // GLSL declaration
-   * uniform sampler2D czm_specularEnvironmentMaps;
+   * uniform samplerCube czm_specularEnvironmentMaps;
    */
   czm_specularEnvironmentMaps: new AutomaticUniform({
     size: 1,
-    datatype: WebGLConstants.SAMPLER_2D,
+    datatype: WebGLConstants.SAMPLER_CUBE,
     getValue: function (uniformState) {
       return uniformState.specularEnvironmentMaps;
     },
