@@ -36,6 +36,7 @@
     "3DTILES",
     "aabb",
     "Amato",
+    "basisu",
     "bathymetric",
     "bitangent",
     "bitangents",
@@ -43,6 +44,7 @@
     "Bourke",
     "brdf",
     "cartesians",
+    "carto",
     "cartographics",
     "cesiumjs",
     "comms",
@@ -93,6 +95,7 @@
     "unregisters",
     "unrenderable",
     "voxel",
+    "VVLH",
     "WEBG",
     "xdescribe"
   ]
