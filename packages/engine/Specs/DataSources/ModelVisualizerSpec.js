@@ -196,6 +196,11 @@ describe(
 
       expect(primitive.lightColor).toEqual(new Cartesian3(1.0, 1.0, 0.0));
 
+      expect(primitive.environmentMapManager.enabled).toBeTrue();
+      expect(primitive.environmentMapManager.maximumPositionEpsilon).toEqual(
+        Number.POSITIVE_INFINITY,
+      );
+
       // wait till the model is loaded before we can check node transformations
       await pollToPromise(function () {
         scene.render();
@@ -274,6 +279,43 @@ describe(
       ];
 
       expect(node.matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
+    it("can apply model environmentMapOptions", async function () {
+      const time = JulianDate.now();
+
+      const model = new ModelGraphics();
+      model.uri = new ConstantProperty(boxArticulationsUrl);
+
+      model.environmentMapOptions = {
+        enabled: false,
+      };
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.position = new ConstantPositionProperty(
+        Cartesian3.fromDegrees(1, 2, 3),
+      );
+      testObject.model = model;
+
+      visualizer.update(time);
+
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
+
+      // wait till the model is loaded before we can check articulations
+      await pollToPromise(function () {
+        scene.render();
+        return primitive.ready;
+      });
+      visualizer.update(time);
+
+      expect(primitive.environmentMapManager.enabled).toBeFalse();
+      expect(primitive.environmentMapManager.maximumPositionEpsilon).toEqual(
+        Number.POSITIVE_INFINITY,
+      );
     });
 
     it("creates a primitive from ModelGraphics with a Resource", async function () {

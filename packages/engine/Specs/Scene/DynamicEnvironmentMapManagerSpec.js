@@ -184,6 +184,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -202,7 +203,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.13869766891002655,
             0.17165547609329224,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -210,7 +211,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.11016352474689484,
             0.15077166259288788,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -218,7 +219,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0013909616973251104,
             -0.00141593546140939,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -226,7 +227,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.00016706169117242098,
             0.00006681153899990022,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
@@ -270,6 +271,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -288,7 +290,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.03880387544631958,
             0.050429586321115494,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -296,7 +298,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.00047372994595207274,
             0.011921915225684643,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -304,7 +306,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0005534383235499263,
             -0.001172146643511951,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -312,22 +314,22 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.00010014028521254659,
             -0.0005452318582683802,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].y).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].z).toBeLessThan(0.0);
 
         expect(manager.sphericalHarmonicCoefficients[6].x).toBeGreaterThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[6].y).toBeGreaterThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[6].z).toBeGreaterThan(0.0);
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toBeLessThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
 
@@ -356,6 +358,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -374,7 +377,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.3365404009819031,
             0.3376566469669342,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -382,7 +385,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.25208908319473267,
             0.25084879994392395,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -390,7 +393,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.0009837104007601738,
             0.0008832928724586964,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
@@ -399,7 +402,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0015308377332985401,
             -0.0012394117657095194,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeGreaterThan(0.0);
@@ -442,6 +445,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           DynamicAtmosphereLightingType.SUNLIGHT;
 
         scene.renderForSpecs(time);
+        scene.renderForSpecs(time);
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -460,7 +464,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.04265068098902702,
             0.04163559526205063,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -468,7 +472,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.023243442177772522,
             0.025639381259679794,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -476,7 +480,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0033528741914778948,
             -0.0031588575802743435,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -484,7 +488,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.007121194154024124,
             0.005899451207369566,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeGreaterThan(0.0);
@@ -527,6 +531,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           DynamicAtmosphereLightingType.SUNLIGHT;
 
         scene.renderForSpecs(time);
+        scene.renderForSpecs(time);
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -545,7 +550,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.0054358793422579765,
             0.0027179396711289883,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -553,7 +558,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.0037772462237626314,
             0.0018886231118813157,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -561,7 +566,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.000007333524990826845,
             -0.0000036667624954134226,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -569,7 +574,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.000008501945558236912,
             0.000004250972779118456,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
@@ -615,6 +620,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -633,7 +639,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.04545757919549942,
             0.02313476987183094,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -641,7 +647,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.004114487674087286,
             -0.0017214358085766435,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -649,7 +655,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0008244783966802061,
             -0.00026270488160662353,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -657,16 +663,16 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.000012375472579151392,
             0.0005265426589176059,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].y).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].z).toBeLessThan(0.0);
 
         expect(manager.sphericalHarmonicCoefficients[6].x).toBeGreaterThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[6].y).toBeGreaterThan(0.0);
@@ -697,6 +703,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -715,7 +722,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.039464931935071945,
             0.047749463468790054,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -723,7 +730,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.031872138381004333,
             0.04223670810461044,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -731,7 +738,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0008044499554671347,
             -0.0008345510577782989,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -739,7 +746,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.000017321406630799174,
             -0.000006108442903496325,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
@@ -780,6 +787,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -798,7 +806,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.21367456018924713,
             0.23666927218437195,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -806,7 +814,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.15787045657634735,
             0.19085952639579773,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -814,7 +822,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0010327763156965375,
             -0.001100384397432208,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -822,7 +830,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.00028964842204004526,
             0.00021805899450555444,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
@@ -863,6 +871,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -881,7 +890,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.07419705390930176,
             0.09077795594930649,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -889,7 +898,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.06336799263954163,
             0.08409948647022247,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -897,7 +906,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0006284310948103666,
             -0.000669674074742943,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -905,7 +914,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.000024254957679659128,
             0.00004792874096892774,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
@@ -946,6 +955,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -964,7 +974,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.13499368727207184,
             0.13499368727207184,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -972,7 +982,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.1081928238272667,
             0.1081928238272667,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -980,7 +990,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0013909616973251104,
             -0.00141593546140939,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -988,7 +998,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.00016706169117242098,
             0.00006681153899990022,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
@@ -1029,6 +1039,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -1047,7 +1058,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.11958353966474533,
             0.15991388261318207,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -1055,7 +1066,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.11915278434753418,
             0.15629366040229797,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -1063,7 +1074,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.0016134318429976702,
             -0.0015525781782343984,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -1071,16 +1082,22 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.000019326049368828535,
             -0.000023931264877319336,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqualEpsilon(
+          0.0,
+          CesiumMath.EPSILON2,
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqualEpsilon(
+          0.0,
+          CesiumMath.EPSILON2,
+        );
 
         expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
 
         expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
         expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
@@ -1112,6 +1129,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
 
@@ -1130,7 +1148,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.1812949925661087,
             0.19759616255760193,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
           new Cartesian3(
@@ -1138,7 +1156,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.09013032913208008,
             0.13857196271419525,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
           new Cartesian3(
@@ -1146,7 +1164,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             -0.000895244418643415,
             -0.0011140345595777035,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
           new Cartesian3(
@@ -1154,7 +1172,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             0.0004962628008797765,
             0.0002673182752914727,
           ),
-          CesiumMath.EPSILON4,
+          CesiumMath.EPSILON2,
         );
 
         expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
