@@ -12,10 +12,10 @@
   ],
   "main": "index.js",
   "module": "index.js",
-  "types": "index.d.ts",
+  "types": "types",
   "files": [
     "index.js",
-    "index.d.ts",
+    "types",
     "Source",
     "README.md",
     "LICENSE.md"
@@ -34,7 +34,7 @@
   "type": "module",
   "scripts": {
     "build": "gulp build --workspace @cesium/widgets",
-    "build-ts": "gulp buildTs --workspace @cesium/widgets",
+    "build-ts": "tsc --project .",
     "coverage": "gulp coverage --workspace @cesium/widgets",
     "test": "gulp test --workspace @cesium/widgets",
     "postversion": "gulp postversion --workspace @cesium/widgets"

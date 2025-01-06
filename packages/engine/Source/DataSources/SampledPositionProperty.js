@@ -15,6 +15,7 @@ import SampledProperty from "./SampledProperty.js";
  *
  * @alias SampledPositionProperty
  * @constructor
+ * @implements {PositionProperty}
  *
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  * @param {number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...

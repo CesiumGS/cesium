@@ -30,7 +30,7 @@
   },
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
-  "types": "./Source/Cesium.d.ts",
+  "types": "./types/Cesium.d.ts",
   "exports": {
     "./package.json": "./package.json",
     "./Source/*": "./Source/*",
@@ -73,6 +73,7 @@
     "gulp-rename": "^2.0.0",
     "gulp-replace": "^1.1.3",
     "gulp-tap": "^2.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
     "gulp-zip": "^6.0.0",
     "husky": "^9.0.7",
     "istanbul-lib-instrument": "^6.0.0",
@@ -99,7 +100,7 @@
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
     "rimraf": "^5.0.0",
-    "tsd-jsdoc": "^2.5.0",
+    "tsd": "^0.31.2",
     "typescript": "^5.3.2",
     "yargs": "^17.0.1"
   },

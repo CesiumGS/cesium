@@ -6,6 +6,11 @@ import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
 
 /**
+ * @typedef {import("../Core/JulianDate").default} JulianDate
+ * @typedef {import("./Property").default} Property
+ */
+
+/**
  * The interface for all {@link Property} objects that define a world
  * location as a {@link Cartesian3} with an associated {@link ReferenceFrame}.
  * This type defines an interface and cannot be instantiated directly.
@@ -13,6 +18,7 @@ import Transforms from "../Core/Transforms.js";
  * @alias PositionProperty
  * @constructor
  * @abstract
+ * @interface
  *
  * @see CallbackPositionProperty
  * @see CompositePositionProperty
@@ -66,7 +72,10 @@ Object.defineProperties(PositionProperty.prototype, {
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
-PositionProperty.prototype.getValue = DeveloperError.throwInstantiationError;
+PositionProperty.prototype.getValue =
+  /** @type {(time?: JulianDate, result?: Cartesian3) => Cartesian3|undefined} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 /**
  * Gets the value of the property at the provided time and in the provided reference frame.
@@ -78,7 +87,9 @@ PositionProperty.prototype.getValue = DeveloperError.throwInstantiationError;
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 PositionProperty.prototype.getValueInReferenceFrame =
-  DeveloperError.throwInstantiationError;
+  /** @type {(time: JulianDate, referenceFrame: ReferenceFrame, result?: Cartesian3) => Cartesian3|undefined} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 /**
  * Compares this property to the provided property and returns
@@ -88,7 +99,10 @@ PositionProperty.prototype.getValueInReferenceFrame =
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
-PositionProperty.prototype.equals = DeveloperError.throwInstantiationError;
+PositionProperty.prototype.equals =
+  /** @type {(other?: Property) => boolean} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 const scratchMatrix3 = new Matrix3();
 

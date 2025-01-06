@@ -15,11 +15,11 @@ Thumbs.db
 /Apps/Sandcastle/templates/bucket.css
 
 /Source/Assets/
-/Source/**/*.d.ts
 /Source/ThirdParty/
 /Source/Widgets/
-/Source/Cesium.d.ts
 /Source/Cesium.js
+
+types
 
 /Specs/SpecList.js
 /Specs/jasmine/**

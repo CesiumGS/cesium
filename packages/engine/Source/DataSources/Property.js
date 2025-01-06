@@ -3,12 +3,17 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
 /**
+ * @typedef {import("../Core/JulianDate").default} JulianDate
+ */
+
+/**
  * The interface for all properties, which represent a value that can optionally vary over time.
  * This type defines an interface and cannot be instantiated directly.
  *
  * @alias Property
  * @constructor
  * @abstract
+ * @interface
  *
  * @see CompositeProperty
  * @see ConstantProperty
@@ -53,10 +58,13 @@ Object.defineProperties(Property.prototype, {
  * @function
  *
  * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
- * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {any|any[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {any|any[]|undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
-Property.prototype.getValue = DeveloperError.throwInstantiationError;
+Property.prototype.getValue =
+  /** @type {(time?: JulianDate, result?: any|any[]) => any|any[]|undefined} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 /**
  * Compares this property to the provided property and returns
@@ -66,7 +74,9 @@ Property.prototype.getValue = DeveloperError.throwInstantiationError;
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
-Property.prototype.equals = DeveloperError.throwInstantiationError;
+Property.prototype.equals = /** @type {(other?: Property) => boolean} */ (
+  DeveloperError.throwInstantiationError
+);
 
 /**
  * @private

@@ -4,10 +4,15 @@ import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 
 /**
+ * @typedef {import("./Property").default} Property
+ */
+
+/**
  * A {@link Property} whose value is lazily evaluated by a callback function.
  *
  * @alias CallbackProperty
  * @constructor
+ * @extends {Property}
  *
  * @param {CallbackProperty.Callback} callback The function to be called when the property is evaluated.
  * @param {boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.

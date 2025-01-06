@@ -72,8 +72,8 @@ const timeScratch = new JulianDate();
  * Gets the value of the property at the provided time in the fixed frame.
  *
  * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
- * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 ConstantPositionProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {

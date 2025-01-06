@@ -1,11 +1,5 @@
 {
     "include": ["Source/**/*"],
-    "exclude": [
-        "Source/ThirdParty/**/*",
-        "Source/Workers/**/*",
-        "Source/Core/Check.js",
-        "Source/Core/defined.js",
-    ],
     "compilerOptions": {
       "composite": true,
       "allowJs": true,

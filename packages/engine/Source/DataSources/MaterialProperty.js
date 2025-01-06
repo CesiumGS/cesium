@@ -5,12 +5,17 @@ import JulianDate from "../Core/JulianDate.js";
 import Material from "../Scene/Material.js";
 
 /**
+ * @typedef {import("./Property").default} Property
+ */
+
+/**
  * The interface for all {@link Property} objects that represent {@link Material} uniforms.
  * This type defines an interface and cannot be instantiated directly.
  *
  * @alias MaterialProperty
  * @constructor
  * @abstract
+ * @interface
  *
  * @see ColorMaterialProperty
  * @see CompositeMaterialProperty
@@ -57,7 +62,10 @@ Object.defineProperties(MaterialProperty.prototype, {
  * @param {JulianDate} time The time for which to retrieve the type.
  * @returns {string} The type of material.
  */
-MaterialProperty.prototype.getType = DeveloperError.throwInstantiationError;
+MaterialProperty.prototype.getType =
+  /** @type {(time: JulianDate) => string} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 /**
  * Gets the value of the property at the provided time.
@@ -65,9 +73,12 @@ MaterialProperty.prototype.getType = DeveloperError.throwInstantiationError;
  *
  * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @returns {object|undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
-MaterialProperty.prototype.getValue = DeveloperError.throwInstantiationError;
+MaterialProperty.prototype.getValue =
+  /** @type {(time?: JulianDate, result?: object) => object|undefined} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 /**
  * Compares this property to the provided property and returns
@@ -77,7 +88,10 @@ MaterialProperty.prototype.getValue = DeveloperError.throwInstantiationError;
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
-MaterialProperty.prototype.equals = DeveloperError.throwInstantiationError;
+MaterialProperty.prototype.equals =
+  /** @type {(other?: Property) => boolean} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 const timeScratch = new JulianDate();
 
