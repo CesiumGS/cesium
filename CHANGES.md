@@ -7,6 +7,7 @@
 ##### Fixes :wrench:
 
 - Fixed error when resetting `Cesium3DTileset.modelMatrix` to its initial value. [#12409](https://github.com/CesiumGS/cesium/pull/12409)
+- Fixed the parameter types of the `ClippingPolygon.equals` function, and fixed cases where parameters to `equals` functions had erroneously not been marked as 'optional'. [#12394](https://github.com/CesiumGS/cesium/pull/12394)
 
 ### 1.125 - 2025-01-02
 
