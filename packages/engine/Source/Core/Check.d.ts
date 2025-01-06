@@ -73,7 +73,11 @@ declare namespace Check {
        * @param {number} limit The limit value to compare against
        * @exception {DeveloperError} test must be typeof 'number' and less than limit
        */
-      function lessThan(name: string, test: any, limit: number): asserts test is number;
+      function lessThan(
+        name: string,
+        test: any,
+        limit: number,
+      ): asserts test is number;
       /**
        * Throws if test is not typeof 'number' and less than or equal to limit
        *
@@ -122,7 +126,12 @@ declare namespace Check {
        * @param {*} test2 The value to test against
        * @exception {DeveloperError} test1 and test2 should be type of 'number' and be equal in value
        */
-      function equals(name1: string, name2: string, test1: any, test2: any): void;
+      function equals(
+        name1: string,
+        name2: string,
+        test1: any,
+        test2: any,
+      ): void;
     }
   }
 }

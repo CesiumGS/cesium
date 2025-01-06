@@ -18,6 +18,7 @@
 !**/*.html
 !**/*.md
 !**/*.ts
+!**/*d.ts
 
 # Re-ignore a few things caught above
 

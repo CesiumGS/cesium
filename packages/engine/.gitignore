@@ -1,5 +1,6 @@
 index.js
 types
+!Specs/types
 Build
 Specs/SpecList.js
 Source/Shaders/**/*.js
