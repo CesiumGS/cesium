@@ -1,6 +1,6 @@
 # Release Guide
 
-We release Cesium on the first work day of every month. [This file](../../../.slackbot.yml) outlines the release schedule and the developer responsible for each month's release.
+We release Cesium on the first work day of every month. The [Release Schedule](./ReleaseSchedule.md) outlines the release schedule and the developer responsible for each month's release.
 
 There is no release manager; instead, our community shares the responsibility. Any committer can create the release for a given month, and at any point, they can pass the responsibility to someone else, or someone else can ask for it. This spreads knowledge, avoids stratification, avoids a single point of failure, and is beautifully unstructured ([more info](https://community.cesium.com/t/cesium-releases/45)).
 
@@ -41,7 +41,7 @@ There is no release manager; instead, our community shares the responsibility. A
 13. Run `npm install`.
 14. Make sure `ThirdParty.json` is up to date by running `npm run build-third-party`. If there are any changes, verify and commit them.
 15. Create the release zip `npm run make-zip`.
-16. Run tests against the release `npm run test -- --failTaskOnError --release`. Test **in all browsers** with the `--browsers` flag (i.e. `--browsers Firefox,Chrome`). Alternatively, test with the browser Spec Runner by starting a local server (`npm start`) and browsing to http://localhost:8080/Specs/SpecRunner.html?built=true&release=true.
+16. Run tests against the release `npm run test -- --failTaskOnError --release`. Test **in all browsers** with the `--browsers` flag (i.e. `--browsers Firefox,Chrome`). Alternatively, test with the browser Spec Runner by starting a local server (`npm start -- --production`) and browsing to http://localhost:8080/Specs/SpecRunner.html?built=true&release=true.
 17. Run end to end tests against the release with `npm run test-e2e-release`, or multiple browsers with `npm run test-e2e-release-all`.
 18. Unpack the release zip to the directory of your choice and start the server by running `npm install` and then `npm start`
 19. Browse to http://localhost:8080 and confirm that the home page loads as expected and all links work.

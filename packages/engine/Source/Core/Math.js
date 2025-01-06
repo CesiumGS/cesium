@@ -1048,6 +1048,8 @@ CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
 });
 
 /**
+ * Calculate the fog impact at a given distance. Useful for culling.
+ * Matches the equation in `fog.glsl`
  * @private
  */
 CesiumMath.fog = function (distanceToCamera, density) {

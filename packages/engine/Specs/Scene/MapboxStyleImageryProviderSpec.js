@@ -31,7 +31,7 @@ describe("Scene/MapboxStyleImageryProvider", function () {
   it("requires the styleId to be specified", function () {
     expect(function () {
       return new MapboxStyleImageryProvider({ accessToken: "test-token" });
-    }).toThrowDeveloperError("styleId is required");
+    }).toThrowDeveloperError("options.styleId is required.");
   });
 
   it("returns valid value for hasAlphaChannel", function () {

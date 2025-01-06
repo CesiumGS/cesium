@@ -1011,7 +1011,7 @@ export async function test() {
     workspace = workspace.replaceAll(`@${scope}/`, ``);
   }
 
-  if (!isProduction) {
+  if (!isProduction && !release) {
     console.log("Building specs...");
     await buildCesium({
       iife: true,
@@ -1203,12 +1203,19 @@ function generateTypeScriptDefinitions(
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
-      /defined\(value: any\): boolean/gm,
-      "defined<Type>(value: Type): value is NonNullable<Type>",
+      /\n?export function defined\(value: any\): boolean;/gm,
+      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+        .toString()
+        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
+        .replace("export default", "export")}`,
     )
+    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`,
+      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+        .toString()
+        .replace(/export default.*\n?/, "")
+        .replace("const Check", "export const Check")}`,
     )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
     .replace(
@@ -1410,12 +1417,19 @@ function createTypeScriptDefinitions() {
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
-      /defined\(value: any\): boolean/gm,
-      "defined<Type>(value: Type): value is NonNullable<Type>",
+      /\n?export function defined\(value: any\): boolean;/gm,
+      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+        .toString()
+        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
+        .replace("export default", "export")}`,
     )
+    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`,
+      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+        .toString()
+        .replace(/export default.*\n?/, "")
+        .replace("const Check", "export const Check")}`,
     )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 to have rest parameter expand tuple
     .replace(

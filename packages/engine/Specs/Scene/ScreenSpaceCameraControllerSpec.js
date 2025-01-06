@@ -1568,6 +1568,79 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).not.toEqual(direction);
   });
 
+  it("maximum tilt angle is 0 in 3D", function () {
+    setUp3D();
+    const originalCameraPosition = Cartesian3.clone(camera.position);
+    const originalCameraDirection = Cartesian3.clone(camera.direction);
+    controller.maximumTiltAngle = 0;
+    const startPosition = new Cartesian2(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 2,
+    );
+    const endPosition = new Cartesian2(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 4,
+    );
+
+    moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+    updateController();
+
+    expect(camera.position).toEqualEpsilon(
+      originalCameraPosition,
+      CesiumMath.EPSILON8,
+    );
+    expect(camera.position).not.toEqualEpsilon(
+      originalCameraDirection,
+      CesiumMath.EPSILON8,
+    );
+
+    const dotProduct = Cartesian3.dot(
+      camera.direction,
+      originalCameraDirection,
+    );
+    const acos = Math.acos(dotProduct);
+    const angle = (acos * 180) / Math.PI;
+    expect(angle).toEqual(0);
+  });
+
+  it("maximum tilt angle is 45 degrees in 3D", function () {
+    setUp3D();
+    const originalCameraPosition = Cartesian3.clone(camera.position);
+    const originalCameraDirection = Cartesian3.clone(camera.direction);
+    controller.maximumTiltAngle = (45 * Math.PI) / 180;
+    const startPosition = new Cartesian2(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 2,
+    );
+    const endPosition = new Cartesian2(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 4,
+    );
+
+    moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+    updateController();
+    moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+    updateController();
+
+    expect(camera.position).not.toEqualEpsilon(
+      originalCameraPosition,
+      CesiumMath.EPSILON8,
+    );
+    expect(camera.position).not.toEqualEpsilon(
+      originalCameraDirection,
+      CesiumMath.EPSILON8,
+    );
+
+    const dotProduct = Cartesian3.dot(
+      camera.direction,
+      originalCameraDirection,
+    );
+    const acos = Math.acos(dotProduct);
+    const angle = (acos * 180) / Math.PI;
+    expect(angle).toBeLessThanOrEqual(45);
+    expect(angle).toBeGreaterThan(44);
+  });
+
   it("looks in 3D", function () {
     setUp3D();
     const position = Cartesian3.clone(camera.position);
