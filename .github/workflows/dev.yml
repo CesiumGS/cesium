@@ -60,6 +60,10 @@ jobs:
         run: npm run make-zip
       - name: release tests (chrome)
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+      - name: ts tests
+        run: |
+          npm run test-ts --workspaces
+          npm run test-ts
       - name: cloc
         run: npm run cloc
   node-18:

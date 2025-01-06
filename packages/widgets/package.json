@@ -35,6 +35,7 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/widgets",
     "build-ts": "tsc --project .",
+    "test-ts": "tsd",
     "coverage": "gulp coverage --workspace @cesium/widgets",
     "test": "gulp test --workspace @cesium/widgets",
     "postversion": "gulp postversion --workspace @cesium/widgets"

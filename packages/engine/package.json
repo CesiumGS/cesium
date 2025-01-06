@@ -56,7 +56,7 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/engine",
     "build-ts": "tsc --project .",
-    "test-ts": "tsd --files Specs/types/index.test-d.ts",
+    "test-ts": "tsd --files Specs/types/*.test-d.ts",
     "coverage": "gulp coverage --workspace @cesium/engine",
     "test": "gulp test --workspace @cesium/engine",
     "postversion": "gulp postversion --workspace @cesium/engine"

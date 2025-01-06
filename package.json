@@ -30,7 +30,7 @@
   },
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
-  "types": "./types/Cesium.d.ts",
+  "types": "types/Cesium.d.ts",
   "exports": {
     "./package.json": "./package.json",
     "./Source/*": "./Source/*",
@@ -137,6 +137,7 @@
     "test-e2e-release-all": "release=true playwright test -c Specs/e2e/playwright.config.js",
     "test-e2e-report": "playwright show-report Build/Specs/e2e/report",
     "test-e2e-update": "playwright test -c Specs/e2e/playwright.config.js --project=chromium -u",
+    "test-ts": "tsd --files Specs/TypeScript/index.ts",
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
     "prettier": "prettier --write \"**/*\"",
