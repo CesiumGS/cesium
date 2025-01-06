@@ -43,6 +43,8 @@ import {
   Resource,
   ResourceCache,
   RuntimeError,
+  TileBoundingRegion,
+  TileOrientedBoundingBox,
   Transforms,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -4801,6 +4803,38 @@ describe(
             boundingSphereEastNorthUp,
             CesiumMath.EPSILON3,
           );
+        },
+      );
+    });
+
+    it("allows setting the model matrix to its initial value when a tile contains a region", function () {
+      // Regression test for https://github.com/CesiumGS/cesium/issues/12002
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(
+        function (tileset) {
+          expect(function () {
+            viewAllTiles();
+
+            // Initially, the tileset tileset modelMatrix is the identity matrix.
+            // When changing it, the tile boundingVolume instances will become
+            // TileOrientedBoundingBox instances that have been created from the
+            // transformed regions.
+            tileset.modelMatrix = Matrix4.fromTranslation(
+              new Cartesian3(0.1, 0, 0),
+            );
+            scene.renderForSpecs();
+            expect(tileset.root.boundingVolume).toBeInstanceOf(
+              TileOrientedBoundingBox,
+            );
+
+            // When setting the modelMatrix back to its initial value, the tile
+            // boundingVolume instances should be the TileBoundingRegion instances
+            // that reflect the original bounding region
+            tileset.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+            scene.renderForSpecs();
+            expect(tileset.root.boundingVolume).toBeInstanceOf(
+              TileBoundingRegion,
+            );
+          }).not.toThrow();
         },
       );
     });
