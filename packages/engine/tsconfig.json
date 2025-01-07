@@ -1,12 +1,15 @@
 {
-    "include": ["Source/**/*"],
+    "include": ["Source/**/**.js"],
     "exclude": [
         "Source/ThirdParty/**/*",
         "Source/Workers/**/*",
         "Source/Core/Check.js",
-        "Source/Core/defined.js",
+        "Source/Core/defined.js"
     ],
     "compilerOptions": {
+      "module": "node16",
+      "strict": true,
+      "verbatimModuleSyntax": true,
       "composite": true,
       "allowJs": true,
       "declaration": true,
@@ -14,6 +17,6 @@
       "declarationMap": true,
       "types": ["node"],
       "outDir": "types",
-      "rootDir": ".",
+      "rootDir": "."
     }
   }

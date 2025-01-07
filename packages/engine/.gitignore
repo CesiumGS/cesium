@@ -1,4 +1,5 @@
 index.js
+engine.d.ts
 types
 !Specs/types
 Build

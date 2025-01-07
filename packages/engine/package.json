@@ -11,9 +11,10 @@
   ],
   "main": "index.js",
   "module": "index.js",
-  "types": "types",
+  "types": "engine.d.ts",
   "files": [
     "index.js",
+    "engine.d.ts",
     "types",
     "Source",
     "Build/**",
@@ -55,7 +56,7 @@
   "type": "module",
   "scripts": {
     "build": "gulp build --workspace @cesium/engine",
-    "build-ts": "tsc --project .",
+    "build-ts": "tsc --build --clean && tsc --build",
     "test-ts": "tsd --files Specs/types/*.test-d.ts",
     "coverage": "gulp coverage --workspace @cesium/engine",
     "test": "gulp test --workspace @cesium/engine",

@@ -1,5 +1,5 @@
 {
-    "include": ["Source/**/*"],
+    "include": ["Source/**/*.js"],
     "compilerOptions": {
       "composite": true,
       "allowJs": true,
@@ -8,6 +8,6 @@
       "declarationMap": true,
       "types": ["node"],
       "outDir": "types",
-      "rootDir": ".",
+      "rootDir": "."
     }
   }
