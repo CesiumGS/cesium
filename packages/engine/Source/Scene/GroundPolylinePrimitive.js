@@ -28,6 +28,11 @@ import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
 
 /**
+ * @typedef {import("./Scene").default} Scene
+ * @typedef {import("./Appearance").default} Appearance
+ */
+
+/**
  * A GroundPolylinePrimitive represents a polyline draped over the terrain or 3D Tiles in the {@link Scene}.
  * <p>
  * Only to be used with GeometryInstances containing {@link GroundPolylineGeometry}.

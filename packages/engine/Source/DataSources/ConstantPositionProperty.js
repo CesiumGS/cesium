@@ -8,6 +8,10 @@ import ReferenceFrame from "../Core/ReferenceFrame.js";
 import PositionProperty from "./PositionProperty.js";
 
 /**
+ * @typedef {import("./Property").default} Property
+ */
+
+/**
  * A {@link PositionProperty} whose value does not change in respect to the
  * {@link ReferenceFrame} in which is it defined.
  *

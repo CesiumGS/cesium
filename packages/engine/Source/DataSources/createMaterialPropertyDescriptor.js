@@ -5,6 +5,10 @@ import ColorMaterialProperty from "./ColorMaterialProperty.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import ImageMaterialProperty from "./ImageMaterialProperty.js";
 
+/**
+ * @typedef {import("./Property").default} Property
+ */
+
 function createMaterialProperty(value) {
   if (value instanceof Color) {
     return new ColorMaterialProperty(value);

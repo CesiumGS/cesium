@@ -404,7 +404,12 @@ TaskProcessor.prototype.destroy = function () {
 TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 
 // exposed for testing purposes
+
+/** @private */
 TaskProcessor._defaultWorkerModulePrefix = "Workers/";
+/** @private */
 TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
+/** @private */
 TaskProcessor._canTransferArrayBuffer = undefined;
+
 export default TaskProcessor;

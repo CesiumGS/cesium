@@ -27,6 +27,10 @@ import Stereographic from "./Stereographic.js";
 import VertexFormat from "./VertexFormat.js";
 import WindingOrder from "./WindingOrder.js";
 
+/**
+ * @typedef {import("./PolygonHierarchy").default} PolygonHierarchy
+ */
+
 const scratchCarto1 = new Cartographic();
 const scratchCarto2 = new Cartographic();
 function adjustPosHeightsForNormal(position, p1, p2, ellipsoid) {

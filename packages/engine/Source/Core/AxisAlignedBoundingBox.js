@@ -5,6 +5,10 @@ import defined from "./defined.js";
 import Intersect from "./Intersect.js";
 
 /**
+ * @typedef {import("./Plane").default} Plane
+ */
+
+/**
  * Creates an instance of an AxisAlignedBoundingBox from the minimum and maximum points along the x, y, and z axes.
  * @alias AxisAlignedBoundingBox
  * @constructor

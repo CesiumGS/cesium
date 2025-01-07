@@ -7,6 +7,7 @@ const CylinderGeometryLibrary = {};
 
 /**
  * @private
+ * @returns {ArrayBufferView}
  */
 CylinderGeometryLibrary.computePositions = function (
   length,

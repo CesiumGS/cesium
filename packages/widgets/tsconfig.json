@@ -1,6 +1,8 @@
 {
     "include": ["Source/**/*.js"],
     "compilerOptions": {
+      "strict": true,
+      "verbatimModuleSyntax": true,
       "composite": true,
       "allowJs": true,
       "declaration": true,

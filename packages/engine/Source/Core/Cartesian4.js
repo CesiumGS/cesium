@@ -5,6 +5,11 @@ import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
 /**
+ * @typedef {import("./Color").default} Color
+ * @typedef {import("./unpack").default} unpack
+ */
+
+/**
  * A 4D Cartesian point.
  * @alias Cartesian4
  * @constructor

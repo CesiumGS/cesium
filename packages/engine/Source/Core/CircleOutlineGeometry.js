@@ -6,6 +6,10 @@ import EllipseOutlineGeometry from "./EllipseOutlineGeometry.js";
 import Ellipsoid from "./Ellipsoid.js";
 
 /**
+ * @typedef {import("./Geometry").default} Geometry
+ */
+
+/**
  * A description of the outline of a circle on the ellipsoid.
  *
  * @alias CircleOutlineGeometry

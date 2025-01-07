@@ -7,6 +7,10 @@ import Ellipsoid from "./Ellipsoid.js";
 import VertexFormat from "./VertexFormat.js";
 
 /**
+ * @typedef {import("./Geometry").default} Geometry
+ */
+
+/**
  * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
  *
  * @alias CircleGeometry

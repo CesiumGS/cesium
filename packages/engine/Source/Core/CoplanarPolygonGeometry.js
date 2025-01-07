@@ -23,6 +23,10 @@ import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";
 import VertexFormat from "./VertexFormat.js";
 
+/**
+ * @typedef {import("./PolygonHierarchy").default} PolygonHierarchy
+ */
+
 const scratchPosition = new Cartesian3();
 const scratchBR = new BoundingRectangle();
 const stScratch = new Cartesian2();

@@ -4,6 +4,10 @@ import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
+ * @typedef {import("./MetadataClass").default} MetadataClass
+ */
+
+/**
  * Metadata about the tileset.
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles

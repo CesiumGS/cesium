@@ -5,6 +5,10 @@ import defined from "./defined.js";
 import EllipsoidOutlineGeometry from "./EllipsoidOutlineGeometry.js";
 
 /**
+ * @typedef {import("./Geometry").default} Geometry
+ */
+
+/**
  * A description of the outline of a sphere.
  *
  * @alias SphereOutlineGeometry

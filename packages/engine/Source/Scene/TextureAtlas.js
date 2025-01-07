@@ -11,6 +11,10 @@ import RuntimeError from "../Core/RuntimeError.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
 
+/**
+ * @typedef {import("./Scene").default} Scene
+ */
+
 // The atlas is made up of regions of space called nodes that contain images or child nodes.
 function TextureAtlasNode(
   bottomLeft,

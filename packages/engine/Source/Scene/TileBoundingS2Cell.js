@@ -15,6 +15,11 @@ import Matrix4 from "../Core/Matrix4.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 import S2Cell from "../Core/S2Cell.js";
+
+/**
+ * @typedef {import("../Core/Color").default} Color
+ */
+
 let centerCartographicScratch = new Cartographic();
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.

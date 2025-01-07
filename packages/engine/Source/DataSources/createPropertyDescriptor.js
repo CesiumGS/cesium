@@ -2,6 +2,10 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import ConstantProperty from "./ConstantProperty.js";
 
+/**
+ * @typedef {import("./Property").default} Property
+ */
+
 function createProperty(
   name,
   privateName,

@@ -27,6 +27,10 @@ import SceneTransforms from "./SceneTransforms.js";
 import TweenCollection from "./TweenCollection.js";
 
 /**
+ * @typedef {import("./Scene").default} Scene
+ */
+
+/**
  * Modifies the camera position and orientation based on mouse input to a canvas.
  * @alias ScreenSpaceCameraController
  * @constructor

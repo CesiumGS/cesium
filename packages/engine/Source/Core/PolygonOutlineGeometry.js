@@ -20,6 +20,11 @@ import PolygonGeometryLibrary from "./PolygonGeometryLibrary.js";
 import PolygonPipeline from "./PolygonPipeline.js";
 import PrimitiveType from "./PrimitiveType.js";
 import WindingOrder from "./WindingOrder.js";
+
+/**
+ * @typedef {import("./PolygonHierarchy").default} PolygonHierarchy
+ */
+
 const createGeometryFromPositionsPositions = [];
 const createGeometryFromPositionsSubdivided = [];
 

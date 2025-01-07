@@ -6,6 +6,10 @@ import CesiumMath from "./Math.js";
 import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
 
 /**
+ * @typedef {import("./Ellipsoid").default} Ellipsoid
+ */
+
+/**
  * A position defined by longitude, latitude, and height.
  * @alias Cartographic
  * @constructor

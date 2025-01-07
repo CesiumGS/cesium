@@ -8,6 +8,10 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import defaultValue from "../Core/defaultValue.js";
 
 /**
+ * @typedef {import("./SpatialNode").default} SpatialNode
+ */
+
+/**
  * A box {@link VoxelShape}.
  *
  * @alias VoxelBoxShape

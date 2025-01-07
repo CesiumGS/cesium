@@ -10,6 +10,10 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 
 /**
+ * @typedef {import("./SpatialNode").default} SpatialNode
+ */
+
+/**
  * A cylinder {@link VoxelShape}.
  *
  * @alias VoxelCylinderShape

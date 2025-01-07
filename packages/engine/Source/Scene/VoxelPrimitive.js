@@ -1949,6 +1949,9 @@ function DefaultVoxelProvider() {
   this.maximumTileCount = 1;
 }
 
+/**
+ * @returns {ArrayBufferView}
+ */
 DefaultVoxelProvider.prototype.requestData = function (options) {
   const tileLevel = defined(options) ? defaultValue(options.tileLevel, 0) : 0;
   if (tileLevel >= 1) {

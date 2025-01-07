@@ -2,6 +2,10 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 
 /**
+ * @typedef {import("./GeocoderService.").default} GeocoderService
+ */
+
+/**
  * Geocodes queries containing longitude and latitude coordinates and an optional height.
  * Query format: `longitude latitude (height)` with longitude/latitude in degrees and height in meters.
  *

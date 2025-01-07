@@ -1,6 +1,10 @@
 import DeveloperError from "../Core/DeveloperError.js";
 
 /**
+ * @typedef {import("./Geometry").default} Geometry
+ */
+
+/**
  * Base class for all geometry creation utility classes that can be passed to {@link GeometryInstance}
  * for asynchronous geometry creation.
  *

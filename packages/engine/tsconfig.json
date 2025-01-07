@@ -7,7 +7,6 @@
         "Source/Core/defined.js"
     ],
     "compilerOptions": {
-      "module": "node16",
       "strict": true,
       "verbatimModuleSyntax": true,
       "composite": true,

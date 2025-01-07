@@ -56,7 +56,7 @@
   "type": "module",
   "scripts": {
     "build": "gulp build --workspace @cesium/engine",
-    "build-ts": "tsc --build --clean && tsc --build",
+    "build-ts": "rm -rf engine.d.ts && tsc --build --clean && tsc --build",
     "test-ts": "tsd --files Specs/types/*.test-d.ts",
     "coverage": "gulp coverage --workspace @cesium/engine",
     "test": "gulp test --workspace @cesium/engine",

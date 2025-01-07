@@ -15,6 +15,10 @@ import IndexDatatype from "./IndexDatatype.js";
 import PolygonGeometryLibrary from "./PolygonGeometryLibrary.js";
 import PrimitiveType from "./PrimitiveType.js";
 
+/**
+ * @typedef {import("./PolygonHierarchy").default} PolygonHierarchy
+ */
+
 function createGeometryFromPositions(positions) {
   const length = positions.length;
   const flatPositions = new Float64Array(length * 3);

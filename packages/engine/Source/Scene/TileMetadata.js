@@ -3,6 +3,10 @@ import defaultValue from "../Core/defaultValue.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
+ * @typedef {import("./MetadataClass").default} MetadataClass
+ */
+
+/**
  * Metadata about a 3D Tile. This represents the tile metadata JSON (3D Tiles 1.1)
  * or the <code>3DTILES_metadata</code> extension on a single {@link Cesium3DTile}
  * <p>

@@ -6,6 +6,10 @@ import EllipsoidGeometry from "./EllipsoidGeometry.js";
 import VertexFormat from "./VertexFormat.js";
 
 /**
+ * @typedef {import("./Geometry").default} Geometry
+ */
+
+/**
  * A description of a sphere centered at the origin.
  *
  * @alias SphereGeometry
