@@ -76,7 +76,6 @@ function createGlyphCanvas(
   // Setting the padding to something bigger is necessary to get enough space for the outlining.
   writeTextToCanvasParameters.padding = SDFSettings.PADDING;
 
-
   writeTextToCanvasParameters.fill =
     style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
   writeTextToCanvasParameters.stroke =
