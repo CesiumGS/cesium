@@ -49,46 +49,137 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 function Cesium3DTilesVoxelProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  /** @inheritdoc */
+  /**
+   * A transform from shape space to local space. If undefined, the identity matrix will be used instead.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Matrix4|undefined}
+   * @readonly
+   */
   this.shapeTransform = undefined;
 
-  /** @inheritdoc */
+  /**
+   * A transform from local space to global space. If undefined, the identity matrix will be used instead.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Matrix4|undefined}
+   * @readonly
+   */
   this.globalTransform = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the {@link VoxelShapeType}
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {VoxelShapeType}
+   * @readonly
+   */
   this.shape = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the minimum bounds.
+   * If undefined, the shape's default minimum bounds will be used instead.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Cartesian3|undefined}
+   * @readonly
+   */
   this.minBounds = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the maximum bounds.
+   * If undefined, the shape's default maximum bounds will be used instead.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Cartesian3|undefined}
+   * @readonly
+   */
   this.maxBounds = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the number of voxels per dimension of a tile.
+   * This is the same for all tiles in the dataset.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Cartesian3}
+   * @readonly
+   */
   this.dimensions = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the number of padding voxels before the tile.
+   * This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Cartesian3|undefined}
+   * @readonly
+   */
   this.paddingBefore = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the number of padding voxels after the tile.
+   * This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Cartesian3|undefined}
+   * @readonly
+   */
   this.paddingAfter = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the metadata names.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {string[]}
+   * @readonly
+   */
   this.names = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the metadata types.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {MetadataType[]}
+   * @readonly
+   */
   this.types = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the metadata component types.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {MetadataComponentType[]}
+   * @readonly
+   */
   this.componentTypes = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the metadata minimum values.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {number[][]|undefined}
+   * @readonly
+   */
   this.minimumValues = undefined;
 
-  /** @inheritdoc */
+  /**
+   * Gets the metadata maximum values.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {number[][]|undefined}
+   * @readonly
+   */
   this.maximumValues = undefined;
 
-  /** @inheritdoc */
+  /**
+   * The maximum number of tiles that exist for this provider.
+   * This value is used as a hint to the voxel renderer to allocate an appropriate amount of GPU memory.
+   * If this value is not known it can be undefined.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {number|undefined}
+   * @readonly
+   */
   this.maximumTileCount = undefined;
 
   /**
@@ -104,7 +195,7 @@ function Cesium3DTilesVoxelProvider(options) {
 }
 
 /**
- * Creates a {@link VoxelProvider} that fetches voxel data from a 3D Tiles tileset.
+ * Creates a {@link Cesium3DTilesVoxelProvider} that fetches voxel data from a 3D Tiles tileset.
  *
  * @param {Resource|string} url The URL to a tileset JSON file
  * @returns {Promise<Cesium3DTilesVoxelProvider>} The created provider
@@ -390,7 +481,20 @@ async function getSubtree(provider, subtreeCoord) {
   return subtree;
 }
 
-/** @inheritdoc */
+/**
+ * Requests the data for a given tile. The data is a flattened 3D array ordered by X, then Y, then Z.
+ *
+ * @private
+ *
+ * @param {object} [options] Object with the following properties:
+ * @param {number} [options.tileLevel=0] The tile's level.
+ * @param {number} [options.tileX=0] The tile's X coordinate.
+ * @param {number} [options.tileY=0] The tile's Y coordinate.
+ * @param {number} [options.tileZ=0] The tile's Z coordinate.
+ * @param {FrameState} options.frameState The frame state
+ * @privateparam {number} [options.keyframe=0] The requested keyframe.
+ * @returns {Promise<Array[]>|undefined} A promise to an array of typed arrays containing the requested voxel data or undefined if there was a problem loading the data.
+ */
 Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const {
@@ -448,14 +552,13 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
     : subtree.tileIsAvailableAtCoordinates(tileCoordinates);
 
   if (!available) {
-    //console.log(`requestData: not available. isSubtreeRoot = ${isSubtreeRoot}, tileLevel = ${tileLevel}`);
     return Promise.reject("Tile is not available");
   }
 
   const gltfLoader = getGltfLoader(implicitTileset, tileCoordinates);
   that._gltfLoaders.push(gltfLoader);
   // TODO: try / catch
-  await gltfLoader.load(true);
+  await gltfLoader.load();
   gltfLoader.process(frameState);
   await gltfLoader._loadResourcesPromise;
   gltfLoader.process(frameState);
