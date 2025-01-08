@@ -891,62 +891,6 @@ export async function createIndexJs(workspace) {
 }
 
 /**
- * Creates the type declaration entry point for a package.
- *
- * @param {string} workspace The workspace for which to create the entry point
- * @param {string="index"} entryName The base file name for the entry point
- * @returns {string} The file contents
- */
-export async function createDeclarationIndex(workspace, entryName="index") {
-  const rootDir = path.resolve(path.join(__dirname, "..", "packages", workspace));
-  const tsConfig = require(path.join(rootDir, "tsconfig.json"));
-  const typesDir = path.join(rootDir, tsConfig.compilerOptions.outDir);
-
-  let contents = "";
-
-  const files = await globby(tsConfig.include.map(glob => path.join(rootDir, glob)));
-  const excludes = tsConfig.exclude ? await globby(tsConfig.exclude.map(glob => path.join(rootDir, glob))) : [];
-  files.forEach(function (file) {
-    const { name, dir } = path.parse(file);
-    const relativePath = path.relative(rootDir, dir);
-    let modulePrefix = relativePath;
-
-    // Prioritize neighbor files
-    let declaration = path.join(dir, `${name}.d.ts`);
-    if (!existsSync(declaration)) {
-      // Fallback to generated types
-      modulePrefix = path.join(path.relative(rootDir, typesDir), relativePath);
-      declaration = path.join(rootDir, modulePrefix, `${name}.d.ts`);
-    }
-
-    // Don't export shader file types
-    const isShader = relativePath.indexOf("Source/Shaders/") === 0;
-    if (!existsSync(declaration) || isShader) {
-
-      if (!isShader && !excludes.includes(file)) {
-        console.warn(`No declaration found for ${file}. Do you need to run build-ts?`);
-      }
-
-      return;
-    }
-
-    const moduleId = path.posix.format({
-      dir: modulePrefix,
-      base: name
-    });
-
-    const assignmentName = name.replace(/(\.|-)/g, "_");
-    contents += `export type { default as ${assignmentName} } from './${moduleId}.d.ts';${EOL}`;
-  });
-
-  await writeFile(`packages/${workspace}/${entryName}.d.ts`, contents, {
-    encoding: "utf-8",
-  });
-
-  return contents;
-}
-
-/**
  * Creates a single entry point file by importing all individual spec files.
  * @param {string[]} files The individual spec files.
  * @param {string} workspace The workspace.
@@ -1070,9 +1014,6 @@ export const buildEngine = async (options) => {
   // Create index.js
   await createIndexJs("engine");
 
-  // Create engine.d.ts
-  await createDeclarationIndex("engine", "engine");
-
   // Build workers.
   await bundleWorkers({
     ...options,
@@ -1112,9 +1053,6 @@ export const buildWidgets = async (options) => {
 
   // Create index.js
   await createIndexJs("widgets");
-
-  // Create widgets.d.ts
-  await createDeclarationIndex("widgets", "widgets");
 
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["widgets"]);
