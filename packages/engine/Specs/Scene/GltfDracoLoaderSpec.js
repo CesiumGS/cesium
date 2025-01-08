@@ -122,8 +122,8 @@ describe(
       ],
     };
 
-    const dracoExtension =
-      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const primitive = gltfDraco.meshes[0].primitives[0];
+    const dracoExtension = primitive.extensions.KHR_draco_mesh_compression;
 
     let scene;
 
@@ -144,6 +144,7 @@ describe(
         return new GltfDracoLoader({
           resourceCache: undefined,
           gltf: gltfDraco,
+          primitive: primitive,
           draco: dracoExtension,
           gltfResource: gltfResource,
           baseResource: gltfResource,
@@ -156,6 +157,20 @@ describe(
         return new GltfDracoLoader({
           resourceCache: ResourceCache,
           gltf: undefined,
+          primitive: primitive,
+          draco: dracoExtension,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if primitive is undefined", function () {
+      expect(function () {
+        return new GltfDracoLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfDraco,
+          primitive: undefined,
           draco: dracoExtension,
           gltfResource: gltfResource,
           baseResource: gltfResource,
@@ -168,6 +183,7 @@ describe(
         return new GltfDracoLoader({
           resourceCache: ResourceCache,
           gltf: gltfDraco,
+          primitive: primitive,
           draco: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
@@ -180,6 +196,7 @@ describe(
         return new GltfDracoLoader({
           resourceCache: ResourceCache,
           gltf: gltfDraco,
+          primitive: primitive,
           draco: dracoExtension,
           gltfResource: undefined,
           baseResource: gltfResource,
@@ -192,6 +209,7 @@ describe(
         return new GltfDracoLoader({
           resourceCache: ResourceCache,
           gltf: gltfDraco,
+          primitive: primitive,
           draco: dracoExtension,
           gltfResource: gltfResource,
           baseResource: undefined,
@@ -208,6 +226,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -232,6 +251,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -266,6 +286,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -300,6 +321,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -334,6 +356,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -362,6 +385,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,

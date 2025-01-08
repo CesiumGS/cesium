@@ -8,6 +8,7 @@
 
 - Fixed error when resetting `Cesium3DTileset.modelMatrix` to its initial value. [#12409](https://github.com/CesiumGS/cesium/pull/12409)
 - Fixed type of `ImageryLayer.fromProviderAsync`, to correctly show that the param `options` is optional. [#12400](https://github.com/CesiumGS/cesium/pull/12400)
+- Fixed Draco decoding for vertex colors that are normalized `UNSIGNED_BYTE` or `UNSIGNED_SHORT`.
 
 ### 1.125 - 2025-01-02
 

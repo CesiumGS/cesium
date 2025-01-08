@@ -140,8 +140,8 @@ describe(
       ],
     };
 
-    const dracoExtension =
-      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const primitive = gltfDraco.meshes[0].primitives[0];
+    const dracoExtension = primitive.extensions.KHR_draco_mesh_compression;
 
     const gltfUncompressed = {
       buffers: [
@@ -281,6 +281,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           bufferViewId: 0,
+          primitive: primitive,
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: 0,
@@ -308,6 +309,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          primitive: primitive,
           draco: dracoExtension,
           attributeSemantic: undefined,
           accessorId: 0,
@@ -323,9 +325,26 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          primitive: primitive,
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: undefined,
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if draco is defined and primitive is not defined", function () {
+      expect(function () {
+        return new GltfVertexBufferLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfDraco,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          primitive: undefined,
+          draco: dracoExtension,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
           loadBuffer: true,
         });
       }).toThrowDeveloperError();
@@ -380,6 +399,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -553,6 +573,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -600,6 +621,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "NORMAL",
         accessorId: 1,
@@ -686,6 +708,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -747,6 +770,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
