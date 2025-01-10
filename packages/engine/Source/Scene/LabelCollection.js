@@ -68,7 +68,6 @@ function createGlyphCanvas(
   outlineColor,
   outlineWidth,
   style,
-  verticalOrigin,
 ) {
   writeTextToCanvasParameters.font = font;
   writeTextToCanvasParameters.fillColor = fillColor;
@@ -76,15 +75,6 @@ function createGlyphCanvas(
   writeTextToCanvasParameters.strokeWidth = outlineWidth;
   // Setting the padding to something bigger is necessary to get enough space for the outlining.
   writeTextToCanvasParameters.padding = SDFSettings.PADDING;
-
-  if (verticalOrigin === VerticalOrigin.CENTER) {
-    writeTextToCanvasParameters.textBaseline = "middle";
-  } else if (verticalOrigin === VerticalOrigin.TOP) {
-    writeTextToCanvasParameters.textBaseline = "top";
-  } else {
-    // VerticalOrigin.BOTTOM and VerticalOrigin.BASELINE
-    writeTextToCanvasParameters.textBaseline = "bottom";
-  }
 
   writeTextToCanvasParameters.fill =
     style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
@@ -211,7 +201,6 @@ function rebindAllGlyphs(labelCollection, label) {
         Color.WHITE,
         0.0,
         LabelStyle.FILL,
-        verticalOrigin,
       );
 
       glyphTextureInfo = new GlyphTextureInfo(
