@@ -527,6 +527,42 @@ function VoxelPrimitive(options) {
    */
   this.loadProgress = new Event();
 
+  /**
+   * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. The voxel
+   * primitive is completely loaded for this view.
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   * @default new Event()
+   *
+   * @example
+   * tileset.allTilesLoaded.addEventListener(function() {
+   *     console.log('All tiles are loaded');
+   * });
+   */
+  this.allTilesLoaded = new Event();
+
+  /**
+   * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
+   * is fired once when all tiles in the initial view are loaded.
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   * @default new Event()
+   *
+   * @example
+   * tileset.initialTilesLoaded.addEventListener(function() {
+   *     console.log('Initial tiles are loaded');
+   * });
+   *
+   * @see Cesium3DTileset#allTilesLoaded
+   */
+  this.initialTilesLoaded = new Event();
+
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;
   initialize(this, provider);

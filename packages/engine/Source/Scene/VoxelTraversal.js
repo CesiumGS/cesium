@@ -143,6 +143,12 @@ function VoxelTraversal(
    */
   this._binaryTreeKeyframeWeighting = new Array(keyframeCount);
 
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._initialTilesLoaded = false;
+
   const binaryTreeKeyframeWeighting = this._binaryTreeKeyframeWeighting;
   binaryTreeKeyframeWeighting[0] = 0;
   binaryTreeKeyframeWeighting[keyframeCount - 1] = 0;
@@ -316,7 +322,6 @@ VoxelTraversal.prototype.update = function (
   const timestamp1 = getTimestamp();
   generateOctree(this, sampleCount, levelBlendFactor);
   const timestamp2 = getTimestamp();
-
   if (this._debugPrint) {
     const loadAndUnloadTimeMs = timestamp1 - timestamp0;
     const generateOctreeTimeMs = timestamp2 - timestamp1;
@@ -786,6 +791,26 @@ function printDebugInformation(
 
   that._primitive._statistics.numberOfPendingRequests = numberOfPendingRequests;
   that._primitive._statistics.numberOfTilesProcessing = numberOfTilesProcessing;
+
+  const tilesLoaded =
+    numberOfPendingRequests === 0 && numberOfTilesProcessing === 0;
+
+  // Events are raised (added to the afterRender queue) here since promises
+  // may resolve outside of the update loop that then raise events, e.g.,
+  // model's readyEvent
+  if (progressChanged && tilesLoaded) {
+    frameState.afterRender.push(function () {
+      that._primitive.allTilesLoaded.raiseEvent();
+      return true;
+    });
+    if (!that._initialTilesLoaded) {
+      that._initialTilesLoaded = true;
+      frameState.afterRender.push(function () {
+        that._primitive.initialTilesLoaded.raiseEvent();
+        return true;
+      });
+    }
+  }
 
   const loadedKeyframeStatistics = `KEYFRAMES: ${
     loadStatesByKeyframe[KeyframeNode.LoadState.LOADED]
