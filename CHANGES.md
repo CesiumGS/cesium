@@ -1,5 +1,7 @@
 # Change Log
 
+<!-- markdownlint-disable MD001 MD031 -->
+
 ### 1.126 - 2025-02-03
 
 #### @cesium/engine
@@ -310,7 +312,7 @@ This is an npm-only release to fix a dependency issue published in 1.118
 
 ##### Breaking Changes :mega:
 
-- By default, instances of `Cesium3DTileset ` will no longer default to enable collisions for camera collision or for clamping entities. [#11829](https://github.com/CesiumGS/cesium/pull/11829)
+- By default, instances of `Cesium3DTileset` will no longer default to enable collisions for camera collision or for clamping entities. [#11829](https://github.com/CesiumGS/cesium/pull/11829)
   - This behavior can be enabled by setting `Cesium3DTileset.enableCollision` to true.
 
 ##### Additions :tada:
@@ -319,6 +321,7 @@ This is an npm-only release to fix a dependency issue published in 1.118
 - Added `Scene.pickVoxel` to pick individual cells from a `VoxelPrimitive`, and `VoxelCell` to report information about the picked cell. [#11828](https://github.com/CesiumGS/cesium/pull/11828)
 - Added `Scene.defaultLogDepthBuffer` to allow changing the default behavior of the `logDepthBuffer` for newly created `Scene` instances. [#11859](https://github.com/CesiumGS/cesium/pull/11859)
 - Added `SensorVolumePortionToDisplay` to assist `CzmlDataSource` in parsing CZML. [#11859](https://github.com/CesiumGS/cesium/pull/11859)
+- Added `I3SBuildingSceneLayerExplorer` widget for working with I3S Building Scene Layer data. [#11678](https://github.com/CesiumGS/cesium/pull/11678)
 
 ##### Fixes :wrench:
 
@@ -333,12 +336,6 @@ This is an npm-only release to fix a dependency issue published in 1.118
 ##### Deprecated :hourglass_flowing_sand:
 
 - `Cesium3DTileset.disableCollision` has been deprecated and will be removed in 1.116. Use `Cesium3DTileset.enableCollision` instead.
-
-#### @cesium/engine
-
-##### Additions :tada:
-
-- Added `I3SBuildingSceneLayerExplorer` widget for working with I3S Building Scene Layer data. [#11678](https://github.com/CesiumGS/cesium/pull/11678)
 
 ### 1.114 - 2024-02-01
 
@@ -2062,9 +2059,9 @@ _This is an npm-only release to fix a publishing issue_.
 - Added support for the `KHR_texture_transform` glTF extension. [#7549](https://github.com/CesiumGS/cesium/pull/7549)
 - Added functions to remove samples from `SampledProperty` and `SampledPositionProperty`. [#7723](https://github.com/CesiumGS/cesium/pull/7723)
 - Added support for color-to-alpha with a threshold on imagery layers. [#7727](https://github.com/CesiumGS/cesium/pull/7727)
-- Add CZML processing for `heightReference` and `extrudedHeightReference` for geoemtry types that support it.
+- Add CZML processing for `heightReference` and `extrudedHeightReference` for geometry types that support it.
 - `CesiumMath.toSNorm` documentation changed to reflect the function's implementation. [#7774](https://github.com/CesiumGS/cesium/pull/7774)
-- Added `CesiumMath.normalize` to convert a scalar value in an arbitrary range to a scalar in the range [0.0, 1.0]. [#7774](https://github.com/CesiumGS/cesium/pull/7774)
+- Added `CesiumMath.normalize` to convert a scalar value in an arbitrary range to a scalar in the range `[0.0, 1.0]`. [#7774](https://github.com/CesiumGS/cesium/pull/7774)
 
 ##### Fixes :wrench:
 
@@ -3069,10 +3066,9 @@ _This is an npm-only release to fix a publishing issue_.
   - Added the ability to blend a `Model` with a color/translucency. Added `color`, `colorBlendMode`, and `colorBlendAmount` properties to `Model`, `ModelGraphics`, and CZML. Also added `ColorBlendMode` enum. [#4547](https://github.com/CesiumGS/cesium/pull/4547)
   - Added the ability to render a `Model` with a silhouette. Added `silhouetteColor` and `silhouetteSize` properties to `Model`, `ModelGraphics`, and CZML. [#4314](https://github.com/CesiumGS/cesium/pull/4314)
 - Improved Labels
-  - Added new `Label` properties `showBackground`, `backgroundColor`, and `backgroundPadding` to the primitive, Entity, and CZML layers.
-  - Added support for newlines (`\n`) in Cesium `Label`s and CZML. [#2402]
-  - Added new enum `VerticalOrigin.BASELINE`. Previously, `VerticalOrigin.BOTTOM` would sometimes align to the baseline depending on the contents of a label.
-    (https://github.com/CesiumGS/cesium/issues/2402)
+  - Added new `Label` properties `showBackground`, `backgroundColor`, and `backgroundPadding` to the primitive, Entity, and CZML layers. [#4715](https://github.com/CesiumGS/cesium/pull/4715)
+  - Added support for newlines (`\n`) in Cesium `Label`s and CZML. [#2402](https://github.com/CesiumGS/cesium/issues/2402)
+  - Added new enum `VerticalOrigin.BASELINE`. Previously, `VerticalOrigin.BOTTOM` would sometimes align to the baseline depending on the contents of a label. [#4715](https://github.com/CesiumGS/cesium/pull/4715)
 - Fixed translucency in Firefox 50. [#4762](https://github.com/CesiumGS/cesium/pull/4762)
 - Fixed texture rotation for `RectangleGeometry`. [#2737](https://github.com/CesiumGS/cesium/issues/2737)
 - Fixed issue where billboards on terrain had an incorrect offset. [#4598](https://github.com/CesiumGS/cesium/issues/4598)
@@ -3083,7 +3079,7 @@ _This is an npm-only release to fix a publishing issue_.
 - Fixed glTF models with skinning that used `bindShapeMatrix`. [#4722](https://github.com/CesiumGS/cesium/issues/4722)
 - Fixed a bug that could cause a "readyImagery is not actually ready" exception with some configurations of imagery layers.
 - Fixed `Rectangle.union` to correctly account for rectangles that cross the IDL. [#4732](https://github.com/CesiumGS/cesium/pull/4732)
-- Fixed tooltips for gallery thumbnails in Sandcastle [#4702].(https://github.com/CesiumGS/cesium/pull/4702)
+- Fixed tooltips for gallery thumbnails in Sandcastle. [#4702](https://github.com/CesiumGS/cesium/pull/4702)
 - DataSourceClock.getValue now preserves the provided `result` properties when its properties are `undefined`. [#4029](https://github.com/CesiumGS/cesium/issues/4029)
 - Added `divideComponents` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`. [#4750](https://github.com/CesiumGS/cesium/pull/4750)
 - Added `WebGLConstants` enum. Previously, this was part of the private Renderer API. [#4731](https://github.com/CesiumGS/cesium/pull/4731)
@@ -3160,7 +3156,7 @@ _This is an npm-only release to fix a publishing issue_.
 - Fixed billboard rotation when sized in meters. [#3979](https://github.com/CesiumGS/cesium/issues/3979)
 - Added `backgroundColor` and `borderWidth` properties to `writeTextToCanvas`.
 - Fixed timeline touch events. [#4305](https://github.com/CesiumGS/cesium/pull/4305)
-- Fixed a bug that was incorrectly clamping Latitudes in KML <GroundOverlay>(s) to the range -PI..PI. Now correctly clamps to -PI/2..PI/2.
+- Fixed a bug that was incorrectly clamping Latitudes in KML `<GroundOverlay>`(s) to the range -PI..PI. Now correctly clamps to -PI/2..PI/2.
 - Added `CesiumMath.clampToLatitudeRange`. A convenience function to clamp a passed radian angle to valid Latitudes.
 - Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
 
@@ -3225,7 +3221,7 @@ _This is an npm-only release to fix a publishing issue_.
   - `Ellipsoid`: `subdivisions`, `stackPartitions`, `slicePartitions`
 - Added `rotatable2D` property to to `Scene`, `CesiumWidget` and `Viewer` to enable map rotation in 2D mode. [#3897](https://github.com/CesiumGS/cesium/issues/3897)
 - `Camera.setView` and `Camera.flyTo` now use the `orientation.heading` parameter in 2D if the map is rotatable.
-- Added `Camera.changed` event that will fire whenever the camera has changed more than `Camera.percentageChanged`. `percentageChanged` is in the range [0, 1].
+- Added `Camera.changed` event that will fire whenever the camera has changed more than `Camera.percentageChanged`. `percentageChanged` is in the range `[0, 1]`.
 - Zooming in toward a target point now keeps the target point at the same screen position. [#4016](https://github.com/CesiumGS/cesium/pull/4016)
 - Improved `GroundPrimitive` performance.
 - Some incorrect KML (specifically KML that reuses IDs) is now parsed correctly.
@@ -3517,6 +3513,9 @@ _This is an npm-only release to fix a publishing issue_.
 - Used all the template urls defined in the CesiumTerrain provider.[#3038](https://github.com/CesiumGS/cesium/pull/3038)
 
 ### 1.13 - 2015-09-01
+
+<!-- After this point in the file most code blocks use the indent style which this rule prevents -->
+<!-- markdownlint-disable MD046 -->
 
 - Breaking changes
   - Remove deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`. Use `BoundingSphere.intersectPlane` instead.
@@ -3853,7 +3852,7 @@ _This is an npm-only release to fix a publishing issue_.
 - Added `modelMatrix` and `cull` options to `Primitive` constructor.
 - The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
 - Fixed `ModelNode.matrix` when a node is targeted for animation.
-- `Camera.tilt` now clamps to [-pi / 2, pi / 2] instead of [0, pi / 2].
+- `Camera.tilt` now clamps to `[-pi / 2, pi / 2]` instead of `[0, pi / 2]`.
 - Fixed an issue that could lead to poor performance on lower-end GPUs like the Intel HD 3000.
 - Added `distanceSquared` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 - Added `Matrix4.multiplyByMatrix3`.
@@ -4018,12 +4017,12 @@ _This is an npm-only release to fix a publishing issue_.
   - `ImageryLayer` properties `alpha`, `brightness`, `contrast`, `hue`, `saturation`, and `gamma` may no longer be functions. If you need to change these values each frame, consider moving your logic to an event handler for `Scene.preRender`.
   - Removed `closeTop` and `closeBottom` options from `RectangleGeometry`.
   - CZML changes:
-    - CZML is now versioned using the <major>.<minor> scheme. For example, any CZML 1.0 implementation will be able to load any 1.<minor> document (with graceful degradation). Major version number increases will be reserved for breaking changes. We fully expect these major version increases to happen, as CZML is still in development, but we wanted to give developers a stable target to work with.
+    - CZML is now versioned using the `<major>.<minor>` scheme. For example, any CZML 1.0 implementation will be able to load any `1.<minor>` document (with graceful degradation). Major version number increases will be reserved for breaking changes. We fully expect these major version increases to happen, as CZML is still in development, but we wanted to give developers a stable target to work with.
     - A `"1.0"` version string is required to be on the document packet, which is required to be the first packet in a CZML file. Previously the `document` packet was optional; it is now mandatory. The simplest document packet is:
-      ```
+      ```json
       {
-        "id":"document",
-        "version":"1.0"
+        "id": "document",
+        "version": "1.0"
       }
       ```
     - The `vertexPositions` property has been removed. There is now a `positions` property directly on objects that use it, currently `polyline`, `polygon`, and `wall`.
@@ -5609,7 +5608,7 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
     - Camera get/set functions, e.g., getPosition/setPosition were replaced with properties, e.g., position.
     - Replaced CompositePrimitive, Polygon, and Polyline getShow/setShow functions with a show property.
     - Replaced Polyline, Polygon, BillboardCollection, and LabelCollection getBufferUsage/setBufferUsage functions with a bufferUsage property.
-    - Changed colors used by billboards, labels, polylines, and polygons. Previously, components were named r, g, b, and a. They are now red, green, blue, and alpha. Previously, each component's range was [0, 255]. The range is now [0, 1] floating point. For example,
+    - Changed colors used by billboards, labels, polylines, and polygons. Previously, components were named r, g, b, and a. They are now red, green, blue, and alpha. Previously, each component's range was `[0, 255]`. The range is now `[0, 1]` floating point. For example,
 
             color : { r : 0, g : 255, b : 0, a : 255 }
 
