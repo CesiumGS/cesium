@@ -6,7 +6,7 @@
 
 ##### Breaking Changes :mega:
 
-- Changed behavior of `DataSourceDisplay.ready` to always stay `true` once it is initially set to `true`.
+- Changed behavior of `DataSourceDisplay.ready` to always stay `true` once it is initially set to `true`. [#12429](https://github.com/CesiumGS/cesium/pull/12429)
 
 ##### Fixes :wrench:
 
