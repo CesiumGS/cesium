@@ -1,0 +1,19 @@
+{
+  "name": "@cesium/wasm-splats",
+  "type": "module",
+  "collaborators": [
+    "Jason Sobotka <jason.sobotka@cesium.com>",
+    "Adam Morris <adam.morris@cesium.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "wasm_splats_bg.wasm",
+    "wasm_splats.js",
+    "wasm_splats.d.ts"
+  ],
+  "main": "wasm_splats.js",
+  "types": "wasm_splats.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
