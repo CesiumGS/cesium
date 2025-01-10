@@ -507,7 +507,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeof.object("options.frameState", frameState);
+  Check.typeOf.object("options.frameState", frameState);
   //>>includeEnd('debug');
 
   // 3D Tiles currently doesn't support time-dynamic data.
@@ -552,7 +552,9 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
     : subtree.tileIsAvailableAtCoordinates(tileCoordinates);
 
   if (!available) {
-    return Promise.reject("Tile is not available");
+    return Promise.reject(
+      `Tile is not available at level ${tileLevel}, x ${tileX}, y ${tileY}, z ${tileZ}`,
+    );
   }
 
   const gltfLoader = getGltfLoader(implicitTileset, tileCoordinates);

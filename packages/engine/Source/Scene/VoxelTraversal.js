@@ -499,96 +499,16 @@ function mapInfiniteRangeToZeroOne(x) {
  */
 function loadAndUnload(that, frameState) {
   const frameNumber = that._frameNumber;
-  const primitive = that._primitive;
-  const shape = primitive._shape;
-  const targetScreenSpaceError = primitive.screenSpaceError;
   const priorityQueue = that._priorityQueue;
-  const keyframeCount = that._keyframeCount;
-
-  const previousKeyframe = CesiumMath.clamp(
-    Math.floor(that._keyframeLocation),
-    0,
-    keyframeCount - 2,
-  );
-  const nextKeyframe = previousKeyframe + 1;
-
-  const { camera, context, pixelRatio } = frameState;
-  const { positionWC, frustum } = camera;
-  const screenHeight = context.drawingBufferHeight / pixelRatio;
-  const screenSpaceErrorMultiplier = screenHeight / frustum.sseDenominator;
-
-  /**
-   * @ignore
-   * @param {SpatialNode} spatialNode
-   * @param {number} visibilityPlaneMask
-   */
-  function addToQueueRecursive(spatialNode, visibilityPlaneMask) {
-    spatialNode.computeScreenSpaceError(positionWC, screenSpaceErrorMultiplier);
-
-    visibilityPlaneMask = spatialNode.visibility(
-      frameState,
-      visibilityPlaneMask,
-    );
-    if (visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
-      return;
-    }
-    spatialNode.visitedFrameNumber = frameNumber;
-
-    // Create keyframe nodes at the playhead.
-    // If they already exist, nothing will be created.
-    if (keyframeCount === 1) {
-      spatialNode.createKeyframeNode(0);
-    } else if (spatialNode.keyframeNodes.length !== keyframeCount) {
-      for (let k = 0; k < keyframeCount; k++) {
-        spatialNode.createKeyframeNode(k);
-      }
-    }
-    const { screenSpaceError, keyframeNodes } = spatialNode;
-    const ssePriority = mapInfiniteRangeToZeroOne(screenSpaceError);
-
-    let hasLoadedKeyframe = false;
-    for (let i = 0; i < keyframeNodes.length; i++) {
-      const keyframeNode = keyframeNodes[i];
-
-      keyframeNode.priority =
-        10.0 * ssePriority +
-        keyframePriority(
-          previousKeyframe,
-          keyframeNode.keyframe,
-          nextKeyframe,
-          that,
-        );
-
-      if (
-        keyframeNode.state !== KeyframeNode.LoadState.UNAVAILABLE &&
-        keyframeNode.state !== KeyframeNode.LoadState.FAILED &&
-        keyframeNode.priority !== -Number.MAX_VALUE
-      ) {
-        priorityQueue.insert(keyframeNode);
-      }
-      if (keyframeNode.state === KeyframeNode.LoadState.LOADED) {
-        hasLoadedKeyframe = true;
-      }
-    }
-
-    if (screenSpaceError < targetScreenSpaceError || !hasLoadedKeyframe) {
-      // Free up memory
-      spatialNode.children = undefined;
-      return;
-    }
-
-    if (!defined(spatialNode.children)) {
-      spatialNode.constructChildNodes(shape);
-    }
-    for (let childIndex = 0; childIndex < 8; childIndex++) {
-      const child = spatialNode.children[childIndex];
-      addToQueueRecursive(child, visibilityPlaneMask);
-    }
-  }
 
   // Add all the nodes to the queue, to sort them by priority.
   priorityQueue.reset();
-  addToQueueRecursive(that.rootNode, CullingVolume.MASK_INDETERMINATE);
+  addToQueueRecursive(
+    that.rootNode,
+    CullingVolume.MASK_INDETERMINATE,
+    that,
+    frameState,
+  );
 
   // Move the nodes from the queue to array of high priority nodes.
   const highPriorityKeyframeNodes = that._highPriorityKeyframeNodes;
@@ -666,6 +586,97 @@ function loadAndUnload(that, frameState) {
 }
 
 /**
+ * @param {SpatialNode} spatialNode
+ * @param {number} visibilityPlaneMask
+ * @param {VoxelTraversal} that
+ * @param {FrameState} frameState
+ *
+ * @private
+ */
+function addToQueueRecursive(
+  spatialNode,
+  visibilityPlaneMask,
+  that,
+  frameState,
+) {
+  const { camera, context, pixelRatio, frameNumber } = frameState;
+  const { positionWC, frustum } = camera;
+  const screenHeight = context.drawingBufferHeight / pixelRatio;
+  const screenSpaceErrorMultiplier = screenHeight / frustum.sseDenominator;
+
+  spatialNode.computeScreenSpaceError(positionWC, screenSpaceErrorMultiplier);
+
+  visibilityPlaneMask = spatialNode.visibility(frameState, visibilityPlaneMask);
+  if (visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
+    return;
+  }
+  spatialNode.visitedFrameNumber = frameNumber;
+
+  const primitive = that._primitive;
+  const shape = primitive._shape;
+  const targetScreenSpaceError = primitive.screenSpaceError;
+  const priorityQueue = that._priorityQueue;
+  const keyframeCount = that._keyframeCount;
+  const previousKeyframe = CesiumMath.clamp(
+    Math.floor(that._keyframeLocation),
+    0,
+    keyframeCount - 2,
+  );
+  const nextKeyframe = previousKeyframe + 1;
+
+  // Create keyframe nodes at the playhead.
+  // If they already exist, nothing will be created.
+  if (keyframeCount === 1) {
+    spatialNode.createKeyframeNode(0);
+  } else if (spatialNode.keyframeNodes.length !== keyframeCount) {
+    for (let k = 0; k < keyframeCount; k++) {
+      spatialNode.createKeyframeNode(k);
+    }
+  }
+  const { screenSpaceError, keyframeNodes } = spatialNode;
+  const ssePriority = mapInfiniteRangeToZeroOne(screenSpaceError);
+
+  let hasLoadedKeyframe = false;
+  for (let i = 0; i < keyframeNodes.length; i++) {
+    const keyframeNode = keyframeNodes[i];
+
+    keyframeNode.priority =
+      10.0 * ssePriority +
+      keyframePriority(
+        previousKeyframe,
+        keyframeNode.keyframe,
+        nextKeyframe,
+        that,
+      );
+
+    if (
+      keyframeNode.state !== KeyframeNode.LoadState.UNAVAILABLE &&
+      keyframeNode.state !== KeyframeNode.LoadState.FAILED &&
+      keyframeNode.priority !== -Number.MAX_VALUE
+    ) {
+      priorityQueue.insert(keyframeNode);
+    }
+    if (keyframeNode.state === KeyframeNode.LoadState.LOADED) {
+      hasLoadedKeyframe = true;
+    }
+  }
+
+  if (screenSpaceError < targetScreenSpaceError || !hasLoadedKeyframe) {
+    // Free up memory
+    spatialNode.children = undefined;
+    return;
+  }
+
+  if (!defined(spatialNode.children)) {
+    spatialNode.constructChildNodes(shape);
+  }
+  for (let childIndex = 0; childIndex < 8; childIndex++) {
+    const child = spatialNode.children[childIndex];
+    addToQueueRecursive(child, visibilityPlaneMask, that, frameState);
+  }
+}
+
+/**
  * Compute a priority for a keyframe node.
  *
  * @private
@@ -734,7 +745,6 @@ function printDebugInformation(
   }
 
   /**
-   * @ignore
    * @param {SpatialNode} node
    */
   function traverseRecursive(node) {
@@ -828,7 +838,6 @@ const GpuOctreeFlag = {
  * @function
  *
  * @param {VoxelTraversal} that
- * @param {FrameState} frameState
  * @param {number} sampleCount
  * @param {number} levelBlendFactor
  * @private
@@ -845,7 +854,6 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
   const leafNodeOctreeData = [];
 
   /**
-   * @ignore
    * @param {SpatialNode} node
    * @param {number} childOctreeIndex
    * @param {number} childEntryIndex
