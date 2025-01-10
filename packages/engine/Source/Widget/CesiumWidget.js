@@ -1146,7 +1146,7 @@ CesiumWidget.prototype._onTick = function (clock) {
   }
 
   const entityView = this._entityView;
-  if (defined(entityView)) {
+  if (defined(entityView) && defined(entityView.boundingSphere)) {
     const trackedEntity = this._trackedEntity;
     const trackedState = this._dataSourceDisplay.getBoundingSphere(
       trackedEntity,
