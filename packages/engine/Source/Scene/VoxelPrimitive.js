@@ -25,6 +25,7 @@ import CustomShader from "./Model/CustomShader.js";
 import Cartographic from "../Core/Cartographic.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 
 /**
  * A primitive that renders voxel data from a {@link VoxelProvider}.
@@ -69,6 +70,12 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._traversal = undefined;
+
+  /**
+   * @type {Cesium3DTilesetStatistics}
+   * @private
+   */
+  this._statistics = new Cesium3DTilesetStatistics();
 
   /**
    * This member is not created until the provider is ready.
@@ -492,6 +499,33 @@ function VoxelPrimitive(options) {
    *
    */
   this.tileUnload = new Event();
+
+  /**
+   * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
+   * is requested, when a requested tile is finished downloading, and when a downloaded tile has been
+   * processed and is ready to render.
+   * <p>
+   * The number of pending tile requests, <code>numberOfPendingRequests</code>, and number of tiles
+   * processing, <code>numberOfTilesProcessing</code> are passed to the event listener.
+   * </p>
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   * @default new Event()
+   *
+   * @example
+   * tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberOfTilesProcessing) {
+   *     if ((numberOfPendingRequests === 0) && (numberOfTilesProcessing === 0)) {
+   *         console.log('Stopped loading');
+   *         return;
+   *     }
+   *
+   *     console.log(`Loading: requests: ${numberOfPendingRequests}, processing: ${numberOfTilesProcessing}`);
+   * });
+   */
+  this.loadProgress = new Event();
 
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;

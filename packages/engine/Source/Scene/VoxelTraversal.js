@@ -323,6 +323,7 @@ VoxelTraversal.prototype.update = function (
     const totalTimeMs = timestamp2 - timestamp0;
     printDebugInformation(
       this,
+      frameState,
       loadAndUnloadTimeMs,
       generateOctreeTimeMs,
       totalTimeMs,
@@ -707,6 +708,7 @@ function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
  */
 function printDebugInformation(
   that,
+  frameState,
   loadAndUnloadTimeMs,
   generateOctreeTimeMs,
   totalTimeMs,
@@ -759,6 +761,31 @@ function printDebugInformation(
     }
   }
   traverseRecursive(rootNode);
+
+  const numberOfPendingRequests =
+    loadStateByCount[KeyframeNode.LoadState.RECEIVING];
+  const numberOfTilesProcessing =
+    loadStateByCount[KeyframeNode.LoadState.RECEIVED];
+
+  const progressChanged =
+    numberOfPendingRequests !==
+      that._primitive._statistics.numberOfPendingRequests ||
+    numberOfTilesProcessing !==
+      that._primitive._statistics.numberOfTilesProcessing;
+
+  if (progressChanged) {
+    frameState.afterRender.push(function () {
+      that._primitive.loadProgress.raiseEvent(
+        numberOfPendingRequests,
+        numberOfTilesProcessing,
+      );
+
+      return true;
+    });
+  }
+
+  that._primitive._statistics.numberOfPendingRequests = numberOfPendingRequests;
+  that._primitive._statistics.numberOfTilesProcessing = numberOfTilesProcessing;
 
   const loadedKeyframeStatistics = `KEYFRAMES: ${
     loadStatesByKeyframe[KeyframeNode.LoadState.LOADED]
