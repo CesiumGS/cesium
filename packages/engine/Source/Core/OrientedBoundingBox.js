@@ -1236,8 +1236,8 @@ OrientedBoundingBox.prototype.isOccluded = function (occluder) {
  * Compares the provided OrientedBoundingBox componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
- * @param {OrientedBoundingBox} left The first OrientedBoundingBox.
- * @param {OrientedBoundingBox} right The second OrientedBoundingBox.
+ * @param {OrientedBoundingBox} [left] The first OrientedBoundingBox.
+ * @param {OrientedBoundingBox} [right] The second OrientedBoundingBox.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 OrientedBoundingBox.equals = function (left, right) {
