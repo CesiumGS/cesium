@@ -374,8 +374,8 @@ export async function prepare() {
   );
 
   copyFileSync(
-    "node_modules/cesiumjs-gsplat-utils/cesiumjs_gsplat_utils_bg.wasm",
-    "packages/engine/Source/ThirdParty/cesiumjs_gsplat_utils_bg.wasm",
+    "node_modules/@cesium/wasm-splats/wasm_splats_bg.wasm",
+    "packages/engine/Source/ThirdParty/wasm_splats_bg.wasm",
   );
 
   // Copy jasmine runner files into Specs

@@ -1,7 +1,7 @@
 import __wbg_init, {
   initSync,
   generate_splat_texture_from_attrs,
-} from "cesiumjs-gsplat-utils";
+} from "@cesium/wasm-splats";
 import buildModuleUrl from "../../Core/buildModuleUrl.js";
 
 //TODO: move to TaskProcessor
@@ -16,7 +16,7 @@ GaussianSplatTextureGenerator.initWasmModule = function () {
   (async () => {
     if (!this.initPromise) {
       this.initPromise = await __wbg_init(
-        buildModuleUrl("ThirdParty/cesiumjs_gsplat_utils_bg.wasm"),
+        buildModuleUrl("ThirdParty/wasm_splats_bg.wasm"),
       )
         .then((wasm) => {
           this.wasmInitialized = true;

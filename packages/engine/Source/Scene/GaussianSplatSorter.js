@@ -21,7 +21,7 @@ GaussianSplatSorter._getSorterTaskProcessor = function () {
     );
     processor
       .initWebAssemblyModule({
-        wasmBinaryFile: "ThirdParty/cesiumjs_gsplat_utils_bg.wasm",
+        wasmBinaryFile: "ThirdParty/wasm_splats_bg.wasm",
       })
       .then(function (result) {
         if (result) {

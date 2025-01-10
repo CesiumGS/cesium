@@ -3,7 +3,7 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 //import RuntimeError from "../Core/RuntimeError.js";
 
-import { initSync, generate_texture_from_attrs } from "cesiumjs-gsplat-utils";
+import { initSync, generate_texture_from_attrs } from "@cesium/wasm-splats";
 
 //load built wasm modules for sorting. Ensure we can load webassembly and we support SIMD.
 async function initWorker(parameters, transferableObjects) {
