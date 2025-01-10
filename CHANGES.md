@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- Changed behavior of `DataSourceDisplay.ready` to always stay `true` once it is initially set to `true`.
+
 ##### Fixes :wrench:
 
 - Fixed error when resetting `Cesium3DTileset.modelMatrix` to its initial value. [#12409](https://github.com/CesiumGS/cesium/pull/12409)
