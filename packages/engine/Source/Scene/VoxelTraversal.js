@@ -114,6 +114,12 @@ function VoxelTraversal(
   this._highPriorityKeyframeNodes = new Array(maximumTileCount);
 
   /**
+   * @type {number}
+   * @private
+   */
+  this._highPriorityKeyframeNodeCount = 0;
+
+  /**
    * @type {KeyframeNode[]}
    * @private
    */
@@ -312,7 +318,8 @@ VoxelTraversal.prototype.update = function (
 
   this._frameNumber = frameState.frameNumber;
   const timestamp0 = getTimestamp();
-  loadAndUnload(this, frameState);
+  selectKeyframeNodes(this, frameState);
+  updateKeyframeNodes(this, frameState);
   const timestamp1 = getTimestamp();
   generateOctree(this, sampleCount, levelBlendFactor);
   const timestamp2 = getTimestamp();
@@ -490,14 +497,12 @@ function mapInfiniteRangeToZeroOne(x) {
 }
 
 /**
- * @function
- *
  * @param {VoxelTraversal} that
  * @param {FrameState} frameState
  *
  * @private
  */
-function loadAndUnload(that, frameState) {
+function selectKeyframeNodes(that, frameState) {
   const frameNumber = that._frameNumber;
   const priorityQueue = that._priorityQueue;
 
@@ -521,23 +526,29 @@ function loadAndUnload(that, frameState) {
       highPriorityKeyframeNode;
     highPriorityKeyframeNodeCount++;
   }
+  that._highPriorityKeyframeNodeCount = highPriorityKeyframeNodeCount;
+}
+
+/**
+ * @param {VoxelTraversal} that
+ * @param {FrameState} frameState
+ *
+ * @private
+ */
+function updateKeyframeNodes(that, frameState) {
+  const megatexture = that.megatextures[0];
+  const keyframeNodesInMegatextureCount = megatexture.occupiedCount;
 
   // Sort the list of keyframe nodes in the megatexture by priority, so
   // we can remove the lowest priority nodes if we need space.
   const keyframeNodesInMegatexture = that._keyframeNodesInMegatexture;
-  // TODO: some of the megatexture state should be stored once, not duplicate for each megatexture
-  const megatexture = that.megatextures[0];
-  const keyframeNodesInMegatextureCount = megatexture.occupiedCount;
   keyframeNodesInMegatexture.length = keyframeNodesInMegatextureCount;
-  keyframeNodesInMegatexture.sort(function (a, b) {
-    if (a.highPriorityFrameNumber === b.highPriorityFrameNumber) {
-      return b.priority - a.priority;
-    }
-    return b.highPriorityFrameNumber - a.highPriorityFrameNumber;
-  });
+  keyframeNodesInMegatexture.sort(keyframeNodeSort);
 
   // Add the high priority nodes to the megatexture,
   // removing existing lower-priority nodes if necessary.
+  const highPriorityKeyframeNodes = that._highPriorityKeyframeNodes;
+  const highPriorityKeyframeNodeCount = that._highPriorityKeyframeNodeCount;
   let destroyedCount = 0;
   let addedCount = 0;
 
@@ -546,7 +557,7 @@ function loadAndUnload(that, frameState) {
     highPriorityKeyframeNodeIndex < highPriorityKeyframeNodeCount;
     highPriorityKeyframeNodeIndex++
   ) {
-    highPriorityKeyframeNode =
+    const highPriorityKeyframeNode =
       highPriorityKeyframeNodes[highPriorityKeyframeNodeIndex];
 
     if (
@@ -583,6 +594,13 @@ function loadAndUnload(that, frameState) {
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
   }
+}
+
+function keyframeNodeSort(a, b) {
+  if (a.highPriorityFrameNumber === b.highPriorityFrameNumber) {
+    return b.priority - a.priority;
+  }
+  return b.highPriorityFrameNumber - a.highPriorityFrameNumber;
 }
 
 /**
