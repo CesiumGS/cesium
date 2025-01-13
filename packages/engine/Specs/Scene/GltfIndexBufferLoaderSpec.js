@@ -144,8 +144,8 @@ describe(
       ],
     };
 
-    const dracoExtension =
-      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const primitive = gltfDraco.meshes[0].primitives[0];
+    const dracoExtension = primitive.extensions.KHR_draco_mesh_compression;
 
     const gltfUncompressed = {
       buffers: [
@@ -378,6 +378,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         loadBuffer: true,
       });
@@ -570,6 +571,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         loadBuffer: true,
       });
@@ -604,6 +606,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         loadBuffer: true,
       });
@@ -678,6 +681,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         loadBuffer: true,
       });
@@ -738,6 +742,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         loadBuffer: true,
       });
