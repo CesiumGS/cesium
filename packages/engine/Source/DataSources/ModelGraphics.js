@@ -18,6 +18,10 @@ function createArticulationStagePropertyBag(value) {
   return new PropertyBag(value);
 }
 
+function createEnvironmentMapPropertyBag(value) {
+  return new PropertyBag(value);
+}
+
 /**
  * @typedef {object} ModelGraphics.ConstructorOptions
  *
@@ -40,6 +44,7 @@ function createArticulationStagePropertyBag(value) {
  * @property {Property | ColorBlendMode} [colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
  * @property {Property | number} [colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @property {Property | Cartesian2} [imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
+ * @property {PropertyBag | Object<string, *>} [environmentMapOptions] The properties for managing dynamic environment maps on this entity.
  * @property {Property | Color} [lightColor] A property specifying the light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
  * @property {PropertyBag | Object<string, TranslationRotationScale>} [nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
@@ -101,6 +106,8 @@ function ModelGraphics(options) {
   this._colorBlendAmountSubscription = undefined;
   this._imageBasedLightingFactor = undefined;
   this._imageBasedLightingFactorSubscription = undefined;
+  this._environmentMapOptions = undefined;
+  this._environmentMapOptionsSubscription = undefined;
   this._lightColor = undefined;
   this._lightColorSubscription = undefined;
   this._distanceDisplayCondition = undefined;
@@ -280,6 +287,17 @@ Object.defineProperties(ModelGraphics.prototype, {
   ),
 
   /**
+   * Gets or sets the {@link DynamicEnvironmentMapManager.ConstructorOptions} to apply to this model. This is represented as an {@link PropertyBag}.
+   * @memberof ModelGraphics.prototype
+   * @type {PropertyBag}
+   */
+  environmentMapOptions: createPropertyDescriptor(
+    "environmentMapOptions",
+    undefined,
+    createEnvironmentMapPropertyBag,
+  ),
+
+  /**
    * A property specifying the {@link Cartesian3} light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * @memberOf ModelGraphics.prototype
    * @type {Property|undefined}
@@ -361,6 +379,7 @@ ModelGraphics.prototype.clone = function (result) {
   result.colorBlendMode = this.colorBlendMode;
   result.colorBlendAmount = this.colorBlendAmount;
   result.imageBasedLightingFactor = this.imageBasedLightingFactor;
+  result.environmentMapOptions = this.environmentMapOptions;
   result.lightColor = this.lightColor;
   result.distanceDisplayCondition = this.distanceDisplayCondition;
   result.nodeTransformations = this.nodeTransformations;
@@ -430,7 +449,10 @@ ModelGraphics.prototype.merge = function (source) {
     this.imageBasedLightingFactor,
     source.imageBasedLightingFactor,
   );
-
+  this.environmentMapOptions = defaultValue(
+    this.environmentMapOptions,
+    source.environmentMapOptions,
+  );
   this.lightColor = defaultValue(this.lightColor, source.lightColor);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,

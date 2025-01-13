@@ -1729,28 +1729,57 @@ function createBoxFromTransformedRegion(
 }
 
 /**
+ * Creates a TileBoundingVolume from the given region and transform
+ * information.
+ *
+ * This may either be a TileBoundingRegion or a TileOrientedBoundingBox.
+ *
+ * If the given transform is the initial transform, then this will return
+ * a TileBoundingRegion. This will either be the given result parameter,
+ * or a new TileBoundingRegion, if the given result parameter was not
+ * a TileBoundingRegion.
+ *
+ * If the given transform deviates from the initial transform, then this
+ * will return a TileOrientedBoundingBox that was computed by applying
+ * the given transform to the given region. This will either be the
+ * given result parameter, or a new TileOrientedBoundingBox, if the given
+ * result parameter was not a TileOrientedBoundingBox
+ *
  * @private
- * @param {Array} region An array of six numbers that define a bounding geographic region in EPSG:4979 coordinates with the order [west, south, east, north, minimum height, maximum height]
- * @param {Matrix4} transform
- * @param {Matrix4} initialTransform
- * @param {TileBoundingVolume} [result]
- * @returns {TileBoundingVolume}
+ * @param {Array} region An array of six numbers that define a bounding
+ * geographic region in EPSG:4979 coordinates with the order
+ * [west, south, east, north, minimum height, maximum height]
+ * @param {Matrix4} transform The current computedTransform of the tile,
+ * which includes the parent transform (which, in turn, includes the
+ * modelMatrix of the containing tileset)
+ * @param {Matrix4} initialTransform The initial transform of the tile,
+ * before any changes to the modelMatrix of the containing tileset
+ * @param {TileBoundingVolume} [result] An optional result.
+ * @returns {TileBoundingVolume} The resulting bounding volume
  */
 function createRegion(region, transform, initialTransform, result) {
   if (
     !Matrix4.equalsEpsilon(transform, initialTransform, CesiumMath.EPSILON8)
   ) {
+    if (result instanceof TileOrientedBoundingBox) {
+      return createBoxFromTransformedRegion(
+        region,
+        transform,
+        initialTransform,
+        result,
+      );
+    }
     return createBoxFromTransformedRegion(
       region,
       transform,
       initialTransform,
-      result,
+      undefined,
     );
   }
 
   const rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
 
-  if (defined(result)) {
+  if (result instanceof TileBoundingRegion) {
     result.rectangle = Rectangle.clone(rectangleRegion, result.rectangle);
     result.minimumHeight = region[4];
     result.maximumHeight = region[5];
