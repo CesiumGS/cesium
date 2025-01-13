@@ -108,7 +108,7 @@ DataSourceClock.prototype.clone = function (result) {
 /**
  * Returns true if this DataSourceClock is equivalent to the other
  *
- * @param {DataSourceClock} other The other DataSourceClock to compare to.
+ * @param {DataSourceClock} [other] The other DataSourceClock to compare to.
  * @returns {boolean} <code>true</code> if the DataSourceClocks are equal; otherwise, <code>false</code>.
  */
 DataSourceClock.prototype.equals = function (other) {

@@ -1562,7 +1562,7 @@ Billboard.getScreenSpaceBoundingBox = function (
  * Determines if this billboard equals another billboard.  Billboards are equal if all their properties
  * are equal.  Billboards in different collections can be equal.
  *
- * @param {Billboard} other The billboard to compare for equality.
+ * @param {Billboard} [other] The billboard to compare for equality.
  * @returns {boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
  */
 Billboard.prototype.equals = function (other) {
