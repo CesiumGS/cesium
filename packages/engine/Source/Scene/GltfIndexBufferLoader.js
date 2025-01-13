@@ -27,6 +27,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {object} [options.primitive] The primitive containing the Draco extension.
  * @param {object} [options.draco] The Draco extension object.
  * @param {string} [options.cacheKey] The cache key of the resource.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
@@ -41,6 +42,7 @@ function GltfIndexBufferLoader(options) {
   const accessorId = options.accessorId;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
+  const primitive = options.primitive;
   const draco = options.draco;
   const cacheKey = options.cacheKey;
   const asynchronous = defaultValue(options.asynchronous, true);
@@ -68,6 +70,7 @@ function GltfIndexBufferLoader(options) {
   this._gltf = gltf;
   this._accessorId = accessorId;
   this._indexDatatype = indexDatatype;
+  this._primitive = primitive;
   this._draco = draco;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
@@ -174,6 +177,7 @@ async function loadFromDraco(indexBufferLoader) {
   try {
     const dracoLoader = resourceCache.getDracoLoader({
       gltf: indexBufferLoader._gltf,
+      primitive: indexBufferLoader._primitive,
       draco: indexBufferLoader._draco,
       gltfResource: indexBufferLoader._gltfResource,
       baseResource: indexBufferLoader._baseResource,
@@ -411,6 +415,7 @@ GltfIndexBufferLoader.prototype.unload = function () {
   this._typedArray = undefined;
   this._buffer = undefined;
   this._gltf = undefined;
+  this._primitive = undefined;
 };
 
 export default GltfIndexBufferLoader;

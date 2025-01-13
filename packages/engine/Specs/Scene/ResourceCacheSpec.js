@@ -101,8 +101,8 @@ describe("ResourceCache", function () {
     ],
   };
 
-  const dracoExtension =
-    gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+  const primitive = gltfDraco.meshes[0].primitives[0];
+  const dracoExtension = primitive.extensions.KHR_draco_mesh_compression;
 
   const gltfUncompressed = {
     buffers: [
@@ -589,6 +589,7 @@ describe("ResourceCache", function () {
     });
     const dracoLoader = ResourceCache.getDracoLoader({
       gltf: gltfDraco,
+      primitive: primitive,
       draco: dracoExtension,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -603,6 +604,7 @@ describe("ResourceCache", function () {
     expect(
       ResourceCache.getDracoLoader({
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -616,6 +618,7 @@ describe("ResourceCache", function () {
     expect(() =>
       ResourceCache.getDracoLoader({
         gltf: undefined,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -627,7 +630,20 @@ describe("ResourceCache", function () {
     expect(() =>
       ResourceCache.getDracoLoader({
         gltf: gltfDraco,
+        primitive: primitive,
         draco: undefined,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getDracoLoader throws if primitive is undefined", function () {
+    expect(() =>
+      ResourceCache.getDracoLoader({
+        gltf: gltfDraco,
+        primitive: undefined,
+        draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       }),
@@ -638,6 +654,7 @@ describe("ResourceCache", function () {
     expect(() =>
       ResourceCache.getDracoLoader({
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: undefined,
         baseResource: gltfResource,
@@ -649,6 +666,7 @@ describe("ResourceCache", function () {
     expect(() =>
       ResourceCache.getDracoLoader({
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: undefined,
@@ -710,6 +728,7 @@ describe("ResourceCache", function () {
       gltfResource: gltfResource,
       baseResource: gltfResource,
       frameState: mockFrameState,
+      primitive: primitive,
       draco: dracoExtension,
       attributeSemantic: "POSITION",
       accessorId: 0,
@@ -728,6 +747,7 @@ describe("ResourceCache", function () {
         gltfResource: gltfResource,
         baseResource: gltfResource,
         frameState: mockFrameState,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -825,6 +845,7 @@ describe("ResourceCache", function () {
         baseResource: gltfResource,
         frameState: mockFrameState,
         bufferViewId: 0,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -852,6 +873,7 @@ describe("ResourceCache", function () {
         gltfResource: gltfResource,
         baseResource: gltfResource,
         frameState: mockFrameState,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: undefined,
         accessorId: 0,
@@ -867,9 +889,26 @@ describe("ResourceCache", function () {
         gltfResource: gltfResource,
         baseResource: gltfResource,
         frameState: mockFrameState,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: undefined,
+        loadBuffer: true,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferLoader throws if draco is defined and primitive is not defined", function () {
+    expect(() =>
+      ResourceCache.getVertexBufferLoader({
+        gltf: gltfDraco,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState,
+        primitive: undefined,
+        draco: dracoExtension,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
         loadBuffer: true,
       }),
     ).toThrowDeveloperError();
@@ -943,6 +982,7 @@ describe("ResourceCache", function () {
       gltfResource: gltfResource,
       baseResource: gltfResource,
       frameState: mockFrameState,
+      primitive: primitive,
       draco: dracoExtension,
       loadBuffer: true,
     });
@@ -960,6 +1000,7 @@ describe("ResourceCache", function () {
         gltfResource: gltfResource,
         baseResource: gltfResource,
         frameState: mockFrameState,
+        primitive: primitive,
         draco: dracoExtension,
         loadBuffer: true,
       }),
