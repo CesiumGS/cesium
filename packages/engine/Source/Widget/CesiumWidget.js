@@ -1554,7 +1554,7 @@ function updateZoomTarget(widget) {
   }
 }
 
-const trackedEntityBoundingSphereScratch2 = new BoundingSphere();
+const trackedEntityBoundingSphereScratch = new BoundingSphere();
 
 function updateTrackedEntity(widget) {
   if (!widget._needTrackedEntityUpdate) {
@@ -1581,7 +1581,7 @@ function updateTrackedEntity(widget) {
   const state = widget._dataSourceDisplay.getBoundingSphere(
     trackedEntity,
     false,
-    trackedEntityBoundingSphereScratch2,
+    trackedEntityBoundingSphereScratch,
   );
   if (state === BoundingSphereState.PENDING) {
     return;
@@ -1604,7 +1604,7 @@ function updateTrackedEntity(widget) {
 
   const bs =
     state !== BoundingSphereState.FAILED
-      ? trackedEntityBoundingSphereScratch2
+      ? trackedEntityBoundingSphereScratch
       : undefined;
   widget._entityView = new EntityView(trackedEntity, scene, scene.ellipsoid);
   widget._entityView.update(currentTime, bs);
