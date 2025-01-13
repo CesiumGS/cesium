@@ -1,6 +1,6 @@
 # Change Log
 
-<!-- markdownlint-disable MD001 MD031 -->
+<!-- markdownlint-disable MD001 -->
 
 ### 1.126 - 2025-02-03
 
