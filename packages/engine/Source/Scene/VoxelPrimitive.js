@@ -479,6 +479,32 @@ function VoxelPrimitive(options) {
   this.tileLoad = new Event();
 
   /**
+   * The event fired to indicate that a tile's content failed to load.
+   * <p>
+   * If there are no event listeners, error messages will be logged to the console.
+   * </p>
+   * <p>
+   * The error object passed to the listener contains two properties:
+   * <ul>
+   * <li><code>url</code>: the url of the failed tile.</li>
+   * <li><code>message</code>: the error message.</li>
+   * </ul>
+   * <p>
+   * If multiple contents are present, this event is raised once per inner content with errors.
+   * </p>
+   *
+   * @type {Event}
+   * @default new Event()
+   *
+   * @example
+   * tileset.tileFailed.addEventListener(function(error) {
+   *     console.log(`An error occurred loading tile: ${error.url}`);
+   *     console.log(`Error: ${error.message}`);
+   * });
+   */
+  this.tileFailed = new Event();
+
+  /**
    * The event fired to indicate that a tile's content was unloaded.
    * <p>
    * The unloaded {@link Cesium3DTile} is passed to the event listener.

@@ -424,6 +424,18 @@ function requestData(that, keyframeNode) {
   }
 
   const provider = that._primitive._provider;
+  const { keyframe, spatialNode } = keyframeNode;
+  if (spatialNode.level >= provider._implicitTileset.availableLevels) {
+    return;
+  }
+
+  const requestOptions = {
+    tileLevel: spatialNode.level,
+    tileX: spatialNode.x,
+    tileY: spatialNode.y,
+    tileZ: spatialNode.z,
+    keyframe: keyframe,
+  };
 
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
@@ -458,24 +470,34 @@ function requestData(that, keyframeNode) {
     }
   }
 
-  function postRequestFailure() {
+  function postRequestFailure(options) {
+    const { requestOptions, error } = options;
+    const message = defined(error.message) ? error.message : error.toString();
+    const url = `${requestOptions.tileLevel}/${requestOptions.tileX}/${requestOptions.tileY}/${requestOptions.tileZ}`;
     that._simultaneousRequestCount--;
+    if (that._primitive.tileFailed.numberOfListeners > 0) {
+      that._primitive.tileFailed.raiseEvent({
+        url: url,
+        message: message,
+      });
+    } else {
+      console.log(`A 3D tile failed to load: ${url}`);
+      console.log(`Error: ${message}`);
+      if (defined(error.stack)) {
+        console.log(error.stack);
+      }
+    }
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
   }
 
-  const { keyframe, spatialNode } = keyframeNode;
-  const promise = provider.requestData({
-    tileLevel: spatialNode.level,
-    tileX: spatialNode.x,
-    tileY: spatialNode.y,
-    tileZ: spatialNode.z,
-    keyframe: keyframe,
-  });
+  const promise = provider.requestData(requestOptions);
 
   if (defined(promise)) {
     that._simultaneousRequestCount++;
     keyframeNode.state = KeyframeNode.LoadState.RECEIVING;
-    promise.then(postRequestSuccess).catch(postRequestFailure);
+    promise
+      .then(postRequestSuccess)
+      .catch((error) => postRequestFailure({ requestOptions, error }));
   } else {
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
   }
