@@ -6,7 +6,6 @@
     "isolatedModules": true
   },
   "include": [
-    "index.ts",
-    "../../types/Cesium.d.ts"
+    "index.ts"
   ]
 }

@@ -14,6 +14,11 @@ import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileProviderError from "./TileProviderError.js";
 
+/**
+ * @typedef {import("./Request").default} Request
+ * @typedef {import("./TerrainData").default} TerrainData
+ */
+
 function DataRectangle(rectangle, maxLevel) {
   this.rectangle = rectangle;
   this.maxLevel = maxLevel;

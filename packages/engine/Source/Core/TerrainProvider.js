@@ -4,15 +4,22 @@ import IndexDatatype from "./IndexDatatype.js";
 import CesiumMath from "./Math.js";
 
 /**
+ * @typedef {import("./Request").default} Request
+ * @typedef {import("./TerrainData").default} TerrainData
+ */
+
+/**
  * Provides terrain or other geometry for the surface of an ellipsoid.  The surface geometry is
  * organized into a pyramid of tiles according to a {@link TilingScheme}.  This type describes an
  * interface and is not intended to be instantiated directly.
  *
  * @alias TerrainProvider
  * @constructor
+ * @interface
  *
  * @see EllipsoidTerrainProvider
  * @see CesiumTerrainProvider
+ * @see ArcGISTiledElevationTerrainProvider
  * @see VRTheWorldTerrainProvider
  * @see GoogleEarthEnterpriseTerrainProvider
  */
@@ -388,7 +395,9 @@ TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function (
  *          pending and the request will be retried later.
  */
 TerrainProvider.prototype.requestTileGeometry =
-  DeveloperError.throwInstantiationError;
+  /** @type {(x: number, y: number, level: number, request?: Request) => Promise<TerrainData>|undefined} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
@@ -398,7 +407,9 @@ TerrainProvider.prototype.requestTileGeometry =
  * @returns {number} The maximum geometric error.
  */
 TerrainProvider.prototype.getLevelMaximumGeometricError =
-  DeveloperError.throwInstantiationError;
+  /** @type {(level: number) => number} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 /**
  * Determines whether data for a tile is available to be loaded.
@@ -410,7 +421,9 @@ TerrainProvider.prototype.getLevelMaximumGeometricError =
  * @returns {boolean|undefined} Undefined if not supported by the terrain provider, otherwise true or false.
  */
 TerrainProvider.prototype.getTileDataAvailable =
-  DeveloperError.throwInstantiationError;
+  /** @type {(x: number, y: number, level: number) => boolean|undefined} */ (
+    DeveloperError.throwInstantiationError
+  );
 
 /**
  * Makes sure we load availability data for a tile
@@ -422,7 +435,10 @@ TerrainProvider.prototype.getTileDataAvailable =
  * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 TerrainProvider.prototype.loadTileDataAvailability =
-  DeveloperError.throwInstantiationError;
+  /** @type {(x: number, y: number, level: number) => undefined|Promise<void>} */ (
+    DeveloperError.throwInstantiationError
+  );
+
 export default TerrainProvider;
 
 /**

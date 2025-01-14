@@ -7,6 +7,11 @@ import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import TerrainProvider from "./TerrainProvider.js";
 
 /**
+ * @typedef {import("./Request").default} Request
+ * @typedef {import("./TerrainData").default} TerrainData
+ */
+
+/**
  * A very simple {@link TerrainProvider} that produces geometry by tessellating an ellipsoidal
  * surface.
  *

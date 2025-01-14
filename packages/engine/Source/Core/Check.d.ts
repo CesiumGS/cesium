@@ -63,7 +63,7 @@ declare namespace Check {
      * @param {*} test The value to test
      * @exception {DeveloperError} test must be typeof 'number'
      */
-    function number(name: string, test: any): asserts test is string;
+    function number(name: string, test: any): asserts test is number;
     namespace number {
       /**
        * Throws if test is not typeof 'number' and less than limit
