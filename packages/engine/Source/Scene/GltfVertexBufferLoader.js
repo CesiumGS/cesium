@@ -26,6 +26,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+ * @param {object} [options.primitive] The primitive containing the Draco extension.
  * @param {object} [options.draco] The Draco extension object.
  * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {number} [options.accessorId] The accessor id.
@@ -47,6 +48,7 @@ function GltfVertexBufferLoader(options) {
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
   const bufferViewId = options.bufferViewId;
+  const primitive = options.primitive;
   const draco = options.draco;
   const attributeSemantic = options.attributeSemantic;
   const accessorId = options.accessorId;
@@ -67,6 +69,7 @@ function GltfVertexBufferLoader(options) {
   }
 
   const hasBufferViewId = defined(bufferViewId);
+  const hasPrimitive = defined(primitive);
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
@@ -89,7 +92,14 @@ function GltfVertexBufferLoader(options) {
     );
   }
 
+  if (hasDraco && !hasPrimitive) {
+    throw new DeveloperError(
+      "When options.draco is defined options.primitive must also be defined.",
+    );
+  }
+
   if (hasDraco) {
+    Check.typeOf.object("options.primitive", primitive);
     Check.typeOf.object("options.draco", draco);
     Check.typeOf.string("options.attributeSemantic", attributeSemantic);
     Check.typeOf.number("options.accessorId", accessorId);
@@ -101,6 +111,7 @@ function GltfVertexBufferLoader(options) {
   this._baseResource = baseResource;
   this._gltf = gltf;
   this._bufferViewId = bufferViewId;
+  this._primitive = primitive;
   this._draco = draco;
   this._attributeSemantic = attributeSemantic;
   this._accessorId = accessorId;
@@ -265,6 +276,7 @@ async function loadFromDraco(vertexBufferLoader) {
   try {
     const dracoLoader = resourceCache.getDracoLoader({
       gltf: vertexBufferLoader._gltf,
+      primitive: vertexBufferLoader._primitive,
       draco: vertexBufferLoader._draco,
       gltfResource: vertexBufferLoader._gltfResource,
       baseResource: vertexBufferLoader._baseResource,
@@ -467,6 +479,7 @@ GltfVertexBufferLoader.prototype.unload = function () {
   this._typedArray = undefined;
   this._buffer = undefined;
   this._gltf = undefined;
+  this._primitive = undefined;
 };
 
 export default GltfVertexBufferLoader;
