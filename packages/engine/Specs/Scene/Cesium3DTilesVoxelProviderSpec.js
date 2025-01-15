@@ -10,9 +10,17 @@ import {
   VoxelProvider,
   VoxelShapeType,
 } from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/Cesium3DTilesVoxelProvider", function () {
+  let scene;
+
+  beforeEach(async function () {
+    scene = createScene();
+  });
+
   afterEach(function () {
+    scene.destroyForSpecs();
     ResourceCache.clearForSpecs();
   });
 
@@ -43,11 +51,45 @@ describe("Scene/Cesium3DTilesVoxelProvider", function () {
     expect(provider.maximumValues).toEqual([[1]]);
   });
 
-  it("requestData works for root tile", async function () {
+  it("requestData works for root tile of ellipsoid tileset", async function () {
     const url = "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
     const provider = await Cesium3DTilesVoxelProvider.fromUrl(url);
 
-    const data = await provider.requestData();
+    const data = await provider.requestData({
+      frameState: scene.frameState,
+    });
+    expect(data.length).toEqual(1);
+
+    const dimensions = provider.dimensions;
+    const voxelCount = dimensions.x * dimensions.y * dimensions.z;
+    const componentCount = MetadataType.getComponentCount(provider.types[0]);
+    const expectedLength = voxelCount * componentCount;
+    expect(data[0].length).toEqual(expectedLength);
+  });
+
+  it("requestData works for root tile of box tileset", async function () {
+    const url = "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json";
+    const provider = await Cesium3DTilesVoxelProvider.fromUrl(url);
+
+    const data = await provider.requestData({
+      frameState: scene.frameState,
+    });
+    expect(data.length).toEqual(1);
+
+    const dimensions = provider.dimensions;
+    const voxelCount = dimensions.x * dimensions.y * dimensions.z;
+    const componentCount = MetadataType.getComponentCount(provider.types[0]);
+    const expectedLength = voxelCount * componentCount;
+    expect(data[0].length).toEqual(expectedLength);
+  });
+
+  it("requestData works for root tile of cylinder tileset", async function () {
+    const url = "./Data/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json";
+    const provider = await Cesium3DTilesVoxelProvider.fromUrl(url);
+
+    const data = await provider.requestData({
+      frameState: scene.frameState,
+    });
     expect(data.length).toEqual(1);
 
     const dimensions = provider.dimensions;
@@ -62,7 +104,9 @@ describe("Scene/Cesium3DTilesVoxelProvider", function () {
       "./Data/Cesium3DTiles/Voxel/VoxelMultiAttribute3DTiles/tileset.json";
     const provider = await Cesium3DTilesVoxelProvider.fromUrl(url);
 
-    const data = await provider.requestData();
+    const data = await provider.requestData({
+      frameState: scene.frameState,
+    });
     expect(data.length).toBe(3);
     expect(data[0][0]).toBe(0.0);
     expect(data[1][0]).toBe(0.5);

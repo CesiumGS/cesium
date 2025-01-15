@@ -1,0 +1,91 @@
+{
+  "extensionsUsed": ["EXT_structural_metadata", "EXT_primitive_voxels"],
+  "extensionsRequired": ["EXT_primitive_voxels"],
+  "accessors": [{
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 8,
+      "type": "SCALAR"
+    }, {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 8,
+      "type": "SCALAR"
+    }, {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 8,
+      "type": "SCALAR"
+    }],
+  "asset": {
+    "version": "2.0"
+  },
+  "buffers": [{
+      "uri": "data:application/octet-stream;base64,AACAPwAAgD8AAIA/AACAPwAAgD8AAIA/AACAPwAAgD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "byteLength": 96
+    }],
+  "bufferViews": [{
+      "buffer": 0,
+      "byteLength": 32,
+      "target": 34962
+    }, {
+      "buffer": 0,
+      "byteOffset": 32,
+      "byteLength": 32,
+      "target": 34962
+    }, {
+      "buffer": 0,
+      "byteOffset": 64,
+      "byteLength": 32,
+      "target": 34962
+    }],
+  "meshes": [{
+      "primitives": [{
+          "attributes": {
+            "_c": 0,
+            "_b": 1,
+            "_a": 2
+          },
+          "mode": 2147483648,
+          "extensions": {
+            "EXT_structural_metadata": {
+              "propertyAttributes": [0]
+            },
+            "EXT_primitive_voxels": {
+              "dimensions": [2, 2, 2],
+              "bounds": {
+                "min": [-1.0, -1.0, -1.0],
+                "max": [1.0, 1.0, 1.0]
+              }
+            }
+          }
+        }]
+    }],
+  "nodes": [{
+      "matrix": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+      "mesh": 0
+    }],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schemaUri": "../../../../schema.json",
+      "propertyAttributes": [{
+          "class": "voxel",
+          "properties": {
+            "a": {
+              "attribute": "_a"
+            },
+            "b": {
+              "attribute": "_b"
+            },
+            "c": {
+              "attribute": "_c"
+            }
+          }
+        }]
+    }
+  }
+}
