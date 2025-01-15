@@ -479,6 +479,22 @@ function VoxelPrimitive(options) {
   this.tileLoad = new Event();
 
   /**
+   * This event fires once for each visible tile in a frame.
+   * <p>
+   * This event is fired during the traversal while the frame is being rendered.
+   *
+   * @type {Event}
+   * @default new Event()
+   *
+   * @example
+   * tileset.tileVisible.addEventListener(function() {
+   *     console.log('A tile is visible.');
+   * });
+   *
+   */
+  this.tileVisible = new Event();
+
+  /**
    * The event fired to indicate that a tile's content failed to load.
    * <p>
    * If there are no event listeners, error messages will be logged to the console.

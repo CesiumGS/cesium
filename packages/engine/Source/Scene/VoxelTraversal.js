@@ -968,6 +968,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
     } else {
       // Store the leaf node information instead
       // Recursion stops here because there are no renderable children
+      that._primitive.tileVisible.raiseEvent();
       if (useLeafNodes) {
         const baseIdx = leafNodeCount * 5;
         const keyframeNode = node.renderableKeyframeNodePrevious;
