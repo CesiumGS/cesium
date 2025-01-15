@@ -2321,6 +2321,23 @@ function backToFront(a, b, position) {
   );
 }
 
+function backToFrontSplats(a, b, scene) {
+  const boxA = a.orientedBoundingBox;
+  const boxB = b.orientedBoundingBox;
+  const camera = scene.camera;
+  const cameraSpaceA = Matrix4.multiplyByPoint(
+    camera.viewMatrix,
+    boxA.center,
+    new Cartesian3(), //use scratch
+  );
+  const cameraSpaceB = Matrix4.multiplyByPoint(
+    camera.viewMatrix,
+    boxB.center,
+    new Cartesian3(), //use scratch
+  );
+  return cameraSpaceA.z * cameraSpaceA.z - (cameraSpaceB.z - cameraSpaceB.z);
+}
+
 function frontToBack(a, b, position) {
   // When distances are equal equal favor sorting b before a. This gives render priority to commands later in the list.
   return (
@@ -2394,7 +2411,7 @@ function performGaussianSplatPass(scene, passState, frustumCommands) {
   commands.length = frustumCommands.indices[Pass.GAUSSIAN_SPLATS];
 
   //still necessary?
-  mergeSort(commands, backToFront, scene.camera.positionWC);
+  mergeSort(commands, backToFrontSplats, scene);
 
   for (let i = 0; i < commands.length; ++i) {
     executeCommand(commands[i], scene, passState);

@@ -388,6 +388,8 @@ function buildDrawCommandForGaussianSplatPrimitive(
     debugShowBoundingVolume: model.debugShowBoundingVolume,
     castShadows: castShadows,
     receiveShadows: receiveShadows,
+    orientedBoundingBox:
+      primitiveRenderResources.model.content.tile.boundingVolume.boundingVolume,
   });
   return command;
 }
