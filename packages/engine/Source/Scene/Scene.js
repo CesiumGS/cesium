@@ -2321,21 +2321,37 @@ function backToFront(a, b, position) {
   );
 }
 
+const scratchCartA = new Cartesian3();
+const scratchCartB = new Cartesian3();
+
 function backToFrontSplats(a, b, scene) {
   const boxA = a.orientedBoundingBox;
   const boxB = b.orientedBoundingBox;
   const camera = scene.camera;
+
   const cameraSpaceA = Matrix4.multiplyByPoint(
     camera.viewMatrix,
     boxA.center,
-    new Cartesian3(), //use scratch
+    scratchCartA,
   );
   const cameraSpaceB = Matrix4.multiplyByPoint(
     camera.viewMatrix,
     boxB.center,
-    new Cartesian3(), //use scratch
+    scratchCartB,
   );
-  return cameraSpaceB.z * cameraSpaceB.z - cameraSpaceA.z * cameraSpaceA.z;
+
+  const sqrDistA = cameraSpaceA.z * cameraSpaceA.z;
+  const sqrDistB = cameraSpaceB.z * cameraSpaceB.z;
+
+  const viewOffsetA = Math.sqrt(
+    cameraSpaceA.x * cameraSpaceA.x + cameraSpaceA.y * cameraSpaceA.y,
+  );
+  const viewOffsetB = Math.sqrt(
+    cameraSpaceB.x * cameraSpaceB.x + cameraSpaceB.y * cameraSpaceB.y,
+  );
+
+  const weight = 10;
+  return sqrDistB + viewOffsetB * weight - (sqrDistA + viewOffsetA * weight);
 }
 
 function frontToBack(a, b, position) {
