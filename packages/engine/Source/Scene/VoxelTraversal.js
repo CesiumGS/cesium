@@ -322,11 +322,15 @@ VoxelTraversal.prototype.update = function (
   const timestamp1 = getTimestamp();
   generateOctree(this, sampleCount, levelBlendFactor);
   const timestamp2 = getTimestamp();
-  if (this._debugPrint) {
+  const checkEventListeners =
+    primitive.loadProgress.numberOfListeners > 0 ||
+    primitive.allTilesLoaded.numberOfListeners > 0 ||
+    primitive.initialTilesLoaded.numberOfListeners > 0;
+  if (this._debugPrint || checkEventListeners) {
     const loadAndUnloadTimeMs = timestamp1 - timestamp0;
     const generateOctreeTimeMs = timestamp2 - timestamp1;
     const totalTimeMs = timestamp2 - timestamp0;
-    printDebugInformation(
+    postPassesUpdate(
       this,
       frameState,
       loadAndUnloadTimeMs,
@@ -733,7 +737,7 @@ function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
  *
  * @private
  */
-function printDebugInformation(
+function postPassesUpdate(
   that,
   frameState,
   loadAndUnloadTimeMs,
@@ -832,6 +836,10 @@ function printDebugInformation(
         return true;
       });
     }
+  }
+
+  if (!that._debugPrint) {
+    return;
   }
 
   const loadedKeyframeStatistics = `KEYFRAMES: ${
