@@ -238,14 +238,6 @@
   }`,
         });
 
-        const customShaderWhite = new Cesium.CustomShader({
-          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-  {
-      material.diffuse = vec3(1.0);
-      material.alpha = 1.0;
-  }`,
-        });
-
         const modelMatrix = Cesium.Matrix4.fromScale(
           Cesium.Cartesian3.fromElements(
             Cesium.Ellipsoid.WGS84.maximumRadius,
@@ -294,15 +286,6 @@
             },
           },
           {
-            text: "Box - 3D Tiles",
-            onselect: async function () {
-              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
-              );
-              const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
-            },
-          },
-          {
             text: "Ellipsoid - Procedural Tileset",
             onselect: function () {
               const provider = new ProceduralMultiTileVoxelProvider(
@@ -314,34 +297,12 @@
             },
           },
           {
-            text: "Ellipsoid - 3D Tiles",
-            onselect: async function () {
-              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-              );
-              const primitive = createPrimitive(
-                provider,
-                customShaderWhite,
-                Cesium.Matrix4.IDENTITY,
-              );
-            },
-          },
-          {
             text: "Cylinder - Procedural Tileset",
             onselect: function () {
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.CYLINDER,
               );
               const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
-            },
-          },
-          {
-            text: "Cylinder - 3D Tiles",
-            onselect: async function () {
-              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
-              );
-              const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
             },
           },
         ]);

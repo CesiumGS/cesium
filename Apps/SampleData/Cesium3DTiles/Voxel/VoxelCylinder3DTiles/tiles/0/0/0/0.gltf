@@ -19,7 +19,7 @@
     {
       "primitives": [
         {
-          "mode": 2147483648,
+          "mode": 2147483650,
           "attributes": {
             "_a": 0
           },
@@ -30,9 +30,6 @@
                 2,
                 2
               ]
-            },
-            "EXT_structural_metadata": {
-              "propertyAttributes": [0]
             }
           }
         }
