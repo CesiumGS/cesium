@@ -691,6 +691,7 @@ function getVertexBufferLoader(
   loader,
   accessorId,
   semantic,
+  primitive,
   draco,
   loadBuffer,
   loadTypedArray,
@@ -706,6 +707,7 @@ function getVertexBufferLoader(
     baseResource: loader._baseResource,
     frameState: frameState,
     bufferViewId: bufferViewId,
+    primitive: primitive,
     draco: draco,
     attributeSemantic: semantic,
     accessorId: accessorId,
@@ -720,6 +722,7 @@ function getVertexBufferLoader(
 function getIndexBufferLoader(
   loader,
   accessorId,
+  primitive,
   draco,
   loadBuffer,
   loadTypedArray,
@@ -731,6 +734,7 @@ function getIndexBufferLoader(
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
     frameState: frameState,
+    primitive: primitive,
     draco: draco,
     asynchronous: loader._asynchronous,
     loadBuffer: loadBuffer,
@@ -1163,6 +1167,7 @@ function loadAttribute(
   loader,
   accessorId,
   semanticInfo,
+  primitive,
   draco,
   loadBuffer,
   loadTypedArray,
@@ -1197,6 +1202,7 @@ function loadAttribute(
     loader,
     accessorId,
     gltfSemantic,
+    primitive,
     draco,
     loadBuffer,
     loadTypedArray,
@@ -1241,6 +1247,7 @@ function loadVertexAttribute(
   loader,
   accessorId,
   semanticInfo,
+  primitive,
   draco,
   hasInstances,
   needsPostProcessing,
@@ -1287,6 +1294,7 @@ function loadVertexAttribute(
     loader,
     accessorId,
     semanticInfo,
+    primitive,
     draco,
     loadBuffer,
     loadTypedArray,
@@ -1354,11 +1362,12 @@ function loadInstancedAttribute(
 
   const loadTypedArray = loadAsTypedArrayOnly || loadTranslationAsTypedArray;
 
-  // Don't pass in draco object since instanced attributes can't be draco compressed
+  // Don't pass in primitive or draco object since instanced attributes can't be draco compressed
   return loadAttribute(
     loader,
     accessorId,
     semanticInfo,
+    undefined,
     undefined,
     loadBuffer,
     loadTypedArray,
@@ -1369,6 +1378,7 @@ function loadInstancedAttribute(
 function loadIndices(
   loader,
   accessorId,
+  primitive,
   draco,
   hasFeatureIds,
   needsPostProcessing,
@@ -1412,6 +1422,7 @@ function loadIndices(
   const indexBufferLoader = getIndexBufferLoader(
     loader,
     accessorId,
+    primitive,
     draco,
     loadBuffer,
     loadTypedArray,
@@ -1874,7 +1885,8 @@ function loadMorphTarget(
 ) {
   const morphTarget = new MorphTarget();
 
-  // Don't pass in draco object since morph targets can't be draco compressed
+  // Don't pass in primitive or draco object since morph targets can't be draco compressed
+  const primitive = undefined;
   const draco = undefined;
   const hasInstances = false;
 
@@ -1894,6 +1906,7 @@ function loadMorphTarget(
       loader,
       accessorId,
       semanticInfo,
+      primitive,
       draco,
       hasInstances,
       needsPostProcessing,
@@ -1987,6 +2000,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
         loader,
         accessorId,
         semanticInfo,
+        gltfPrimitive,
         draco,
         hasInstances,
         needsPostProcessing,
@@ -2019,6 +2033,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     const indicesPlan = loadIndices(
       loader,
       indices,
+      gltfPrimitive,
       draco,
       hasFeatureIds,
       needsPostProcessing,
