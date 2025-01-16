@@ -2335,7 +2335,7 @@ function backToFrontSplats(a, b, scene) {
     boxB.center,
     new Cartesian3(), //use scratch
   );
-  return cameraSpaceA.z * cameraSpaceA.z - (cameraSpaceB.z - cameraSpaceB.z);
+  return cameraSpaceB.z * cameraSpaceB.z - cameraSpaceA.z * cameraSpaceA.z;
 }
 
 function frontToBack(a, b, position) {
