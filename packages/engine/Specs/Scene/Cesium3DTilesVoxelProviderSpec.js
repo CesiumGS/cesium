@@ -40,7 +40,7 @@ describe("Scene/Cesium3DTilesVoxelProvider", function () {
     );
     expect(provider.shape).toEqual(VoxelShapeType.ELLIPSOID);
     expect(provider.minBounds).toEqual(new Cartesian3(0.0, 0.0, -1.0));
-    expect(provider.maxBounds).toEqual(new Cartesian3(1.0, 1.0, 0.0));
+    expect(provider.maxBounds).toEqual(new Cartesian3(1.0, 1.0, 500000.0));
     expect(provider.dimensions).toEqual(new Cartesian3(2, 2, 2));
     expect(provider.paddingBefore).toBeUndefined();
     expect(provider.paddingAfter).toBeUndefined();
