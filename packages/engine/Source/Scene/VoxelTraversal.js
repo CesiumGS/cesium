@@ -444,7 +444,6 @@ function requestData(that, keyframeNode) {
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
     const length = provider.types.length;
-    that._primitive.tileLoad.raiseEvent();
 
     if (!defined(result)) {
       keyframeNode.state = KeyframeNode.LoadState.UNAVAILABLE;
@@ -466,32 +465,22 @@ function requestData(that, keyframeNode) {
           keyframeNode.metadata[i] = data;
           // State is received only when all metadata requests have been received
           keyframeNode.state = KeyframeNode.LoadState.RECEIVED;
+          that._primitive.tileLoad.raiseEvent();
         } else {
           keyframeNode.state = KeyframeNode.LoadState.FAILED;
           break;
         }
       }
     }
+    if (keyframeNode.state === KeyframeNode.LoadState.FAILED) {
+      that._primitive.tileFailed.raiseEvent();
+    }
   }
 
-  function postRequestFailure(options) {
-    const { requestOptions, error } = options;
-    const message = defined(error.message) ? error.message : error.toString();
-    const url = `${requestOptions.tileLevel}/${requestOptions.tileX}/${requestOptions.tileY}/${requestOptions.tileZ}`;
+  function postRequestFailure() {
     that._simultaneousRequestCount--;
-    if (that._primitive.tileFailed.numberOfListeners > 0) {
-      that._primitive.tileFailed.raiseEvent({
-        url: url,
-        message: message,
-      });
-    } else {
-      console.log(`A 3D tile failed to load: ${url}`);
-      console.log(`Error: ${message}`);
-      if (defined(error.stack)) {
-        console.log(error.stack);
-      }
-    }
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
+    that._primitive.tileFailed.raiseEvent();
   }
 
   const promise = provider.requestData(requestOptions);
@@ -499,11 +488,10 @@ function requestData(that, keyframeNode) {
   if (defined(promise)) {
     that._simultaneousRequestCount++;
     keyframeNode.state = KeyframeNode.LoadState.RECEIVING;
-    promise
-      .then(postRequestSuccess)
-      .catch((error) => postRequestFailure({ requestOptions, error }));
+    promise.then(postRequestSuccess).catch(postRequestFailure);
   } else {
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
+    that._primitive.tileFailed.raiseEvent();
   }
 }
 
