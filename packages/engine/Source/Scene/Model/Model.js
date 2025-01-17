@@ -2209,7 +2209,7 @@ function updateGaussianSplatting(model, frameState) {
     model._previousViewProj[10] * scratchViewMatrix[10];
 
   if (Math.abs(dot - 1) > CesiumMath.EPSILON2) {
-    if (prim?.isGaussianSplatPrimitive ?? false) {
+    if (prim?.isGaussianSplatPrimitive) {
       Matrix4.multiply(
         frameState.camera.viewMatrix,
         model.modelMatrix,
