@@ -139,9 +139,10 @@ GeometryPipelineStage.process = function (
     const gaussianSplatsEnabled =
       (primitive?.isGaussianSplatPrimitive ?? false) &&
       model.enableShowGaussianSplatting;
-    if (gaussianSplatsEnabled) {
-      const showSplats =
-        model?.style?.showGaussianSplatting ?? model.showGaussianSplatting;
+    const showSplats =
+      model?.style?.showGaussianSplatting ?? model.showGaussianSplatting;
+
+    if (gaussianSplatsEnabled === true) {
       primitive.attributes.find((a) => a.name === "POSITION").instanceDivisor =
         showSplats ? 1 : 0;
       primitive.attributes.find((a) => a.name === "_SCALE").instanceDivisor =
@@ -157,9 +158,7 @@ GeometryPipelineStage.process = function (
         ).instanceDivisor = showSplats ? 1 : 0;
       }
 
-      if (!showSplats) {
-        shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
-
+      if (showSplats === false) {
         for (const name in primitive.attributes) {
           if (
             primitive.attributes.hasOwnProperty(name) &&
@@ -177,7 +176,9 @@ GeometryPipelineStage.process = function (
           }
         }
       }
-    } else {
+    }
+
+    if (gaussianSplatsEnabled === false || showSplats === false) {
       shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
     }
   }
