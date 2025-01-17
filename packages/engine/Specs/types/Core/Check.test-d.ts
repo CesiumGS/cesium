@@ -36,7 +36,11 @@ Check.typeOf.number.lessThan("lessThan", myNumberLessThan, 100);
 expectAssignable<number>(myNumberLessThan);
 
 let myNumberLessThanEquals: string | number | undefined;
-Check.typeOf.number.lessThanOrEquals("lessThanEquals", myNumberLessThanEquals, 100);
+Check.typeOf.number.lessThanOrEquals(
+  "lessThanEquals",
+  myNumberLessThanEquals,
+  100,
+);
 expectAssignable<number>(myNumberLessThanEquals);
 
 let myNumberGreaterThan: string | number | undefined;
@@ -44,5 +48,9 @@ Check.typeOf.number.greaterThan("greaterThan", myNumberGreaterThan, 100);
 expectAssignable<number>(myNumberGreaterThan);
 
 let myNumberGreaterThanEquals: string | number | undefined;
-Check.typeOf.number.greaterThanOrEquals("greaterThanEquals", myNumberGreaterThanEquals, 100);
+Check.typeOf.number.greaterThanOrEquals(
+  "greaterThanEquals",
+  myNumberGreaterThanEquals,
+  100,
+);
 expectAssignable<number>(myNumberGreaterThanEquals);

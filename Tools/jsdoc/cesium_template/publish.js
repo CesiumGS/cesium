@@ -464,7 +464,6 @@ exports.publish = function (taffyData, opts, tutorials) {
   var namespaces = taffy(members.namespaces);
   var globals = taffy(members.globals);
 
-  console.log("interfaces", interfaces);
   var typesJson = {};
 
   Object.keys(helper.longnameToUrl).forEach(function (longname) {

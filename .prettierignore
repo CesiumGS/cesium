@@ -25,12 +25,14 @@
 **/*.min.js
 
 packages/engine/Build/**
+packages/engine/types/**
 packages/engine/index.js
 packages/engine/Source/Scene/GltfPipeline/**
 packages/engine/Source/Shaders/**/*.js
 packages/engine/Source/ThirdParty/**
 
 packages/widgets/Build/**
+packages/widgets/types/**
 packages/widgets/index.js
 packages/widgets/Source/ThirdParty/**
 
