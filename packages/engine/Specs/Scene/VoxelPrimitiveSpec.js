@@ -73,6 +73,21 @@ describe(
       expect(spyUpdate2.calls.count()).toEqual(1);
     });
 
+    it("tile load and load progress events are raised", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      primitive.tileLoad.addEventListener(spyUpdate1);
+      primitive.loadProgress.addEventListener(spyUpdate2);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate1.calls.count()).toEqual(1);
+      expect(spyUpdate2.calls.count()).toBeGreaterThan(0);
+    });
+
     it("toggles render options that require shader rebuilds", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
