@@ -77,6 +77,7 @@ exports.handlers = {
     // TODO: this allows us to use the closure type casting to arrow function types but I'm not sure
     // that's actually the correct way to handle it yet. I just wanted to get JSDoc not failing anymore
     // Consider removing this
+    // related https://github.com/jsdoc/jsdoc/issues/1286
     if (/\{.*=>.*\}/.test(e.comment)) {
       logger.warn(
         `replacing arrow function(s) in ${e.filename} at line ${e.lineno}:${e.columnno} for comment: \n${e.comment}`,

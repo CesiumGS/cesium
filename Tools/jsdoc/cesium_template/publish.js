@@ -54,6 +54,7 @@ function needsSignature(doclet) {
   if (
     doclet.kind === "function" ||
     doclet.kind === "class" ||
+    doclet.kind === "interface" ||
     doclet.kind === "module"
   ) {
     needsSig = true;
@@ -424,7 +425,10 @@ exports.publish = function (taffyData, opts, tutorials) {
   // once for all
   view.nav = buildNav(members);
   attachModuleSymbols(
-    find({ kind: ["class", "function"], longname: { left: "module:" } }),
+    find({
+      kind: ["class", "function", "interface"],
+      longname: { left: "module:" },
+    }),
     members.modules,
   );
 
@@ -455,14 +459,20 @@ exports.publish = function (taffyData, opts, tutorials) {
 
   // set up the lists that we'll use to generate pages
   var classes = taffy(members.classes);
+  var interfaces = taffy(members.interfaces);
   var modules = taffy(members.modules);
   var namespaces = taffy(members.namespaces);
   var globals = taffy(members.globals);
 
+  console.log("interfaces", interfaces);
   var typesJson = {};
 
   Object.keys(helper.longnameToUrl).forEach(function (longname) {
     var items = helper.find(classes, { longname: longname });
+
+    if (!items.length) {
+      items = helper.find(interfaces, { longname: longname });
+    }
 
     if (!items.length) {
       items = helper.find(modules, { longname: longname });
