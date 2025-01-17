@@ -341,16 +341,9 @@ function loadBufferSource(texture, source) {
     width,
   );
 
-  let glErr;
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-  glErr = gl.getError();
-  if (glErr !== 0) {
-    console.log(
-      `pixelStorei err ${glErr}, format ${pixelFormat} internalFormat ${internalFormat}`,
-    );
-  }
 
   let { arrayBufferView } = source;
   if (flipY) {
@@ -373,12 +366,6 @@ function loadBufferSource(texture, source) {
     PixelDatatype.toWebGLConstant(pixelDatatype, context),
     arrayBufferView,
   );
-  glErr = gl.getError();
-  if (glErr !== 0) {
-    console.log(
-      `texImage2D err ${glErr}, format ${pixelFormat} internalFormat ${internalFormat}`,
-    );
-  }
 
   if (defined(source.mipLevels)) {
     let mipWidth = width;
