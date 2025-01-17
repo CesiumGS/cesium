@@ -44,10 +44,8 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
-
 import GaussianSplatSorter from "../GaussianSplatSorter.js";
-//import Buffer from "../../Renderer/Buffer.js";
-//import BufferUsage from "../../Renderer/BufferUsage.js";
+
 /**
  * <div class="notice">
  * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
