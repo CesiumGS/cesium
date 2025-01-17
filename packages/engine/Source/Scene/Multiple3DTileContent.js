@@ -6,7 +6,6 @@ import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
@@ -518,20 +517,18 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
   try {
     const preprocessed = preprocess3DTileContent(arrayBuffer);
 
+    const tileset = multipleContents._tileset;
+    const resource = multipleContents._innerContentResources[index];
+    const tile = multipleContents._tile;
+
     if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
-      throw new RuntimeError(
-        "External tilesets are disallowed inside multiple contents",
-      );
+      tile.hasTilesetContent = true;
     }
 
     multipleContents._disableSkipLevelOfDetail =
       multipleContents._disableSkipLevelOfDetail ||
       preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
       preprocessed.contentType === Cesium3DTileContentType.VECTOR;
-
-    const tileset = multipleContents._tileset;
-    const resource = multipleContents._innerContentResources[index];
-    const tile = multipleContents._tile;
 
     let content;
     const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
