@@ -348,7 +348,11 @@ export async function prepare() {
     "node_modules/draco3d/draco_decoder.wasm",
     "packages/engine/Source/ThirdParty/draco_decoder.wasm",
   );
-
+  // Copy Gaussian Splatting utilities into Source
+  copyFileSync(
+    "node_modules/@cesium/wasm-splats/wasm_splats_bg.wasm",
+    "packages/engine/Source/ThirdParty/wasm_splats_bg.wasm",
+  );
   // Copy pako and zip.js worker files to Source/ThirdParty
   copyFileSync(
     "node_modules/pako/dist/pako_inflate.min.js",
@@ -371,11 +375,6 @@ export async function prepare() {
   copyFileSync(
     "node_modules/prismjs/themes/prism.min.css",
     "Tools/jsdoc/cesium_template/static/styles/prism.css",
-  );
-
-  copyFileSync(
-    "node_modules/@cesium/wasm-splats/wasm_splats_bg.wasm",
-    "packages/engine/Source/ThirdParty/wasm_splats_bg.wasm",
   );
 
   // Copy jasmine runner files into Specs
