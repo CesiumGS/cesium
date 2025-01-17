@@ -2178,17 +2178,19 @@ function updatePointCloudShading(model) {
   }
 }
 
+const scratchViewMatrix = new Matrix4();
+const scratchModelMatrix = new Matrix4();
+
 function updateGaussianSplatting(model, frameState) {
   //if the camera has rotated enough, update commands
-  const viewProj = new Matrix4();
   Matrix4.multiply(
     frameState.camera.frustum.projectionMatrix,
     frameState.camera.viewMatrix,
-    viewProj,
+    scratchViewMatrix,
   );
 
   if (model._previousViewProj === undefined) {
-    model._previousViewProj = viewProj;
+    model._previousViewProj = scratchViewMatrix;
     return;
   }
 
@@ -2202,19 +2204,18 @@ function updateGaussianSplatting(model, frameState) {
   }
 
   const dot =
-    model._previousViewProj[2] * viewProj[2] +
-    model._previousViewProj[6] * viewProj[6] +
-    model._previousViewProj[10] * viewProj[10];
+    model._previousViewProj[2] * scratchViewMatrix[2] +
+    model._previousViewProj[6] * scratchViewMatrix[6] +
+    model._previousViewProj[10] * scratchViewMatrix[10];
 
   if (Math.abs(dot - 1) > CesiumMath.EPSILON2) {
     if (prim?.isGaussianSplatPrimitive ?? false) {
-      const modelView = new Matrix4();
       Matrix4.multiply(
         frameState.camera.viewMatrix,
         model.modelMatrix,
-        modelView,
+        scratchModelMatrix,
       );
-      model._previousViewProj = viewProj;
+      model._previousViewProj = scratchViewMatrix;
 
       if (!prim?.hasGaussianSplatTexture) {
         model.resetDrawCommands();
@@ -2228,7 +2229,7 @@ function updateGaussianSplatting(model, frameState) {
         const promise = GaussianSplatSorter.radixSortIndexes({
           primitive: {
             positions: new Float32Array(posAttr.typedArray),
-            modelView: Float32Array.from(modelView),
+            modelView: Float32Array.from(scratchModelMatrix),
             count: idxAttr.count,
           },
           sortType: "Index",
