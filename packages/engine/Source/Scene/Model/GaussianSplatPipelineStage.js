@@ -6,37 +6,6 @@ import PrimitiveType from "../../Core/PrimitiveType.js";
 import BlendingState from "../BlendingState.js";
 import Matrix4 from "../../Core/Matrix4.js";
 
-// class CesiumPerformanceTimer {
-//   constructor() {
-//     this.startTime = null;
-//     this.endTime = null;
-//   }
-
-//   start() {
-//     this.startTime = performance.now();
-//   }
-
-//   end() {
-//     this.endTime = performance.now();
-//   }
-
-//   getExecutionTime() {
-//     if (!this.startTime || !this.endTime) {
-//       throw new Error(
-//         "Timer must be started and ended before getting execution time",
-//       );
-//     }
-//     return {
-//       milliseconds: this.endTime - this.startTime,
-//     };
-//   }
-
-//   reset() {
-//     this.startTime = null;
-//     this.endTime = null;
-//   }
-// }
-
 const GaussianSplatPipelineStage = {
   name: "GaussianSplatPipelineStage",
 };
