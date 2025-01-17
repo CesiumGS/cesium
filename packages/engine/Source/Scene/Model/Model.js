@@ -2189,7 +2189,7 @@ function updateGaussianSplatting(model, frameState) {
     scratchViewMatrix,
   );
 
-  if (model._previousViewProj === undefined) {
+  if (defined(model._previousViewProj)) {
     model._previousViewProj = scratchViewMatrix;
     return;
   }
