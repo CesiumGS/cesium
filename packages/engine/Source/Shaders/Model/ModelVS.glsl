@@ -134,15 +134,15 @@ void main()
     #endif
 
     #ifdef PRIMITIVE_TYPE_POINTS
-
-    #ifdef HAS_CUSTOM_VERTEX_SHADER
-    gl_PointSize = vsOutput.pointSize;
-    #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
-    gl_PointSize = pointCloudPointSizeStylingStage(attributes, metadata);
-    #else
-    gl_PointSize = 1.0;
-    #endif
-    gl_PointSize *= show;
+        #ifdef HAS_CUSTOM_VERTEX_SHADER
+        gl_PointSize = vsOutput.pointSize;
+        #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
+        gl_PointSize = pointCloudPointSizeStylingStage(attributes, metadata);
+        #else
+        gl_PointSize = 1.0;
+        #endif
+        
+        gl_PointSize *= show;
     #endif
 
     #ifdef HAS_GAUSSIAN_SPLATS
