@@ -1,7 +1,7 @@
 import DeveloperError from "../Core/DeveloperError.js";
 
 /**
- * @typedef {import("./Geometry").default} Geometry
+ * @import Geometry from "./Geometry"
  */
 
 /**

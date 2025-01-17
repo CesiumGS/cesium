@@ -12,7 +12,7 @@ import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js";
 import PrimitiveType from "./PrimitiveType.js";
 
 /**
- * @typedef {import("./AxisAlignedBoundingBox").default} AxisAlignedBoundingBox
+ * @import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox"
  */
 
 const diffScratch = new Cartesian3();

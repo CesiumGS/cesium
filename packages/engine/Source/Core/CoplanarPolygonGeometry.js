@@ -24,7 +24,7 @@ import Quaternion from "./Quaternion.js";
 import VertexFormat from "./VertexFormat.js";
 
 /**
- * @typedef {import("./PolygonHierarchy").default} PolygonHierarchy
+ * @import PolygonHierarchy from "./PolygonHierarchy"
  */
 
 const scratchPosition = new Cartesian3();

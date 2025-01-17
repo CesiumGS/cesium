@@ -6,7 +6,7 @@ import CesiumMath from "./Math.js";
 import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
 
 /**
- * @typedef {import("./Ellipsoid").default} Ellipsoid
+ * @import Ellipsoid from "./Ellipsoid"
  */
 
 /**

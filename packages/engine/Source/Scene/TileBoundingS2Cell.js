@@ -17,7 +17,7 @@ import Primitive from "./Primitive.js";
 import S2Cell from "../Core/S2Cell.js";
 
 /**
- * @typedef {import("../Core/Color").default} Color
+ * @import Color from "../Core/Color"
  */
 
 let centerCartographicScratch = new Cartographic();

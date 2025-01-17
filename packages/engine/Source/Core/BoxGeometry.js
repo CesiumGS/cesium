@@ -13,7 +13,7 @@ import PrimitiveType from "./PrimitiveType.js";
 import VertexFormat from "./VertexFormat.js";
 
 /**
- * @typedef {import("./AxisAlignedBoundingBox").default} AxisAlignedBoundingBox
+ * @import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox"
  */
 
 const diffScratch = new Cartesian3();

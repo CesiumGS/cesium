@@ -11,7 +11,7 @@ import Rectangle from "../Core/Rectangle.js";
 import defaultValue from "../Core/defaultValue.js";
 
 /**
- * @typedef {import("./SpatialNode").default} SpatialNode
+ * @import SpatialNode from "./SpatialNode"
  */
 
 /**

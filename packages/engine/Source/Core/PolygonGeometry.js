@@ -28,7 +28,7 @@ import VertexFormat from "./VertexFormat.js";
 import WindingOrder from "./WindingOrder.js";
 
 /**
- * @typedef {import("./PolygonHierarchy").default} PolygonHierarchy
+ * @import PolygonHierarchy from "./PolygonHierarchy"
  */
 
 const scratchCarto1 = new Cartographic();

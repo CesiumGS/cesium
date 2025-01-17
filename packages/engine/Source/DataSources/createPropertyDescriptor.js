@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 import ConstantProperty from "./ConstantProperty.js";
 
 /**
- * @typedef {import("./Property").default} Property
+ * @import Property from "./Property"
  */
 
 function createProperty(

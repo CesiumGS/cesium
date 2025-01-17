@@ -4,8 +4,8 @@ import IndexDatatype from "./IndexDatatype.js";
 import CesiumMath from "./Math.js";
 
 /**
- * @typedef {import("./Request").default} Request
- * @typedef {import("./TerrainData").default} TerrainData
+ * @import Request from "./Request"
+ * @import TerrainData from "./TerrainData"
  */
 
 /**

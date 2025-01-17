@@ -16,7 +16,7 @@ import PolygonGeometryLibrary from "./PolygonGeometryLibrary.js";
 import PrimitiveType from "./PrimitiveType.js";
 
 /**
- * @typedef {import("./PolygonHierarchy").default} PolygonHierarchy
+ * @import PolygonHierarchy from "./PolygonHierarchy"
  */
 
 function createGeometryFromPositions(positions) {

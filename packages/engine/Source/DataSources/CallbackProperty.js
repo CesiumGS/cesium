@@ -4,7 +4,7 @@ import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 
 /**
- * @typedef {import("./Property").default} Property
+ * @import Property from "./Property"
  */
 
 /**

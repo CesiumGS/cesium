@@ -7,8 +7,8 @@ import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import TerrainProvider from "./TerrainProvider.js";
 
 /**
- * @typedef {import("./Request").default} Request
- * @typedef {import("./TerrainData").default} TerrainData
+ * @import Request from "./Request"
+ * @import TerrainData from "./TerrainData"
  */
 
 /**

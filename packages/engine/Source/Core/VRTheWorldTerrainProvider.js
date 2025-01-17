@@ -15,8 +15,8 @@ import TerrainProvider from "./TerrainProvider.js";
 import TileProviderError from "./TileProviderError.js";
 
 /**
- * @typedef {import("./Request").default} Request
- * @typedef {import("./TerrainData").default} TerrainData
+ * @import Request from "./Request"
+ * @import TerrainData from "./TerrainData"
  */
 
 function DataRectangle(rectangle, maxLevel) {

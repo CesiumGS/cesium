@@ -5,8 +5,8 @@ import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
 /**
- * @typedef {import("./Color").default} Color
- * @typedef {import("./unpack").default} unpack
+ * @import Color from "./Color"
+ * @import unpack from "./unpack"
  */
 
 /**

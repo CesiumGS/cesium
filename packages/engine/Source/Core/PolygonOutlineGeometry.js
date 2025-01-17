@@ -22,7 +22,7 @@ import PrimitiveType from "./PrimitiveType.js";
 import WindingOrder from "./WindingOrder.js";
 
 /**
- * @typedef {import("./PolygonHierarchy").default} PolygonHierarchy
+ * @import PolygonHierarchy from "./PolygonHierarchy"
  */
 
 const createGeometryFromPositionsPositions = [];

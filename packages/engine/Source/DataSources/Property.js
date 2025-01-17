@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
 /**
- * @typedef {import("../Core/JulianDate").default} JulianDate
+ * @import JulianDate from "../Core/JulianDate"
  */
 
 /**
@@ -54,6 +54,12 @@ Object.defineProperties(Property.prototype, {
 });
 
 /**
+ * @callback PropertyGetValue
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
+ * @param {any|any[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {any|any[]|undefined} The modified result parameter or a new instance if the result parameter was not supplied.
+ */
+/**
  * Gets the value of the property at the provided time.
  * @function
  *
@@ -61,11 +67,18 @@ Object.defineProperties(Property.prototype, {
  * @param {any|any[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {any|any[]|undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
-Property.prototype.getValue =
-  /** @type {(time?: JulianDate, result?: any|any[]) => any|any[]|undefined} */ (
-    DeveloperError.throwInstantiationError
-  );
+Property.prototype.getValue = /** @type {PropertyGetValue} */ (
+  DeveloperError.throwInstantiationError
+);
 
+/**
+ * Compares this property to the provided property and returns
+ * <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @callback PropertyEquals
+ *
+ * @param {Property} [other] The other property.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ */
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -74,7 +87,7 @@ Property.prototype.getValue =
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
-Property.prototype.equals = /** @type {(other?: Property) => boolean} */ (
+Property.prototype.equals = /** @type {PropertyEquals} */ (
   DeveloperError.throwInstantiationError
 );
 

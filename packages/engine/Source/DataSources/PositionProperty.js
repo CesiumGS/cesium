@@ -6,8 +6,8 @@ import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
 
 /**
- * @typedef {import("../Core/JulianDate").default} JulianDate
- * @typedef {import("./Property").default} Property
+ * @import JulianDate from "../Core/JulianDate"
+ * @import Property from "./Property"
  */
 
 /**
@@ -87,7 +87,8 @@ PositionProperty.prototype.getValue =
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 PositionProperty.prototype.getValueInReferenceFrame =
-  /** @type {(time: JulianDate, referenceFrame: ReferenceFrame, result?: Cartesian3) => Cartesian3|undefined} */ (
+  // ERROR: Unable to parse a tag's type expression for source file /home/name/Programming/cesium/packages/engine/Source/DataSources/PositionProperty.js in line 90 with tag title "type" and text "{(time: JulianDate, referenceFrame: ReferenceFrame, result?: Cartesian3) => Cartesian3|undefined}": Invalid type expression "(time: JulianDate, referenceFrame: ReferenceFrame, result?: Cartesian3) => Cartesian3|undefined": Expected "$", "'", ".", "0", "@", "\"", "\\", "_", "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do","else", "enum", "export", "extends", "finally", "for", "function", "if", "implements", "import", "in", "instanceof", "interface", "let", "new", "package", "private", "protected", "public", "return", "static", "super", "switch", "this", "throw", "try", "typeof", "var", "void", "while", "with", "yield", Unicode letter number, Unicode lowercase letter, Unicode modifier letter, Unicode other letter, Unicode titlecase letter, Unicode uppercase letter, or [1-9] but " " found.
+  /** @type {((time: JulianDate, referenceFrame: ReferenceFrame, result?: Cartesian3) => Cartesian3|undefined)} */ (
     DeveloperError.throwInstantiationError
   );
 

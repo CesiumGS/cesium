@@ -8,7 +8,7 @@ import ReferenceFrame from "../Core/ReferenceFrame.js";
 import PositionProperty from "./PositionProperty.js";
 
 /**
- * @typedef {import("./Property").default} Property
+ * @import Property from "./Property"
  */
 
 /**

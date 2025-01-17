@@ -27,7 +27,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import TweenCollection from "./TweenCollection.js";
 
 /**
- * @typedef {import("./Scene").default} Scene
+ * @import Scene from "./Scene"
  */
 
 /**

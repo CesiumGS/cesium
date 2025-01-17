@@ -3,7 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * @typedef {import("./MetadataClass").default} MetadataClass
+ * @import MetadataClass from "./MetadataClass"
  */
 
 /**

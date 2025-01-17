@@ -1,7 +1,7 @@
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {import("./Property").default} Property
+ * @import Property from "./Property"
  */
 
 function createRawProperty(value) {

@@ -5,7 +5,7 @@ import JulianDate from "../Core/JulianDate.js";
 import Material from "../Scene/Material.js";
 
 /**
- * @typedef {import("./Property").default} Property
+ * @import Property from "./Property"
  */
 
 /**

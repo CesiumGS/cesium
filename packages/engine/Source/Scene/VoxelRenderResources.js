@@ -21,7 +21,7 @@ import Octree from "../Shaders/Voxels/Octree.js";
 import Megatexture from "../Shaders/Voxels/Megatexture.js";
 
 /**
- * @typedef {import("./VoxelPrimitive").default} VoxelPrimitive
+ * @import VoxelPrimitive from "./VoxelPrimitive"
  */
 
 /**

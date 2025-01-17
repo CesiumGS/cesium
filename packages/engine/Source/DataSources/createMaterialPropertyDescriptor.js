@@ -6,7 +6,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import ImageMaterialProperty from "./ImageMaterialProperty.js";
 
 /**
- * @typedef {import("./Property").default} Property
+ * @import Property from "./Property"
  */
 
 function createMaterialProperty(value) {

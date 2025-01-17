@@ -7,6 +7,10 @@ import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
+/**
+ * @import Ellipsoid from "../Core/Ellipsoid.js"
+ */
+
 const defaultCredit = new Credit(
   "MapQuest, Open Street Map and contributors, CC-BY-SA",
 );

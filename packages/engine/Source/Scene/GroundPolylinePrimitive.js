@@ -28,8 +28,8 @@ import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
 
 /**
- * @typedef {import("./Scene").default} Scene
- * @typedef {import("./Appearance").default} Appearance
+ * @import Scene from "./Scene"
+ * @import Appearance from "./Appearance"
  */
 
 /**

@@ -7,7 +7,7 @@ import Ellipsoid from "./Ellipsoid.js";
 import VertexFormat from "./VertexFormat.js";
 
 /**
- * @typedef {import("./Geometry").default} Geometry
+ * @import Geometry from "./Geometry"
  */
 
 /**

@@ -13,7 +13,7 @@ import Transforms from "../Core/Transforms.js";
 import SceneMode from "./SceneMode.js";
 
 /**
- * @typedef {import("./Scene").default} Scene
+ * @import Scene from "./Scene"
  */
 
 /**

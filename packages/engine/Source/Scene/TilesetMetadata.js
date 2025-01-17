@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * @typedef {import("./MetadataClass").default} MetadataClass
+ * @import MetadataClass from "./MetadataClass"
  */
 
 /**

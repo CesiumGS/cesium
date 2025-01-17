@@ -2,7 +2,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 
 /**
- * @typedef {import("./GeocoderService.").default} GeocoderService
+ * @import GeocoderService from "./GeocoderService."
  */
 
 /**

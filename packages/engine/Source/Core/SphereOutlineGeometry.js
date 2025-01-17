@@ -5,7 +5,7 @@ import defined from "./defined.js";
 import EllipsoidOutlineGeometry from "./EllipsoidOutlineGeometry.js";
 
 /**
- * @typedef {import("./Geometry").default} Geometry
+ * @import Geometry from "./Geometry"
  */
 
 /**
