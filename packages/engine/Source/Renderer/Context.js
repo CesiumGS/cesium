@@ -51,7 +51,7 @@ function Context(canvas, options) {
   } = defaultValue(options, {});
 
   // Override select WebGL defaults
-  webglOptions.alpha = defaultValue(webglOptions.alpha, true); // WebGL default is true
+  webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
   webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
   webglOptions.powerPreference = defaultValue(
     webglOptions.powerPreference,
