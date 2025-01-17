@@ -57,12 +57,12 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addUniform("mat4", "u_scalingMatrix", ShaderDestination.VERTEX);
 
   const uniformMap = renderResources.uniformMap;
-  const cam = frameState.camera;
+  const camera = frameState.camera;
   const width = frameState.context.drawingBufferWidth;
   const height = frameState.context.drawingBufferHeight;
 
-  const tan_fovx = Math.tan(cam.frustum.fov * 0.5);
-  const tan_fovy = Math.tan(cam.frustum.fovy * 0.5);
+  const tan_fovx = Math.tan(camera.frustum.fov * 0.5);
+  const tan_fovy = Math.tan(camera.frustum.fovy * 0.5);
   const focal_x = width / (tan_fovx * 2);
   const focal_y = height / (tan_fovy * 2);
 
@@ -94,27 +94,31 @@ GaussianSplatPipelineStage.process = function (
     const attributes = primitive.attributes;
     const modelView = new Matrix4();
     const modelMat = renderResources.model.modelMatrix;
-    Matrix4.multiply(cam.viewMatrix, modelMat, modelView);
+    Matrix4.multiply(camera.viewMatrix, modelMat, modelView);
 
-    const posAttr = attributes.find((a) => a.name === "POSITION");
-    const scaleAttr = attributes.find((a) => a.name === "_SCALE");
-    const rotAttr = attributes.find((a) => a.name === "_ROTATION");
-    const clrAttr = attributes.find((a) => a.name === "COLOR_0");
+    const positions = attributes.find((a) => a.name === "POSITION");
+    const scales = attributes.find((a) => a.name === "_SCALE");
+    const rotations = attributes.find((a) => a.name === "_ROTATION");
+    const colors = attributes.find((a) => a.name === "COLOR_0");
 
-    const posArray = posAttr.typedArray;
-    const scaleArray = scaleAttr.typedArray;
-    const rotArray = rotAttr.typedArray;
-    const clrArray = clrAttr.typedArray;
+    const positionsArray = positions.typedArray;
+    const scalesArray = scales.typedArray;
+    const rotationsArray = rotations.typedArray;
+    const colorsArray = colors.typedArray;
 
-    const newPosArray = new posArray.constructor(posArray.length);
-    const newScaleArray = new scaleArray.constructor(scaleArray.length);
-    const newRotArray = new rotArray.constructor(rotArray.length);
-    const newClrArray = new clrArray.constructor(clrArray.length);
+    const newPositionsArray = new positionsArray.constructor(
+      positionsArray.length,
+    );
+    const newScalesArray = new scalesArray.constructor(scalesArray.length);
+    const newRotationsArray = new rotationsArray.constructor(
+      rotationsArray.length,
+    );
+    const newColorsArray = new colorsArray.constructor(colorsArray.length);
 
     const calcDepth = (i) =>
-      posArray[i * 3] * modelView[2] +
-      posArray[i * 3 + 1] * modelView[6] +
-      posArray[i * 3 + 2] * modelView[10];
+      positionsArray[i * 3] * modelView[2] +
+      positionsArray[i * 3 + 1] * modelView[6] +
+      positionsArray[i * 3 + 2] * modelView[10];
 
     const depthValues = new Int32Array(renderResources.count);
     let maxDepth = -Infinity;
@@ -170,29 +174,29 @@ GaussianSplatPipelineStage.process = function (
     for (let i = 0; i < renderResources.count; i++) {
       const j = indices[i];
 
-      newPosArray[i * 3] = posArray[j * 3];
-      newPosArray[i * 3 + 1] = posArray[j * 3 + 1];
-      newPosArray[i * 3 + 2] = posArray[j * 3 + 2];
+      newPositionsArray[i * 3] = positionsArray[j * 3];
+      newPositionsArray[i * 3 + 1] = positionsArray[j * 3 + 1];
+      newPositionsArray[i * 3 + 2] = positionsArray[j * 3 + 2];
 
-      newScaleArray[i * 3] = scaleArray[j * 3];
-      newScaleArray[i * 3 + 1] = scaleArray[j * 3 + 1];
-      newScaleArray[i * 3 + 2] = scaleArray[j * 3 + 2];
+      newScalesArray[i * 3] = scalesArray[j * 3];
+      newScalesArray[i * 3 + 1] = scalesArray[j * 3 + 1];
+      newScalesArray[i * 3 + 2] = scalesArray[j * 3 + 2];
 
-      newRotArray[i * 4] = rotArray[j * 4];
-      newRotArray[i * 4 + 1] = rotArray[j * 4 + 1];
-      newRotArray[i * 4 + 2] = rotArray[j * 4 + 2];
-      newRotArray[i * 4 + 3] = rotArray[j * 4 + 3];
+      newRotationsArray[i * 4] = rotationsArray[j * 4];
+      newRotationsArray[i * 4 + 1] = rotationsArray[j * 4 + 1];
+      newRotationsArray[i * 4 + 2] = rotationsArray[j * 4 + 2];
+      newRotationsArray[i * 4 + 3] = rotationsArray[j * 4 + 3];
 
-      newClrArray[i * 4] = clrArray[j * 4];
-      newClrArray[i * 4 + 1] = clrArray[j * 4 + 1];
-      newClrArray[i * 4 + 2] = clrArray[j * 4 + 2];
-      newClrArray[i * 4 + 3] = clrArray[j * 4 + 3];
+      newColorsArray[i * 4] = colorsArray[j * 4];
+      newColorsArray[i * 4 + 1] = colorsArray[j * 4 + 1];
+      newColorsArray[i * 4 + 2] = colorsArray[j * 4 + 2];
+      newColorsArray[i * 4 + 3] = colorsArray[j * 4 + 3];
     }
 
-    posAttr.typedArray = newPosArray;
-    scaleAttr.typedArray = newScaleArray;
-    rotAttr.typedArray = newRotArray;
-    clrAttr.typedArray = newClrArray;
+    positions.typedArray = newPositionsArray;
+    scales.typedArray = newScalesArray;
+    rotations.typedArray = newRotationsArray;
+    colors.typedArray = newColorsArray;
   };
 
   radixSort();
