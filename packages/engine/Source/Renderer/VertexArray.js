@@ -693,15 +693,6 @@ VertexArray.fromGeometry = function (options) {
         }
 
         vaAttributes.push(attrProps);
-
-        // vaAttributes.push({
-        //   index: attributeLocations[name],
-        //   vertexBuffer: vertexBuffer,
-        //   value: attribute.value,
-        //   componentDatatype: componentDatatype,
-        //   componentsPerAttribute: attribute.componentsPerAttribute,
-        //   normalize: attribute.normalize,
-        // });
       }
     }
   }
