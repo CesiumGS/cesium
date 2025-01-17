@@ -8,6 +8,7 @@
 
 - Expanded integration with the [iTwin Platform](https://developer.bentley.com/) to load GeoJSON and KML data from the Reality Management API. Use `ITwinData.createDataSourceForRealityDataId` to load data as either GeoJSON or KML`. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
 - Added `environmentMapOptions` to `ModelGraphics`. For performance reasons by default, the environment map will not update if the entity position change. If environment map updates based on entity position are desired, provide an appropriate `environmentMapOptions.maximumPositionEpsilon` value. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
+- Added events to `VoxelPrimitive` to match `Cesium3DTileset`, including `allTilesLoaded`, `initialTilesLoaded`, `loadProgress`, `tileFailed`, `tileLoad`, `tileVisible`, `tileUnload`.
 
 ##### Fixes :wrench:
 
