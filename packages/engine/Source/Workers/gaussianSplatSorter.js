@@ -1,7 +1,5 @@
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-//import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-//import RuntimeError from "../Core/RuntimeError.js";
 
 import {
   initSync,
