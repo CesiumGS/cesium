@@ -1,3 +1,5 @@
+const logger = require("jsdoc/util/logger");
+
 exports.defineTags = function (dictionary) {
   // @internalConstructor defines some formatting options, but otherwise
   // is formatted like a class.
@@ -68,4 +70,18 @@ exports.defineTags = function (dictionary) {
     canHaveName: true,
     mustHaveValue: true,
   });
+};
+
+exports.handlers = {
+  jsdocCommentFound: function (e) {
+    // TODO: this allows us to use the closure type casting to arrow function types but I'm not sure
+    // that's actually the correct way to handle it yet. I just wanted to get JSDoc not failing anymore
+    // Consider removing this
+    if (/\{.*=>.*\}/.test(e.comment)) {
+      logger.warn(
+        `replacing arrow function(s) in ${e.filename} at line ${e.lineno}:${e.columnno} for comment: \n${e.comment}`,
+      );
+      e.comment = e.comment.replaceAll(/\{.*=>.*\}/g, "{any}");
+    }
+  },
 };

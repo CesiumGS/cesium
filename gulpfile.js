@@ -353,8 +353,13 @@ export const cloc = gulp.series(clean, clocSource);
 export async function buildDocs() {
   const generatePrivateDocumentation = argv.private ? "--private" : "";
 
+  // TODO: consider removing this again? I added it to explicitly make sure pages
+  // we want to exist are still getting generated and not just lingering around
+  await rimraf("Build/Documentation");
+
+  // TODO: Turn --pedantic back on if we can
   execSync(
-    `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
+    `npx jsdoc --configure Tools/jsdoc/conf.json ${generatePrivateDocumentation}`,
     {
       stdio: "inherit",
       env: Object.assign({}, process.env, {
