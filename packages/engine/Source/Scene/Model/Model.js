@@ -850,7 +850,7 @@ Object.defineProperties(Model.prototype, {
       // Warning for improper setup of gaussian splatting
       if (
         this._enableShowGaussianSplatting === true ||
-        this.type !== ModelType.GLTF
+        (this.type !== ModelType.GLTF && this.type !== ModelType.TILE_GLTF)
       ) {
         oneTimeWarning(
           "model-enable-show-gaussian-splatting-ignored",
