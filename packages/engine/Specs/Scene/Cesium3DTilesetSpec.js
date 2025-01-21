@@ -1407,7 +1407,7 @@ describe(
 
         const root = tileset.root;
         root.refine = Cesium3DTileRefine.REPLACE;
-        root.hasEmptyContent = false; // mock content
+        root.hasRenderableContent = true; // mock content
         tileset.maximumScreenSpaceError = 0.0; // Force root tile to always not meet SSE since this is just checking the request volume
 
         // Renders all 5 tiles
