@@ -120,9 +120,9 @@ import pickModel from "./pickModel.js";
  * @alias Model
  * @internalConstructor
  *
+ * @privateParam {object} options Object with the following properties:
  * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
  * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally.
- * @privateParam {object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
  * @privateParam {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.

@@ -510,9 +510,10 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
   Check.typeOf.object("options.frameState", frameState);
   //>>includeEnd('debug');
 
-  // 3D Tiles currently doesn't support time-dynamic data.
   if (keyframe !== 0) {
-    return undefined;
+    return Promise.reject(
+      `3D Tiles currently doesn't support time-dynamic data.`,
+    );
   }
 
   // 1. Load the subtree that the tile belongs to (possibly from the subtree cache)
@@ -553,7 +554,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
 
   if (!available) {
     return Promise.reject(
-      `Tile is not available at level ${tileLevel}, x ${tileX}, y ${tileY}, z ${tileZ}`,
+      `Tile is not available at level ${tileLevel}, x ${tileX}, y ${tileY}, z ${tileZ}.`,
     );
   }
 

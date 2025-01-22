@@ -433,8 +433,6 @@ function requestData(that, keyframeNode, frameState) {
 
     if (!defined(result)) {
       keyframeNode.state = KeyframeNode.LoadState.UNAVAILABLE;
-    } else if (result === KeyframeNode.LoadState.FAILED) {
-      keyframeNode.state = KeyframeNode.LoadState.FAILED;
     } else if (!Array.isArray(result) || result.length !== length) {
       // TODO should this throw runtime error?
       keyframeNode.state = KeyframeNode.LoadState.FAILED;
@@ -473,15 +471,12 @@ function requestData(that, keyframeNode, frameState) {
     keyframe: keyframe,
     frameState: frameState,
   };
-  const promise = provider.requestData(requestParameters);
-
-  if (defined(promise)) {
-    that._simultaneousRequestCount++;
-    keyframeNode.state = KeyframeNode.LoadState.RECEIVING;
-    promise.then(postRequestSuccess).catch(postRequestFailure);
-  } else {
-    keyframeNode.state = KeyframeNode.LoadState.FAILED;
-  }
+  that._simultaneousRequestCount++;
+  keyframeNode.state = KeyframeNode.LoadState.RECEIVING;
+  provider
+    .requestData(requestParameters)
+    .then(postRequestSuccess)
+    .catch(postRequestFailure);
 }
 
 /**
@@ -591,6 +586,7 @@ function updateKeyframeNodes(that, frameState) {
         highPriorityKeyframeNode,
         that.megatextures,
       );
+      highPriorityKeyframeNode.state = KeyframeNode.LoadState.LOADED;
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
   }

@@ -320,12 +320,7 @@ SpatialNode.prototype.destroyKeyframeNode = function (
     this.renderableKeyframeNodes.splice(renderableKeyframeNodeIndex, 1);
   }
 
-  keyframeNode.spatialNode = undefined;
-  keyframeNode.state = KeyframeNode.LoadState.UNLOADED;
-  keyframeNode.metadata = {};
-  keyframeNode.megatextureIndex = -1;
-  keyframeNode.priority = -Number.MAX_VALUE;
-  keyframeNode.highPriorityFrameNumber = -1;
+  keyframeNode.unload();
 };
 
 /**
@@ -337,7 +332,6 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
   megatextures,
 ) {
   if (
-    keyframeNode.state !== KeyframeNode.LoadState.RECEIVED ||
     keyframeNode.megatextureIndex !== -1 ||
     keyframeNode.metadata.length !== megatextures.length
   ) {
@@ -348,8 +342,6 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
     const megatexture = megatextures[i];
     keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadata[i]);
   }
-
-  keyframeNode.state = KeyframeNode.LoadState.LOADED;
 
   const renderableKeyframeNodes = this.renderableKeyframeNodes;
   let renderableKeyframeNodeIndex = findKeyframeIndex(
