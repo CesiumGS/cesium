@@ -4,7 +4,6 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import GltfLoader from "./GltfLoader.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitSubtreeCache from "./ImplicitSubtreeCache.js";
@@ -21,8 +20,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import VoxelBoxShape from "./VoxelBoxShape.js";
 import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelShapeType from "./VoxelShapeType.js";
-import MetadataComponentType from "./MetadataComponentType.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
+import VoxelContent from "./VoxelContent.js";
 
 /**
  * A {@link VoxelProvider} that fetches voxel data from a 3D Tiles tileset.
@@ -474,7 +472,7 @@ async function getSubtree(provider, subtreeCoord) {
 }
 
 /**
- * Requests the data for a given tile. The data is a flattened 3D array ordered by X, then Y, then Z.
+ * Requests the data for a given tile.
  *
  * @private
  *
@@ -483,9 +481,8 @@ async function getSubtree(provider, subtreeCoord) {
  * @param {number} [options.tileX=0] The tile's X coordinate.
  * @param {number} [options.tileY=0] The tile's Y coordinate.
  * @param {number} [options.tileZ=0] The tile's Z coordinate.
- * @param {FrameState} options.frameState The frame state
  * @privateparam {number} [options.keyframe=0] The requested keyframe.
- * @returns {Promise<Array[]>|undefined} A promise to an array of typed arrays containing the requested voxel data or undefined if there was a problem loading the data.
+ * @returns {Promise<VoxelContent>} A promise resolving to a VoxelContent containing the data for the tile.
  */
 Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -497,10 +494,6 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
     keyframe = 0,
     frameState,
   } = options;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.frameState", frameState);
-  //>>includeEnd('debug');
 
   if (keyframe !== 0) {
     return Promise.reject(
@@ -554,59 +547,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
     url: gltfRelative.url,
   });
 
-  const gltfLoader = new GltfLoader({
-    gltfResource: gltfResource,
-    releaseGltfJson: false,
-    loadAttributesAsTypedArray: true,
-  });
-
-  await gltfLoader.load();
-  gltfLoader.process(frameState);
-  await gltfLoader._loadResourcesPromise;
-  gltfLoader.process(frameState);
-
-  const { attributes } = gltfLoader.components.scene.nodes[0].primitives[0];
-  return processAttributes(attributes, that);
+  return VoxelContent.fromGltf(gltfResource, this, frameState);
 };
-
-/**
- * Processes the attributes from the glTF loader, reordering them into the order expected by the primitive.
- * TODO: use a MetadataTable?
- *
- * @param {ModelComponents.Attribute[]} attributes The attributes to process.
- * @param {VoxelProvider} provider The provider from which these attributes were received.
- * @returns {TypedArray[]} An array of typed arrays containing the attribute values.
- * @private
- */
-function processAttributes(attributes, provider) {
-  const { names, types, componentTypes } = provider;
-  const data = new Array(attributes.length);
-
-  for (let i = 0; i < attributes.length; i++) {
-    // The attributes array from GltfLoader is not in the same order as
-    // names, types, etc. from the provider.
-    // Find the appropriate glTF attribute based on its name.
-    // Note: glTF custom attribute names are prefixed with "_"
-    const name = `_${names[i]}`;
-    const attribute = attributes.find((a) => a.name === name);
-    if (!defined(attribute)) {
-      continue;
-    }
-
-    const componentDatatype = MetadataComponentType.toComponentDatatype(
-      componentTypes[i],
-    );
-    const componentCount = MetadataType.getComponentCount(types[i]);
-    const totalCount = attribute.count * componentCount;
-    data[i] = ComponentDatatype.createArrayBufferView(
-      componentDatatype,
-      attribute.typedArray.buffer,
-      attribute.typedArray.byteOffset + attribute.byteOffset,
-      totalCount,
-    );
-  }
-
-  return data;
-}
 
 export default Cesium3DTilesVoxelProvider;

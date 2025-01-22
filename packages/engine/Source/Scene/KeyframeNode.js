@@ -13,7 +13,6 @@ const LoadState = Object.freeze({
  *
  * @param {SpatialNode} spatialNode
  * @param {number} keyframe
- * // TODO: add contentResource param? Or does that go in VoxelContent?
  *
  * @private
  */
@@ -21,17 +20,11 @@ function KeyframeNode(spatialNode, keyframe) {
   this.spatialNode = spatialNode;
   this.keyframe = keyframe;
   this.state = LoadState.UNLOADED;
-  // TODO: switch to .content
-  this.metadata = [];
-  //this.content = undefined;
-  //this.contentResource = contentResource;
+  this.content = undefined;
   this.megatextureIndex = -1;
   this.priority = -Number.MAX_VALUE;
   this.highPriorityFrameNumber = -1;
 }
-
-//KeyframeNode.prototype.requestContent = function() {
-//};
 
 /**
  * Frees the resources used by this object.
@@ -39,9 +32,7 @@ function KeyframeNode(spatialNode, keyframe) {
  * @private
  */
 KeyframeNode.prototype.unload = function () {
-  // TODO: switch to .content
-  //this.content = this.content && this.content.destroy();
-  this.metadata = [];
+  this.content = this.content && this.content.destroy();
 
   this.spatialNode = undefined;
   this.state = LoadState.UNLOADED;

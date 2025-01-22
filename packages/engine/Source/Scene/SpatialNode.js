@@ -333,14 +333,15 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
 ) {
   if (
     keyframeNode.megatextureIndex !== -1 ||
-    keyframeNode.metadata.length !== megatextures.length
+    keyframeNode.content.metadata.length !== megatextures.length
   ) {
     throw new DeveloperError("Keyframe node cannot be added to megatexture");
   }
 
+  const { metadata } = keyframeNode.content;
   for (let i = 0; i < megatextures.length; i++) {
     const megatexture = megatextures[i];
-    keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadata[i]);
+    keyframeNode.megatextureIndex = megatexture.add(metadata[i]);
   }
 
   const renderableKeyframeNodes = this.renderableKeyframeNodes;

@@ -434,24 +434,26 @@ function requestData(that, keyframeNode, frameState) {
 
     if (!defined(result)) {
       keyframeNode.state = KeyframeNode.LoadState.UNAVAILABLE;
-    } else if (!Array.isArray(result) || result.length !== length) {
+      //} else if (!Array.isArray(result) || result.length !== length) {
       // TODO should this throw runtime error?
-      keyframeNode.state = KeyframeNode.LoadState.FAILED;
+      // TODO what if result is a VoxelContent? How do we check the metadata?
+      //  keyframeNode.state = KeyframeNode.LoadState.FAILED;
     } else {
       const megatextures = that.megatextures;
+      keyframeNode.content = result;
+      keyframeNode.state = KeyframeNode.LoadState.RECEIVED;
+      const { metadata } = result;
       for (let i = 0; i < length; i++) {
         const { voxelCountPerTile, channelCount } = megatextures[i];
         const { x, y, z } = voxelCountPerTile;
         const tileVoxelCount = x * y * z;
 
-        const data = result[i];
+        const data = metadata[i];
         const expectedLength = tileVoxelCount * channelCount;
-        if (data.length === expectedLength) {
-          keyframeNode.metadata[i] = data;
+        if (data.length !== expectedLength) {
           // State is received only when all metadata requests have been received
-          keyframeNode.state = KeyframeNode.LoadState.RECEIVED;
-        } else {
           keyframeNode.state = KeyframeNode.LoadState.FAILED;
+          keyframeNode.content = undefined;
           break;
         }
       }
