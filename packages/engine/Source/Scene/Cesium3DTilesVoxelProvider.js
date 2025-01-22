@@ -182,14 +182,6 @@ function Cesium3DTilesVoxelProvider(options) {
    */
   this.maximumTileCount = undefined;
 
-  /**
-   * glTFs that are in the process of being loaded.
-   *
-   * @type {GltfLoader[]}
-   * @private
-   */
-  this._gltfLoaders = new Array();
-
   this._implicitTileset = undefined;
   this._subtreeCache = new ImplicitSubtreeCache();
 }
@@ -519,10 +511,8 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
   // 1. Load the subtree that the tile belongs to (possibly from the subtree cache)
   // 2. Load the voxel content if available
 
-  const implicitTileset = this._implicitTileset;
-  const { names, types, componentTypes } = this;
-
   // Can't use a scratch variable here because the object is used inside the promise chain.
+  const implicitTileset = this._implicitTileset;
   const tileCoordinates = new ImplicitTileCoordinates({
     subdivisionScheme: implicitTileset.subdivisionScheme,
     subtreeLevels: implicitTileset.subtreeLevels,
@@ -545,9 +535,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
   const that = this;
 
   const subtree = await getSubtree(that, subtreeCoord);
-  // TODO: this looks wrong? We get !available for tiles that are present if we ignore availability
   // NOTE: these two subtree methods are ONLY used by voxels!
-  // NOTE: the errors are coming from the first call, childSubtreeIsAvailableAtCoordinates
   const available = isSubtreeRoot
     ? subtree.childSubtreeIsAvailableAtCoordinates(tileCoordinates)
     : subtree.tileIsAvailableAtCoordinates(tileCoordinates);
@@ -558,17 +546,42 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
     );
   }
 
-  const gltfLoader = getGltfLoader(implicitTileset, tileCoordinates);
-  that._gltfLoaders.push(gltfLoader);
-  // TODO: try / catch
+  const { contentUriTemplates, baseResource } = implicitTileset;
+  const gltfRelative = contentUriTemplates[0].getDerivedResource({
+    templateValues: tileCoordinates.getTemplateValues(),
+  });
+  const gltfResource = baseResource.getDerivedResource({
+    url: gltfRelative.url,
+  });
+
+  const gltfLoader = new GltfLoader({
+    gltfResource: gltfResource,
+    releaseGltfJson: false,
+    loadAttributesAsTypedArray: true,
+  });
+
   await gltfLoader.load();
   gltfLoader.process(frameState);
   await gltfLoader._loadResourcesPromise;
   gltfLoader.process(frameState);
 
   const { attributes } = gltfLoader.components.scene.nodes[0].primitives[0];
+  return processAttributes(attributes, that);
+};
 
+/**
+ * Processes the attributes from the glTF loader, reordering them into the order expected by the primitive.
+ * TODO: use a MetadataTable?
+ *
+ * @param {ModelComponents.Attribute[]} attributes The attributes to process.
+ * @param {VoxelProvider} provider The provider from which these attributes were received.
+ * @returns {TypedArray[]} An array of typed arrays containing the attribute values.
+ * @private
+ */
+function processAttributes(attributes, provider) {
+  const { names, types, componentTypes } = provider;
   const data = new Array(attributes.length);
+
   for (let i = 0; i < attributes.length; i++) {
     // The attributes array from GltfLoader is not in the same order as
     // names, types, etc. from the provider.
@@ -593,31 +606,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
     );
   }
 
-  that._gltfLoaders.splice(that._gltfLoaders.indexOf(gltfLoader), 1);
   return data;
-};
-
-/**
- * Get a loader for a glTF tile from a tileset
- * @param {ImplicitTileset} implicitTileset The tileset from which the loader will retrieve a glTF tile
- * @param {ImplicitTileCoordinates} tileCoord The coordinates of the desired tile
- * @returns {GltfLoader} A loader for the requested tile
- * @private
- */
-function getGltfLoader(implicitTileset, tileCoord) {
-  const { contentUriTemplates, baseResource } = implicitTileset;
-  const gltfRelative = contentUriTemplates[0].getDerivedResource({
-    templateValues: tileCoord.getTemplateValues(),
-  });
-  const gltfResource = baseResource.getDerivedResource({
-    url: gltfRelative.url,
-  });
-
-  return new GltfLoader({
-    gltfResource: gltfResource,
-    releaseGltfJson: false,
-    loadAttributesAsTypedArray: true,
-  });
 }
 
 export default Cesium3DTilesVoxelProvider;

@@ -425,7 +425,8 @@ function requestData(that, keyframeNode, frameState) {
     return;
   }
 
-  const provider = that._primitive._provider;
+  const primitive = that._primitive;
+  const provider = primitive.provider;
 
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
