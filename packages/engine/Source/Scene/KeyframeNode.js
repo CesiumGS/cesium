@@ -1,7 +1,7 @@
 const LoadState = Object.freeze({
   UNLOADED: 0, // Has no data and is in dormant state
   RECEIVING: 1, // Is waiting on data from the provider
-  RECEIVED: 2, // Received data from the provider
+  PROCESSING: 2, // Data received.  Contents are being processed for rendering.  Depending on the content, it might make its own requests for external data.
   LOADED: 3, // Processed data from provider
   FAILED: 4, // Failed to receive data from the provider
   UNAVAILABLE: 5, // No data available for this tile

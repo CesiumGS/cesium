@@ -58,7 +58,7 @@
 
         ProceduralSingleTileVoxelProvider.prototype.requestData = function (options) {
           if (options.tileLevel >= 1) {
-            return undefined;
+            return Promise.reject(`No tiles available beyond level 0`);
           }
 
           const dimensions = this.dimensions;
@@ -93,7 +93,8 @@
             }
           }
 
-          return Promise.resolve([dataColor]);
+          const content = new Cesium.VoxelContent({ metadata: [dataColor] });
+          return Promise.resolve(content);
         };
 
         function ProceduralMultiTileVoxelProvider(shape) {
@@ -143,7 +144,9 @@
           const { tileLevel, tileX, tileY, tileZ } = options;
 
           if (tileLevel >= this._levelCount) {
-            return undefined;
+            return Promise.reject(
+              `No tiles available beyond level ${this._levelCount - 1}`,
+            );
           }
 
           const type = this.types[0];
@@ -204,7 +207,8 @@
               }
             }
           }
-          return Promise.resolve([dataTile]);
+          const content = new Cesium.VoxelContent({ metadata: [dataTile] });
+          return Promise.resolve(content);
         };
 
         function createPrimitive(provider, customShader, modelMatrix) {

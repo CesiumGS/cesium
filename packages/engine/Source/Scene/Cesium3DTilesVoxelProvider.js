@@ -492,7 +492,6 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
     tileY = 0,
     tileZ = 0,
     keyframe = 0,
-    frameState,
   } = options;
 
   if (keyframe !== 0) {
@@ -547,7 +546,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
     url: gltfRelative.url,
   });
 
-  return VoxelContent.fromGltf(gltfResource, this, frameState);
+  return VoxelContent.fromGltf(gltfResource);
 };
 
 export default Cesium3DTilesVoxelProvider;

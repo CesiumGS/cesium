@@ -413,11 +413,10 @@ function recomputeBoundingVolumesRecursive(that, node) {
  *
  * @param {VoxelTraversal} that
  * @param {KeyframeNode} keyframeNode
- * @param {FrameState} frameState
  *
  * @private
  */
-function requestData(that, keyframeNode, frameState) {
+function requestData(that, keyframeNode) {
   if (
     that._simultaneousRequestCount >=
     VoxelTraversal.simultaneousRequestCountMaximum
@@ -430,34 +429,10 @@ function requestData(that, keyframeNode, frameState) {
 
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
-    const length = provider.types.length;
-
-    if (!defined(result)) {
-      keyframeNode.state = KeyframeNode.LoadState.UNAVAILABLE;
-      //} else if (!Array.isArray(result) || result.length !== length) {
-      // TODO should this throw runtime error?
-      // TODO what if result is a VoxelContent? How do we check the metadata?
-      //  keyframeNode.state = KeyframeNode.LoadState.FAILED;
-    } else {
-      const megatextures = that.megatextures;
-      keyframeNode.content = result;
-      keyframeNode.state = KeyframeNode.LoadState.RECEIVED;
-      const { metadata } = result;
-      for (let i = 0; i < length; i++) {
-        const { voxelCountPerTile, channelCount } = megatextures[i];
-        const { x, y, z } = voxelCountPerTile;
-        const tileVoxelCount = x * y * z;
-
-        const data = metadata[i];
-        const expectedLength = tileVoxelCount * channelCount;
-        if (data.length !== expectedLength) {
-          // State is received only when all metadata requests have been received
-          keyframeNode.state = KeyframeNode.LoadState.FAILED;
-          keyframeNode.content = undefined;
-          break;
-        }
-      }
-    }
+    keyframeNode.content = result;
+    keyframeNode.state = defined(result)
+      ? KeyframeNode.LoadState.PROCESSING
+      : KeyframeNode.LoadState.UNAVAILABLE;
   }
 
   function postRequestFailure(error) {
@@ -472,7 +447,6 @@ function requestData(that, keyframeNode, frameState) {
     tileY: spatialNode.y,
     tileZ: spatialNode.z,
     keyframe: keyframe,
-    frameState: frameState,
   };
   that._simultaneousRequestCount++;
   keyframeNode.state = KeyframeNode.LoadState.RECEIVING;
@@ -567,9 +541,20 @@ function updateKeyframeNodes(that, frameState) {
       continue;
     }
     if (highPriorityKeyframeNode.state === KeyframeNode.LoadState.UNLOADED) {
-      requestData(that, highPriorityKeyframeNode, frameState);
+      requestData(that, highPriorityKeyframeNode);
     }
-    if (highPriorityKeyframeNode.state === KeyframeNode.LoadState.RECEIVED) {
+    if (highPriorityKeyframeNode.state === KeyframeNode.LoadState.PROCESSING) {
+      const { content } = highPriorityKeyframeNode;
+      content.update(that._primitive, frameState);
+      if (!content.ready) {
+        continue;
+      }
+      if (!validateMetadata(content.metadata, that)) {
+        // TODO should this throw runtime error?
+        highPriorityKeyframeNode.content = undefined;
+        highPriorityKeyframeNode.state = KeyframeNode.LoadState.FAILED;
+        continue;
+      }
       let addNodeIndex = 0;
       if (megatexture.isFull()) {
         // If the megatexture is full, try removing a discardable node with the lowest priority.
@@ -600,6 +585,35 @@ function keyframeNodeSort(a, b) {
     return b.priority - a.priority;
   }
   return b.highPriorityFrameNumber - a.highPriorityFrameNumber;
+}
+
+/**
+ * Check if an array of metadata is of the expected type and size
+ *
+ * @param {TypedArray[]} metadata The metadata to validate
+ * @param {VoxelTraversal} traversal The traversal to validate against
+ * @returns {boolean} <code>true</code> if the metadata is valid, <code>false</code> otherwise
+ *
+ * @private
+ */
+function validateMetadata(metadata, traversal) {
+  const length = traversal._primitive.provider.types.length;
+  if (!Array.isArray(metadata) || metadata.length !== length) {
+    return false;
+  }
+  const { megatextures } = traversal;
+  for (let i = 0; i < length; i++) {
+    const { voxelCountPerTile, channelCount } = megatextures[i];
+    const { x, y, z } = voxelCountPerTile;
+    const tileVoxelCount = x * y * z;
+
+    const data = metadata[i];
+    const expectedLength = tileVoxelCount * channelCount;
+    if (data.length !== expectedLength) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -794,7 +808,7 @@ function printDebugInformation(
   const loadStateStatistics =
     `UNLOADED: ${loadStateByCount[KeyframeNode.LoadState.UNLOADED]} | ` +
     `RECEIVING: ${loadStateByCount[KeyframeNode.LoadState.RECEIVING]} | ` +
-    `RECEIVED: ${loadStateByCount[KeyframeNode.LoadState.RECEIVED]} | ` +
+    `PROCESSING: ${loadStateByCount[KeyframeNode.LoadState.PROCESSING]} | ` +
     `LOADED: ${loadStateByCount[KeyframeNode.LoadState.LOADED]} | ` +
     `FAILED: ${loadStateByCount[KeyframeNode.LoadState.FAILED]} | ` +
     `UNAVAILABLE: ${loadStateByCount[KeyframeNode.LoadState.UNAVAILABLE]} | ` +

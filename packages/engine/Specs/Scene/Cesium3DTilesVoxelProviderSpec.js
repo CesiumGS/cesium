@@ -11,6 +11,7 @@ import {
   VoxelShapeType,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/Cesium3DTilesVoxelProvider", function () {
   let scene;
@@ -54,62 +55,98 @@ describe("Scene/Cesium3DTilesVoxelProvider", function () {
   it("requestData works for root tile of ellipsoid tileset", async function () {
     const url = "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
     const provider = await Cesium3DTilesVoxelProvider.fromUrl(url);
+    const primitive = { provider };
 
-    const data = await provider.requestData({
+    const content = await provider.requestData({
       frameState: scene.frameState,
     });
-    expect(data.length).toEqual(1);
 
-    const dimensions = provider.dimensions;
-    const voxelCount = dimensions.x * dimensions.y * dimensions.z;
+    await pollToPromise(function () {
+      scene.renderForSpecs();
+      content.update(primitive, scene.frameState);
+      return content.ready;
+    });
+
+    const { metadata } = content;
+    expect(metadata.length).toEqual(1);
+
+    const { x, y, z } = provider.dimensions;
+    const voxelCount = x * y * z;
     const componentCount = MetadataType.getComponentCount(provider.types[0]);
     const expectedLength = voxelCount * componentCount;
-    expect(data[0].length).toEqual(expectedLength);
+    expect(metadata[0].length).toEqual(expectedLength);
   });
 
   it("requestData works for root tile of box tileset", async function () {
     const url = "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json";
     const provider = await Cesium3DTilesVoxelProvider.fromUrl(url);
+    const primitive = { provider };
 
-    const data = await provider.requestData({
+    const content = await provider.requestData({
       frameState: scene.frameState,
     });
-    expect(data.length).toEqual(1);
 
-    const dimensions = provider.dimensions;
-    const voxelCount = dimensions.x * dimensions.y * dimensions.z;
+    await pollToPromise(function () {
+      scene.renderForSpecs();
+      content.update(primitive, scene.frameState);
+      return content.ready;
+    });
+
+    const { metadata } = content;
+    expect(metadata.length).toEqual(1);
+
+    const { x, y, z } = provider.dimensions;
+    const voxelCount = x * y * z;
     const componentCount = MetadataType.getComponentCount(provider.types[0]);
     const expectedLength = voxelCount * componentCount;
-    expect(data[0].length).toEqual(expectedLength);
+    expect(metadata[0].length).toEqual(expectedLength);
   });
 
   it("requestData works for root tile of cylinder tileset", async function () {
     const url = "./Data/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json";
     const provider = await Cesium3DTilesVoxelProvider.fromUrl(url);
+    const primitive = { provider };
 
-    const data = await provider.requestData({
+    const content = await provider.requestData({
       frameState: scene.frameState,
     });
-    expect(data.length).toEqual(1);
 
-    const dimensions = provider.dimensions;
-    const voxelCount = dimensions.x * dimensions.y * dimensions.z;
+    await pollToPromise(function () {
+      scene.renderForSpecs();
+      content.update(primitive, scene.frameState);
+      return content.ready;
+    });
+
+    const { metadata } = content;
+    expect(metadata.length).toEqual(1);
+
+    const { x, y, z } = provider.dimensions;
+    const voxelCount = x * y * z;
     const componentCount = MetadataType.getComponentCount(provider.types[0]);
     const expectedLength = voxelCount * componentCount;
-    expect(data[0].length).toEqual(expectedLength);
+    expect(metadata[0].length).toEqual(expectedLength);
   });
 
   it("requestData loads multiple attributes correctly", async function () {
     const url =
       "./Data/Cesium3DTiles/Voxel/VoxelMultiAttribute3DTiles/tileset.json";
     const provider = await Cesium3DTilesVoxelProvider.fromUrl(url);
+    const primitive = { provider };
 
-    const data = await provider.requestData({
+    const content = await provider.requestData({
       frameState: scene.frameState,
     });
-    expect(data.length).toBe(3);
-    expect(data[0][0]).toBe(0.0);
-    expect(data[1][0]).toBe(0.5);
-    expect(data[2][0]).toBe(1.0);
+
+    await pollToPromise(function () {
+      scene.renderForSpecs();
+      content.update(primitive, scene.frameState);
+      return content.ready;
+    });
+
+    const { metadata } = content;
+    expect(metadata.length).toBe(3);
+    expect(metadata[0][0]).toBe(0.0);
+    expect(metadata[1][0]).toBe(0.5);
+    expect(metadata[2][0]).toBe(1.0);
   });
 });

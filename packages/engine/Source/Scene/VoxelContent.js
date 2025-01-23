@@ -26,7 +26,6 @@ import MetadataType from "./MetadataType.js";
  * @exception {DeveloperError} One of loader and metadata must be defined.
  * @exception {DeveloperError} metadata must be an array of TypedArrays.
  *
- * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelContent(options) {
@@ -83,7 +82,7 @@ Object.defineProperties(VoxelContent.prototype, {
   },
 });
 
-VoxelContent.fromGltf = async function (resource, provider, frameState) {
+VoxelContent.fromGltf = async function (resource) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("resource", resource);
   //>>includeEnd('debug');
@@ -105,16 +104,7 @@ VoxelContent.fromGltf = async function (resource, provider, frameState) {
     throw error;
   }
 
-  await loader.load();
-  loader.process(frameState);
-  await loader._loadResourcesPromise;
-  loader.process(frameState);
-
-  const metadata = processAttributes(
-    loader.components.scene.nodes[0].primitives[0].attributes,
-    provider,
-  );
-  return new VoxelContent({ resource, loader, metadata });
+  return new VoxelContent({ resource, loader });
 };
 
 /**
@@ -159,10 +149,10 @@ VoxelContent.prototype.update = function (primitive, frameState) {
  * @returns {TypedArray[]} An array of typed arrays containing the attribute values
  * @private
  */
-function processAttributes(attributes, provider) {
+function processAttributes(attributes, primitive) {
   //function processAttributes(attributes, primitive) {
   //const { names, types, componentTypes } = primitive.provider;
-  const { names, types, componentTypes } = provider;
+  const { names, types, componentTypes } = primitive.provider;
   const data = new Array(attributes.length);
 
   for (let i = 0; i < attributes.length; i++) {

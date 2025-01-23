@@ -74,7 +74,7 @@
           const { tileLevel, tileX, tileY, tileZ } = options;
 
           if (tileLevel >= this._levelCount) {
-            return undefined;
+            return Promise.reject(`No tiles available beyond level ${this._levelCount}`);
           }
 
           const dimensions = this.dimensions;
@@ -83,7 +83,8 @@
             tileZ * dimensions.y * dimensions.x + tileY * dimensions.x + tileX;
           const dataTile = constructRandomTileData(dimensions, type, randomSeed);
 
-          return Promise.resolve([dataTile]);
+          const content = new Cesium.VoxelContent({ metadata: [dataTile] });
+          return Promise.resolve(content);
         };
 
         function constructRandomTileData(dimensions, type, randomSeed) {
