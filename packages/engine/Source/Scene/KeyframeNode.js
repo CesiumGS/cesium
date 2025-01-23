@@ -28,7 +28,6 @@ function KeyframeNode(spatialNode, keyframe) {
 
 /**
  * Frees the resources used by this object.
- * TODO: replace with a destroy method?
  * @private
  */
 KeyframeNode.prototype.unload = function () {

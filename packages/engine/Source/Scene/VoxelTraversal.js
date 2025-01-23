@@ -43,7 +43,6 @@ function VoxelTraversal(
   maximumTextureMemoryByteLength,
 ) {
   /**
-   * TODO: maybe this shouldn't be stored or passed into update function?
    * @type {VoxelPrimitive}
    * @private
    */
@@ -550,7 +549,6 @@ function updateKeyframeNodes(that, frameState) {
         continue;
       }
       if (!validateMetadata(content.metadata, that)) {
-        // TODO should this throw runtime error?
         highPriorityKeyframeNode.content = undefined;
         highPriorityKeyframeNode.state = KeyframeNode.LoadState.FAILED;
         continue;

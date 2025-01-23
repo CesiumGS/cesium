@@ -18,9 +18,9 @@ import Resource from "../Core/Resource.js";
 import ResourceCache from "./ResourceCache.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import VoxelBoxShape from "./VoxelBoxShape.js";
+import VoxelContent from "./VoxelContent.js";
 import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelShapeType from "./VoxelShapeType.js";
-import VoxelContent from "./VoxelContent.js";
 
 /**
  * A {@link VoxelProvider} that fetches voxel data from a 3D Tiles tileset.

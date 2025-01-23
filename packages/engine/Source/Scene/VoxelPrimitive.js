@@ -2,29 +2,30 @@ import buildVoxelDrawCommands from "./buildVoxelDrawCommands.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import Cartographic from "../Core/Cartographic.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
+import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import clone from "../Core/clone.js";
+import CustomShader from "./Model/CustomShader.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
+import Material from "./Material.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
-import Material from "./Material.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import PolylineCollection from "./PolylineCollection.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import VoxelContent from "./VoxelContent.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 import VoxelTraversal from "./VoxelTraversal.js";
-import CustomShader from "./Model/CustomShader.js";
-import Cartographic from "../Core/Cartographic.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 
 /**
  * A primitive that renders voxel data from a {@link VoxelProvider}.
@@ -1955,7 +1956,8 @@ DefaultVoxelProvider.prototype.requestData = function (options) {
     return undefined;
   }
 
-  return Promise.resolve([new Float32Array(1)]);
+  const content = new VoxelContent({ metadata: [new Float32Array(1)] });
+  return Promise.resolve(content);
 };
 
 VoxelPrimitive.DefaultProvider = new DefaultVoxelProvider();
