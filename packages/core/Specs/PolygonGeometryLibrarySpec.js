@@ -4,7 +4,7 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   PolygonGeometryLibrary,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/PolygonGeometryLibrary", function () {
   describe("splitPolygonByPlane", function () {

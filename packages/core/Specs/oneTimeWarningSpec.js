@@ -1,4 +1,4 @@
-import { oneTimeWarning } from "../../index.js";
+import { oneTimeWarning } from "../index.js";
 
 describe("Core/oneTimeWarning", function () {
   it("logs a warning", function () {

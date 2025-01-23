@@ -7,7 +7,7 @@ import {
   Math as CesiumMath,
   PrimitiveType,
   SimplePolylineGeometry,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

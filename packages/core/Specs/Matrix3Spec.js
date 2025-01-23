@@ -4,7 +4,7 @@ import {
   Math as CesiumMath,
   Matrix3,
   Quaternion,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";

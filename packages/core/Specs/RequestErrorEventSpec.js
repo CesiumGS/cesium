@@ -1,4 +1,4 @@
-import { RequestErrorEvent } from "../../index.js";
+import { RequestErrorEvent } from "../index.js";
 
 describe("Core/RequestErrorEvent", function () {
   it("parses response headers provided as a string", function () {

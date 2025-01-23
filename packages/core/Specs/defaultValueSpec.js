@@ -1,4 +1,4 @@
-import { defaultValue } from "../../index.js";
+import { defaultValue } from "../index.js";
 
 describe("Core/defaultValue", function () {
   it("Works with first parameter undefined", function () {

@@ -1,4 +1,4 @@
-import { Math as CesiumMath, SphereOutlineGeometry } from "../../index.js";
+import { Math as CesiumMath, SphereOutlineGeometry } from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

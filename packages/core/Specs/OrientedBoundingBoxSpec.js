@@ -12,7 +12,7 @@ import {
   Plane,
   Quaternion,
   Rectangle,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

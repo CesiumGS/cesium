@@ -5,7 +5,7 @@ import {
   Matrix3,
   Math as CesiumMath,
   TimeStandard,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/IauOrientationAxes", function () {
   it("compute ICRF to Moon Fixed", function () {

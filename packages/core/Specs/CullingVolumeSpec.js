@@ -5,7 +5,7 @@ import {
   CullingVolume,
   Intersect,
   PerspectiveFrustum,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/CullingVolume", function () {
   let cullingVolume;

@@ -1,4 +1,4 @@
-import { createWorldTerrainAsync, CesiumTerrainProvider } from "../../index.js";
+import { createWorldTerrainAsync, CesiumTerrainProvider } from "../index.js";
 
 describe("Core/createWorldTerrainAsync", function () {
   it("resolves to CesiumTerrainProvider instance with default parameters", async function () {

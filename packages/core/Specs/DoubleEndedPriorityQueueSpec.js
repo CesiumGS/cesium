@@ -1,4 +1,4 @@
-import { DoubleEndedPriorityQueue } from "../../index.js";
+import { DoubleEndedPriorityQueue } from "../index.js";
 
 describe("Core/DoubleEndedPriorityQueue", function () {
   function comparator(a, b) {

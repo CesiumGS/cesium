@@ -1,4 +1,4 @@
-import { Cartesian3, CoplanarPolygonOutlineGeometry } from "../../index.js";
+import { Cartesian3, CoplanarPolygonOutlineGeometry } from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

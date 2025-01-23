@@ -10,7 +10,7 @@ import Matrix4 from "./Matrix4.js";
 import PolylinePipeline from "./PolylinePipeline.js";
 import Quaternion from "./Quaternion.js";
 import Transforms from "./Transforms.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
+import oneTimeWarning from "./oneTimeWarning.js";
 
 const scratch2Array = [new Cartesian3(), new Cartesian3()];
 const scratchCartesian1 = new Cartesian3();

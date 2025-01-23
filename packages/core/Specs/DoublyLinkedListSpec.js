@@ -1,4 +1,4 @@
-import { DoublyLinkedList } from "../../index.js";
+import { DoublyLinkedList } from "../index.js";
 
 describe("Core/DoublyLinkedList", function () {
   it("constructs", function () {

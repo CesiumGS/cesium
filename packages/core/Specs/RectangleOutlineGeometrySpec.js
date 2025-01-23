@@ -8,7 +8,7 @@ import {
   Matrix2,
   Rectangle,
   RectangleOutlineGeometry,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

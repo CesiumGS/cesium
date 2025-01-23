@@ -3,7 +3,7 @@ import {
   Cartesian3,
   Rectangle,
   Math as CesiumMath,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/ApproximateTerrainHeights", function () {
   beforeAll(function () {

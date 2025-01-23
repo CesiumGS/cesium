@@ -1,4 +1,4 @@
-import { DistanceDisplayCondition } from "../../index.js";
+import { DistanceDisplayCondition } from "../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/DistanceDisplayCondition", function () {

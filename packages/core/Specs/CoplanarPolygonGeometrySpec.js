@@ -5,7 +5,7 @@ import {
   Math as CesiumMath,
   Ellipsoid,
   VertexFormat,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

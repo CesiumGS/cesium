@@ -3,7 +3,7 @@ import {
   Cartographic,
   Ellipsoid,
   Math as CesiumMath,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/Cartographic", function () {
   const surfaceCartesian = new Cartesian3(

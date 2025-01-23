@@ -1,4 +1,4 @@
-import { resizeImageToNextPowerOfTwo } from "../../index.js";
+import { resizeImageToNextPowerOfTwo } from "../index.js";
 
 describe("Core/resizeImageToNextPowerOfTwo", function () {
   const canvas = document.createElement("canvas");

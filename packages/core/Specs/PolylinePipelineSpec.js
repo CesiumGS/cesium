@@ -4,7 +4,7 @@ import {
   Math as CesiumMath,
   PolylinePipeline,
   Transforms,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/PolylinePipeline", function () {
   it("wrapLongitude", function () {

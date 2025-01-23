@@ -8,7 +8,7 @@ import {
   GroundPolylineGeometry,
   Math as CesiumMath,
   WebMercatorProjection,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

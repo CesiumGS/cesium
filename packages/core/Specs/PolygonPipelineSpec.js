@@ -5,7 +5,7 @@ import {
   Math as CesiumMath,
   PolygonPipeline,
   WindingOrder,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/PolygonPipeline", function () {
   beforeEach(function () {

@@ -3,7 +3,7 @@ import {
   FeatureDetection,
   Math as CesiumMath,
   S2Cell,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/S2Cell", function () {
   if (!FeatureDetection.supportsBigInt()) {

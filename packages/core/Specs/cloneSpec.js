@@ -1,4 +1,4 @@
-import { clone } from "../../index.js";
+import { clone } from "../index.js";
 
 describe("Core/clone", function () {
   it("can make shallow clones", function () {

@@ -3,7 +3,7 @@ import {
   CesiumTerrainProvider,
   createWorldTerrainAsync,
   sampleTerrainMostDetailed,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/sampleTerrainMostDetailed", function () {
   let worldTerrain;

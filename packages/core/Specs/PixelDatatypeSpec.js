@@ -1,4 +1,4 @@
-import { PixelDatatype } from "../../index.js";
+import { PixelDatatype } from "../index.js";
 
 describe("Core/PixelDatatype", function () {
   it("getTypedArrayConstructor returns the expected constructor", function () {

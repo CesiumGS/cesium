@@ -3,7 +3,7 @@ import {
   Ellipsoid,
   EllipsoidGeodesic,
   Math as CesiumMath,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/EllipsoidGeodesic", function () {
   it("throws without start", function () {

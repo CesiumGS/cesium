@@ -3,7 +3,7 @@ import {
   HermiteSpline,
   Math as CesiumMath,
   Quaternion,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/HermiteSpline", function () {
   let points;

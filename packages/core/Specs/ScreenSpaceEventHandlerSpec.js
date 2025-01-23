@@ -7,7 +7,7 @@ import {
   KeyboardEventModifier,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
-} from "../../index.js";
+} from "../index.js";
 
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 

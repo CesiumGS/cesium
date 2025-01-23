@@ -3,7 +3,7 @@ import {
   BoxOutlineGeometry,
   Cartesian3,
   GeometryOffsetAttribute,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

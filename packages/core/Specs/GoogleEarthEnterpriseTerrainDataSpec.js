@@ -8,7 +8,7 @@ import {
   Rectangle,
   TerrainData,
   TerrainMesh,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   const sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;

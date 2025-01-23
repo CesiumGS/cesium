@@ -5,7 +5,7 @@ import {
   JulianDate,
   Math as CesiumMath,
   VideoSynchronizer,
-} from "../../index.js";
+} from "../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

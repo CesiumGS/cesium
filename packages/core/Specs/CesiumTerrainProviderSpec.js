@@ -12,7 +12,7 @@ import {
   Resource,
   RuntimeError,
   TerrainProvider,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/CesiumTerrainProvider", function () {
   beforeEach(function () {

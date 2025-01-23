@@ -5,7 +5,7 @@ import {
   RequestErrorEvent,
   Resource,
   RuntimeError,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/IonResource", function () {
   const assetId = 123890213;

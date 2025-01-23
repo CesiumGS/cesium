@@ -3,7 +3,7 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   WallOutlineGeometry,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

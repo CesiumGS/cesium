@@ -1,4 +1,4 @@
-import { TrustedServers } from "../../index.js";
+import { TrustedServers } from "../index.js";
 
 describe("Core/TrustedServers", function () {
   afterEach(function () {

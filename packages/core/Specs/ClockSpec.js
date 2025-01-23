@@ -1,10 +1,4 @@
-import {
-  Clock,
-  ClockRange,
-  ClockStep,
-  defined,
-  JulianDate,
-} from "../../index.js";
+import { Clock, ClockRange, ClockStep, defined, JulianDate } from "../index.js";
 
 describe("Core/Clock", function () {
   it("sets default parameters when constructed", function () {

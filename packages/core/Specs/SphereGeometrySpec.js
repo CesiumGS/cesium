@@ -3,7 +3,7 @@ import {
   Math as CesiumMath,
   SphereGeometry,
   VertexFormat,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

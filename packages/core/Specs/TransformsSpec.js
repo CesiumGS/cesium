@@ -17,7 +17,7 @@ import {
   RuntimeError,
   TimeInterval,
   Transforms,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/Transforms", function () {
   const negativeX = new Cartesian4(-1, 0, 0, 0);

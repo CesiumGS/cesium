@@ -7,7 +7,7 @@ import {
   TilingScheme,
   WebMercatorProjection,
   WebMercatorTilingScheme,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/WebMercatorTilingScheme", function () {
   let tilingScheme;

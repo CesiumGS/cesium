@@ -5,7 +5,7 @@ import {
   Ion,
   IonGeocodeProviderType,
   IonGeocoderService,
-} from "../../index.js";
+} from "../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

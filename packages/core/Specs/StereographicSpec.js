@@ -3,7 +3,7 @@ import {
   Cartesian3,
   Math as CesiumMath,
   Stereographic,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/Stereographic", function () {
   it("construct with default values", function () {

@@ -4,7 +4,7 @@ import {
   GeocoderService,
   Rectangle,
   Resource,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/BingMapsGeocoderService", function () {
   afterAll(function () {

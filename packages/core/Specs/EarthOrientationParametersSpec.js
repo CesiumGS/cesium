@@ -4,7 +4,7 @@ import {
   JulianDate,
   TimeStandard,
   RuntimeError,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/EarthOrientationParameters", function () {
   let officialLeapSeconds;

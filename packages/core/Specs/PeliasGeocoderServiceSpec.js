@@ -4,7 +4,7 @@ import {
   GeocodeType,
   PeliasGeocoderService,
   Resource,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/PeliasGeocoderService", function () {
   it("conforms to GeocoderService interface", function () {

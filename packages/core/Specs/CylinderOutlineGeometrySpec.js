@@ -1,7 +1,4 @@
-import {
-  CylinderOutlineGeometry,
-  GeometryOffsetAttribute,
-} from "../../index.js";
+import { CylinderOutlineGeometry, GeometryOffsetAttribute } from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

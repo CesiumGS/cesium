@@ -10,7 +10,7 @@ import {
   VerticalExaggeration,
   TerrainQuantization,
   Transforms,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/TerrainEncoding", function () {
   let center;

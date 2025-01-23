@@ -7,7 +7,7 @@ import {
   Request,
   Resource,
   RuntimeError,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/GoogleEarthEnterpriseMetadata", function () {
   it("tileXYToQuadKey", function () {

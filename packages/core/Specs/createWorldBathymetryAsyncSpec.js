@@ -1,7 +1,4 @@
-import {
-  createWorldBathymetryAsync,
-  CesiumTerrainProvider,
-} from "../../index.js";
+import { createWorldBathymetryAsync, CesiumTerrainProvider } from "../index.js";
 
 describe("Core/createWorldBathymetryAsync", function () {
   it("resolves to CesiumTerrainProvider instance with default parameters", async function () {

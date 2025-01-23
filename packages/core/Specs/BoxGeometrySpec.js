@@ -4,7 +4,7 @@ import {
   Cartesian3,
   GeometryOffsetAttribute,
   VertexFormat,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

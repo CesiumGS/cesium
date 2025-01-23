@@ -1,4 +1,4 @@
-import { MortonOrder } from "../../index.js";
+import { MortonOrder } from "../index.js";
 
 describe("Core/MortonOrder", function () {
   it("encode2D throws for undefined inputs", function () {

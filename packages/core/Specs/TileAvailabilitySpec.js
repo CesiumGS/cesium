@@ -5,7 +5,7 @@ import {
   TileAvailability,
   WebMercatorTilingScheme,
   defined,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/TileAvailability", function () {
   const webMercator = new WebMercatorTilingScheme();

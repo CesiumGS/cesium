@@ -7,7 +7,7 @@ import {
   QuantizedMeshTerrainData,
   TerrainData,
   TerrainMesh,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/QuantizedMeshTerrainData", function () {
   it("conforms to TerrainData interface", function () {

@@ -5,7 +5,7 @@ import {
   Math as CesiumMath,
   Matrix4,
   PerspectiveFrustum,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

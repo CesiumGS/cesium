@@ -7,7 +7,7 @@ import {
   Quaternion,
   TranslationRotationScale,
   RuntimeError,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";

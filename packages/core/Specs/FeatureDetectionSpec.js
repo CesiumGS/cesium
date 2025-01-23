@@ -1,4 +1,4 @@
-import { FeatureDetection } from "../../index.js";
+import { FeatureDetection } from "../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Core/FeatureDetection", function () {

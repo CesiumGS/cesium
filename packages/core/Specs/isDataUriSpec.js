@@ -1,4 +1,4 @@
-import { isDataUri } from "../../index.js";
+import { isDataUri } from "../index.js";
 
 describe("Core/isDataUri", function () {
   it("Throws if url is undefined", function () {

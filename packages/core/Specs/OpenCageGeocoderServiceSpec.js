@@ -3,7 +3,7 @@ import {
   GeocoderService,
   OpenCageGeocoderService,
   Resource,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/OpenCageGeocoderService", function () {
   const endpoint = "https://api.opencagedata.com/geocode/v1/";

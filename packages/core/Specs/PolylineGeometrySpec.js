@@ -7,7 +7,7 @@ import {
   Math as CesiumMath,
   PolylineGeometry,
   VertexFormat,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

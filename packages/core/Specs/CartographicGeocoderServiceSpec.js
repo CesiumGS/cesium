@@ -2,7 +2,7 @@ import {
   Cartesian3,
   CartographicGeocoderService,
   GeocoderService,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/CartographicGeocoderService", function () {
   const service = new CartographicGeocoderService();

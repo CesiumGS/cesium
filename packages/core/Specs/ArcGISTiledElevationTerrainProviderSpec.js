@@ -9,7 +9,7 @@ import {
   TerrainProvider,
   WebMercatorTilingScheme,
   Math as CesiumMath,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/ArcGISTiledElevationTerrainProvider", function () {
   const lercTileUrl = "Data/Images/Red16x16.png";

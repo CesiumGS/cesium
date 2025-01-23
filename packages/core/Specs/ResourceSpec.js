@@ -9,7 +9,7 @@ import {
   RequestErrorEvent,
   RequestScheduler,
   Resource,
-} from "../../index.js";
+} from "../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

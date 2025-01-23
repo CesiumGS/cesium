@@ -4,7 +4,7 @@ import {
   GoogleGeocoderService,
   Resource,
   Rectangle,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/GoogleGeocoderService", function () {
   it("conforms to GeocoderService interface", function () {

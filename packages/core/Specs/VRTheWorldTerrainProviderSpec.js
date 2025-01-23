@@ -8,7 +8,7 @@ import {
   RuntimeError,
   TerrainProvider,
   VRTheWorldTerrainProvider,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/VRTheWorldTerrainProvider", function () {
   const imageUrl = "Data/Images/Red16x16.png";

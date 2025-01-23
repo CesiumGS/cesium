@@ -6,7 +6,7 @@ import {
   Math as CesiumMath,
   Rectangle,
   TilingScheme,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/GeographicTilingScheme", function () {
   it("conforms to TilingScheme interface.", function () {

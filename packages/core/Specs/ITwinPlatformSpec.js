@@ -3,7 +3,7 @@ import {
   RequestErrorEvent,
   Resource,
   RuntimeError,
-} from "../../index.js";
+} from "../index.js";
 
 describe("ITwinPlatform", () => {
   let previousAccessToken;

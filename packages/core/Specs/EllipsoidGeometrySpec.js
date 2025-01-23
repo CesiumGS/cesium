@@ -4,7 +4,7 @@ import {
   GeometryOffsetAttribute,
   Math as CesiumMath,
   VertexFormat,
-} from "../../index.js";
+} from "../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

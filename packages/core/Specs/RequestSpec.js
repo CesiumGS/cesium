@@ -1,4 +1,4 @@
-import { Request, RequestState, RequestType } from "../../index.js";
+import { Request, RequestState, RequestType } from "../index.js";
 
 describe("Core/Request", function () {
   it("sets correct properties in constructor", function () {
