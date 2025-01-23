@@ -1,4 +1,4 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+import WebGLConstants from "./WebGLConstants.js";
 
 /**
  * The data type of a pixel.
