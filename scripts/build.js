@@ -261,6 +261,7 @@ const workspaceSourceFiles = {
     "!packages/engine/Source/ThirdParty/_*",
   ],
   widgets: ["packages/widgets/Source/**/*.js"],
+  core: ["packages/core/Source/**/*.js"],
 };
 
 /**
@@ -307,6 +308,7 @@ export async function createCesiumJs() {
 const workspaceSpecFiles = {
   engine: ["packages/engine/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
+  core: ["packages/core/Specs/**/*Spec.js"],
 };
 
 /**
@@ -1060,6 +1062,39 @@ export const buildWidgets = async (options) => {
     incremental: incremental,
     outbase: "packages/widgets/Specs",
     outdir: "packages/widgets/Build/Specs",
+    specListFile: specListFile,
+    write: write,
+  });
+};
+
+/**
+ * Builds the widgets workspace.
+ *
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ */
+export const buildCore = async (options) => {
+  options = options || {};
+
+  const incremental = options.incremental ?? false;
+  const write = options.write ?? true;
+
+  // Generate Build folder to place build artifacts.
+  mkdirp.sync("packages/core/Build");
+
+  // Create index.js
+  await createIndexJs("core");
+
+  // Create SpecList.js
+  const specFiles = await globby(workspaceSpecFiles["core"]);
+  const specListFile = path.join("packages/core/Specs", "SpecList.js");
+  await createSpecListForWorkspace(specFiles, "core", specListFile);
+
+  await bundleSpecs({
+    incremental: incremental,
+    outbase: "packages/core/Specs",
+    outdir: "packages/core/Build/Specs",
     specListFile: specListFile,
     write: write,
   });

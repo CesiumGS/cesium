@@ -30,6 +30,7 @@ import {
   createCombinedSpecList,
   createJsHintOptions,
   defaultESBuildOptions,
+  buildCore,
 } from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -133,8 +134,11 @@ export async function build() {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
+  } else if (workspace === `@${scope}/core`) {
+    return buildCore(buildOptions);
   }
 
+  await buildCore(buildOptions);
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
@@ -427,6 +431,7 @@ function combineForSandcastle() {
 }
 
 export const websiteRelease = gulp.series(
+  buildCore,
   buildEngine,
   buildWidgets,
   function websiteReleaseBuild() {
@@ -442,6 +447,7 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
+  buildCore,
   buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified
