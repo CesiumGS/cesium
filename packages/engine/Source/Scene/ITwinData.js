@@ -154,7 +154,7 @@ ITwinData.createTilesetForRealityDataId = async function (
  *
  * @throws {RuntimeError} if the type of reality data is not supported by this function
  */
-ITwinData.createDataSourceForRealityDataId = async function loadRealityData(
+ITwinData.createDataSourceForRealityDataId = async function (
   iTwinId,
   realityDataId,
   type,
@@ -203,6 +203,40 @@ ITwinData.createDataSourceForRealityDataId = async function loadRealityData(
 
   // If we get here it's guaranteed to be a KML type
   return KmlDataSource.load(tilesetAccessUrl);
+};
+
+ITwinData.loadGeospatialFeatures = async function (
+  iTwinId,
+  collectionId,
+  limit,
+) {
+  ////>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("collectionId", collectionId);
+  if (defined(limit)) {
+    Check.typeOf.number("limit", limit);
+    Check.typeOf.number.lessThanOrEquals("limit", limit, 10000);
+    Check.typeOf.number.greaterThanOrEquals("limit", limit, 1);
+  }
+  //>>includeEnd('debug')
+
+  const pageLimit = limit ?? 10000;
+
+  const tilesetUrl = `${ITwinPlatform.apiEndpoint}/geospatial-features/itwins/${iTwinId}/ogc/collections/${collectionId}/items`;
+
+  const resource = new Resource({
+    url: tilesetUrl,
+    headers: {
+      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
+      Accept: "application/vnd.bentley.itwin-platform.v1+json",
+    },
+    queryParameters: {
+      limit: pageLimit,
+      client: "CesiumJS",
+    },
+  });
+
+  return GeoJsonDataSource.load(resource);
 };
 
 export default ITwinData;
