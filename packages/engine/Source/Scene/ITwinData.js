@@ -6,6 +6,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import Check from "../Core/Check.js";
 import KmlDataSource from "../DataSources/KmlDataSource.js";
 import GeoJsonDataSource from "../DataSources/GeoJsonDataSource.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS
@@ -205,6 +206,17 @@ ITwinData.createDataSourceForRealityDataId = async function (
   return KmlDataSource.load(tilesetAccessUrl);
 };
 
+/**
+ * Load data from the Geospatial Features API as GeoJSON.
+ *
+ * NOTE: this function does not implement the full WFS schema yet so the limit
+ * should be larger than the entire dataset to retrieve everything
+ *
+ * @param {string} iTwinId The id of the iTwin to load data from
+ * @param {string} collectionId The id of the data collection to load
+ * @param {number} [limit=10000] number of items per page, must be between 1 and 10,000 inclusive
+ * @returns {Promise<GeoJsonDataSource>}
+ */
 ITwinData.loadGeospatialFeatures = async function (
   iTwinId,
   collectionId,
@@ -218,11 +230,14 @@ ITwinData.loadGeospatialFeatures = async function (
     Check.typeOf.number.lessThanOrEquals("limit", limit, 10000);
     Check.typeOf.number.greaterThanOrEquals("limit", limit, 1);
   }
+  if (!defined(ITwinPlatform.defaultAccessToken)) {
+    throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
+  }
   //>>includeEnd('debug')
 
   const pageLimit = limit ?? 10000;
 
-  const tilesetUrl = `${ITwinPlatform.apiEndpoint}/geospatial-features/itwins/${iTwinId}/ogc/collections/${collectionId}/items`;
+  const tilesetUrl = `${ITwinPlatform.apiEndpoint}geospatial-features/itwins/${iTwinId}/ogc/collections/${collectionId}/items`;
 
   const resource = new Resource({
     url: tilesetUrl,
