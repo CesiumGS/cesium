@@ -83,7 +83,7 @@
             tileZ * dimensions.y * dimensions.x + tileY * dimensions.x + tileX;
           const dataTile = constructRandomTileData(dimensions, type, randomSeed);
 
-          const content = new Cesium.VoxelContent({ metadata: [dataTile] });
+          const content = Cesium.VoxelContent.fromMetadataArray([dataTile]);
           return Promise.resolve(content);
         };
 

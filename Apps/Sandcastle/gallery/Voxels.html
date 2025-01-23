@@ -93,7 +93,7 @@
             }
           }
 
-          const content = new Cesium.VoxelContent({ metadata: [dataColor] });
+          const content = Cesium.VoxelContent.fromMetadataArray([dataColor]);
           return Promise.resolve(content);
         };
 
@@ -207,7 +207,7 @@
               }
             }
           }
-          const content = new Cesium.VoxelContent({ metadata: [dataTile] });
+          const content = Cesium.VoxelContent.fromMetadataArray([dataTile]);
           return Promise.resolve(content);
         };
 

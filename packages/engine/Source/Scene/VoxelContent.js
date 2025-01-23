@@ -8,14 +8,17 @@ import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
 
 /**
+ * <div class="notice">
+ * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
+ * </div>
  * An object representing voxel content for a {@link Cesium3DTilesVoxelProvider}.
  *
  * @alias VoxelContent
- * @constructor
+ * @internalConstructor
  *
- * @param {object} options An object with the following properties:
- * @param {ResourceLoader} [options.loader] The loader used to load the voxel content.
- * @param {TypedArray[]} [options.metadata] The metadata for this voxel content.
+ * @privateParam {object} options An object with the following properties:
+ * @privateParam {ResourceLoader} [options.loader] The loader used to load the voxel content.
+ * @privateParam {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]} [options.metadata] The metadata for this voxel content.
  *
  * @exception {DeveloperError} One of loader and metadata must be defined.
  * @exception {DeveloperError} metadata must be an array of TypedArrays.
@@ -62,8 +65,8 @@ Object.defineProperties(VoxelContent.prototype, {
    * The metadata for this voxel content.
    * The metadata is an array of typed arrays, one for each field.
    * The data for one field is a flattened 3D array ordered by X, then Y, then Z.
-   * TODO: use a MetadataTable
-   * @type {TypedArray[]}
+   * TODO: use a MetadataTable?
+   * @type {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]}
    * @readonly
    */
   metadata: {
@@ -74,10 +77,29 @@ Object.defineProperties(VoxelContent.prototype, {
 });
 
 /**
+ * Constructs a VoxelContent from an array of metadata.
+ *
+ * @param {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]} metadata The metadata to use for this voxel content.
+ * @returns {VoxelContent} A VoxelContent containing the specified metadata.
+ */
+VoxelContent.fromMetadataArray = function (metadata) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("metadata", metadata);
+  if (!Array.isArray(metadata)) {
+    throw new DeveloperError("metadata must be an array of TypedArrays.");
+  }
+  //>>includeEnd('debug');
+
+  return new VoxelContent({ metadata });
+};
+
+/**
  * Constructs a VoxelContent from a glTF resource.
  *
- * @param {Resource} resource A Resource pointing to a glTF containing voxel content
- * @returns {Promise<VoxelContent>} A promise that resolves to the voxel content
+ * @param {Resource} resource A Resource pointing to a glTF containing voxel content.
+ * @returns {Promise<VoxelContent>} A promise that resolves to the voxel content.
+ *
+ * @private
  */
 VoxelContent.fromGltf = async function (resource) {
   //>>includeStart('debug', pragmas.debug);
@@ -140,7 +162,7 @@ VoxelContent.prototype.update = function (primitive, frameState) {
  *
  * @param {ModelComponents.Attribute[]} attributes The attributes to process
  * @param {VoxelPrimitive} primitive The primitive for which this voxel content will be used.
- * @returns {TypedArray[]} An array of typed arrays containing the attribute values
+ * @returns {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]} An array of typed arrays containing the attribute values
  * @private
  */
 function processAttributes(attributes, primitive) {
