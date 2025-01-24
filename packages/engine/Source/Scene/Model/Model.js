@@ -15,7 +15,6 @@ import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
-import CesiumMath from "../../Core/Math.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
@@ -45,6 +44,7 @@ import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 import GaussianSplatSorter from "../GaussianSplatSorter.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * <div class="notice">
@@ -495,9 +495,6 @@ function Model(options) {
     options.showGaussianSplatting,
     true,
   );
-
-  //track last camera view to determine if gaussian splats need to be re-sorted
-  this._previousViewProj = undefined;
 
   /**
    * The color to use when rendering outlines.
@@ -2178,22 +2175,28 @@ function updatePointCloudShading(model) {
   }
 }
 
-function updateGaussianSplatting(model, frameState) {
-  //if the camera has rotated enough, update commands
-  const viewMatrix = new Matrix4();
-  Matrix4.multiply(
-    frameState.camera.frustum.projectionMatrix,
-    frameState.camera.viewMatrix,
-    viewMatrix,
-  );
+const scratchSplatMatrix = new Matrix4();
 
-  if (!defined(model._previousViewProj)) {
-    model._previousViewProj = viewMatrix;
+function updateGaussianSplatting(model, frameState) {
+  let prim;
+  for (let i = 0; i < model.sceneGraph.components.nodes.length; i++) {
+    for (
+      let j = 0;
+      j < model.sceneGraph.components.nodes[i].primitives.length;
+      j++
+    ) {
+      const primitive = model.sceneGraph.components.nodes[i].primitives[j];
+      if (primitive.isGaussianSplatPrimitive) {
+        prim = primitive;
+        break;
+      }
+    }
+  }
+
+  if (!defined(prim)) {
     return;
   }
 
-  const sg = model._sceneGraph;
-  const prim = sg._components.nodes[0].primitives[0]; //walk more primitives
   //texture generation is done and we have one ready to use
   //rebuild our draw  commands this one time
   if (prim.gaussianSplatTexturePending && prim.hasGaussianSplatTexture) {
@@ -2201,56 +2204,43 @@ function updateGaussianSplatting(model, frameState) {
     model.resetDrawCommands();
   }
 
-  const dot =
-    model._previousViewProj[2] * viewMatrix[2] +
-    model._previousViewProj[6] * viewMatrix[6] +
-    model._previousViewProj[10] * viewMatrix[10];
+  Matrix4.multiply(
+    frameState.camera.viewMatrix,
+    model.modelMatrix,
+    scratchSplatMatrix,
+  );
 
-  if (Math.abs(dot - 1) > CesiumMath.EPSILON2) {
-    if (prim?.isGaussianSplatPrimitive) {
-      const modelViewMatrix = new Matrix4();
-      Matrix4.multiply(
-        frameState.camera.viewMatrix,
-        model.modelMatrix,
-        modelViewMatrix,
-      );
-      model._previousViewProj = viewMatrix;
-
-      if (!prim?.hasGaussianSplatTexture) {
-        model.resetDrawCommands();
-        return;
-      }
-
-      const idxAttr = prim.attributes.find((a) => a.name === "_SPLAT_INDEXES");
-      const posAttr = prim.attributes.find((a) => a.name === "POSITION");
-
-      try {
-        const promise = GaussianSplatSorter.radixSortIndexes({
-          primitive: {
-            positions: new Float32Array(posAttr.typedArray),
-            modelView: Float32Array.from(modelViewMatrix),
-            count: idxAttr.count,
-          },
-          sortType: "Index",
-        });
-
-        if (promise === undefined) {
-          return;
-        }
-
-        promise.catch((err) => {
-          console.error(`${err}`);
-        });
-        promise.then((sortedData) => {
-          idxAttr.typedArray = sortedData;
-          model.resetDrawCommands();
-        });
-      } catch (e) {
-        console.log(`${e}`);
-      }
-    }
-    //model.resetDrawCommands();
+  if (!prim?.hasGaussianSplatTexture) {
+    model.resetDrawCommands();
+    return;
   }
+
+  const idxAttr = prim.attributes.find((a) => a.name === "_SPLAT_INDEXES");
+  const posAttr = ModelUtility.getAttributeBySemantic(
+    prim,
+    VertexAttributeSemantic.POSITION,
+  );
+
+  const promise = GaussianSplatSorter.radixSortIndexes({
+    primitive: {
+      positions: new Float32Array(posAttr.typedArray),
+      modelView: Float32Array.from(scratchSplatMatrix),
+      count: idxAttr.count,
+    },
+    sortType: "Index",
+  });
+
+  if (promise === undefined) {
+    return;
+  }
+
+  promise.catch((err) => {
+    throw err;
+  });
+  promise.then((sortedData) => {
+    idxAttr.typedArray = sortedData;
+    model.resetDrawCommands();
+  });
 }
 
 function updateSilhouette(model, frameState) {

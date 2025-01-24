@@ -161,9 +161,8 @@ GeometryPipelineStage.process = function (
       ).instanceDivisor = showSplats ? 1 : 0;
 
       if (primitive.hasGaussianSplatTexture) {
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.SPLAT_INDEXES,
+        primitive.attributes.find(
+          (a) => a.name === "_SPLAT_INDEXES",
         ).instanceDivisor = showSplats ? 1 : 0;
       }
 
