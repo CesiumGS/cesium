@@ -17,6 +17,8 @@ async function initWorker(parameters, transferableObjects) {
   }
 }
 
+const TEXTURE_WIDTH = 2048;
+
 function generateGaussianSortWorker(parameters, transferableObjects) {
   // Handle initialization
   const wasmConfig = parameters.webAssemblyConfig;
@@ -36,14 +38,14 @@ function generateGaussianSortWorker(parameters, transferableObjects) {
     return radix_sort_gaussians_indexes(
       primitive.positions,
       primitive.modelView,
-      2048,
+      TEXTURE_WIDTH,
       primitive.count,
     );
   } else if (sortType === "SIMD Index") {
     return radix_sort_gaussians_indexes(
       primitive.positions,
       primitive.modelView,
-      2048,
+      TEXTURE_WIDTH,
       primitive.count,
     );
   }
