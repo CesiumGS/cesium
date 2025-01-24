@@ -35,6 +35,9 @@ const defaultColor = Color.WHITE;
 const defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
 const defaultColorBlendAmount = 0.5;
 const defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+const defaultEnvironmentMapOptions = {
+  maximumPositionEpsilon: Number.POSITIVE_INFINITY,
+};
 
 const modelMatrixScratch = new Matrix4();
 const nodeMatrixScratch = new Matrix4();
@@ -76,6 +79,7 @@ async function createModelPrimitive(
   entity,
   resource,
   incrementallyLoadTextures,
+  environmentMapOptions,
 ) {
   const primitives = visualizer._primitives;
   const modelHash = visualizer._modelHash;
@@ -85,6 +89,7 @@ async function createModelPrimitive(
       url: resource,
       incrementallyLoadTextures: incrementallyLoadTextures,
       scene: visualizer._scene,
+      environmentMapOptions: environmentMapOptions,
     });
 
     if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
@@ -176,6 +181,9 @@ ModelVisualizer.prototype.update = function (time) {
         articulationsScratch: {},
         loadFailed: false,
         modelUpdated: false,
+        environmentMapOptionsScratch: {
+          ...defaultEnvironmentMapOptions,
+        },
       };
       modelHash[entity.id] = modelData;
 
@@ -185,7 +193,20 @@ ModelVisualizer.prototype.update = function (time) {
         defaultIncrementallyLoadTextures,
       );
 
-      createModelPrimitive(this, entity, resource, incrementallyLoadTextures);
+      const environmentMapOptions = Property.getValueOrDefault(
+        modelGraphics._environmentMapOptions,
+        time,
+        defaultEnvironmentMapOptions,
+        modelData.environmentMapOptionsScratch,
+      );
+
+      createModelPrimitive(
+        this,
+        entity,
+        resource,
+        incrementallyLoadTextures,
+        environmentMapOptions,
+      );
     }
 
     const model = modelData.modelPrimitive;

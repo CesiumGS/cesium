@@ -1134,8 +1134,6 @@ CesiumWidget.prototype._updateCanAnimate = function (isUpdated) {
   this._clock.canAnimate = isUpdated;
 };
 
-const boundingSphereScratch = new BoundingSphere();
-
 /**
  * @private
  */
@@ -1148,15 +1146,15 @@ CesiumWidget.prototype._onTick = function (clock) {
   }
 
   const entityView = this._entityView;
-  if (defined(entityView)) {
+  if (defined(entityView) && defined(entityView.boundingSphere)) {
     const trackedEntity = this._trackedEntity;
     const trackedState = this._dataSourceDisplay.getBoundingSphere(
       trackedEntity,
-      true,
-      boundingSphereScratch,
+      false,
+      entityView.boundingSphere,
     );
     if (trackedState === BoundingSphereState.DONE) {
-      entityView.update(time, boundingSphereScratch);
+      entityView.update(time, entityView.boundingSphere);
     }
   }
 };
@@ -1414,6 +1412,8 @@ CesiumWidget.prototype._postRender = function () {
   updateTrackedEntity(this);
 };
 
+const zoomTargetBoundingSphereScratch = new BoundingSphere();
+
 function updateZoomTarget(widget) {
   const target = widget._zoomTarget;
   if (!defined(target) || widget.scene.mode === SceneMode.MORPHING) {
@@ -1511,13 +1511,15 @@ function updateZoomTarget(widget) {
     const state = widget._dataSourceDisplay.getBoundingSphere(
       entities[i],
       false,
-      boundingSphereScratch,
+      zoomTargetBoundingSphereScratch,
     );
 
     if (state === BoundingSphereState.PENDING) {
       return;
     } else if (state !== BoundingSphereState.FAILED) {
-      boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
+      boundingSpheres.push(
+        BoundingSphere.clone(zoomTargetBoundingSphereScratch),
+      );
     }
   }
 
@@ -1552,6 +1554,8 @@ function updateZoomTarget(widget) {
   }
 }
 
+const trackedEntityBoundingSphereScratch = new BoundingSphere();
+
 function updateTrackedEntity(widget) {
   if (!widget._needTrackedEntityUpdate) {
     return;
@@ -1577,7 +1581,7 @@ function updateTrackedEntity(widget) {
   const state = widget._dataSourceDisplay.getBoundingSphere(
     trackedEntity,
     false,
-    boundingSphereScratch,
+    trackedEntityBoundingSphereScratch,
   );
   if (state === BoundingSphereState.PENDING) {
     return;
@@ -1599,7 +1603,9 @@ function updateTrackedEntity(widget) {
   }
 
   const bs =
-    state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
+    state !== BoundingSphereState.FAILED
+      ? trackedEntityBoundingSphereScratch
+      : undefined;
   widget._entityView = new EntityView(trackedEntity, scene, scene.ellipsoid);
   widget._entityView.update(currentTime, bs);
   widget._needTrackedEntityUpdate = false;
