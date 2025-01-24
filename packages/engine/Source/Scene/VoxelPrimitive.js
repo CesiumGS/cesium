@@ -460,16 +460,12 @@ function VoxelPrimitive(options) {
   /**
    * The event fired to indicate that a tile's content was loaded.
    * <p>
-   * The loaded tile is passed to the event listener.
-   * </p>
-   * <p>
    * This event is fired during the tileset traversal while the frame is being rendered
    * so that updates to the tile take effect in the same frame.  Do not create or modify
    * Cesium entities or primitives during the event listener.
    * </p>
    *
    * @type {Event}
-   * @default new Event()
    *
    * @example
    * voxelPrimitive.tileLoad.addEventListener(function() {
@@ -484,7 +480,6 @@ function VoxelPrimitive(options) {
    * This event is fired during the traversal while the frame is being rendered.
    *
    * @type {Event}
-   * @default new Event()
    *
    * @example
    * voxelPrimitive.tileVisible.addEventListener(function() {
@@ -496,12 +491,8 @@ function VoxelPrimitive(options) {
 
   /**
    * The event fired to indicate that a tile's content failed to load.
-   * <p>
-   * If there are no event listeners, error messages will be logged to the console.
-   * </p>
    *
    * @type {Event}
-   * @default new Event()
    *
    * @example
    * voxelPrimitive.tileFailed.addEventListener(function() {
@@ -514,7 +505,6 @@ function VoxelPrimitive(options) {
    * The event fired to indicate that a tile's content was unloaded.
    *
    * @type {Event}
-   * @default new Event()
    *
    * @example
    * voxelPrimitive.tileUnload.addEventListener(function() {
@@ -537,12 +527,11 @@ function VoxelPrimitive(options) {
    * </p>
    *
    * @type {Event}
-   * @default new Event()
    *
    * @example
    * voxelPrimitive.loadProgress.addEventListener(function(numberOfPendingRequests, numberOfTilesProcessing) {
    *     if ((numberOfPendingRequests === 0) && (numberOfTilesProcessing === 0)) {
-   *         console.log('Stopped loading');
+   *         console.log('Finished loading');
    *         return;
    *     }
    *
@@ -559,7 +548,6 @@ function VoxelPrimitive(options) {
    * </p>
    *
    * @type {Event}
-   * @default new Event()
    *
    * @example
    * voxelPrimitive.allTilesLoaded.addEventListener(function() {
@@ -576,7 +564,6 @@ function VoxelPrimitive(options) {
    * </p>
    *
    * @type {Event}
-   * @default new Event()
    *
    * @example
    * voxelPrimitive.initialTilesLoaded.addEventListener(function() {
