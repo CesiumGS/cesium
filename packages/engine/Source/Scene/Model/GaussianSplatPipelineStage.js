@@ -5,6 +5,8 @@ import Pass from "../../Renderer/Pass.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import BlendingState from "../BlendingState.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelUtility from "./ModelUtility.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 const GaussianSplatPipelineStage = {
   name: "GaussianSplatPipelineStage",
@@ -91,15 +93,27 @@ GaussianSplatPipelineStage.process = function (
   };
 
   const radixSort = () => {
-    const attributes = primitive.attributes;
+    //const attributes = primitive.attributes;
     const modelView = new Matrix4();
     const modelMat = renderResources.model.modelMatrix;
     Matrix4.multiply(camera.viewMatrix, modelMat, modelView);
 
-    const positions = attributes.find((a) => a.name === "POSITION");
-    const scales = attributes.find((a) => a.name === "_SCALE");
-    const rotations = attributes.find((a) => a.name === "_ROTATION");
-    const colors = attributes.find((a) => a.name === "COLOR_0");
+    const positions = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.POSITION,
+    );
+    const scales = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.SCALE,
+    );
+    const rotations = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.ROTATION,
+    );
+    const colors = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.COLOR,
+    );
 
     const positionsArray = positions.typedArray;
     const scalesArray = scales.typedArray;
