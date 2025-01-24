@@ -43,6 +43,10 @@ export default [
     files: ["packages/**/*.js", "Apps/**/*.js", "Specs/**/*.js", "**/*.html"],
     ...configCesium.configs.browser,
     plugins: { html },
+    languageOptions: {
+      ...configCesium.configs.browser.languageOptions,
+      ecmaVersion: 2022,
+    },
     rules: {
       ...configCesium.configs.browser.rules,
       "no-unused-vars": [

@@ -60,3 +60,23 @@ exports.defineTags = function (dictionary) {
     mustHaveValue: true,
   });
 };
+
+exports.handlers = {
+  newDoclet: function ({ doclet }) {
+    // JSDoc doesn't understand static class properties
+    // https://github.com/jsdoc/jsdoc/issues/2044
+    // this forces them if they have the @static tag
+    // alternatively just make them a static getter and JSDoc does understand that
+    if (
+      doclet.comment.includes("@static") &&
+      doclet.scope !== "static" &&
+      (doclet.kind === "member" || doclet.kind === "constant")
+    ) {
+      console.log("set scope to static for", doclet.longname);
+      doclet.scope = "static";
+      // # means instanceMember, . means staticMember
+      // This also affects sorting
+      doclet.longname = doclet.longname.replace("#", ".");
+    }
+  },
+};
