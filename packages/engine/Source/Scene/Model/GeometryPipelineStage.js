@@ -143,18 +143,27 @@ GeometryPipelineStage.process = function (
       model?.style?.showGaussianSplatting ?? model.showGaussianSplatting;
 
     if (gaussianSplatsEnabled === true) {
-      primitive.attributes.find((a) => a.name === "POSITION").instanceDivisor =
-        showSplats ? 1 : 0;
-      primitive.attributes.find((a) => a.name === "_SCALE").instanceDivisor =
-        showSplats ? 1 : 0;
-      primitive.attributes.find((a) => a.name === "_ROTATION").instanceDivisor =
-        showSplats ? 1 : 0;
-      primitive.attributes.find((a) => a.name === "COLOR_0").instanceDivisor =
-        showSplats ? 1 : 0;
+      ModelUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.POSITION,
+      ).instanceDivisor = showSplats ? 1 : 0;
+      ModelUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.SCALE,
+      ).instanceDivisor = showSplats ? 1 : 0;
+      ModelUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.ROTATION,
+      ).instanceDivisor = showSplats ? 1 : 0;
+      ModelUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.COLOR,
+      ).instanceDivisor = showSplats ? 1 : 0;
 
       if (primitive.hasGaussianSplatTexture) {
-        primitive.attributes.find(
-          (a) => a.name === "_SPLAT_INDEXES",
+        ModelUtility.getAttributeBySemantic(
+          primitive,
+          VertexAttributeSemantic.SPLAT_INDEXES,
         ).instanceDivisor = showSplats ? 1 : 0;
       }
 

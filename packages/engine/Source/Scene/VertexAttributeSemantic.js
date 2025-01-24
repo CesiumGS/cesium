@@ -87,6 +87,13 @@ const VertexAttributeSemantic = {
    * @constant
    */
   ROTATION: "_ROTATION",
+  /**
+   * Gaussian Splat Attribute Texture Index
+   *
+   * @type {string}
+   * @constant
+   */
+  SPLAT_INDEXES: "_SPLAT_INDEXES",
 };
 
 function semanticToVariableName(semantic) {
@@ -111,6 +118,8 @@ function semanticToVariableName(semantic) {
       return "scale";
     case VertexAttributeSemantic.ROTATION:
       return "rotation";
+    case VertexAttributeSemantic.SPLAT_INDEXES:
+      return "splatIndex";
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("semantic is not a valid value.");
@@ -144,6 +153,7 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
     case VertexAttributeSemantic.FEATURE_ID:
     case VertexAttributeSemantic.SCALE:
     case VertexAttributeSemantic.ROTATION:
+    case VertexAttributeSemantic.SPLAT_INDEXES:
       return true;
     //>>includeStart('debug', pragmas.debug);
     default:
@@ -196,6 +206,8 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
       return VertexAttributeSemantic.SCALE;
     case "_ROTATION":
       return VertexAttributeSemantic.ROTATION;
+    case "_SPLAT_INDEXES":
+      return VertexAttributeSemantic.SPLAT_INDEXES;
   }
 
   return undefined;
@@ -269,6 +281,8 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
       return "vec3";
     case VertexAttributeSemantic.ROTATION:
       return "vec4";
+    case VertexAttributeSemantic.SPLAT_INDEXES:
+      return "int";
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("semantic is not a valid value.");
