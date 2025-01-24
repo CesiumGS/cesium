@@ -209,9 +209,6 @@ ITwinData.createDataSourceForRealityDataId = async function (
 /**
  * Load data from the Geospatial Features API as GeoJSON.
  *
- * NOTE: this function does not implement the full WFS schema yet so the limit
- * should be larger than the entire dataset to retrieve everything
- *
  * @param {string} iTwinId The id of the iTwin to load data from
  * @param {string} collectionId The id of the data collection to load
  * @param {number} [limit=10000] number of items per page, must be between 1 and 10,000 inclusive
@@ -222,7 +219,7 @@ ITwinData.loadGeospatialFeatures = async function (
   collectionId,
   limit,
 ) {
-  ////>>includeStart('debug', pragmas.debug);
+  //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("collectionId", collectionId);
   if (defined(limit)) {
