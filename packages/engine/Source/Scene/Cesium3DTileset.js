@@ -2203,6 +2203,8 @@ Cesium3DTileset.prototype.loadTileset = function (
   return rootTile;
 };
 
+const EMPTY_ARRAY = [];
+
 /**
  * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit
  * tiling (3D Tiles 1.1) or uses the <code>3DTILES_implicit_tiling</code> extension,
@@ -2220,6 +2222,33 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
   const hasImplicitTiling =
     defined(tileHeader.implicitTiling) ||
     hasExtension(tileHeader, "3DTILES_implicit_tiling");
+
+  if (defined(tileHeader.contents) && tileHeader.contents.length > 1) {
+    const deepCopy = true;
+    const tileJson = clone(tileHeader, deepCopy);
+    delete tileJson.children;
+    delete tileJson.contents;
+
+    const children = [];
+
+    for (const content of tileHeader.contents) {
+      const childTileJson = clone(tileJson, deepCopy);
+      childTileJson.geometricError = 0.0;
+      childTileJson.content = clone(content, deepCopy);
+      children.push(childTileJson);
+    }
+
+    tileJson.children = [];
+    tileJson.children.push.apply(tileJson.children, children);
+    tileJson.children.push.apply(
+      tileJson.children,
+      defaultValue(tileHeader.children, EMPTY_ARRAY),
+    );
+    tileJson.refine = "ADD";
+    tileJson.geometricError = parentTile._geometricError;
+
+    return new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
+  }
 
   if (!hasImplicitTiling) {
     return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
