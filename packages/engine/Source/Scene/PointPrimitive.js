@@ -665,7 +665,7 @@ PointPrimitive.getScreenSpaceBoundingBox = function (
  * Determines if this point equals another point.  Points are equal if all their properties
  * are equal.  Points in different collections can be equal.
  *
- * @param {PointPrimitive} other The point to compare for equality.
+ * @param {PointPrimitive} [other] The point to compare for equality.
  * @returns {boolean} <code>true</code> if the points are equal; otherwise, <code>false</code>.
  */
 PointPrimitive.prototype.equals = function (other) {

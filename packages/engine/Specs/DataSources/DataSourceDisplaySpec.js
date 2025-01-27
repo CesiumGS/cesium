@@ -363,7 +363,7 @@ describe(
       });
     });
 
-    it("ready is true when datasources are ready", function () {
+    it("ready is true once datasources are ready and stays true", async function () {
       const source1 = new MockDataSource();
       const source2 = new MockDataSource();
 
@@ -372,19 +372,19 @@ describe(
         dataSourceCollection: dataSourceCollection,
         visualizersCallback: visualizersCallback,
       });
-      expect(display.ready).toBe(false);
+      expect(display.ready).withContext("before adding sources").toBe(false);
 
-      return Promise.all([
+      await Promise.all([
         dataSourceCollection.add(source1),
         dataSourceCollection.add(source2),
-      ]).then(function () {
-        display.update(Iso8601.MINIMUM_VALUE);
-        expect(display.ready).toBe(true);
+      ]);
 
-        spyOn(MockVisualizer.prototype, "update").and.returnValue(false);
-        display.update(Iso8601.MINIMUM_VALUE);
-        expect(display.ready).toBe(false);
-      });
+      display.update(Iso8601.MINIMUM_VALUE);
+      expect(display.ready).withContext("after adding sources").toBe(true);
+
+      spyOn(MockVisualizer.prototype, "update").and.returnValue(false);
+      display.update(Iso8601.MINIMUM_VALUE);
+      expect(display.ready).withContext("after updating again").toBe(true);
     });
 
     it("triggers a rendering when the data source becomes ready", function () {
