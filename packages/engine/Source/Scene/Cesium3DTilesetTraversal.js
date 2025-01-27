@@ -1,6 +1,8 @@
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Intersect from "../Core/Intersect.js";
+import JulianDate from "../Core/JulianDate.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 
@@ -67,6 +69,36 @@ Cesium3DTilesetTraversal.canTraverse = function (tile) {
   return tile._screenSpaceError > tile.tileset.memoryAdjustedScreenSpaceError;
 };
 
+const startTime = JulianDate.fromIso8601("2024-11-01");
+
+function timestampInRange(tile, frameState) {
+  const tileContentHeader = defaultValue(
+    tile._contentHeader,
+    defaultValue.EMPTY_OBJECT,
+  );
+  const tileMetadata = defaultValue(
+    tileContentHeader.metadata,
+    defaultValue.EMPTY_OBJECT,
+  );
+  const tileProperties = defaultValue(
+    tileMetadata.properties,
+    defaultValue.EMPTY_OBJECT,
+  );
+  const timestampStart = tileProperties.timestampStart;
+  const timestampStop = tileProperties.timestampStop;
+
+  if (defined(timestampStart) && defined(timestampStop)) {
+    const time = Math.floor(
+      JulianDate.daysDifference(frameState.time, startTime),
+    );
+    if (time < timestampStart || time >= timestampStop) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /**
  * Mark a tile as selected, and add it to the tileset's list of selected tiles
  *
@@ -76,6 +108,10 @@ Cesium3DTilesetTraversal.canTraverse = function (tile) {
  */
 Cesium3DTilesetTraversal.selectTile = function (tile, frameState) {
   if (tile.contentVisibility(frameState) === Intersect.OUTSIDE) {
+    return;
+  }
+
+  if (!timestampInRange(tile, frameState)) {
     return;
   }
 
@@ -138,6 +174,10 @@ Cesium3DTilesetTraversal.loadTile = function (tile, frameState) {
   }
 
   if (!isOnScreenLongEnough(tile, frameState)) {
+    return;
+  }
+
+  if (!timestampInRange(tile, frameState)) {
     return;
   }
 
