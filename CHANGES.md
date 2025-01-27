@@ -16,6 +16,7 @@
 - Fixed Draco decoding for vertex colors that are normalized `UNSIGNED_BYTE` or `UNSIGNED_SHORT`. [#12417](https://github.com/CesiumGS/cesium/pull/12417)
 - Fixed type error when setting `Viewer.selectedEntity` [#12303](https://github.com/CesiumGS/cesium/issues/12303)
 - Fixed urls with https in the documentation `basemap.nationalmap.gov` [#12375](https://github.com/CesiumGS/cesium/issues/12375)
+- Fixed error in polyline when sinAngle is < 1. the value of expandWidth was too much. [#12434](https://github.com/CesiumGS/cesium/pull/12434)
 
 ## 1.125 - 2025-01-02
 
