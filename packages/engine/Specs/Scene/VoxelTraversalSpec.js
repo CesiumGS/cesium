@@ -166,6 +166,30 @@ describe(
       expect(megatexture.occupiedCount).toBe(1);
     });
 
+    it("tile failed event is raised", async function () {
+      const keyFrameLocation = 0;
+      const recomputeBoundingVolumes = true;
+      const pauseUpdate = false;
+      const spyFailed = jasmine.createSpy("listener");
+      traversal._primitive.tileFailed.addEventListener(spyFailed);
+      spyOn(traversal._primitive._provider, "requestData").and.callFake(() => {
+        return Promise.reject();
+      });
+      let counter = 0;
+      const target = 3;
+      await pollToPromise(function () {
+        traversal.update(
+          scene.frameState,
+          keyFrameLocation,
+          recomputeBoundingVolumes,
+          pauseUpdate,
+        );
+        counter++;
+        return counter === target;
+      });
+      expect(spyFailed.calls.count()).toBeGreaterThan(1);
+    });
+
     it("finds keyframe node with expected metadata values", async function () {
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
@@ -203,7 +227,7 @@ describe(
             pauseUpdate,
           );
         }
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 15; i++) {
           updateTraversal();
         }
       }
