@@ -310,6 +310,9 @@ function processVoxelProperties(renderResources, primitive) {
         const glslField = getGlslField(type, j);
         const minimumValue = minimumValues[i][j];
         const maximumValue = maximumValues[i][j];
+        if (!defined(minimumValue) || !defined(maximumValue)) {
+          continue;
+        }
         shaderBuilder.addFunctionLines(functionId, [
           `${statisticsFieldName}.${name}.min${glslField} = ${getGlslNumberAsFloat(
             minimumValue,

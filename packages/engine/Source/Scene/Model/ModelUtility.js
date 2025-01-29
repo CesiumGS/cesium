@@ -346,6 +346,8 @@ ModelUtility.supportedExtensions = {
   CESIUM_primitive_outline: true,
   CESIUM_RTC: true,
   EXT_feature_metadata: true,
+  EXT_implicit_cylinder_region: true,
+  EXT_implicit_ellipsoid_region: true,
   EXT_instance_features: true,
   EXT_mesh_features: true,
   EXT_mesh_gpu_instancing: true,

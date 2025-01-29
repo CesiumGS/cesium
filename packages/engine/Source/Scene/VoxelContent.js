@@ -148,8 +148,13 @@ VoxelContent.prototype.update = function (primitive, frameState) {
   }
 
   if (this._resourcesLoaded) {
-    const { attributes } = loader.components.scene.nodes[0].primitives[0];
-    this._metadata = processAttributes(attributes, primitive);
+    const { structuralMetadata, scene } = loader.components;
+    const { attributes } = scene.nodes[0].primitives[0];
+    this._metadata = processAttributes(
+      attributes,
+      structuralMetadata,
+      primitive,
+    );
     this._ready = true;
     return;
   }
@@ -161,20 +166,22 @@ VoxelContent.prototype.update = function (primitive, frameState) {
  * Processes the attributes from the glTF loader, reordering them into the order expected by the primitive.
  *
  * @param {ModelComponents.Attribute[]} attributes The attributes to process
+ * @param {StructuralMetadata} structuralMetadata Information from the glTF EXT_structural_metadata extension
  * @param {VoxelPrimitive} primitive The primitive for which this voxel content will be used.
  * @returns {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]} An array of typed arrays containing the attribute values
  * @private
  */
-function processAttributes(attributes, primitive) {
-  const { names, types, componentTypes } = primitive.provider;
-  const data = new Array(attributes.length);
+function processAttributes(attributes, structuralMetadata, primitive) {
+  const { className, names, types, componentTypes } = primitive.provider;
+  const propertyAttribute = structuralMetadata.propertyAttributes.find(
+    (p) => p.class.id === className,
+  );
+  const { properties } = propertyAttribute;
+  const data = new Array(names.length);
 
   for (let i = 0; i < attributes.length; i++) {
-    // The attributes array from GltfLoader is not in the same order as
-    // names, types, etc. from the provider.
     // Find the appropriate glTF attribute based on its name.
-    // Note: glTF custom attribute names are prefixed with "_"
-    const name = `_${names[i]}`;
+    const name = properties[names[i]].attribute;
     const attribute = attributes.find((a) => a.name === name);
     if (!defined(attribute)) {
       continue;

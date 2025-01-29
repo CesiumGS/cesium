@@ -125,6 +125,15 @@ function Cesium3DTilesVoxelProvider(options) {
   this.paddingAfter = undefined;
 
   /**
+   * The metadata class for this tileset.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {string|undefined}
+   * @readonly
+   */
+  this.className = undefined;
+
+  /**
    * Gets the metadata names.
    *
    * @memberof Cesium3DTilesVoxelProvider.prototype
@@ -405,6 +414,7 @@ function addAttributeInfo(provider, metadata, className) {
     return { id, type, componentType, minValue, maxValue };
   });
 
+  provider.className = className;
   provider.names = propertyInfo.map((info) => info.id);
   provider.types = propertyInfo.map((info) => info.type);
   provider.componentTypes = propertyInfo.map((info) => info.componentType);
