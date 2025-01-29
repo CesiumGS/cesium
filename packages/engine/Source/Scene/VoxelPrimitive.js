@@ -25,6 +25,7 @@ import CustomShader from "./Model/CustomShader.js";
 import Cartographic from "../Core/Cartographic.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 
 /**
  * A primitive that renders voxel data from a {@link VoxelProvider}.
@@ -69,6 +70,12 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._traversal = undefined;
+
+  /**
+   * @type {Cesium3DTilesetStatistics}
+   * @private
+   */
+  this._statistics = new Cesium3DTilesetStatistics();
 
   /**
    * This member is not created until the provider is ready.
@@ -449,6 +456,123 @@ function VoxelPrimitive(options) {
       };
     }
   }
+
+  /**
+   * The event fired to indicate that a tile's content was loaded.
+   * <p>
+   * This event is fired during the tileset traversal while the frame is being rendered
+   * so that updates to the tile take effect in the same frame.  Do not create or modify
+   * Cesium entities or primitives during the event listener.
+   * </p>
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.tileLoad.addEventListener(function() {
+   *     console.log('A tile was loaded.');
+   * });
+   */
+  this.tileLoad = new Event();
+
+  /**
+   * This event fires once for each visible tile in a frame.
+   * <p>
+   * This event is fired during the traversal while the frame is being rendered.
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.tileVisible.addEventListener(function() {
+   *     console.log('A tile is visible.');
+   * });
+   *
+   */
+  this.tileVisible = new Event();
+
+  /**
+   * The event fired to indicate that a tile's content failed to load.
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.tileFailed.addEventListener(function() {
+   *     console.log('An error occurred loading tile.');
+   * });
+   */
+  this.tileFailed = new Event();
+
+  /**
+   * The event fired to indicate that a tile's content was unloaded.
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.tileUnload.addEventListener(function() {
+   *     console.log('A tile was unloaded from the cache.');
+   * });
+   *
+   */
+  this.tileUnload = new Event();
+
+  /**
+   * The event fired to indicate progress of loading new tiles. This event is fired when a new tile
+   * is requested, when a requested tile is finished downloading, and when a downloaded tile has been
+   * processed and is ready to render.
+   * <p>
+   * The number of pending tile requests, <code>numberOfPendingRequests</code>, and number of tiles
+   * processing, <code>numberOfTilesProcessing</code> are passed to the event listener.
+   * </p>
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.loadProgress.addEventListener(function(numberOfPendingRequests, numberOfTilesProcessing) {
+   *     if ((numberOfPendingRequests === 0) && (numberOfTilesProcessing === 0)) {
+   *         console.log('Finished loading');
+   *         return;
+   *     }
+   *
+   *     console.log(`Loading: requests: ${numberOfPendingRequests}, processing: ${numberOfTilesProcessing}`);
+   * });
+   */
+  this.loadProgress = new Event();
+
+  /**
+   * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. The voxel
+   * primitive is completely loaded for this view.
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.allTilesLoaded.addEventListener(function() {
+   *     console.log('All tiles are loaded');
+   * });
+   */
+  this.allTilesLoaded = new Event();
+
+  /**
+   * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
+   * is fired once when all tiles in the initial view are loaded.
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.initialTilesLoaded.addEventListener(function() {
+   *     console.log('Initial tiles are loaded');
+   * });
+   *
+   * @see Cesium3DTileset#allTilesLoaded
+   */
+  this.initialTilesLoaded = new Event();
 
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;

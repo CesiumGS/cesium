@@ -15,6 +15,8 @@
 - Fixed type of `ImageryLayer.fromProviderAsync`, to correctly show that the param `options` is optional. [#12400](https://github.com/CesiumGS/cesium/pull/12400)
 - Fixed Draco decoding for vertex colors that are normalized `UNSIGNED_BYTE` or `UNSIGNED_SHORT`. [#12417](https://github.com/CesiumGS/cesium/pull/12417)
 - Fixed type error when setting `Viewer.selectedEntity` [#12303](https://github.com/CesiumGS/cesium/issues/12303)
+- Fixed urls with https in the documentation `basemap.nationalmap.gov` [#12375](https://github.com/CesiumGS/cesium/issues/12375)
+- Fixed error in polyline when sinAngle is < 1. the value of expandWidth was too much. [#12434](https://github.com/CesiumGS/cesium/pull/12434)
 
 ## 1.125 - 2025-01-02
 
@@ -24,6 +26,7 @@
 
 - Expanded integration with the [iTwin Platform](https://developer.bentley.com/) to load GeoJSON and KML data from the Reality Management API. Use `ITwinData.createDataSourceForRealityDataId` to load data as either GeoJSON or KML`. [#12344](https://github.com/CesiumGS/cesium/pull/12344)
 - Added `environmentMapOptions` to `ModelGraphics`. For performance reasons by default, the environment map will not update if the entity position change. If environment map updates based on entity position are desired, provide an appropriate `environmentMapOptions.maximumPositionEpsilon` value. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
+- Added events to `VoxelPrimitive` to match `Cesium3DTileset`, including `allTilesLoaded`, `initialTilesLoaded`, `loadProgress`, `tileFailed`, `tileLoad`, `tileVisible`, `tileUnload`.
 
 #### Fixes :wrench:
 
