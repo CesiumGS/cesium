@@ -9,7 +9,7 @@ import MetadataType from "./MetadataType.js";
 
 /**
  * <div class="notice">
- * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
+ * To construct a VoxelContent, call {@link VoxelContent.fromMetadataArray} or {@link VoxelContent.fromGltf}. Do not call the constructor directly.
  * </div>
  * An object representing voxel content for a {@link Cesium3DTilesVoxelProvider}.
  *
@@ -26,21 +26,20 @@ import MetadataType from "./MetadataType.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelContent(options) {
-  const { loader, metadata } = options;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options", options);
-  if (!defined(loader)) {
-    if (!defined(metadata)) {
+  if (!defined(options.loader)) {
+    if (!defined(options.metadata)) {
       throw new DeveloperError("One of loader and metadata must be defined.");
     }
-    if (!Array.isArray(metadata)) {
+    if (!Array.isArray(options.metadata)) {
       throw new DeveloperError("metadata must be an array of TypedArrays.");
     }
   }
   //>>includeEnd('debug');
 
-  this._loader = loader;
-  this._metadata = metadata;
+  this._loader = options.loader;
+  this._metadata = options.metadata;
   this._resourcesLoaded = false;
   this._ready = false;
 }

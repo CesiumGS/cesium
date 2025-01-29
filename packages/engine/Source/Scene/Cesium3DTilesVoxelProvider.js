@@ -538,9 +538,11 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
 
   const subtree = await getSubtree(that, subtreeCoord);
   // NOTE: these two subtree methods are ONLY used by voxels!
-  const available = isSubtreeRoot
-    ? subtree.childSubtreeIsAvailableAtCoordinates(tileCoordinates)
-    : subtree.tileIsAvailableAtCoordinates(tileCoordinates);
+  const isAvailable = isSubtreeRoot
+    ? subtree.childSubtreeIsAvailableAtCoordinates
+    : subtree.tileIsAvailableAtCoordinates;
+
+  const available = isAvailable(tileCoordinates);
 
   if (!available) {
     return Promise.reject(

@@ -183,6 +183,7 @@ ImplicitSubtree.prototype.tileIsAvailableAtIndex = function (index) {
 
 /**
  * Check if a specific tile is available at an implicit tile coordinate
+ * NOTE: only used for voxels.
  *
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
  * @returns {boolean} The value of the i-th bit
@@ -249,6 +250,7 @@ ImplicitSubtree.prototype.childSubtreeIsAvailableAtIndex = function (index) {
 
 /**
  * Check if a specific child subtree is available at an implicit tile coordinate
+ * NOTE: only used for voxels.
  *
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a child subtree
  * @returns {boolean} The value of the i-th bit
