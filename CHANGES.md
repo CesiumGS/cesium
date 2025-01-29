@@ -19,6 +19,8 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 };
 ```
 
+- Changed `VoxelCylinderShape` to assume coordinates in the order (radius, angle, height). See [CesiumGS/3d-tiles#780](https://github.com/CesiumGS/3d-tiles/pull/780)
+
 #### Fixes :wrench:
 
 - Fixed error when resetting `Cesium3DTileset.modelMatrix` to its initial value. [#12409](https://github.com/CesiumGS/cesium/pull/12409)
