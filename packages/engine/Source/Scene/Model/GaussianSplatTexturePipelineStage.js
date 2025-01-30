@@ -36,20 +36,23 @@ GaussianSplatTexturePipelineStage.process = function (
     ShaderDestination.BOTH,
   );
 
+  if (renderResources.model.content.tileset.debugShowBoundingVolume) {
+    shaderBuilder.addDefine(
+      "DEBUG_BOUNDING_VOLUMES",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+  }
+
   shaderBuilder.addAttribute("float", "a_splatIndex");
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
+  shaderBuilder.addVarying("float", "v_depth");
 
   shaderBuilder.addUniform(
     "highp usampler2D",
     "u_splatAttributeTexture",
-    ShaderDestination.VERTEX,
-  );
-
-  shaderBuilder.addUniform(
-    "mat4",
-    "u_transformMatrix",
     ShaderDestination.VERTEX,
   );
 
@@ -63,10 +66,6 @@ GaussianSplatTexturePipelineStage.process = function (
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
-  };
-
-  uniformMap.u_transformMatrix = function () {
-    return renderResources.model.sceneGraph.components.nodes[0].matrix;
   };
 
   renderResources.instanceCount = renderResources.count;
