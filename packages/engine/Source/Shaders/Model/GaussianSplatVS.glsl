@@ -79,6 +79,8 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition,1.0);
     positionClip = clipPosition;
 
+    //positionClip *= u_scalingMatrix;
+
     float[6] cov3D;
     calcCov3D(attributes.scale, attributes.rotation, cov3D);
     vec3 cov = calcCov2D(a_splatPosition, u_focalX, u_focalY, u_tan_fovX, u_tan_fovY, cov3D, viewMatrix);
@@ -113,8 +115,11 @@ vec4 calcCovVectors(vec3 worldPos, mat3 Vrk, mat3 viewmatrix) {
         0.0, 0.0, 0.0
     );
 
+    //assuming a uniform scale, should get us close enough
+    float scale = length(viewmatrix[0]);
+
     mat3 T = viewmatrix * J;
-    mat3 cov = transpose(T) * Vrk * T;
+    mat3 cov = transpose(T) * Vrk * T / (scale*scale);
 
     float diagonal1 = cov[0][0] + .3;
     float offDiagonal = cov[0][1];
@@ -139,7 +144,7 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     uint texIdx = uint(a_splatIndex);
     ivec2 posCoord = ivec2((texIdx & 0x3ffu) << 1, texIdx >> 10);
     vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
-
+    
     vec4 splatViewPos = czm_modelView * vec4(splatPosition.xyz, 1.0);
     vec4 clipPosition = czm_projection * splatViewPos;
 
@@ -180,7 +185,14 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     positionClip.z = clamp(positionClip.z, -abs(positionClip.w), abs(positionClip.w));
 
     v_vertPos = corner ;
+    v_depth = positionClip.z;
+    
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
+
+    //if tile bounding volumes are shown, increase transparency so we can see the entire box
+    #ifdef DEBUG_BOUNDING_VOLUMES
+    v_splatColor.a *= 0.08;
+    #endif
 }
 
 

@@ -263,7 +263,7 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
  * Do our dequantizing here. When using meshopt, our positions are quantized,
  * as well as our quaternions. decodeFilterQuat returns quantized shorts
  */
-function dequantizeSplatMeshopt(attribute, matrix) {
+function dequantizeSplatMeshopt(attribute) {
   if (
     attribute.name === "_ROTATION" &&
     attribute.componentDatatype === ComponentDatatype.SHORT
@@ -279,10 +279,11 @@ function dequantizeSplatMeshopt(attribute, matrix) {
 
   if (
     attribute.name === "POSITION" &&
-    attribute.componentDatatype === ComponentDatatype.SHORT
+    attribute.componentDatatype === ComponentDatatype.UNSIGNED_SHORT
   ) {
-    const fa = new Float32Array(attribute.typedArray).map(
-      (n, i) => (n / 32767.0) * matrix[0],
+    const fa = Float32Array.from(
+      attribute.typedArray,
+      (n) => n / attribute.max.x,
     );
     attribute.typedArray = fa;
     attribute.componentDatatype = ComponentDatatype.FLOAT;
@@ -297,7 +298,6 @@ function dequantizeSplatMeshopt(attribute, matrix) {
       let minZ = Infinity;
       let maxZ = -Infinity;
 
-      // Step through array 3 values at a time
       for (let i = 0; i < flatArray.length; i += 3) {
         const x = flatArray[i];
         const y = flatArray[i + 1];
@@ -330,12 +330,17 @@ function setupGaussianSplatBuffers(loadPlan, context) {
     attributePlan.loadTypedArray = true;
 
     const attribute = attributePlan.attribute;
-    dequantizeSplatMeshopt(attribute, loadPlan.gaussianSplatScalingMatrix);
+    dequantizeSplatMeshopt(attribute);
   }
 }
 
 function generateSplatTexture(loadPlan, context) {
   loadPlan.primitive.gaussianSplatTexturePending = true;
+
+  const attributePlans = loadPlan.attributePlans;
+  for (let i = 0; i < attributePlans.length; i++) {
+    dequantizeSplatMeshopt(attributePlans[i].attribute);
+  }
 
   GaussianSplatTextureGenerator.generateFromAttrs(
     loadPlan.primitive.attributes,
