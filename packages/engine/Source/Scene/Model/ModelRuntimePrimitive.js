@@ -314,11 +314,14 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   pipelineStages.push(PrimitiveStatisticsPipelineStage);
 
-  if (hasGaussianSplats && !(primitive?.gaussianSplatTexturePending ?? false)) {
-    if (primitive?.hasGaussianSplatTexture ?? false) {
-      pipelineStages.push(GaussianSplatTexturePipelineStage);
-    } else {
+  if (hasGaussianSplats) {
+    if (!defined(primitive.needsGaussianSplatTexture)) {
       pipelineStages.push(GaussianSplatPipelineStage);
+    } else if (
+      primitive.needsGaussianSplatTexture === false &&
+      (primitive?.hasGaussianSplatTexture ?? false)
+    ) {
+      pipelineStages.push(GaussianSplatTexturePipelineStage);
     }
   }
 

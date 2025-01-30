@@ -11,6 +11,7 @@ async function initWorker(parameters, transferableObjects) {
     initSync(wasmConfig.wasmBinary);
     return true;
   }
+  return false;
 }
 
 async function generateSplatTextureWorker(parameters, transferableObjects) {
@@ -20,13 +21,19 @@ async function generateSplatTextureWorker(parameters, transferableObjects) {
   }
 
   const { attributes, count } = parameters;
-  return generate_texture_from_attrs(
+  const result = generate_texture_from_attrs(
     attributes.positions,
     attributes.scales,
     attributes.rotations,
     attributes.colors,
     count,
   );
+
+  return {
+    data: result.data,
+    width: result.width,
+    height: result.height,
+  };
 }
 
 export default createTaskProcessorWorker(generateSplatTextureWorker);

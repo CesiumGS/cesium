@@ -212,6 +212,7 @@ function GltfLoader(options) {
     loadForClassification = false,
     renameBatchIdSemantic = false,
     loadGaussianSplatting = true,
+    generateGaussianSplatTexture = true,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -237,6 +238,7 @@ function GltfLoader(options) {
   this._loadForClassification = loadForClassification;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
   this._loadGaussianSplatting = loadGaussianSplatting;
+  this._generateGaussianSplatTexture = generateGaussianSplatTexture;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -1963,6 +1965,8 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;
+    primitivePlan.generateGaussianSplatTexture =
+      loader._generateGaussianSplatTexture;
   }
 
   const loadForClassification = loader._loadForClassification;

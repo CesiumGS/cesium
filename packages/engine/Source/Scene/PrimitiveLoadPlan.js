@@ -7,11 +7,6 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
-import GaussianSplatTextureGenerator from "./Model/GaussianSplatTextureGenerator.js";
-import Texture from "../Renderer/Texture.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import Sampler from "../Renderer/Sampler.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 
@@ -180,7 +175,7 @@ function PrimitiveLoadPlan(primitive) {
    * @type {boolean}
    * @private
    */
-  this.generateGaussianSplatTexture = true;
+  this.generateGaussianSplatTexture = false;
 }
 
 /**
@@ -204,7 +199,10 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
     this.primitive.isGaussianSplatPrimitive = true;
     setupGaussianSplatBuffers(this, context);
     if (this.generateGaussianSplatTexture) {
-      generateSplatTexture(this, context);
+      this.attributePlans.forEach((attr) => {
+        dequantizeSplatMeshopt(attr);
+        this.primitive.needsGaussianSplatTexture = true;
+      });
     }
   }
 };
@@ -332,51 +330,6 @@ function setupGaussianSplatBuffers(loadPlan, context) {
     const attribute = attributePlan.attribute;
     dequantizeSplatMeshopt(attribute);
   }
-}
-
-function generateSplatTexture(loadPlan, context) {
-  loadPlan.primitive.gaussianSplatTexturePending = true;
-
-  const attributePlans = loadPlan.attributePlans;
-  for (let i = 0; i < attributePlans.length; i++) {
-    dequantizeSplatMeshopt(attributePlans[i].attribute);
-  }
-
-  GaussianSplatTextureGenerator.generateFromAttrs(
-    loadPlan.primitive.attributes,
-    loadPlan.primitive.attributes[0].count,
-  ).then((splatTextureData) => {
-    const splatTex = new Texture({
-      context,
-      source: {
-        width: splatTextureData.width,
-        height: splatTextureData.height,
-        arrayBufferView: splatTextureData.data,
-      },
-      preMultiplyAlpha: false,
-      skipColorSpaceConversion: true,
-      pixelFormat: PixelFormat.RGBA_INTEGER,
-      pixelDatatype: PixelDatatype.UNSIGNED_INT,
-      flipY: false,
-      sampler: Sampler.NEAREST,
-    });
-    const count = loadPlan.primitive.attributes[0].count;
-    const attribute = new ModelComponents.Attribute();
-
-    //index attribute for indexing into attribute texture
-    attribute.name = "_SPLAT_INDEXES";
-    attribute.typedArray = new Uint32Array([...Array(count).keys()]);
-    attribute.componentDatatype = ComponentDatatype.UNSIGNED_INT;
-    attribute.type = AttributeType.SCALAR;
-    attribute.normalized = false;
-    attribute.count = count;
-    attribute.constant = 0;
-    attribute.instanceDivisor = 1;
-
-    loadPlan.primitive.attributes.push(attribute);
-    loadPlan.primitive.gaussianSplatTexture = splatTex;
-    loadPlan.primitive.hasGaussianSplatTexture = true;
-  });
 }
 
 function generateBuffers(loadPlan, context) {

@@ -46,6 +46,16 @@ import pickModel from "./pickModel.js";
 import GaussianSplatSorter from "../GaussianSplatSorter.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
+import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
+
+import Texture from "../../Renderer/Texture.js";
+import PixelFormat from "../../Core/PixelFormat.js";
+import PixelDatatype from "../../Renderer/PixelDatatype.js";
+import Sampler from "../../Renderer/Sampler.js";
+import AttributeType from "../AttributeType.js";
+import ModelComponents from "../ModelComponents.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
+
 /**
  * <div class="notice">
  * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
@@ -2177,6 +2187,79 @@ function updatePointCloudShading(model) {
 
 const scratchSplatMatrix = new Matrix4();
 
+function generateSplatTexture(primitive, frameState) {
+  primitive.gaussianSplatTexturePending = true;
+  const promise = GaussianSplatTextureGenerator.generateFromAttrs({
+    attributes: {
+      positions: new Float32Array(
+        ModelUtility.getAttributeBySemantic(
+          primitive,
+          VertexAttributeSemantic.POSITION,
+        ).typedArray,
+      ),
+      scales: new Float32Array(
+        ModelUtility.getAttributeBySemantic(
+          primitive,
+          VertexAttributeSemantic.SCALE,
+        ).typedArray,
+      ),
+      rotations: new Float32Array(
+        ModelUtility.getAttributeBySemantic(
+          primitive,
+          VertexAttributeSemantic.ROTATION,
+        ).typedArray,
+      ),
+      colors: new Uint8Array(
+        ModelUtility.getAttributeBySemantic(
+          primitive,
+          VertexAttributeSemantic.COLOR,
+        ).typedArray,
+      ),
+    },
+    count: primitive.attributes[0].count,
+  });
+
+  if (promise === undefined) {
+    primitive.gaussianSplatTexturePending = false;
+    return;
+  }
+
+  promise.then((splatTextureData) => {
+    const splatTex = new Texture({
+      context: frameState.context,
+      source: {
+        width: splatTextureData.width,
+        height: splatTextureData.height,
+        arrayBufferView: splatTextureData.data,
+      },
+      preMultiplyAlpha: false,
+      skipColorSpaceConversion: true,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+      flipY: false,
+      sampler: Sampler.NEAREST,
+    });
+    const count = primitive.attributes[0].count;
+    const attribute = new ModelComponents.Attribute();
+
+    //index attribute for indexing into attribute texture
+    attribute.name = "_SPLAT_INDEXES";
+    attribute.typedArray = new Uint32Array([...Array(count).keys()]);
+    attribute.componentDatatype = ComponentDatatype.UNSIGNED_INT;
+    attribute.type = AttributeType.SCALAR;
+    attribute.normalized = false;
+    attribute.count = count;
+    attribute.constant = 0;
+    attribute.instanceDivisor = 1;
+
+    primitive.attributes.push(attribute);
+    primitive.gaussianSplatTexture = splatTex;
+    primitive.hasGaussianSplatTexture = true;
+    primitive.needsGaussianSplatTexture = false;
+    primitive.gaussianSplatTexturePending = false;
+  });
+}
+
 function updateGaussianSplatting(model, frameState) {
   let prim;
   for (let i = 0; i < model.sceneGraph.components.nodes.length; i++) {
@@ -2197,11 +2280,11 @@ function updateGaussianSplatting(model, frameState) {
     return;
   }
 
-  //texture generation is done and we have one ready to use
-  //rebuild our draw  commands this one time
-  if (prim.gaussianSplatTexturePending && prim.hasGaussianSplatTexture) {
-    prim.gaussianSplatTexturePending = false;
-    model.resetDrawCommands();
+  if (prim.needsGaussianSplatTexture) {
+    if (!prim.gaussianSplatTexturePending) {
+      generateSplatTexture(prim, frameState);
+    }
+    return;
   }
 
   Matrix4.multiply(
