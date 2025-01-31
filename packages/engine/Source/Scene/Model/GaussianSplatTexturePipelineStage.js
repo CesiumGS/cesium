@@ -48,7 +48,6 @@ GaussianSplatTexturePipelineStage.process = function (
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
-  shaderBuilder.addVarying("float", "v_depth");
 
   shaderBuilder.addUniform(
     "highp usampler2D",

@@ -185,8 +185,6 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     positionClip.z = clamp(positionClip.z, -abs(positionClip.w), abs(positionClip.w));
 
     v_vertPos = corner ;
-    v_depth = positionClip.z;
-    
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
 
     //if tile bounding volumes are shown, increase transparency so we can see the entire box
