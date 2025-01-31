@@ -51,6 +51,11 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
   // used to help short-circuit computations after a tile was canceled.
   this._cancelCount = 0;
 
+  // The number of contents that turned out to be external tilesets
+  // in createInnerContent. When all contents are external tilesets,
+  // then tile.hasRenderableContent will become `false`
+  this._externalTilesetCount = 0;
+
   const contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
   this._requests = new Array(contentCount);
@@ -504,6 +509,16 @@ async function createInnerContents(multipleContents) {
   const contents = await Promise.all(promises);
   multipleContents._contentsCreated = true;
   multipleContents._contents = contents.filter(defined);
+
+  // If each content is an external tileset, then the tile
+  // itself does not have any renderable content
+  if (
+    multipleContents._externalTilesetCount === multipleContents._contents.length
+  ) {
+    const tile = multipleContents._tile;
+    tile.hasRenderableContent = false;
+  }
+
   return contents;
 }
 
@@ -522,6 +537,7 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
     const tile = multipleContents._tile;
 
     if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
+      multipleContents._externalTilesetCount++;
       tile.hasTilesetContent = true;
     }
 

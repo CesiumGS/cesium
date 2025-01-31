@@ -5875,6 +5875,8 @@ describe(
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
       const externalInMultipleContentsUrl =
         "Data/Cesium3DTiles/MultipleContents/ExternalInMultipleContents/tileset.json";
+      const onlyExternalInMultipleContentsUrl =
+        "Data/Cesium3DTiles/MultipleContents/OnlyExternalInMultipleContents/tileset.json";
 
       it("request statistics are updated correctly on success", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
@@ -6066,7 +6068,7 @@ describe(
       });
 
       it("renders external tilesets in multiple contents", async function () {
-        // A tileset that has three contents in its root node:
+        // A tileset that has four contents in its root node:
         // - One GLB
         // - Three external tilesets that each have one GLB in their root node
         const tileset = await Cesium3DTilesTester.loadTileset(
@@ -6092,6 +6094,38 @@ describe(
         // selected and visited
         const statistics = tileset._statistics;
         expect(statistics.visited).toEqual(4);
+        expect(statistics.selected).toEqual(4);
+      });
+
+      it("renders external tilesets when multiple contents only contains external tilesets", async function () {
+        // A tileset that has four contents in its root node
+        // that are all external tilesets, each with one GLB
+        // in their root node
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          onlyExternalInMultipleContentsUrl,
+        );
+
+        // Look straight at the tileset with its 4 contents
+        scene.camera.lookAtTransform(Matrix4.IDENTITY);
+        scene.camera.setView({
+          destination: new Cartesian3(0.0, 0.0, -10),
+          orientation: {
+            direction: new Cartesian3(0.0, 0.0, 1.0),
+            up: new Cartesian3(0.0, 1.0, 0.0),
+          },
+        });
+
+        scene.renderForSpecs();
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+        // Expect the root node of the main tileset and the
+        // root nodes of the four external tilesets to be
+        // visited, and the root nodes of the four external
+        // tilesets to be selected
+        const statistics = tileset._statistics;
+        console.log(statistics);
+        expect(statistics.visited).toEqual(5);
         expect(statistics.selected).toEqual(4);
       });
 
