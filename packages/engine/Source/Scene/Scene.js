@@ -2321,37 +2321,21 @@ function backToFront(a, b, position) {
   );
 }
 
-const scratchCartA = new Cartesian3();
-const scratchCartB = new Cartesian3();
+const scratchCart3 = new Cartesian3();
+function distanceSquaredToCenter(center, position) {
+  const diff = Cartesian3.subtract(center, position, scratchCart3);
+  const distance = Math.max(0.0, Cartesian3.magnitude(diff));
+  return distance * distance;
+}
 
-function backToFrontSplats(a, b, scene) {
-  const boxA = a.orientedBoundingBox;
-  const boxB = b.orientedBoundingBox;
-  const camera = scene.camera;
+function backToFrontSplats(a, b, position) {
+  const boxA = a.boundingVolume;
+  const boxB = b.boundingVolume;
 
-  const cameraSpaceA = Matrix4.multiplyByPoint(
-    camera.viewMatrix,
-    boxA.center,
-    scratchCartA,
+  return (
+    distanceSquaredToCenter(boxB.center, position) -
+    distanceSquaredToCenter(boxA.center, position)
   );
-  const cameraSpaceB = Matrix4.multiplyByPoint(
-    camera.viewMatrix,
-    boxB.center,
-    scratchCartB,
-  );
-
-  const sqrDistA = cameraSpaceA.z * cameraSpaceA.z;
-  const sqrDistB = cameraSpaceB.z * cameraSpaceB.z;
-
-  const viewOffsetA = Math.sqrt(
-    cameraSpaceA.x * cameraSpaceA.x + cameraSpaceA.y * cameraSpaceA.y,
-  );
-  const viewOffsetB = Math.sqrt(
-    cameraSpaceB.x * cameraSpaceB.x + cameraSpaceB.y * cameraSpaceB.y,
-  );
-
-  const weight = 10;
-  return sqrDistB + viewOffsetB * weight - (sqrDistA + viewOffsetA * weight);
 }
 
 function frontToBack(a, b, position) {
@@ -2427,7 +2411,7 @@ function performGaussianSplatPass(scene, passState, frustumCommands) {
   commands.length = frustumCommands.indices[Pass.GAUSSIAN_SPLATS];
 
   //still necessary?
-  mergeSort(commands, backToFrontSplats, scene);
+  mergeSort(commands, backToFrontSplats, scene.camera.positionWC);
 
   for (let i = 0; i < commands.length; ++i) {
     executeCommand(commands[i], scene, passState);
