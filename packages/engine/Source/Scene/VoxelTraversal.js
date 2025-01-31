@@ -783,11 +783,8 @@ function postPassesUpdate(
     loadStateIndex < loadStateCount;
     loadStateIndex++
   ) {
-    const keyframeArray = new Array(keyframeCount);
+    const keyframeArray = new Array(keyframeCount).fill(0);
     loadStatesByKeyframe[loadStateIndex] = keyframeArray;
-    for (let i = 0; i < keyframeCount; i++) {
-      keyframeArray[i] = 0;
-    }
     loadStateByCount[loadStateIndex] = 0;
   }
 
@@ -821,7 +818,7 @@ function postPassesUpdate(
   const numberOfPendingRequests =
     loadStateByCount[KeyframeNode.LoadState.RECEIVING];
   const numberOfTilesProcessing =
-    loadStateByCount[KeyframeNode.LoadState.RECEIVED];
+    loadStateByCount[KeyframeNode.LoadState.PROCESSING];
 
   const progressChanged =
     numberOfPendingRequests !==
