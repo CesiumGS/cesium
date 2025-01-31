@@ -19,10 +19,11 @@ function VoxelProvider() {
 
 Object.defineProperties(VoxelProvider.prototype, {
   /**
-   * A transform from local space to global space. If undefined, the identity matrix will be used instead.
+   * A transform from local space to global space.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Matrix4|undefined}
+   * @type {Matrix4}
+   * @default Matrix4.IDENTITY
    * @readonly
    */
   globalTransform: {
@@ -30,10 +31,11 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * A transform from shape space to local space. If undefined, the identity matrix will be used instead.
+   * A transform from shape space to local space.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Matrix4|undefined}
+   * @type {Matrix4}
+   * @default Matrix4.IDENTITY
    * @readonly
    */
   shapeTransform: {
@@ -90,7 +92,8 @@ Object.defineProperties(VoxelProvider.prototype, {
    * Gets the number of padding voxels before the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Cartesian3|undefined}
+   * @type {Cartesian3}
+   * @default Cartesian3.ZERO
    * @readonly
    */
   paddingBefore: {
@@ -101,7 +104,8 @@ Object.defineProperties(VoxelProvider.prototype, {
    * Gets the number of padding voxels after the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Cartesian3|undefined}
+   * @type {Cartesian3}
+   * @default Cartesian3.ZERO
    * @readonly
    */
   paddingAfter: {
@@ -180,7 +184,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * Gets the number of keyframes in the dataset.
    *
    * @memberof VoxelProvider.prototype
-   * @type {number}
+   * @type {number|undefined}
    * @readonly
    * @private
    */
@@ -193,7 +197,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * or undefined if it doesn't have timestamps.
    *
    * @memberof VoxelProvider.prototype
-   * @type {TimeIntervalCollection}
+   * @type {TimeIntervalCollection|undefined}
    * @readonly
    * @private
    */
@@ -205,15 +209,13 @@ Object.defineProperties(VoxelProvider.prototype, {
 /**
  * Requests the data for a given tile.
  *
- * @private
- *
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.tileLevel=0] The tile's level.
  * @param {number} [options.tileX=0] The tile's X coordinate.
  * @param {number} [options.tileY=0] The tile's Y coordinate.
  * @param {number} [options.tileZ=0] The tile's Z coordinate.
  * @privateparam {number} [options.keyframe=0] The requested keyframe.
- * @returns {Promise<VoxelContent>} A promise resolving to a VoxelContent containing the data for the tile.
+ * @returns {Promise<VoxelContent>|undefined} A promise resolving to a VoxelContent containing the data for the tile, or undefined if the request could not be scheduled this frame.
  */
 VoxelProvider.prototype.requestData = DeveloperError.throwInstantiationError;
 

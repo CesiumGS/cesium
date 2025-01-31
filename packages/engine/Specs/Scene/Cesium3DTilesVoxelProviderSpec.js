@@ -43,8 +43,8 @@ describe("Scene/Cesium3DTilesVoxelProvider", function () {
     expect(provider.minBounds).toEqual(new Cartesian3(0.0, 0.0, -1.0));
     expect(provider.maxBounds).toEqual(new Cartesian3(1.0, 1.0, 500000.0));
     expect(provider.dimensions).toEqual(new Cartesian3(2, 2, 2));
-    expect(provider.paddingBefore).toBeUndefined();
-    expect(provider.paddingAfter).toBeUndefined();
+    expect(provider.paddingBefore).toEqual(Cartesian3.ZERO);
+    expect(provider.paddingAfter).toEqual(Cartesian3.ZERO);
     expect(provider.names).toEqual(["a"]);
     expect(provider.types).toEqual([MetadataType.SCALAR]);
     expect(provider.componentTypes).toEqual([MetadataComponentType.FLOAT32]);
