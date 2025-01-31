@@ -217,6 +217,8 @@ Object.defineProperties(VoxelProvider.prototype, {
  * @privateparam {number} [options.keyframe=0] The requested keyframe.
  * @returns {Promise<VoxelContent>|undefined} A promise resolving to a VoxelContent containing the data for the tile, or undefined if the request could not be scheduled this frame.
  */
-VoxelProvider.prototype.requestData = DeveloperError.throwInstantiationError;
+VoxelProvider.prototype.requestData = function (options) {
+  DeveloperError.throwInstantiationError();
+};
 
 export default VoxelProvider;
