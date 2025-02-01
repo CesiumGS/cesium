@@ -461,12 +461,13 @@ function requestData(that, keyframeNode) {
     tileZ: spatialNode.z,
     keyframe: keyframe,
   };
+  const promise = provider.requestData(requestParameters);
+  if (!defined(promise)) {
+    return;
+  }
   that._simultaneousRequestCount++;
   keyframeNode.state = KeyframeNode.LoadState.RECEIVING;
-  provider
-    .requestData(requestParameters)
-    .then(postRequestSuccess)
-    .catch(postRequestFailure);
+  promise.then(postRequestSuccess).catch(postRequestFailure);
 }
 
 /**

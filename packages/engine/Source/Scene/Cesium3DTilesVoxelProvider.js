@@ -88,6 +88,7 @@ function Cesium3DTilesVoxelProvider(options) {
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("className", className);
   Check.typeOf.object("names", names);
   Check.typeOf.object("types", types);
   Check.typeOf.object("componentTypes", componentTypes);
@@ -96,7 +97,7 @@ function Cesium3DTilesVoxelProvider(options) {
   //>>includeEnd('debug');
 
   /**
-   * A transform from shape space to local space. If undefined, the identity matrix will be used instead.
+   * A transform from shape space to local space.
    *
    * @memberof Cesium3DTilesVoxelProvider.prototype
    * @type {Matrix4}
@@ -106,7 +107,7 @@ function Cesium3DTilesVoxelProvider(options) {
   this.shapeTransform = shapeTransform;
 
   /**
-   * A transform from local space to global space. If undefined, the identity matrix will be used instead.
+   * A transform from local space to global space.
    *
    * @memberof Cesium3DTilesVoxelProvider.prototype
    * @type {Matrix4}
@@ -532,7 +533,6 @@ async function getSubtree(provider, subtreeCoord) {
   // Check one more time if the subtree is in the cache.
   // This could happen if there are two in-flight tile requests from the same
   // subtree and one finishes before the other.
-  // TODO: only allow one request per subtree
   subtree = subtreeCache.find(subtreeCoord);
   if (defined(subtree)) {
     return subtree;
