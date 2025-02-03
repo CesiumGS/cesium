@@ -323,6 +323,11 @@ PolygonGeometryLibrary.subdivideRhumbLine = function (
   const c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
   const rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
 
+  if (rhumb.surfaceDistance === 0) {
+    // no need to try and subdivide a line with the same start and end
+    return [p0.x, p0.y, p0.z];
+  }
+
   const n = rhumb.surfaceDistance / minDistance;
   const countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
   const numVertices = Math.pow(2, countDivide);
