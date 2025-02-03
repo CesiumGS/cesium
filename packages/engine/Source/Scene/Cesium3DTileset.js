@@ -868,6 +868,22 @@ function Cesium3DTileset(options) {
   this.showOutline = defaultValue(options.showOutline, true);
 
   /**
+   * Whether to display Gaussing Splatting (will fall back to point cloud rendering if false)
+   * <insert link to spec here>
+   *
+   * @type {boolean}
+   */
+  this.showGaussianSplatting = defaultValue(
+    options.showGaussianSplatting,
+    true,
+  );
+
+  this._enableShowGaussianSplatting = defaultValue(
+    options.enableShowGaussianSplatting,
+    true,
+  );
+
+  /**
    * The color to use when rendering outlines.
    *
    * @type {Color}

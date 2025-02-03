@@ -543,6 +543,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     enableShowOutline: tileset._enableShowOutline,
     showOutline: tileset.showOutline,
     outlineColor: tileset.outlineColor,
+    showGaussianSplatting: tileset.showGaussianSplatting,
   };
 
   return combine(additionalOptions, mainOptions);

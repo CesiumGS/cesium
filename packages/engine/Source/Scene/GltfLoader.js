@@ -211,6 +211,8 @@ function GltfLoader(options) {
     loadPrimitiveOutline = true,
     loadForClassification = false,
     renameBatchIdSemantic = false,
+    loadGaussianSplatting = true,
+    generateGaussianSplatTexture = true,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -235,6 +237,8 @@ function GltfLoader(options) {
   this._loadPrimitiveOutline = loadPrimitiveOutline;
   this._loadForClassification = loadForClassification;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
+  this._loadGaussianSplatting = loadGaussianSplatting;
+  this._generateGaussianSplatTexture = generateGaussianSplatTexture;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -508,7 +512,7 @@ function postProcessGeometry(loader, context) {
     const loadPlan = loadPlans[i];
     loadPlan.postProcess(context);
 
-    if (loadPlan.needsOutlines) {
+    if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
       // The glTF loader takes ownership of any buffers generated in the
       // post-process stage since they were created after the geometry loaders
       // finished. This way they can be destroyed when the loader is destroyed.
@@ -1032,7 +1036,10 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
     attribute.semantic === VertexAttributeSemantic.POSITION ||
     attribute.semantic === VertexAttributeSemantic.NORMAL ||
     attribute.semantic === VertexAttributeSemantic.TANGENT ||
-    attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+    attribute.semantic === VertexAttributeSemantic.TEXCOORD ||
+    attribute.semantic === VertexAttributeSemantic.FEATURE_ID ||
+    attribute.semantic === VertexAttributeSemantic.SCALE ||
+    attribute.semantic === VertexAttributeSemantic.ROTATION;
 
   // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
   // However, for KHR_mesh_quantization, min and max must be dequantized for
@@ -1951,6 +1958,15 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       outlineExtension,
       primitivePlan,
     );
+  }
+
+  const gaussianSplattingExtension = extensions.KHR_gaussian_splatting;
+
+  if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
+    needsPostProcessing = true;
+    primitivePlan.needsGaussianSplats = true;
+    primitivePlan.generateGaussianSplatTexture =
+      loader._generateGaussianSplatTexture;
   }
 
   const loadForClassification = loader._loadForClassification;

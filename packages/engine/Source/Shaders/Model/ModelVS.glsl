@@ -141,8 +141,12 @@ void main()
         #else
         gl_PointSize = 1.0;
         #endif
-
+        
         gl_PointSize *= show;
+    #endif
+
+    #ifdef HAS_GAUSSIAN_SPLATS
+    gaussianSplatStage(attributes, positionClip);
     #endif
 
     // Important NOT to compute gl_Position = show * positionClip or we hit:

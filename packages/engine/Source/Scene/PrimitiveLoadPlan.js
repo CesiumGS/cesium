@@ -7,6 +7,8 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
+import AttributeCompression from "../Core/AttributeCompression.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
@@ -157,6 +159,23 @@ function PrimitiveLoadPlan(primitive) {
    * @private
    */
   this.outlineIndices = undefined;
+
+  /**
+   * Set this true to indicate that the primitive has the
+   * KHR_gaussian_splatting extension and needs to be post-processed
+   *
+   * @type {boolean}
+   * @private
+   */
+  this.needsGaussianSplats = false;
+
+  /**
+   * Set this to true if generating textures for Gaussian Splat rendering
+   *
+   * @type {boolean}
+   * @private
+   */
+  this.generateGaussianSplatTexture = false;
 }
 
 /**
@@ -173,6 +192,18 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
   if (this.needsOutlines) {
     generateOutlines(this);
     generateBuffers(this, context);
+  }
+
+  //handle splat post-processing for point primitives
+  if (this.needsGaussianSplats) {
+    this.primitive.isGaussianSplatPrimitive = true;
+    setupGaussianSplatBuffers(this, context);
+    if (this.generateGaussianSplatTexture) {
+      this.attributePlans.forEach((attr) => {
+        dequantizeSplatMeshopt(attr);
+        this.primitive.needsGaussianSplatTexture = true;
+      });
+    }
   }
 };
 
@@ -224,6 +255,81 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   attribute.count = outlineCoordinatesTypedArray.length / 3;
 
   return attribute;
+}
+
+/**
+ * Do our dequantizing here. When using meshopt, our positions are quantized,
+ * as well as our quaternions. decodeFilterQuat returns quantized shorts
+ */
+function dequantizeSplatMeshopt(attribute) {
+  if (
+    attribute.name === "_ROTATION" &&
+    attribute.componentDatatype === ComponentDatatype.SHORT
+  ) {
+    attribute.typedArray = AttributeCompression.dequantize(
+      attribute.typedArray,
+      ComponentDatatype.SHORT,
+      AttributeType.VEC4,
+      attribute.count,
+    );
+    attribute.componentDatatype = ComponentDatatype.FLOAT;
+  }
+
+  if (
+    attribute.name === "POSITION" &&
+    attribute.componentDatatype === ComponentDatatype.UNSIGNED_SHORT
+  ) {
+    const fa = Float32Array.from(
+      attribute.typedArray,
+      (n) => n / attribute.max.x,
+    );
+    attribute.typedArray = fa;
+    attribute.componentDatatype = ComponentDatatype.FLOAT;
+    attribute.normalized = false;
+    attribute.constant = new Cartesian3(0, 0, 0);
+
+    const findMinMaxXY = (flatArray) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+
+      for (let i = 0; i < flatArray.length; i += 3) {
+        const x = flatArray[i];
+        const y = flatArray[i + 1];
+        const z = flatArray[i + 2];
+
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+      }
+
+      return [
+        new Cartesian3(minX, minY, minZ),
+        new Cartesian3(maxX, maxY, maxZ),
+      ];
+    };
+    [attribute.min, attribute.max] = findMinMaxXY(attribute.typedArray);
+  }
+}
+
+function setupGaussianSplatBuffers(loadPlan, context) {
+  const attributePlans = loadPlan.attributePlans;
+  const attrLen = attributePlans.length;
+  for (let i = 0; i < attrLen; i++) {
+    const attributePlan = attributePlans[i];
+    //defer til much later into the pipeline
+    attributePlan.loadBuffer = false;
+    attributePlan.loadTypedArray = true;
+
+    const attribute = attributePlan.attribute;
+    dequantizeSplatMeshopt(attribute);
+  }
 }
 
 function generateBuffers(loadPlan, context) {

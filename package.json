@@ -52,7 +52,8 @@
   ],
   "dependencies": {
     "@cesium/engine": "^13.1.0",
-    "@cesium/widgets": "^10.1.0"
+    "@cesium/widgets": "^10.1.0",
+    "@cesium/wasm-splats": "file:./temp_wasm/pkg"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.1",

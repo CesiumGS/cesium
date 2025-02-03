@@ -1308,6 +1308,7 @@ function beginDraw(
   bindFramebuffer(context, framebuffer);
   applyRenderState(context, renderState, passState, false);
   shaderProgram._bind();
+
   context._maxFrameTextureUnitIndex = Math.max(
     context._maxFrameTextureUnitIndex,
     shaderProgram.maximumTextureUnitIndex,
@@ -1382,6 +1383,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
     } else {
       count = va.numberOfVertices;
     }
+
     if (instanceCount === 0) {
       context._gl.drawArrays(primitiveType, offset, count);
     } else {

@@ -21,7 +21,8 @@ const Pass = {
   OPAQUE: 7,
   TRANSLUCENT: 8,
   VOXELS: 9,
-  OVERLAY: 10,
-  NUMBER_OF_PASSES: 11,
+  GAUSSIAN_SPLATS: 10,
+  OVERLAY: 11,
+  NUMBER_OF_PASSES: 12,
 };
 export default Object.freeze(Pass);
