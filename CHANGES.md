@@ -7,6 +7,7 @@
 #### Breaking Changes :mega:
 
 - Changed behavior of `DataSourceDisplay.ready` to always stay `true` once it is initially set to `true`. [#12429](https://github.com/CesiumGS/cesium/pull/12429)
+- `createGooglePhotorealistic3DTileset(key)` has been removed. Use `createGooglePhotorealistic3DTileset({key})` instead.
 
 #### Additions :tada:
 
