@@ -89,6 +89,9 @@ function Cesium3DTilesVoxelProvider(options) {
   /** @inheritdoc */
   this.maximumTileCount = undefined;
 
+  /** @inheritdoc */
+  this.availableLevels = undefined;
+
   this._implicitTileset = undefined;
   this._subtreeCache = new ImplicitSubtreeCache();
 }
@@ -148,6 +151,7 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   provider.shapeTransform = shapeTransform;
   provider.globalTransform = globalTransform;
   provider.maximumTileCount = getTileCount(metadata);
+  provider.availableLevels = implicitTileset.availableLevels;
 
   let paddingBefore;
   let paddingAfter;
