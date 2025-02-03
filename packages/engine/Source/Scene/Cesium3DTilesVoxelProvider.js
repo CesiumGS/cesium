@@ -98,6 +98,7 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
   /**
    * The number of levels of detail containing available tiles in the tileset.
    *
+   * @memberof VoxelPrimitive.prototype
    * @type {number|undefined}
    * @readonly
    */
