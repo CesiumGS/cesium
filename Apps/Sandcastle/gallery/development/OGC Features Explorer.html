@@ -331,7 +331,9 @@
               createdNewDataSource = true;
             }
             const resource = createCollectionResource(baseUrl, collectionId, options);
-            loadedGeoJson = await loadedGeoJson.process(resource);
+            loadedGeoJson = await loadedGeoJson.process(resource, {
+              preventDuplicates: true,
+            });
 
             if (createdNewDataSource) {
               viewer.dataSources.add(loadedGeoJson);

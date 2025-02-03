@@ -110,11 +110,16 @@ function defaultDescribeProperty(properties, nameProperty) {
 //GeoJSON specifies only the Feature object has a usable id property
 //But since "multi" geometries create multiple entity,
 //we can't use it for them either.
-function createObject(geoJson, entityCollection, describe) {
+function createObject(
+  geoJson,
+  entityCollection,
+  describe,
+  preventDuplicates = false,
+) {
   let id = geoJson.id;
   if (!defined(id) || geoJson.type !== "Feature") {
     id = createGuid();
-  } else {
+  } else if (!preventDuplicates) {
     let i = 2;
     let finalId = id;
     while (defined(entityCollection.getById(finalId))) {
@@ -122,6 +127,10 @@ function createObject(geoJson, entityCollection, describe) {
       i++;
     }
     id = finalId;
+  }
+
+  if (entityCollection.getById(id) && preventDuplicates) {
+    return;
   }
 
   const entity = entityCollection.getOrCreateEntity(id);
@@ -215,7 +224,12 @@ const geometryTypes = {
 function processFeature(dataSource, feature, notUsed, crsFunction, options) {
   if (feature.geometry === null) {
     //Null geometry is allowed, so just create an empty entity instance for it.
-    createObject(feature, dataSource._entityCollection, options.describe);
+    createObject(
+      feature,
+      dataSource._entityCollection,
+      options.describe,
+      options.preventDuplicates,
+    );
     return;
   }
 
@@ -313,7 +327,11 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
     geoJson,
     dataSource._entityCollection,
     options.describe,
+    options.preventDuplicates,
   );
+  if (!defined(entity)) {
+    return;
+  }
   entity.billboard = billboard;
   entity.position = new ConstantPositionProperty(crsFunction(coordinates));
 
@@ -385,7 +403,11 @@ function createLineString(
     geoJson,
     dataSource._entityCollection,
     options.describe,
+    options.preventDuplicates,
   );
+  if (!defined(entity)) {
+    return;
+  }
   const polylineGraphics = new PolylineGraphics();
   entity.polyline = polylineGraphics;
 
@@ -512,7 +534,11 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
     geoJson,
     dataSource._entityCollection,
     options.describe,
+    options.preventDuplicates,
   );
+  if (!defined(entity)) {
+    return;
+  }
   entity.polygon = polygon;
 }
 
@@ -564,6 +590,7 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * @property {Color} [fill=GeoJsonDataSource.fill] The default color for polygon interiors.
  * @property {boolean} [clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {boolean} [preventDuplicates=false] Prevent createing duplicate entities based on matching ids
  */
 
 /**
@@ -906,6 +933,15 @@ GeoJsonDataSource.prototype.process = function (data, options) {
   return preload(this, data, options, false);
 };
 
+/**
+ * @private
+ *
+ * @param {GeoJsonDataSource} that
+ * @param {Resource|string|object} data
+ * @param {GeoJsonDataSource.LoadOptions} options
+ * @param {boolean} clear
+ * @returns
+ */
 function preload(that, data, options, clear) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(data)) {
@@ -956,6 +992,7 @@ function preload(that, data, options, clear) {
       defaultValue(options.fill, defaultFill),
     ),
     clampToGround: defaultValue(options.clampToGround, defaultClampToGround),
+    preventDuplicates: options.preventDuplicates ?? false,
   };
 
   return Promise.resolve(promise)
