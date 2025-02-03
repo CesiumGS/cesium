@@ -429,7 +429,10 @@ function requestData(that, keyframeNode) {
 
   const provider = that._primitive._provider;
   const { keyframe, spatialNode } = keyframeNode;
-  if (spatialNode.level >= provider._implicitTileset.availableLevels) {
+  if (
+    defined(provider.availableLevels) &&
+    spatialNode.level >= provider.availableLevels
+  ) {
     return;
   }
 
