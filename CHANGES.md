@@ -21,6 +21,10 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 
 - Changed `VoxelCylinderShape` to assume coordinates in the order (radius, angle, height). See [CesiumGS/3d-tiles#780](https://github.com/CesiumGS/3d-tiles/pull/780)
 
+#### Additions :tada:
+
+- Add `ITwinData.loadGeospatialFeatures(iTwinId, collectionId)` function to load data from the [Geospatial Features API](https://developer.bentley.com/apis/geospatial-features/operations/get-features/) [#12449](https://github.com/CesiumGS/cesium/pull/12449)
+
 #### Fixes :wrench:
 
 - Fixed error when resetting `Cesium3DTileset.modelMatrix` to its initial value. [#12409](https://github.com/CesiumGS/cesium/pull/12409)
@@ -30,6 +34,7 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 - Fixed type error when setting `Viewer.selectedEntity` [#12303](https://github.com/CesiumGS/cesium/issues/12303)
 - Fixed urls with https in the documentation `basemap.nationalmap.gov` [#12375](https://github.com/CesiumGS/cesium/issues/12375)
 - Fixed error in polyline when sinAngle is < 1. the value of expandWidth was too much. [#12434](https://github.com/CesiumGS/cesium/pull/12434)
+- Allow external tilesets in multiple contents. [#12440](https://github.com/CesiumGS/cesium/pull/12440)
 
 ## 1.125 - 2025-01-02
 
