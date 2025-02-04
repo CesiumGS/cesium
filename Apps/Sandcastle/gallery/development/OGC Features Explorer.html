@@ -202,14 +202,26 @@
         // TODO: The pagination is _only_ done using the `next` link, it does _not_ support `offset`
         // TODO: The `f` query param is not supported, not standard either but will break this APi
         const finlandApiKey = "51cc1662-dc71-458e-9df3-c3d421bf18ed";
-        const finlandProvider = {
+        const finlandGeoNamesProvider = {
           id: "finland",
           name: "Finland Geo Names (Points)",
           baseUrl:
             "https://avoin-paikkatieto.maanmittauslaitos.fi/geographic-names/features/v1",
-          queryParams: {
+          queryParameters: {
             "api-key": finlandApiKey,
           },
+        };
+        const finlandTopographyProvider = {
+          id: "finland-topo",
+          name: "Finland Topography (Points, Lines, Areas)",
+          baseUrl:
+            "https://avoin-paikkatieto.maanmittauslaitos.fi/maastotiedot/features/v1",
+          queryParameters: {
+            "api-key": finlandApiKey,
+          },
+          // headers: {
+          //   Authorization: `Basic ${btoa(`${finlandApiKey}:`)}`,
+          // },
         };
 
         // ldproxy API:
@@ -217,7 +229,7 @@
           id: "strassen",
           name: "Strassen - German Roads (Points, Lines)",
           baseUrl: "https://demo.ldproxy.net/strassen",
-          queryParams: {
+          queryParameters: {
             f: "json",
           },
         };
@@ -225,7 +237,7 @@
           id: "vinyard",
           name: "Vinyards - Germany (Areas)",
           baseUrl: "https://demo.ldproxy.net/vineyards",
-          queryParams: {
+          queryParameters: {
             f: "json",
           },
         };
@@ -233,7 +245,7 @@
           id: "daraa",
           name: "Daraa, Syria (Points, Lines, Areas)",
           baseUrl: "https://demo.ldproxy.net/daraa",
-          queryParams: {
+          queryParameters: {
             f: "json",
           },
         };
@@ -241,30 +253,18 @@
         const providers = [
           strassenProvider,
           vinyardProvider,
-          finlandProvider,
+          finlandGeoNamesProvider,
+          finlandTopographyProvider,
           daraaProvider,
         ];
         let currentProvider = strassenProvider;
 
-        function translateName(name) {
-          // Many of the ldproxy examples are in Germen so it's hard to know what they are
-          // or what they represent or just talk about them. Translate some of the terms to eng
-          // cspell:disable
-          const translations = {
-            "Abschnitte und Äste": "Sections and Branches",
-            Netzknoten: "Network nodes",
-            Nullpunkte: "Zero points",
-            Unfälle: "Accidents",
-            "Unfälle (alternative Darstellung)": "Accidents (alternative representation)",
-          };
-          // cspell:enable
-          return translations[name] ?? name;
-        }
         async function fetchCollections(baseUrl, options) {
-          const { queryParams, headers } = options;
-          const queryString = new URLSearchParams(queryParams);
+          const { queryParameters, headers } = options;
+          const queryString = new URLSearchParams(queryParameters);
           const response = await fetch(
             `${baseUrl}/collections${queryString && queryString !== "" && `?${queryString}`}`,
+            { headers },
           );
           const json = await response.json();
           json.collections = json.collections.map((collection) => {
@@ -291,9 +291,9 @@
           const resource = new Cesium.Resource({
             url: `${baseUrl}/collections/${collectionId}/items`,
           });
-          const { queryParams, headers, limit, offset, bbox } = options;
-          if (queryParams) {
-            resource.setQueryParameters(queryParams);
+          const { queryParameters, headers, limit, offset, bbox } = options;
+          if (queryParameters) {
+            resource.setQueryParameters(queryParameters);
           }
           if (headers) {
             resource.headers = headers;
@@ -433,8 +433,92 @@
           statusLabel.innerText = `Done (${itemsLoaded}/${maxItems}/${totalItems})`;
         }
 
+        let abortController;
+        async function loadEntireCollection2(baseUrl, collectionId, options = {}) {
+          const unloadedSuccessfully = unload();
+          if (!unloadedSuccessfully) {
+            statusLabel.innerText = "Error";
+            console.log("Failed to unload previous dataSource");
+            return;
+          }
+
+          if (Cesium.defined(abortController)) {
+            abortController.abort();
+          }
+          const thisAbortController = new AbortController();
+          abortController = thisAbortController;
+
+          const firstPageResource = createCollectionResource(
+            baseUrl,
+            collectionId,
+            options,
+          );
+          const firstPage = await firstPageResource.fetchJson();
+
+          let totalItems = firstPage.numberMatched ?? Number.POSITIVE_INFINITY;
+
+          // if (!Cesium.defined(totalItems)) {
+          //   console.warn("Unable to determine the total items");
+
+          //   // statusLabel.innerText = "Error";
+          //   // return;
+          // }
+
+          const maxItems = Math.min(options.maxItems ?? 10000, totalItems);
+
+          let nextUrl = firstPage.links?.find((link) => link.rel === "next")?.href;
+
+          let itemsLoaded = firstPage.numberReturned ?? firstPage.features?.length;
+          const geoJson = await Cesium.GeoJsonDataSource.load(firstPage);
+          loadedGeoJson = geoJson;
+
+          // TODO: I'm not sure how we want to manage this yet? it'd be nice to add it as early as possible
+          // then keep loading data into it but I'm not sure the "right" workflow for that
+          viewer.dataSources.add(geoJson);
+
+          // TODO: We probably really need a way to cancel this process after it starts
+          while (Cesium.defined(nextUrl) && itemsLoaded + options.limit < maxItems) {
+            if (thisAbortController.signal.aborted) {
+              console.log("canceled loading");
+              break;
+            }
+            statusLabel.innerText = `Loading collection (${itemsLoaded}/${maxItems})...`;
+            console.log("loading next page", nextUrl);
+
+            let currentLimit = options.limit;
+            if (itemsLoaded + currentLimit > maxItems) {
+              currentLimit = maxItems - itemsLoaded;
+            }
+
+            const nextUrlPath = new URL(nextUrl);
+            Object.entries(options.queryParameters).forEach(([key, value]) => {
+              nextUrlPath.searchParams.set(key, value);
+            });
+            nextUrlPath.searchParams.set("limit", currentLimit);
+
+            const nextPageResource = new Cesium.Resource({
+              url: nextUrlPath.href,
+              // queryParameters: {
+              //   ...options.queryParameters,
+              //   // limit: currentLimit,
+              // },
+              headers: options.headers,
+            });
+            const nextPage = await nextPageResource.fetchJson();
+            geoJson.process(nextPage);
+
+            itemsLoaded += nextPage.numberReturned ?? nextPage.features?.length;
+            nextUrl = nextPage.links?.find((link) => link.rel === "next")?.href;
+          }
+          if (totalItems === Number.POSITIVE_INFINITY && !Cesium.defined(nextUrl)) {
+            totalItems = itemsLoaded;
+          }
+
+          statusLabel.innerText = `Done (${itemsLoaded}/${maxItems}/${totalItems})`;
+        }
+
         const collections = await fetchCollections(currentProvider.baseUrl, {
-          queryParams: currentProvider.queryParams,
+          queryParameters: currentProvider.queryParameters,
           headers: currentProvider.headers,
         });
         console.log(collections);
@@ -486,7 +570,7 @@
 
         Sandcastle.addToolbarButton("Reload", async () => {
           // loadCollection(currentProvider.baseUrl, viewModel.selectedCollection.id, {
-          //   queryParams: { ...currentProvider.queryParams },
+          //   queryParameters: { ...currentProvider.queryParameters },
           //   headers: currentProvider.headers,
           //   limit: limit,
           //   offset: offset,
@@ -499,15 +583,16 @@
 
           console.log("using camera bbox", camBbox);
 
-          await loadEntireCollection(
+          await loadEntireCollection2(
             currentProvider.baseUrl,
             viewModel.selectedCollection.id,
             {
-              queryParams: currentProvider.queryParams,
+              queryParameters: currentProvider.queryParameters,
               headers: currentProvider.headers,
               pageSize: limit,
+              limit: limit,
               // bbox: useBbox ? bbox : undefined,
-              bbox: camBbox.join(","),
+              // bbox: camBbox.join(","),
               maxItems: viewModel.maxItems,
             },
           );
@@ -524,7 +609,7 @@
             currentProvider = newValue;
             viewModel.collections = [];
             const collections = await fetchCollections(currentProvider.baseUrl, {
-              queryParams: currentProvider.queryParams,
+              queryParameters: currentProvider.queryParameters,
               headers: currentProvider.headers,
             });
             viewModel.collections = collections.collections;
@@ -547,17 +632,18 @@
 
               // Load the collection
               // loadCollection(currentProvider.baseUrl, newValue.id, {
-              //   queryParams: currentProvider.queryParams,
+              //   queryParameters: currentProvider.queryParameters,
               //   headers: currentProvider.headers,
               //   limit: limit,
               //   offset: offset,
               //   bbox: useBbox ? bbox : undefined,
               // });
 
-              await loadEntireCollection(currentProvider.baseUrl, newValue.id, {
-                queryParams: currentProvider.queryParams,
+              await loadEntireCollection2(currentProvider.baseUrl, newValue.id, {
+                queryParameters: currentProvider.queryParameters,
                 headers: currentProvider.headers,
                 pageSize: limit,
+                limit: limit,
                 bbox: useBbox ? bbox : undefined,
                 maxItems: viewModel.maxItems,
               });
@@ -612,6 +698,150 @@
           easingFunction: Cesium.EasingFunction.LINEAR_NONE,
         };
         viewer.scene.camera.flyTo(cameraLocation1);
+
+        function translateName(name) {
+          // Many of the ldproxy examples are in German so it's hard to know what they are
+          // or what they represent or just talk about them. Translate some of the terms to eng
+          // Also did this for the Finland topography using ChatGPT, may be inacurate but better than nothing
+          // cspell:disable
+          const translations = {
+            "Abschnitte und Äste": "Sections and Branches",
+            Netzknoten: "Network nodes",
+            Nullpunkte: "Zero points",
+            Unfälle: "Accidents",
+            "Unfälle (alternative Darstellung)": "Accidents (alternative representation)",
+            syvyyskayransyvyysarvo: "Depth crossing depth value",
+            tiesymboli: "Road symbol",
+            kalliosymboli: "Rock symbol",
+            muuntoasema: "Transformer station",
+            retkeilyalue: "Recreation area",
+            osoitepiste: "Address point",
+            jarvi: "Lake",
+            pelastuskoodipiste: "Rescue code point",
+            urheilujavirkistysalue: "Sports and recreation area",
+            puu: "Tree",
+            virtavesikapea: "Stream narrow",
+            pato: "Dam",
+            rauhoitettukohde: "Protected area",
+            sulkuportti: "Lock gate",
+            allas: "Basin",
+            korkeuskayra: "Elevation contour",
+            tulvaalue: "Flood area",
+            muuntaja: "Transformer",
+            syvyyskayra: "Lake Depth contour",
+            autoliikennealue: "Vehicle traffic area",
+            louhos: "Quarry",
+            rautatie: "Railway",
+            suurjannitelinjanpylvas: "High voltage line pole",
+            vesikuoppa: "Water pit",
+            suojanne: "Shelter",
+            korkeuskayrankorkeusarvo: "Elevation contour height value",
+            tieviiva: "Road line",
+            valtakunnanrajapyykki: "National boundary marker",
+            koski: "Rapids",
+            maatalousmaa: "Agricultural land",
+            karttasymboli: "Map symbol",
+            kunnanhallintoraja: "Municipal boundary",
+            masto: "Mast",
+            ampumaalue: "Shooting range",
+            viettoviiva: "Slope line",
+            puurivi: "Tree line",
+            merkittavaluontokohde: "Notable natural site",
+            syvyyspiste: "Depth point",
+            "Satama-alue": "Port area",
+            taytemaa: "Fill land",
+            lahde: "Spring (water source)",
+            suo: "Swamp",
+            metsamaanmuokkaus: "Forest land cultivation",
+            tienroteksti: "Road text",
+            mastonkorkeus: "Mast height",
+            rakennusreunaviiva: "Building edge line",
+            savupiipunkorkeus: "Chimney height",
+            ulkojasisasaaristonraja: "Outer archipelago boundary",
+            ilmarata: "Aerial railway",
+            muistomerkki: "Monument",
+            vesikulkuvaylanteksti: "Waterway text",
+            matalikko: "Shoal",
+            muuavoinalue: "Other open area",
+            suojelualueenreunaviiva: "Protected area boundary",
+            kunnanhallintokeskus: "Municipal administration center",
+            luonnonpuisto: "Nature reserve",
+            puisto: "Park",
+            vesikivikko: "Water gravel",
+            vesikulkuvayla: "Waterway",
+            vesiasteikko: "Water scale",
+            lahestymisvalo: "Approach light",
+            maastokuvionreuna: "Terrain pattern edge",
+            tulentekopaikka: "Campfire site",
+            kellotapuli: "Bell tower",
+            tuulivoimala: "Wind turbine",
+            rakennus: "Building",
+            varastoalue: "Storage area",
+            vesikivi: "Water stone",
+            niitty: "Meadow",
+            uittolaite: "Rafting device",
+            vedenpinnankorkeusluku: "Water surface elevation value",
+            turvalaite: "Safety device",
+            suojametsa: "Protective forest",
+            rajavyohykkeentakaraja: "Border zone back boundary",
+            lentokenttaalue: "Airport area",
+            luonnonsuojelualue: "Nature conservation area",
+            kansallispuisto: "National park",
+            hietikko: "Sand",
+            kivi: "Stone",
+            hylynsyvyys: "Wreck depth",
+            sahkolinja: "Power line",
+            virtausnuoli: "Flow arrow",
+            metsanraja: "Forest boundary",
+            hautausmaa: "Cemetery",
+            kunta: "Municipality",
+            virtavesialue: "Stream area",
+            nakotorni: "Watchtower",
+            sahkolinjansymboli: "Power line symbol",
+            kaatopaikka: "Landfill",
+            savupiippu: "Chimney",
+            maasto2kuvionreuna: "Terrain pattern 2 edge",
+            rautatieliikennepaikka: "Railway traffic area",
+            aita: "Fence",
+            paikannimi: "Place name",
+            sisaistenaluevesienulkoraja: "Internal water boundary",
+            vesitorni: "Water tower",
+            kallioalue: "Rock area",
+            kalliohalkeama: "Rock fracture",
+            maatuvavesialue: "Groundwater area",
+            jyrkanne: "Cliff",
+            uittoranni: "Rafting shore",
+            portti: "Gate",
+            pistolaituriviiva: "Dockline",
+            kaislikko: "Reed bed",
+            kivikko: "Gravel",
+            aallonmurtaja: "Breakwater",
+            rakennelma: "Structure",
+            ankkuripaikka: "Anchorage",
+            taajaanrakennetunalueenreuna: "Edge of the densely built area",
+            ilmaradankannatinpylvas: "Aerial railway support pole",
+            maaaineksenottoalue: "Soil extraction area",
+            aidansymboli: "Fence symbol",
+            hylky: "Wreck",
+            metsamaankasvillisuus: "Forest land vegetation",
+            suojaalue: "Protection area",
+            luiska: "Ramp",
+            tervahauta: "Tar pit",
+            suojaalueenreunaviiva: "Protection area boundary",
+            soistuma: "Swamp",
+            harvalouhikko: "Sparse quarry",
+            vesikulkuvaylankulkusuunta: "Waterway direction",
+            aluemerenulkoraja: "Area sea boundary",
+            rautatiensymboli: "Railway symbol",
+            taajaanrakennettualue: "Densely built area",
+            suojametsanreunaviiva: "Protective forest boundary",
+            meri: "Sea",
+            tunnelinaukko: "Tunnel entrance",
+            selite: "Explanation",
+          };
+          // cspell:enable
+          return translations[name] ?? name;
+        }
 
         // TODO: remove
         window.cesiumViewer = viewer;
