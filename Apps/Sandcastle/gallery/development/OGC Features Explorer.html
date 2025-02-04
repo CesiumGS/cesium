@@ -508,9 +508,11 @@
             }
 
             const nextUrlPath = new URL(nextUrl);
-            Object.entries(options.queryParameters).forEach(([key, value]) => {
-              nextUrlPath.searchParams.set(key, value);
-            });
+            if (Cesium.defined(options.queryParameters)) {
+              Object.entries(options.queryParameters).forEach(([key, value]) => {
+                nextUrlPath.searchParams.set(key, value);
+              });
+            }
             nextUrlPath.searchParams.set("limit", currentLimit);
 
             const nextPageResource = new Cesium.Resource({
