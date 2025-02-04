@@ -199,6 +199,38 @@ Rectangle.fromDegrees = function (west, south, east, north, result) {
 };
 
 /**
+ * Returns the boundary longitude and latitude in degrees for the given rectangle
+ *
+ * @param {Rectangle} rectangle The target rectangle to convert
+ * @returns {{west: number, south: number, east: number, north: number}} The components of the rectangle converted to degrees
+ *
+ * @example
+ * const rectangle = new Cesium.Rectangle(0, 0.349, 0.174, 0.523);
+ * const { west, south, east, north } = Cesium.Rectangle.fromDegrees(rectangle);
+ */
+Rectangle.toDegrees = function (rectangle) {
+  const west = CesiumMath.toDegrees(rectangle.west);
+  const south = CesiumMath.toDegrees(rectangle.south);
+  const east = CesiumMath.toDegrees(rectangle.east);
+  const north = CesiumMath.toDegrees(rectangle.north);
+
+  return { west, south, east, north };
+};
+
+/**
+ * Returns the boundary longitude and latitude in degrees for the current rectangle
+ *
+ * @returns {{west: number, south: number, east: number, north: number}} The components of the rectangle converted to degrees
+ *
+ * @example
+ * const rectangle = new Cesium.Rectangle(0, 0.349, 0.174, 0.523);
+ * const { west, south, east, north } = rectangle.toDegrees();
+ */
+Rectangle.prototype.toDegrees = function () {
+  return Rectangle.toDegrees(this);
+};
+
+/**
  * Creates a rectangle given the boundary longitude and latitude in radians.
  *
  * @param {number} [west=0.0] The westernmost longitude in radians in the range [-Math.PI, Math.PI].

@@ -138,36 +138,47 @@
             </td>
           </tr>
           <tr>
+            <td>Max items</td>
+            <td>
+              <input
+                type="number"
+                name="maxItems"
+                id="maxItems"
+                data-bind="value: maxItems"
+              />
+            </td>
+          </tr>
+          <tr>
             <td>
               <input type="checkbox" name="bbox" id="bbox" data-bind="checked: useBbox" />
               <label for="bbox">bbox</label>
             </td>
             <td id="bbox-inputs">
-              <label>Upper left</label>
+              <label>Lower left (W/S)</label>
               <input
                 type="text"
                 id="bbox"
                 size="6"
-                data-bind="value: bboxUpperLeftLat, enable: useBbox"
+                data-bind="value: bboxLowerLeftLat, enable: useBbox"
               />
               <input
                 type="text"
                 id="bbox"
                 size="6"
-                data-bind="value: bboxUpperLeftLong, enable: useBbox"
+                data-bind="value: bboxLowerLeftLong, enable: useBbox"
               />
-              <label>Lower right</label>
+              <label>Upper right (E/N)</label>
               <input
                 type="text"
                 id="bbox"
                 size="6"
-                data-bind="value: bboxLowerRightLat, enable: useBbox"
+                data-bind="value: bboxUpperRightLat, enable: useBbox"
               />
               <input
                 type="text"
                 id="bbox"
                 size="6"
-                data-bind="value: bboxLowerRightLong, enable: useBbox"
+                data-bind="value: bboxUpperRightLong, enable: useBbox"
               />
             </td>
           </tr>
@@ -181,10 +192,15 @@
         // cspell:words ldproxy strassen daraa
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
+        viewer.scene.debugShowFramesPerSecond = true;
+
         const statusLabel = document.querySelector("#status");
 
         // Finland API:
         // Check out https://www.maanmittauslaitos.fi/en/rajapinnat/api-avaimen-ohje
+        // TODO: The total items seems to be in the `Content-Length` header instead of `numMatched` neither are in the spec
+        // TODO: The pagination is _only_ done using the `next` link, it does _not_ support `offset`
+        // TODO: The `f` query param is not supported, not standard either but will break this APi
         const finlandApiKey = "51cc1662-dc71-458e-9df3-c3d421bf18ed";
         const finlandProvider = {
           id: "finland",
@@ -348,6 +364,75 @@
           }
         }
 
+        async function loadEntireCollection(baseUrl, collectionId, options = {}) {
+          const unloadedSuccessfully = unload();
+          if (!unloadedSuccessfully) {
+            statusLabel.innerText = "Error";
+            console.log("Failed to unload previous dataSource");
+            return;
+          }
+
+          const oneItemResource = createCollectionResource(baseUrl, collectionId, {
+            ...options,
+            limit: 1,
+            offset: 0,
+          });
+          const oneItem = await oneItemResource.fetchJson();
+
+          const totalItems = oneItem.numberMatched ?? Number.POSITIVE_INFINITY;
+
+          if (!Cesium.defined(totalItems)) {
+            console.error("Unable to determine the total items");
+
+            statusLabel.innerText = "Error";
+            return;
+          }
+
+          const pageSize = options.pageSize ?? 10;
+          const maxItems = Math.min(options.maxItems ?? 10000, totalItems);
+
+          let itemsLoaded = 1;
+          let currentOffset = 1;
+          const geoJson = await Cesium.GeoJsonDataSource.load(oneItem);
+          loadedGeoJson = geoJson;
+
+          // TODO: I'm not sure how we want to manage this yet? it'd be nice to add it as early as possible
+          // then keep loading data into it but I'm not sure the "right" workflow for that
+          viewer.dataSources.add(geoJson);
+
+          console.log(totalItems, oneItem);
+          // TODO: We probably really need a way to cancel this process after it starts
+          while (itemsLoaded < maxItems) {
+            statusLabel.innerText = `Loading collection (${itemsLoaded}/${maxItems})...`;
+            let currentPageSize = pageSize;
+            if (currentOffset + currentPageSize > maxItems) {
+              currentPageSize = maxItems - currentOffset;
+            }
+            console.log("loading", {
+              pageSize,
+              currentPageSize,
+              currentOffset,
+              maxItems,
+            });
+            const pageResource = createCollectionResource(baseUrl, collectionId, {
+              ...options,
+              limit: currentPageSize,
+              offset: currentOffset,
+            });
+            try {
+              await geoJson.process(pageResource);
+            } catch (error) {
+              console.error("failed to load page");
+              console.error(error);
+            }
+            currentOffset += currentPageSize;
+            // TODO: this may be wrong for the last page, can we see the return value from process?
+            itemsLoaded += currentPageSize;
+          }
+
+          statusLabel.innerText = `Done (${itemsLoaded}/${maxItems}/${totalItems})`;
+        }
+
         const collections = await fetchCollections(currentProvider.baseUrl, {
           queryParams: currentProvider.queryParams,
           headers: currentProvider.headers,
@@ -355,7 +440,8 @@
         console.log(collections);
 
         let featureGeoJson;
-        let limit = 10;
+        const defaultLimit = 100;
+        let limit = defaultLimit;
         let offset = 0;
         let useBbox = false;
         let bbox = "7.3978,51.5197,7.4190,51.5358";
@@ -368,11 +454,12 @@
           limit: limit,
           offset: offset,
           offsetStep: 10,
+          maxItems: 100,
           useBbox: useBbox,
-          bboxUpperLeftLat: "7.3978",
-          bboxUpperLeftLong: "51.5197",
-          bboxLowerRightLat: "7.4190",
-          bboxLowerRightLong: "51.5358",
+          bboxLowerLeftLat: "7.3978",
+          bboxLowerLeftLong: "51.5197",
+          bboxUpperRightLat: "7.4190",
+          bboxUpperRightLong: "51.5358",
         };
 
         const bboxEntity = viewer.entities.add({
@@ -387,24 +474,43 @@
         });
         function updateBbox() {
           bbox = [
-            viewModel.bboxUpperLeftLat,
-            viewModel.bboxUpperLeftLong,
-            viewModel.bboxLowerRightLat,
-            viewModel.bboxLowerRightLong,
+            viewModel.bboxLowerLeftLat,
+            viewModel.bboxLowerLeftLong,
+            viewModel.bboxUpperRightLat,
+            viewModel.bboxUpperRightLong,
           ].join(",");
           const newCoords = bbox.split(",").map(Number.parseFloat);
           console.log("updating bbox to", bbox, newCoords);
           bboxEntity.rectangle.coordinates = Cesium.Rectangle.fromDegrees(...newCoords);
         }
 
-        Sandcastle.addToolbarButton("Reload", () => {
-          loadCollection(currentProvider.baseUrl, viewModel.selectedCollection.id, {
-            queryParams: { ...currentProvider.queryParams },
-            headers: currentProvider.headers,
-            limit: limit,
-            offset: offset,
-            bbox: useBbox ? bbox : undefined,
-          });
+        Sandcastle.addToolbarButton("Reload", async () => {
+          // loadCollection(currentProvider.baseUrl, viewModel.selectedCollection.id, {
+          //   queryParams: { ...currentProvider.queryParams },
+          //   headers: currentProvider.headers,
+          //   limit: limit,
+          //   offset: offset,
+          //   bbox: useBbox ? bbox : undefined,
+          // });
+
+          const cameraRect = viewer.camera.computeViewRectangle();
+          const { west, south, east, north } = cameraRect.toDegrees();
+          const camBbox = [west, south, east, north];
+
+          console.log("using camera bbox", camBbox);
+
+          await loadEntireCollection(
+            currentProvider.baseUrl,
+            viewModel.selectedCollection.id,
+            {
+              queryParams: currentProvider.queryParams,
+              headers: currentProvider.headers,
+              pageSize: limit,
+              // bbox: useBbox ? bbox : undefined,
+              bbox: camBbox.join(","),
+              maxItems: viewModel.maxItems,
+            },
+          );
         });
 
         Cesium.knockout.track(viewModel);
@@ -425,7 +531,7 @@
           });
         Cesium.knockout
           .getObservable(viewModel, "selectedCollection")
-          .subscribe((newValue) => {
+          .subscribe(async (newValue) => {
             if (!newValue) {
               // This will happen when we clear the list when switching providers
               return;
@@ -433,19 +539,27 @@
             console.log("selected collection", newValue);
             try {
               // Reset page values
-              limit = 10;
+              limit = defaultLimit;
               offset = 0;
-              viewModel.limit = 10;
+              viewModel.limit = defaultLimit;
               viewModel.offset = 0;
-              viewModel.offsetStep = 10;
+              viewModel.offsetStep = defaultLimit;
 
               // Load the collection
-              loadCollection(currentProvider.baseUrl, newValue.id, {
-                queryParams: { ...currentProvider.queryParams },
+              // loadCollection(currentProvider.baseUrl, newValue.id, {
+              //   queryParams: currentProvider.queryParams,
+              //   headers: currentProvider.headers,
+              //   limit: limit,
+              //   offset: offset,
+              //   bbox: useBbox ? bbox : undefined,
+              // });
+
+              await loadEntireCollection(currentProvider.baseUrl, newValue.id, {
+                queryParams: currentProvider.queryParams,
                 headers: currentProvider.headers,
-                limit: limit,
-                offset: offset,
+                pageSize: limit,
                 bbox: useBbox ? bbox : undefined,
+                maxItems: viewModel.maxItems,
               });
             } catch (error) {
               console.error("failed to get feature service", error);
@@ -454,27 +568,27 @@
         // Set this after setting up the subscriptions so it loads the initial value
         viewModel.selectedCollection = collections.collections[0];
         Cesium.knockout.getObservable(viewModel, "limit").subscribe((newValue) => {
-          limit = newValue;
-          viewModel.offsetStep = newValue;
+          limit = Number.parseInt(newValue);
+          viewModel.offsetStep = Number.parseInt(newValue);
         });
         Cesium.knockout.getObservable(viewModel, "offset").subscribe((newValue) => {
-          offset = newValue;
+          offset = Number.parseInt(newValue);
         });
         Cesium.knockout.getObservable(viewModel, "useBbox").subscribe((newValue) => {
           useBbox = newValue;
           bboxEntity.show = newValue;
         });
         Cesium.knockout
-          .getObservable(viewModel, "bboxUpperLeftLat")
+          .getObservable(viewModel, "bboxLowerLeftLat")
           .subscribe(updateBbox);
         Cesium.knockout
-          .getObservable(viewModel, "bboxUpperLeftLong")
+          .getObservable(viewModel, "bboxLowerLeftLong")
           .subscribe(updateBbox);
         Cesium.knockout
-          .getObservable(viewModel, "bboxLowerRightLat")
+          .getObservable(viewModel, "bboxUpperRightLat")
           .subscribe(updateBbox);
         Cesium.knockout
-          .getObservable(viewModel, "bboxLowerRightLong")
+          .getObservable(viewModel, "bboxUpperRightLong")
           .subscribe(updateBbox);
 
         Sandcastle.addToggleButton(
@@ -482,6 +596,22 @@
           extendCollection,
           (newValue) => (extendCollection = newValue),
         );
+
+        const cameraLocation1 = {
+          destination: new Cesium.Cartesian3(
+            4707530.494549263,
+            569403.0894252402,
+            5576100.984555612,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            6.254810079554895,
+            -1.3627892645769126,
+            6.283137168892078,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        viewer.scene.camera.flyTo(cameraLocation1);
 
         // TODO: remove
         window.cesiumViewer = viewer;
