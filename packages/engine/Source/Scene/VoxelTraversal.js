@@ -143,6 +143,12 @@ function VoxelTraversal(
    */
   this._binaryTreeKeyframeWeighting = new Array(keyframeCount);
 
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._initialTilesLoaded = false;
+
   const binaryTreeKeyframeWeighting = this._binaryTreeKeyframeWeighting;
   binaryTreeKeyframeWeighting[0] = 0;
   binaryTreeKeyframeWeighting[keyframeCount - 1] = 0;
@@ -316,13 +322,17 @@ VoxelTraversal.prototype.update = function (
   const timestamp1 = getTimestamp();
   generateOctree(this, sampleCount, levelBlendFactor);
   const timestamp2 = getTimestamp();
-
-  if (this._debugPrint) {
+  const checkEventListeners =
+    primitive.loadProgress.numberOfListeners > 0 ||
+    primitive.allTilesLoaded.numberOfListeners > 0 ||
+    primitive.initialTilesLoaded.numberOfListeners > 0;
+  if (this._debugPrint || checkEventListeners) {
     const loadAndUnloadTimeMs = timestamp1 - timestamp0;
     const generateOctreeTimeMs = timestamp2 - timestamp1;
     const totalTimeMs = timestamp2 - timestamp0;
-    printDebugInformation(
+    postPassesUpdate(
       this,
+      frameState,
       loadAndUnloadTimeMs,
       generateOctreeTimeMs,
       totalTimeMs,
@@ -418,6 +428,21 @@ function requestData(that, keyframeNode) {
   }
 
   const provider = that._primitive._provider;
+  const { keyframe, spatialNode } = keyframeNode;
+  if (
+    defined(provider.availableLevels) &&
+    spatialNode.level >= provider.availableLevels
+  ) {
+    return;
+  }
+
+  const requestOptions = {
+    tileLevel: spatialNode.level,
+    tileX: spatialNode.x,
+    tileY: spatialNode.y,
+    tileZ: spatialNode.z,
+    keyframe: keyframe,
+  };
 
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
@@ -443,27 +468,25 @@ function requestData(that, keyframeNode) {
           keyframeNode.metadata[i] = data;
           // State is received only when all metadata requests have been received
           keyframeNode.state = KeyframeNode.LoadState.RECEIVED;
+          that._primitive.tileLoad.raiseEvent();
         } else {
           keyframeNode.state = KeyframeNode.LoadState.FAILED;
           break;
         }
       }
     }
+    if (keyframeNode.state === KeyframeNode.LoadState.FAILED) {
+      that._primitive.tileFailed.raiseEvent();
+    }
   }
 
   function postRequestFailure() {
     that._simultaneousRequestCount--;
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
+    that._primitive.tileFailed.raiseEvent();
   }
 
-  const { keyframe, spatialNode } = keyframeNode;
-  const promise = provider.requestData({
-    tileLevel: spatialNode.level,
-    tileX: spatialNode.x,
-    tileY: spatialNode.y,
-    tileZ: spatialNode.z,
-    keyframe: keyframe,
-  });
+  const promise = provider.requestData(requestOptions);
 
   if (defined(promise)) {
     that._simultaneousRequestCount++;
@@ -471,6 +494,7 @@ function requestData(that, keyframeNode) {
     promise.then(postRequestSuccess).catch(postRequestFailure);
   } else {
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
+    that._primitive.tileFailed.raiseEvent();
   }
 }
 
@@ -645,6 +669,7 @@ function loadAndUnload(that, frameState) {
         destroyedCount++;
 
         const discardNode = keyframeNodesInMegatexture[addNodeIndex];
+        that._primitive.tileUnload.raiseEvent();
         discardNode.spatialNode.destroyKeyframeNode(
           discardNode,
           that.megatextures,
@@ -703,8 +728,9 @@ function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
  *
  * @private
  */
-function printDebugInformation(
+function postPassesUpdate(
   that,
+  frameState,
   loadAndUnloadTimeMs,
   generateOctreeTimeMs,
   totalTimeMs,
@@ -757,6 +783,55 @@ function printDebugInformation(
     }
   }
   traverseRecursive(rootNode);
+
+  const numberOfPendingRequests =
+    loadStateByCount[KeyframeNode.LoadState.RECEIVING];
+  const numberOfTilesProcessing =
+    loadStateByCount[KeyframeNode.LoadState.RECEIVED];
+
+  const progressChanged =
+    numberOfPendingRequests !==
+      that._primitive._statistics.numberOfPendingRequests ||
+    numberOfTilesProcessing !==
+      that._primitive._statistics.numberOfTilesProcessing;
+
+  if (progressChanged) {
+    frameState.afterRender.push(function () {
+      that._primitive.loadProgress.raiseEvent(
+        numberOfPendingRequests,
+        numberOfTilesProcessing,
+      );
+
+      return true;
+    });
+  }
+
+  that._primitive._statistics.numberOfPendingRequests = numberOfPendingRequests;
+  that._primitive._statistics.numberOfTilesProcessing = numberOfTilesProcessing;
+
+  const tilesLoaded =
+    numberOfPendingRequests === 0 && numberOfTilesProcessing === 0;
+
+  // Events are raised (added to the afterRender queue) here since promises
+  // may resolve outside of the update loop that then raise events, e.g.,
+  // model's readyEvent
+  if (progressChanged && tilesLoaded) {
+    frameState.afterRender.push(function () {
+      that._primitive.allTilesLoaded.raiseEvent();
+      return true;
+    });
+    if (!that._initialTilesLoaded) {
+      that._initialTilesLoaded = true;
+      frameState.afterRender.push(function () {
+        that._primitive.initialTilesLoaded.raiseEvent();
+        return true;
+      });
+    }
+  }
+
+  if (!that._debugPrint) {
+    return;
+  }
 
   const loadedKeyframeStatistics = `KEYFRAMES: ${
     loadStatesByKeyframe[KeyframeNode.LoadState.LOADED]
@@ -892,6 +967,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
     } else {
       // Store the leaf node information instead
       // Recursion stops here because there are no renderable children
+      that._primitive.tileVisible.raiseEvent();
       if (useLeafNodes) {
         const baseIdx = leafNodeCount * 5;
         const keyframeNode = node.renderableKeyframeNodePrevious;

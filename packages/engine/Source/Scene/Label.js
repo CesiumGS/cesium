@@ -1364,7 +1364,7 @@ Label.filterUnsupportedCharacters = function (text) {
  * Determines if this label equals another label.  Labels are equal if all their properties
  * are equal.  Labels in different collections can be equal.
  *
- * @param {Label} other The label to compare for equality.
+ * @param {Label} [other] The label to compare for equality.
  * @returns {boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
  */
 Label.prototype.equals = function (other) {

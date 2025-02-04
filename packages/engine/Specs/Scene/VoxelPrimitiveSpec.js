@@ -58,6 +58,51 @@ describe(
       expect(primitive.maximumValues).toBe(provider.maximumValues);
     });
 
+    it("loads tiles from a minimal procedural provider", async function () {
+      const spyUpdate = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive();
+      primitive.initialTilesLoaded.addEventListener(spyUpdate);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate.calls.count()).toEqual(1);
+    });
+
+    it("initial tiles loaded and all tiles loaded events are raised", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      primitive.allTilesLoaded.addEventListener(spyUpdate1);
+      primitive.initialTilesLoaded.addEventListener(spyUpdate2);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate1.calls.count()).toEqual(1);
+      expect(spyUpdate2.calls.count()).toEqual(1);
+    });
+
+    it("tile load, load progress and tile visible events are raised", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const spyUpdate3 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      primitive.tileLoad.addEventListener(spyUpdate1);
+      primitive.loadProgress.addEventListener(spyUpdate2);
+      primitive.tileVisible.addEventListener(spyUpdate3);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate1.calls.count()).toEqual(1);
+      expect(spyUpdate2.calls.count()).toBeGreaterThan(0);
+      expect(spyUpdate3.calls.count()).toEqual(1);
+    });
+
     it("toggles render options that require shader rebuilds", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);

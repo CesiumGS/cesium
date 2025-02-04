@@ -104,7 +104,6 @@ let imageSmoothingEnabledName;
  * @param {string} text The text to write.
  * @param {object} [options] Object with the following properties:
  * @param {string} [options.font='10px sans-serif'] The CSS font to use.
- * @param {string} [options.textBaseline='bottom'] The baseline of the text.
  * @param {boolean} [options.fill=true] Whether to fill the text.
  * @param {boolean} [options.stroke=false] Whether to stroke the text.
  * @param {Color} [options.fillColor=Color.WHITE] The fill color.

@@ -536,8 +536,8 @@ Color.clone = function (color, result) {
 /**
  * Returns true if the first Color equals the second color.
  *
- * @param {Color} left The first Color to compare for equality.
- * @param {Color} right The second Color to compare for equality.
+ * @param {Color} [left] The first Color to compare for equality.
+ * @param {Color} [right] The second Color to compare for equality.
  * @returns {boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
  */
 Color.equals = function (left, right) {
@@ -577,7 +577,7 @@ Color.prototype.clone = function (result) {
 /**
  * Returns true if this Color equals other.
  *
- * @param {Color} other The Color to compare for equality.
+ * @param {Color} [other] The Color to compare for equality.
  * @returns {boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
  */
 Color.prototype.equals = function (other) {

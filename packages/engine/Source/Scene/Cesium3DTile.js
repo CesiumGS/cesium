@@ -320,6 +320,24 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasImplicitContent = false;
 
   /**
+   * Determines whether the tile has renderable content.
+   *
+   * The loading starts with the assumption that the tile does have
+   * renderable content, if the content is not empty.<br>
+   * <br>
+   * This turns <code>false</code> only when the tile content is loaded
+   * and turns out to be a single content that points to an external
+   * tileset or implicit content
+   * </p>
+   *
+   * @type {boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasRenderableContent = !hasEmptyContent;
+
+  /**
    * When <code>true</code>, the tile contains content metadata from implicit tiling. This flag is set
    * for tiles transcoded by <code>Implicit3DTileContent</code>.
    * <p>
@@ -650,27 +668,6 @@ Object.defineProperties(Cesium3DTile.prototype, {
     set: function (value) {
       this._color = Color.clone(value, this._color);
       this._colorDirty = true;
-    },
-  },
-
-  /**
-   * Determines if the tile's content is renderable. <code>false</code> if the
-   * tile has empty content or if it points to an external tileset or implicit content
-   *
-   * @memberof Cesium3DTile.prototype
-   *
-   * @type {boolean}
-   * @readonly
-   *
-   * @private
-   */
-  hasRenderableContent: {
-    get: function () {
-      return (
-        !this.hasEmptyContent &&
-        !this.hasTilesetContent &&
-        !this.hasImplicitContent
-      );
     },
   },
 
@@ -1346,10 +1343,12 @@ async function makeContent(tile, arrayBuffer) {
     preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON
   ) {
     tile.hasImplicitContent = true;
+    tile.hasRenderableContent = false;
   }
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
     tile.hasTilesetContent = true;
+    tile.hasRenderableContent = false;
   }
 
   let content;
@@ -1729,28 +1728,57 @@ function createBoxFromTransformedRegion(
 }
 
 /**
+ * Creates a TileBoundingVolume from the given region and transform
+ * information.
+ *
+ * This may either be a TileBoundingRegion or a TileOrientedBoundingBox.
+ *
+ * If the given transform is the initial transform, then this will return
+ * a TileBoundingRegion. This will either be the given result parameter,
+ * or a new TileBoundingRegion, if the given result parameter was not
+ * a TileBoundingRegion.
+ *
+ * If the given transform deviates from the initial transform, then this
+ * will return a TileOrientedBoundingBox that was computed by applying
+ * the given transform to the given region. This will either be the
+ * given result parameter, or a new TileOrientedBoundingBox, if the given
+ * result parameter was not a TileOrientedBoundingBox
+ *
  * @private
- * @param {Array} region An array of six numbers that define a bounding geographic region in EPSG:4979 coordinates with the order [west, south, east, north, minimum height, maximum height]
- * @param {Matrix4} transform
- * @param {Matrix4} initialTransform
- * @param {TileBoundingVolume} [result]
- * @returns {TileBoundingVolume}
+ * @param {Array} region An array of six numbers that define a bounding
+ * geographic region in EPSG:4979 coordinates with the order
+ * [west, south, east, north, minimum height, maximum height]
+ * @param {Matrix4} transform The current computedTransform of the tile,
+ * which includes the parent transform (which, in turn, includes the
+ * modelMatrix of the containing tileset)
+ * @param {Matrix4} initialTransform The initial transform of the tile,
+ * before any changes to the modelMatrix of the containing tileset
+ * @param {TileBoundingVolume} [result] An optional result.
+ * @returns {TileBoundingVolume} The resulting bounding volume
  */
 function createRegion(region, transform, initialTransform, result) {
   if (
     !Matrix4.equalsEpsilon(transform, initialTransform, CesiumMath.EPSILON8)
   ) {
+    if (result instanceof TileOrientedBoundingBox) {
+      return createBoxFromTransformedRegion(
+        region,
+        transform,
+        initialTransform,
+        result,
+      );
+    }
     return createBoxFromTransformedRegion(
       region,
       transform,
       initialTransform,
-      result,
+      undefined,
     );
   }
 
   const rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
 
-  if (defined(result)) {
+  if (result instanceof TileBoundingRegion) {
     result.rectangle = Rectangle.clone(rectangleRegion, result.rectangle);
     result.minimumHeight = region[4];
     result.maximumHeight = region[5];
