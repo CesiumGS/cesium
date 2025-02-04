@@ -203,7 +203,7 @@
         // TODO: The `f` query param is not supported, not standard either but will break this APi
         const finlandApiKey = "51cc1662-dc71-458e-9df3-c3d421bf18ed";
         const finlandGeoNamesProvider = {
-          id: "finland",
+          id: "finland-places",
           name: "Finland Geo Names (Points)",
           baseUrl:
             "https://avoin-paikkatieto.maanmittauslaitos.fi/geographic-names/features/v1",
@@ -219,6 +219,7 @@
           queryParameters: {
             "api-key": finlandApiKey,
           },
+          // TODO: this _should_ work but it was failing for CORS issues so maybe not
           // headers: {
           //   Authorization: `Basic ${btoa(`${finlandApiKey}:`)}`,
           // },
@@ -250,12 +251,28 @@
           },
         };
 
+        // iTwin
+        const serviceResponse = await fetch("https://api.cesium.com/itwin/token");
+        const { access_token: token } = await serviceResponse.json();
+        Cesium.ITwinPlatform.defaultAccessToken = token;
+
+        const iTwinId = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
+        const iTwinProvider = {
+          id: "iTwin",
+          name: "iTwin",
+          baseUrl: `https://api.bentley.com/geospatial-features/itwins/${iTwinId}/ogc`,
+          headers: {
+            Authorization: `Bearer ${Cesium.ITwinPlatform.defaultAccessToken}`,
+          },
+        };
+
         const providers = [
           strassenProvider,
           vinyardProvider,
           finlandGeoNamesProvider,
           finlandTopographyProvider,
           daraaProvider,
+          iTwinProvider,
         ];
         let currentProvider = strassenProvider;
 
@@ -477,10 +494,10 @@
           viewer.dataSources.add(geoJson);
 
           // TODO: We probably really need a way to cancel this process after it starts
-          while (Cesium.defined(nextUrl) && itemsLoaded + options.limit < maxItems) {
+          while (Cesium.defined(nextUrl) && itemsLoaded + options.limit <= maxItems) {
             if (thisAbortController.signal.aborted) {
               console.log("canceled loading");
-              break;
+              return;
             }
             statusLabel.innerText = `Loading collection (${itemsLoaded}/${maxItems})...`;
             console.log("loading next page", nextUrl);
@@ -505,6 +522,10 @@
               headers: options.headers,
             });
             const nextPage = await nextPageResource.fetchJson();
+            if (thisAbortController.signal.aborted) {
+              console.log("canceled loading");
+              return;
+            }
             geoJson.process(nextPage);
 
             itemsLoaded += nextPage.numberReturned ?? nextPage.features?.length;
