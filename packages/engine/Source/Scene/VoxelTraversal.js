@@ -791,9 +791,9 @@ function postPassesUpdate(
 
   const progressChanged =
     numberOfPendingRequests !==
-      that._primitive._statistics.numberOfPendingRequests ||
+      that._primitive.statistics.numberOfPendingRequests ||
     numberOfTilesProcessing !==
-      that._primitive._statistics.numberOfTilesProcessing;
+      that._primitive.statistics.numberOfTilesProcessing;
 
   if (progressChanged) {
     frameState.afterRender.push(function () {
@@ -806,8 +806,8 @@ function postPassesUpdate(
     });
   }
 
-  that._primitive._statistics.numberOfPendingRequests = numberOfPendingRequests;
-  that._primitive._statistics.numberOfTilesProcessing = numberOfTilesProcessing;
+  that._primitive.statistics.numberOfPendingRequests = numberOfPendingRequests;
+  that._primitive.statistics.numberOfTilesProcessing = numberOfTilesProcessing;
 
   const tilesLoaded =
     numberOfPendingRequests === 0 && numberOfTilesProcessing === 0;

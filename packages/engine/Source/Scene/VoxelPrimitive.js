@@ -1059,6 +1059,15 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._customShaderCompilationEvent;
     },
   },
+
+  /**
+   * @private
+   */
+    statistics: {
+      get: function () {
+        return this._statistics;
+      },
+    },
 });
 
 const scratchDimensions = new Cartesian3();
