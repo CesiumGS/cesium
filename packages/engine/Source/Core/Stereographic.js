@@ -11,8 +11,9 @@ import Ray from "./Ray.js";
 
 /**
  * Represents a point in stereographic coordinates, which can be obtained by projecting a cartesian coordinate from one pole onto a tangent plane at the other pole.
- * The stereographic projection faithfully represents the relative directions of all great circles passing through its center point.
- * To faithfully represents angles everywhere, this is a conformal projection, which means points are projected onto an arbrary sphere.
+ * The stereographic projection is limited to showing only about three-quarters of the ellipsoid. The opposite pole cannot be projected.
+ * Due to enormous distortion of area, distance, and scale, the use of this projection is normally limited to one hemisphere.
+ * The stereographic projection is a conformal projection, meaning it faithfully represents the relative directions and angles.
  * @param {Cartesian2} [position] The steroegraphic coordinates.
  * @param {EllipseGeometry} [tangentPlane] The tangent plane onto which the point was projected.
  */

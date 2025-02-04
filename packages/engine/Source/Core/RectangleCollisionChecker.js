@@ -35,7 +35,7 @@ RectangleWithId.fromRectangleAndId = function (id, rectangle, result) {
  */
 RectangleCollisionChecker.prototype.insert = function (id, rectangle) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("id", id);
+  Check.defined("id", id);
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
@@ -61,7 +61,7 @@ const removalScratch = new RectangleWithId();
  */
 RectangleCollisionChecker.prototype.remove = function (id, rectangle) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("id", id);
+  Check.typeOf.defined("id", id);
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
@@ -91,5 +91,23 @@ RectangleCollisionChecker.prototype.collides = function (rectangle) {
     collisionScratch,
   );
   return this._tree.collides(withId);
+};
+
+/**
+ * TODO
+ * @param {Rectangle} rectangle A Rectangle that should be checked against the rectangles in the collision checker.
+ * @returns {Array} Whether the rectangle collides with any of the rectangles in the collision checker.
+ */
+RectangleCollisionChecker.prototype.search = function (rectangle) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
+
+  const withId = RectangleWithId.fromRectangleAndId(
+    "",
+    rectangle,
+    collisionScratch,
+  );
+  return this._tree.search(withId)?.map((item) => item.id);
 };
 export default RectangleCollisionChecker;

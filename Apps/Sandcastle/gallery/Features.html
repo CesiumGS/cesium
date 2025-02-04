@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Render vector data features." />
+    <meta name="cesium-sandcastle-labels" content="Geometries" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        // const data = {
+        //     type: 'Feature',
+        //     geometry: {
+        //         type: 'Polygon',
+        //         coordinates: [
+        //             [
+        //                 [-67.13734, 45.13745],
+        //                 [-66.96466, 44.8097],
+        //                 [-68.03252, 44.3252],
+        //                 [-69.06, 43.98],
+        //                 [-70.11617, 43.68405],
+        //                 [-70.64573, 43.09008],
+        //                 [-70.75102, 43.08003],
+        //                 [-70.79761, 43.21973],
+        //                 [-70.98176, 43.36789],
+        //                 [-70.94416, 43.46633],
+        //                 [-71.08482, 45.30524],
+        //                 [-70.66002, 45.46022],
+        //                 [-70.30495, π45.91479],
+        //                 [-70.00014, 46.69317],
+        //                 [-69.23708, 47.44777],
+        //                 [-68.90478, 47.18479],
+        //                 [-68.2343, 47.35462],
+        //                 [-67.79035, 47.06624],
+        //                 [-67.79141, 45.70258],
+        //                 [-67.13734, 45.13745]
+        //             ]
+        //         ]
+        //     }
+        // };
+
+        // const layer = new Cesium.FeatureLayer({
+        //     name: "Maine",
+        // });
+        // const feature = layer.addGeoJsonFeature(data);
+
+        //const response = await fetch("https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/world-administrative-boundaries/exports/geojson?lang=en&timezone=America%2FNew_York");
+        const response = await fetch(
+          "https://demo.ldproxy.net/vineyards/collections/vineyards/items?limit=10000&f=json",
+        );
+
+        const geojson = await response.json();
+        console.log("loaded json");
+        //console.log(geojson);
+
+        const layer = new Cesium.FeatureLayer({
+          name: "Countries",
+        });
+        layer.addGeoJson(geojson);
+
+        let timer = 0;
+        layer.viewChanged.addEventListener(() => {
+          timer = performance.now();
+          console.log("view changed...");
+        });
+        layer.viewReady.addEventListener(() => {
+          const ms = performance.now() - timer;
+          console.log(`view ready in ${Math.floor(ms)} ms`);
+        });
+
+        viewer.scene.primitives.add(layer);
+
+        console.log(layer);
+
+        viewer.scene.debugShowFramesPerSecond = true;
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

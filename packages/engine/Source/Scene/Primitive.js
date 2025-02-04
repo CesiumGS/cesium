@@ -729,6 +729,7 @@ function cloneInstance(instance, geometry) {
 
 const positionRegex = /in\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
+// TODO: Move this elsewhere
 Primitive._modifyShaderPosition = function (
   primitive,
   vertexShaderSource,
