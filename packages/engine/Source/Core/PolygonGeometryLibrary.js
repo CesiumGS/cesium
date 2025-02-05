@@ -323,19 +323,24 @@ PolygonGeometryLibrary.subdivideRhumbLine = function (
   const c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
   const rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
 
-  if (rhumb.surfaceDistance === 0) {
-    // no need to try and subdivide a line with the same start and end
-    return [p0.x, p0.y, p0.z];
+  if (!defined(result)) {
+    result = [];
+  }
+
+  if (rhumb.surfaceDistance <= minDistance) {
+    // no need to try and subdivide a line that's already shorter than the min distance
+    // this also inherently handles duplicated points which would have 0 distance
+    result.length = 3;
+    result[0] = p0.x;
+    result[1] = p0.y;
+    result[2] = p0.z;
+    return result;
   }
 
   const n = rhumb.surfaceDistance / minDistance;
   const countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
   const numVertices = Math.pow(2, countDivide);
   const distanceBetweenVertices = rhumb.surfaceDistance / numVertices;
-
-  if (!defined(result)) {
-    result = [];
-  }
 
   const positions = result;
   positions.length = numVertices * 3;
