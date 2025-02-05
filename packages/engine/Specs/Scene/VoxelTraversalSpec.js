@@ -164,6 +164,7 @@ describe(
 
       const megatexture = traversal.megatextures[0];
       expect(megatexture.occupiedCount).toBe(1);
+      expect(traversal._primitive.statistics.textureByteLength).toEqual(64);
     });
 
     it("tile failed event is raised", async function () {
@@ -188,6 +189,11 @@ describe(
         return counter === target;
       });
       expect(spyFailed.calls.count()).toBeGreaterThan(1);
+      expect(
+        traversal._primitive.statistics.numberOfTilesWithContentReady,
+      ).toEqual(0);
+      expect(traversal._primitive.statistics.visited).toEqual(3);
+      expect(traversal._primitive.statistics.textureByteLength).toEqual(0);
     });
 
     it("finds keyframe node with expected metadata values", async function () {
