@@ -795,7 +795,7 @@ function postPassesUpdate(
   }
   traverseRecursive(rootNode);
 
-  primitive.statistics.selected =
+  primitive.statistics.numberOfTilesWithContentReady =
     loadStateByCount[KeyframeNode.LoadState.LOADED];
   primitive.statistics.visited = nodeCountTotal;
 
