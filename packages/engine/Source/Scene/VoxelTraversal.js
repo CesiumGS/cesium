@@ -325,22 +325,17 @@ VoxelTraversal.prototype.update = function (
   const timestamp1 = getTimestamp();
   generateOctree(this, sampleCount, levelBlendFactor);
   const timestamp2 = getTimestamp();
-  const checkEventListeners =
-    primitive.loadProgress.numberOfListeners > 0 ||
-    primitive.allTilesLoaded.numberOfListeners > 0 ||
-    primitive.initialTilesLoaded.numberOfListeners > 0;
-  if (this._debugPrint || checkEventListeners) {
-    const loadAndUnloadTimeMs = timestamp1 - timestamp0;
-    const generateOctreeTimeMs = timestamp2 - timestamp1;
-    const totalTimeMs = timestamp2 - timestamp0;
-    postPassesUpdate(
-      this,
-      frameState,
-      loadAndUnloadTimeMs,
-      generateOctreeTimeMs,
-      totalTimeMs,
-    );
-  }
+
+  const loadAndUnloadTimeMs = timestamp1 - timestamp0;
+  const generateOctreeTimeMs = timestamp2 - timestamp1;
+  const totalTimeMs = timestamp2 - timestamp0;
+  postPassesUpdate(
+    this,
+    frameState,
+    loadAndUnloadTimeMs,
+    generateOctreeTimeMs,
+    totalTimeMs,
+  );
 };
 
 /**
@@ -752,6 +747,7 @@ function postPassesUpdate(
 ) {
   const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
+  const primitive = that._primitive;
 
   const loadStateCount = Object.keys(KeyframeNode.LoadState).length;
   const loadStatesByKeyframe = new Array(loadStateCount);
@@ -799,6 +795,18 @@ function postPassesUpdate(
   }
   traverseRecursive(rootNode);
 
+  primitive.statistics.selected =
+    loadStateByCount[KeyframeNode.LoadState.LOADED];
+  primitive.statistics.visited = nodeCountTotal;
+
+  const checkEventListeners =
+    primitive.loadProgress.numberOfListeners > 0 ||
+    primitive.allTilesLoaded.numberOfListeners > 0 ||
+    primitive.initialTilesLoaded.numberOfListeners > 0;
+  if (!that._debugPrint && !checkEventListeners) {
+    return;
+  }
+
   const numberOfPendingRequests =
     loadStateByCount[KeyframeNode.LoadState.RECEIVING];
   const numberOfTilesProcessing =
@@ -821,8 +829,8 @@ function postPassesUpdate(
     });
   }
 
-  that._primitive.statistics.numberOfPendingRequests = numberOfPendingRequests;
-  that._primitive.statistics.numberOfTilesProcessing = numberOfTilesProcessing;
+  primitive.statistics.numberOfPendingRequests = numberOfPendingRequests;
+  primitive.statistics.numberOfTilesProcessing = numberOfTilesProcessing;
 
   const tilesLoaded =
     numberOfPendingRequests === 0 && numberOfTilesProcessing === 0;
@@ -832,13 +840,13 @@ function postPassesUpdate(
   // model's readyEvent
   if (progressChanged && tilesLoaded) {
     frameState.afterRender.push(function () {
-      that._primitive.allTilesLoaded.raiseEvent();
+      primitive.allTilesLoaded.raiseEvent();
       return true;
     });
     if (!that._initialTilesLoaded) {
       that._initialTilesLoaded = true;
       frameState.afterRender.push(function () {
-        that._primitive.initialTilesLoaded.raiseEvent();
+        primitive.initialTilesLoaded.raiseEvent();
         return true;
       });
     }
@@ -983,7 +991,6 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
       // Store the leaf node information instead
       // Recursion stops here because there are no renderable children
       that._primitive.tileVisible.raiseEvent();
-      //++that.statistics.selected;
       if (useLeafNodes) {
         const baseIdx = leafNodeCount * 5;
         const keyframeNode = node.renderableKeyframeNodePrevious;

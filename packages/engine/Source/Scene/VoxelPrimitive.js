@@ -1063,11 +1063,11 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * @private
    */
-    statistics: {
-      get: function () {
-        return this._statistics;
-      },
+  statistics: {
+    get: function () {
+      return this._statistics;
     },
+  },
 });
 
 const scratchDimensions = new Cartesian3();
@@ -1141,6 +1141,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
     provider.timeIntervalCollection,
     this._clock,
   );
+
+  this.statistics.clear();
 
   const traversal = this._traversal;
   const sampleCountOld = traversal._sampleCount;
