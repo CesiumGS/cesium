@@ -83,6 +83,9 @@ describe(
       });
       expect(spyUpdate1.calls.count()).toEqual(1);
       expect(spyUpdate2.calls.count()).toEqual(1);
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
+      expect(primitive.statistics.visited).toEqual(1);
+      expect(primitive.statistics.textureByteLength).toEqual(64);
     });
 
     it("tile load, load progress and tile visible events are raised", async function () {
