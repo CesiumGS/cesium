@@ -1,4 +1,5 @@
 import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import CesiumMath from "../Core/Math.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defined from "../Core/defined.js";
@@ -221,6 +222,8 @@ function VoxelTraversal(
    */
   this.leafNodeTexelSizeUv = new Cartesian2();
 }
+
+const scratchDimensions = new Cartesian3();
 
 /**
  * Finds a keyframe node in the traversal
@@ -685,6 +688,18 @@ function loadAndUnload(that, frameState) {
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
   }
+
+  const dimensions = Cartesian3.clone(
+    primitive._provider.dimensions,
+    scratchDimensions,
+  );
+  primitive.statistics.textureByteLength =
+    VoxelTraversal.getApproximateTextureMemoryByteLength(
+      that.megatextures[0].occupiedCount,
+      dimensions,
+      primitive._provider.types,
+      primitive._provider.componentTypes,
+    );
 }
 
 /**
@@ -968,6 +983,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
       // Store the leaf node information instead
       // Recursion stops here because there are no renderable children
       that._primitive.tileVisible.raiseEvent();
+      //++that.statistics.selected;
       if (useLeafNodes) {
         const baseIdx = leafNodeCount * 5;
         const keyframeNode = node.renderableKeyframeNodePrevious;
