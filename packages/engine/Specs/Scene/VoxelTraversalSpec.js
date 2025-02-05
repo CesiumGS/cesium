@@ -159,7 +159,10 @@ describe(
           pauseUpdate,
         );
         scene.renderForSpecs();
-        return traversal.megatextures[0].occupiedCount > 0;
+        return (
+          traversal.megatextures[0].occupiedCount > 0 &&
+          traversal._primitive.statistics.textureByteLength > 0
+        );
       });
 
       const megatexture = traversal.megatextures[0];
