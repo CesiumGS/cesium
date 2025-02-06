@@ -16,6 +16,7 @@ import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
+import VoxelContent from "./VoxelContent.js";
 
 /**
  * @alias Megatexture
@@ -275,10 +276,12 @@ function MegatextureNode(index) {
 }
 
 /**
- * @param {Array} data
- * @returns {number}
+ * Add an array of tile metadata to the megatexture.
+ * @param {Array} data The data to be added.
+ * @param {VoxelContent.MetadataOrder} [order=VoxelContent.MetadataOrder.XYZ] The ordering of the data in the array.
+ * @returns {number} The index of the tile's location in the megatexture.
  */
-Megatexture.prototype.add = function (data) {
+Megatexture.prototype.add = function (data, order) {
   if (this.isFull()) {
     throw new DeveloperError("Trying to add when there are no empty spots");
   }
@@ -298,7 +301,7 @@ Megatexture.prototype.add = function (data) {
   this.occupiedList = node;
 
   const index = node.index;
-  this.writeDataToTexture(index, data);
+  this.writeDataToTexture(index, data, order);
 
   this.occupiedCount++;
   return index;
@@ -390,55 +393,56 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
 };
 
 /**
- * @param {number} index
- * @param {Float32Array|Uint16Array|Uint8Array} data
+ * Write an array of tile metadata to the megatexture.
+ * @param {number} index The index of the tile's location in the megatexture.
+ * @param {Float32Array|Uint16Array|Uint8Array} data The data to be written.
+ * @param {VoxelContent.MetadataOrder} [order=VoxelContent.MetadataOrder.XYZ] The ordering of the data in the array
  */
-Megatexture.prototype.writeDataToTexture = function (index, data) {
+Megatexture.prototype.writeDataToTexture = function (index, data, order) {
   // Unsigned short textures not allowed in webgl 1, so treat as float
   const tileData =
     data.constructor === Uint16Array ? new Float32Array(data) : data;
 
-  const voxelDimensionsPerTile = this.voxelCountPerTile;
-  const sliceDimensionsPerRegion = this.sliceCountPerRegion;
-  const voxelDimensionsPerRegion = this.voxelCountPerRegion;
-  const channelCount = this.channelCount;
+  const {
+    tileVoxelDataTemp,
+    voxelCountPerTile,
+    sliceCountPerRegion,
+    voxelCountPerRegion,
+    channelCount,
+    regionCountPerMegatexture,
+  } = this;
 
-  const tileVoxelData = this.tileVoxelDataTemp;
-  for (let z = 0; z < voxelDimensionsPerTile.z; z++) {
-    const sliceVoxelOffsetX =
-      (z % sliceDimensionsPerRegion.x) * voxelDimensionsPerTile.x;
+  for (let z = 0; z < voxelCountPerTile.z; z++) {
+    const sliceVoxelOffsetX = (z % sliceCountPerRegion.x) * voxelCountPerTile.x;
     const sliceVoxelOffsetY =
-      Math.floor(z / sliceDimensionsPerRegion.x) * voxelDimensionsPerTile.y;
-    for (let y = 0; y < voxelDimensionsPerTile.y; y++) {
-      for (let x = 0; x < voxelDimensionsPerTile.x; x++) {
-        const readIndex =
-          z * voxelDimensionsPerTile.y * voxelDimensionsPerTile.x +
-          y * voxelDimensionsPerTile.x +
-          x;
-        const writeIndex =
-          (sliceVoxelOffsetY + y) * voxelDimensionsPerRegion.x +
-          (sliceVoxelOffsetX + x);
+      Math.floor(z / sliceCountPerRegion.x) * voxelCountPerTile.y;
+    for (let y = 0; y < voxelCountPerTile.y; y++) {
+      const readOffset =
+        order === VoxelContent.MetadataOrder.GLTF
+          ? (y * voxelCountPerTile.z + z) * voxelCountPerTile.x
+          : (z * voxelCountPerTile.y + y) * voxelCountPerTile.x;
+      const writeOffset =
+        (sliceVoxelOffsetY + y) * voxelCountPerRegion.x + sliceVoxelOffsetX;
+      for (let x = 0; x < voxelCountPerTile.x; x++) {
+        const readIndex = readOffset + x;
+        const writeIndex = writeOffset + x;
         for (let c = 0; c < channelCount; c++) {
-          tileVoxelData[writeIndex * channelCount + c] =
+          tileVoxelDataTemp[writeIndex * channelCount + c] =
             tileData[readIndex * channelCount + c];
         }
       }
     }
   }
 
-  const regionDimensionsPerMegatexture = this.regionCountPerMegatexture;
-  const voxelWidth = voxelDimensionsPerRegion.x;
-  const voxelHeight = voxelDimensionsPerRegion.y;
   const voxelOffsetX =
-    (index % regionDimensionsPerMegatexture.x) * voxelDimensionsPerRegion.x;
+    (index % regionCountPerMegatexture.x) * voxelCountPerRegion.x;
   const voxelOffsetY =
-    Math.floor(index / regionDimensionsPerMegatexture.x) *
-    voxelDimensionsPerRegion.y;
+    Math.floor(index / regionCountPerMegatexture.x) * voxelCountPerRegion.y;
 
   const source = {
-    arrayBufferView: tileVoxelData,
-    width: voxelWidth,
-    height: voxelHeight,
+    arrayBufferView: tileVoxelDataTemp,
+    width: voxelCountPerRegion.x,
+    height: voxelCountPerRegion.y,
   };
 
   const copyOptions = {

@@ -338,10 +338,10 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
     throw new DeveloperError("Keyframe node cannot be added to megatexture");
   }
 
-  const { metadata } = keyframeNode.content;
+  const { metadata, order } = keyframeNode.content;
   for (let i = 0; i < megatextures.length; i++) {
     const megatexture = megatextures[i];
-    keyframeNode.megatextureIndex = megatexture.add(metadata[i]);
+    keyframeNode.megatextureIndex = megatexture.add(metadata[i], order);
   }
 
   const renderableKeyframeNodes = this.renderableKeyframeNodes;

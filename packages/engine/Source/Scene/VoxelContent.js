@@ -8,6 +8,19 @@ import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
 
 /**
+ * Metadata ordering for voxel content.
+ * In both cases, x data is contiguous in strides along the y axis,
+ * and each group of y strides represents a z slice.
+ * However, the orientation of the axes follows different conventions.
+ * @enum {number}
+ * @private
+ */
+const MetadataOrder = Object.freeze({
+  XYZ: 0, // Default ordering following the 3D Tiles convention. Z-axis points upward.
+  GLTF: 1, // Ordering following the glTF convention. Y-axis points upward.
+});
+
+/**
  * <div class="notice">
  * To construct a VoxelContent, call {@link VoxelContent.fromMetadataArray} or {@link VoxelContent.fromGltf}. Do not call the constructor directly.
  * </div>
@@ -19,6 +32,7 @@ import MetadataType from "./MetadataType.js";
  * @privateParam {object} options An object with the following properties:
  * @privateParam {ResourceLoader} [options.loader] The loader used to load the voxel content.
  * @privateParam {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]} [options.metadata] The metadata for this voxel content.
+ * @privateParam {VoxelContent.MetadataOrder} [options.order=VoxelContent.MetadataOrder.XYZ] The order of the metadata.
  *
  * @exception {DeveloperError} One of loader and metadata must be defined.
  * @exception {DeveloperError} metadata must be an array of TypedArrays.
@@ -38,8 +52,11 @@ function VoxelContent(options) {
   }
   //>>includeEnd('debug');
 
-  this._loader = options.loader;
-  this._metadata = options.metadata;
+  const { loader, metadata, order = MetadataOrder.XYZ } = options;
+
+  this._loader = loader;
+  this._metadata = metadata;
+  this._order = order;
   this._resourcesLoaded = false;
   this._ready = false;
 }
@@ -72,6 +89,17 @@ Object.defineProperties(VoxelContent.prototype, {
       return this._metadata;
     },
   },
+
+  /**
+   * The order of the metadata.
+   * @type {VoxelContent.MetadataOrder}
+   * @readonly
+   */
+  order: {
+    get: function () {
+      return this._order;
+    },
+  },
 });
 
 /**
@@ -88,7 +116,10 @@ VoxelContent.fromMetadataArray = function (metadata) {
   }
   //>>includeEnd('debug');
 
-  return new VoxelContent({ metadata });
+  return new VoxelContent({
+    metadata,
+    order: MetadataOrder.XYZ,
+  });
 };
 
 /**
@@ -121,7 +152,10 @@ VoxelContent.fromGltf = async function (resource) {
     throw error;
   }
 
-  return new VoxelContent({ loader });
+  return new VoxelContent({
+    loader: loader,
+    order: MetadataOrder.GLTF,
+  });
 };
 
 /**
@@ -225,5 +259,7 @@ VoxelContent.prototype.destroy = function () {
   this._loader = this._loader && this._loader.destroy();
   return destroyObject(this);
 };
+
+VoxelContent.MetadataOrder = MetadataOrder;
 
 export default VoxelContent;
