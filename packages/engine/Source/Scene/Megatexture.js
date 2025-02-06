@@ -16,7 +16,7 @@ import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import VoxelContent from "./VoxelContent.js";
+import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * @alias Megatexture
@@ -278,7 +278,7 @@ function MegatextureNode(index) {
 /**
  * Add an array of tile metadata to the megatexture.
  * @param {Array} data The data to be added.
- * @param {VoxelContent.MetadataOrder} [order=VoxelContent.MetadataOrder.XYZ] The ordering of the data in the array.
+ * @param {VoxelMetadataOrder} [order=VoxelMetadataOrder.XYZ] The ordering of the data in the array.
  * @returns {number} The index of the tile's location in the megatexture.
  */
 Megatexture.prototype.add = function (data, order) {
@@ -396,7 +396,7 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
  * Write an array of tile metadata to the megatexture.
  * @param {number} index The index of the tile's location in the megatexture.
  * @param {Float32Array|Uint16Array|Uint8Array} data The data to be written.
- * @param {VoxelContent.MetadataOrder} [order=VoxelContent.MetadataOrder.XYZ] The ordering of the data in the array
+ * @param {VoxelMetadataOrder} [order=VoxelMetadataOrder.XYZ] The ordering of the data in the array
  */
 Megatexture.prototype.writeDataToTexture = function (index, data, order) {
   // Unsigned short textures not allowed in webgl 1, so treat as float
@@ -418,7 +418,7 @@ Megatexture.prototype.writeDataToTexture = function (index, data, order) {
       Math.floor(z / sliceCountPerRegion.x) * voxelCountPerTile.y;
     for (let y = 0; y < voxelCountPerTile.y; y++) {
       const readOffset =
-        order === VoxelContent.MetadataOrder.GLTF
+        order === VoxelMetadataOrder.GLTF
           ? (y * voxelCountPerTile.z + z) * voxelCountPerTile.x
           : (z * voxelCountPerTile.y + y) * voxelCountPerTile.x;
       const writeOffset =

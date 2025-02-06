@@ -96,16 +96,27 @@ function Cesium3DTilesVoxelProvider(options) {
   Check.typeOf.object("dimensions", dimensions);
   //>>includeEnd('debug');
 
-  /**
-   * A transform from shape space to local space.
-   *
-   * @memberof Cesium3DTilesVoxelProvider.prototype
-   * @type {Matrix4}
-   * @default Matrix4.IDENTITY
-   * @readonly
-   */
-  this.shapeTransform = shapeTransform;
+  this._shapeTransform = shapeTransform;
+  this._globalTransform = globalTransform;
+  this._shape = shape;
+  this._minBounds = minBounds;
+  this._maxBounds = maxBounds;
+  this._dimensions = dimensions;
+  this._paddingBefore = paddingBefore;
+  this._paddingAfter = paddingAfter;
+  this._className = className;
+  this._names = names;
+  this._types = types;
+  this._componentTypes = componentTypes;
+  this._minimumValues = minimumValues;
+  this._maximumValues = maximumValues;
+  this._maximumTileCount = maximumTileCount;
+  this._availableLevels = undefined;
+  this._implicitTileset = undefined;
+  this._subtreeCache = new ImplicitSubtreeCache();
+}
 
+Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
   /**
    * A transform from local space to global space.
    *
@@ -114,7 +125,25 @@ function Cesium3DTilesVoxelProvider(options) {
    * @default Matrix4.IDENTITY
    * @readonly
    */
-  this.globalTransform = globalTransform;
+  globalTransform: {
+    get: function () {
+      return this._globalTransform;
+    },
+  },
+
+  /**
+   * A transform from shape space to local space.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Matrix4}
+   * @default Matrix4.IDENTITY
+   * @readonly
+   */
+  shapeTransform: {
+    get: function () {
+      return this._shapeTransform;
+    },
+  },
 
   /**
    * Gets the {@link VoxelShapeType}
@@ -123,7 +152,11 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {VoxelShapeType}
    * @readonly
    */
-  this.shape = shape;
+  shape: {
+    get: function () {
+      return this._shape;
+    },
+  },
 
   /**
    * Gets the minimum bounds.
@@ -133,7 +166,11 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {Cartesian3|undefined}
    * @readonly
    */
-  this.minBounds = minBounds;
+  minBounds: {
+    get: function () {
+      return this._minBounds;
+    },
+  },
 
   /**
    * Gets the maximum bounds.
@@ -143,39 +180,52 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {Cartesian3|undefined}
    * @readonly
    */
-  this.maxBounds = maxBounds;
+  maxBounds: {
+    get: function () {
+      return this._maxBounds;
+    },
+  },
 
   /**
-   * Gets the number of voxels per dimension of a tile.
-   * This is the same for all tiles in the dataset.
+   * Gets the number of voxels per dimension of a tile. This is the same for all tiles in the dataset.
    *
    * @memberof Cesium3DTilesVoxelProvider.prototype
    * @type {Cartesian3}
    * @readonly
    */
-  this.dimensions = dimensions;
+  dimensions: {
+    get: function () {
+      return this._dimensions;
+    },
+  },
 
   /**
-   * Gets the number of padding voxels before the tile.
-   * This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
-   *
-   * @memberof Cesium3DTilesVoxelProvider.prototype
-   * @type {Cartesian3}
-   * @default Cartesian3.ZERO
-   * @readonly
-   */
-  this.paddingBefore = paddingBefore;
-
-  /**
-   * Gets the number of padding voxels after the tile.
-   * This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
+   * Gets the number of padding voxels before the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    *
    * @memberof Cesium3DTilesVoxelProvider.prototype
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    * @readonly
    */
-  this.paddingAfter = paddingAfter;
+  paddingBefore: {
+    get: function () {
+      return this._paddingBefore;
+    },
+  },
+
+  /**
+   * Gets the number of padding voxels after the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Cartesian3}
+   * @default Cartesian3.ZERO
+   * @readonly
+   */
+  paddingAfter: {
+    get: function () {
+      return this._paddingAfter;
+    },
+  },
 
   /**
    * The metadata class for this tileset.
@@ -184,7 +234,11 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {string}
    * @readonly
    */
-  this.className = className;
+  className: {
+    get: function () {
+      return this._className;
+    },
+  },
 
   /**
    * Gets the metadata names.
@@ -193,7 +247,11 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {string[]}
    * @readonly
    */
-  this.names = names;
+  names: {
+    get: function () {
+      return this._names;
+    },
+  },
 
   /**
    * Gets the metadata types.
@@ -202,7 +260,11 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {MetadataType[]}
    * @readonly
    */
-  this.types = types;
+  types: {
+    get: function () {
+      return this._types;
+    },
+  },
 
   /**
    * Gets the metadata component types.
@@ -211,7 +273,11 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {MetadataComponentType[]}
    * @readonly
    */
-  this.componentTypes = componentTypes;
+  componentTypes: {
+    get: function () {
+      return this._componentTypes;
+    },
+  },
 
   /**
    * Gets the metadata minimum values.
@@ -220,7 +286,11 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {number[][]|undefined}
    * @readonly
    */
-  this.minimumValues = minimumValues;
+  minimumValues: {
+    get: function () {
+      return this._minimumValues;
+    },
+  },
 
   /**
    * Gets the metadata maximum values.
@@ -229,7 +299,11 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {number[][]|undefined}
    * @readonly
    */
-  this.maximumValues = maximumValues;
+  maximumValues: {
+    get: function () {
+      return this._maximumValues;
+    },
+  },
 
   /**
    * The maximum number of tiles that exist for this provider.
@@ -240,18 +314,16 @@ function Cesium3DTilesVoxelProvider(options) {
    * @type {number|undefined}
    * @readonly
    */
-  this.maximumTileCount = maximumTileCount;
+  maximumTileCount: {
+    get: function () {
+      return this._maximumTileCount;
+    },
+  },
 
-  this._availableLevels = undefined;
-  this._implicitTileset = undefined;
-  this._subtreeCache = new ImplicitSubtreeCache();
-}
-
-Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
   /**
    * The number of levels of detail containing available tiles in the tileset.
    *
-   * @memberof VoxelPrimitive.prototype
+   * @memberof Cesium3DTilesVoxelProvider.prototype
    * @type {number|undefined}
    * @readonly
    */
