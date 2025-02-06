@@ -79,6 +79,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
     const gaussianSplatUncompressed =
       "./Data/Cesium3DTiles/GaussianSplats/synthetic/0/0.gltf";
+    const gaussianSplatMeshopt =
+      "./Data/Cesium3DTiles/GaussianSplats/penguin/meshopt_full/0/0.gltf";
 
     let scene;
     let scene2D;
@@ -1761,7 +1763,7 @@ describe(
 
     it("process model with Gaussian splat attributes with texture", function () {
       return loadGltf(gaussianSplatUncompressed, {
-        generateGaussianSplatTexture: false,
+        generateGaussianSplatTexture: true,
       }).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const node = components.nodes[0];
@@ -1787,7 +1789,134 @@ describe(
         const scaleAttribute = attributes[2];
         const rotationAttribute = attributes[3];
 
-        console.log(JSON.parse(JSON.stringify(primitive)));
+        expect(colorAttribute.typedArray).toBeDefined();
+        expect(colorAttribute.type).toEqual("VEC4");
+        expect(colorAttribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_BYTE,
+        );
+
+        expect(scaleAttribute.typedArray).toBeDefined();
+        expect(scaleAttribute.type).toEqual("VEC3");
+        expect(scaleAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT,
+        );
+
+        expect(positionAttribute.typedArray).toBeDefined();
+        expect(positionAttribute.type).toEqual("VEC3");
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT,
+        );
+
+        expect(rotationAttribute.typedArray).toBeDefined();
+        expect(rotationAttribute.type).toEqual("VEC4");
+        expect(rotationAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT,
+        );
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec4 color_0;",
+            "    vec3 position2D;",
+            "    vec3 scale;",
+            "    vec4 rotation;",
+          ],
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec4 color_0;",
+            "    vec4 rotation;",
+            "    vec3 scale;",
+          ],
+        );
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.position2D = a_position2D;",
+            "    attributes.color_0 = a_color_0;",
+            "    attributes.rotation = a_rotation;",
+            "    attributes.scale = a_scale;",
+          ],
+        );
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    v_color_0 = attributes.color_0;"],
+        );
+        ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    attributes.color_0 = v_color_0;"],
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "vec4 v_color_0;",
+          "vec4 v_rotation;",
+          "vec3 v_scale;",
+          "vec3 v_positionEC;",
+          "vec3 v_positionMC;",
+          "vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_COLOR_0",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_COLOR_0",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "in vec3 a_positionMC;",
+          [
+            "in vec3 a_position2D;",
+            "in vec4 a_color_0;",
+            "in vec4 a_rotation;",
+            "in vec3 a_scale;",
+          ],
+        );
+        verifyFeatureStruct(shaderBuilder);
+      });
+    });
+
+    it("process meshopt compressed model with Gaussian splat attributes with texture", function () {
+      return loadGltf(gaussianSplatMeshopt, {
+        generateGaussianSplatTexture: true,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        renderResources.runtimeNode.node = node;
+        renderResources.model._projectTo2D = true;
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene2D.frameState,
+        );
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        const attributes = primitive.attributes;
+
+        expect(attributes.length).toEqual(4);
+
+        const colorAttribute = attributes[2];
+        const positionAttribute = attributes[3];
+        const scaleAttribute = attributes[0];
+        const rotationAttribute = attributes[1];
 
         expect(colorAttribute.typedArray).toBeDefined();
         expect(colorAttribute.type).toEqual("VEC4");
