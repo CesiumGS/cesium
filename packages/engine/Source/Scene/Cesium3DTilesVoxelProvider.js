@@ -242,9 +242,25 @@ function Cesium3DTilesVoxelProvider(options) {
    */
   this.maximumTileCount = maximumTileCount;
 
+  this._availableLevels = undefined;
   this._implicitTileset = undefined;
   this._subtreeCache = new ImplicitSubtreeCache();
 }
+
+Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
+  /**
+   * The number of levels of detail containing available tiles in the tileset.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {number|undefined}
+   * @readonly
+   */
+  availableLevels: {
+    get: function () {
+      return this._availableLevels;
+    },
+  },
+});
 
 /**
  * Creates a {@link Cesium3DTilesVoxelProvider} that fetches voxel data from a 3D Tiles tileset.
@@ -313,11 +329,14 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   }
 
   const provider = new Cesium3DTilesVoxelProvider(providerOptions);
-  provider._implicitTileset = new ImplicitTileset(
+
+  const implicitTileset = new ImplicitTileset(
     resource,
     root,
     schemaLoader.schema,
   );
+  provider._implicitTileset = implicitTileset;
+  provider._availableLevels = implicitTileset.availableLevels;
 
   ResourceCache.unload(schemaLoader);
 

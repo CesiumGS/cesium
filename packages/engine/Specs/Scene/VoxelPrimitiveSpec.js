@@ -58,6 +58,18 @@ describe(
       expect(primitive.maximumValues).toBe(provider.maximumValues);
     });
 
+    it("loads tiles from a minimal procedural provider", async function () {
+      const spyUpdate = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive();
+      primitive.initialTilesLoaded.addEventListener(spyUpdate);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate.calls.count()).toEqual(1);
+    });
+
     it("initial tiles loaded and all tiles loaded events are raised", async function () {
       const spyUpdate1 = jasmine.createSpy("listener");
       const spyUpdate2 = jasmine.createSpy("listener");

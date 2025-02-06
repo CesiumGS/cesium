@@ -181,6 +181,16 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
+   * The number of levels of detail containing available tiles in the tileset.
+   *
+   * @type {number|undefined}
+   * @readonly
+   */
+  availableLevels: {
+    get: DeveloperError.throwInstantiationError,
+  },
+
+  /**
    * Gets the number of keyframes in the dataset.
    *
    * @memberof VoxelProvider.prototype
