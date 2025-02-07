@@ -172,6 +172,7 @@ function rebindAllGlyphs(labelCollection, label) {
     backgroundBillboard.disableDepthTestDistance =
       label._disableDepthTestDistance;
     backgroundBillboard.clusterShow = label.clusterShow;
+    backgroundBillboard.value = label._value;
   }
 
   const glyphTextureCache = labelCollection._glyphTextureCache;
@@ -311,6 +312,7 @@ function rebindAllGlyphs(labelCollection, label) {
         billboard.color = Color.TRANSPARENT;
         billboard.outlineWidth = label.outlineWidth;
       }
+      billboard.value = label._value;
     }
   }
 
@@ -584,6 +586,11 @@ function destroyLabel(labelCollection, label) {
 function LabelCollection(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  if (options.filterMin || options.filterMax) {
+    this._filterMin = options.filterMin;
+    this._filterMax = options.filterMax;
+  }
+
   this._scene = options.scene;
   this._batchTable = options.batchTable;
 
@@ -592,12 +599,16 @@ function LabelCollection(options) {
 
   this._backgroundBillboardCollection = new BillboardCollection({
     scene: this._scene,
+    filterMin: this._filterMin,
+    filterMax: this._filterMax,
   });
   this._backgroundBillboardCollection.destroyTextureAtlas = false;
 
   this._billboardCollection = new BillboardCollection({
     scene: this._scene,
     batchTable: this._batchTable,
+    filterMin: this._filterMin,
+    filterMax: this._filterMax,
   });
   this._billboardCollection.destroyTextureAtlas = false;
   this._billboardCollection._sdf = true;
@@ -691,6 +702,36 @@ Object.defineProperties(LabelCollection.prototype, {
   length: {
     get: function () {
       return this._labels.length;
+    },
+  },
+
+  filterMin: {
+    get: function () {
+      return this._filterMin;
+    },
+    set: function (value) {
+      if (this._filterMin !== value) {
+        this._filterMin = value;
+        // Propagate the new value to the billboard collection.
+        if (this._billboardCollection) {
+          this._billboardCollection._filterMin = value;
+          this._backgroundBillboardCollection._filterMin = value;
+        }
+      }
+    },
+  },
+  filterMax: {
+    get: function () {
+      return this._filterMax;
+    },
+    set: function (value) {
+      if (this._filterMax !== value) {
+        this._filterMax = value;
+        if (this._billboardCollection) {
+          this._billboardCollection._filterMax = value;
+          this._backgroundBillboardCollection._filterMax = value;
+        }
+      }
     },
   },
 });

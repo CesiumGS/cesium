@@ -113,6 +113,7 @@ function parseFont(label) {
  * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} specifying near and far scaling properties of the label based on the label's distance from the camera.
  * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} specifying at what distance from the camera that this label will be displayed.
  * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ * @property {boolean} [value=0] set a value, usefull to filter quickly which label to show
  */
 
 /**
@@ -140,6 +141,9 @@ function Label(options, labelCollection) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
+
+  this._value = defaultValue(options.value, 0);
+
   if (
     defined(options.disableDepthTestDistance) &&
     options.disableDepthTestDistance < 0.0
@@ -1197,6 +1201,29 @@ Object.defineProperties(Label.prototype, {
         const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.clusterShow = value;
+        }
+      }
+    },
+  },
+
+  /**
+   * Gets or sets the value of this label.
+   * @memberof Label.prototype
+   * @type {float}
+   */
+  value: {
+    get: function () {
+      return this._value;
+    },
+    set: function (newValue) {
+      if (this._value !== newValue) {
+        this._value = newValue;
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const billboard = glyphs[i].billboard;
+          if (defined(billboard)) {
+            billboard.value = newValue;
+          }
         }
       }
     },
