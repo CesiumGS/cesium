@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.127 - 2025-??-??
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Gaussian Splatting support for 3D Tiles 1.1 using [this draft glTF extension](https://github.com/KhronosGroup/glTF/issues/2454).
+- PixelFormat added for integer textures
+
 ## 1.126 - 2025-02-03
 
 ### @cesium/engine
