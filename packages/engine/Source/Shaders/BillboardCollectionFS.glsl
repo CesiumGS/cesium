@@ -9,6 +9,12 @@ in vec4 v_pickColor;
 in vec4 v_color;
 in float v_splitDirection;
 
+#ifdef FILTER
+uniform float u_filterMin;
+uniform float u_filterMax;
+in float v_value;
+#endif
+
 #ifdef SDF
 in vec4 v_outlineColor;
 in float v_outlineWidth;
@@ -89,6 +95,12 @@ void main()
 {
     if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
     if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
+	
+#ifdef FILTER
+	if(v_value < u_filterMin || v_value > u_filterMax){
+		discard;
+	}
+#endif
     
     vec4 color = texture(u_atlas, v_textureCoordinates);
 

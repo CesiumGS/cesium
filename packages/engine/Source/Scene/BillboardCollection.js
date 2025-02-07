@@ -55,6 +55,7 @@ const DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
 const TEXTURE_COORDINATE_BOUNDS = Billboard.TEXTURE_COORDINATE_BOUNDS;
 const SDF_INDEX = Billboard.SDF_INDEX;
 const SPLIT_DIRECTION_INDEX = Billboard.SPLIT_DIRECTION_INDEX;
+const VALUE_INDEX = Billboard.VALUE_INDEX;
 const NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
 let attributeLocations;
@@ -73,6 +74,7 @@ const attributeLocationsBatched = {
   a_batchId: 10,
   sdf: 11,
   splitDirection: 12,
+  value: 13,
 };
 
 const attributeLocationsInstanced = {
@@ -90,6 +92,7 @@ const attributeLocationsInstanced = {
   a_batchId: 11,
   sdf: 12,
   splitDirection: 13,
+  value: 14,
 };
 
 /**
@@ -116,6 +119,8 @@ const attributeLocationsInstanced = {
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the billboards in the collection will be shown.
+ * @param {float} [options.filterMin=0] set the filter min to apply to the billboard.value .
+ * @param {float} [options.filterMax=0] set the filter max to apply to the billboard.value .
  *
  * @performance For best performance, prefer a few collections, each with many billboards, to
  * many collections with only a few billboards each.  Organize collections so that billboards
@@ -162,6 +167,9 @@ function BillboardCollection(options) {
   this._billboardsToUpdateIndex = 0;
   this._billboardsRemoved = false;
   this._createVertexArray = false;
+
+  this._shaderFilter = false;
+  this._compiledShaderFilter = false;
 
   this._shaderRotation = false;
   this._compiledShaderRotation = false;
@@ -315,12 +323,28 @@ function BillboardCollection(options) {
     BufferUsage.STATIC_DRAW, // DISTANCE_DISPLAY_CONDITION_INDEX
     BufferUsage.STATIC_DRAW, // TEXTURE_COORDINATE_BOUNDS
     BufferUsage.STATIC_DRAW, // SPLIT_DIRECTION_INDEX
+    BufferUsage.STATIC_DRAW, // VALUE_INDEX
   ];
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
+  if (options.filterMin || options.filterMax) {
+    this._shaderFilter = true;
+    this._filterMin = options.filterMin;
+    this._filterMax = options.filterMax;
+  } else {
+    this._filterMin = 0;
+    this._filterMax = 0;
+  }
+
   const that = this;
   this._uniforms = {
+    u_filterMin: function () {
+      return that._filterMin;
+    },
+    u_filterMax: function () {
+      return that._filterMax;
+    },
     u_atlas: function () {
       return that._textureAtlas.texture;
     },
@@ -786,6 +810,12 @@ function createVAF(
       componentsPerAttribute: 1,
       componentDatatype: ComponentDatatype.FLOAT,
       usage: buffersUsage[SPLIT_DIRECTION_INDEX],
+    },
+    {
+      index: attributeLocations.value,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      usage: buffersUsage[VALUE_INDEX],
     },
   ];
 
@@ -1619,6 +1649,29 @@ function writeSplitDirection(
   }
 }
 
+function writeValue(
+  billboardCollection,
+  frameState,
+  textureAtlasCoordinates,
+  vafWriters,
+  billboard,
+) {
+  const writer = vafWriters[attributeLocations.value];
+  const value = billboard.value ? billboard.value : 0;
+
+  let i;
+  if (billboardCollection._instanced) {
+    i = billboard._index;
+    writer(i, value);
+  } else {
+    i = billboard._index * 4;
+    writer(i + 0, value);
+    writer(i + 1, value);
+    writer(i + 2, value);
+    writer(i + 3, value);
+  }
+}
+
 function writeBillboard(
   billboardCollection,
   frameState,
@@ -1704,6 +1757,13 @@ function writeBillboard(
     billboard,
   );
   writeSplitDirection(
+    billboardCollection,
+    frameState,
+    textureAtlasCoordinates,
+    vafWriters,
+    billboard,
+  );
+  writeValue(
     billboardCollection,
     frameState,
     textureAtlasCoordinates,
@@ -2025,6 +2085,10 @@ BillboardCollection.prototype.update = function (frameState) {
       writers.push(writeSplitDirection);
     }
 
+    if (properties[VALUE_INDEX]) {
+      writers.push(writeValue);
+    }
+
     const numWriters = writers.length;
     vafWriters = this._vaf.writers;
 
@@ -2159,6 +2223,7 @@ BillboardCollection.prototype.update = function (frameState) {
 
   if (
     blendOptionChanged ||
+    this._shaderFilter !== this._compiledShaderFilter ||
     this._shaderRotation !== this._compiledShaderRotation ||
     this._shaderAlignedAxis !== this._compiledShaderAlignedAxis ||
     this._shaderScaleByDistance !== this._compiledShaderScaleByDistance ||
@@ -2194,6 +2259,9 @@ BillboardCollection.prototype.update = function (frameState) {
       defines: vertDefines,
       sources: [vsSource],
     });
+    if (this._shaderFilter) {
+      vs.defines.push("FILTER");
+    }
     if (this._instanced) {
       vs.defines.push("INSTANCED");
     }
@@ -2239,6 +2307,9 @@ BillboardCollection.prototype.update = function (frameState) {
         defines: ["OPAQUE", vectorFragDefine],
         sources: [fsSource],
       });
+      if (this._shaderFilter) {
+        fs.defines.push("FILTER");
+      }
       if (this._shaderClampToGround) {
         if (supportVSTextureReads) {
           fs.defines.push("VERTEX_DEPTH_CHECK");
@@ -2264,6 +2335,9 @@ BillboardCollection.prototype.update = function (frameState) {
         defines: ["TRANSLUCENT", vectorFragDefine],
         sources: [fsSource],
       });
+      if (this._shaderFilter) {
+        fs.defines.push("FILTER");
+      }
       if (this._shaderClampToGround) {
         if (supportVSTextureReads) {
           fs.defines.push("VERTEX_DEPTH_CHECK");
@@ -2289,6 +2363,9 @@ BillboardCollection.prototype.update = function (frameState) {
         defines: [vectorFragDefine],
         sources: [fsSource],
       });
+      if (this._shaderFilter) {
+        fs.defines.push("FILTER");
+      }
       if (this._shaderClampToGround) {
         if (supportVSTextureReads) {
           fs.defines.push("VERTEX_DEPTH_CHECK");
@@ -2314,6 +2391,9 @@ BillboardCollection.prototype.update = function (frameState) {
         defines: [vectorFragDefine],
         sources: [fsSource],
       });
+      if (this._shaderFilter) {
+        fs.defines.push("FILTER");
+      }
       if (this._shaderClampToGround) {
         if (supportVSTextureReads) {
           fs.defines.push("VERTEX_DEPTH_CHECK");
@@ -2334,6 +2414,7 @@ BillboardCollection.prototype.update = function (frameState) {
       });
     }
 
+    this._compiledShaderFilter = this._shaderFilter;
     this._compiledShaderRotation = this._shaderRotation;
     this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
     this._compiledShaderScaleByDistance = this._shaderScaleByDistance;

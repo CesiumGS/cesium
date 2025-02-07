@@ -51,6 +51,7 @@ import SplitDirection from "./SplitDirection.js";
  * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} Specifying the distance from the camera at which this billboard will be displayed.
  * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
  * @property {SplitDirection} [splitDirection] A {@link SplitDirection} Specifying the split property of the billboard.
+ * @property {boolean} [value=0] set a value, usefull to filter quickly which billboard to show
  */
 
 /**
@@ -257,6 +258,8 @@ function Billboard(options, billboardCollection) {
     options.splitDirection,
     SplitDirection.NONE,
   );
+
+  this._value = defaultValue(options.value, 0);
 }
 
 const SHOW_INDEX = (Billboard.SHOW_INDEX = 0);
@@ -280,7 +283,8 @@ const DISABLE_DEPTH_DISTANCE = (Billboard.DISABLE_DEPTH_DISTANCE = 15);
 Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
 const SDF_INDEX = (Billboard.SDF_INDEX = 17);
 const SPLIT_DIRECTION_INDEX = (Billboard.SPLIT_DIRECTION_INDEX = 18);
-Billboard.NUMBER_OF_PROPERTIES = 19;
+const VALUE_INDEX = (Billboard.VALUE_INDEX = 19);
+Billboard.NUMBER_OF_PROPERTIES = 20;
 
 function makeDirty(billboard, propertyChanged) {
   const billboardCollection = billboard._billboardCollection;
@@ -1100,6 +1104,24 @@ Object.defineProperties(Billboard.prototype, {
       }
     },
   },
+
+  /**
+   * Gets or sets the value of this billboard.
+   * @memberof Billboard.prototype
+   * @type {float}
+   * @default 0
+   */
+  value: {
+    get: function () {
+      return this._value;
+    },
+    set: function (value) {
+      if (this._value !== value) {
+        this._value = value;
+        makeDirty(this, VALUE_INDEX);
+      }
+    },
+  },
 });
 
 Billboard.prototype.getPickId = function (context) {
@@ -1596,7 +1618,8 @@ Billboard.prototype.equals = function (other) {
         other._distanceDisplayCondition,
       ) &&
       this._disableDepthTestDistance === other._disableDepthTestDistance &&
-      this._splitDirection === other._splitDirection)
+      this._splitDirection === other._splitDirection &&
+      this._value === other._value)
   );
 };
 
