@@ -1061,6 +1061,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
+   *  Loading and rendering information for requested content
+   * @type {Cesium3DTilesetStatistics}
+   * @readonly
    * @private
    */
   statistics: {
