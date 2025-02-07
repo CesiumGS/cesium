@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.127 - 2025-03-03
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
+
 ## 1.126 - 2025-02-03
 
 ### @cesium/engine
