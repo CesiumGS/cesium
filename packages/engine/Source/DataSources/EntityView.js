@@ -43,7 +43,7 @@ function updateTransform(
   ellipsoid,
 ) {
   const mode = that.scene.mode;
-  let cartesian = positionProperty.getValue(time, that._lastCartesian);
+  const cartesian = positionProperty.getValue(time, that._lastCartesian);
   if (defined(cartesian)) {
     let hasBasis = false;
     let invertVelocity = false;
@@ -216,10 +216,6 @@ function updateTransform(
       }
     }
 
-    if (defined(that.boundingSphere)) {
-      cartesian = that.boundingSphere.center;
-    }
-
     let position;
     let direction;
     let up;
@@ -346,12 +342,6 @@ function EntityView(entity, scene, ellipsoid) {
    */
   this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
-  /**
-   * The bounding sphere of the object.
-   * @type {BoundingSphere}
-   */
-  this.boundingSphere = undefined;
-
   // Shadow copies of the objects so we can detect changes.
   this._lastEntity = undefined;
   this._mode = undefined;
@@ -445,7 +435,6 @@ EntityView.prototype.update = function (time, boundingSphere) {
       }
 
       camera.viewBoundingSphere(boundingSphere, scratchHeadingPitchRange);
-      this.boundingSphere = boundingSphere;
       updateLookAt = false;
       saveCamera = false;
     } else if (
