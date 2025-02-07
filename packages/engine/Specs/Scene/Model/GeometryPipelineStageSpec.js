@@ -1771,7 +1771,6 @@ describe(
         const renderResources = mockRenderResources(primitive);
 
         renderResources.runtimeNode.node = node;
-        renderResources.model._projectTo2D = true;
 
         GeometryPipelineStage.process(
           renderResources,
@@ -1820,7 +1819,6 @@ describe(
           [
             "    vec3 positionMC;",
             "    vec4 color_0;",
-            "    vec3 position2D;",
             "    vec3 scale;",
             "    vec4 rotation;",
           ],
@@ -1844,7 +1842,6 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
-            "    attributes.position2D = a_position2D;",
             "    attributes.color_0 = a_color_0;",
             "    attributes.rotation = a_rotation;",
             "    attributes.scale = a_scale;",
@@ -1879,12 +1876,7 @@ describe(
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
           "in vec3 a_positionMC;",
-          [
-            "in vec3 a_position2D;",
-            "in vec4 a_color_0;",
-            "in vec4 a_rotation;",
-            "in vec3 a_scale;",
-          ],
+          ["in vec4 a_color_0;", "in vec4 a_rotation;", "in vec3 a_scale;"],
         );
         verifyFeatureStruct(shaderBuilder);
       });
@@ -1900,7 +1892,6 @@ describe(
         const renderResources = mockRenderResources(primitive);
 
         renderResources.runtimeNode.node = node;
-        renderResources.model._projectTo2D = true;
 
         GeometryPipelineStage.process(
           renderResources,
@@ -1949,7 +1940,6 @@ describe(
           [
             "    vec3 positionMC;",
             "    vec4 color_0;",
-            "    vec3 position2D;",
             "    vec3 scale;",
             "    vec4 rotation;",
           ],
@@ -1973,7 +1963,6 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
-            "    attributes.position2D = a_position2D;",
             "    attributes.color_0 = a_color_0;",
             "    attributes.rotation = a_rotation;",
             "    attributes.scale = a_scale;",
@@ -2008,12 +1997,7 @@ describe(
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
           "in vec3 a_positionMC;",
-          [
-            "in vec3 a_position2D;",
-            "in vec4 a_color_0;",
-            "in vec4 a_rotation;",
-            "in vec3 a_scale;",
-          ],
+          ["in vec4 a_color_0;", "in vec4 a_rotation;", "in vec3 a_scale;"],
         );
         verifyFeatureStruct(shaderBuilder);
       });
