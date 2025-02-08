@@ -417,10 +417,7 @@ Megatexture.prototype.writeDataToTexture = function (index, data, order) {
     const sliceVoxelOffsetY =
       Math.floor(z / sliceCountPerRegion.x) * voxelCountPerTile.y;
     for (let y = 0; y < voxelCountPerTile.y; y++) {
-      const readOffset =
-        order === VoxelMetadataOrder.GLTF
-          ? (y * voxelCountPerTile.z + z) * voxelCountPerTile.x
-          : (z * voxelCountPerTile.y + y) * voxelCountPerTile.x;
+      const readOffset = getReadOffset(order, voxelCountPerTile, y, z);
       const writeOffset =
         (sliceVoxelOffsetY + y) * voxelCountPerRegion.x + sliceVoxelOffsetX;
       for (let x = 0; x < voxelCountPerTile.x; x++) {
@@ -453,6 +450,29 @@ Megatexture.prototype.writeDataToTexture = function (index, data, order) {
 
   this.texture.copyFrom(copyOptions);
 };
+
+/**
+ * Get the offset into the data array for a given row of contiguous voxel data.
+ *
+ * @param {VoxelMetadataOrder} order
+ * @param {Cartesian3} dimensions The number of voxels in each dimension of the tile.
+ * @param {number} y The y index of the voxel row
+ * @param {number} z The z index of the voxel row
+ * @returns {number} The offset into the data array
+ * @private
+ */
+function getReadOffset(order, dimensions, y, z) {
+  if (order !== VoxelMetadataOrder.GLTF) {
+    const voxelsPerInputSlice = dimensions.y * dimensions.x;
+    const sliceIndex = z;
+    const rowIndex = y;
+    return sliceIndex * voxelsPerInputSlice + rowIndex * dimensions.x;
+  }
+  const voxelsPerInputSlice = dimensions.z * dimensions.x;
+  const sliceIndex = y;
+  const rowIndex = dimensions.z - 1 - z;
+  return sliceIndex * voxelsPerInputSlice + rowIndex * dimensions.x;
+}
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
