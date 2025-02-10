@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -52,7 +52,7 @@
         const stop = Cesium.JulianDate.addSeconds(
           start,
           duration,
-          new Cesium.JulianDate()
+          new Cesium.JulianDate(),
         );
 
         // Make sure viewer is at the desired time.
@@ -92,12 +92,12 @@
         const firstTangent = Cesium.Cartesian3.subtract(
           points[0],
           before,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
         const lastTangent = Cesium.Cartesian3.subtract(
           after,
           points[8],
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
 
         // Create the position spline.
@@ -134,7 +134,7 @@
         }
 
         // Create the entity and bind its position to the callback position property
-        viewer.entities.add({
+        const entity = viewer.entities.add({
           availability: new Cesium.TimeIntervalCollection([
             new Cesium.TimeInterval({
               start: start,
@@ -158,35 +158,11 @@
             leadTime: 1,
             trailTime: 0.1,
           },
+          trackingReferenceFrame: Cesium.TrackingReferenceFrame.INERTIAL,
+          viewFrom: new Cesium.Cartesian3(-100, 0, 10),
         });
 
-        const camera = viewer.camera;
-        const scene = viewer.scene;
-
-        const scratchPosition = new Cesium.Cartesian3();
-        const scratchOrientation = new Cesium.Quaternion();
-        const scratchTransform = new Cesium.Matrix4();
-        const offset = new Cesium.Cartesian3(-100, 0, 10);
-
-        // Update camera to follow entity's position and orientation
-        viewer.clock.onTick.addEventListener(function (clock) {
-          if (scene.mode === Cesium.Scene.MORPHING) {
-            return;
-          }
-          const time = clock.currentTime;
-          const entityPosition = position.getValue(time, scratchPosition);
-          const entityOrientation = orientation.getValue(time, scratchOrientation);
-          if (entityPosition === undefined || entityOrientation === undefined) {
-            return;
-          }
-          const transform = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
-            entityPosition,
-            entityOrientation,
-            Cesium.Cartesian3.ONE,
-            scratchTransform
-          );
-          camera.lookAtTransform(transform, offset);
-        });
+        viewer.trackedEntity = entity;
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

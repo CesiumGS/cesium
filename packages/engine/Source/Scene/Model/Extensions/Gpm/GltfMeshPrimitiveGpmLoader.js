@@ -76,7 +76,7 @@ function GltfMeshPrimitiveGpmLoader(options) {
 
 if (defined(Object.create)) {
   GltfMeshPrimitiveGpmLoader.prototype = Object.create(
-    ResourceLoader.prototype
+    ResourceLoader.prototype,
   );
   GltfMeshPrimitiveGpmLoader.prototype.constructor = GltfMeshPrimitiveGpmLoader;
 }
@@ -234,13 +234,13 @@ GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache = new Map();
  * Create the JSON description of a metadata class that treats
  * the given PPE texture as a property texture property.
  *
- * @param {any} ppeTexture - The PPE texture
+ * @param {PpeTexture} ppeTexture - The PPE texture
  * @param {number} index - The index of the texture in the extension
  * @returns The class JSON
  */
 GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson = function (
   ppeTexture,
-  index
+  index,
 ) {
   const traits = ppeTexture.traits;
   const ppePropertyName = traits.source;
@@ -268,9 +268,9 @@ GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson = function (
   // property values when they are `normalized`, the values will be
   // declared as `normalized` here.
   // The normalization factor will later have to be cancelled out,
-  // when integrating the `scale` into the actual property texture
-  // property. In the property texture property, the `scale` has to
-  // be multiplied by 255.
+  // with the `scale` being multiplied by 255.
+  const offset = ppeTexture.offset ?? 0.0;
+  const scale = (ppeTexture.scale ?? 1.0) * 255.0;
   const classJson = {
     name: `PPE texture class ${index}`,
     properties: {
@@ -279,6 +279,8 @@ GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson = function (
         type: "SCALAR",
         componentType: "UINT8",
         normalized: true,
+        offset: offset,
+        scale: scale,
         min: traits.min,
         max: traits.max,
       },
@@ -301,15 +303,15 @@ GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson = function (
  * @returns The `MetadataSchema`
  */
 GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema = function (
-  meshPrimitiveGpmLocal
+  meshPrimitiveGpmLocal,
 ) {
-  const ppeTexturePropertyIdentifiers = GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers(
-    meshPrimitiveGpmLocal
-  );
+  const ppeTexturePropertyIdentifiers =
+    GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers(
+      meshPrimitiveGpmLocal,
+    );
   const key = ppeTexturePropertyIdentifiers.toString();
-  let ppeTexturesMetadataSchema = GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache.get(
-    key
-  );
+  let ppeTexturesMetadataSchema =
+    GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache.get(key);
   if (defined(ppeTexturesMetadataSchema)) {
     return ppeTexturesMetadataSchema;
   }
@@ -326,17 +328,17 @@ GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema = function (
     const classId = `ppeTexture_${i}`;
     const classJson = GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson(
       ppeTexture,
-      i
+      i,
     );
     ppeTexturesMetadataSchemaJson.classes[classId] = classJson;
   }
 
   ppeTexturesMetadataSchema = MetadataSchema.fromJson(
-    ppeTexturesMetadataSchemaJson
+    ppeTexturesMetadataSchemaJson,
   );
   GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache.set(
     key,
-    ppeTexturesMetadataSchema
+    ppeTexturesMetadataSchema,
   );
   return ppeTexturesMetadataSchema;
 };
@@ -357,7 +359,7 @@ GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema = function (
  * @returns The identifiers
  */
 GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers = function (
-  meshPrimitiveGpmLocal
+  meshPrimitiveGpmLocal,
 ) {
   const ppeTexturePropertyIdentifiers = [];
   const ppeTextures = meshPrimitiveGpmLocal.ppeTextures;
@@ -369,7 +371,7 @@ GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers = function (
     // schema.
     const classJson = GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson(
       ppeTexture,
-      i
+      i,
     );
     const ppeTexturePropertyIdentifier = JSON.stringify(classJson);
     ppeTexturePropertyIdentifiers.push(ppeTexturePropertyIdentifier);
@@ -391,12 +393,13 @@ GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers = function (
  */
 GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata = function (
   meshPrimitiveGpmLocal,
-  textures
+  textures,
 ) {
   const propertyTextures = [];
-  const ppeTexturesMetadataSchema = GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema(
-    meshPrimitiveGpmLocal
-  );
+  const ppeTexturesMetadataSchema =
+    GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema(
+      meshPrimitiveGpmLocal,
+    );
   const ppeTextures = meshPrimitiveGpmLocal.ppeTextures;
   for (let i = 0; i < ppeTextures.length; i++) {
     const ppeTexture = ppeTextures[i];
@@ -405,19 +408,12 @@ GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata = function (
     const ppePropertyName = traits.source;
     const metadataClass = ppeTexturesMetadataSchema.classes[classId];
 
-    // The class property has been declared as `normalized`, so
-    // that `offset` and `scale` can be applied. The normalization
-    // factor has to be cancelled out here, by multiplying the
-    // `scale` with 255.
-    const scale = (ppeTexture.scale ?? 1.0) * 255.0;
     const ppeTextureAsPropertyTexture = {
       class: classId,
       properties: {
         [ppePropertyName]: {
           index: ppeTexture.index,
           texCoord: ppeTexture.texCoord,
-          offset: ppeTexture.offset,
-          scale: scale,
         },
       },
     };
@@ -428,7 +424,7 @@ GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata = function (
         propertyTexture: ppeTextureAsPropertyTexture,
         class: metadataClass,
         textures: textures,
-      })
+      }),
     );
   }
   const structuralMetadata = new StructuralMetadata({
@@ -512,10 +508,11 @@ GltfMeshPrimitiveGpmLoader.prototype.process = function (frameState) {
   const meshPrimitiveGpmLocal = new MeshPrimitiveGpmLocal(ppeTextures);
   this._meshPrimitiveGpmLocal = meshPrimitiveGpmLocal;
 
-  const structuralMetadata = GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata(
-    meshPrimitiveGpmLocal,
-    textures
-  );
+  const structuralMetadata =
+    GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata(
+      meshPrimitiveGpmLocal,
+      textures,
+    );
   this._structuralMetadata = structuralMetadata;
 
   this._state = ResourceLoaderState.READY;

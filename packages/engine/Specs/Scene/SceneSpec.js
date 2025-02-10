@@ -85,7 +85,7 @@ const propertyValueEpsilon = 0.01;
  */
 function createEmbeddedGltfWithPropertyTexture(
   schema,
-  propertyTextureProperties
+  propertyTextureProperties,
 ) {
   const result = {
     extensions: {
@@ -144,8 +144,7 @@ function createEmbeddedGltfWithPropertyTexture(
     },
     buffers: [
       {
-        uri:
-          "data:application/gltf-buffer;base64,AAABAAIAAQADAAIAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAA",
+        uri: "data:application/gltf-buffer;base64,AAABAAIAAQADAAIAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAA",
         byteLength: 156,
       },
     ],
@@ -168,8 +167,7 @@ function createEmbeddedGltfWithPropertyTexture(
       {
         // A 16x16 pixels image that contains all combinations of
         // (0, 127, 255) in its upper-left 9x9 pixels
-        uri:
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42u2RUQ6AMAhDd3OO/qQt8VP8NRHjNpf0leI5ruqXbNVL4c9Dn+E8ljV+iLaXaoAY1YDaADaynBg2gFZLR1+wAdJEWZpW1AIVqmjCruqybw4qnEJbbQBHdWoS2XIUXdp+F8DNUOpM0tIZCusQJrzHNTnsOy2pFTZ7xpKhYFUu4M1v+OvrdQGABqEpS2kSLgAAAABJRU5ErkJggg==",
+        uri: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42u2RUQ6AMAhDd3OO/qQt8VP8NRHjNpf0leI5ruqXbNVL4c9Dn+E8ljV+iLaXaoAY1YDaADaynBg2gFZLR1+wAdJEWZpW1AIVqmjCruqybw4qnEJbbQBHdWoS2XIUXdp+F8DNUOpM0tIZCusQJrzHNTnsOy2pFTZ7xpKhYFUu4M1v+OvrdQGABqEpS2kSLgAAAABJRU5ErkJggg==",
         mimeType: "image/png",
       },
     ],
@@ -273,12 +271,6 @@ function createPropertyTextureGltfScalar() {
             type: "SCALAR",
             componentType: "UINT8",
           },
-          example_normalized_UINT8_SCALAR: {
-            name: "Example SCALAR property with normalized UINT8 components",
-            type: "SCALAR",
-            componentType: "UINT8",
-            normalized: true,
-          },
         },
       },
     },
@@ -289,10 +281,54 @@ function createPropertyTextureGltfScalar() {
       texCoord: 0,
       channels: [0],
     },
+  };
+  return createPropertyTextureGltf(schema, properties);
+}
+
+/**
+ * Creates the glTF for the normalized 'scalar' test case
+ *
+ * @param {number|undefined} classPropertyOffset The optional offset
+ * that will be defined in the class property definition
+ * @param {number|undefined} classPropertyScale The optional scale
+ * that will be defined in the class property definition
+ * @param {number|undefined} metadataPropertyOffset The optional offset
+ * that will be defined in the property texture property definition
+ * @param {number|undefined} metadataPropertyScale The optional scale
+ * that will be defined in the property texture property definition
+ * @returns The glTF
+ */
+function createPropertyTextureGltfNormalizedScalar(
+  classPropertyOffset,
+  classPropertyScale,
+  metadataPropertyOffset,
+  metadataPropertyScale,
+) {
+  const schema = {
+    id: "ExampleSchema",
+    classes: {
+      exampleClass: {
+        name: "Example class",
+        properties: {
+          example_normalized_UINT8_SCALAR: {
+            name: "Example SCALAR property with normalized UINT8 components",
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+            offset: classPropertyOffset,
+            scale: classPropertyScale,
+          },
+        },
+      },
+    },
+  };
+  const properties = {
     example_normalized_UINT8_SCALAR: {
       index: 0,
       texCoord: 0,
-      channels: [1],
+      channels: [0],
+      offset: metadataPropertyOffset,
+      scale: metadataPropertyScale,
     },
   };
   return createPropertyTextureGltf(schema, properties);
@@ -311,8 +347,7 @@ function createPropertyTextureGltfScalarArray() {
         name: "Example class",
         properties: {
           example_fixed_length_UINT8_SCALAR_array: {
-            name:
-              "Example fixed-length SCALAR array property with UINT8 components",
+            name: "Example fixed-length SCALAR array property with UINT8 components",
             type: "SCALAR",
             componentType: "UINT8",
             array: true,
@@ -327,6 +362,57 @@ function createPropertyTextureGltfScalarArray() {
       index: 0,
       texCoord: 0,
       channels: [0, 1, 2],
+    },
+  };
+  return createPropertyTextureGltf(schema, properties);
+}
+
+/**
+ * Creates the glTF for the 'normalized scalar array' test case
+ *
+ * @param {number[]|undefined} classPropertyOffset The optional offset
+ * that will be defined in the class property definition
+ * @param {number[]|undefined} classPropertyScale The optional scale
+ * that will be defined in the class property definition
+ * @param {number[]|undefined} metadataPropertyOffset The optional offset
+ * that will be defined in the property texture property definition
+ * @param {number[]|undefined} metadataPropertyScale The optional scale
+ * that will be defined in the property texture property definition
+ * @returns The glTF
+ */
+function createPropertyTextureGltfNormalizedScalarArray(
+  classPropertyOffset,
+  classPropertyScale,
+  metadataPropertyOffset,
+  metadataPropertyScale,
+) {
+  const schema = {
+    id: "ExampleSchema",
+    classes: {
+      exampleClass: {
+        name: "Example class",
+        properties: {
+          example_fixed_length_normalized_UINT8_SCALAR_array: {
+            name: "Example fixed-length SCALAR array property with normalized INT8 components",
+            type: "SCALAR",
+            componentType: "UINT8",
+            array: true,
+            count: 3,
+            normalized: true,
+            offset: classPropertyOffset,
+            scale: classPropertyScale,
+          },
+        },
+      },
+    },
+  };
+  const properties = {
+    example_fixed_length_normalized_UINT8_SCALAR_array: {
+      index: 0,
+      texCoord: 0,
+      channels: [0, 1, 2],
+      offset: metadataPropertyOffset,
+      scale: metadataPropertyScale,
     },
   };
   return createPropertyTextureGltf(schema, properties);
@@ -366,9 +452,22 @@ function createPropertyTextureGltfVec2() {
 /**
  * Creates the glTF for the normalized 'vec2' test case
  *
+ * @param {number[]|undefined} classPropertyOffset The optional offset
+ * that will be defined in the class property definition
+ * @param {number[]|undefined} classPropertyScale The optional scale
+ * that will be defined in the class property definition
+ * @param {number[]|undefined} metadataPropertyOffset The optional offset
+ * that will be defined in the property texture property definition
+ * @param {number[]|undefined} metadataPropertyScale The optional scale
+ * that will be defined in the property texture property definition
  * @returns The glTF
  */
-function createPropertyTextureGltfNormalizedVec2() {
+function createPropertyTextureGltfNormalizedVec2(
+  classPropertyOffset,
+  classPropertyScale,
+  metadataPropertyOffset,
+  metadataPropertyScale,
+) {
   const schema = {
     id: "ExampleSchema",
     classes: {
@@ -380,6 +479,8 @@ function createPropertyTextureGltfNormalizedVec2() {
             type: "VEC2",
             componentType: "UINT8",
             normalized: true,
+            offset: classPropertyOffset,
+            scale: classPropertyScale,
           },
         },
       },
@@ -390,6 +491,8 @@ function createPropertyTextureGltfNormalizedVec2() {
       index: 0,
       texCoord: 0,
       channels: [0, 1],
+      offset: metadataPropertyOffset,
+      scale: metadataPropertyScale,
     },
   };
   return createPropertyTextureGltf(schema, properties);
@@ -480,7 +583,7 @@ async function loadAsModel(scene, gltf) {
       scene.renderForSpecs();
       return model.ready;
     },
-    { timeout: 10000 }
+    { timeout: 10000 },
   );
 }
 
@@ -524,7 +627,7 @@ function pickMetadataAt(scene, schemaId, className, propertyName, x, y) {
     screenPosition,
     schemaId,
     className,
-    propertyName
+    propertyName,
   );
   return metadataValue;
 }
@@ -566,7 +669,7 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         Resource._DefaultImplementations.loadWithXhr(
           path,
@@ -574,14 +677,14 @@ describe(
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       };
     }
 
     function returnQuantizedMeshTileJson() {
       return returnTileJson(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json"
+        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
       );
     }
 
@@ -611,7 +714,7 @@ describe(
         expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
         expect(scene.screenSpaceCameraController).toBeInstanceOf(
-          ScreenSpaceCameraController
+          ScreenSpaceCameraController,
         );
         expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
@@ -663,14 +766,14 @@ describe(
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(
-          webglOptions.premultipliedAlpha
+          webglOptions.premultipliedAlpha,
         );
         expect(contextAttributes.preserveDrawingBuffer).toEqual(
-          webglOptions.preserveDrawingBuffer
+          webglOptions.preserveDrawingBuffer,
         );
         expect(s.mapProjection).toEqual(mapProjection);
         expect(s._depthPlane._ellipsoidOffset).toEqual(
-          Number.POSITIVE_INFINITY
+          Number.POSITIVE_INFINITY,
         );
 
         s.destroyForSpecs();
@@ -770,7 +873,7 @@ describe(
       const center = Cartesian3.add(
         scene.camera.position,
         scene.camera.direction,
-        new Cartesian3()
+        new Cartesian3(),
       );
 
       const c = new DrawCommand({
@@ -804,16 +907,15 @@ describe(
       c.execute = function () {};
 
       const originalShallowClone = DrawCommand.shallowClone;
-      spyOn(DrawCommand, "shallowClone").and.callFake(function (
-        command,
-        result
-      ) {
-        result = originalShallowClone(command, result);
-        result.execute = function () {
-          result.uniformMap.debugShowCommandsColor();
-        };
-        return result;
-      });
+      spyOn(DrawCommand, "shallowClone").and.callFake(
+        function (command, result) {
+          result = originalShallowClone(command, result);
+          result.execute = function () {
+            result.uniformMap.debugShowCommandsColor();
+          };
+          return result;
+        },
+      );
 
       scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -840,7 +942,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const rectanglePrimitive2 = createRectangle(rectangle, 1000.0);
@@ -848,7 +950,7 @@ describe(
         0.0,
         1.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -878,7 +980,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const rectanglePrimitive2 = createRectangle(rectangle);
@@ -886,7 +988,7 @@ describe(
         0.0,
         1.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -916,7 +1018,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -979,7 +1081,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = scene.primitives;
@@ -1040,7 +1142,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -1058,7 +1160,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -1076,7 +1178,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -1094,7 +1196,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -1112,7 +1214,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
         return expect(s).toRenderAndCall(function () {
           render(s.frameState, s.globe);
@@ -1129,7 +1231,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -1147,7 +1249,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -1173,7 +1275,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -1202,7 +1304,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -1227,7 +1329,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = scene.primitives;
@@ -1237,7 +1339,7 @@ describe(
         destination: new Cartesian3(
           Ellipsoid.WGS84.maximumRadius * Math.PI + 10000.0,
           0.0,
-          10.0
+          10.0,
         ),
         convert: false,
       });
@@ -1262,7 +1364,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = s.primitives;
@@ -1272,7 +1374,7 @@ describe(
         destination: new Cartesian3(
           Ellipsoid.WGS84.maximumRadius * Math.PI,
           0.0,
-          10.0
+          10.0,
         ),
         convert: false,
       });
@@ -1300,7 +1402,7 @@ describe(
         4.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = scene.primitives;
@@ -1327,7 +1429,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -1353,7 +1455,7 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       expect(scene).toRenderAndCall(function () {
@@ -1365,7 +1467,7 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
 
         const primitives = scene.primitives;
@@ -1393,7 +1495,7 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       expect(scene).toRenderAndCall(function () {
@@ -1405,7 +1507,7 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
 
         const primitives = scene.primitives;
@@ -1433,7 +1535,7 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       expect(scene).toRenderAndCall(function () {
@@ -1445,7 +1547,7 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
 
         const primitives = scene.primitives;
@@ -1473,7 +1575,7 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       const rectanglePrimitive = createRectangle(rectangle);
@@ -1481,7 +1583,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = scene.primitives;
@@ -1513,17 +1615,17 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       const rectanglePrimitive = scene.primitives.add(
-        createRectangle(rectangle)
+        createRectangle(rectangle),
       );
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       scene.useDepthPicking = true;
@@ -1551,22 +1653,22 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
       spyOn(
         SceneTransforms,
-        "transformWindowToDrawingBuffer"
+        "transformWindowToDrawingBuffer",
       ).and.callThrough();
 
       expect(scene).toRenderAndCall(function () {
         scene.pickPosition(windowPosition);
         expect(
-          SceneTransforms.transformWindowToDrawingBuffer
+          SceneTransforms.transformWindowToDrawingBuffer,
         ).toHaveBeenCalled();
 
         scene.pickPosition(windowPosition);
         expect(
-          SceneTransforms.transformWindowToDrawingBuffer.calls.count()
+          SceneTransforms.transformWindowToDrawingBuffer.calls.count(),
         ).toEqual(1);
 
         const rectanglePrimitive = createRectangle(rectangle);
@@ -1574,7 +1676,7 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
 
         const primitives = scene.primitives;
@@ -1584,12 +1686,12 @@ describe(
       expect(scene).toRenderAndCall(function () {
         scene.pickPosition(windowPosition);
         expect(
-          SceneTransforms.transformWindowToDrawingBuffer.calls.count()
+          SceneTransforms.transformWindowToDrawingBuffer.calls.count(),
         ).toEqual(2);
 
         scene.pickPosition(windowPosition);
         expect(
-          SceneTransforms.transformWindowToDrawingBuffer.calls.count()
+          SceneTransforms.transformWindowToDrawingBuffer.calls.count(),
         ).toEqual(2);
       });
     });
@@ -1747,7 +1849,7 @@ describe(
       scene.render();
 
       scene.camera.lookLeft(
-        scene.camera.frustum.fov * (scene.camera.percentageChanged + 0.1)
+        scene.camera.frustum.fov * (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1771,7 +1873,7 @@ describe(
       scene.render();
 
       scene.camera.twistLeft(
-        CesiumMath.PI * (scene.camera.percentageChanged + 0.1)
+        CesiumMath.PI * (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1792,7 +1894,7 @@ describe(
       scene.render();
 
       scene.camera.twistLeft(
-        CesiumMath.PI * (scene.camera.percentageChanged + 0.1)
+        CesiumMath.PI * (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1814,7 +1916,7 @@ describe(
 
       scene.camera.moveUp(
         scene.camera.positionCartographic.height *
-          (scene.camera.percentageChanged + 0.1)
+          (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1839,7 +1941,7 @@ describe(
 
       scene.camera.moveLeft(
         scene.camera.positionCartographic.height *
-          (scene.camera.percentageChanged + 0.1)
+          (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1874,7 +1976,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -1900,7 +2002,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -1927,7 +2029,7 @@ describe(
       expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
-        undefined
+        undefined,
       );
     });
 
@@ -1940,7 +2042,7 @@ describe(
       expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
-        result
+        result,
       );
     });
 
@@ -1964,15 +2066,13 @@ describe(
       returnQuantizedMeshTileJson();
 
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "//terrain/tiles"
-      );
+      scene.terrainProvider =
+        await CesiumTerrainProvider.fromUrl("//terrain/tiles");
 
       expect(scene.terrainProvider).toBe(globe.terrainProvider);
       scene.globe = undefined;
-      const newProvider = await CesiumTerrainProvider.fromUrl(
-        "//newTerrain/tiles"
-      );
+      const newProvider =
+        await CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
       expect(function () {
         scene.terrainProvider = newProvider;
       }).not.toThrow();
@@ -2247,7 +2347,7 @@ describe(
 
       scene.morphTo2D(1.0);
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
@@ -2262,7 +2362,7 @@ describe(
 
       scene.morphToColumbusView(1.0);
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
@@ -2277,7 +2377,7 @@ describe(
 
       scene.morphTo3D(1.0);
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
@@ -2295,7 +2395,7 @@ describe(
       const lastFrameNumber = scene.frameState.frameNumber;
       const lastRenderTime = JulianDate.clone(
         scene.lastRenderTime,
-        scratchTime
+        scratchTime,
       );
       expect(lastRenderTime).toBeDefined();
       expect(scene._renderRequested).toBe(false);
@@ -2308,12 +2408,12 @@ describe(
       scene.maximumRenderTimeChange = 100.0;
 
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 50.0, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 50.0, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
 
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
     });
@@ -2324,7 +2424,7 @@ describe(
       const lastFrameNumber = scene.frameState.frameNumber;
       const lastRenderTime = JulianDate.clone(
         scene.lastRenderTime,
-        scratchTime
+        scratchTime,
       );
       expect(lastRenderTime).toBeDefined();
       expect(scene._renderRequested).toBe(false);
@@ -2335,7 +2435,7 @@ describe(
       const farFuture = JulianDate.addDays(
         lastRenderTime,
         10000,
-        new JulianDate()
+        new JulianDate(),
       );
 
       scene.renderForSpecs();
@@ -2383,12 +2483,12 @@ describe(
         destination: new Cartesian3(
           -588536.1057451078,
           -10512475.371849751,
-          6737159.100747835
+          6737159.100747835,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5688261558859757,
-          0.0
+          0.0,
         ),
       });
       scene.renderForSpecs();
@@ -2398,12 +2498,12 @@ describe(
         destination: new Cartesian3(
           -5754647.167415793,
           14907694.100240812,
-          -483807.2406259497
+          -483807.2406259497,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5698869547885104,
-          0.0
+          0.0,
         ),
       });
       scene.renderForSpecs();
@@ -2429,12 +2529,12 @@ describe(
         destination: new Cartesian3(
           -5754647.167415793,
           14907694.100240812,
-          -483807.2406259497
+          -483807.2406259497,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5698869547885104,
-          0.0
+          0.0,
         ),
       });
       scene.renderForSpecs();
@@ -2505,12 +2605,12 @@ describe(
         destination: new Cartesian3(
           -746658.0557573901,
           -5644191.0002196245,
-          2863585.099969967
+          2863585.099969967,
         ),
         orientation: new HeadingPitchRoll(
           0.3019699121236403,
           0.07316306869231592,
-          0.0007089903642230055
+          0.0007089903642230055,
         ),
       });
       await updateGlobeUntilDone(scene);
@@ -2545,12 +2645,12 @@ describe(
         destination: new Cartesian3(
           -4643042.379120885,
           4314056.579506199,
-          -451828.8968118975
+          -451828.8968118975,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -0.7855491933100796,
-          6.283185307179586
+          6.283185307179586,
         ),
       });
       scene.morphToColumbusView(0.0);
@@ -2563,13 +2663,14 @@ describe(
     it("does not occlude primitives when camera is underground", async function () {
       const globe = new Globe();
       scene.globe = globe;
+      scene.fog.density = 0.0004;
 
       // A primitive at height -25000.0 is less than the minor axis for WGS84 and will get culled unless the camera is underground
       const center = Cartesian3.fromRadians(
         2.3929070618374535,
         -0.07149851443375346,
         -25000.0,
-        globe.ellipsoid
+        globe.ellipsoid,
       );
       const radius = 10.0;
 
@@ -2587,17 +2688,17 @@ describe(
       await updateGlobeUntilDone(scene);
       expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
 
-      // Look underground at the primitive
+      // Look underground at the primitive, camera height ~-24,000
       scene.camera.setView({
         destination: new Cartesian3(
           -4643042.379120885,
           4314056.579506199,
-          -451828.8968118975
+          -451828.8968118975,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -0.7855491933100796,
-          6.283185307179586
+          6.283185307179586,
         ),
       });
       await updateGlobeUntilDone(scene);
@@ -2614,7 +2715,7 @@ describe(
         2.3929070618374535,
         -0.07149851443375346,
         -25000.0,
-        globe.ellipsoid
+        globe.ellipsoid,
       );
       const radius = 10.0;
 
@@ -2649,18 +2750,18 @@ describe(
         destination: new Cartesian3(
           2838477.9315700866,
           -4939120.816857662,
-          1978094.4576285738
+          1978094.4576285738,
         ),
         orientation: new HeadingPitchRoll(
           5.955798516387474,
           -1.0556025616093283,
-          0.39098563693868016
+          0.39098563693868016,
         ),
       });
 
       await updateGlobeUntilDone(scene);
       const time = JulianDate.fromIso8601(
-        "2020-04-25T03:07:26.04924034334544558Z"
+        "2020-04-25T03:07:26.04924034334544558Z",
       );
       globe.translucency.enabled = true;
       globe.translucency.frontFaceAlpha = 0.5;
@@ -2680,12 +2781,12 @@ describe(
         destination: new Cartesian3(
           2764681.3022502237,
           -20999839.371941473,
-          14894754.464869803
+          14894754.464869803,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5687983447998315,
-          0
+          0,
         ),
       });
 
@@ -2714,12 +2815,12 @@ describe(
         destination: new Cartesian3(
           -557278.4840232887,
           -6744284.200717078,
-          2794079.461722868
+          2794079.461722868,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5687983448015541,
-          0
+          0,
         ),
       });
 
@@ -2730,7 +2831,7 @@ describe(
         }),
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(1.0, 0.0, 0.0, 0.5)
+            new Color(1.0, 0.0, 0.0, 0.5),
           ),
         },
       });
@@ -2742,7 +2843,7 @@ describe(
             closed: true,
           }),
           asynchronous: false,
-        })
+        }),
       );
 
       await updateGlobeUntilDone(scene);
@@ -2762,12 +2863,12 @@ describe(
         destination: new Cartesian3(
           -557278.4840232887,
           -6744284.200717078,
-          2794079.461722868
+          2794079.461722868,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5687983448015541,
-          0
+          0,
         ),
       });
 
@@ -2778,7 +2879,7 @@ describe(
         }),
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(1.0, 0.0, 0.0, 0.5)
+            new Color(1.0, 0.0, 0.0, 0.5),
           ),
         },
       });
@@ -2790,7 +2891,7 @@ describe(
             closed: true,
           }),
           asynchronous: false,
-        })
+        }),
       );
 
       await updateGlobeUntilDone(scene);
@@ -2852,7 +2953,7 @@ describe(
     const webglStub = !!window.webglStub;
 
     const defaultDate = JulianDate.fromDate(
-      new Date("January 1, 2014 12:00:00 UTC")
+      new Date("January 1, 2014 12:00:00 UTC"),
     );
 
     it("throws without windowPosition", async function () {
@@ -2944,13 +3045,13 @@ describe(
 
       const windowPosition = new Cartesian2(
         Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2)
+        Math.floor(canvasSizeY / 2),
       );
       const actualMetadataValue = scene.pickMetadata(
         windowPosition,
         schemaId,
         className,
-        propertyName
+        propertyName,
       );
       expect(actualMetadataValue).toBeUndefined();
       scene.destroyForSpecs();
@@ -2974,13 +3075,13 @@ describe(
 
       const windowPosition = new Cartesian2(
         Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2)
+        Math.floor(canvasSizeY / 2),
       );
       const actualMetadataValue = scene.pickMetadata(
         windowPosition,
         schemaId,
         className,
-        propertyName
+        propertyName,
       );
       expect(actualMetadataValue).toBeUndefined();
       scene.destroyForSpecs();
@@ -3000,7 +3101,7 @@ describe(
 
       const windowPosition = new Cartesian2(
         Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2)
+        Math.floor(canvasSizeY / 2),
       );
       const metadataSchema = scene.pickMetadataSchema(windowPosition);
 
@@ -3032,7 +3133,7 @@ describe(
 
       const windowPosition = new Cartesian2(
         Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2)
+        Math.floor(canvasSizeY / 2),
       );
 
       // The pickMetadataSchema call should return the schema that
@@ -3076,7 +3177,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -3084,7 +3185,7 @@ describe(
         className,
         propertyName,
         0,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -3092,7 +3193,7 @@ describe(
         className,
         propertyName,
         0,
-        2
+        2,
       );
       const expectedMetadataValue0 = 0;
       const expectedMetadataValue1 = 127;
@@ -3100,15 +3201,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -3120,7 +3221,16 @@ describe(
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_normalized_UINT8_SCALAR";
-      const gltf = createPropertyTextureGltfScalar();
+      const classPropertyOffset = undefined;
+      const classPropertyScale = undefined;
+      const metadataPropertyOffset = undefined;
+      const metadataPropertyScale = undefined;
+      const gltf = createPropertyTextureGltfNormalizedScalar(
+        classPropertyOffset,
+        classPropertyScale,
+        metadataPropertyOffset,
+        metadataPropertyScale,
+      );
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
@@ -3143,23 +3253,23 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
         schemaId,
         className,
         propertyName,
-        3,
-        0
+        0,
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
         schemaId,
         className,
         propertyName,
-        6,
-        0
+        0,
+        2,
       );
       const expectedMetadataValue0 = 0.0;
       const expectedMetadataValue1 = 0.5;
@@ -3167,15 +3277,174 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
+      );
+      scene.destroyForSpecs();
+    });
+
+    it("picks normalized UINT8 SCALAR from a property texture with offset and scale in class property", async function () {
+      if (webglStub) {
+        return;
+      }
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_normalized_UINT8_SCALAR";
+      const classPropertyOffset = 100.0;
+      const classPropertyScale = 2.0;
+      const metadataPropertyOffset = undefined;
+      const metadataPropertyScale = undefined;
+      const gltf = createPropertyTextureGltfNormalizedScalar(
+        classPropertyOffset,
+        classPropertyScale,
+        metadataPropertyOffset,
+        metadataPropertyScale,
+      );
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      const scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        0,
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        1,
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        2,
+      );
+      const expectedMetadataValue0 =
+        classPropertyOffset + classPropertyScale * 0.0;
+      const expectedMetadataValue1 =
+        classPropertyOffset + classPropertyScale * 0.5;
+      const expectedMetadataValue2 =
+        classPropertyOffset + classPropertyScale * 1.0;
+
+      expect(actualMetadataValue0).toEqualEpsilon(
+        expectedMetadataValue0,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue1).toEqualEpsilon(
+        expectedMetadataValue1,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue2).toEqualEpsilon(
+        expectedMetadataValue2,
+        propertyValueEpsilon,
+      );
+      scene.destroyForSpecs();
+    });
+
+    it("picks normalized UINT8 SCALAR from a property texture with offset and scale in property texture property", async function () {
+      if (webglStub) {
+        return;
+      }
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_normalized_UINT8_SCALAR";
+      const classPropertyOffset = 100.0;
+      const classPropertyScale = 200.0;
+      // These should override the values from the class property:
+      const metadataPropertyOffset = 200.0;
+      const metadataPropertyScale = 3.0;
+      const gltf = createPropertyTextureGltfNormalizedScalar(
+        classPropertyOffset,
+        classPropertyScale,
+        metadataPropertyOffset,
+        metadataPropertyScale,
+      );
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      const scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        0,
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        1,
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        2,
+      );
+      const expectedMetadataValue0 =
+        metadataPropertyOffset + metadataPropertyScale * 0.0;
+      const expectedMetadataValue1 =
+        metadataPropertyOffset + metadataPropertyScale * 0.5;
+      const expectedMetadataValue2 =
+        metadataPropertyOffset + metadataPropertyScale * 1.0;
+
+      expect(actualMetadataValue0).toEqualEpsilon(
+        expectedMetadataValue0,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue1).toEqualEpsilon(
+        expectedMetadataValue1,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue2).toEqualEpsilon(
+        expectedMetadataValue2,
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -3210,7 +3479,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -3218,7 +3487,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -3226,7 +3495,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
       const expectedMetadataValue0 = [0, 0, 0];
       const expectedMetadataValue1 = [127, 0, 127];
@@ -3234,15 +3503,91 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
+      );
+      scene.destroyForSpecs();
+    });
+
+    it("picks fixed length normalized UINT8 SCALAR array from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_fixed_length_normalized_UINT8_SCALAR_array";
+      const classPropertyOffset = undefined;
+      const classPropertyScale = undefined;
+      const metadataPropertyOffset = undefined;
+      const metadataPropertyScale = undefined;
+      const gltf = createPropertyTextureGltfNormalizedScalarArray(
+        classPropertyOffset,
+        classPropertyScale,
+        metadataPropertyOffset,
+        metadataPropertyScale,
+      );
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      const scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        0,
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        1,
+        1,
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        2,
+        2,
+      );
+      const expectedMetadataValue0 = [0, 0, 0];
+      const expectedMetadataValue1 = [0.5, 0, 0.5];
+      const expectedMetadataValue2 = [1.0, 0, 1.0];
+
+      expect(actualMetadataValue0).toEqualEpsilon(
+        expectedMetadataValue0,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue1).toEqualEpsilon(
+        expectedMetadataValue1,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue2).toEqualEpsilon(
+        expectedMetadataValue2,
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -3278,7 +3623,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -3286,7 +3631,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -3294,7 +3639,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
       const expectedMetadataValue0 = new Cartesian2(0, 0);
       const expectedMetadataValue1 = new Cartesian2(127, 0);
@@ -3302,15 +3647,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -3323,7 +3668,16 @@ describe(
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_normalized_UINT8_VEC2";
-      const gltf = createPropertyTextureGltfNormalizedVec2();
+      const classPropertyOffset = undefined;
+      const classPropertyScale = undefined;
+      const metadataPropertyOffset = undefined;
+      const metadataPropertyScale = undefined;
+      const gltf = createPropertyTextureGltfNormalizedVec2(
+        classPropertyOffset,
+        classPropertyScale,
+        metadataPropertyOffset,
+        metadataPropertyScale,
+      );
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
@@ -3346,7 +3700,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -3354,7 +3708,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -3362,7 +3716,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
 
       const expectedMetadataValue0 = new Cartesian2(0.0, 0.0);
@@ -3371,15 +3725,190 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
+      );
+      scene.destroyForSpecs();
+    });
+
+    it("picks normalized UINT8 VEC2 from a property texture with offset and scale in class property", async function () {
+      if (webglStub) {
+        return;
+      }
+
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_normalized_UINT8_VEC2";
+      const classPropertyOffset = [100.0, 200.0];
+      const classPropertyScale = [2.0, 3.0];
+      const metadataPropertyOffset = undefined;
+      const metadataPropertyScale = undefined;
+      const gltf = createPropertyTextureGltfNormalizedVec2(
+        classPropertyOffset,
+        classPropertyScale,
+        metadataPropertyOffset,
+        metadataPropertyScale,
+      );
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      const scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        0,
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        1,
+        1,
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        2,
+        2,
+      );
+
+      const expectedMetadataValue0 = new Cartesian2(
+        classPropertyOffset[0] + classPropertyScale[0] * 0.0,
+        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+      );
+      const expectedMetadataValue1 = new Cartesian2(
+        classPropertyOffset[0] + classPropertyScale[0] * 0.5,
+        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+      );
+      const expectedMetadataValue2 = new Cartesian2(
+        classPropertyOffset[0] + classPropertyScale[0] * 1.0,
+        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+      );
+
+      expect(actualMetadataValue0).toEqualEpsilon(
+        expectedMetadataValue0,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue1).toEqualEpsilon(
+        expectedMetadataValue1,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue2).toEqualEpsilon(
+        expectedMetadataValue2,
+        propertyValueEpsilon,
+      );
+      scene.destroyForSpecs();
+    });
+
+    it("picks normalized UINT8 VEC2 from a property texture with offset and scale in property texture property", async function () {
+      if (webglStub) {
+        return;
+      }
+
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_normalized_UINT8_VEC2";
+      const classPropertyOffset = [100.0, 200.0];
+      const classPropertyScale = [2.0, 3.0];
+      // These should override the values from the class property:
+      const metadataPropertyOffset = [300.0, 400.0];
+      const metadataPropertyScale = [4.0, 5.0];
+      const gltf = createPropertyTextureGltfNormalizedVec2(
+        classPropertyOffset,
+        classPropertyScale,
+        metadataPropertyOffset,
+        metadataPropertyScale,
+      );
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      const scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        0,
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        1,
+        1,
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        2,
+        2,
+      );
+
+      const expectedMetadataValue0 = new Cartesian2(
+        metadataPropertyOffset[0] + metadataPropertyScale[0] * 0.0,
+        metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
+      );
+      const expectedMetadataValue1 = new Cartesian2(
+        metadataPropertyOffset[0] + metadataPropertyScale[0] * 0.5,
+        metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
+      );
+      const expectedMetadataValue2 = new Cartesian2(
+        metadataPropertyOffset[0] + metadataPropertyScale[0] * 1.0,
+        metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
+      );
+
+      expect(actualMetadataValue0).toEqualEpsilon(
+        expectedMetadataValue0,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue1).toEqualEpsilon(
+        expectedMetadataValue1,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue2).toEqualEpsilon(
+        expectedMetadataValue2,
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -3415,7 +3944,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -3423,7 +3952,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -3431,7 +3960,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
       const expectedMetadataValue0 = new Cartesian3(0, 0, 0);
       const expectedMetadataValue1 = new Cartesian3(127, 0, 127);
@@ -3439,15 +3968,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -3483,7 +4012,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -3491,7 +4020,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -3499,7 +4028,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
 
       const expectedMetadataValue0 = new Cartesian4(0, 0, 0, 0);
@@ -3508,18 +4037,18 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
   }),
-  "WebGL"
+  "WebGL",
 );

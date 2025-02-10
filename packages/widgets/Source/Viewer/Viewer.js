@@ -18,6 +18,7 @@ import {
   Math as CesiumMath,
   Property,
   ScreenSpaceEventType,
+  IonGeocoderService,
 } from "@cesium/engine";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
@@ -137,7 +138,7 @@ function linkTimelineToDataSourceClock(timeline, dataSource) {
         stopTime = JulianDate.addSeconds(
           startTime,
           CesiumMath.EPSILON2,
-          scratchStopTime
+          scratchStopTime,
         );
       }
       timeline.updateFromClock();
@@ -151,10 +152,8 @@ const cartesian3Scratch = new Cartesian3();
 function pickImageryLayerFeature(viewer, windowPosition) {
   const scene = viewer.scene;
   const pickRay = scene.camera.getPickRay(windowPosition);
-  const imageryLayerFeaturePromise = scene.imageryLayers.pickImageryLayerFeatures(
-    pickRay,
-    scene
-  );
+  const imageryLayerFeaturePromise =
+    scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
   if (!defined(imageryLayerFeaturePromise)) {
     return;
   }
@@ -188,7 +187,7 @@ function pickImageryLayerFeature(viewer, windowPosition) {
       if (defined(feature.position)) {
         const ecfPosition = viewer.scene.ellipsoid.cartographicToCartesian(
           feature.position,
-          cartesian3Scratch
+          cartesian3Scratch,
         );
         entity.position = new ConstantPositionProperty(ecfPosition);
       }
@@ -201,7 +200,7 @@ function pickImageryLayerFeature(viewer, windowPosition) {
         return;
       }
       viewer.selectedEntity = createNoFeaturesEntity();
-    }
+    },
   );
 
   return loadingMessage;
@@ -282,7 +281,7 @@ function enableVRUI(viewer, enabled) {
  * @property {boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
  * @property {boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
  * @property {boolean} [vrButton=false] If set to true, the VRButton widget will be created.
- * @property {boolean|GeocoderService[]} [geocoder=true] If set to false, the Geocoder widget will not be created.
+ * @property {boolean|IonGeocodeProviderType|GeocoderService[]} [geocoder=IonGeocodeProviderType.DEFAULT] The geocoding service or services to use when searching with the Geocoder widget. If set to false, the Geocoder widget will not be created.
  * @property {boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
  * @property {boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
  * @property {boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
@@ -297,7 +296,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
- * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
+ * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false. Cannot be used when `globe` is set to false.
  * @property {Ellipsoid} [ellipsoid = Ellipsoid.default] The default ellipsoid.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
@@ -404,6 +403,16 @@ function Viewer(container, options) {
   container = getElement(container);
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    options.globe === false &&
+    defined(options.baseLayer) &&
+    options.baseLayer !== false
+  ) {
+    throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
+  }
+  //>>includeEnd('debug')
+
   const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
     (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
@@ -416,7 +425,7 @@ function Viewer(container, options) {
   ) {
     throw new DeveloperError(
       "options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
-Either specify options.baseLayer instead or set options.baseLayerPicker to true."
+Either specify options.baseLayer instead or set options.baseLayerPicker to true.",
     );
   }
 
@@ -427,7 +436,7 @@ Either specify options.baseLayer instead or set options.baseLayerPicker to true.
   ) {
     throw new DeveloperError(
       "options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget. \
-Either specify options.terrainProvider instead or set options.baseLayerPicker to true."
+Either specify options.terrainProvider instead or set options.baseLayerPicker to true.",
     );
   }
   //>>includeEnd('debug')
@@ -522,7 +531,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     viewerContainer.appendChild(selectionIndicatorContainer);
     selectionIndicator = new SelectionIndicator(
       selectionIndicatorContainer,
-      scene
+      scene,
     );
   }
 
@@ -538,12 +547,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     eventHelper.add(
       infoBoxViewModel.cameraClicked,
       Viewer.prototype._onInfoBoxCameraClicked,
-      this
+      this,
     );
     eventHelper.add(
       infoBoxViewModel.closeClicked,
       Viewer.prototype._onInfoBoxClockClicked,
-      this
+      this,
     );
   }
 
@@ -559,7 +568,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     geocoderContainer.className = "cesium-viewer-geocoderContainer";
     toolbar.appendChild(geocoderContainer);
     let geocoderService;
-    if (defined(options.geocoder) && typeof options.geocoder !== "boolean") {
+    if (typeof options.geocoder === "string") {
+      geocoderService = [
+        new IonGeocoderService({
+          scene,
+          geocodeProviderType: options.geocoder,
+        }),
+      ];
+    } else if (
+      defined(options.geocoder) &&
+      typeof options.geocoder !== "boolean"
+    ) {
       geocoderService = Array.isArray(options.geocoder)
         ? options.geocoder
         : [options.geocoder];
@@ -573,7 +592,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     eventHelper.add(
       geocoder.viewModel.search.beforeExecute,
       Viewer.prototype._clearObjects,
-      this
+      this,
     );
   }
 
@@ -594,7 +613,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     eventHelper.add(
       homeButton.viewModel.command.beforeExecute,
       Viewer.prototype._clearTrackedObject,
-      this
+      this,
     );
   }
 
@@ -604,7 +623,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   //>>includeStart('debug', pragmas.debug);
   if (options.sceneModePicker === true && scene3DOnly) {
     throw new DeveloperError(
-      "options.sceneModePicker is not available when options.scene3DOnly is set to true."
+      "options.sceneModePicker is not available when options.scene3DOnly is set to true.",
     );
   }
   //>>includeEnd('debug');
@@ -628,11 +647,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   if (createBaseLayerPicker) {
     const imageryProviderViewModels = defaultValue(
       options.imageryProviderViewModels,
-      createDefaultImageryProviderViewModels()
+      createDefaultImageryProviderViewModels(),
     );
     const terrainProviderViewModels = defaultValue(
       options.terrainProviderViewModels,
-      createDefaultTerrainProviderViewModels()
+      createDefaultTerrainProviderViewModels(),
     );
 
     baseLayerPicker = new BaseLayerPicker(toolbar, {
@@ -647,7 +666,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     //Grab the dropdown for resize code.
     const elements = toolbar.getElementsByClassName(
-      "cesium-baseLayerPicker-dropDown"
+      "cesium-baseLayerPicker-dropDown",
     );
     baseLayerPickerDropDown = elements[0];
   }
@@ -672,7 +691,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     //>>includeStart('debug', pragmas.debug);
     if (defined(options.terrainProvider)) {
       throw new DeveloperError(
-        "Specify either options.terrainProvider or options.terrain."
+        "Specify either options.terrainProvider or options.terrain.",
       );
     }
     //>>includeEnd('debug')
@@ -696,7 +715,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       //window.localStorage is null if disabled in Firefox or undefined in browsers with implementation
       if (defined(window.localStorage)) {
         const hasSeenNavHelp = window.localStorage.getItem(
-          "cesium-hasSeenNavHelp"
+          "cesium-hasSeenNavHelp",
         );
         if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
           showNavHelp = false;
@@ -712,7 +731,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       container: toolbar,
       instructionsInitiallyVisible: defaultValue(
         options.navigationInstructionsInitiallyVisible,
-        showNavHelp
+        showNavHelp,
       ),
     });
   }
@@ -725,7 +744,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     viewerContainer.appendChild(animationContainer);
     animation = new Animation(
       animationContainer,
-      new AnimationViewModel(clockViewModel)
+      new AnimationViewModel(clockViewModel),
     );
   }
 
@@ -753,7 +772,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     viewerContainer.appendChild(fullscreenContainer);
     fullscreenButton = new FullscreenButton(
       fullscreenContainer,
-      options.fullscreenElement
+      options.fullscreenElement,
     );
 
     //Subscribe to fullscreenButton.viewModel.isFullscreenEnabled so
@@ -769,7 +788,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
           timeline.container.style.right = `${fullscreenContainer.clientWidth}px`;
           timeline.resize();
         }
-      }
+      },
     );
   }
 
@@ -795,7 +814,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
           timeline.container.style.right = `${vrContainer.clientWidth}px`;
           timeline.resize();
         }
-      }
+      },
     );
 
     vrModeSubscription = subscribeAndEvaluate(
@@ -803,7 +822,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       "isVRMode",
       function (isVRMode) {
         enableVRUI(that, isVRMode);
-      }
+      },
     );
   }
 
@@ -847,12 +866,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   eventHelper.add(
     dataSourceCollection.dataSourceAdded,
     Viewer.prototype._onDataSourceAdded,
-    this
+    this,
   );
   eventHelper.add(
     dataSourceCollection.dataSourceRemoved,
     Viewer.prototype._onDataSourceRemoved,
-    this
+    this,
   );
 
   // Prior to each render, check if anything needs to be resized.
@@ -871,12 +890,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   eventHelper.add(
     dataSourceCollection.dataSourceAdded,
     Viewer.prototype._dataSourceAdded,
-    this
+    this,
   );
   eventHelper.add(
     dataSourceCollection.dataSourceRemoved,
     Viewer.prototype._dataSourceRemoved,
-    this
+    this,
   );
 
   // Subscribe to left clicks and zoom to the picked object.
@@ -902,11 +921,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   cesiumWidget.screenSpaceEventHandler.setInputAction(
     pickAndSelectObject,
-    ScreenSpaceEventType.LEFT_CLICK
+    ScreenSpaceEventType.LEFT_CLICK,
   );
   cesiumWidget.screenSpaceEventHandler.setInputAction(
     pickAndTrackObject,
-    ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+    ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
   );
 
   // This allows to update the Viewer's _clockViewModel instead of the CesiumWidget's _clock
@@ -1663,10 +1682,10 @@ Viewer.prototype.destroy = function () {
     !this.screenSpaceEventHandler.isDestroyed()
   ) {
     this.screenSpaceEventHandler.removeInputAction(
-      ScreenSpaceEventType.LEFT_CLICK
+      ScreenSpaceEventType.LEFT_CLICK,
     );
     this.screenSpaceEventHandler.removeInputAction(
-      ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+      ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
   }
 
@@ -1704,7 +1723,7 @@ Viewer.prototype.destroy = function () {
     this._timeline.removeEventListener(
       "settime",
       onTimelineScrubfunction,
-      false
+      false,
     );
     this._element.removeChild(this._timeline.container);
     this._timeline = this._timeline.destroy();
@@ -1746,12 +1765,12 @@ Viewer.prototype.destroy = function () {
  */
 Viewer.prototype._dataSourceAdded = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   const entityCollection = dataSource.entities;
   entityCollection.collectionChanged.addEventListener(
     Viewer.prototype._onEntityCollectionChanged,
-    this
+    this,
   );
 };
 
@@ -1760,12 +1779,12 @@ Viewer.prototype._dataSourceAdded = function (
  */
 Viewer.prototype._dataSourceRemoved = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   const entityCollection = dataSource.entities;
   entityCollection.collectionChanged.removeEventListener(
     Viewer.prototype._onEntityCollectionChanged,
-    this
+    this,
   );
 
   if (defined(this.selectedEntity)) {
@@ -1805,7 +1824,7 @@ Viewer.prototype._onTick = function (clock) {
     const state = this._cesiumWidget.dataSourceDisplay.getBoundingSphere(
       selectedEntity,
       true,
-      boundingSphereScratch
+      boundingSphereScratch,
     );
     if (state !== BoundingSphereState.FAILED) {
       position = boundingSphereScratch.center;
@@ -1821,7 +1840,7 @@ Viewer.prototype._onTick = function (clock) {
   if (defined(selectionIndicatorViewModel)) {
     selectionIndicatorViewModel.position = Cartesian3.clone(
       position,
-      selectionIndicatorViewModel.position
+      selectionIndicatorViewModel.position,
     );
     selectionIndicatorViewModel.showSelection = showSelection && enableCamera;
     selectionIndicatorViewModel.update();
@@ -1839,12 +1858,12 @@ Viewer.prototype._onTick = function (clock) {
     if (showSelection) {
       infoBoxViewModel.titleText = defaultValue(
         selectedEntity.name,
-        selectedEntity.id
+        selectedEntity.id,
       );
       infoBoxViewModel.description = Property.getValueOrDefault(
         selectedEntity.description,
         time,
-        ""
+        "",
       );
     } else {
       infoBoxViewModel.titleText = "";
@@ -1859,7 +1878,7 @@ Viewer.prototype._onTick = function (clock) {
 Viewer.prototype._onEntityCollectionChanged = function (
   collection,
   added,
-  removed
+  removed,
 ) {
   const length = removed.length;
   for (let i = 0; i < length; i++) {
@@ -1926,13 +1945,21 @@ Viewer.prototype._onDataSourceChanged = function (dataSource) {
  */
 Viewer.prototype._onDataSourceAdded = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
+  if (
+    this._cesiumWidget._automaticallyTrackDataSourceClocks &&
+    dataSource === this.clockTrackedDataSource
+  ) {
+    // When data sources are added to the CesiumWidget they may be automatically
+    // tracked in that class but we also need to update the timeline in this class
+    linkTimelineToDataSourceClock(this._timeline, dataSource);
+  }
   const id = dataSource.entities.id;
   const removalFunc = this._eventHelper.add(
     dataSource.changedEvent,
     Viewer.prototype._onDataSourceChanged,
-    this
+    this,
   );
   this._dataSourceChangedListeners[id] = removalFunc;
 };
@@ -1942,7 +1969,7 @@ Viewer.prototype._onDataSourceAdded = function (
  */
 Viewer.prototype._onDataSourceRemoved = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   const id = dataSource.entities.id;
   this._dataSourceChangedListeners[id]();

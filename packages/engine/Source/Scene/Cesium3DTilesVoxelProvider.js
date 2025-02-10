@@ -89,9 +89,25 @@ function Cesium3DTilesVoxelProvider(options) {
   /** @inheritdoc */
   this.maximumTileCount = undefined;
 
+  this._availableLevels = undefined;
   this._implicitTileset = undefined;
   this._subtreeCache = new ImplicitSubtreeCache();
 }
+
+Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
+  /**
+   * The number of levels of detail containing available tiles in the tileset.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {number|undefined}
+   * @readonly
+   */
+  availableLevels: {
+    get: function () {
+      return this._availableLevels;
+    },
+  },
+});
 
 /**
  * Creates a {@link VoxelProvider} that fetches voxel data from a 3D Tiles tileset.
@@ -138,13 +154,8 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
 
   const implicitTileset = new ImplicitTileset(resource, root, metadataSchema);
 
-  const {
-    shape,
-    minBounds,
-    maxBounds,
-    shapeTransform,
-    globalTransform,
-  } = getShape(root);
+  const { shape, minBounds, maxBounds, shapeTransform, globalTransform } =
+    getShape(root);
 
   provider.shape = shape;
   provider.minBounds = minBounds;
@@ -166,6 +177,7 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   provider.paddingAfter = paddingAfter;
 
   provider._implicitTileset = implicitTileset;
+  provider._availableLevels = implicitTileset.availableLevels;
 
   ResourceCache.unload(schemaLoader);
 
@@ -178,7 +190,7 @@ function getTileCount(metadata) {
   }
 
   return metadata.tileset.getPropertyBySemantic(
-    MetadataSemantic.TILESET_TILE_COUNT
+    MetadataSemantic.TILESET_TILE_COUNT,
   );
 }
 
@@ -191,7 +203,7 @@ function validate(tileset) {
 
   if (!hasExtension(root.content, "3DTILES_content_voxels")) {
     throw new RuntimeError(
-      "Root tile content must have 3DTILES_content_voxels extension"
+      "Root tile content must have 3DTILES_content_voxels extension",
     );
   }
 
@@ -228,12 +240,12 @@ function getShape(tile) {
   } else if (hasExtension(boundingVolume, "3DTILES_bounding_volume_cylinder")) {
     return getCylinderShape(
       boundingVolume.extensions["3DTILES_bounding_volume_cylinder"].cylinder,
-      tileTransform
+      tileTransform,
     );
   }
 
   throw new RuntimeError(
-    "Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider"
+    "Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider",
   );
 }
 
@@ -263,7 +275,7 @@ function getBoxShape(box, tileTransform) {
   const obb = OrientedBoundingBox.unpack(box);
   const shapeTransform = Matrix4.fromRotationTranslation(
     obb.halfAxes,
-    obb.center
+    obb.center,
   );
 
   return {
@@ -279,7 +291,7 @@ function getCylinderShape(cylinder, tileTransform) {
   const obb = OrientedBoundingBox.unpack(cylinder);
   const shapeTransform = Matrix4.fromRotationTranslation(
     obb.halfAxes,
-    obb.center
+    obb.center,
   );
 
   return {
@@ -345,11 +357,10 @@ function copyArray(values, length) {
 }
 
 async function getVoxelContent(implicitTileset, tileCoordinates) {
-  const voxelRelative = implicitTileset.contentUriTemplates[0].getDerivedResource(
-    {
+  const voxelRelative =
+    implicitTileset.contentUriTemplates[0].getDerivedResource({
       templateValues: tileCoordinates.getTemplateValues(),
-    }
-  );
+    });
   const voxelResource = implicitTileset.baseResource.getDerivedResource({
     url: voxelRelative.url,
   });
@@ -361,7 +372,7 @@ async function getVoxelContent(implicitTileset, tileCoordinates) {
     voxelResource,
     preprocessed.jsonPayload,
     preprocessed.binaryPayload,
-    implicitTileset.metadataSchema
+    implicitTileset.metadataSchema,
   );
 
   return voxelContent;
@@ -381,7 +392,7 @@ async function getSubtreePromise(provider, subtreeCoord) {
   const subtreeRelative = implicitTileset.subtreeUriTemplate.getDerivedResource(
     {
       templateValues: subtreeCoord.getTemplateValues(),
-    }
+    },
   );
   const subtreeResource = implicitTileset.baseResource.getDerivedResource({
     url: subtreeRelative.url,
@@ -402,7 +413,7 @@ async function getSubtreePromise(provider, subtreeCoord) {
     preprocessed.jsonPayload,
     preprocessed.binaryPayload,
     implicitTileset,
-    subtreeCoord
+    subtreeCoord,
   );
   subtreeCache.addSubtree(subtree);
   return subtree;

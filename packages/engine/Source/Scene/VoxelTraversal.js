@@ -40,7 +40,7 @@ function VoxelTraversal(
   types,
   componentTypes,
   keyframeCount,
-  maximumTextureMemoryByteLength
+  maximumTextureMemoryByteLength,
 ) {
   /**
    * TODO: maybe this shouldn't be stored or passed into update function?
@@ -66,7 +66,7 @@ function VoxelTraversal(
       dimensions,
       componentCount,
       componentType,
-      maximumTextureMemoryByteLength
+      maximumTextureMemoryByteLength,
     );
   }
 
@@ -143,6 +143,12 @@ function VoxelTraversal(
    */
   this._binaryTreeKeyframeWeighting = new Array(keyframeCount);
 
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._initialTilesLoaded = false;
+
   const binaryTreeKeyframeWeighting = this._binaryTreeKeyframeWeighting;
   binaryTreeKeyframeWeighting[0] = 0;
   binaryTreeKeyframeWeighting[keyframeCount - 1] = 0;
@@ -150,16 +156,16 @@ function VoxelTraversal(
     binaryTreeKeyframeWeighting,
     1,
     keyframeCount - 2,
-    0
+    0,
   );
 
   const internalNodeTexelCount = 9;
   const internalNodeTextureDimensionX = 2048;
   const internalNodeTilesPerRow = Math.floor(
-    internalNodeTextureDimensionX / internalNodeTexelCount
+    internalNodeTextureDimensionX / internalNodeTexelCount,
   );
   const internalNodeTextureDimensionY = Math.ceil(
-    maximumTileCount / internalNodeTilesPerRow
+    maximumTileCount / internalNodeTilesPerRow,
   );
 
   /**
@@ -191,7 +197,7 @@ function VoxelTraversal(
    */
   this.internalNodeTexelSizeUv = new Cartesian2(
     1.0 / internalNodeTextureDimensionX,
-    1.0 / internalNodeTextureDimensionY
+    1.0 / internalNodeTextureDimensionY,
   );
 
   /**
@@ -250,7 +256,7 @@ VoxelTraversal.prototype.update = function (
   frameState,
   keyframeLocation,
   recomputeBoundingVolumes,
-  pauseUpdate
+  pauseUpdate,
 ) {
   const primitive = this._primitive;
   const context = frameState.context;
@@ -268,10 +274,10 @@ VoxelTraversal.prototype.update = function (
     const leafNodeTexelCount = 2;
     const leafNodeTextureDimensionX = 1024;
     const leafNodeTilesPerRow = Math.floor(
-      leafNodeTextureDimensionX / leafNodeTexelCount
+      leafNodeTextureDimensionX / leafNodeTexelCount,
     );
     const leafNodeTextureDimensionY = Math.ceil(
-      maximumTileCount / leafNodeTilesPerRow
+      maximumTileCount / leafNodeTilesPerRow,
     );
 
     this.leafNodeTexture = new Texture({
@@ -289,7 +295,7 @@ VoxelTraversal.prototype.update = function (
     this.leafNodeTexelSizeUv = Cartesian2.fromElements(
       1.0 / leafNodeTextureDimensionX,
       1.0 / leafNodeTextureDimensionY,
-      this.leafNodeTexelSizeUv
+      this.leafNodeTexelSizeUv,
     );
     this.leafNodeTilesPerRow = leafNodeTilesPerRow;
   } else if (!useLeafNodes && defined(this.leafNodeTexture)) {
@@ -299,7 +305,7 @@ VoxelTraversal.prototype.update = function (
   this._keyframeLocation = CesiumMath.clamp(
     keyframeLocation,
     0.0,
-    keyframeCount - 1
+    keyframeCount - 1,
   );
 
   if (recomputeBoundingVolumes) {
@@ -316,16 +322,20 @@ VoxelTraversal.prototype.update = function (
   const timestamp1 = getTimestamp();
   generateOctree(this, sampleCount, levelBlendFactor);
   const timestamp2 = getTimestamp();
-
-  if (this._debugPrint) {
+  const checkEventListeners =
+    primitive.loadProgress.numberOfListeners > 0 ||
+    primitive.allTilesLoaded.numberOfListeners > 0 ||
+    primitive.initialTilesLoaded.numberOfListeners > 0;
+  if (this._debugPrint || checkEventListeners) {
     const loadAndUnloadTimeMs = timestamp1 - timestamp0;
     const generateOctreeTimeMs = timestamp2 - timestamp1;
     const totalTimeMs = timestamp2 - timestamp0;
-    printDebugInformation(
+    postPassesUpdate(
       this,
+      frameState,
       loadAndUnloadTimeMs,
       generateOctreeTimeMs,
-      totalTimeMs
+      totalTimeMs,
     );
   }
 };
@@ -418,6 +428,21 @@ function requestData(that, keyframeNode) {
   }
 
   const provider = that._primitive._provider;
+  const { keyframe, spatialNode } = keyframeNode;
+  if (
+    defined(provider.availableLevels) &&
+    spatialNode.level >= provider.availableLevels
+  ) {
+    return;
+  }
+
+  const requestOptions = {
+    tileLevel: spatialNode.level,
+    tileX: spatialNode.x,
+    tileY: spatialNode.y,
+    tileZ: spatialNode.z,
+    keyframe: keyframe,
+  };
 
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
@@ -443,27 +468,25 @@ function requestData(that, keyframeNode) {
           keyframeNode.metadata[i] = data;
           // State is received only when all metadata requests have been received
           keyframeNode.state = KeyframeNode.LoadState.RECEIVED;
+          that._primitive.tileLoad.raiseEvent();
         } else {
           keyframeNode.state = KeyframeNode.LoadState.FAILED;
           break;
         }
       }
     }
+    if (keyframeNode.state === KeyframeNode.LoadState.FAILED) {
+      that._primitive.tileFailed.raiseEvent();
+    }
   }
 
   function postRequestFailure() {
     that._simultaneousRequestCount--;
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
+    that._primitive.tileFailed.raiseEvent();
   }
 
-  const { keyframe, spatialNode } = keyframeNode;
-  const promise = provider.requestData({
-    tileLevel: spatialNode.level,
-    tileX: spatialNode.x,
-    tileY: spatialNode.y,
-    tileZ: spatialNode.z,
-    keyframe: keyframe,
-  });
+  const promise = provider.requestData(requestOptions);
 
   if (defined(promise)) {
     that._simultaneousRequestCount++;
@@ -471,6 +494,7 @@ function requestData(that, keyframeNode) {
     promise.then(postRequestSuccess).catch(postRequestFailure);
   } else {
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
+    that._primitive.tileFailed.raiseEvent();
   }
 }
 
@@ -505,7 +529,7 @@ function loadAndUnload(that, frameState) {
   const previousKeyframe = CesiumMath.clamp(
     Math.floor(that._keyframeLocation),
     0,
-    keyframeCount - 2
+    keyframeCount - 2,
   );
   const nextKeyframe = previousKeyframe + 1;
 
@@ -524,7 +548,7 @@ function loadAndUnload(that, frameState) {
 
     visibilityPlaneMask = spatialNode.visibility(
       frameState,
-      visibilityPlaneMask
+      visibilityPlaneMask,
     );
     if (visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
       return;
@@ -553,7 +577,7 @@ function loadAndUnload(that, frameState) {
           previousKeyframe,
           keyframeNode.keyframe,
           nextKeyframe,
-          that
+          that,
         );
 
       if (
@@ -594,9 +618,8 @@ function loadAndUnload(that, frameState) {
   while (priorityQueue.length > 0) {
     highPriorityKeyframeNode = priorityQueue.removeMaximum();
     highPriorityKeyframeNode.highPriorityFrameNumber = frameNumber;
-    highPriorityKeyframeNodes[
-      highPriorityKeyframeNodeCount
-    ] = highPriorityKeyframeNode;
+    highPriorityKeyframeNodes[highPriorityKeyframeNodeCount] =
+      highPriorityKeyframeNode;
     highPriorityKeyframeNodeCount++;
   }
 
@@ -646,9 +669,10 @@ function loadAndUnload(that, frameState) {
         destroyedCount++;
 
         const discardNode = keyframeNodesInMegatexture[addNodeIndex];
+        that._primitive.tileUnload.raiseEvent();
         discardNode.spatialNode.destroyKeyframeNode(
           discardNode,
-          that.megatextures
+          that.megatextures,
         );
       } else {
         addNodeIndex = keyframeNodesInMegatextureCount + addedCount;
@@ -656,7 +680,7 @@ function loadAndUnload(that, frameState) {
       }
       highPriorityKeyframeNode.spatialNode.addKeyframeNodeToMegatextures(
         highPriorityKeyframeNode,
-        that.megatextures
+        that.megatextures,
       );
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
@@ -676,24 +700,24 @@ function loadAndUnload(that, frameState) {
 function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
   const keyframeDifference = Math.min(
     Math.abs(keyframe - previousKeyframe),
-    Math.abs(keyframe - nextKeyframe)
+    Math.abs(keyframe - nextKeyframe),
   );
   const maxKeyframeDifference = Math.max(
     previousKeyframe,
     traversal._keyframeCount - nextKeyframe - 1,
-    1
+    1,
   );
   const keyframeFactor = Math.pow(
     1.0 - keyframeDifference / maxKeyframeDifference,
-    4.0
+    4.0,
   );
   const binaryTreeFactor = Math.exp(
-    -traversal._binaryTreeKeyframeWeighting[keyframe]
+    -traversal._binaryTreeKeyframeWeighting[keyframe],
   );
   return CesiumMath.lerp(
     binaryTreeFactor,
     keyframeFactor,
-    0.15 + 0.85 * keyframeFactor
+    0.15 + 0.85 * keyframeFactor,
   );
 }
 
@@ -704,11 +728,12 @@ function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
  *
  * @private
  */
-function printDebugInformation(
+function postPassesUpdate(
   that,
+  frameState,
   loadAndUnloadTimeMs,
   generateOctreeTimeMs,
-  totalTimeMs
+  totalTimeMs,
 ) {
   const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
@@ -759,6 +784,55 @@ function printDebugInformation(
   }
   traverseRecursive(rootNode);
 
+  const numberOfPendingRequests =
+    loadStateByCount[KeyframeNode.LoadState.RECEIVING];
+  const numberOfTilesProcessing =
+    loadStateByCount[KeyframeNode.LoadState.RECEIVED];
+
+  const progressChanged =
+    numberOfPendingRequests !==
+      that._primitive._statistics.numberOfPendingRequests ||
+    numberOfTilesProcessing !==
+      that._primitive._statistics.numberOfTilesProcessing;
+
+  if (progressChanged) {
+    frameState.afterRender.push(function () {
+      that._primitive.loadProgress.raiseEvent(
+        numberOfPendingRequests,
+        numberOfTilesProcessing,
+      );
+
+      return true;
+    });
+  }
+
+  that._primitive._statistics.numberOfPendingRequests = numberOfPendingRequests;
+  that._primitive._statistics.numberOfTilesProcessing = numberOfTilesProcessing;
+
+  const tilesLoaded =
+    numberOfPendingRequests === 0 && numberOfTilesProcessing === 0;
+
+  // Events are raised (added to the afterRender queue) here since promises
+  // may resolve outside of the update loop that then raise events, e.g.,
+  // model's readyEvent
+  if (progressChanged && tilesLoaded) {
+    frameState.afterRender.push(function () {
+      that._primitive.allTilesLoaded.raiseEvent();
+      return true;
+    });
+    if (!that._initialTilesLoaded) {
+      that._initialTilesLoaded = true;
+      frameState.afterRender.push(function () {
+        that._primitive.initialTilesLoaded.raiseEvent();
+        return true;
+      });
+    }
+  }
+
+  if (!that._debugPrint) {
+    return;
+  }
+
   const loadedKeyframeStatistics = `KEYFRAMES: ${
     loadStatesByKeyframe[KeyframeNode.LoadState.LOADED]
   }`;
@@ -783,7 +857,7 @@ function printDebugInformation(
     `ALL: ${totalTimeMsRounded}`;
 
   console.log(
-    `${loadedKeyframeStatistics} || ${loadStateStatistics} || ${timerStatistics}`
+    `${loadedKeyframeStatistics} || ${loadStateStatistics} || ${timerStatistics}`,
   );
 }
 
@@ -855,7 +929,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
     childOctreeIndex,
     childEntryIndex,
     parentOctreeIndex,
-    parentEntryIndex
+    parentEntryIndex,
   ) {
     let hasRenderableChildren = false;
     if (defined(node.children)) {
@@ -887,12 +961,13 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
           childOctreeIndex,
           childEntryIndex,
           parentOctreeIndex,
-          parentEntryIndex + cc
+          parentEntryIndex + cc,
         );
       }
     } else {
       // Store the leaf node information instead
       // Recursion stops here because there are no renderable children
+      that._primitive.tileVisible.raiseEvent();
       if (useLeafNodes) {
         const baseIdx = leafNodeCount * 5;
         const keyframeNode = node.renderableKeyframeNodePrevious;
@@ -941,14 +1016,14 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
     internalNodeOctreeData,
     9,
     that.internalNodeTilesPerRow,
-    that.internalNodeTexture
+    that.internalNodeTexture,
   );
   if (useLeafNodes) {
     copyToLeafNodeTexture(
       leafNodeOctreeData,
       2,
       that.leafNodeTilesPerRow,
-      that.leafNodeTexture
+      that.leafNodeTexture,
     );
   }
 }
@@ -986,7 +1061,7 @@ function copyToInternalNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
   const tileCount = Math.ceil(data.length / texelsPerTile);
   const copyWidth = Math.max(
     1,
-    texelsPerTile * Math.min(tileCount, tilesPerRow)
+    texelsPerTile * Math.min(tileCount, tilesPerRow),
   );
   const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
 
@@ -1028,7 +1103,7 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
   const tileCount = Math.ceil(data.length / datasPerTile);
   const copyWidth = Math.max(
     1,
-    texelsPerTile * Math.min(tileCount, tilesPerRow)
+    texelsPerTile * Math.min(tileCount, tilesPerRow),
   );
   const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
 
@@ -1043,7 +1118,7 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
     const timeLerpCompressed = CesiumMath.clamp(
       Math.floor(65536 * timeLerp),
       0,
-      65535
+      65535,
     );
     textureData[tileIndex * 8 + 0] = (timeLerpCompressed >>> 0) & 0xff;
     textureData[tileIndex * 8 + 1] = (timeLerpCompressed >>> 8) & 0xff;
@@ -1084,7 +1159,7 @@ VoxelTraversal.getApproximateTextureMemoryByteLength = function (
   tileCount,
   dimensions,
   types,
-  componentTypes
+  componentTypes,
 ) {
   let textureMemoryByteLength = 0;
 
@@ -1094,12 +1169,13 @@ VoxelTraversal.getApproximateTextureMemoryByteLength = function (
     const componentType = componentTypes[i];
     const componentCount = MetadataType.getComponentCount(type);
 
-    textureMemoryByteLength += Megatexture.getApproximateTextureMemoryByteLength(
-      tileCount,
-      dimensions,
-      componentCount,
-      componentType
-    );
+    textureMemoryByteLength +=
+      Megatexture.getApproximateTextureMemoryByteLength(
+        tileCount,
+        dimensions,
+        componentCount,
+        componentType,
+      );
   }
 
   return textureMemoryByteLength;

@@ -158,7 +158,7 @@ function ModelSceneGraph(options) {
   this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
     components.forwardAxis,
-    new Matrix4()
+    new Matrix4(),
   );
 
   // Store articulations from the AGI_articulations extension
@@ -271,7 +271,7 @@ function initialize(sceneGraph) {
     const rootNodeIndex = traverseAndCreateSceneGraph(
       sceneGraph,
       rootNode,
-      transformToRoot
+      transformToRoot,
     );
 
     sceneGraph._rootNodes.push(rootNodeIndex);
@@ -288,7 +288,7 @@ function initialize(sceneGraph) {
       new ModelSkin({
         skin: skin,
         sceneGraph: sceneGraph,
-      })
+      }),
     );
   }
 
@@ -318,19 +318,19 @@ function computeModelMatrix(sceneGraph, modelMatrix) {
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     modelMatrix,
     components.transform,
-    sceneGraph._computedModelMatrix
+    sceneGraph._computedModelMatrix,
   );
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     sceneGraph._computedModelMatrix,
     sceneGraph._axisCorrectionMatrix,
-    sceneGraph._computedModelMatrix
+    sceneGraph._computedModelMatrix,
   );
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
     sceneGraph._computedModelMatrix,
     model.computedScale,
-    sceneGraph._computedModelMatrix
+    sceneGraph._computedModelMatrix,
   );
 }
 
@@ -340,33 +340,33 @@ function computeModelMatrix2D(sceneGraph, frameState) {
   const computedModelMatrix = sceneGraph._computedModelMatrix;
   const translation = Matrix4.getTranslation(
     computedModelMatrix,
-    scratchComputedTranslation
+    scratchComputedTranslation,
   );
 
   if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
     sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,
-      sceneGraph._computedModelMatrix2D
+      sceneGraph._computedModelMatrix2D,
     );
   } else {
     const center = sceneGraph.boundingSphere.center;
     const to2D = Transforms.ellipsoidTo2DModelMatrix(
       frameState.mapProjection,
       center,
-      sceneGraph._computedModelMatrix2D
+      sceneGraph._computedModelMatrix2D,
     );
     sceneGraph._computedModelMatrix2D = Matrix4.multiply(
       to2D,
       computedModelMatrix,
-      sceneGraph._computedModelMatrix2D
+      sceneGraph._computedModelMatrix2D,
     );
   }
 
   sceneGraph._boundingSphere2D = BoundingSphere.transform(
     sceneGraph._boundingSphere,
     sceneGraph._computedModelMatrix2D,
-    sceneGraph._boundingSphere2D
+    sceneGraph._boundingSphere2D,
   );
 }
 
@@ -393,13 +393,13 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
     const childNodeTransformToRoot = Matrix4.multiplyTransformation(
       transformToRoot,
       transform,
-      new Matrix4()
+      new Matrix4(),
     );
 
     const childIndex = traverseAndCreateSceneGraph(
       sceneGraph,
       childNode,
-      childNodeTransformToRoot
+      childNodeTransformToRoot,
     );
     childrenIndices.push(childIndex);
   }
@@ -420,7 +420,7 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
         primitive: node.primitives[i],
         node: node,
         model: sceneGraph._model,
-      })
+      }),
     );
   }
 
@@ -475,13 +475,13 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
     Number.MAX_VALUE,
     Number.MAX_VALUE,
     Number.MAX_VALUE,
-    scratchModelPositionMin
+    scratchModelPositionMin,
   );
   const modelPositionMax = Cartesian3.fromElements(
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
-    scratchModelPositionMax
+    scratchModelPositionMax,
   );
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
@@ -498,7 +498,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
 
     const nodeRenderResources = new NodeRenderResources(
       modelRenderResources,
-      runtimeNode
+      runtimeNode,
     );
 
     for (j = 0; j < nodePipelineStages.length; j++) {
@@ -507,7 +507,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
       nodePipelineStage.process(
         nodeRenderResources,
         runtimeNode.node,
-        frameState
+        frameState,
       );
     }
 
@@ -520,7 +520,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
 
       const primitiveRenderResources = new PrimitiveRenderResources(
         nodeRenderResources,
-        runtimePrimitive
+        runtimePrimitive,
       );
 
       for (k = 0; k < primitivePipelineStages.length; k++) {
@@ -529,40 +529,40 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         primitivePipelineStage.process(
           primitiveRenderResources,
           runtimePrimitive.primitive,
-          frameState
+          frameState,
         );
       }
 
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
         primitiveRenderResources.boundingSphere,
-        new BoundingSphere()
+        new BoundingSphere(),
       );
 
       const primitivePositionMin = Matrix4.multiplyByPoint(
         nodeTransform,
         primitiveRenderResources.positionMin,
-        scratchPrimitivePositionMin
+        scratchPrimitivePositionMin,
       );
       const primitivePositionMax = Matrix4.multiplyByPoint(
         nodeTransform,
         primitiveRenderResources.positionMax,
-        scratchPrimitivePositionMax
+        scratchPrimitivePositionMax,
       );
 
       Cartesian3.minimumByComponent(
         modelPositionMin,
         primitivePositionMin,
-        modelPositionMin
+        modelPositionMin,
       );
       Cartesian3.maximumByComponent(
         modelPositionMax,
         primitivePositionMax,
-        modelPositionMax
+        modelPositionMax,
       );
 
       const drawCommand = ModelDrawCommands.buildModelDrawCommand(
         primitiveRenderResources,
-        frameState
+        frameState,
       );
       runtimePrimitive.drawCommand = drawCommand;
     }
@@ -571,25 +571,25 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
   this._boundingSphere = BoundingSphere.fromCornerPoints(
     modelPositionMin,
     modelPositionMax,
-    new BoundingSphere()
+    new BoundingSphere(),
   );
 
   this._boundingSphere = BoundingSphere.transformWithoutScale(
     this._boundingSphere,
     this._axisCorrectionMatrix,
-    this._boundingSphere
+    this._boundingSphere,
   );
 
   this._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,
     this._components.transform,
-    this._boundingSphere
+    this._boundingSphere,
   );
 
   model._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,
     model.modelMatrix,
-    model._boundingSphere
+    model._boundingSphere,
   );
 
   model._initialRadius = model._boundingSphere.radius;
@@ -601,6 +601,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
  * this method again to ensure the correct sequence of pipeline stages are
  * used.
  *
+ * @param {FrameState} frameState
  * @private
  */
 ModelSceneGraph.prototype.configurePipeline = function (frameState) {
@@ -686,7 +687,7 @@ ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
 
 ModelSceneGraph.prototype.updateModelMatrix = function (
   modelMatrix,
-  frameState
+  frameState,
 ) {
   computeModelMatrix(this, modelMatrix);
   if (frameState.mode !== SceneMode.SCENE3D) {
@@ -747,7 +748,7 @@ function traverseSceneGraph(
   runtimeNode,
   visibleNodesOnly,
   callback,
-  callbackOptions
+  callbackOptions,
 ) {
   if (visibleNodesOnly && !runtimeNode.show) {
     return;
@@ -761,7 +762,7 @@ function traverseSceneGraph(
       childRuntimeNode,
       visibleNodesOnly,
       callback,
-      callbackOptions
+      callbackOptions,
     );
   }
 
@@ -777,7 +778,7 @@ function forEachRuntimePrimitive(
   sceneGraph,
   visibleNodesOnly,
   callback,
-  callbackOptions
+  callbackOptions,
 ) {
   const rootNodes = sceneGraph._rootNodes;
   const rootNodesLength = rootNodes.length;
@@ -789,7 +790,7 @@ function forEachRuntimePrimitive(
       runtimeNode,
       visibleNodesOnly,
       callback,
-      callbackOptions
+      callbackOptions,
     );
   }
 }
@@ -812,7 +813,7 @@ ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
     this,
     false,
     updatePrimitiveBackFaceCulling,
-    backFaceCullingOptions
+    backFaceCullingOptions,
   );
 };
 
@@ -857,7 +858,7 @@ const scratchShowBoundingVolumeOptions = {
  * @private
  */
 ModelSceneGraph.prototype.updateShowBoundingVolume = function (
-  debugShowBoundingVolume
+  debugShowBoundingVolume,
 ) {
   const showBoundingVolumeOptions = scratchShowBoundingVolumeOptions;
   showBoundingVolumeOptions.debugShowBoundingVolume = debugShowBoundingVolume;
@@ -866,7 +867,7 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
     this,
     false,
     updatePrimitiveShowBoundingVolume,
-    showBoundingVolumeOptions
+    showBoundingVolumeOptions,
   );
 };
 
@@ -908,7 +909,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
     this,
     true,
     pushPrimitiveDrawCommands,
-    pushDrawCommandOptions
+    pushDrawCommandOptions,
   );
 
   frameState.commandList.push.apply(frameState.commandList, silhouetteCommands);
@@ -943,7 +944,7 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
  */
 ModelSceneGraph.prototype.setArticulationStage = function (
   articulationStageKey,
-  value
+  value,
 ) {
   const names = articulationStageKey.split(" ");
   if (names.length !== 2) {

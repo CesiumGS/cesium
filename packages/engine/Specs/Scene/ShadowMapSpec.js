@@ -11,7 +11,6 @@ import {
   HeadingPitchRange,
   HeadingPitchRoll,
   HeightmapTerrainData,
-  ImageBasedLighting,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
@@ -85,11 +84,11 @@ describe(
       const boxOrigin = new Cartesian3.fromRadians(
         longitude,
         latitude,
-        boxHeight
+        boxHeight,
       );
       const boxTransform = Transforms.headingPitchRollToFixedFrame(
         boxOrigin,
-        new HeadingPitchRoll()
+        new HeadingPitchRoll(),
       );
 
       const boxScale = 0.5;
@@ -100,21 +99,21 @@ describe(
       const floorOrigin = new Cartesian3.fromRadians(
         longitude,
         latitude,
-        floorHeight
+        floorHeight,
       );
       const floorTransform = Transforms.headingPitchRollToFixedFrame(
         floorOrigin,
-        new HeadingPitchRoll()
+        new HeadingPitchRoll(),
       );
 
       const roomOrigin = new Cartesian3.fromRadians(
         longitude,
         latitude,
-        height
+        height,
       );
       const roomTransform = Transforms.headingPitchRollToFixedFrame(
         roomOrigin,
-        new HeadingPitchRoll()
+        new HeadingPitchRoll(),
       );
 
       const modelPromises = [];
@@ -126,7 +125,7 @@ describe(
           show: false,
         }).then(function (model) {
           box = model;
-        })
+        }),
       );
       modelPromises.push(
         loadModel({
@@ -136,7 +135,7 @@ describe(
           show: false,
         }).then(function (model) {
           boxTranslucent = model;
-        })
+        }),
       );
       modelPromises.push(
         loadModel({
@@ -146,7 +145,7 @@ describe(
           show: false,
         }).then(function (model) {
           boxPointLights = model;
-        })
+        }),
       );
       modelPromises.push(
         loadModel({
@@ -157,7 +156,7 @@ describe(
           show: false,
         }).then(function (model) {
           boxCutout = model;
-        })
+        }),
       );
       modelPromises.push(
         loadModel({
@@ -166,7 +165,7 @@ describe(
           show: false,
         }).then(function (model) {
           boxNoNormals = model;
-        })
+        }),
       );
       modelPromises.push(
         loadModel({
@@ -176,7 +175,7 @@ describe(
           show: false,
         }).then(function (model) {
           floor = model;
-        })
+        }),
       );
       modelPromises.push(
         loadModel({
@@ -186,7 +185,7 @@ describe(
           show: false,
         }).then(function (model) {
           floorTranslucent = model;
-        })
+        }),
       );
       modelPromises.push(
         loadModel({
@@ -196,7 +195,7 @@ describe(
           show: false,
         }).then(function (model) {
           room = model;
-        })
+        }),
       );
 
       primitiveBox = createPrimitive(boxTransform, 0.5, Color.RED);
@@ -204,7 +203,7 @@ describe(
       primitiveBoxTranslucent = createPrimitive(
         boxTransform,
         0.5,
-        Color.RED.withAlpha(0.5)
+        Color.RED.withAlpha(0.5),
       );
       primitiveFloor = createPrimitive(floorTransform, 2.0, Color.RED);
       primitiveFloorRTC = createPrimitiveRTC(floorTransform, 2.0, Color.RED);
@@ -232,7 +231,7 @@ describe(
           asynchronous: false,
           show: false,
           shadows: ShadowMode.ENABLED,
-        })
+        }),
       );
     }
 
@@ -241,7 +240,7 @@ describe(
         BoxGeometry.fromDimensions({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           dimensions: new Cartesian3(size, size, size),
-        })
+        }),
       );
 
       const positions = boxGeometry.attributes.position.values;
@@ -256,7 +255,7 @@ describe(
       BoundingSphere.transform(
         boxGeometry.boundingSphere,
         transform,
-        boxGeometry.boundingSphere
+        boxGeometry.boundingSphere,
       );
 
       const boxGeometryInstance = new GeometryInstance({
@@ -277,33 +276,18 @@ describe(
           rtcCenter: boxGeometry.boundingSphere.center,
           show: false,
           shadows: ShadowMode.ENABLED,
-        })
+        }),
       );
     }
 
     async function loadModel(options) {
-      // A white ambient light with low intensity
-      const defaultIbl = new ImageBasedLighting({
-        sphericalHarmonicCoefficients: [
-          new Cartesian3(0.35449, 0.35449, 0.35449),
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-        ],
-      });
       const model = scene.primitives.add(
         await Model.fromGltfAsync({
           environmentMapOptions: {
             enabled: false,
           },
-          imageBasedLighting: defaultIbl,
           ...options,
-        })
+        }),
       );
       await pollToPromise(
         function () {
@@ -311,7 +295,7 @@ describe(
           scene.render();
           return model.ready;
         },
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
       return model;
     }
@@ -351,7 +335,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       // Create light camera pointing straight down
@@ -368,7 +352,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       // Create light camera pointing straight down
@@ -386,7 +370,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       const frustum = new OrthographicOffCenterFrustum();
@@ -413,7 +397,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       const lightCamera = new Camera(scene);
@@ -434,7 +418,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       const lightCamera = new Camera(scene);
@@ -648,7 +632,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       // Create light camera that is angled horizontally
@@ -663,7 +647,7 @@ describe(
       // Instead of the default flat tile, add a ridge that will cast shadows
       spyOn(
         EllipsoidTerrainProvider.prototype,
-        "requestTileGeometry"
+        "requestTileGeometry",
       ).and.callFake(function () {
         const width = 16;
         const height = 16;
@@ -712,7 +696,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       // Create light camera pointing straight down
@@ -749,7 +733,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0),
       );
 
       // Use the default shadow map which uses the sun as a light source
@@ -806,18 +790,18 @@ describe(
       const lightDirectionAbove = new Cartesian3(
         -0.22562675028973597,
         0.8893549458095356,
-        -0.3976686433675793
+        -0.3976686433675793,
       ); // Light pointing straight above
       const lightDirectionAngle = new Cartesian3(
         0.14370705890272903,
         0.9062077731227641,
-        -0.3976628636840613
+        -0.3976628636840613,
       ); // Light at an angle
 
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0),
       );
 
       // Use the default shadow map which uses the scene's light source
@@ -926,7 +910,7 @@ describe(
       for (let i = 0; i < 6; ++i) {
         boxPointLights.modelMatrix = Transforms.headingPitchRollToFixedFrame(
           origins[i],
-          new HeadingPitchRoll()
+          new HeadingPitchRoll(),
         );
         scene.render(); // Model is pre-loaded, render one frame to update the model matrix
 
@@ -1051,7 +1035,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       // Create light camera pointing straight down
@@ -1117,19 +1101,19 @@ describe(
             if (depthFramebufferSupported(sceneWithWebgl1)) {
               expect(sceneWithWebgl1.shadowMap._usesDepthTexture).toBe(true);
               expect(
-                sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat
+                sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat,
               ).toEqual(PixelFormat.DEPTH_STENCIL);
             } else {
               // Depth texture extension is supported, but it fails to create create a depth-only FBO
               expect(sceneWithWebgl1.shadowMap._usesDepthTexture).toBe(false);
               expect(
-                sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat
+                sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat,
               ).toEqual(PixelFormat.RGBA);
             }
           }
         },
         undefined,
-        sceneWithWebgl1
+        sceneWithWebgl1,
       );
 
       sceneWithWebgl1.shadowMap =
@@ -1147,11 +1131,11 @@ describe(
         function (rgba) {
           expect(sceneWithWebgl1.shadowMap._usesDepthTexture).toBe(false);
           expect(
-            sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat
+            sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat,
           ).toEqual(PixelFormat.RGBA);
         },
         undefined,
-        sceneWithWebgl1
+        sceneWithWebgl1,
       );
 
       sceneWithWebgl1.destroyForSpecs();
@@ -1169,7 +1153,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, 200000);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       renderAndCall(function (rgba) {
@@ -1184,7 +1168,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
       );
 
       // Create light camera pointing straight down
@@ -1339,8 +1323,8 @@ describe(
           if (defined(owner) && owner instanceof Model) {
             expect(
               drawCommand.shaderProgram._fragmentShaderText.indexOf(
-                "czm_shadow"
-              ) !== -1
+                "czm_shadow",
+              ) !== -1,
             ).toBe(true);
           }
         }
@@ -1357,8 +1341,8 @@ describe(
           if (defined(owner) && owner instanceof Model) {
             expect(
               drawCommand.shaderProgram._fragmentShaderText.indexOf(
-                "czm_shadow"
-              ) !== -1
+                "czm_shadow",
+              ) !== -1,
             ).toBe(false);
           }
         }
@@ -1368,11 +1352,11 @@ describe(
     it("Model updates derived commands when the shadow map is dirty", function () {
       const spy1 = spyOn(
         ShadowMap,
-        "createReceiveDerivedCommand"
+        "createReceiveDerivedCommand",
       ).and.callThrough();
       const spy2 = spyOn(
         ShadowMap,
-        "createCastDerivedCommand"
+        "createCastDerivedCommand",
       ).and.callThrough();
 
       box.show = true;
@@ -1500,5 +1484,5 @@ describe(
       scene.shadowMap = undefined;
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -24,7 +24,7 @@
 
       document.body.className = document.body.className.replace(
         /(?:\s|^)sandcastle-loading(?:\s|$)/,
-        " "
+        " ",
       );
     },
     addToggleButton: function (text, checked, onchange, toolbarID) {
@@ -101,11 +101,11 @@
   if (window.location.protocol === "file:") {
     if (
       window.confirm(
-        "You must host this app on a web server.\nSee contributor's guide for more info?"
+        "You must host this app on a web server.\nSee contributor's guide for more info?",
       )
     ) {
       window.location =
-        "https://github.com/CesiumGS/cesium/wiki/Contributor%27s-Guide";
+        "https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#quickstart";
     }
   }
 })();

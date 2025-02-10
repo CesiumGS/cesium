@@ -22,7 +22,7 @@ describe(
       camera.direction = Cartesian3.fromElements(1, 1, 1);
 
       provider = await Cesium3DTilesVoxelProvider.fromUrl(
-        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       );
       return provider;
     });
@@ -56,6 +56,51 @@ describe(
       expect(primitive._traversal).toBeDefined();
       expect(primitive.minimumValues).toBe(provider.minimumValues);
       expect(primitive.maximumValues).toBe(provider.maximumValues);
+    });
+
+    it("loads tiles from a minimal procedural provider", async function () {
+      const spyUpdate = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive();
+      primitive.initialTilesLoaded.addEventListener(spyUpdate);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate.calls.count()).toEqual(1);
+    });
+
+    it("initial tiles loaded and all tiles loaded events are raised", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      primitive.allTilesLoaded.addEventListener(spyUpdate1);
+      primitive.initialTilesLoaded.addEventListener(spyUpdate2);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate1.calls.count()).toEqual(1);
+      expect(spyUpdate2.calls.count()).toEqual(1);
+    });
+
+    it("tile load, load progress and tile visible events are raised", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const spyUpdate3 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      primitive.tileLoad.addEventListener(spyUpdate1);
+      primitive.loadProgress.addEventListener(spyUpdate2);
+      primitive.tileVisible.addEventListener(spyUpdate3);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate1.calls.count()).toEqual(1);
+      expect(spyUpdate2.calls.count()).toBeGreaterThan(0);
+      expect(spyUpdate3.calls.count()).toEqual(1);
     });
 
     it("toggles render options that require shader rebuilds", async function () {
@@ -140,7 +185,7 @@ describe(
 
     it("applies vertical exaggeration to box-shaped voxels by scaling the model matrix", async function () {
       const boxProvider = await Cesium3DTilesVoxelProvider.fromUrl(
-        "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json"
+        "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
       );
       const primitive = new VoxelPrimitive({ provider: boxProvider });
       scene.primitives.add(primitive);
@@ -156,7 +201,7 @@ describe(
       const expectedModelMatrix = Matrix4.multiplyByScale(
         modelMatrix,
         scalar,
-        new Matrix4()
+        new Matrix4(),
       );
       expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
     });
@@ -220,5 +265,5 @@ describe(
       expect(primitive._traversal).toBeUndefined();
     });
   },
-  "WebGL"
+  "WebGL",
 );

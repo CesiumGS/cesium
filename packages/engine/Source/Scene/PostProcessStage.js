@@ -94,9 +94,16 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 function PostProcessStage(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const {
+    name = createGuid(),
     fragmentShader,
+    uniforms,
     textureScale = 1.0,
+    forcePowerOfTwo = false,
+    sampleMode = PostProcessStageSampleMode.NEAREST,
     pixelFormat = PixelFormat.RGBA,
+    pixelDatatype = PixelDatatype.UNSIGNED_BYTE,
+    clearColor = Color.BLACK,
+    scissorRectangle,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -105,7 +112,7 @@ function PostProcessStage(options) {
   Check.typeOf.number.lessThanOrEquals(
     "options.textureScale",
     textureScale,
-    1.0
+    1.0,
   );
   if (!PixelFormat.isColorFormat(pixelFormat)) {
     throw new DeveloperError("options.pixelFormat must be a color format.");
@@ -113,19 +120,13 @@ function PostProcessStage(options) {
   //>>includeEnd('debug');
 
   this._fragmentShader = fragmentShader;
-  this._uniforms = options.uniforms;
+  this._uniforms = uniforms;
   this._textureScale = textureScale;
-  this._forcePowerOfTwo = defaultValue(options.forcePowerOfTwo, false);
-  this._sampleMode = defaultValue(
-    options.sampleMode,
-    PostProcessStageSampleMode.NEAREST
-  );
+  this._forcePowerOfTwo = forcePowerOfTwo;
+  this._sampleMode = sampleMode;
   this._pixelFormat = pixelFormat;
-  this._pixelDatatype = defaultValue(
-    options.pixelDatatype,
-    PixelDatatype.UNSIGNED_BYTE
-  );
-  this._clearColor = defaultValue(options.clearColor, Color.BLACK);
+  this._pixelDatatype = pixelDatatype;
+  this._clearColor = clearColor;
 
   this._uniformMap = undefined;
   this._command = undefined;
@@ -143,18 +144,14 @@ function PostProcessStage(options) {
   const passState = new PassState();
   passState.scissorTest = {
     enabled: true,
-    rectangle: defined(options.scissorRectangle)
-      ? BoundingRectangle.clone(options.scissorRectangle)
+    rectangle: defined(scissorRectangle)
+      ? BoundingRectangle.clone(scissorRectangle)
       : new BoundingRectangle(),
   };
   this._passState = passState;
 
   this._ready = false;
 
-  let name = options.name;
-  if (!defined(name)) {
-    name = createGuid();
-  }
   this._name = name;
 
   this._logDepthChanged = undefined;
@@ -509,7 +506,7 @@ function createUniformMap(stage) {
     ) {
       uniformMap[`${name}Dimensions`] = getUniformMapDimensionsFunction(
         uniformMap,
-        name
+        name,
       );
     }
   }
@@ -673,13 +670,12 @@ function updateUniformTextures(stage, context) {
   for (let i = 0; i < dirtyUniforms.length; ++i) {
     const name = dirtyUniforms[i];
     const stageNameUrlOrImage = uniforms[name];
-    const stageWithName = stage._textureCache.getStageByName(
-      stageNameUrlOrImage
-    );
+    const stageWithName =
+      stage._textureCache.getStageByName(stageNameUrlOrImage);
     if (defined(stageWithName)) {
       stage._actualUniforms[name] = createStageOutputTextureFunction(
         stage,
-        stageNameUrlOrImage
+        stageNameUrlOrImage,
       );
     } else if (typeof stageNameUrlOrImage === "string") {
       const resource = new Resource({
@@ -687,7 +683,7 @@ function updateUniformTextures(stage, context) {
       });
 
       promises.push(
-        resource.fetchImage().then(createLoadImageFunction(stage, name))
+        resource.fetchImage().then(createLoadImageFunction(stage, name)),
       );
     } else {
       stage._texturesToCreate.push({
@@ -918,7 +914,7 @@ PostProcessStage.prototype.update = function (context, useLogDepth) {
           0,
           0,
           colorTexture.width,
-          colorTexture.height
+          colorTexture.height,
         ),
       });
     }
@@ -939,7 +935,7 @@ PostProcessStage.prototype.execute = function (
   context,
   colorTexture,
   depthTexture,
-  idTexture
+  idTexture,
 ) {
   if (
     !defined(this._command) ||

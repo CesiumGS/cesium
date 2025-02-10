@@ -18,6 +18,8 @@ import {
   ImageryLayerCollection,
   SceneMode,
   ShadowMode,
+  IonGeocodeProviderType,
+  IonGeocoderService,
 } from "@cesium/engine";
 
 import {
@@ -92,7 +94,7 @@ describe(
       expect(viewer.animation).toBeInstanceOf(Animation);
       expect(viewer.clockViewModel).toBeInstanceOf(ClockViewModel);
       expect(viewer.animation.viewModel.clockViewModel).toBe(
-        viewer.clockViewModel
+        viewer.clockViewModel,
       );
       expect(viewer.timeline).toBeInstanceOf(Timeline);
       expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -106,7 +108,7 @@ describe(
       expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);
       expect(viewer.cesiumLogo).toBe(viewer.cesiumWidget.cesiumLogo);
       expect(viewer.screenSpaceEventHandler).toBe(
-        viewer.cesiumWidget.screenSpaceEventHandler
+        viewer.cesiumWidget.screenSpaceEventHandler,
       );
       expect(viewer.useBrowserRecommendedResolution).toBe(true);
       expect(viewer.isDestroyed()).toEqual(false);
@@ -119,7 +121,7 @@ describe(
       viewer = createViewer(container, { clockViewModel: clockViewModel });
       expect(viewer.clockViewModel).toBe(clockViewModel);
       expect(viewer.animation.viewModel.clockViewModel).toBe(
-        viewer.clockViewModel
+        viewer.clockViewModel,
       );
       viewer.destroy();
       expect(clockViewModel.isDestroyed()).toBe(false);
@@ -130,7 +132,7 @@ describe(
       const clockViewModel = new ClockViewModel(
         new Clock({
           shouldAnimate: false,
-        })
+        }),
       );
 
       viewer = createViewer(container, {
@@ -354,6 +356,19 @@ describe(
       expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
     });
 
+    it("constructs geocoder with IonGeocodeProviderType", function () {
+      viewer = createViewer(container, {
+        geocoder: IonGeocodeProviderType.GOOGLE,
+      });
+      expect(viewer.geocoder).toBeDefined();
+      expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
+      const geocoderService = viewer.geocoder.viewModel._geocoderServices[0];
+      expect(geocoderService).toBeInstanceOf(IonGeocoderService);
+      expect(geocoderService.geocodeProviderType).toEqual(
+        IonGeocodeProviderType.GOOGLE,
+      );
+    });
+
     it("constructs geocoder with geocoder service option", function () {
       const service = new CartographicGeocoderService();
       viewer = createViewer(container, {
@@ -428,7 +443,7 @@ describe(
         fullscreenElement: testElement,
       });
       expect(viewer.fullscreenButton.viewModel.fullscreenElement).toBe(
-        testElement
+        testElement,
       );
     });
 
@@ -460,13 +475,13 @@ describe(
       expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
       expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
       expect(contextAttributes.powerPreference).toEqual(
-        webglOptions.powerPreference
+        webglOptions.powerPreference,
       );
       expect(contextAttributes.premultipliedAlpha).toEqual(
-        webglOptions.premultipliedAlpha
+        webglOptions.premultipliedAlpha,
       );
       expect(contextAttributes.preserveDrawingBuffer).toEqual(
-        webglOptions.preserveDrawingBuffer
+        webglOptions.preserveDrawingBuffer,
       );
     });
 
@@ -501,10 +516,10 @@ describe(
       await pollToPromise(() => viewer.scene.imageryLayers.get(0).ready);
       expect(viewer.scene.imageryLayers.length).toEqual(1);
       expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
-        testProvider
+        testProvider,
       );
       expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(
-        testProviderViewModel
+        testProviderViewModel,
       );
     });
 
@@ -518,16 +533,16 @@ describe(
       await pollToPromise(() => viewer.scene.imageryLayers.get(0).ready);
       expect(viewer.scene.imageryLayers.length).toEqual(1);
       expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
-        testProvider
+        testProvider,
       );
       expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(
-        testProviderViewModel
+        testProviderViewModel,
       );
       expect(
-        viewer.baseLayerPicker.viewModel.imageryProviderViewModels.length
+        viewer.baseLayerPicker.viewModel.imageryProviderViewModels.length,
       ).toBe(models.length);
       expect(
-        viewer.baseLayerPicker.viewModel.imageryProviderViewModels[0]
+        viewer.baseLayerPicker.viewModel.imageryProviderViewModels[0],
       ).toEqual(models[0]);
     });
 
@@ -538,8 +553,25 @@ describe(
       });
       expect(viewer.scene.imageryLayers.length).toEqual(1);
       expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
-        testProvider
+        testProvider,
       );
+    });
+
+    it("throws when baseLayer is provided with globe: false", function () {
+      expect(function () {
+        viewer = createViewer(container, {
+          globe: false,
+          baseLayer: new ImageryLayer(testProvider),
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("does not throw when globe is false and baseLayer is not provided", function () {
+      expect(function () {
+        viewer = createViewer(container, {
+          globe: false,
+        });
+      }).not.toThrowDeveloperError();
     });
 
     it("can set baseLayer to false when BaseLayerPicker is disabled", function () {
@@ -688,11 +720,11 @@ describe(
         return !viewer.useDefaultRenderLoop;
       }).catch(function () {
         expect(
-          viewer._element.querySelector(".cesium-widget-errorPanel")
+          viewer._element.querySelector(".cesium-widget-errorPanel"),
         ).not.toBeNull();
 
         const messages = viewer._element.querySelectorAll(
-          ".cesium-widget-errorPanel-message"
+          ".cesium-widget-errorPanel-message",
         );
 
         let found = false;
@@ -706,11 +738,11 @@ describe(
 
         // click the OK button to dismiss the panel
         DomEventSimulator.fireClick(
-          viewer._element.querySelector(".cesium-button")
+          viewer._element.querySelector(".cesium-button"),
         );
 
         expect(
-          viewer._element.querySelector(".cesium-widget-errorPanel")
+          viewer._element.querySelector(".cesium-widget-errorPanel"),
         ).toBeNull();
       });
     });
@@ -729,7 +761,7 @@ describe(
         return !viewer.useDefaultRenderLoop;
       }).catch(function () {
         expect(
-          viewer._element.querySelector(".cesium-widget-errorPanel")
+          viewer._element.querySelector(".cesium-widget-errorPanel"),
         ).toBeNull();
       });
     });
@@ -748,7 +780,7 @@ describe(
       });
 
       expect(viewer.scene.maximumRenderTimeChange).toBe(
-        Number.POSITIVE_INFINITY
+        Number.POSITIVE_INFINITY,
       );
     });
 
@@ -758,7 +790,7 @@ describe(
       });
 
       expect(viewer.scene._depthPlane._ellipsoidOffset).toBe(
-        Number.POSITIVE_INFINITY
+        Number.POSITIVE_INFINITY,
       );
     });
 
@@ -770,7 +802,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(123456, 123456, 123456)
+        new Cartesian3(123456, 123456, 123456),
       );
 
       dataSource.entities.add(entity);
@@ -792,7 +824,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(123456, 123456, 123456)
+        new Cartesian3(123456, 123456, 123456),
       );
 
       dataSource.entities.add(entity);
@@ -848,7 +880,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantProperty(
-        new Cartesian3(123456, 123456, 123456)
+        new Cartesian3(123456, 123456, 123456),
       );
 
       viewer.trackedEntity = entity;
@@ -889,5 +921,5 @@ describe(
       expect(viewer.clockViewModel.canAnimate).toBe(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

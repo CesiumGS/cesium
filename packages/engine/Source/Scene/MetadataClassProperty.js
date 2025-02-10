@@ -81,7 +81,7 @@ function MetadataClassProperty(options) {
   this._isArray = defaultValue(options.isArray, false);
   this._isVariableLengthArray = defaultValue(
     options.isVariableLengthArray,
-    false
+    false,
   );
   this._arrayLength = options.arrayLength;
 
@@ -438,6 +438,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the class property JSON itself did not define it, then it will be
+   * initialized to the default value.
+   *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
@@ -450,6 +454,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the class property JSON itself did not define it, then it will be
+   * initialized to the default value.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
@@ -668,7 +676,7 @@ function parseType(property, enums) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    `unknown metadata type {type: ${type}, componentType: ${componentType})`
+    `unknown metadata type {type: ${type}, componentType: ${componentType})`,
   );
   //>>includeEnd('debug');
 }
@@ -702,7 +710,7 @@ MetadataClassProperty.prototype.normalize = function (value) {
   return normalizeInPlace(
     value,
     this._valueType,
-    MetadataComponentType.normalize
+    MetadataComponentType.normalize,
   );
 };
 
@@ -735,7 +743,7 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   return normalizeInPlace(
     value,
     this._valueType,
-    MetadataComponentType.unnormalize
+    MetadataComponentType.unnormalize,
   );
 };
 
@@ -753,7 +761,7 @@ MetadataClassProperty.prototype.applyValueTransform = function (value) {
     value,
     this._offset,
     this._scale,
-    MetadataComponentType.applyValueTransform
+    MetadataComponentType.applyValueTransform,
   );
 };
 
@@ -771,7 +779,7 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
     value,
     this._offset,
     this._scale,
-    MetadataComponentType.unapplyValueTransform
+    MetadataComponentType.unapplyValueTransform,
   );
 };
 
@@ -780,7 +788,7 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
  */
 MetadataClassProperty.prototype.expandConstant = function (
   constant,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
   enableNestedArrays = defaultValue(enableNestedArrays, false);
   const isArray = this._isArray;
@@ -871,7 +879,7 @@ function arrayEquals(left, right) {
  */
 MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
   value,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
   enableNestedArrays = defaultValue(enableNestedArrays, false);
   const MathType = MetadataType.getMathType(this._type);
@@ -910,7 +918,7 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
  */
 MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
   value,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
   enableNestedArrays = defaultValue(enableNestedArrays, false);
   const MathType = MetadataType.getMathType(this._type);
@@ -1139,13 +1147,31 @@ function normalizeInPlace(values, valueType, normalizeFunction) {
 }
 
 /**
+ * Applies the value transform that is defined with the given offsets
+ * and scales to the given values.
+ *
+ * If the given values are not an array, then the given transformation
+ * function will be applied directly.
+ *
+ * If the values are an array, then this function will be called recursively
+ * with the array elements, boiling down to a component-wise application
+ * of the transformation function to the innermost array elements.
+ *
+ * @param {number|number[]|number[][]} values The input values
+ * @param {number|number[]|number[][]} offsets The offsets
+ * @param {number|number[]|number[][]} scales The scales
+ * @param {Function} transformationFunction The function with the signature
+ * `(value:number, offset:number, scale:number) : number` that will be
+ * applied to the innermost elements
+ * @returns The input values (or the result of applying the transformation
+ * function to a single value if the values have not been an array).
  * @private
  */
 MetadataClassProperty.valueTransformInPlace = function (
   values,
   offsets,
   scales,
-  transformationFunction
+  transformationFunction,
 ) {
   if (!Array.isArray(values)) {
     // transform a single value
@@ -1158,7 +1184,7 @@ MetadataClassProperty.valueTransformInPlace = function (
       values[i],
       offsets[i],
       scales[i],
-      transformationFunction
+      transformationFunction,
     );
   }
 

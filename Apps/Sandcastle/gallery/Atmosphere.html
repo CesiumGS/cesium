@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -25,6 +25,8 @@
         background: rgba(42, 42, 42, 0.8);
         padding: 4px;
         border-radius: 4px;
+        max-height: 80%;
+        overflow-y: auto;
       }
       #toolbar input {
         vertical-align: middle;
@@ -634,7 +636,7 @@
         globe.atmosphereLightIntensity = 20.0;
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2022-03-23T11:31:42.34200000000419095Z"
+          "2022-03-23T11:31:42.34200000000419095Z",
         );
 
         const canvas = viewer.canvas;

@@ -1,11 +1,14 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import SceneMode from "./SceneMode.js";
 
 /**
  * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
  * performance improvements by rendering less geometry and dispatching less terrain requests.
+ *
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Fog.html|Cesium Sandcastle Fog Demo}
  *
  * @alias Fog
  * @constructor
@@ -15,6 +18,9 @@ function Fog() {
    * <code>true</code> if fog is enabled, <code>false</code> otherwise.
    * @type {boolean}
    * @default true
+   * @example
+   * // Disable fog in the scene
+   * viewer.scene.fog.enabled = false;
    */
   this.enabled = true;
   /**
@@ -22,6 +28,10 @@ function Fog() {
    * This allows to benefits from optimized tile loading strategy based on fog density without the actual visual rendering.
    * @type {boolean}
    * @default true
+   * @example
+   * // Use fog culling but don't render it
+   * viewer.scene.fog.enabled = true;
+   * viewer.scene.fog.renderable = false;
    */
   this.renderable = true;
   /**
@@ -31,9 +41,36 @@ function Fog() {
    * 1000.0m above the ellipsoid, increasing the value to 3.0e-3 will cause many tiles close to the viewer be culled.
    * Decreasing the value will push the fog further from the viewer, but decrease performance as more of the terrain is rendered.
    * @type {number}
-   * @default 2.0e-4
+   * @default 0.0006
+   * @example
+   * // Double the default fog density
+   * viewer.scene.fog.density = 0.0012;
    */
-  this.density = 2.0e-4;
+  this.density = 0.0006;
+  /**
+   * A scalar used in the function to adjust density based on the height of the camera above the terrain.
+   * @type {number}
+   * @default 0.001
+   */
+  this.heightScalar = 0.001;
+  this._heightFalloff = 0.59;
+  /**
+   * The maximum height fog is applied. If the camera is above this height fog will be disabled.
+   * @type {number}
+   * @default 800000.0
+   */
+  this.maxHeight = 800000.0;
+  /**
+   * A scalar that impacts the visual density of fog. This value does not impact the culling of terrain.
+   * Use in combination with the {@link Fog.density} to make fog appear more or less dense.
+   * @type {number}
+   * @default 0.15
+   * @experimental The value of this scalar may not be final and is subject to change.
+   * @example
+   * // Increase fog appearance effect
+   * viewer.scene.fog.visualDensityScalar = 0.6;
+   */
+  this.visualDensityScalar = 0.15;
   /**
    * A factor used to increase the screen space error of terrain tiles when they are partially in fog. The effect is to reduce
    * the number of terrain tiles requested for rendering. If set to zero, the feature will be disabled. If the value is increased
@@ -52,109 +89,36 @@ function Fog() {
   this.minimumBrightness = 0.03;
 }
 
-// These values were found by sampling the density at certain views and finding at what point culled tiles impacted the view at the horizon.
-const heightsTable = [
-  359.393,
-  800.749,
-  1275.6501,
-  2151.1192,
-  3141.7763,
-  4777.5198,
-  6281.2493,
-  12364.307,
-  15900.765,
-  49889.0549,
-  78026.8259,
-  99260.7344,
-  120036.3873,
-  151011.0158,
-  156091.1953,
-  203849.3112,
-  274866.9803,
-  319916.3149,
-  493552.0528,
-  628733.5874,
-];
-const densityTable = [
-  2.0e-5,
-  2.0e-4,
-  1.0e-4,
-  7.0e-5,
-  5.0e-5,
-  4.0e-5,
-  3.0e-5,
-  1.9e-5,
-  1.0e-5,
-  8.5e-6,
-  6.2e-6,
-  5.8e-6,
-  5.3e-6,
-  5.2e-6,
-  5.1e-6,
-  4.2e-6,
-  4.0e-6,
-  3.4e-6,
-  2.6e-6,
-  2.2e-6,
-];
+Object.defineProperties(Fog.prototype, {
+  /**
+   * Exponent factor used in the function to adjust how density changes based on the height of the camera above the ellipsoid. Smaller values produce a more gradual transition as camera height increases.
+   * Value must be greater than 0.
+   * @memberof Fog.prototype
+   * @type {number}
+   * @default 0.59
+   */
+  heightFalloff: {
+    get: function () {
+      return this._heightFalloff;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value < 0) {
+        throw new DeveloperError("value must be positive.");
+      }
+      //>>includeEnd('debug');
 
-// Scale densities by 1e6 to bring lowest value to ~1. Prevents divide by zero.
-for (let i = 0; i < densityTable.length; ++i) {
-  densityTable[i] *= 1.0e6;
-}
-// Change range to [0, 1].
-const tableStartDensity = densityTable[1];
-const tableEndDensity = densityTable[densityTable.length - 1];
-for (let j = 0; j < densityTable.length; ++j) {
-  densityTable[j] =
-    (densityTable[j] - tableEndDensity) / (tableStartDensity - tableEndDensity);
-}
-
-let tableLastIndex = 0;
-
-function findInterval(height) {
-  const heights = heightsTable;
-  const length = heights.length;
-
-  if (height < heights[0]) {
-    tableLastIndex = 0;
-    return tableLastIndex;
-  } else if (height > heights[length - 1]) {
-    tableLastIndex = length - 2;
-    return tableLastIndex;
-  }
-
-  // Take advantage of temporal coherence by checking current, next and previous intervals
-  // for containment of time.
-  if (height >= heights[tableLastIndex]) {
-    if (tableLastIndex + 1 < length && height < heights[tableLastIndex + 1]) {
-      return tableLastIndex;
-    } else if (
-      tableLastIndex + 2 < length &&
-      height < heights[tableLastIndex + 2]
-    ) {
-      ++tableLastIndex;
-      return tableLastIndex;
-    }
-  } else if (tableLastIndex - 1 >= 0 && height >= heights[tableLastIndex - 1]) {
-    --tableLastIndex;
-    return tableLastIndex;
-  }
-
-  // The above failed so do a linear search.
-  let i;
-  for (i = 0; i < length - 2; ++i) {
-    if (height >= heights[i] && height < heights[i + 1]) {
-      break;
-    }
-  }
-
-  tableLastIndex = i;
-  return tableLastIndex;
-}
+      this._heightFalloff = value;
+    },
+  },
+});
 
 const scratchPositionNormal = new Cartesian3();
 
+/**
+ * @param {FrameState} frameState
+ * @private
+ */
 Fog.prototype.update = function (frameState) {
   const enabled = (frameState.fog.enabled = this.enabled);
   if (!enabled) {
@@ -169,7 +133,7 @@ Fog.prototype.update = function (frameState) {
   // Turn off fog in space.
   if (
     !defined(positionCartographic) ||
-    positionCartographic.height > 800000.0 ||
+    positionCartographic.height > this.maxHeight ||
     frameState.mode !== SceneMode.SCENE3D
   ) {
     frameState.fog.enabled = false;
@@ -178,28 +142,24 @@ Fog.prototype.update = function (frameState) {
   }
 
   const height = positionCartographic.height;
-  const i = findInterval(height);
-  const t = CesiumMath.clamp(
-    (height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]),
-    0.0,
-    1.0
-  );
-  let density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t);
-
-  // Again, scale value to be in the range of densityTable (prevents divide by zero) and change to new range.
-  const startDensity = this.density * 1.0e6;
-  const endDensity = (startDensity / tableStartDensity) * tableEndDensity;
-  density = density * (startDensity - endDensity) * 1.0e-6;
+  let density =
+    this.density *
+    this.heightScalar *
+    Math.pow(
+      Math.max(height / this.maxHeight, CesiumMath.EPSILON4),
+      -Math.max(this._heightFalloff, 0.0),
+    );
 
   // Fade fog in as the camera tilts toward the horizon.
   const positionNormal = Cartesian3.normalize(
     camera.positionWC,
-    scratchPositionNormal
+    scratchPositionNormal,
   );
   const dot = Math.abs(Cartesian3.dot(camera.directionWC, positionNormal));
   density *= 1.0 - dot;
 
   frameState.fog.density = density;
+  frameState.fog.visualDensityScalar = this.visualDensityScalar;
   frameState.fog.sse = this.screenSpaceErrorFactor;
   frameState.fog.minimumBrightness = this.minimumBrightness;
 };

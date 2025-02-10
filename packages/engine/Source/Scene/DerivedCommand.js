@@ -1,3 +1,4 @@
+import { MetadataComponentType } from "@cesium/engine";
 import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -16,7 +17,7 @@ const discardRegex = /\bdiscard\b/;
 function getDepthOnlyShaderProgram(context, shaderProgram) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "depthOnly"
+    "depthOnly",
   );
   if (defined(cachedShader)) {
     return cachedShader;
@@ -64,7 +65,7 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
       vertexShaderSource: shaderProgram.vertexShaderSource,
       fragmentShaderSource: fs,
       attributeLocations: shaderProgram._attributeLocations,
-    }
+    },
   );
 }
 
@@ -95,7 +96,7 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
   scene,
   command,
   context,
-  result
+  result,
 ) {
   // For a depth only pass, we bind a framebuffer with only a depth attachment (no color attachments),
   // do not write color, and write depth. If the fragment shader doesn't modify the fragment depth
@@ -111,17 +112,17 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
 
   result.depthOnlyCommand = DrawCommand.shallowClone(
     command,
-    result.depthOnlyCommand
+    result.depthOnlyCommand,
   );
 
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.depthOnlyCommand.renderState = getDepthOnlyRenderState(
       scene,
-      command.renderState
+      command.renderState,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -145,7 +146,7 @@ function getLogDepthShaderProgram(context, shaderProgram) {
 
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "logDepth"
+    "logDepth",
   );
   if (defined(cachedShader)) {
     return cachedShader;
@@ -223,7 +224,7 @@ void main()
       vertexShaderSource: vs,
       fragmentShaderSource: fs,
       attributeLocations: attributeLocations,
-    }
+    },
   );
 }
 
@@ -239,7 +240,7 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.command.shaderProgram = getLogDepthShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -252,7 +253,7 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
 function getPickShaderProgram(context, shaderProgram, pickId) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "pick"
+    "pick",
   );
   if (defined(cachedShader)) {
     return cachedShader;
@@ -315,7 +316,7 @@ DerivedCommand.createPickDerivedCommand = function (
   scene,
   command,
   context,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = {};
@@ -330,11 +331,11 @@ DerivedCommand.createPickDerivedCommand = function (
     result.pickCommand.shaderProgram = getPickShaderProgram(
       context,
       command.shaderProgram,
-      command.pickId
+      command.pickId,
     );
     result.pickCommand.renderState = getPickRenderState(
       scene,
-      command.renderState
+      command.renderState,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -417,6 +418,98 @@ function getGlslType(classProperty) {
 }
 
 /**
+ * Returns a shader statement that applies the inverse of the
+ * value transform to the given value, based on the given offset
+ * and scale.
+ *
+ * @param {string} input The input value
+ * @param {string} offset The offset
+ * @param {string} scale The scale
+ * @returns {string} The statement
+ */
+function unapplyValueTransform(input, offset, scale) {
+  return `((${input} - float(${offset})) / float(${scale}))`;
+}
+
+/**
+ * Returns a shader statement that applies the inverse of the
+ * normalization, based on the given component type
+ *
+ * @param {string} input The input value
+ * @param {string} componentType The component type
+ * @returns {string} The statement
+ */
+function unnormalize(input, componentType) {
+  const max = MetadataComponentType.getMaximum(componentType);
+  return `(${input}) / float(${max})`;
+}
+
+/**
+ * Creates a shader statement that returns the value of the specified
+ * property, normalized to the range [0, 1].
+ *
+ * @param {MetadataClassProperty} classProperty The class property
+ * @param {object} metadataProperty The metadata property, either
+ * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
+ * @returns {string} The string
+ */
+function getSourceValueStringScalar(classProperty, metadataProperty) {
+  let result = `float(value)`;
+
+  // The 'hasValueTransform' indicates whether the property
+  // (or its class property) did define an 'offset' or 'scale'.
+  // Even when they had not been defined in the JSON, they are
+  // defined in the object, with default values.
+  if (metadataProperty.hasValueTransform) {
+    const offset = metadataProperty.offset;
+    const scale = metadataProperty.scale;
+    result = unapplyValueTransform(result, offset, scale);
+  }
+  if (!classProperty.normalized) {
+    result = unnormalize(result, classProperty.componentType);
+  }
+  return result;
+}
+
+/**
+ * Creates a shader statement that returns the value of the specified
+ * component of the given property, normalized to the range [0, 1].
+ *
+ * @param {MetadataClassProperty} classProperty The class property
+ * @param {object} metadataProperty The metadata property, either
+ * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
+ * @param {string} componentName The name, in ["x", "y", "z", "w"]
+ * @returns {string} The string
+ */
+function getSourceValueStringComponent(
+  classProperty,
+  metadataProperty,
+  componentName,
+) {
+  const valueString = `value.${componentName}`;
+  let result = `float(${valueString})`;
+
+  // The 'hasValueTransform' indicates whether the property
+  // (or its class property) did define an 'offset' or 'scale'.
+  // Even when they had not been defined in the JSON, they are
+  // defined in the object, with default values
+  // Note that in the 'PropertyTextureProperty' and the
+  // 'PropertyAttributeProperty', these values are
+  // stored as "object types" (like 'Cartesian2'), whereas
+  // in the 'MetadataClassProperty', they are stored as
+  // "array types", e.g. a `[number, number]`
+  if (metadataProperty.hasValueTransform) {
+    const offset = metadataProperty.offset[componentName];
+    const scale = metadataProperty.scale[componentName];
+    result = unapplyValueTransform(result, offset, scale);
+  }
+  if (!classProperty.normalized) {
+    result = unnormalize(result, classProperty.componentType);
+  }
+  return result;
+}
+
+/**
  * Creates a new `ShaderProgram` from the given input that renders metadata
  * values into the frame buffer, according to the given picked metadata info.
  *
@@ -438,7 +531,7 @@ function getGlslType(classProperty) {
 function getPickMetadataShaderProgram(
   context,
   shaderProgram,
-  pickedMetadataInfo
+  pickedMetadataInfo,
 ) {
   const schemaId = pickedMetadataInfo.schemaId;
   const className = pickedMetadataInfo.className;
@@ -446,40 +539,40 @@ function getPickMetadataShaderProgram(
   const keyword = `pickMetadata-${schemaId}-${className}-${propertyName}`;
   const shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    keyword
+    keyword,
   );
   if (defined(shader)) {
     return shader;
   }
 
+  const metadataProperty = pickedMetadataInfo.metadataProperty;
   const classProperty = pickedMetadataInfo.classProperty;
   const glslType = getGlslType(classProperty);
 
   // Define the components that will go into the output `metadataValues`.
+  // This will be the 'color' that is written into the frame buffer,
+  // meaning that the values should be in [0.0, 1.0], and will become
+  // values in [0, 255] in the frame buffer.
   // By default, all of them are 0.0.
   const sourceValueStrings = ["0.0", "0.0", "0.0", "0.0"];
   const componentCount = getComponentCount(classProperty);
   if (componentCount === 1) {
-    // When the property is a scalar, store its value directly
-    // in `metadataValues.x`
-    sourceValueStrings[0] = `float(value)`;
+    // When the property is a scalar, store the source value
+    // string directly in `metadataValues.x`
+    sourceValueStrings[0] = getSourceValueStringScalar(
+      classProperty,
+      metadataProperty,
+    );
   } else {
     // When the property is an array, store the array elements
     // in `metadataValues.x/y/z/w`
-    const components = ["x", "y", "z", "w"];
+    const componentNames = ["x", "y", "z", "w"];
     for (let i = 0; i < componentCount; i++) {
-      const component = components[i];
-      const valueString = `value.${component}`;
-      sourceValueStrings[i] = `float(${valueString})`;
-    }
-  }
-
-  // Make sure that the `metadataValues` components are all in
-  // the range [0, 1] (which will result in RGBA components
-  // in [0, 255] during rendering)
-  if (!classProperty.normalized) {
-    for (let i = 0; i < componentCount; i++) {
-      sourceValueStrings[i] += " / 255.0";
+      sourceValueStrings[i] = getSourceValueStringComponent(
+        classProperty,
+        metadataProperty,
+        componentNames[i],
+      );
     }
   }
 
@@ -491,32 +584,32 @@ function getPickMetadataShaderProgram(
   replaceDefine(
     newDefines,
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_TYPE,
-    glslType
+    glslType,
   );
   replaceDefine(
     newDefines,
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_STRING,
-    `metadata.${propertyName}`
+    `metadata.${propertyName}`,
   );
   replaceDefine(
     newDefines,
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_X,
-    sourceValueStrings[0]
+    sourceValueStrings[0],
   );
   replaceDefine(
     newDefines,
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Y,
-    sourceValueStrings[1]
+    sourceValueStrings[1],
   );
   replaceDefine(
     newDefines,
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Z,
-    sourceValueStrings[2]
+    sourceValueStrings[2],
   );
   replaceDefine(
     newDefines,
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_W,
-    sourceValueStrings[3]
+    sourceValueStrings[3],
   );
 
   const newFragmentShaderSource = new ShaderSource({
@@ -530,7 +623,7 @@ function getPickMetadataShaderProgram(
       vertexShaderSource: shaderProgram.vertexShaderSource,
       fragmentShaderSource: newFragmentShaderSource,
       attributeLocations: shaderProgram._attributeLocations,
-    }
+    },
   );
   return newShader;
 }
@@ -542,24 +635,24 @@ DerivedCommand.createPickMetadataDerivedCommand = function (
   scene,
   command,
   context,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = {};
   }
   result.pickMetadataCommand = DrawCommand.shallowClone(
     command,
-    result.pickMetadataCommand
+    result.pickMetadataCommand,
   );
 
   result.pickMetadataCommand.shaderProgram = getPickMetadataShaderProgram(
     context,
     command.shaderProgram,
-    command.pickedMetadataInfo
+    command.pickedMetadataInfo,
   );
   result.pickMetadataCommand.renderState = getPickRenderState(
     scene,
-    command.renderState
+    command.renderState,
   );
   result.shaderProgramId = command.shaderProgram.id;
 
@@ -569,7 +662,7 @@ DerivedCommand.createPickMetadataDerivedCommand = function (
 function getHdrShaderProgram(context, shaderProgram) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "HDR"
+    "HDR",
   );
   if (defined(cachedShader)) {
     return cachedShader;
@@ -603,7 +696,7 @@ DerivedCommand.createHdrCommand = function (command, context, result) {
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.command.shaderProgram = getHdrShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {

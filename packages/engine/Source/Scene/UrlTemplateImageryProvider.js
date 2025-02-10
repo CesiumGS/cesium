@@ -159,13 +159,13 @@ const pickFeaturesTags = combine(tags, {
  * });
  * // Access a Web Map Service (WMS) server.
  * const wms = new Cesium.UrlTemplateImageryProvider({
- *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
- *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
- *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
- *          'layers=public%3AMyBroadband_Availability&srs=EPSG%3A3857&' +
+ *    url : 'https://services.ga.gov.au/gis/services/NM_Hydrology_and_Marine_Points/MapServer/WMSServer?' +
+ *          'tiled=true&transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
+ *          'styles=&service=WMS&version=1.3.0&request=GetMap&' +
+ *          'layers=Bores&crs=EPSG%3A3857&' +
  *          'bbox={westProjected}%2C{southProjected}%2C{eastProjected}%2C{northProjected}&' +
  *          'width=256&height=256',
- *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
+ *    rectangle : Cesium.Rectangle.fromDegrees(95.0, -55.0, 170.0, -1.0)  // From GetCapabilities EX_GeographicBoundingBox
  * });
  * // Using custom tags in your template url.
  * const custom = new Cesium.UrlTemplateImageryProvider({
@@ -219,16 +219,16 @@ function UrlTemplateImageryProvider(options) {
   this._maximumLevel = options.maximumLevel;
   this._tilingScheme = defaultValue(
     options.tilingScheme,
-    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid })
+    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid }),
   );
 
   this._rectangle = defaultValue(
     options.rectangle,
-    this._tilingScheme.rectangle
+    this._tilingScheme.rectangle,
   );
   this._rectangle = Rectangle.intersection(
     this._rectangle,
-    this._tilingScheme.rectangle
+    this._tilingScheme.rectangle,
   );
 
   this._tileDiscardPolicy = options.tileDiscardPolicy;
@@ -527,11 +527,11 @@ UrlTemplateImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   return ImageryProvider.loadImage(
     this,
-    buildImageResource(this, x, y, level, request)
+    buildImageResource(this, x, y, level, request),
   );
 };
 
@@ -554,7 +554,7 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   if (
     !this.enablePickFeatures ||
@@ -586,7 +586,7 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
       level,
       longitude,
       latitude,
-      format.format
+      format.format,
     );
 
     ++formatIndex;
@@ -650,7 +650,7 @@ function buildPickFeaturesResource(
   level,
   longitude,
   latitude,
-  format
+  format,
 ) {
   degreesScratchComputed = false;
   projectedScratchComputed = false;
@@ -673,7 +673,7 @@ function buildPickFeaturesResource(
           level,
           longitude,
           latitude,
-          format
+          format,
         );
       }
     });
@@ -698,7 +698,7 @@ function padWithZerosIfNecessary(imageryProvider, key, value) {
           value.length >= paddingTemplateWidth
             ? value
             : new Array(
-                paddingTemplateWidth - value.toString().length + 1
+                paddingTemplateWidth - value.toString().length + 1,
               ).join("0") + value;
       }
     }
@@ -787,7 +787,7 @@ function computeProjected(imageryProvider, x, y, level) {
     x,
     y,
     level,
-    projectedScratch
+    projectedScratch,
   );
 
   projectedScratchComputed = true;
@@ -838,7 +838,7 @@ function reverseITag(
   level,
   longitude,
   latitude,
-  format
+  format,
 ) {
   computeIJ(imageryProvider, x, y, level, longitude, latitude);
   return imageryProvider.tileWidth - ijScratch.x - 1;
@@ -851,7 +851,7 @@ function reverseJTag(
   level,
   longitude,
   latitude,
-  format
+  format,
 ) {
   computeIJ(imageryProvider, x, y, level, longitude, latitude);
   return imageryProvider.tileHeight - ijScratch.y - 1;
@@ -871,7 +871,7 @@ function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
     y,
     level,
     longitude,
-    latitude
+    latitude,
   );
   const projected = longitudeLatitudeProjectedScratch;
 
@@ -879,7 +879,7 @@ function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
     x,
     y,
     level,
-    rectangleScratch
+    rectangleScratch,
   );
   ijScratch.x =
     ((imageryProvider.tileWidth * (projected.x - rectangle.west)) /
@@ -899,7 +899,7 @@ function longitudeDegreesTag(
   level,
   longitude,
   latitude,
-  format
+  format,
 ) {
   return CesiumMath.toDegrees(longitude);
 }
@@ -911,7 +911,7 @@ function latitudeDegreesTag(
   level,
   longitude,
   latitude,
-  format
+  format,
 ) {
   return CesiumMath.toDegrees(latitude);
 }
@@ -923,7 +923,7 @@ function longitudeProjectedTag(
   level,
   longitude,
   latitude,
-  format
+  format,
 ) {
   computeLongitudeLatitudeProjected(
     imageryProvider,
@@ -931,7 +931,7 @@ function longitudeProjectedTag(
     y,
     level,
     longitude,
-    latitude
+    latitude,
   );
   return longitudeLatitudeProjectedScratch.x;
 }
@@ -943,7 +943,7 @@ function latitudeProjectedTag(
   level,
   longitude,
   latitude,
-  format
+  format,
 ) {
   computeLongitudeLatitudeProjected(
     imageryProvider,
@@ -951,7 +951,7 @@ function latitudeProjectedTag(
     y,
     level,
     longitude,
-    latitude
+    latitude,
   );
   return longitudeLatitudeProjectedScratch.y;
 }
@@ -965,7 +965,7 @@ function computeLongitudeLatitudeProjected(
   level,
   longitude,
   latitude,
-  format
+  format,
 ) {
   if (longitudeLatitudeProjectedScratchComputed) {
     return;
@@ -980,7 +980,7 @@ function computeLongitudeLatitudeProjected(
     cartographic.latitude = latitude;
     imageryProvider.tilingScheme.projection.project(
       cartographic,
-      longitudeLatitudeProjectedScratch
+      longitudeLatitudeProjectedScratch,
     );
   }
 
