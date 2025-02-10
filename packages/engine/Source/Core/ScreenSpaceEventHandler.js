@@ -352,6 +352,18 @@ function handleMouseMove(screenSpaceEventHandler, event) {
     return;
   }
 
+  const canvas = screenSpaceEventHandler._element;
+  const rect = canvas.getBoundingClientRect();
+
+  if (
+    event.clientX < rect.left ||
+    event.clientX > rect.right ||
+    event.clientY < rect.top ||
+    event.clientY > rect.bottom
+  ) {
+    return;
+  }
+
   const modifier = getModifier(event);
 
   const position = getPosition(
