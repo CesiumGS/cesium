@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.127 - 2025-03-03
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed error when there are duplicated points in polygon/polyline geometries with `ArcType.RHUMB` [#12460](https://github.com/CesiumGS/cesium/pull/12460)
+
 ## 1.126 - 2025-02-03
 
 ### @cesium/engine
