@@ -83,7 +83,7 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
 
   const runtimeError = new RuntimeError(errorMessage);
   if (defined(error)) {
-    runtimeError.stack = error.stack;
+    runtimeError.stack = `Original stack:\n${error.stack}\nHandler stack:\n${runtimeError.stack}`;
   }
 
   return runtimeError;

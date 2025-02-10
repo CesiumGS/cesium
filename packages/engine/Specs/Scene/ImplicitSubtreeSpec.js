@@ -254,15 +254,15 @@ describe("Scene/ImplicitSubtree", function () {
     }).toThrowDeveloperError();
   });
 
-  // it("throws without implicitTileset", function () {
-  //   expect(function () {
-  //     return new ImplicitSubtree(
-  //       subtreeResource,
-  //       undefined,
-  //       quadtreeCoordinates
-  //     );
-  //   }).toThrowDeveloperError();
-  // });
+  it("throws without implicitTileset", function () {
+    expect(function () {
+      return new ImplicitSubtree(
+        subtreeResource,
+        undefined,
+        quadtreeCoordinates,
+      );
+    }).toThrowDeveloperError();
+  });
 
   it("throws without implicitCoordinates", function () {
     expect(function () {
