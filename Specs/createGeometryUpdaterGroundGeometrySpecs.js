@@ -1,20 +1,22 @@
-import { Color } from "../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../Source/Cesium.js";
-import { JulianDate } from "../Source/Cesium.js";
-import { ColorMaterialProperty } from "../Source/Cesium.js";
-import { ConstantProperty } from "../Source/Cesium.js";
-import { SampledProperty } from "../Source/Cesium.js";
-import { ClassificationType } from "../Source/Cesium.js";
-import { GroundPrimitive } from "../Source/Cesium.js";
-import { HeightReference } from "../Source/Cesium.js";
-import { PrimitiveCollection } from "../Source/Cesium.js";
+import {
+  Color,
+  GeometryOffsetAttribute,
+  JulianDate,
+  ColorMaterialProperty,
+  ConstantProperty,
+  SampledProperty,
+  ClassificationType,
+  GroundPrimitive,
+  HeightReference,
+  PrimitiveCollection,
+} from "@cesium/engine";
 
 function createGeometryUpdaterGroundGeometrySpecs(
   Updater,
   geometryPropertyName,
   createEntity,
   createDynamicEntity,
-  getScene
+  getScene,
 ) {
   const time = JulianDate.now();
 
@@ -145,7 +147,7 @@ function createGeometryUpdaterGroundGeometrySpecs(
 
     graphics.heightReference = new ConstantProperty(HeightReference.NONE);
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.NONE
+      HeightReference.NONE,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
@@ -155,7 +157,7 @@ function createGeometryUpdaterGroundGeometrySpecs(
 
     graphics.heightReference = new ConstantProperty(HeightReference.NONE);
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
@@ -165,112 +167,112 @@ function createGeometryUpdaterGroundGeometrySpecs(
 
     graphics.heightReference = new ConstantProperty(HeightReference.NONE);
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
     instance = updater.createOutlineGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
 
     graphics.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.NONE
+      HeightReference.NONE,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
     instance = updater.createOutlineGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
 
     graphics.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
     instance = updater.createOutlineGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
 
     graphics.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.ALL
+      GeometryOffsetAttribute.ALL,
     );
     instance = updater.createOutlineGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.ALL
+      GeometryOffsetAttribute.ALL,
     );
 
     graphics.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.NONE
+      HeightReference.NONE,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
     instance = updater.createOutlineGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
 
     graphics.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
     instance = updater.createOutlineGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.TOP
+      GeometryOffsetAttribute.TOP,
     );
 
     graphics.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     graphics.extrudedHeightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     updater._onEntityPropertyChanged(entity, geometryPropertyName);
     instance = updater.createFillGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.ALL
+      GeometryOffsetAttribute.ALL,
     );
     instance = updater.createOutlineGeometryInstance(time);
     expect(instance.geometry._offsetAttribute).toEqual(
-      GeometryOffsetAttribute.ALL
+      GeometryOffsetAttribute.ALL,
     );
 
     graphics.height = undefined;
@@ -301,7 +303,7 @@ function createGeometryUpdaterGroundGeometrySpecs(
     const groundPrimitives = new PrimitiveCollection();
     const dynamicUpdater = updater.createDynamicUpdater(
       primitives,
-      groundPrimitives
+      groundPrimitives,
     );
     expect(dynamicUpdater.isDestroyed()).toBe(false);
     expect(primitives.length).toBe(0);
@@ -330,14 +332,14 @@ function createGeometryUpdaterGroundGeometrySpecs(
     const groundPrimitives = new PrimitiveCollection();
     const dynamicUpdater = updater.createDynamicUpdater(
       primitives,
-      groundPrimitives
+      groundPrimitives,
     );
 
     dynamicUpdater.update(time);
 
     if (GroundPrimitive.isSupported(getScene())) {
       expect(groundPrimitives.get(0).classificationType).toEqual(
-        ClassificationType.BOTH
+        ClassificationType.BOTH,
       );
     }
 

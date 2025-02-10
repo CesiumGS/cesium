@@ -1,7 +1,5 @@
-define(function () {
-  "use strict";
+import { createTaskProcessorWorker } from "@cesium/engine";
 
-  return function () {
-    throw new Error("BadGeometry.createGeometry");
-  };
+export default createTaskProcessorWorker(function () {
+  throw new Error("BadGeometry.createGeometry");
 });

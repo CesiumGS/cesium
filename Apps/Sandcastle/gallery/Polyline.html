@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -32,7 +29,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -71,16 +68,10 @@
         });
 
         const orangeOutlined = viewer.entities.add({
-          name:
-            "Orange line with black outline at height and following the surface",
+          name: "Orange line with black outline at height and following the surface",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              -75,
-              39,
-              250000,
-              -125,
-              39,
-              250000,
+              -75, 39, 250000, -125, 39, 250000,
             ]),
             width: 5,
             material: new Cesium.PolylineOutlineMaterialProperty({
@@ -95,18 +86,11 @@
           name: "Purple straight arrow at height",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              -75,
-              43,
-              500000,
-              -125,
-              43,
-              500000,
+              -75, 43, 500000, -125, 43, 500000,
             ]),
             width: 10,
             arcType: Cesium.ArcType.NONE,
-            material: new Cesium.PolylineArrowMaterialProperty(
-              Cesium.Color.PURPLE
-            ),
+            material: new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE),
           },
         });
 
@@ -114,12 +98,7 @@
           name: "Blue dashed line",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              -75,
-              45,
-              500000,
-              -125,
-              45,
-              500000,
+              -75, 45, 500000, -125, 45, 500000,
             ]),
             width: 4,
             material: new Cesium.PolylineDashMaterialProperty({
@@ -130,11 +109,14 @@
 
         viewer.zoomTo(viewer.entities);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

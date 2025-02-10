@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -30,7 +27,7 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const czml = [
@@ -53,8 +50,7 @@
               cartographicDegrees: [-77, 37, 10000],
             },
             model: {
-              gltf:
-                "https://cesium.com/public/SandcastleSampleData/launchvehicle.glb",
+              gltf: "https://cesium.com/public/SandcastleSampleData/launchvehicle.glb",
               scale: 2.0,
               minimumPixelSize: 128,
               runAnimations: false,
@@ -83,7 +79,7 @@
         });
 
         const dataSourcePromise = viewer.dataSources.add(
-          Cesium.CzmlDataSource.load(czml)
+          Cesium.CzmlDataSource.load(czml),
         );
 
         dataSourcePromise
@@ -94,11 +90,14 @@
             console.error(error);
           });
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

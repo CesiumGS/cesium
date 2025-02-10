@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -95,8 +92,8 @@
                 <code>requestRenderMode</code> enabled
               </h3>
               <i
-                >When enabled, a new frame is only rendered when scene updates
-                occur, or a new frame is explicitly rendered.</i
+                >When enabled, a new frame is only rendered when scene updates occur, or a
+                new frame is explicitly rendered.</i
               >
             </td>
           </tr>
@@ -111,9 +108,9 @@
                 Render when simulation time changes
               </h4>
               <i
-                >Automatically render when the simulation time changes by "Max
-                delta time". Adjust the simulation time on the animation widget
-                and "Max delta time" value to see their relationship.</i
+                >Automatically render when the simulation time changes by "Max delta
+                time". Adjust the simulation time on the animation widget and "Max delta
+                time" value to see their relationship.</i
               >
             </td>
           </tr>
@@ -138,7 +135,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create a viewer that won't render a new frame unless
@@ -146,7 +143,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           requestRenderMode: true,
           maximumRenderTimeChange: Infinity,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const scene = viewer.scene;
@@ -167,6 +164,7 @@
 
         // Clear scene and set default view.
         let handler;
+        let loadingTileset = false;
         function resetScene() {
           viewer.trackedEntity = undefined;
           viewer.dataSources.removeAll();
@@ -180,18 +178,26 @@
           viewModel.showTimeOptions = false;
           viewModel.timeChangeEnabled = false;
           viewModel.maximumRenderTimeChange = 0;
+          loadingTileset = false;
         }
 
         // Load a tileset and set the view.
         // No need to call scene.requestRender()
-        function loadTilesetScenario() {
+        async function loadTilesetScenario() {
           resetScene();
 
-          tileset = new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          });
-          viewer.scene.primitives.add(tileset);
-          viewer.zoomTo(tileset);
+          loadingTileset = true;
+          try {
+            tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+            if (!loadingTileset) {
+              // Scenario was changed. Discard result.
+              return;
+            }
+            viewer.scene.primitives.add(tileset);
+            viewer.zoomTo(tileset);
+          } catch (error) {
+            console.log(`Error loading tileset: ${error}`);
+          }
         }
 
         // Load an animated model and set the view.
@@ -205,11 +211,7 @@
 
           const entity = viewer.entities.add({
             name: "Aircraft",
-            position: Cesium.Cartesian3.fromDegrees(
-              -123.0744619,
-              44.0503706,
-              5000.0
-            ),
+            position: Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 5000.0),
             model: {
               uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
               minimumPixelSize: 128,
@@ -232,7 +234,7 @@
           viewModel.maximumRenderTimeChange = 10.0;
 
           viewer.dataSources.add(
-            Cesium.CzmlDataSource.load("../../SampleData/simple.czml")
+            Cesium.CzmlDataSource.load("../../SampleData/simple.czml"),
           );
           viewer.clock.shouldAnimate = true;
         }
@@ -348,13 +350,15 @@
         ];
 
         Sandcastle.addToolbarMenu(scenarios);
-
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Apply simple color-to-alpha on imagery layers."
-    />
+    <meta name="description" content="Apply simple color-to-alpha on imagery layers." />
     <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -54,10 +48,12 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          geocoder: Cesium.IonGeocodeProviderType.BING,
+        });
 
         const layers = viewer.scene.imageryLayers;
 
@@ -67,12 +63,12 @@
         baseLayer.colorToAlphaThreshold = 0.2;
 
         // Add a bump layer with adjustable threshold
-        const singleTileLayer = layers.addImageryProvider(
-          new Cesium.SingleTileImageryProvider({
-            url: "../images/earthbump1k.jpg",
+        const singleTileLayer = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.SingleTileImageryProvider.fromUrl("../images/earthbump1k.jpg", {
             rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
-          })
+          }),
         );
+        layers.add(singleTileLayer);
 
         singleTileLayer.colorToAlpha = new Cesium.Color(0.0, 0.0, 0.0, 1.0);
         singleTileLayer.colorToAlphaThreshold = 0.1;
@@ -89,15 +85,16 @@
         Cesium.knockout
           .getObservable(viewModel, "threshold")
           .subscribe(function (newValue) {
-            singleTileLayer.colorToAlphaThreshold = parseFloat(
-              viewModel.threshold
-            );
+            singleTileLayer.colorToAlphaThreshold = parseFloat(viewModel.threshold);
           }); //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

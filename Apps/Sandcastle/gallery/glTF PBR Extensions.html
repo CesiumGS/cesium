@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use glTF extensions for physically-based rendering."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div id="lightingToolbar"></div>
+      <div id="modelsToolbar"></div>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          animation: false,
+          timeline: false,
+          useBrowserRecommendedResolution: false,
+        });
+
+        const { scene, camera, clock } = viewer;
+
+        if (!scene.specularEnvironmentMapsSupported) {
+          window.alert("This browser does not support specular environment maps.");
+        }
+
+        const height = 20.0;
+        const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
+        const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
+
+        scene.light = new Cesium.DirectionalLight({
+          direction: new Cesium.Cartesian3(
+            0.2454278300540191,
+            0.8842635425193919,
+            0.39729481195458805,
+          ),
+          intensity: 0.0,
+        });
+
+        // This environment map was processed using Khronos's glTF IBL Sampler. To process your own:
+        // 1 - Download and build the Khronos glTF IBL Sampler (https://github.com/KhronosGroup/glTF-IBL-Sampler).
+        // 2 - Run `cli -inputPath /path/to/image.hdr -outCubeMap /path/to/output.ktx2`. Run `cli -h` for all options.
+        const environmentMapURL =
+          "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx2";
+
+        // To generate the spherical harmonic coefficients below, use Google's Filament project:
+        // 1 - Download the Filament release (https://github.com/google/filament/releases).
+        // 2 - Run `cmgen --no-mirror --type=ktx --deploy=/path/to/output /path/to/image.hdr`.
+        //     Other formats are also supported. Run `cmgen --help` for all options.
+        // 3 - Take the generated coefficients and load them in CesiumJS as shown below.
+        const L00 = new Cesium.Cartesian3(
+          1.234897375106812,
+          1.221635103225708,
+          1.273374080657959,
+        );
+        const L1_1 = new Cesium.Cartesian3(
+          1.136140108108521,
+          1.171419978141785,
+          1.287894368171692,
+        );
+        const L10 = new Cesium.Cartesian3(
+          1.245410919189453,
+          1.245791077613831,
+          1.283067107200623,
+        );
+        const L11 = new Cesium.Cartesian3(
+          1.107124328613281,
+          1.112697005271912,
+          1.153419137001038,
+        );
+        const L2_2 = new Cesium.Cartesian3(
+          1.08641505241394,
+          1.079904079437256,
+          1.10212504863739,
+        );
+        const L2_1 = new Cesium.Cartesian3(
+          1.190043210983276,
+          1.186099290847778,
+          1.214627981185913,
+        );
+        const L20 = new Cesium.Cartesian3(
+          0.017783647403121,
+          0.020140396431088,
+          0.025317270308733,
+        );
+        const L21 = new Cesium.Cartesian3(
+          1.087014317512512,
+          1.084779262542725,
+          1.111417651176453,
+        );
+        const L22 = new Cesium.Cartesian3(
+          -0.052426788955927,
+          -0.048315055668354,
+          -0.041973855346441,
+        );
+        const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
+
+        const imageBasedLighting = new Cesium.ImageBasedLighting({
+          sphericalHarmonicCoefficients: coefficients,
+          specularEnvironmentMaps: environmentMapURL,
+        });
+
+        const lightingOptions = [
+          {
+            text: "Environment map lighting",
+            onselect: () => {
+              imageBasedLighting.sphericalHarmonicCoefficients = coefficients;
+              imageBasedLighting.specularEnvironmentMaps = environmentMapURL;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
+              scene.light.intensity = 0.0;
+            },
+          },
+          {
+            text: "Procedural sky lighting",
+            onselect: () => {
+              imageBasedLighting.sphericalHarmonicCoefficients = undefined;
+              imageBasedLighting.specularEnvironmentMaps = undefined;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
+              scene.light.intensity = 2.0;
+            },
+          },
+          {
+            text: "Direct lighting only",
+            onselect: () => {
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ZERO;
+              scene.light.intensity = 1.0;
+            },
+          },
+        ];
+        Sandcastle.addToolbarMenu(lightingOptions, "lightingToolbar");
+
+        let model;
+        const modelOptions = [
+          {
+            text: "Clear Coat Wicker",
+            onselect: () => loadModel(2584329),
+          },
+          {
+            text: "Damaged Helmet",
+            onselect: () => loadModel(2681021),
+          },
+          {
+            text: "Water Bottle",
+            onselect: () => loadModel(2654597),
+          },
+          {
+            text: "Antique Camera",
+            onselect: () => loadModel(2681022),
+          },
+          {
+            text: "Toy Car",
+            onselect: () => loadModel(2584331),
+          },
+          {
+            text: "Pot of Coals",
+            onselect: () => loadModel(2584330),
+          },
+          {
+            text: "Barn Lamp",
+            onselect: () => loadModel(2583726),
+          },
+          {
+            text: "Duck",
+            onselect: () => loadModel(2681027),
+          },
+          {
+            text: "Environment Test",
+            onselect: () => loadModel(2681028),
+          },
+          {
+            text: "Mirror Ball",
+            onselect: () => loadModel(2674524),
+          },
+          {
+            text: "Metal-Roughness Spheres",
+            onselect: () => loadModel(2635364),
+          },
+          {
+            text: "Specular Test",
+            onselect: () => loadModel(2572779),
+          },
+          {
+            text: "Anisotropy Strength Test",
+            onselect: () => loadModel(2583526),
+          },
+          {
+            text: "Anisotropy Disc Test",
+            onselect: () => loadModel(2583858),
+          },
+          {
+            text: "Anisotropy Rotation Test",
+            onselect: () => loadModel(2583859),
+          },
+          {
+            text: "Clear Coat Test",
+            onselect: () => loadModel(2584326),
+          },
+          {
+            text: "Clear Coat Car Paint",
+            onselect: () => loadModel(2584328),
+          },
+        ];
+        Sandcastle.addToolbarMenu(modelOptions, "modelsToolbar");
+        loadModel(2584329);
+
+        async function loadModel(ionAssetId) {
+          try {
+            const resource = await Cesium.IonResource.fromAssetId(ionAssetId);
+            model = await Cesium.Model.fromGltfAsync({
+              url: resource,
+              modelMatrix: modelMatrix,
+              imageBasedLighting,
+            });
+
+            scene.primitives.removeAll();
+            scene.primitives.add(model);
+
+            model.readyEvent.addEventListener(() => {
+              zoomToModel(model);
+            });
+          } catch (error) {
+            window.alert(`Error loading model: ${error}`);
+          }
+        }
+
+        function zoomToModel(model) {
+          const controller = scene.screenSpaceCameraController;
+          controller.minimumZoomDistance = camera.frustum.near;
+          controller._minimumRotateRate = 1.0;
+
+          let { radius } = model.boundingSphere;
+          if (radius < 10.0) {
+            // ScreenSpaceCameraController doesn't handle small models well
+            const scale = 10.0 / radius;
+            Cesium.Matrix4.multiplyByUniformScale(
+              model.modelMatrix,
+              scale,
+              model.modelMatrix,
+            );
+            radius *= scale;
+          }
+
+          const heading = Cesium.Math.toRadians(270.0);
+          const pitch = 0.0;
+          camera.lookAt(
+            model.boundingSphere.center,
+            new Cesium.HeadingPitchRange(heading, pitch, radius * 2.0),
+          );
+        }
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>

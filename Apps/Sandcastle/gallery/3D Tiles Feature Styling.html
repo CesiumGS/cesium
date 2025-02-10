@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -22,10 +22,7 @@
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
 
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -50,19 +47,18 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-
         // How to use the 3D Tiles Styling language to style individual features, like buildings.
         // Styling language specification: https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
         // Add Cesium OSM buildings to the scene as our example 3D Tileset.
-        const osmBuildingsTileset = Cesium.createOsmBuildings();
+        const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
         viewer.scene.primitives.add(osmBuildingsTileset);
 
         // Set the initial camera to look at Seattle
@@ -172,12 +168,8 @@
             viewer.selectedEntity = undefined;
             const pickedBuilding = viewer.scene.pick(movement.position);
             if (pickedBuilding) {
-              const pickedLatitude = pickedBuilding.getProperty(
-                "cesium#latitude"
-              );
-              const pickedLongitude = pickedBuilding.getProperty(
-                "cesium#longitude"
-              );
+              const pickedLatitude = pickedBuilding.getProperty("cesium#latitude");
+              const pickedLongitude = pickedBuilding.getProperty("cesium#longitude");
               colorByDistanceToCoordinate(pickedLatitude, pickedLongitude);
             }
           }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -206,14 +198,15 @@
           }
         };
 
-        colorByMaterial();
-
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+        colorByMaterial(); //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

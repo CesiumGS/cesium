@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar input[type="range"] {
@@ -37,7 +34,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
 
@@ -64,18 +61,18 @@
           const cartesianPosition = Cesium.Cartographic.toCartesian(
             cartographicPosition,
             Cesium.Ellipsoid.WGS84,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
             cartesianPosition,
             Cesium.Ellipsoid.WGS84,
-            new Cesium.Matrix4()
+            new Cesium.Matrix4(),
           );
 
           this.halfWidthMeters = 10000;
           this.boundingSphere = new Cesium.BoundingSphere(
             cartesianPosition,
-            this.halfWidthMeters * Math.SQRT2
+            this.halfWidthMeters * Math.SQRT2,
           );
 
           this.time = undefined;
@@ -153,7 +150,7 @@
               bucket32 / width,
               (255 - bucket4) / width,
               1.0,
-              scratchColor
+              scratchColor,
             );
             textureTypedArray[4 * i] = 255 * color.red;
             textureTypedArray[4 * i + 1] = 255 * color.green;
@@ -164,9 +161,7 @@
           return new Cesium.Texture({
             context: context,
             pixelFormat: Cesium.PixelFormat.RGBA,
-            pixelDataType: Cesium.ComponentDatatype.fromTypedArray(
-              textureTypedArray
-            ),
+            pixelDataType: Cesium.ComponentDatatype.fromTypedArray(textureTypedArray),
             source: {
               width: width,
               height: 1,
@@ -184,8 +179,8 @@
           // Inteference patterns made by two plane waves crossing each
           // other at an angle. The color is based on the height.
           const vertexShader = `
-            attribute vec3 a_position;
-            varying vec3 v_position;
+            in vec3 a_position;
+            out vec3 v_position;
             uniform float u_time;
             void main()
             {
@@ -200,7 +195,7 @@
             `;
 
           const fragmentShader = `
-            varying vec3 v_position;
+            in vec3 v_position;
             uniform float u_time;
             uniform sampler2D u_texture;
             void main()
@@ -214,7 +209,7 @@
                 z *= 0.5;
                 // signed -> unsigned
                 z = 0.5 + 0.5 * z;
-                gl_FragColor = texture2D(u_texture, vec2(z, 0.5));
+                out_FragColor = texture(u_texture, vec2(z, 0.5));
             }
             `;
 
@@ -238,7 +233,7 @@
 
           const positionTypedArray = generateVertices(
             primitive.faceResolution,
-            primitive.halfWidthMeters
+            primitive.halfWidthMeters,
           );
           const positionVertexBuffer = Cesium.Buffer.createVertexBuffer({
             context: context,
@@ -250,20 +245,16 @@
             index: positionLocation,
             vertexBuffer: positionVertexBuffer,
             componentsPerAttribute: 3,
-            componentDatatype: Cesium.ComponentDatatype.fromTypedArray(
-              positionTypedArray
-            ),
+            componentDatatype:
+              Cesium.ComponentDatatype.fromTypedArray(positionTypedArray),
           };
 
-          const indexCount =
-            primitive.faceResolution * primitive.faceResolution * 6;
+          const indexCount = primitive.faceResolution * primitive.faceResolution * 6;
           const indexTypedArray = generateIndices(primitive.faceResolution);
           const indexBuffer = Cesium.Buffer.createIndexBuffer({
             context: context,
             typedArray: indexTypedArray,
-            indexDatatype: Cesium.ComponentDatatype.fromTypedArray(
-              indexTypedArray
-            ),
+            indexDatatype: Cesium.ComponentDatatype.fromTypedArray(indexTypedArray),
             usage: Cesium.BufferUsage.STATIC_DRAW,
           });
 
@@ -315,20 +306,21 @@
         };
 
         const position = new Cesium.Cartographic(0, 0, 1000.0);
-        const primitive = viewer.scene.primitives.add(
-          new CustomPrimitive(position)
-        );
+        const primitive = viewer.scene.primitives.add(new CustomPrimitive(position));
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(0, 0, 50000),
           duration: 0.1,
         });
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

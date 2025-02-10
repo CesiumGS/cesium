@@ -12,6 +12,7 @@
   "extensions": {
     "3DTILES_metadata": {
       "schema": {
+        "id": "ImplicitContentHeightSemanticsMetadataSchemaId",
         "classes": {
           "tile": {
             "properties": {

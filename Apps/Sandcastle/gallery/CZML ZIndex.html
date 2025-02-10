@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -30,7 +27,7 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const czml = [
@@ -63,17 +60,7 @@
             name: "Green corridor",
             corridor: {
               positions: {
-                cartographicDegrees: [
-                  -90.0,
-                  43.0,
-                  0,
-                  -95.0,
-                  43.0,
-                  0,
-                  -95.0,
-                  38.0,
-                  0,
-                ],
+                cartographicDegrees: [-90.0, 43.0, 0, -95.0, 43.0, 0, -95.0, 38.0, 0],
               },
               width: 200000.0,
               zIndex: 3,
@@ -92,21 +79,8 @@
             polygon: {
               positions: {
                 cartographicDegrees: [
-                  -115.0,
-                  47.0,
-                  0,
-                  -115.0,
-                  42.0,
-                  0,
-                  -107.0,
-                  43.0,
-                  0,
-                  -102.0,
-                  41.0,
-                  0,
-                  -102.0,
-                  45.0,
-                  0,
+                  -115.0, 47.0, 0, -115.0, 42.0, 0, -107.0, 43.0, 0, -102.0, 41.0, 0,
+                  -102.0, 45.0, 0,
                 ],
               },
               zIndex: 1,
@@ -146,11 +120,14 @@
         viewer.zoomTo(dataSourcePromise);
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

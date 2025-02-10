@@ -1,3 +1,5 @@
+# Contribution Guide
+
 Thanks for contributing to CesiumJS. You rock! Are you
 
 - [submitting an issue](#submitting-an-issue),
@@ -6,7 +8,7 @@ Thanks for contributing to CesiumJS. You rock! Are you
 
 To ensure an inclusive community, contributors and users in the Cesium community should follow the [code of conduct](./CODE_OF_CONDUCT.md).
 
-# Submitting an Issue
+## Submitting an Issue
 
 If you have a question, do not submit an issue; instead, search the [Cesium community forum](https://community.cesium.com/). The forum is very active and there are years of informative archives, often with answers from the core Cesium team. If you do not find an answer to your question, start a new thread and you'll likely get a quick response.
 
@@ -21,7 +23,7 @@ If a related issue does not exist, submit a new one. Please be concise and inclu
 - The version of Cesium. Did this work in a previous version?
 - Ideas for how to fix or workaround the issue. Also mention if you are willing to help fix it. If so, the Cesium team can often provide guidance and the issue may get fixed more quickly with your help.
 
-# Getting Started Contributing
+## Getting Started Contributing
 
 Everyone is welcome to contribute to CesiumJS!
 
@@ -43,13 +45,13 @@ See the [Build Guide](Documentation/Contributors/BuildGuide/README.md) for how t
 
 Always feel free to introduce yourself on the [Cesium community forum](https://community.cesium.com/) to brainstorm ideas and ask for guidance.
 
-# Opening a Pull Request
+## Opening a Pull Request
 
 We love pull requests. We strive to promptly review them, provide feedback, and merge. Interest in Cesium is at an all-time high so the core team is busy. Following the tips in this guide will help your pull request get merged quickly.
 
 > If you plan to make a major change, please start a new thread on the [Cesium community forum](https://community.cesium.com/) first. Pull requests for small features and bug fixes can generally just be opened without discussion on the forum.
 
-## Contributor License Agreement (CLA)
+### Contributor License Agreement (CLA)
 
 Before we can review a pull request, we require a signed Contributor License Agreement. There is a CLA for:
 
@@ -60,7 +62,7 @@ This only needs to be completed once, and enables contributions to all of the pr
 
 If you have any questions, feel free to reach out to [hello@cesium.com](mailto:hello@cesium)!
 
-## Pull Request Guidelines
+### Pull Request Guidelines
 
 Our code is our lifeblood so maintaining CesiumJS's high code quality is important to us.
 
@@ -68,8 +70,7 @@ Our code is our lifeblood so maintaining CesiumJS's high code quality is importa
 - If this is your first contribution to CesiumJS, add your name to [CONTRIBUTORS.md](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md).
 - For an overview of our workflow see [github pull request workflows](https://cesium.com/blog/2013/10/08/github-pull-request-workflows/).
 - Pull request tips
-  - After you open a pull request, the friendly [cesium-concierge](https://github.com/CesiumGS/cesium-concierge) bot will comment with a short automated review. At least one human will also review your pull request.
-  - If your pull request fixes an existing issue, include a link to the issue in the description (like this: [#1](https://github.com/CesiumGS/cesium/issues/1)). Likewise, if your pull request fixes an issue reported on the Cesium forum, include a link to the thread.
+  - If your pull request fixes an existing issue, include a link to the issue in the description (like this: "Fixes [#1](https://github.com/CesiumGS/cesium/issues/1)"). Likewise, if your pull request fixes an issue reported on the Cesium forum, include a link to the thread.
   - If your pull request needs additional work, include a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments).
   - Once you are done making new commits to address feedback, add a comment to the pull request such as `"this is ready"` since GitHub doesn't notify us about commits.
 - Code and tests
@@ -82,6 +83,6 @@ Our code is our lifeblood so maintaining CesiumJS's high code quality is importa
     - If the change is significant, add a new [Sandcastle](https://sandcastle.cesium.com) example or extend an existing one.
   - If you added third-party libraries, including new version of existing libraries, update [LICENSE.md](LICENSE.md). Mention it in [CHANGES.md](CHANGES.md). If you plan to add a third-party library, start a [GitHub issue](https://github.com/CesiumGS/cesium/issues/new) discussing it first.
 
-## Code of Conduct
+### Code of Conduct
 
 To ensure an inclusive community, contributors and users in the Cesium community should follow the [code of conduct](./CODE_OF_CONDUCT.md).

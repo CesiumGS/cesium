@@ -1,4 +1,4 @@
-import { defaultValue, getTimestamp } from "../Source/Cesium.js";
+import { defaultValue, getTimestamp } from "@cesium/engine";
 
 function pollToPromise(f, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -23,7 +23,7 @@ function pollToPromise(f, options) {
         resolve();
       } else if (getTimestamp() > endTimestamp) {
         reject(
-          new Error(`Timeout - function did not complete within ${timeout}ms`)
+          new Error(`Timeout - function did not complete within ${timeout}ms`),
         );
       } else {
         setTimeout(poller, pollInterval);

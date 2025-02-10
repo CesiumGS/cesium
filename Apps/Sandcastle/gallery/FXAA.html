@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -29,44 +26,47 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
             1331419.302230775,
             -4656681.5022043325,
-            4136232.6465900405
+            4136232.6465900405,
           ),
           orientation: new Cesium.HeadingPitchRoll(
             6.032455545102689,
             -0.056832496140112765,
-            6.282360923090216
+            6.282360923090216,
           ),
           endTransform: Cesium.Matrix4.IDENTITY,
         });
-
-        viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(75343),
-          })
-        );
 
         viewer.scene.postProcessStages.fxaa.enabled = true;
 
         Sandcastle.addToggleButton("FXAA", true, function (checked) {
           viewer.scene.postProcessStages.fxaa.enabled = checked;
         });
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        } //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

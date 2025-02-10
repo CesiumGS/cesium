@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use a CallbackPositionProperty when your data can't be pre-computed or needs to be derived from other properties at runtime."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // This example illustrates a Callback Position Property, a position property whose
+        // value is lazily evaluated by a callback function.
+        // Use a CallbackPositionProperty when your data can't be pre-computed
+        // or needs to be derived from other properties at runtime.
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+        });
+
+        // Enable lighting based on the sun position.
+        viewer.scene.globe.enableLighting = true;
+
+        // Enable depth testing so things behind the terrain disappear.
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+
+        // Set bounds of our simulation time.
+        const start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+        const duration = 8;
+        const stop = Cesium.JulianDate.addSeconds(
+          start,
+          duration,
+          new Cesium.JulianDate(),
+        );
+
+        // Make sure viewer is at the desired time.
+        viewer.clock.startTime = start.clone();
+        viewer.clock.stopTime = stop.clone();
+        viewer.clock.currentTime = start.clone();
+        viewer.clock.multiplier = 1.0;
+        viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+        viewer.clock.shouldAnimate = true;
+
+        // Set timeline to simulation bounds.
+        viewer.timeline.zoomTo(start, stop);
+
+        // Prepare time samples.
+        const times = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        const firstTime = times[0];
+        const lastTime = times[times.length - 1];
+        const delta = lastTime - firstTime;
+
+        // Prepare point samples. Before and after points are used to
+        // calculate the first and last tangents for the spline.
+        const before = Cesium.Cartesian3.fromDegrees(-112.87962, 36.27375, 620.01);
+        const points = [
+          Cesium.Cartesian3.fromDegrees(-112.87709, 36.27782, 620.01),
+          Cesium.Cartesian3.fromDegrees(-112.87351, 36.27992, 617.9),
+          Cesium.Cartesian3.fromDegrees(-112.87081, 36.2816, 617.6),
+          Cesium.Cartesian3.fromDegrees(-112.86539, 36.28239, 625.36),
+          Cesium.Cartesian3.fromDegrees(-112.86108, 36.28137, 627.82),
+          Cesium.Cartesian3.fromDegrees(-112.85551, 36.27967, 625.54),
+          Cesium.Cartesian3.fromDegrees(-112.848, 36.27732, 628.9),
+          Cesium.Cartesian3.fromDegrees(-112.84086, 36.27739, 638.81),
+          Cesium.Cartesian3.fromDegrees(-112.83682, 36.27995, 643.31),
+        ];
+        const after = Cesium.Cartesian3.fromDegrees(-112.83506, 36.2822, 643.31);
+
+        // Calculate first and last tangents.
+        const firstTangent = Cesium.Cartesian3.subtract(
+          points[0],
+          before,
+          new Cesium.Cartesian3(),
+        );
+        const lastTangent = Cesium.Cartesian3.subtract(
+          after,
+          points[8],
+          new Cesium.Cartesian3(),
+        );
+
+        // Create the position spline.
+        const positionSpline = new Cesium.CatmullRomSpline({
+          times: times,
+          points: points,
+          firstTangent: firstTangent,
+          lastTangent: lastTangent,
+        });
+
+        // Create the callback position property and make it return spline evaluations.
+        const position = new Cesium.CallbackPositionProperty(function (time, result) {
+          const splineTime =
+            (delta * Cesium.JulianDate.secondsDifference(time, start)) / duration;
+          if (splineTime < firstTime || splineTime > lastTime) {
+            return undefined;
+          }
+          return positionSpline.evaluate(splineTime, result);
+        }, false);
+
+        const orientation = new Cesium.VelocityOrientationProperty(position);
+
+        // Add a waypoints.
+        for (let i = 0; i < points.length; ++i) {
+          viewer.entities.add({
+            position: points[i],
+            point: {
+              pixelSize: 8,
+              color: Cesium.Color.TRANSPARENT,
+              outlineColor: Cesium.Color.YELLOW,
+              outlineWidth: 3,
+            },
+          });
+        }
+
+        // Create the entity and bind its position to the callback position property
+        const entity = viewer.entities.add({
+          availability: new Cesium.TimeIntervalCollection([
+            new Cesium.TimeInterval({
+              start: start,
+              stop: stop,
+            }),
+          ]),
+          position: position,
+          orientation: orientation,
+          model: {
+            uri: "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
+            minimumPixelSize: 64,
+            maximumScale: 20000,
+          },
+          path: {
+            material: new Cesium.PolylineGlowMaterialProperty({
+              glowPower: 0.1,
+              color: Cesium.Color.YELLOW,
+            }),
+            width: 10,
+            resolution: 0.01,
+            leadTime: 1,
+            trailTime: 0.1,
+          },
+          trackingReferenceFrame: Cesium.TrackingReferenceFrame.INERTIAL,
+          viewFrom: new Cesium.Cartesian3(-100, 0, 10),
+        });
+
+        viewer.trackedEntity = entity;
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

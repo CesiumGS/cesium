@@ -9,7 +9,7 @@ import {
   MetadataEnum,
   MetadataTable,
   MetadataType,
-} from "../Source/Cesium.js";
+} from "@cesium/engine";
 
 function MetadataTester() {}
 
@@ -60,14 +60,14 @@ function createProperties(options) {
   const enumDefinitions = {};
   for (const enumId in enums) {
     if (enums.hasOwnProperty(enumId)) {
-      enumDefinitions[enumId] = new MetadataEnum({
+      enumDefinitions[enumId] = MetadataEnum.fromJson({
         id: enumId,
         enum: enums[enumId],
       });
     }
   }
 
-  const classDefinition = new MetadataClass({
+  const classDefinition = MetadataClass.fromJson({
     id: classId,
     class: schema.classes[classId],
     enums: enumDefinitions,
@@ -84,7 +84,7 @@ function createProperties(options) {
       count = values.length;
 
       const valuesBuffer = addPadding(
-        createValuesBuffer(values, classProperty)
+        createValuesBuffer(values, classProperty),
       );
       const valuesBufferView = bufferViewIndex++;
       bufferViews[valuesBufferView] = valuesBuffer;
@@ -114,8 +114,8 @@ function createProperties(options) {
           createArrayOffsetBuffer(
             values,
             classProperty.type,
-            arrayOffsetBufferType
-          )
+            arrayOffsetBufferType,
+          ),
         );
         const arrayOffsetBufferView = bufferViewIndex++;
         bufferViews[arrayOffsetBufferView] = arrayOffsetBuffer;
@@ -125,10 +125,10 @@ function createProperties(options) {
       if (classProperty.type === MetadataType.STRING) {
         const stringOffsetBufferType = defaultValue(
           stringOffsetType,
-          offsetType
+          offsetType,
         );
         const stringOffsetBuffer = addPadding(
-          createStringOffsetBuffer(values, stringOffsetBufferType)
+          createStringOffsetBuffer(values, stringOffsetBufferType),
         );
         const stringOffsetBufferView = bufferViewIndex++;
         bufferViews[stringOffsetBufferView] = stringOffsetBuffer;
@@ -418,7 +418,7 @@ function createBuffer(values, componentType) {
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(
-        `${componentType} is not a valid component type`
+        `${componentType} is not a valid component type`,
       );
     //>>includeEnd('debug');
   }

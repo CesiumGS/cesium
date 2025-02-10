@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Apply Vertical Exaggeration to 3D Tiles" />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+
+      #toolbar .header {
+        font-weight: bold;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+      <h1>Loading...</h1>
+    </div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>Exaggeration</td>
+            <td>
+              <input
+                type="range"
+                min="1"
+                max="5"
+                step="0.01"
+                data-bind="value: exaggeration, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: exaggeration" />
+            </td>
+          </tr>
+          <tr>
+            <td>Relative Height</td>
+            <td>
+              <input
+                type="range"
+                min="-1000"
+                max="9000"
+                step="1"
+                data-bind="value: relativeHeight, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: relativeHeight" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          timeline: false,
+          animation: false,
+          sceneModePicker: false,
+          baseLayerPicker: false,
+          geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
+          // The globe does not need to be displayed,
+          // since the Photorealistic 3D Tiles include terrain
+          globe: false,
+        });
+
+        const { scene, camera } = viewer;
+        scene.verticalExaggeration = 3.0;
+
+        camera.setView({
+          destination: new Cesium.Cartesian3(
+            -2710292.813384663,
+            -4360657.061518585,
+            3793571.786860543,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            5.794062761901799,
+            -0.30293409742984756,
+            0.0009187098191985044,
+          ),
+        });
+
+        // Enable rendering the sky
+        scene.skyAtmosphere.show = true;
+
+        // Add Photorealistic 3D Tiles
+        try {
+          const tileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
+          scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading Photorealistic 3D Tiles tileset.
+    ${error}`);
+        }
+
+        const viewModel = {
+          exaggeration: scene.verticalExaggeration,
+          relativeHeight: scene.verticalExaggerationRelativeHeight,
+        };
+
+        function updateExaggeration() {
+          scene.verticalExaggeration = Number(viewModel.exaggeration);
+          scene.verticalExaggerationRelativeHeight = Number(viewModel.relativeHeight);
+        }
+
+        Cesium.knockout.track(viewModel);
+        const toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+        for (const name in viewModel) {
+          if (viewModel.hasOwnProperty(name)) {
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updateExaggeration);
+          }
+        }
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>

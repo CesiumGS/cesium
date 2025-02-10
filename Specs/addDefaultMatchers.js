@@ -1,25 +1,97 @@
+import {
+  Cartesian2,
+  defaultValue,
+  defined,
+  DeveloperError,
+  FeatureDetection,
+  PrimitiveType,
+  Buffer,
+  BufferUsage,
+  ClearCommand,
+  DrawCommand,
+  ShaderProgram,
+  VertexArray,
+  Math as CesiumMath,
+} from "@cesium/engine";
 import equals from "./equals.js";
-import { Cartesian2 } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { DeveloperError } from "../Source/Cesium.js";
-import { FeatureDetection } from "../Source/Cesium.js";
-import { Math as CesiumMath } from "../Source/Cesium.js";
-import { PrimitiveType } from "../Source/Cesium.js";
-import { Buffer } from "../Source/Cesium.js";
-import { BufferUsage } from "../Source/Cesium.js";
-import { ClearCommand } from "../Source/Cesium.js";
-import { DrawCommand } from "../Source/Cesium.js";
-import { ShaderProgram } from "../Source/Cesium.js";
-import { VertexArray } from "../Source/Cesium.js";
 
 function createMissingFunctionMessageFunction(
   item,
   actualPrototype,
-  expectedInterfacePrototype
+  expectedInterfacePrototype,
 ) {
   return function () {
     return `Expected function '${item}' to exist on ${actualPrototype.constructor.name} because it should implement interface ${expectedInterfacePrototype.constructor.name}.`;
+  };
+}
+
+function makeAsyncThrowFunction(debug, Type, name) {
+  if (debug) {
+    return function (util) {
+      return {
+        compare: function (actualPromise, message) {
+          // based on the built-in Jasmine toBeRejectedWithError async-matcher
+          if (!defined(actualPromise) || !defined(actualPromise.then)) {
+            throw new Error("Expected function to be called on a promise.");
+          }
+
+          return actualPromise
+            .then(() => {
+              return {
+                pass: false,
+                message:
+                  "Expected a promise to be rejected but it was resolved.",
+              };
+            })
+            .catch((e) => {
+              let result = e instanceof Type || e.name === name;
+              if (defined(message)) {
+                if (typeof message === "string") {
+                  result = result && e.message === message;
+                } else {
+                  // if the expected message is a regular expression check it against the error message
+                  // this matches how the builtin .toRejectWithError(Error, /message/) works
+                  // https://github.com/jasmine/jasmine/blob/main/src/core/matchers/toThrowError.js
+                  result = result && message.test(e.message);
+                }
+              }
+              return {
+                pass: result,
+                message: result
+                  ? `Expected a promise to be rejected with ${name}.`
+                  : `Expected a promise to be rejected with ${
+                      defined(message) ? `${name}: ${message}` : name
+                    }, but it was rejected with ${e}`,
+              };
+            });
+        },
+      };
+    };
+  }
+
+  return function () {
+    return {
+      compare: function (actualPromise) {
+        return Promise.resolve(actualPromise)
+          .then(() => {
+            return { pass: true };
+          })
+          .catch((e) => {
+            // Ignore any error
+            return { pass: true };
+          });
+      },
+      negativeCompare: function (actualPromise) {
+        return Promise.resolve(actualPromise)
+          .then(() => {
+            return { pass: true };
+          })
+          .catch((e) => {
+            // Ignore any error
+            return { pass: true };
+          });
+      },
+    };
   };
 }
 
@@ -27,7 +99,7 @@ function makeThrowFunction(debug, Type, name) {
   if (debug) {
     return function (util) {
       return {
-        compare: function (actual, expected) {
+        compare: function (actual, message) {
           // based on the built-in Jasmine toThrow matcher
           let result = false;
           let exception;
@@ -45,20 +117,29 @@ function makeThrowFunction(debug, Type, name) {
           if (exception) {
             result = exception instanceof Type || exception.name === name;
           }
+          if (defined(message)) {
+            if (typeof message === "string") {
+              result = result && exception.message === message;
+            } else {
+              // if the expected message is a regular expression check it against the error message
+              // this matches how the builtin .toRejectWithError(Error, /message/) works
+              // https://github.com/jasmine/jasmine/blob/main/src/core/matchers/toThrowError.js
+              result = result && message.test(exception.message);
+            }
+          }
 
-          let message;
+          let testMessage;
           if (result) {
-            message = [
-              `Expected function not to throw ${name} , but it threw`,
-              exception.message || exception,
-            ].join(" ");
+            testMessage = `Expected function not to throw ${name} , but it threw ${exception.message || exception}`;
           } else {
-            message = `Expected function to throw ${name}.`;
+            testMessage = defined(message)
+              ? `Expected to throw with ${name}: ${message}, but it was thrown with ${exception}`
+              : `Expected function to throw with ${name}.`;
           }
 
           return {
             pass: result,
-            message: message,
+            message: testMessage,
           };
         },
       };
@@ -209,7 +290,7 @@ function createDefaultMatchers(debug) {
                 message: createMissingFunctionMessageFunction(
                   item,
                   actualPrototype,
-                  expectedInterfacePrototype
+                  expectedInterfacePrototype,
                 ),
               };
             }
@@ -329,6 +410,29 @@ function createDefaultMatchers(debug) {
       };
     },
 
+    toPickVoxelAndCall: function (util) {
+      return {
+        compare: function (actual, expected, args) {
+          const scene = actual;
+          const result = scene.pickVoxel(
+            defaultValue(args, new Cartesian2(0, 0)),
+          );
+
+          const webglStub = !!window.webglStub;
+          if (!webglStub) {
+            // The callback may have expectations that fail, which still makes the
+            // spec fail, as we desired, even though this matcher sets pass to true.
+            const callback = expected;
+            callback(result);
+          }
+
+          return {
+            pass: true,
+          };
+        },
+      };
+    },
+
     toDrillPickAndCall: function (util) {
       return {
         compare: function (actual, expected, limit) {
@@ -379,14 +483,14 @@ function createDefaultMatchers(debug) {
           ray,
           limit,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.drillPickFromRay(
             ray,
             limit,
             objectsToExclude,
-            width
+            width,
           );
 
           const webglStub = !!window.webglStub;
@@ -411,7 +515,7 @@ function createDefaultMatchers(debug) {
           expected,
           position,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.sampleHeight(position, objectsToExclude, width);
@@ -438,13 +542,13 @@ function createDefaultMatchers(debug) {
           expected,
           cartesian,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.clampToHeight(
             cartesian,
             objectsToExclude,
-            width
+            width,
           );
 
           const webglStub = !!window.webglStub;
@@ -620,7 +724,17 @@ function createDefaultMatchers(debug) {
     toThrowDeveloperError: makeThrowFunction(
       debug,
       DeveloperError,
-      "DeveloperError"
+      "DeveloperError",
+    ),
+  };
+}
+
+function createDefaultAsyncMatchers(debug) {
+  return {
+    toBeRejectedWithDeveloperError: makeAsyncThrowFunction(
+      debug,
+      DeveloperError,
+      "DeveloperError",
     ),
   };
 }
@@ -698,7 +812,7 @@ function renderEquals(util, actual, expected, expectEqual) {
     message = `Expected ${
       expectEqual ? "" : "not "
     }to render [${typedArrayToArray(
-      expected
+      expected,
     )}], but actually rendered [${typedArrayToArray(actualRgba)}].`;
   }
 
@@ -785,26 +899,26 @@ function contextRenderAndReadPixels(options) {
 
   if (!defined(fs) && !defined(sp)) {
     throw new DeveloperError(
-      "options.fragmentShader or options.shaderProgram is required."
+      "options.fragmentShader or options.shaderProgram is required.",
     );
   }
 
   if (defined(fs) && defined(sp)) {
     throw new DeveloperError(
-      "Both options.fragmentShader and options.shaderProgram can not be used at the same time."
+      "Both options.fragmentShader and options.shaderProgram can not be used at the same time.",
     );
   }
 
   if (defined(vs) && defined(sp)) {
     throw new DeveloperError(
-      "Both options.vertexShader and options.shaderProgram can not be used at the same time."
+      "Both options.vertexShader and options.shaderProgram can not be used at the same time.",
     );
   }
 
   if (!defined(sp)) {
     if (!defined(vs)) {
       vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
     }
     sp = ShaderProgram.fromCache({
       context: context,
@@ -924,6 +1038,7 @@ function expectContextToRender(actual, expected, expectEqual) {
 function addDefaultMatchers(debug) {
   return function () {
     this.addMatchers(createDefaultMatchers(debug));
+    this.addAsyncMatchers(createDefaultAsyncMatchers(debug));
   };
 }
 export default addDefaultMatchers;

@@ -1,4 +1,4 @@
-export default function concatTypedArrays(arrays) {
+function concatTypedArrays(arrays) {
   let i;
   const length = arrays.length;
 
@@ -14,10 +14,12 @@ export default function concatTypedArrays(arrays) {
     const data = new Uint8Array(
       array.buffer,
       array.byteOffset,
-      array.byteLength
+      array.byteLength,
     );
     buffer.set(data, byteOffset);
     byteOffset += data.length;
   }
   return buffer;
 }
+
+export default concatTypedArrays;

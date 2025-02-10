@@ -1,0 +1,12 @@
+index.js
+index.d.ts
+Build
+Specs/SpecList.js
+Source/Shaders/**/*.js
+Source/ThirdParty/Shaders/**/*.js
+Source/ThirdParty/_commonjsHelpers*
+Source/ThirdParty/draco_decoder.wasm
+Source/ThirdParty/Workers/draco_decoder_nodejs.js
+Source/ThirdParty/Workers/pako_inflate.min.js
+Source/ThirdParty/Workers/pako_deflate.min.js
+Source/ThirdParty/Workers/z-worker-pako.js

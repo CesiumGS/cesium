@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -32,7 +29,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // This example illustrates a Callback Property, a property whose
@@ -59,7 +56,7 @@
               return Cesium.Cartesian3.fromDegreesArray(
                 [startLongitude, startLatitude, endLongitude, startLatitude],
                 Cesium.Ellipsoid.WGS84,
-                result
+                result,
               );
             }, isConstant),
             width: 5,
@@ -69,7 +66,7 @@
 
         const startCartographic = Cesium.Cartographic.fromDegrees(
           startLongitude,
-          startLatitude
+          startLatitude,
         );
 
         // use scratch object to avoid new allocations per frame.
@@ -94,13 +91,10 @@
           endCartographic = Cesium.Cartographic.fromCartesian(endPoint);
 
           geodesic.setEndPoints(startCartographic, endCartographic);
-          const midpointCartographic = geodesic.interpolateUsingFraction(
-            0.5,
-            scratch
-          );
+          const midpointCartographic = geodesic.interpolateUsingFraction(0.5, scratch);
           return Cesium.Cartesian3.fromRadians(
             midpointCartographic.longitude,
-            midpointCartographic.latitude
+            midpointCartographic.latitude,
           );
         }
 
@@ -118,11 +112,14 @@
         // Keep the view centered.
         viewer.trackedEntity = label;
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -1,0 +1,279 @@
+{
+    "asset": {
+        "generator": "COLLADA2GLTF with hand edits",
+        "version": "2.0"
+    },
+    "extensionsUsed": [
+        "EXT_structural_metadata"
+    ],
+    "extensions": {
+        "EXT_structural_metadata": {
+            "schema": {
+                "classes": {
+                    "warpedBox": {
+                        "properties": {
+                            "warpMatrix": {
+                                "description": "Scaling matrices at every vertex for scaling texture coordinates in a shader. It's contrived but helpful for unit testing",
+                                "type": "MAT2",
+                                "componentType": "FLOAT32"
+                            },
+                            "transformedWarpMatrix": {
+                                "description": "For unit testing, apply an offset and scale to the warp matrix.",
+                                "type": "MAT2",
+                                "componentType": "FLOAT32",
+                                "offset": [
+                                    0.5, 0.5, 
+                                    0.5, 0.5
+                                ],
+                                "scale": [
+                                    2, 2, 
+                                    2, 2
+                                ]
+                            },
+                            "temperatures": {
+                                "description": "(insideTemperature, outsideTemperature) where inside temperature is between [20, 25] °C and outside temperature is between [10, 30] °C. Values are stored in normalized form, but are scaled to these ranges using offset/scale",
+                                "type": "VEC2",
+                                "componentType": "UINT16",
+                                "normalized": true,
+                                "offset": [20, 10],
+                                "scale": [5, 20],
+                                "noData": [0.1, 0.3]
+                            }
+                        }
+                    }
+                }
+            },
+            "propertyAttributes": [
+                {
+                    "class": "warpedBox",
+                    "properties": {
+                        "warpMatrix": {
+                            "attribute": "_WARP_MATRIX"
+                        },
+                        "transformedWarpMatrix": {
+                            "attribute": "_WARP_MATRIX"
+                        },
+                        "temperatures": {
+                            "attribute": "_TEMPERATURES"
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "scene": 0,
+    "scenes": [
+        {
+            "nodes": [
+                0
+            ]
+        }
+    ],
+    "nodes": [
+        {
+            "children": [
+                1
+            ],
+            "matrix": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ]
+        },
+        {
+            "mesh": 0
+        }
+    ],
+    "meshes": [
+        {
+            "primitives": [
+                {
+                    "attributes": {
+                        "NORMAL": 1,
+                        "POSITION": 2,
+                        "TEXCOORD_0": 3,
+                        "_WARP_MATRIX": 4,
+                        "_TEMPERATURES": 5
+                    },
+                    "indices": 0,
+                    "mode": 4,
+                    "material": 0,
+                    "extensions": {
+                        "EXT_structural_metadata": {
+                          "propertyAttributes": [
+                            0
+                          ]
+                        }
+                    }
+                }
+            ],
+            "name": "Mesh"
+        }
+    ],
+    "accessors": [
+        {
+            "bufferView": 0,
+            "byteOffset": 0,
+            "componentType": 5123,
+            "count": 36,
+            "max": [
+                23
+            ],
+            "min": [
+                0
+            ],
+            "type": "SCALAR"
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 24,
+            "max": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "min": [
+                -1.0,
+                -1.0,
+                -1.0
+            ],
+            "type": "VEC3"
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 288,
+            "componentType": 5126,
+            "count": 24,
+            "max": [
+                0.5,
+                0.5,
+                0.5
+            ],
+            "min": [
+                -0.5,
+                -0.5,
+                -0.5
+            ],
+            "type": "VEC3"
+        },
+        {
+            "bufferView": 2,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 24,
+            "max": [
+                6.0,
+                1.0
+            ],
+            "min": [
+                0.0,
+                0.0
+            ],
+            "type": "VEC2"
+        },
+        {
+            "bufferView": 3,
+            "byteOffset": 0,
+            "type": "MAT2",
+            "componentType": 5126,
+            "count": 24
+        },
+        {
+            "bufferView": 4,
+            "byteOffset": 0,
+            "type": "VEC2",
+            "componentType": 5123,
+            "normalized": true,
+            "count": 24
+        }
+    ],
+    "materials": [
+        {
+            "pbrMetallicRoughness": {
+                "baseColorTexture": {
+                    "index": 0
+                },
+                "metallicFactor": 0.0
+            },
+            "name": "Texture"
+        }
+    ],
+    "textures": [
+        {
+            "sampler": 0,
+            "source": 0
+        }
+    ],
+    "images": [
+        {
+            "uri": "CesiumLogoFlat.png"
+        }
+    ],
+    "samplers": [
+        {
+            "magFilter": 9729,
+            "minFilter": 9986,
+            "wrapS": 10497,
+            "wrapT": 10497
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 768,
+            "byteLength": 72,
+            "target": 34963
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 576,
+            "byteStride": 12,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 576,
+            "byteLength": 192,
+            "byteStride": 8,
+            "target": 34962
+        },
+        {
+            "buffer": 1,
+            "byteOffset": 0,
+            "byteLength": 768,
+            "target": 34962
+        },
+        {
+            "buffer": 1,
+            "byteOffset": 768,
+            "byteLength": 96,
+            "target": 34962
+        }
+    ],
+    "buffers": [
+        {
+            "byteLength": 840,
+            "uri": "BoxTextured0.bin"
+        },
+        {
+            "byteLength": 864,
+            "uri": "metadata.bin"
+        }
+    ]
+}
