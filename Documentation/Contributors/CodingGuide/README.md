@@ -190,7 +190,6 @@ Cartesian3.fromDegrees(); // Not Cartesin3.fromAngle()
 
 ```javascript
 "use strict";
-
 ```
 
 - :speedboat: To avoid type coercion (implicit type conversion), test for equality with `===` and `!==`, e.g.,
@@ -378,7 +377,7 @@ function getTransform(node) {
     return Matrix4.fromTranslationQuaternionRotationScale(
       node.translation,
       node.rotation,
-      node.scale
+      node.scale,
     );
   }
 }
@@ -395,7 +394,7 @@ function getTransform(node) {
   return Matrix4.fromTranslationQuaternionRotationScale(
     node.translation,
     node.rotation,
-    node.scale
+    node.scale,
   );
 }
 ```
@@ -453,7 +452,7 @@ Cartesian3.fromRadians = function (longitude, latitude, height) {
 ```javascript
 this._mapProjection = defaultValue(
   options.mapProjection,
-  new GeographicProjection()
+  new GeographicProjection(),
 );
 ```
 
@@ -829,7 +828,7 @@ When the overhead of getter/setter functions is prohibitive or reference-type se
 ```javascript
 function Model(options) {
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
 }
@@ -931,7 +930,7 @@ A public identifier (class, function, property) should be deprecated before bein
 function Foo() {
   deprecationWarning(
     "Foo",
-    "Foo was deprecated in CesiumJS 1.01.  It will be removed in 1.03.  Use newFoo instead."
+    "Foo was deprecated in CesiumJS 1.01.  It will be removed in 1.03.  Use newFoo instead.",
   );
   // ...
 }

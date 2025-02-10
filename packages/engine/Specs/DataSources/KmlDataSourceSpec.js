@@ -250,7 +250,7 @@ describe("DataSources/KmlDataSource", function () {
     return dataSource.load("Data/KML/backslash.kmz").then(function (source) {
       expect(source).toBe(dataSource);
       expect(
-        isDataUri(source.entities.values[0]._billboard._image._value.url)
+        isDataUri(source.entities.values[0]._billboard._image._value.url),
       ).toBe(true);
     });
   });
@@ -287,25 +287,25 @@ describe("DataSources/KmlDataSource", function () {
 
     const OrigDeferredLoading = KmlDataSource._DeferredLoading;
     let deferredLoading;
-    spyOn(KmlDataSource, "_DeferredLoading").and.callFake(function (
-      datasource
-    ) {
-      deferredLoading = new OrigDeferredLoading(datasource);
+    spyOn(KmlDataSource, "_DeferredLoading").and.callFake(
+      function (datasource) {
+        deferredLoading = new OrigDeferredLoading(datasource);
 
-      const process = deferredLoading._process.bind(deferredLoading);
-      spyOn(deferredLoading, "_process").and.callFake(function (isFirst) {
-        jasmine.clock().tick(1001); // Step over a second everytime, so we only process 1 feature
-        return process(isFirst);
-      });
+        const process = deferredLoading._process.bind(deferredLoading);
+        spyOn(deferredLoading, "_process").and.callFake(function (isFirst) {
+          jasmine.clock().tick(1001); // Step over a second everytime, so we only process 1 feature
+          return process(isFirst);
+        });
 
-      const giveUpTime = deferredLoading._giveUpTime.bind(deferredLoading);
-      spyOn(deferredLoading, "_giveUpTime").and.callFake(function () {
-        giveUpTime();
-        jasmine.clock().tick(1); // Fire the setTimeout callback
-      });
+        const giveUpTime = deferredLoading._giveUpTime.bind(deferredLoading);
+        spyOn(deferredLoading, "_giveUpTime").and.callFake(function () {
+          giveUpTime();
+          jasmine.clock().tick(1); // Fire the setTimeout callback
+        });
 
-      return deferredLoading;
-    });
+        return deferredLoading;
+      },
+    );
 
     const dataSource = new KmlDataSource(options);
     return dataSource
@@ -364,20 +364,20 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("load rejects loading non-KML URL", function () {
-    return KmlDataSource.load("Data/Images/Blue.png", options).catch(function (
-      e
-    ) {
-      expect(e).toBeInstanceOf(RuntimeError);
-    });
+    return KmlDataSource.load("Data/Images/Blue.png", options).catch(
+      function (e) {
+        expect(e).toBeInstanceOf(RuntimeError);
+      },
+    );
   });
 
   it("load rejects valid KMZ zip URL with no KML contained", function () {
-    return KmlDataSource.load("Data/KML/empty.kmz", options).catch(function (
-      e
-    ) {
-      expect(e).toBeInstanceOf(RuntimeError);
-      expect(e.message).toEqual("KMZ file does not contain a KML document.");
-    });
+    return KmlDataSource.load("Data/KML/empty.kmz", options).catch(
+      function (e) {
+        expect(e).toBeInstanceOf(RuntimeError);
+        expect(e.message).toEqual("KMZ file does not contain a KML document.");
+      },
+    );
   });
 
   it("if load contains <icon> tag with no image included, no image is added", function () {
@@ -391,7 +391,7 @@ describe("DataSources/KmlDataSource", function () {
         expect(source.entities.values.length).toEqual(1);
         expect(source.entities._entities._array.length).toEqual(1);
         expect(
-          source.entities._entities._array[0]._billboard._image
+          source.entities._entities._array[0]._billboard._image,
         ).toBeUndefined();
       });
   });
@@ -407,7 +407,7 @@ describe("DataSources/KmlDataSource", function () {
         expect(source.entities.values.length).toEqual(1);
         expect(source.entities._entities._array.length).toEqual(1);
         expect(
-          source.entities._entities._array[0]._billboard._image._value
+          source.entities._entities._array[0]._billboard._image._value,
         ).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
       });
   });
@@ -423,7 +423,7 @@ describe("DataSources/KmlDataSource", function () {
         expect(source.entities.values.length).toEqual(1);
         expect(source.entities._entities._array.length).toEqual(1);
         expect(
-          source.entities._entities._array[0]._billboard._image._value
+          source.entities._entities._array[0]._billboard._image._value,
         ).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
       });
   });
@@ -583,7 +583,7 @@ describe("DataSources/KmlDataSource", function () {
         expect(clock.clockRange).toEqual(ClockRange.LOOP_STOP);
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
         expect(clock.multiplier).toEqual(
-          JulianDate.secondsDifference(endDate, beginDate) / 60
+          JulianDate.secondsDifference(endDate, beginDate) / 60,
         );
         return dataSource;
       })
@@ -599,7 +599,7 @@ describe("DataSources/KmlDataSource", function () {
 
         return dataSource.load(
           parser.parseFromString(kml, "text/xml"),
-          options
+          options,
         );
       })
       .then(function (dataSource) {
@@ -615,7 +615,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.id).toBe("Bob");
@@ -635,7 +635,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].id).toBe("Bob");
@@ -652,7 +652,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.name).toBe("bob");
@@ -670,7 +670,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.kml.address).toBe("1826 South 16th Street");
@@ -686,7 +686,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.kml.phoneNumber).toBe("555-555-5555");
@@ -702,7 +702,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.kml.snippet).toBe("Hey!");
@@ -723,7 +723,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.kml).toBeDefined();
@@ -750,7 +750,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.kml).toBeDefined();
@@ -779,7 +779,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.availability).toBeDefined();
@@ -803,7 +803,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.availability).toBeDefined();
@@ -822,7 +822,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.availability).toBeUndefined();
@@ -842,7 +842,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.availability).toBeDefined();
@@ -864,7 +864,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.availability).toBeDefined();
@@ -886,7 +886,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.availability).toBeDefined();
@@ -904,7 +904,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.show).toBe(false);
@@ -921,7 +921,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.availability).toBeUndefined();
@@ -939,7 +939,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.availability).toBeUndefined();
@@ -966,7 +966,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.kml.extendedData).toBeDefined();
@@ -993,7 +993,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.name).toBeUndefined();
@@ -1018,12 +1018,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
       expect(entity.rectangle.material.image.getValue().url).toEqual(
-        "http://test.invalid/image.png"
+        "http://test.invalid/image.png",
       );
     });
   });
@@ -1040,15 +1040,15 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
       expect(entity.rectangle.material.image.getValue().url).toEqual(
-        "http://test.invalid/image.png"
+        "http://test.invalid/image.png",
       );
       expect(entity.rectangle.material.color.getValue()).toEqual(
-        new Color(1.0, 0.0, 0.0, 127 / 255)
+        new Color(1.0, 0.0, 0.0, 127 / 255),
       );
     });
   });
@@ -1063,7 +1063,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.rectangle.material).toBeInstanceOf(ColorMaterialProperty);
@@ -1087,13 +1087,13 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon).toBeUndefined();
       expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(
         Rectangle.fromDegrees(3, 1, 4, 2),
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
       expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
       expect(entity.rectangle.stRotation.getValue()).toEqual(Math.PI / 4);
@@ -1115,12 +1115,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon).toBeUndefined();
       expect(entity.rectangle.coordinates.getValue()).toEqual(
-        Rectangle.fromDegrees(-180, -90, 180, 90)
+        Rectangle.fromDegrees(-180, -90, 180, 90),
       );
     });
   });
@@ -1139,12 +1139,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon).toBeUndefined();
       expect(entity.rectangle.coordinates.getValue()).toEqual(
-        Rectangle.fromDegrees(-180, -90, 180, 90)
+        Rectangle.fromDegrees(-180, -90, 180, 90),
       );
     });
   });
@@ -1163,13 +1163,13 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.rectangle).toBeUndefined();
       expect(entity.polygon.hierarchy.getValue().positions).toEqualEpsilon(
         Cartesian3.fromDegreesArray([1, 2, 3, 4, 5, 6, 7, 8]),
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
     });
   });
@@ -1191,12 +1191,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.material).toBeInstanceOf(ImageMaterialProperty);
       expect(entity.polygon.material.image.getValue().url).toEqual(
-        "http://test.invalid/image.png"
+        "http://test.invalid/image.png",
       );
     });
   });
@@ -1216,7 +1216,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.zIndex.getValue()).toEqual(3);
@@ -1233,7 +1233,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.rectangle.height.getValue()).toEqual(23);
@@ -1254,7 +1254,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(screenOverlayContainer.children.length).toEqual(1);
       const child = screenOverlayContainer.children[0];
@@ -1267,7 +1267,7 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.style.height).toEqual("");
       expect(child.style.top).toEqual("");
       expect(["calc(100% + 0px)", "calc(100% - 0px)"]).toContain(
-        child.style.bottom
+        child.style.bottom,
       );
       expect(child.style.right).toEqual("");
       expect(["calc(0% + 0px)", "calc(0% - 0px)"]).toContain(child.style.left);
@@ -1300,16 +1300,16 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(screenOverlayContainer.children.length).toEqual(2);
       expect(screenOverlayContainer.children[0].tagName).toEqual("IMG");
       expect(screenOverlayContainer.children[0].getAttribute("src")).toEqual(
-        "http://invalid.url/first"
+        "http://invalid.url/first",
       );
       expect(screenOverlayContainer.children[1].tagName).toEqual("IMG");
       expect(screenOverlayContainer.children[1].getAttribute("src")).toEqual(
-        "http://invalid.url/second"
+        "http://invalid.url/second",
       );
 
       dataSource.destroy();
@@ -1330,7 +1330,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(screenOverlayContainer.children.length).toEqual(1);
       const child = screenOverlayContainer.children[0];
@@ -1364,7 +1364,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(screenOverlayContainer.children.length).toEqual(1);
       const child = screenOverlayContainer.children[0];
@@ -1398,7 +1398,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(screenOverlayContainer.children.length).toEqual(1);
       const child = screenOverlayContainer.children[0];
@@ -1432,7 +1432,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(screenOverlayContainer.children.length).toEqual(1);
       dataSource.destroy();
@@ -1456,7 +1456,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -1480,7 +1480,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -1497,7 +1497,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
@@ -1513,7 +1513,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
@@ -1545,7 +1545,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -1573,9 +1573,10 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
-      const generatedColor = dataSource.entities.values[0].billboard.color.getValue();
+      const generatedColor =
+        dataSource.entities.values[0].billboard.color.getValue();
       expect(generatedColor.red).toBeLessThan(1.0);
       expect(generatedColor.green).toBeLessThan(1.0);
       expect(generatedColor.blue).toBeLessThan(1.0);
@@ -1599,9 +1600,10 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
-      const generatedColor = dataSource.entities.values[0].billboard.color.getValue();
+      const generatedColor =
+        dataSource.entities.values[0].billboard.color.getValue();
       expect(generatedColor.red).toEqual(0);
       expect(generatedColor.green).toEqual(0);
       expect(generatedColor.blue).toEqual(0);
@@ -1624,7 +1626,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values[0].billboard.color).toBeUndefined();
     });
@@ -1645,7 +1647,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -1680,7 +1682,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -1716,7 +1718,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
@@ -1746,7 +1748,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -1785,7 +1787,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -1816,7 +1818,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -1859,7 +1861,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -1904,7 +1906,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -1949,7 +1951,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -1996,7 +1998,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.billboard.scale.getValue()).toBe(2.0);
@@ -2024,7 +2026,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.billboard.scale.getValue()).toBe(2.0);
@@ -2053,7 +2055,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.billboard.scale.getValue()).toBe(2.0);
@@ -2082,7 +2084,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.billboard.scale.getValue()).toBe(2.0);
@@ -2101,7 +2103,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].billboard).toBeDefined();
@@ -2123,12 +2125,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const billboard = entities[0].billboard;
       expect(billboard.image.getValue().url).toEqual(
-        "http://test.invalid/image.png"
+        "http://test.invalid/image.png",
       );
     });
   });
@@ -2148,12 +2150,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const billboard = entities[0].billboard;
       expect(billboard.image.getValue().url).toEqual(
-        "https://maps.google.com/mapfiles/kml/pal3/icon56.png"
+        "https://maps.google.com/mapfiles/kml/pal3/icon56.png",
       );
     });
   });
@@ -2177,19 +2179,19 @@ describe("DataSources/KmlDataSource", function () {
       const entities = dataSource.entities.values;
       const billboard = entities[0].billboard;
       expect(billboard.image.getValue().url).toEqual(
-        "http://test.invalid/image.png"
+        "http://test.invalid/image.png",
       );
     });
   });
 
   it("IconStyle: Sets billboard image inside KMZ", function () {
-    return KmlDataSource.load("Data/KML/simple.kmz", options).then(function (
-      dataSource
-    ) {
-      const entities = dataSource.entities.values;
-      const billboard = entities[0].billboard;
-      expect(billboard.image.getValue().url).toEqual(image);
-    });
+    return KmlDataSource.load("Data/KML/simple.kmz", options).then(
+      function (dataSource) {
+        const entities = dataSource.entities.values;
+        const billboard = entities[0].billboard;
+        expect(billboard.image.getValue().url).toEqual(image);
+      },
+    );
   });
 
   it("IconStyle: Sets billboard image with subregion", function () {
@@ -2216,12 +2218,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const billboard = dataSource.entities.values[0].billboard;
       expect(billboard.image.getValue().url).toEqual(expectedIconHref);
       expect(billboard.imageSubRegion.getValue()).toEqual(
-        new BoundingRectangle(49, 43, 18, 18)
+        new BoundingRectangle(49, 43, 18, 18),
       );
     });
   });
@@ -2239,7 +2241,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const billboard = dataSource.entities.values[0].billboard;
       expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(8, 8));
@@ -2259,7 +2261,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const billboard = dataSource.entities.values[0].billboard;
       expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(15, -14));
@@ -2279,7 +2281,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const billboard = dataSource.entities.values[0].billboard;
       expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(-15, 14));
@@ -2300,7 +2302,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].billboard.color.getValue()).toEqual(color);
@@ -2320,7 +2322,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].billboard.scale.getValue()).toEqual(2.2);
@@ -2340,14 +2342,14 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].billboard.rotation.getValue()).toEqual(
-        CesiumMath.toRadians(-4)
+        CesiumMath.toRadians(-4),
       );
       expect(entities[0].billboard.alignedAxis.getValue()).toEqual(
-        Cartesian3.UNIT_Z
+        Cartesian3.UNIT_Z,
       );
     });
   });
@@ -2377,7 +2379,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -2389,7 +2391,7 @@ describe("DataSources/KmlDataSource", function () {
       expect(div.style["background-color"]).toEqual("rgba(102, 68, 34, 0)");
       expect(div.style.color).toEqual("rgba(0, 34, 68, 0.4)");
       expect(div.textContent).toEqual(
-        "The Name The Description The Address The Snippet The ID The Property The Value $[prop2/displayName] $[prop2]"
+        "The Name The Description The Address The Snippet The ID The Property The Value $[prop2/displayName] $[prop2]",
       );
     });
   });
@@ -2407,7 +2409,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -2428,7 +2430,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -2463,7 +2465,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -2503,7 +2505,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.description).toBeUndefined();
@@ -2519,7 +2521,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -2563,7 +2565,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -2587,7 +2589,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
 
@@ -2600,27 +2602,27 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("BalloonStyle: description is rewritten for embedded kmz links and images", function () {
-    return KmlDataSource.load("Data/KML/simple.kmz", options).then(function (
-      dataSource
-    ) {
-      const entity = dataSource.entities.values[0];
-      const description = entity.description.getValue();
-      const div = document.createElement("div");
-      div.innerHTML = description;
+    return KmlDataSource.load("Data/KML/simple.kmz", options).then(
+      function (dataSource) {
+        const entity = dataSource.entities.values[0];
+        const description = entity.description.getValue();
+        const div = document.createElement("div");
+        div.innerHTML = description;
 
-      expect(div.textContent).toEqual("image.png image.png");
-      const children = div.firstChild.querySelectorAll("*");
-      expect(children.length).toEqual(2);
+        expect(div.textContent).toEqual("image.png image.png");
+        const children = div.firstChild.querySelectorAll("*");
+        expect(children.length).toEqual(2);
 
-      const link = children[0];
-      expect(link.localName).toEqual("a");
-      expect(link.getAttribute("href")).toEqual(image);
-      expect(link.getAttribute("download")).toEqual("image.png");
+        const link = children[0];
+        expect(link.localName).toEqual("a");
+        expect(link.getAttribute("href")).toEqual(image);
+        expect(link.getAttribute("download")).toEqual("image.png");
 
-      const img = children[1];
-      expect(img.localName).toEqual("img");
-      expect(img.src).toEqual(image);
-    });
+        const img = children[1];
+        expect(img.localName).toEqual("img");
+        expect(img.src).toEqual(image);
+      },
+    );
   });
 
   it("LabelStyle: Sets defaults", function () {
@@ -2635,7 +2637,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const label = entities[0].label;
@@ -2666,7 +2668,7 @@ describe("DataSources/KmlDataSource", function () {
       expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
       expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(17, 0));
       expect(label.translucencyByDistance.getValue()).toEqual(
-        new NearFarScalar(3000000, 1.0, 5000000, 0.0)
+        new NearFarScalar(3000000, 1.0, 5000000, 0.0),
       );
     });
   });
@@ -2685,7 +2687,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].label.fillColor.getValue()).toEqual(color);
@@ -2707,11 +2709,11 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].label.pixelOffset.getValue()).toEqual(
-        new Cartesian2(33, 0)
+        new Cartesian2(33, 0),
       );
     });
   });
@@ -2729,11 +2731,11 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].label.pixelOffset.getValue()).toEqual(
-        new Cartesian3(3 * 16 + 1, 0)
+        new Cartesian3(3 * 16 + 1, 0),
       );
     });
   });
@@ -2751,7 +2753,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].label.pixelOffset).toBeUndefined();
@@ -2771,7 +2773,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const polyline = entities[0].polyline;
@@ -2800,7 +2802,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const polyline = entities[0].polyline;
@@ -2822,7 +2824,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const polyline = entities[0].polyline;
@@ -2842,7 +2844,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const polygon = entities[0].polygon;
@@ -2878,7 +2880,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const polygon = entities[0].polygon;
@@ -2900,7 +2902,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const polygon = entities[0].polygon;
@@ -2921,7 +2923,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const polygon = entities[0].polygon;
@@ -2939,7 +2941,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities;
       const folder = entities.getById("parent");
@@ -2965,7 +2967,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const start = JulianDate.fromIso8601("2000-01-01");
       const stop = JulianDate.fromIso8601("2000-01-03");
@@ -2998,7 +3000,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const startFolder = JulianDate.fromIso8601("2000-01-01");
       const stopFolder = JulianDate.fromIso8601("2000-01-04");
@@ -3030,7 +3032,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const start = JulianDate.fromIso8601("2000-01-03");
 
@@ -3061,7 +3063,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const startFolder = JulianDate.fromIso8601("2000-01-03");
       const startFeature = JulianDate.fromIso8601("2000-01-04");
@@ -3089,12 +3091,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(0, 0, 0)
+        Cartesian3.fromDegrees(0, 0, 0),
       );
       expect(entities[0].polyline).toBeUndefined();
     });
@@ -3112,12 +3114,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       expect(entities[0].polyline).toBeUndefined();
     });
@@ -3134,12 +3136,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(0, 0, 0)
+        Cartesian3.fromDegrees(0, 0, 0),
       );
       expect(entities[0].polyline).toBeUndefined();
     });
@@ -3160,7 +3162,7 @@ describe("DataSources/KmlDataSource", function () {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(
-        entities[0].billboard.heightReference.getValue(Iso8601.MINIMUM_VALUE)
+        entities[0].billboard.heightReference.getValue(Iso8601.MINIMUM_VALUE),
       ).toEqual(HeightReference.CLAMP_TO_GROUND);
       expect(entities[0].polyline).toBeUndefined();
     });
@@ -3178,12 +3180,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       expect(entities[0].billboard.pixelOffset).toBeUndefined();
       expect(entities[0].polyline).toBeUndefined();
@@ -3202,12 +3204,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       expect(entities[0].billboard.pixelOffset).toBeUndefined();
       expect(entities[0].polyline).toBeUndefined();
@@ -3227,12 +3229,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(1, 2, 0)
+        Cartesian3.fromDegrees(1, 2, 0),
       );
       expect(entities[0].billboard.pixelOffset).toBeUndefined();
       expect(entities[0].polyline).toBeUndefined();
@@ -3253,12 +3255,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(1, 2)
+        Cartesian3.fromDegrees(1, 2),
       );
       expect(entities[0].polyline).toBeUndefined();
     });
@@ -3277,21 +3279,21 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       expect(entities[0].polyline).toBeDefined();
 
       const positions = entities[0].polyline.positions.getValue(
-        Iso8601.MINIMUM_VALUE
+        Iso8601.MINIMUM_VALUE,
       );
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)],
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -3310,21 +3312,21 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       expect(entities[0].polyline).toBeDefined();
 
       const positions = entities[0].polyline.positions.getValue(
-        Iso8601.MINIMUM_VALUE
+        Iso8601.MINIMUM_VALUE,
       );
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)],
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -3342,21 +3344,21 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       expect(entities[0].polyline).toBeDefined();
 
       const positions = entities[0].polyline.positions.getValue(
-        Iso8601.MINIMUM_VALUE
+        Iso8601.MINIMUM_VALUE,
       );
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)],
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -3372,15 +3374,15 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(
-        entities[0].position.getValue(Iso8601.MINIMUM_VALUE)
+        entities[0].position.getValue(Iso8601.MINIMUM_VALUE),
       ).toEqualEpsilon(
         new Cartesian3(213935.5635247161, 95566.36983235707, 6352461.425213023),
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -3397,15 +3399,15 @@ describe("DataSources/KmlDataSource", function () {
     const moonOptions = combine(options, { ellipsoid: Ellipsoid.MOON });
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      moonOptions
+      moonOptions,
     ).then(function (moonDataSource) {
       const entities = moonDataSource.entities.values;
       expect(entities.length).toEqual(1);
       expect(
-        entities[0].position.getValue(Iso8601.MINIMUM_VALUE)
+        entities[0].position.getValue(Iso8601.MINIMUM_VALUE),
       ).toEqualEpsilon(
         new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544),
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -3426,7 +3428,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.hierarchy).toBeUndefined();
@@ -3452,7 +3454,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       const coordinates = [
@@ -3461,7 +3463,7 @@ describe("DataSources/KmlDataSource", function () {
         Cartesian3.fromDegrees(7, 8, 9),
       ];
       expect(entity.polygon.hierarchy.getValue().positions).toEqual(
-        coordinates
+        coordinates,
       );
     });
   });
@@ -3503,7 +3505,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       const coordinates = [
@@ -3546,7 +3548,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
@@ -3566,7 +3568,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
@@ -3587,7 +3589,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight).toBeUndefined();
@@ -3608,7 +3610,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
@@ -3629,7 +3631,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight).toBeUndefined();
@@ -3658,13 +3660,13 @@ describe("DataSources/KmlDataSource", function () {
     const moonOptions = combine(options, { ellipsoid: Ellipsoid.MOON });
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      moonOptions
+      moonOptions,
     ).then(function (moonDataSource) {
       const entity = moonDataSource.entities.values[0];
       const moonPoint = entity.polygon.hierarchy.getValue().positions[0];
       expect(moonPoint).toEqualEpsilon(
         new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544),
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -3689,13 +3691,13 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       const earthPoint = entity.polygon.hierarchy.getValue().positions[0];
       expect(earthPoint).toEqualEpsilon(
         new Cartesian3(213935.5635247161, 95566.36983235707, 6352461.425213023),
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -3710,7 +3712,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -3735,7 +3737,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -3745,11 +3747,11 @@ describe("DataSources/KmlDataSource", function () {
       expect(entity.polyline).toBeDefined();
 
       const positions = entity.polyline.positions.getValue(
-        Iso8601.MINIMUM_VALUE
+        Iso8601.MINIMUM_VALUE,
       );
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)],
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(entity.polyline.arcType.getValue()).toEqual(ArcType.NONE);
     });
@@ -3770,7 +3772,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -3782,7 +3784,7 @@ describe("DataSources/KmlDataSource", function () {
       const positions = entity.wall.positions.getValue(Iso8601.MINIMUM_VALUE);
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6)],
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
   });
@@ -3801,7 +3803,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -3809,11 +3811,11 @@ describe("DataSources/KmlDataSource", function () {
       const entity = entities[0];
       expect(entity.polyline.arcType).toBeUndefined();
       const positions = entity.polyline.positions.getValue(
-        Iso8601.MINIMUM_VALUE
+        Iso8601.MINIMUM_VALUE,
       );
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)],
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
   });
@@ -3833,7 +3835,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -3841,11 +3843,11 @@ describe("DataSources/KmlDataSource", function () {
       const entity = entities[0];
       expect(entity.polyline.arcType).toBeUndefined();
       const positions = entity.polyline.positions.getValue(
-        Iso8601.MINIMUM_VALUE
+        Iso8601.MINIMUM_VALUE,
       );
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)],
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
   });
@@ -3865,7 +3867,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -3876,7 +3878,7 @@ describe("DataSources/KmlDataSource", function () {
       const positions = entity.wall.positions.getValue(Iso8601.MINIMUM_VALUE);
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6)],
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
   });
@@ -3895,7 +3897,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -3906,7 +3908,7 @@ describe("DataSources/KmlDataSource", function () {
       const positions = entity.wall.positions.getValue(Iso8601.MINIMUM_VALUE);
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6)],
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
   });
@@ -3925,7 +3927,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
@@ -3936,7 +3938,7 @@ describe("DataSources/KmlDataSource", function () {
       const positions = entity.wall.positions.getValue(Iso8601.MINIMUM_VALUE);
       expect(positions).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6)],
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
   });
@@ -3966,24 +3968,24 @@ describe("DataSources/KmlDataSource", function () {
       const entity = dataSource.entities.values[0];
       expect(entity.position.getValue(time1)).toEqualEpsilon(
         Cartesian3.fromDegrees(1, 2, 3),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time2)).toEqualEpsilon(
         Cartesian3.fromDegrees(4, 5, 6),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time3)).toEqualEpsilon(
         Cartesian3.fromDegrees(7, 8, 9),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.billboard.heightReference.getValue(time1)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       expect(entity.billboard.heightReference.getValue(time2)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       expect(entity.billboard.heightReference.getValue(time3)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       expect(entity.polyline).toBeUndefined();
 
@@ -4019,24 +4021,24 @@ describe("DataSources/KmlDataSource", function () {
       const entity = dataSource.entities.values[0];
       expect(entity.position.getValue(time1)).toEqualEpsilon(
         Cartesian3.fromDegrees(1, 2, 3),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time2)).toEqualEpsilon(
         Cartesian3.fromDegrees(4, 5, 6),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time3)).toEqualEpsilon(
         Cartesian3.fromDegrees(7, 8, 9),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.billboard.heightReference.getValue(time1)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       expect(entity.billboard.heightReference.getValue(time2)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       expect(entity.billboard.heightReference.getValue(time3)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       expect(entity.polyline).toBeUndefined();
     });
@@ -4061,7 +4063,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
       const time2 = JulianDate.fromIso8601("2000-01-01T00:00:01Z");
@@ -4070,28 +4072,28 @@ describe("DataSources/KmlDataSource", function () {
       const entity = dataSource.entities.values[0];
       expect(entity.position.getValue(time1)).toEqualEpsilon(
         Cartesian3.fromDegrees(1, 2, 3),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time2)).toEqualEpsilon(
         Cartesian3.fromDegrees(4, 5, 6),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time3)).toEqualEpsilon(
         Cartesian3.fromDegrees(7, 8, 9),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
 
       expect(entity.polyline.positions.getValue(time1)).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2)],
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.polyline.positions.getValue(time2)).toEqualEpsilon(
         [Cartesian3.fromDegrees(4, 5, 6), Cartesian3.fromDegrees(4, 5)],
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.polyline.positions.getValue(time3)).toEqualEpsilon(
         [Cartesian3.fromDegrees(7, 8, 9), Cartesian3.fromDegrees(7, 8)],
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     });
   });
@@ -4115,7 +4117,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
       const time2 = JulianDate.fromIso8601("2000-01-01T00:00:01Z");
@@ -4124,28 +4126,28 @@ describe("DataSources/KmlDataSource", function () {
       const entity = dataSource.entities.values[0];
       expect(entity.position.getValue(time1)).toEqualEpsilon(
         Cartesian3.fromDegrees(1, 2, 3),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time2)).toEqualEpsilon(
         Cartesian3.fromDegrees(4, 5, 6),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time3)).toEqualEpsilon(
         Cartesian3.fromDegrees(7, 8, 9),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
 
       expect(entity.polyline.positions.getValue(time1)).toEqualEpsilon(
         [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2)],
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.polyline.positions.getValue(time2)).toEqualEpsilon(
         [Cartesian3.fromDegrees(4, 5, 6), Cartesian3.fromDegrees(4, 5)],
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.polyline.positions.getValue(time3)).toEqualEpsilon(
         [Cartesian3.fromDegrees(7, 8, 9), Cartesian3.fromDegrees(7, 8)],
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     });
   });
@@ -4174,23 +4176,23 @@ describe("DataSources/KmlDataSource", function () {
       const entity = dataSource.entities.values[0];
       expect(entity.position.getValue(time1)).toEqualEpsilon(
         Cartesian3.fromDegrees(1, 2, 3),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time2)).toEqualEpsilon(
         Cartesian3.fromDegrees(4, 5, 6),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time3)).toBeUndefined();
 
       // heightReference should be constant so its available all the time
       expect(entity.billboard.heightReference.getValue(time1)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       expect(entity.billboard.heightReference.getValue(time2)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       expect(entity.billboard.heightReference.getValue(time3)).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
 
       expect(entity.availability.start).toEqual(time1);
@@ -4221,7 +4223,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
       const time2 = JulianDate.fromIso8601("2000-01-01T00:00:01Z");
@@ -4237,19 +4239,19 @@ describe("DataSources/KmlDataSource", function () {
 
       expect(entity.position.getValue(time1)).toEqualEpsilon(
         Cartesian3.fromDegrees(1, 2),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time2)).toEqualEpsilon(
         Cartesian3.fromDegrees(4, 5),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time3)).toEqualEpsilon(
         Cartesian3.fromDegrees(6, 5),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time4)).toEqualEpsilon(
         Cartesian3.fromDegrees(3, 2),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     });
   });
@@ -4278,7 +4280,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
       const time2 = JulianDate.fromIso8601("2000-01-01T00:00:01Z");
@@ -4292,19 +4294,19 @@ describe("DataSources/KmlDataSource", function () {
 
       expect(entity.position.getValue(time1)).toEqualEpsilon(
         Cartesian3.fromDegrees(1, 2),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time2)).toEqualEpsilon(
         Cartesian3.fromDegrees(4, 5),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time3)).toEqualEpsilon(
         Cartesian3.fromDegrees(6, 5),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
       expect(entity.position.getValue(time4)).toEqualEpsilon(
         Cartesian3.fromDegrees(3, 2),
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     });
   });
@@ -4337,7 +4339,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
       const time2 = JulianDate.fromIso8601("2000-01-01T00:00:01Z");
@@ -4350,16 +4352,16 @@ describe("DataSources/KmlDataSource", function () {
       expect(entity.availability.get(0).stop).toEqual(time4);
 
       expect(entity.position.getValue(time1)).toEqual(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       expect(entity.position.getValue(time2)).toEqual(
-        Cartesian3.fromDegrees(4, 5, 6)
+        Cartesian3.fromDegrees(4, 5, 6),
       );
       expect(entity.position.getValue(time3)).toEqual(
-        Cartesian3.fromDegrees(6, 5, 4)
+        Cartesian3.fromDegrees(6, 5, 4),
       );
       expect(entity.position.getValue(time4)).toEqual(
-        Cartesian3.fromDegrees(3, 2, 1)
+        Cartesian3.fromDegrees(3, 2, 1),
       );
     });
   });
@@ -4382,7 +4384,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities;
       expect(entities.values.length).toEqual(3);
@@ -4398,7 +4400,7 @@ describe("DataSources/KmlDataSource", function () {
       expect(point1.kml).toBe(multi.kml);
       expect(point1.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(
         Cartesian3.fromDegrees(1, 2),
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
 
       const point2 = entities.getById("testIDpoint2");
@@ -4409,7 +4411,7 @@ describe("DataSources/KmlDataSource", function () {
       expect(point2.kml).toBe(multi.kml);
       expect(point2.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(
         Cartesian3.fromDegrees(3, 4),
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -4421,7 +4423,7 @@ describe("DataSources/KmlDataSource", function () {
         expect(entities.length).toEqual(2);
         expect(entities[0].id).toEqual("link");
         expect(entities[1].parent).toBe(entities[0]);
-      }
+      },
     );
   });
 
@@ -4438,7 +4440,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(3);
@@ -4484,7 +4486,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(3);
@@ -4534,7 +4536,7 @@ describe("DataSources/KmlDataSource", function () {
         canvas: uberCanvas,
         camera: uberCamera,
         options: options,
-      })
+      }),
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(3);
@@ -4557,7 +4559,7 @@ describe("DataSources/KmlDataSource", function () {
       }).then(function () {
         expect(spy).toHaveBeenCalledWith(
           dataSource,
-          `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90`
+          `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90`,
         );
 
         expect(entities.length).toEqual(3);
@@ -4584,18 +4586,20 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      requestNetworkLink.resolve(url);
-      deferred.reject();
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        requestNetworkLink.resolve(url);
+        deferred.reject();
+      },
+    );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
@@ -4614,18 +4618,20 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      requestNetworkLink.resolve(url);
-      deferred.reject();
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        requestNetworkLink.resolve(url);
+        deferred.reject();
+      },
+    );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
@@ -4645,24 +4651,26 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      requestNetworkLink.resolve(url);
-      deferred.reject();
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        requestNetworkLink.resolve(url);
+        deferred.reject();
+      },
+    );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90`
+        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90`,
       );
     });
   });
@@ -4679,24 +4687,26 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      requestNetworkLink.resolve(url);
-      deferred.reject();
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        requestNetworkLink.resolve(url);
+        deferred.reject();
+      },
+    );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        `${expectedRefreshLinkHref}?client=Cesium-v1&v=2.2&lang=English`
+        `${expectedRefreshLinkHref}?client=Cesium-v1&v=2.2&lang=English`,
       );
     });
   });
@@ -4713,24 +4723,26 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      requestNetworkLink.resolve(url);
-      deferred.reject();
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        requestNetworkLink.resolve(url);
+        deferred.reject();
+      },
+    );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        `${expectedRefreshLinkHref}?client=Cesium-v1&v=2.2&lang=English`
+        `${expectedRefreshLinkHref}?client=Cesium-v1&v=2.2&lang=English`,
       );
     });
   });
@@ -4749,27 +4761,29 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      requestNetworkLink.resolve(url);
-      deferred.reject();
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        requestNetworkLink.resolve(url);
+        deferred.reject();
+      },
+    );
 
     KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      Object.assign({ camera: uberCamera, canvas: uberCanvas }, options)
+      Object.assign({ camera: uberCamera, canvas: uberCanvas }, options),
     );
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1`
+        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1`,
       );
     });
   });
@@ -4788,18 +4802,20 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      requestNetworkLink.resolve(url);
-      deferred.reject();
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        requestNetworkLink.resolve(url);
+        deferred.reject();
+      },
+    );
 
     const src = new KmlDataSource();
     src.camera = uberCamera;
@@ -4808,7 +4824,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1`
+        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1`,
       );
     });
   });
@@ -4826,18 +4842,20 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      requestNetworkLink.resolve(url);
-      deferred.reject();
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        requestNetworkLink.resolve(url);
+        deferred.reject();
+      },
+    );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
@@ -4879,7 +4897,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      ourOptions
+      ourOptions,
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(3);
@@ -4902,7 +4920,7 @@ describe("DataSources/KmlDataSource", function () {
       }).then(function () {
         expect(spy).toHaveBeenCalledWith(
           dataSource,
-          `${expectedRefreshLinkHref}?BBOX=0%2C0%2C0%2C0`
+          `${expectedRefreshLinkHref}?BBOX=0%2C0%2C0%2C0`,
         );
 
         expect(entities.length).toEqual(3);
@@ -4934,7 +4952,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const start = JulianDate.fromIso8601("2000-01-01");
       const stop = JulianDate.fromIso8601("2000-01-03");
@@ -4963,7 +4981,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const start = JulianDate.fromIso8601("2000-01-03");
 
@@ -4984,7 +5002,7 @@ describe("DataSources/KmlDataSource", function () {
         expect(entities.length).toBe(3);
         expect(entities[1].billboard).not.toBeNull();
         expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(1, 2, 3)
+          Cartesian3.fromDegrees(1, 2, 3),
         );
 
         // The root network link is loaded, then the children
@@ -4993,7 +5011,7 @@ describe("DataSources/KmlDataSource", function () {
         expect(entities[0].parent).toBeUndefined();
         expect(entities[2].parent).toBe(entities[0]);
         expect(entities[1].parent).toBe(entities[2]);
-      }
+      },
     );
   });
 
@@ -5001,7 +5019,7 @@ describe("DataSources/KmlDataSource", function () {
     return KmlDataSource.load("Data/KML/namespaced.kml", options).then(
       function (dataSource) {
         expect(dataSource.entities.values.length).toBe(3);
-      }
+      },
     );
   });
 
@@ -5014,7 +5032,7 @@ describe("DataSources/KmlDataSource", function () {
         const polylineColor = polyline.material.color.getValue();
         expect(polylineColor).toEqual(expectedColor);
         expect(polyline.width.getValue()).toEqual(10);
-      }
+      },
     );
   });
 
@@ -5030,7 +5048,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
@@ -5049,7 +5067,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
@@ -5069,7 +5087,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.name).toBe("bob");
@@ -5095,7 +5113,7 @@ describe("DataSources/KmlDataSource", function () {
           </Placemark>';
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entityCollection = dataSource.entities;
       const entity = entityCollection.values[0];
@@ -5117,12 +5135,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - Unsupported Icon refreshMode: onInterval"
+        "KML - Unsupported Icon refreshMode: onInterval",
       );
     });
   });
@@ -5141,12 +5159,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - Unsupported Icon viewRefreshMode: onStop"
+        "KML - Unsupported Icon viewRefreshMode: onStop",
       );
     });
   });
@@ -5168,12 +5186,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - gx:x, gx:y, gx:w, gx:h aren't supported for GroundOverlays"
+        "KML - gx:x, gx:y, gx:w, gx:h aren't supported for GroundOverlays",
       );
     });
   });
@@ -5204,21 +5222,21 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(4);
       expect(console.warn.calls.argsFor(0)[0]).toBe(
-        "KML - gx:outerColor is not supported in a LineStyle"
+        "KML - gx:outerColor is not supported in a LineStyle",
       );
       expect(console.warn.calls.argsFor(1)[0]).toBe(
-        "KML - gx:outerWidth is not supported in a LineStyle"
+        "KML - gx:outerWidth is not supported in a LineStyle",
       );
       expect(console.warn.calls.argsFor(2)[0]).toBe(
-        "KML - gx:physicalWidth is not supported in a LineStyle"
+        "KML - gx:physicalWidth is not supported in a LineStyle",
       );
       expect(console.warn.calls.argsFor(3)[0]).toBe(
-        "KML - gx:labelVisibility is not supported in a LineStyle"
+        "KML - gx:labelVisibility is not supported in a LineStyle",
       );
     });
   });
@@ -5238,12 +5256,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - Unsupported ListStyle with listItemType: radioFolder"
+        "KML - Unsupported ListStyle with listItemType: radioFolder",
       );
     });
   });
@@ -5270,12 +5288,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - Unsupported StyleMap key: highlighted"
+        "KML - Unsupported StyleMap key: highlighted",
       );
     });
   });
@@ -5299,12 +5317,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - gx:drawOrder is not supported in LineStrings when clampToGround is false"
+        "KML - gx:drawOrder is not supported in LineStrings when clampToGround is false",
       );
     });
   });
@@ -5325,12 +5343,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - gx:angles are not supported in gx:Tracks"
+        "KML - gx:angles are not supported in gx:Tracks",
       );
     });
   });
@@ -5346,12 +5364,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - Unsupported geometry: Model"
+        "KML - Unsupported geometry: Model",
       );
     });
   });
@@ -5374,15 +5392,15 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(2);
       expect(console.warn.calls.argsFor(0)[0]).toBe(
-        "KML - SchemaData is unsupported"
+        "KML - SchemaData is unsupported",
       );
       expect(console.warn.calls.argsFor(1)[0]).toBe(
-        "KML - ExtendedData with xmlns:prefix is unsupported"
+        "KML - ExtendedData with xmlns:prefix is unsupported",
       );
     });
   });
@@ -5411,22 +5429,22 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       const placemark = dataSource.entities.values[0];
       expect(placemark.kml.camera).toBeInstanceOf(KmlCamera);
       expect(placemark.kml.lookAt).toBeInstanceOf(KmlLookAt);
       expect(placemark.kml.lookAt.position).toEqual(
-        Cartesian3.fromDegrees(-120, 40, 100)
+        Cartesian3.fromDegrees(-120, 40, 100),
       );
       expect(placemark.kml.lookAt.headingPitchRange).toEqualEpsilon(
         new HeadingPitchRange(
           CesiumMath.toRadians(90),
           CesiumMath.toRadians(30 - 90),
-          1250
+          1250,
         ),
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
   });
@@ -5447,12 +5465,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - Placemark Regions are unsupported"
+        "KML - Placemark Regions are unsupported",
       );
     });
   });
@@ -5471,12 +5489,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - Unsupported viewRefreshMode: onRegion"
+        "KML - Unsupported viewRefreshMode: onRegion",
       );
     });
   });
@@ -5501,7 +5519,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.kmlTours.length).toEqual(1);
       const tour = dataSource.kmlTours[0];
@@ -5554,7 +5572,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.kmlTours.length).toEqual(1);
       const tour = dataSource.kmlTours[0];
@@ -5599,18 +5617,18 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.kmlTours.length).toEqual(1);
       expect(dataSource.kmlTours[0].playlist.length).toEqual(0);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML Tour unsupported node AnimatedUpdate"
+        "KML Tour unsupported node AnimatedUpdate",
       );
       expect(console.warn).toHaveBeenCalledWith(
-        "KML Tour unsupported node TourControl"
+        "KML Tour unsupported node TourControl",
       );
       expect(console.warn).toHaveBeenCalledWith(
-        "KML Tour unsupported node SoundCue"
+        "KML Tour unsupported node SoundCue",
       );
     });
   });
@@ -5629,12 +5647,12 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(2);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
-        "KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element"
+        "KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element",
       );
     });
   });
@@ -5663,7 +5681,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      kmlOptions
+      kmlOptions,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(2);
     });
@@ -5680,7 +5698,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
@@ -5699,7 +5717,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polygon.perPositionHeight).toBeUndefined();
@@ -5727,7 +5745,7 @@ describe("DataSources/KmlDataSource", function () {
     const clampToGroundOptions = combine(options, { clampToGround: true });
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      clampToGroundOptions
+      clampToGroundOptions,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polyline).toBeDefined();
@@ -5760,7 +5778,7 @@ describe("DataSources/KmlDataSource", function () {
     const clampToGroundOptions = combine(options, { clampToGround: true });
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      clampToGroundOptions
+      clampToGroundOptions,
     ).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
       expect(entity.polyline).toBeDefined();
@@ -5833,13 +5851,13 @@ describe("DataSources/KmlDataSource", function () {
     CesiumMath.setRandomNumberSeed(0);
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      options,
     ).then(function (dataSource) {
       expect(dataSource.entities.values.length).toEqual(4);
       expect(
-        dataSource.entities.values[2].polygon.material.color.getValue()
+        dataSource.entities.values[2].polygon.material.color.getValue(),
       ).not.toEqual(
-        dataSource.entities.values[3].polygon.material.color.getValue()
+        dataSource.entities.values[3].polygon.material.color.getValue(),
       );
     });
   });

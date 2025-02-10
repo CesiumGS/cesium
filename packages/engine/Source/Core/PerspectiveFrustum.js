@@ -162,7 +162,7 @@ function update(frustum) {
     !defined(frustum.far)
   ) {
     throw new DeveloperError(
-      "fov, aspectRatio, near, or far parameters are not set."
+      "fov, aspectRatio, near, or far parameters are not set.",
     );
   }
   //>>includeEnd('debug');
@@ -186,7 +186,7 @@ function update(frustum) {
   Check.typeOf.number.greaterThanOrEquals(
     "aspectRatio",
     frustum.aspectRatio,
-    0.0
+    0.0,
   );
 
   Check.typeOf.number.greaterThanOrEquals("near", frustum.near, 0.0);
@@ -312,7 +312,7 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
 PerspectiveFrustum.prototype.computeCullingVolume = function (
   position,
   direction,
-  up
+  up,
 ) {
   update(this);
   return this._offCenterFrustum.computeCullingVolume(position, direction, up);
@@ -353,7 +353,7 @@ PerspectiveFrustum.prototype.getPixelDimensions = function (
   drawingBufferHeight,
   distance,
   pixelRatio,
-  result
+  result,
 ) {
   update(this);
   return this._offCenterFrustum.getPixelDimensions(
@@ -361,7 +361,7 @@ PerspectiveFrustum.prototype.getPixelDimensions = function (
     drawingBufferHeight,
     distance,
     pixelRatio,
-    result
+    result,
   );
 };
 
@@ -427,7 +427,7 @@ PerspectiveFrustum.prototype.equals = function (other) {
 PerspectiveFrustum.prototype.equalsEpsilon = function (
   other,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   if (!defined(other) || !(other instanceof PerspectiveFrustum)) {
     return false;
@@ -441,18 +441,18 @@ PerspectiveFrustum.prototype.equalsEpsilon = function (
       this.fov,
       other.fov,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     ) &&
     CesiumMath.equalsEpsilon(
       this.aspectRatio,
       other.aspectRatio,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     ) &&
     this._offCenterFrustum.equalsEpsilon(
       other._offCenterFrustum,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     )
   );
 };

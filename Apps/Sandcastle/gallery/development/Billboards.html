@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -92,7 +92,7 @@
           const range = 100.0;
           viewer.camera.lookAt(
             center,
-            new Cesium.HeadingPitchRange(heading, pitch, range)
+            new Cesium.HeadingPitchRange(heading, pitch, range),
           );
 
           const billboards = scene.primitives.add(new Cesium.BillboardCollection());
@@ -150,7 +150,7 @@
           Sandcastle.declare(offsetByDistance);
           Promise.all([
             Cesium.Resource.createIfNeeded(
-              "../images/Cesium_Logo_overlay.png"
+              "../images/Cesium_Logo_overlay.png",
             ).fetchImage(),
             Cesium.Resource.createIfNeeded("../images/facility.gif").fetchImage(),
           ]).then(function (images) {
@@ -177,7 +177,7 @@
                 1.0e3,
                 1.0,
                 1.5e6,
-                0.0
+                0.0,
               ),
               translucencyByDistance: new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1),
             });

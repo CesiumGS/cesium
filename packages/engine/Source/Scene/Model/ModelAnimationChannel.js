@@ -280,12 +280,12 @@ ModelAnimationChannel.prototype.animate = function (time) {
     ) {
       runtimeNode[path] = spline.evaluate(
         localAnimationTime,
-        scratchCartesian3
+        scratchCartesian3,
       );
     } else if (path === AnimatedPropertyType.ROTATION) {
       runtimeNode[path] = spline.evaluate(
         localAnimationTime,
-        scratchQuaternion
+        scratchQuaternion,
       );
     }
   }

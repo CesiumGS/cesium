@@ -159,13 +159,13 @@ StripeMaterialProperty.prototype.getValue = function (time, result) {
     this._evenColor,
     time,
     defaultEvenColor,
-    result.evenColor
+    result.evenColor,
   );
   result.oddColor = Property.getValueOrClonedDefault(
     this._oddColor,
     time,
     defaultOddColor,
-    result.oddColor
+    result.oddColor,
   );
   result.offset = Property.getValueOrDefault(this._offset, time, defaultOffset);
   result.repeat = Property.getValueOrDefault(this._repeat, time, defaultRepeat);

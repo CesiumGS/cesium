@@ -303,7 +303,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
-    "pixelOffsetScaleByDistance"
+    "pixelOffsetScaleByDistance",
   ),
 
   /**
@@ -321,7 +321,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -331,7 +331,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
 
   /**
@@ -397,15 +397,15 @@ BillboardGraphics.prototype.merge = function (source) {
   this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
   this.horizontalOrigin = defaultValue(
     this._horizontalOrigin,
-    source.horizontalOrigin
+    source.horizontalOrigin,
   );
   this.verticalOrigin = defaultValue(
     this._verticalOrigin,
-    source.verticalOrigin
+    source.verticalOrigin,
   );
   this.heightReference = defaultValue(
     this._heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.color = defaultValue(this._color, source.color);
   this.rotation = defaultValue(this._rotation, source.rotation);
@@ -415,31 +415,31 @@ BillboardGraphics.prototype.merge = function (source) {
   this.height = defaultValue(this._height, source.height);
   this.scaleByDistance = defaultValue(
     this._scaleByDistance,
-    source.scaleByDistance
+    source.scaleByDistance,
   );
   this.translucencyByDistance = defaultValue(
     this._translucencyByDistance,
-    source.translucencyByDistance
+    source.translucencyByDistance,
   );
   this.pixelOffsetScaleByDistance = defaultValue(
     this._pixelOffsetScaleByDistance,
-    source.pixelOffsetScaleByDistance
+    source.pixelOffsetScaleByDistance,
   );
   this.imageSubRegion = defaultValue(
     this._imageSubRegion,
-    source.imageSubRegion
+    source.imageSubRegion,
   );
   this.distanceDisplayCondition = defaultValue(
     this._distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
   this.disableDepthTestDistance = defaultValue(
     this._disableDepthTestDistance,
-    source.disableDepthTestDistance
+    source.disableDepthTestDistance,
   );
   this.splitDirection = defaultValue(
     this.splitDirection,
-    source.splitDirection
+    source.splitDirection,
   );
 };
 export default BillboardGraphics;

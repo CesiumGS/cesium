@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -45,7 +45,7 @@
           const position = Cesium.Cartesian3.fromDegrees(
             -123.0744619,
             44.0503706,
-            height
+            height,
           );
           const heading = Cesium.Math.toRadians(135);
           const pitch = 0;
@@ -66,7 +66,7 @@
           const target = Cesium.Cartesian3.fromDegrees(
             -123.0744619,
             44.0503706,
-            height + 7.5
+            height + 7.5,
           );
           const offset = new Cesium.Cartesian3(50.0, -15.0, 0.0);
           viewer.scene.camera.lookAt(target, offset);
@@ -100,12 +100,12 @@
                 destination: new Cesium.Cartesian3(
                   1331419.302230775,
                   -4656681.5022043325,
-                  4136232.6465900405
+                  4136232.6465900405,
                 ),
                 orientation: new Cesium.HeadingPitchRoll(
                   6.032455545102689,
                   -0.056832496140112765,
-                  6.282360923090216
+                  6.282360923090216,
                 ),
                 endTransform: Cesium.Matrix4.IDENTITY,
               });
@@ -121,7 +121,7 @@
                 destination: new Cesium.Cartesian3(
                   1234138.7804841248,
                   -5086063.633843134,
-                  3633284.606361642
+                  3633284.606361642,
                 ),
                 orientation: {
                   heading: 0.4304630387656614,
@@ -140,7 +140,7 @@
               scene.primitives.removeAll();
               createModel(
                 "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
-                1000.0
+                1000.0,
               );
             },
           },

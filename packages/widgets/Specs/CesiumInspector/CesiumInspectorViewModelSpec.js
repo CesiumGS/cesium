@@ -58,7 +58,7 @@ describe(
     it("can create and destroy", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       expect(viewModel.scene).toBe(scene);
       expect(viewModel.performanceContainer).toBe(performanceContainer);
@@ -82,7 +82,7 @@ describe(
     it("show frustums", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       viewModel.frustums = true;
       expect(viewModel.scene.debugShowFrustums).toBe(true);
@@ -96,7 +96,7 @@ describe(
     it("show performance", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       viewModel.performance = true;
       scene.render();
@@ -114,14 +114,14 @@ describe(
             CesiumMath.toRadians(-110.0),
             CesiumMath.toRadians(0.0),
             CesiumMath.toRadians(-90.0),
-            CesiumMath.toRadians(20.0)
+            CesiumMath.toRadians(20.0),
           ),
-          CesiumMath.toRadians(45)
-        )
+          CesiumMath.toRadians(45),
+        ),
       );
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       scene.render();
       viewModel.primitive = p;
@@ -140,10 +140,10 @@ describe(
             CesiumMath.toRadians(-110.0),
             CesiumMath.toRadians(0.0),
             CesiumMath.toRadians(-90.0),
-            CesiumMath.toRadians(20.0)
+            CesiumMath.toRadians(20.0),
           ),
-          CesiumMath.toRadians(45)
-        )
+          CesiumMath.toRadians(45),
+        ),
       );
 
       const q = scene.primitives.add(
@@ -152,14 +152,14 @@ describe(
             CesiumMath.toRadians(-10.0),
             CesiumMath.toRadians(0.0),
             CesiumMath.toRadians(-9.0),
-            CesiumMath.toRadians(20.0)
-          )
-        )
+            CesiumMath.toRadians(20.0),
+          ),
+        ),
       );
 
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       scene.render();
       viewModel.primitive = p;
@@ -179,15 +179,15 @@ describe(
             CesiumMath.toRadians(-110.0),
             CesiumMath.toRadians(0.0),
             CesiumMath.toRadians(-90.0),
-            CesiumMath.toRadians(20.0)
+            CesiumMath.toRadians(20.0),
           ),
-          CesiumMath.toRadians(45)
-        )
+          CesiumMath.toRadians(45),
+        ),
       );
 
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       scene.render();
       viewModel.primitive = p;
@@ -202,37 +202,37 @@ describe(
     it("show wireframe", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       viewModel.wireframe = true;
       expect(viewModel.scene.globe._surface.tileProvider._debug.wireframe).toBe(
-        true
+        true,
       );
 
       viewModel.wireframe = false;
       expect(viewModel.scene.globe._surface.tileProvider._debug.wireframe).toBe(
-        false
+        false,
       );
     });
 
     it("suspend updates", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       viewModel.suspendUpdates = true;
       expect(viewModel.scene.globe._surface._debug.suspendLodUpdate).toBe(true);
 
       viewModel.suspendUpdates = false;
       expect(viewModel.scene.globe._surface._debug.suspendLodUpdate).toBe(
-        false
+        false,
       );
     });
 
     it("show tile coords", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       expect(viewModel.scene.imageryLayers.length).toBe(0);
 
@@ -246,7 +246,7 @@ describe(
     it("show tile bounding sphere", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       const tile = new QuadtreeTile({
         tilingScheme: new WebMercatorTilingScheme(),
@@ -259,19 +259,19 @@ describe(
 
       viewModel.tileBoundingSphere = true;
       expect(
-        viewModel.scene.globe._surface.tileProvider._debug.boundingSphereTile
+        viewModel.scene.globe._surface.tileProvider._debug.boundingSphereTile,
       ).toBe(tile);
 
       viewModel.tileBoundingSphere = false;
       expect(
-        viewModel.scene.globe._surface.tileProvider._debug.boundingSphereTile
+        viewModel.scene.globe._surface.tileProvider._debug.boundingSphereTile,
       ).toBe(undefined);
     });
 
     it("filter tile", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       const tile = new QuadtreeTile({
         tilingScheme: new WebMercatorTilingScheme(),
@@ -294,7 +294,7 @@ describe(
     it("does not try to render a non-renderable tile", function () {
       const viewModel = new CesiumInspectorViewModel(
         scene,
-        performanceContainer
+        performanceContainer,
       );
       const tile = new QuadtreeTile({
         tilingScheme: new WebMercatorTilingScheme(),
@@ -313,5 +313,5 @@ describe(
       expect(viewModel.suspendUpdates).toBe(false);
     });
   },
-  "WebGL"
+  "WebGL",
 );

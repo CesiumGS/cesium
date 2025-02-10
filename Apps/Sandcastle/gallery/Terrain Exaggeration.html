@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -86,12 +86,12 @@
           destination: new Cesium.Cartesian3(
             336567.0354790703,
             5664688.047602498,
-            2923204.3566963132
+            2923204.3566963132,
           ),
           orientation: new Cesium.HeadingPitchRoll(
             1.2273281382639265,
             -0.32239612370237514,
-            0.0027207329018610338
+            0.0027207329018610338,
           ),
         });
 
@@ -99,7 +99,7 @@
           position: new Cesium.Cartesian3(
             314557.3531714575,
             5659723.771882165,
-            2923538.5417330978
+            2923538.5417330978,
           ),
           ellipsoid: {
             radii: new Cesium.Cartesian3(400.0, 400.0, 400.0),
@@ -177,7 +177,7 @@
           function (checked) {
             visualizeRelativeHeight = checked;
             updateMaterial();
-          }
+          },
         );
 
         Sandcastle.addToolbarButton("Remove Exaggeration", function () {

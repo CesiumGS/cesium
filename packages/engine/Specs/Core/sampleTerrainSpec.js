@@ -26,15 +26,15 @@ describe("Core/sampleTerrain", function () {
       Cartographic.fromDegrees(87.0, 28.0),
     ];
 
-    return sampleTerrain(worldTerrain, 11, positions).then(function (
-      passedPositions
-    ) {
-      expect(passedPositions).toBe(positions);
-      expect(positions[0].height).toBeGreaterThan(5000);
-      expect(positions[0].height).toBeLessThan(10000);
-      expect(positions[1].height).toBeGreaterThan(5000);
-      expect(positions[1].height).toBeLessThan(10000);
-    });
+    return sampleTerrain(worldTerrain, 11, positions).then(
+      function (passedPositions) {
+        expect(passedPositions).toBe(positions);
+        expect(positions[0].height).toBeGreaterThan(5000);
+        expect(positions[0].height).toBeLessThan(10000);
+        expect(positions[1].height).toBeGreaterThan(5000);
+        expect(positions[1].height).toBeLessThan(10000);
+      },
+    );
   });
 
   it("queries heights from terrain without availability", async function () {
@@ -46,7 +46,7 @@ describe("Core/sampleTerrain", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
         Resource._DefaultImplementations.loadWithXhr(
@@ -55,7 +55,7 @@ describe("Core/sampleTerrain", function () {
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
         return;
       }
@@ -67,12 +67,12 @@ describe("Core/sampleTerrain", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       );
     };
 
     const terrainProvider = await CesiumTerrainProvider.fromUrl(
-      "Data/CesiumTerrainTileJson/StandardHeightmap.tile.json"
+      "Data/CesiumTerrainTileJson/StandardHeightmap.tile.json",
     );
 
     const positions = [
@@ -100,7 +100,7 @@ describe("Core/sampleTerrain", function () {
     const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
 
     return expectAsync(
-      sampleTerrain(worldTerrain, 18, positions, true)
+      sampleTerrain(worldTerrain, 18, positions, true),
     ).toBeRejected();
   });
 
@@ -110,7 +110,7 @@ describe("Core/sampleTerrain", function () {
 
     const positions = [positionWithData, positionWithoutData];
     return expectAsync(
-      sampleTerrain(worldTerrain, 12, positions, true)
+      sampleTerrain(worldTerrain, 12, positions, true),
     ).toBeRejected();
   });
 
@@ -138,15 +138,15 @@ describe("Core/sampleTerrain", function () {
     ];
 
     await expectAsync(
-      sampleTerrain(undefined, 11, positions)
+      sampleTerrain(undefined, 11, positions),
     ).toBeRejectedWithDeveloperError();
 
     await expectAsync(
-      sampleTerrain(worldTerrain, undefined, positions)
+      sampleTerrain(worldTerrain, undefined, positions),
     ).toBeRejectedWithDeveloperError();
 
     await expectAsync(
-      sampleTerrain(worldTerrain, 11, undefined)
+      sampleTerrain(worldTerrain, 11, undefined),
     ).toBeRejectedWithDeveloperError();
   });
 
@@ -173,31 +173,28 @@ describe("Core/sampleTerrain", function () {
     function spyOnTerrainDataCreateMesh(terrainProvider) {
       // do some sneaky spying, so we can check how many times createMesh is called
       const originalRequestTileGeometry = terrainProvider.requestTileGeometry;
-      spyOn(terrainProvider, "requestTileGeometry").and.callFake(function (
-        x,
-        y,
-        level,
-        request
-      ) {
-        // Call the original function!
-        return originalRequestTileGeometry
-          .call(terrainProvider, x, y, level, request)
-          .then(function (tile) {
-            spyOn(tile, "createMesh").and.callThrough();
-            // return the original tile - after we've spied on the createMesh method
-            return tile;
-          });
-      });
+      spyOn(terrainProvider, "requestTileGeometry").and.callFake(
+        function (x, y, level, request) {
+          // Call the original function!
+          return originalRequestTileGeometry
+            .call(terrainProvider, x, y, level, request)
+            .then(function (tile) {
+              spyOn(tile, "createMesh").and.callThrough();
+              // return the original tile - after we've spied on the createMesh method
+              return tile;
+            });
+        },
+      );
     }
 
     function expectTileAndMeshCounts(
       terrainProvider,
       numberOfTilesRequested,
-      wasFirstTileMeshCreated
+      wasFirstTileMeshCreated,
     ) {
       // assert how many tiles were requested
       expect(terrainProvider.requestTileGeometry.calls.count()).toEqual(
-        numberOfTilesRequested
+        numberOfTilesRequested,
       );
 
       // get the first tile that was requested
@@ -208,7 +205,7 @@ describe("Core/sampleTerrain", function () {
           .returnValue.then(function (terrainData) {
             // assert if the mesh was created or not for this tile
             expect(terrainData.createMesh.calls.count()).toEqual(
-              wasFirstTileMeshCreated ? 1 : 0
+              wasFirstTileMeshCreated ? 1 : 0,
             );
           })
       );
@@ -226,7 +223,7 @@ describe("Core/sampleTerrain", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         // find a key (source path) path in the spec which matches (ends with) the requested url
         const availablePaths = Object.keys(proxySpec);
@@ -244,8 +241,8 @@ describe("Core/sampleTerrain", function () {
         if (!defined(proxiedUrl)) {
           throw new Error(
             `Unexpected XHR load to url: ${url}; spec includes: ${availablePaths.join(
-              ", "
-            )}`
+              ", ",
+            )}`,
           );
         }
 
@@ -257,7 +254,7 @@ describe("Core/sampleTerrain", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
     }
@@ -268,23 +265,22 @@ describe("Core/sampleTerrain", function () {
         "/9/759/335.terrain?v=1.2.0":
           "Data/CesiumTerrainTileJson/9_759_335/9_759_335.terrain",
       });
-      const terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "made/up/url"
-      );
+      const terrainProvider =
+        await CesiumTerrainProvider.fromUrl("made/up/url");
 
       spyOnTerrainDataCreateMesh(terrainProvider);
 
       const positionA = Cartographic.fromDegrees(
         86.93666235421982,
-        27.97989963555095
+        27.97989963555095,
       );
       const positionB = Cartographic.fromDegrees(
         86.9366623542198,
-        27.9798996355509
+        27.9798996355509,
       );
       const positionC = Cartographic.fromDegrees(
         86.936662354213,
-        27.979899635557
+        27.979899635557,
       );
 
       const level = 9;
@@ -311,23 +307,22 @@ describe("Core/sampleTerrain", function () {
         "/tile/9/214/379": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
       });
 
-      const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-        "made/up/url"
-      );
+      const terrainProvider =
+        await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
 
       spyOnTerrainDataCreateMesh(terrainProvider);
 
       const positionA = Cartographic.fromDegrees(
         86.93666235421982,
-        27.97989963555095
+        27.97989963555095,
       );
       const positionB = Cartographic.fromDegrees(
         86.9366623542198,
-        27.9798996355509
+        27.9798996355509,
       );
       const positionC = Cartographic.fromDegrees(
         86.936662354213,
-        27.979899635557
+        27.979899635557,
       );
 
       const level = 9;
@@ -356,33 +351,29 @@ describe("Core/sampleTerrain", function () {
         "/tile/9/214/376": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
       });
 
-      const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-        "made/up/url"
-      );
+      const terrainProvider =
+        await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
 
       let i = 0;
       const originalRequestTileGeometry = terrainProvider.requestTileGeometry;
-      spyOn(terrainProvider, "requestTileGeometry").and.callFake(function (
-        x,
-        y,
-        level,
-        request
-      ) {
-        i++;
-        if (i === 2 || i === 3) {
-          // on the 2nd and 3rd requestTileGeometry call, return undefined
-          //  to simulate RequestScheduler throttling the request
-          return undefined;
-        }
-        // otherwise, call the original method
-        return originalRequestTileGeometry.call(
-          terrainProvider,
-          x,
-          y,
-          level,
-          request
-        );
-      });
+      spyOn(terrainProvider, "requestTileGeometry").and.callFake(
+        function (x, y, level, request) {
+          i++;
+          if (i === 2 || i === 3) {
+            // on the 2nd and 3rd requestTileGeometry call, return undefined
+            //  to simulate RequestScheduler throttling the request
+            return undefined;
+          }
+          // otherwise, call the original method
+          return originalRequestTileGeometry.call(
+            terrainProvider,
+            x,
+            y,
+            level,
+            request,
+          );
+        },
+      );
 
       // 3 positions, quite far apart (requires multiple tile requests)
       const positionA = Cartographic.fromDegrees(85, 28);

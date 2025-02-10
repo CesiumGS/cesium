@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -32,9 +32,10 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
 
         try {
-          viewer.scene.terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
-          );
+          viewer.scene.terrainProvider =
+            await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+            );
         } catch (error) {
           window.alert(`Failed to load terrain. ${error}`);
         } //Sandcastle_End

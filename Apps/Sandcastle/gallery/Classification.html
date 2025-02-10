@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -83,15 +83,15 @@
         let center = new Cesium.Cartesian3(
           1216389.3637977627,
           -4736323.641980423,
-          4081321.7428341154
+          4081321.7428341154,
         );
         let modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
         let hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(
-          new Cesium.HeadingPitchRoll(2.619728786416368, 0.0, 0.0)
+          new Cesium.HeadingPitchRoll(2.619728786416368, 0.0, 0.0),
         );
         let hpr = Cesium.Matrix4.fromRotationTranslation(
           hprRotation,
-          new Cesium.Cartesian3(0.0, 0.0, -2.0)
+          new Cesium.Cartesian3(0.0, 0.0, -2.0),
         );
         Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
 
@@ -105,28 +105,28 @@
               modelMatrix: modelMatrix,
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+                  new Cesium.Color(1.0, 0.0, 0.0, 0.5),
                 ),
                 show: new Cesium.ShowGeometryInstanceAttribute(true),
               },
               id: "volume",
             }),
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-          })
+          }),
         );
 
         center = new Cesium.Cartesian3(
           1216409.0189737265,
           -4736252.144235287,
-          4081393.6027081604
+          4081393.6027081604,
         );
         modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
         hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(
-          new Cesium.HeadingPitchRoll(5.785339046755887, 0.0, 0.0)
+          new Cesium.HeadingPitchRoll(5.785339046755887, 0.0, 0.0),
         );
         hpr = Cesium.Matrix4.fromRotationTranslation(
           hprRotation,
-          new Cesium.Cartesian3(0.4, 0.0, -2.0)
+          new Cesium.Cartesian3(0.4, 0.0, -2.0),
         );
         Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
 
@@ -139,28 +139,28 @@
               modelMatrix: modelMatrix,
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  Cesium.Color.fromCssColorString("#F26419").withAlpha(0.5)
+                  Cesium.Color.fromCssColorString("#F26419").withAlpha(0.5),
                 ),
                 show: new Cesium.ShowGeometryInstanceAttribute(true),
               },
               id: "volume 1",
             }),
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-          })
+          }),
         );
 
         center = new Cesium.Cartesian3(
           1216404.8844045496,
           -4736255.287065536,
-          4081392.010192471
+          4081392.010192471,
         );
         modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
         hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(
-          new Cesium.HeadingPitchRoll(5.785339046755887, 0.0, 0.0)
+          new Cesium.HeadingPitchRoll(5.785339046755887, 0.0, 0.0),
         );
         hpr = Cesium.Matrix4.fromRotationTranslation(
           hprRotation,
-          new Cesium.Cartesian3(-0.25, 0.0, -2.0)
+          new Cesium.Cartesian3(-0.25, 0.0, -2.0),
         );
         Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
 
@@ -173,24 +173,24 @@
               modelMatrix: modelMatrix,
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  Cesium.Color.fromCssColorString("#F03A47").withAlpha(0.5)
+                  Cesium.Color.fromCssColorString("#F03A47").withAlpha(0.5),
                 ),
                 show: new Cesium.ShowGeometryInstanceAttribute(true),
               },
               id: "volume 2",
             }),
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-          })
+          }),
         );
 
         center = new Cesium.Cartesian3(
           1216398.813990024,
           -4736258.039875737,
-          4081387.9562678365
+          4081387.9562678365,
         );
         modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
         let translation = Cesium.Matrix4.fromTranslation(
-          new Cesium.Cartesian3(0.0, 0.0, -2.0)
+          new Cesium.Cartesian3(0.0, 0.0, -2.0),
         );
         Cesium.Matrix4.multiply(modelMatrix, translation, modelMatrix);
 
@@ -203,24 +203,24 @@
               modelMatrix: modelMatrix,
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  Cesium.Color.fromCssColorString("#004FFF").withAlpha(0.5)
+                  Cesium.Color.fromCssColorString("#004FFF").withAlpha(0.5),
                 ),
                 show: new Cesium.ShowGeometryInstanceAttribute(true),
               },
               id: "volume 3",
             }),
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-          })
+          }),
         );
 
         center = new Cesium.Cartesian3(
           1216393.6257790313,
           -4736259.809075361,
-          4081384.4858198245
+          4081384.4858198245,
         );
         modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
         translation = Cesium.Matrix4.fromTranslation(
-          new Cesium.Cartesian3(0.0, 0.0, -1.0)
+          new Cesium.Cartesian3(0.0, 0.0, -1.0),
         );
         Cesium.Matrix4.multiply(modelMatrix, translation, modelMatrix);
 
@@ -233,14 +233,14 @@
               modelMatrix: modelMatrix,
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  Cesium.Color.fromCssColorString("#55DDE0").withAlpha(0.5)
+                  Cesium.Color.fromCssColorString("#55DDE0").withAlpha(0.5),
                 ),
                 show: new Cesium.ShowGeometryInstanceAttribute(true),
               },
               id: "volume 4",
             }),
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-          })
+          }),
         );
 
         function highlightBuilding() {
@@ -248,7 +248,7 @@
             destination: new Cesium.Cartesian3(
               1216394.1392207467,
               -4736348.59346919,
-              4081293.9160685353
+              4081293.9160685353,
             ),
             orientation: {
               heading: 0.018509338875732695,
@@ -262,7 +262,7 @@
             destination: new Cesium.Cartesian3(
               1216435.0352745096,
               -4736283.144192113,
-              4081368.0920420634
+              4081368.0920420634,
             ),
             orientation: {
               heading: 5.718380792746039,
@@ -279,21 +279,16 @@
           scene.invertClassification = checked;
           scene.invertClassificationColor = new Cesium.Color(0.25, 0.25, 0.25, 1.0);
 
-          buildingHighlight.getGeometryInstanceAttributes(
-            "volume"
-          ).show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
-          treeHighlight1.getGeometryInstanceAttributes(
-            "volume 1"
-          ).show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
-          treeHighlight2.getGeometryInstanceAttributes(
-            "volume 2"
-          ).show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
-          treeHighlight3.getGeometryInstanceAttributes(
-            "volume 3"
-          ).show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
-          treeHighlight4.getGeometryInstanceAttributes(
-            "volume 4"
-          ).show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+          buildingHighlight.getGeometryInstanceAttributes("volume").show =
+            Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+          treeHighlight1.getGeometryInstanceAttributes("volume 1").show =
+            Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+          treeHighlight2.getGeometryInstanceAttributes("volume 2").show =
+            Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+          treeHighlight3.getGeometryInstanceAttributes("volume 3").show =
+            Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+          treeHighlight4.getGeometryInstanceAttributes("volume 4").show =
+            Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
         }
 
         function updateAlpha(value) {
@@ -338,9 +333,8 @@
             }
 
             if (Cesium.defined(currentObjectId)) {
-              attributes = currentPrimitive.getGeometryInstanceAttributes(
-                currentObjectId
-              );
+              attributes =
+                currentPrimitive.getGeometryInstanceAttributes(currentObjectId);
               attributes.color = currentColor;
               attributes.show = currentShow;
               currentObjectId = undefined;

@@ -63,11 +63,11 @@ function Cesium3DTilesTerrainData(options) {
   Check.typeOf.object("options.boundingSphere", options.boundingSphere);
   Check.typeOf.object(
     "option.orientedBoundingBox",
-    options.orientedBoundingBox
+    options.orientedBoundingBox,
   );
   Check.typeOf.object(
     "options.horizonOcclusionPoint",
-    options.horizonOcclusionPoint
+    options.horizonOcclusionPoint,
   );
   Check.typeOf.number("options.skirtHeight", options.skirtHeight);
   //>>includeEnd('debug');
@@ -84,19 +84,19 @@ function Cesium3DTilesTerrainData(options) {
   /** @type {BoundingSphere} */
   this._boundingSphere = BoundingSphere.clone(
     options.boundingSphere,
-    new BoundingSphere()
+    new BoundingSphere(),
   );
 
   /** @type {OrientedBoundingBox} */
   this._orientedBoundingBox = OrientedBoundingBox.clone(
     options.orientedBoundingBox,
-    new OrientedBoundingBox()
+    new OrientedBoundingBox(),
   );
 
   /** @type {Cartesian3} */
   this._horizonOcclusionPoint = Cartesian3.clone(
     options.horizonOcclusionPoint,
-    new Cartesian3()
+    new Cartesian3(),
   );
 
   /** @type {Boolean} */
@@ -167,7 +167,7 @@ Object.defineProperties(Cesium3DTilesTerrainData.prototype, {
 Cesium3DTilesTerrainData.prototype.interpolateHeight = function (
   rectangle,
   longitude,
-  latitude
+  latitude,
 ) {
   const mesh = this._mesh;
   if (mesh === undefined) {
@@ -195,7 +195,7 @@ Cesium3DTilesTerrainData.prototype.isChildAvailable = function (
   thisX,
   thisY,
   childX,
-  childY
+  childY,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("thisX", thisX);
@@ -220,7 +220,7 @@ const createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
 const createMeshTaskProcessorThrottle = new TaskProcessor(
   createMeshTaskName,
   // @ts-ignore
-  TerrainData.maximumAsynchronousTasks
+  TerrainData.maximumAsynchronousTasks,
 );
 
 /**
@@ -269,7 +269,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
     x,
     y,
     level,
-    new Rectangle()
+    new Rectangle(),
   );
 
   const gltf = this._gltf;
@@ -303,7 +303,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
     // Need to re-clone and re-wrap all buffers and complex objects to put them back into their normal state
     const encoding = TerrainEncoding.clone(
       taskResult.encoding,
-      new TerrainEncoding()
+      new TerrainEncoding(),
     );
     const vertices = new Float32Array(taskResult.verticesBuffer);
     const vertexCount = vertices.length / encoding.stride;
@@ -321,15 +321,15 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
     const center = Cartesian3.clone(encoding.center, new Cartesian3());
     const boundingSphere = BoundingSphere.clone(
       that._boundingSphere,
-      new BoundingSphere()
+      new BoundingSphere(),
     );
     const horizonOcclusionPoint = Cartesian3.clone(
       that._horizonOcclusionPoint,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const orientedBoundingBox = OrientedBoundingBox.clone(
       that._orientedBoundingBox,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
 
     const mesh = new TerrainMesh(
@@ -348,7 +348,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
       westIndices,
       southIndices,
       eastIndices,
-      northIndices
+      northIndices,
     );
 
     that._mesh = mesh;
@@ -392,7 +392,7 @@ Cesium3DTilesTerrainData.prototype._createMeshSync = function (options) {
     x,
     y,
     level,
-    new Rectangle()
+    new Rectangle(),
   );
 
   const meshPromise = Cesium3DTilesTerrainGeometryProcessor.createMesh({
@@ -418,7 +418,7 @@ Cesium3DTilesTerrainData.prototype._createMeshSync = function (options) {
       const mesh = result;
       that._mesh = mesh;
       return Promise.resolve(mesh);
-    }
+    },
   );
 };
 
@@ -441,7 +441,7 @@ Cesium3DTilesTerrainData.prototype.upsample = function (
   thisLevel,
   descendantX,
   descendantY,
-  descendantLevel
+  descendantLevel,
 ) {
   // mesh is not defined, so there are no UVs yet, so exit early
   const mesh = this._mesh;
@@ -461,7 +461,7 @@ Cesium3DTilesTerrainData.prototype.upsample = function (
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   );
   return upsampledTerrainData;
 };
@@ -487,7 +487,7 @@ Cesium3DTilesTerrainData.prototype._upsampleSync = function (
   thisLevel,
   descendantX,
   descendantY,
-  descendantLevel
+  descendantLevel,
 ) {
   // mesh is not defined, so there are no UVs yet, so exit early
   const mesh = this._mesh;
@@ -507,7 +507,7 @@ Cesium3DTilesTerrainData.prototype._upsampleSync = function (
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   );
   return upsampledTerrainData;
 };
@@ -595,7 +595,7 @@ Cesium3DTilesUpsampleTerrainData.prototype.upsample = function (
   thisLevel,
   descendantX,
   descendantY,
-  descendantLevel
+  descendantLevel,
 ) {
   const isSynchronous = false;
   const upsampledTerrainData = upsampleMesh(
@@ -609,7 +609,7 @@ Cesium3DTilesUpsampleTerrainData.prototype.upsample = function (
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   );
   return upsampledTerrainData;
 };
@@ -635,7 +635,7 @@ Cesium3DTilesUpsampleTerrainData.prototype._upsampleSync = function (
   thisLevel,
   descendantX,
   descendantY,
-  descendantLevel
+  descendantLevel,
 ) {
   const isSynchronous = true;
   const upsampledTerrainData = upsampleMesh(
@@ -649,7 +649,7 @@ Cesium3DTilesUpsampleTerrainData.prototype._upsampleSync = function (
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   );
   // @ts-ignore
   return upsampledTerrainData;
@@ -667,7 +667,7 @@ Cesium3DTilesUpsampleTerrainData.prototype._upsampleSync = function (
 Cesium3DTilesUpsampleTerrainData.prototype.interpolateHeight = function (
   rectangle,
   longitude,
-  latitude
+  latitude,
 ) {
   const mesh = this._mesh;
   const height = interpolateMeshHeight(mesh, rectangle, longitude, latitude);
@@ -683,9 +683,10 @@ Cesium3DTilesUpsampleTerrainData.prototype.interpolateHeight = function (
  *
  * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
  */
-Cesium3DTilesUpsampleTerrainData.prototype.wasCreatedByUpsampling = function () {
-  return true;
-};
+Cesium3DTilesUpsampleTerrainData.prototype.wasCreatedByUpsampling =
+  function () {
+    return true;
+  };
 
 /**
  * Determines if a given child tile is available, based on the
@@ -704,7 +705,7 @@ Cesium3DTilesUpsampleTerrainData.prototype.isChildAvailable = function (
   _thisX,
   _thisY,
   _childX,
-  _childY
+  _childY,
 ) {
   // upsample tiles are dynamic so they don't have children
   return false;
@@ -743,7 +744,7 @@ Object.defineProperties(Cesium3DTilesUpsampleTerrainData.prototype, {
 const upsampleTaskProcessor = new TaskProcessor(
   "upsampleVerticesFromCesium3DTilesTerrain",
   // @ts-ignore
-  TerrainData.maximumAsynchronousTasks
+  TerrainData.maximumAsynchronousTasks,
 );
 
 /**
@@ -773,7 +774,7 @@ function upsampleMesh(
   thisLevel,
   descendantX,
   descendantY,
-  descendantLevel
+  descendantLevel,
 ) {
   //>>includeStart('debug', pragmas.debug)
   Check.typeOf.bool("synchronous", synchronous);
@@ -791,7 +792,7 @@ function upsampleMesh(
   const levelDifference = descendantLevel - thisLevel;
   if (levelDifference > 1) {
     throw new DeveloperError(
-      "Upsampling through more than one level at a time is not currently supported."
+      "Upsampling through more than one level at a time is not currently supported.",
     );
   }
 
@@ -804,7 +805,7 @@ function upsampleMesh(
     descendantX,
     descendantY,
     descendantLevel,
-    new Rectangle()
+    new Rectangle(),
   );
   /** @type Ellipsoid */
   // @ts-ignore
@@ -826,9 +827,8 @@ function upsampleMesh(
   };
 
   if (synchronous) {
-    const upsampledMesh = Cesium3DTilesTerrainGeometryProcessor.upsampleMesh(
-      options
-    );
+    const upsampledMesh =
+      Cesium3DTilesTerrainGeometryProcessor.upsampleMesh(options);
 
     const upsampledTerrainData = new Cesium3DTilesUpsampleTerrainData({
       terrainMesh: upsampledMesh,
@@ -852,7 +852,7 @@ function upsampleMesh(
         // Need to re-clone and re-wrap all buffers and complex ojects to put them back into their normal state
         const encoding = TerrainEncoding.clone(
           taskResult.encoding,
-          new TerrainEncoding()
+          new TerrainEncoding(),
         );
         const stride = encoding.stride;
         const vertices = new Float32Array(taskResult.verticesBuffer);
@@ -871,15 +871,15 @@ function upsampleMesh(
         const center = Cartesian3.clone(encoding.center, new Cartesian3());
         const boundingSphere = BoundingSphere.clone(
           taskResult.boundingSphere,
-          new BoundingSphere()
+          new BoundingSphere(),
         );
         const horizonOcclusionPoint = Cartesian3.clone(
           taskResult.horizonOcclusionPoint,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const orientedBoundingBox = OrientedBoundingBox.clone(
           taskResult.orientedBoundingBox,
-          new OrientedBoundingBox()
+          new OrientedBoundingBox(),
         );
 
         const upsampledMesh = new TerrainMesh(
@@ -898,7 +898,7 @@ function upsampleMesh(
           westIndices,
           southIndices,
           eastIndices,
-          northIndices
+          northIndices,
         );
 
         const upsampledTerrainData = new Cesium3DTilesUpsampleTerrainData({
@@ -908,7 +908,7 @@ function upsampleMesh(
         });
 
         return Promise.resolve(upsampledTerrainData);
-      }
+      },
     );
   }
 }
@@ -934,7 +934,7 @@ function interpolateMeshHeight(mesh, rectangle, longitude, latitude) {
   const u = CesiumMath.clamp(
     (longitude - rectangle.west) / rectangleWidth,
     0.0,
-    1.0
+    1.0,
   );
 
   // @ts-ignore
@@ -942,7 +942,7 @@ function interpolateMeshHeight(mesh, rectangle, longitude, latitude) {
   const v = CesiumMath.clamp(
     (latitude - rectangle.south) / rectangleHeight,
     0.0,
-    1.0
+    1.0,
   );
 
   const vertices = mesh.vertices;
@@ -974,7 +974,7 @@ function interpolateMeshHeight(mesh, rectangle, longitude, latitude) {
         uv1.y,
         uv2.x,
         uv2.y,
-        scratchBary
+        scratchBary,
       );
       if (
         barycentric.x >= 0.0 &&

@@ -17,7 +17,7 @@ const packageJsons = [
 const words = packageJsons.reduce((acc, packageJsonPath) => {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
   const packageNames = Object.keys(packageJson.dependencies ?? {}).concat(
-    Object.keys(packageJson.devDependencies ?? {})
+    Object.keys(packageJson.devDependencies ?? {}),
   );
   // remove the @ org symbol and dashes to get just words in package names
   const setOfWords = packageNames

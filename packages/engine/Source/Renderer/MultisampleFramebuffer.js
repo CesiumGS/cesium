@@ -53,13 +53,13 @@ function MultisampleFramebuffer(options) {
 
   if (defined(colorRenderbuffers) !== defined(colorTextures)) {
     throw new DeveloperError(
-      "Both color renderbuffer and texture attachments must be provided."
+      "Both color renderbuffer and texture attachments must be provided.",
     );
   }
 
   if (defined(depthStencilRenderbuffer) !== defined(depthStencilTexture)) {
     throw new DeveloperError(
-      "Both depth-stencil renderbuffer and texture attachments must be provided."
+      "Both depth-stencil renderbuffer and texture attachments must be provided.",
     );
   }
 
@@ -95,7 +95,7 @@ MultisampleFramebuffer.prototype.getColorFramebuffer = function () {
  */
 MultisampleFramebuffer.prototype.blitFramebuffers = function (
   context,
-  blitStencil
+  blitStencil,
 ) {
   this._renderFramebuffer.bindRead();
   this._colorFramebuffer.bindDraw();
@@ -117,7 +117,7 @@ MultisampleFramebuffer.prototype.blitFramebuffers = function (
     this._width,
     this._height,
     mask,
-    gl.NEAREST
+    gl.NEAREST,
   );
   gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
   gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);

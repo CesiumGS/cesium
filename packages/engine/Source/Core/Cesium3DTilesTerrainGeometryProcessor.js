@@ -99,7 +99,7 @@ function decodePositions(gltf) {
       buffer.byteOffset + // offset from the start of the glb
         defaultValue(bufferViewMeshOpt.byteOffset, 0) +
         defaultValue(accessor.byteOffset, 0),
-      bufferViewMeshOpt.byteLength
+      bufferViewMeshOpt.byteLength,
     );
 
     const positionByteLength = bufferViewMeshOpt.byteStride;
@@ -110,7 +110,7 @@ function decodePositions(gltf) {
       new Uint8Array(positionsResult.buffer),
       positionCount,
       positionByteLength,
-      compressedBuffer
+      compressedBuffer,
     );
 
     const positionStorageValueMax =
@@ -134,7 +134,7 @@ function decodePositions(gltf) {
       buffer.byteOffset + // offset from the start of the glb
         defaultValue(bufferView.byteOffset, 0) +
         defaultValue(accessor.byteOffset, 0),
-      positionCount * 3
+      positionCount * 3,
     );
   }
 
@@ -167,7 +167,7 @@ function decodeNormals(gltf) {
       buffer.byteOffset + // offset from the start of the glb
         defaultValue(bufferViewMeshOpt.byteOffset, 0) +
         defaultValue(accessor.byteOffset, 0),
-      bufferViewMeshOpt.byteLength
+      bufferViewMeshOpt.byteLength,
     );
 
     const normalByteLength = bufferViewMeshOpt.byteStride;
@@ -178,7 +178,7 @@ function decodeNormals(gltf) {
       new Uint8Array(normalsResult.buffer),
       normalCount,
       normalByteLength,
-      compressedBuffer
+      compressedBuffer,
     );
 
     normals = new Float32Array(normalCount * 3);
@@ -216,7 +216,7 @@ function decodeNormals(gltf) {
       buffer.byteOffset + // offset from the start of the glb
         defaultValue(bufferView.byteOffset, 0) +
         defaultValue(accessor.byteOffset, 0),
-      normalCount * 3
+      normalCount * 3,
     );
   }
 
@@ -254,7 +254,7 @@ function decodeIndices(gltf) {
       buffer.byteOffset + // offset from the start of the glb
         defaultValue(bufferViewMeshOpt.byteOffset, 0) +
         defaultValue(accessor.byteOffset, 0),
-      bufferViewMeshOpt.byteLength
+      bufferViewMeshOpt.byteLength,
     );
     indices = new SizedIndexType(indexCount);
 
@@ -264,7 +264,7 @@ function decodeIndices(gltf) {
       new Uint8Array(indices.buffer),
       indexCount,
       indexByteLength,
-      compressedBuffer
+      compressedBuffer,
     );
   } else {
     buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
@@ -273,7 +273,7 @@ function decodeIndices(gltf) {
       buffer.byteOffset + // offset from the glb
         defaultValue(bufferView.byteOffset, 0) +
         defaultValue(accessor.byteOffset, 0),
-      indexCount
+      indexCount,
     );
   }
 
@@ -312,7 +312,7 @@ function decodeEdgeIndices(gltf, name) {
       buffer.byteOffset + // offset from the start of the glb
         defaultValue(bufferViewMeshOpt.byteOffset, 0) +
         defaultValue(accessor.byteOffset, 0),
-      bufferViewMeshOpt.byteLength
+      bufferViewMeshOpt.byteLength,
     );
     indices = new SizedIndexType(indexCount);
 
@@ -322,7 +322,7 @@ function decodeEdgeIndices(gltf, name) {
       new Uint8Array(indices.buffer),
       indexCount,
       indexByteLength,
-      compressedBuffer
+      compressedBuffer,
     );
   } else {
     buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
@@ -332,7 +332,7 @@ function decodeEdgeIndices(gltf, name) {
       buffer.byteOffset + // offset from the glb
         defaultValue(bufferView.byteOffset, 0) +
         defaultValue(accessor.byteOffset, 0),
-      indexCount
+      indexCount,
     );
   }
 
@@ -435,11 +435,11 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
   Check.typeOf.object("options.boundingSphere", options.boundingSphere);
   Check.typeOf.object(
     "options.orientedBoundingBox",
-    options.orientedBoundingBox
+    options.orientedBoundingBox,
   );
   Check.typeOf.object(
     "options.horizonOcclusionPoint",
-    options.horizonOcclusionPoint
+    options.horizonOcclusionPoint,
   );
   Check.typeOf.number("options.skirtHeight", options.skirtHeight);
   //>>includeEnd('debug');
@@ -447,7 +447,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
   const exaggeration = defaultValue(options.exaggeration, 1.0);
   const exaggerationRelativeHeight = defaultValue(
     options.exaggerationRelativeHeight,
-    0.0
+    0.0,
   );
   const hasVertexNormals = options.hasVertexNormals;
   const hasWebMercatorT = options.hasWebMercatorT;
@@ -459,15 +459,15 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
   const maximumHeight = options.maximumHeight;
   const boundingSphere = BoundingSphere.clone(
     options.boundingSphere,
-    new BoundingSphere()
+    new BoundingSphere(),
   );
   const orientedBoundingBox = OrientedBoundingBox.clone(
     options.orientedBoundingBox,
-    new OrientedBoundingBox()
+    new OrientedBoundingBox(),
   );
   const horizonOcclusionPoint = Cartesian3.clone(
     options.horizonOcclusionPoint,
-    new Cartesian3()
+    new Cartesian3(),
   );
   const skirtHeight = options.skirtHeight;
   const ellipsoid = Ellipsoid.clone(options.ellipsoid, new Ellipsoid());
@@ -495,7 +495,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
 
     const approximateCenterCartographic = Rectangle.center(
       rectangle,
-      scratchCenterCartographic
+      scratchCenterCartographic,
     );
     approximateCenterCartographic.height =
       0.5 * (minimumHeight + maximumHeight);
@@ -503,29 +503,29 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
     const approximateCenterPosition = Cartographic.toCartesian(
       approximateCenterCartographic,
       ellipsoid,
-      scratchCenterCartesian
+      scratchCenterCartesian,
     );
 
     const enuToEcef = Transforms.eastNorthUpToFixedFrame(
       approximateCenterPosition,
       ellipsoid,
-      scratchEnuToEcef
+      scratchEnuToEcef,
     );
     const ecefToEnu = Matrix4.inverseTransformation(
       enuToEcef,
-      scratchEcefToEnu
+      scratchEcefToEnu,
     );
 
     let tilesetTransform = Matrix4.unpack(
       gltf.nodes[0].matrix,
       0,
-      scratchTilesetTransform
+      scratchTilesetTransform,
     );
 
     tilesetTransform = Matrix4.multiply(
       Axis.Y_UP_TO_Z_UP,
       tilesetTransform,
-      tilesetTransform
+      tilesetTransform,
     );
 
     // @ts-ignore
@@ -536,7 +536,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
       gltfInfo.edgeIndicesWest,
       gltfInfo.edgeIndicesSouth,
       gltfInfo.edgeIndicesEast,
-      gltfInfo.edgeIndicesNorth
+      gltfInfo.edgeIndicesNorth,
     );
 
     const positionsLocalWithoutSkirts = gltfInfo.positions;
@@ -546,16 +546,15 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
     const vertexCountWithSkirts = vertexCountWithoutSkirts + skirtVertexCount;
     const indexCountWithoutSkirts = indicesWithoutSkirts.length;
     // @ts-ignore
-    const skirtIndexCount = TerrainProvider.getSkirtIndexCountWithFilledCorners(
-      skirtVertexCount
-    );
+    const skirtIndexCount =
+      TerrainProvider.getSkirtIndexCountWithFilledCorners(skirtVertexCount);
     const indexCountWithSkirts = indexCountWithoutSkirts + skirtIndexCount;
 
     // For consistency with glTF spec, 16 bit index buffer can't contain 65535
     const SizedIndexTypeWithSkirts =
       vertexCountWithSkirts <= 65535 ? Uint16Array : Uint32Array;
     const indexBufferWithSkirts = new SizedIndexTypeWithSkirts(
-      indexCountWithSkirts
+      indexCountWithSkirts,
     );
     indexBufferWithSkirts.set(indicesWithoutSkirts);
 
@@ -580,7 +579,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
     mergeSort(sortedWestIndices, sortedEdgeCompare);
 
     const sortedSouthIndices = new SizedIndexTypeWithSkirts(
-      southIndices.length
+      southIndices.length,
     );
     sortedSouthIndices.set(southIndices);
     mergeSort(sortedSouthIndices, sortedEdgeCompare);
@@ -590,17 +589,15 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
     mergeSort(sortedEastIndices, sortedEdgeCompare);
 
     const sortedNorthIndices = new SizedIndexTypeWithSkirts(
-      northIndices.length
+      northIndices.length,
     );
     sortedNorthIndices.set(northIndices);
     mergeSort(sortedNorthIndices, sortedEdgeCompare);
 
-    const southMerc = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-      tileMinLatitude
-    );
-    const northMerc = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-      tileMaxLatitude
-    );
+    const southMerc =
+      WebMercatorProjection.geodeticLatitudeToMercatorAngle(tileMinLatitude);
+    const northMerc =
+      WebMercatorProjection.geodeticLatitudeToMercatorAngle(tileMaxLatitude);
 
     const oneOverMercatorHeight = 1.0 / (northMerc - southMerc);
 
@@ -627,12 +624,12 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
       hasWebMercatorT,
       hasGeodeticSurfaceNormals,
       exaggeration,
-      exaggerationRelativeHeight
+      exaggerationRelativeHeight,
     );
 
     const tempBufferStride = tempTerrainEncoding.stride;
     const tempBuffer = new Float32Array(
-      vertexCountWithSkirts * tempBufferStride
+      vertexCountWithSkirts * tempBufferStride,
     );
     let tempBufferOffset = 0;
 
@@ -640,19 +637,19 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
       const posLocal = Cartesian3.unpack(
         positionsLocalWithoutSkirts,
         i * 3,
-        scratchPosLocal
+        scratchPosLocal,
       );
 
       const posECEF = Matrix4.multiplyByPoint(
         tilesetTransform,
         posLocal,
-        scratchPosEcef
+        scratchPosEcef,
       );
 
       const cartographic = Cartographic.fromCartesian(
         posECEF,
         ellipsoid,
-        scratchCartographic
+        scratchCartographic,
       );
 
       const longitude = cartographic.longitude;
@@ -696,7 +693,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
         normal = Matrix4.multiplyByPointAsVector(
           tilesetTransform,
           normal,
-          scratchNormal
+          scratchNormal,
         );
 
         normal = Cartesian3.normalize(normal, scratchNormal);
@@ -706,9 +703,8 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
 
       let webMercatorT;
       if (hasWebMercatorT) {
-        const mercatorAngle = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-          latitude
-        );
+        const mercatorAngle =
+          WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude);
         webMercatorT = (mercatorAngle - southMerc) * oneOverMercatorHeight;
       }
 
@@ -716,7 +712,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
       if (hasGeodeticSurfaceNormals) {
         geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
           posECEF,
-          scratchGeodeticSurfaceNormal
+          scratchGeodeticSurfaceNormal,
         );
       }
 
@@ -728,7 +724,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
         height,
         normalOct,
         webMercatorT,
-        geodeticSurfaceNormal
+        geodeticSurfaceNormal,
       );
 
       const posEnu = Matrix4.multiplyByPoint(ecefToEnu, posECEF, scratchPosEnu);
@@ -752,7 +748,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
       westIndices,
       southIndices,
       eastIndices,
-      northIndices
+      northIndices,
     );
 
     addSkirtsToMesh(
@@ -763,7 +759,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
       maxPosEnu,
       enuToEcef,
       ecefToEnu,
-      skirtHeight
+      skirtHeight,
     );
 
     return Promise.resolve(mesh);
@@ -797,19 +793,19 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   Check.typeOf.object("options.parentIndices", options.parentIndices);
   Check.typeOf.number(
     "options.parentVertexCountWithoutSkirts",
-    options.parentVertexCountWithoutSkirts
+    options.parentVertexCountWithoutSkirts,
   );
   Check.typeOf.number(
     "options.parentIndexCountWithoutSkirts",
-    options.parentIndexCountWithoutSkirts
+    options.parentIndexCountWithoutSkirts,
   );
   Check.typeOf.number(
     "options.parentMinimumHeight",
-    options.parentMinimumHeight
+    options.parentMinimumHeight,
   );
   Check.typeOf.number(
     "options.parentMaximumHeight",
-    options.parentMaximumHeight
+    options.parentMaximumHeight,
   );
   Check.typeOf.object("options.parentEncoding", options.parentEncoding);
   Check.typeOf.object("options.rectangle", options.rectangle);
@@ -825,7 +821,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   const vertexBuffer = options.parentVertices;
   const encoding = TerrainEncoding.clone(
     options.parentEncoding,
-    new TerrainEncoding()
+    new TerrainEncoding(),
   );
   const hasVertexNormals = encoding.hasVertexNormals;
   const hasWebMercatorT = encoding.hasWebMercatorT;
@@ -873,20 +869,20 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     upsampledNorthIndices,
     upsampledTriIDs,
     upsampledBarys,
-    upsampledUVs
+    upsampledUVs,
   );
 
   // Don't know the min and max height of the upsampled positions yet, so calculate a center point from the parent's min and max height
   const approximateCenterCartographic = Rectangle.center(
     upsampleRectangle,
-    scratchCenterCartographicUpsample
+    scratchCenterCartographicUpsample,
   );
   approximateCenterCartographic.height =
     0.5 * (parentMinimumHeight + parentMaximumHeight);
   const approximateCenterPosition = Cartographic.toCartesian(
     approximateCenterCartographic,
     ellipsoid,
-    scratchCenterCartesianUpsample
+    scratchCenterCartesianUpsample,
   );
 
   const upsampledVertexCountWithoutSkirts = upsampledTriIDs.length;
@@ -900,7 +896,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     hasWebMercatorT,
     hasGeodeticSurfaceNormals,
     exaggeration,
-    exaggerationRelativeHeight
+    exaggerationRelativeHeight,
   );
   const upsampledVertexBufferStride = upsampledTerrainEncoding.stride;
 
@@ -909,58 +905,59 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     upsampledWestIndices,
     upsampledSouthIndices,
     upsampledEastIndices,
-    upsampledNorthIndices
+    upsampledNorthIndices,
   );
   const upsampledVertexCountWithSkirts =
     upsampledVertexCountWithoutSkirts + upsampledSkirtVertexCount;
   const upsampledIndexCountWithoutSkirts = upsampledIndices.length;
   // @ts-ignore
-  const upsampledSkirtIndexCount = TerrainProvider.getSkirtIndexCountWithFilledCorners(
-    upsampledSkirtVertexCount
-  );
+  const upsampledSkirtIndexCount =
+    TerrainProvider.getSkirtIndexCountWithFilledCorners(
+      upsampledSkirtVertexCount,
+    );
   const upsampledIndexCountWithSkirts =
     upsampledIndexCountWithoutSkirts + upsampledSkirtIndexCount;
   // For consistency with glTF spec, 16 bit index buffer can't contain 65535
   const SizedIndexTypeWithSkirts =
     upsampledVertexCountWithSkirts <= 65535 ? Uint16Array : Uint32Array;
   const upsampledIndexBuffer = new SizedIndexTypeWithSkirts(
-    upsampledIndexCountWithSkirts
+    upsampledIndexCountWithSkirts,
   );
   upsampledIndexBuffer.set(upsampledIndices);
 
   const upsampledWestIndicesBuffer = new SizedIndexTypeWithSkirts(
-    upsampledWestIndices.length
+    upsampledWestIndices.length,
   );
   upsampledWestIndicesBuffer.set(upsampledWestIndices);
 
   const upsampledSouthIndicesBuffer = new SizedIndexTypeWithSkirts(
-    upsampledSouthIndices.length
+    upsampledSouthIndices.length,
   );
   upsampledSouthIndicesBuffer.set(upsampledSouthIndices);
 
   const upsampledEastIndicesBuffer = new SizedIndexTypeWithSkirts(
-    upsampledEastIndices.length
+    upsampledEastIndices.length,
   );
   upsampledEastIndicesBuffer.set(upsampledEastIndices);
 
   const upsampledNorthIndicesBuffer = new SizedIndexTypeWithSkirts(
-    upsampledNorthIndices.length
+    upsampledNorthIndices.length,
   );
   upsampledNorthIndicesBuffer.set(upsampledNorthIndices);
 
   const upsampledVertexBuffer = new Float32Array(
-    upsampledVertexCountWithSkirts * upsampledVertexBufferStride
+    upsampledVertexCountWithSkirts * upsampledVertexBufferStride,
   );
   let upsampledVertexBufferOffset = 0;
 
   const enuToEcef = Transforms.eastNorthUpToFixedFrame(
     approximateCenterPosition,
     ellipsoid,
-    scratchEnuToEcefUpsample
+    scratchEnuToEcefUpsample,
   );
   const ecefToEnu = Matrix4.inverseTransformation(
     enuToEcef,
-    scratchEcefToEnuUpsample
+    scratchEcefToEnuUpsample,
   );
 
   const minimumLongitude = upsampleRectangle.west;
@@ -968,12 +965,10 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   const minimumLatitude = upsampleRectangle.south;
   const maximumLatitude = upsampleRectangle.north;
 
-  const southMerc = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-    minimumLatitude
-  );
-  const northMerc = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-    maximumLatitude
-  );
+  const southMerc =
+    WebMercatorProjection.geodeticLatitudeToMercatorAngle(minimumLatitude);
+  const northMerc =
+    WebMercatorProjection.geodeticLatitudeToMercatorAngle(maximumLatitude);
   const oneOverMercatorHeight = 1.0 / (northMerc - southMerc);
 
   let minimumHeight = Number.POSITIVE_INFINITY;
@@ -1019,18 +1014,18 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
       lon,
       lat,
       height,
-      scratchCartographicUpsample
+      scratchCartographicUpsample,
     );
     const position = Cartographic.toCartesian(
       carto,
       ellipsoid,
-      scratchPosEcefUpsample
+      scratchPosEcefUpsample,
     );
 
     const posEnu = Matrix4.multiplyByPoint(
       ecefToEnu,
       position,
-      scratchPosEnuUpsample
+      scratchPosEnuUpsample,
     );
     minPosEnu = Cartesian3.minimumByComponent(posEnu, minPosEnu, minPosEnu);
     maxPosEnu = Cartesian3.maximumByComponent(posEnu, maxPosEnu, maxPosEnu);
@@ -1040,37 +1035,36 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
       const normalA = encoding.decodeNormal(
         vertexBuffer,
         indexA,
-        scratchNormalA
+        scratchNormalA,
       );
       const normalB = encoding.decodeNormal(
         vertexBuffer,
         indexB,
-        scratchNormalB
+        scratchNormalB,
       );
       const normalC = encoding.decodeNormal(
         vertexBuffer,
         indexC,
-        scratchNormalC
+        scratchNormalC,
       );
 
       let normal = Cartesian3.fromElements(
         normalA.x * baryA + normalB.x * baryB + normalC.x * baryC,
         normalA.y * baryA + normalB.y * baryB + normalC.y * baryC,
         normalA.z * baryA + normalB.z * baryB + normalC.z * baryC,
-        scratchNormalUpsample
+        scratchNormalUpsample,
       );
       normal = Cartesian3.normalize(normal, scratchNormalUpsample);
       normalOct = AttributeCompression.octEncode(
         normal,
-        scratchNormalOctUpsample
+        scratchNormalOctUpsample,
       );
     }
 
     let webMercatorT;
     if (hasWebMercatorT) {
-      const mercatorAngle = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-        lat
-      );
+      const mercatorAngle =
+        WebMercatorProjection.geodeticLatitudeToMercatorAngle(lat);
       webMercatorT = (mercatorAngle - southMerc) * oneOverMercatorHeight;
     }
 
@@ -1078,7 +1072,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     if (hasGeodeticSurfaceNormals) {
       geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
         position,
-        scratchGeodeticSurfaceNormalUpsample
+        scratchGeodeticSurfaceNormalUpsample,
       );
     }
 
@@ -1090,7 +1084,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
       height,
       normalOct,
       webMercatorT,
-      geodeticSurfaceNormal
+      geodeticSurfaceNormal,
     );
   }
 
@@ -1100,23 +1094,24 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     minimumHeight,
     maximumHeight,
     ellipsoid,
-    scratchOrientedBoundingBox
+    scratchOrientedBoundingBox,
   );
   const boundingSphere = BoundingSphere.fromVertices(
     upsampledVertexBuffer,
     upsampledTerrainEncoding.center,
     upsampledVertexBufferStride,
-    scratchBoundingSphere
+    scratchBoundingSphere,
   );
   const occluder = new EllipsoidalOccluder(ellipsoid);
-  const horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(
-    upsampledTerrainEncoding.center, // vector from ellipsoid center to horizon occlusion point
-    upsampledVertexBuffer,
-    upsampledVertexBufferStride,
-    upsampledTerrainEncoding.center,
-    minimumHeight,
-    scratchHorizonOcclusionPoint
-  );
+  const horizonOcclusionPoint =
+    occluder.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(
+      upsampledTerrainEncoding.center, // vector from ellipsoid center to horizon occlusion point
+      upsampledVertexBuffer,
+      upsampledVertexBufferStride,
+      upsampledTerrainEncoding.center,
+      minimumHeight,
+      scratchHorizonOcclusionPoint,
+    );
 
   const upsampledMesh = new TerrainMesh(
     Cartesian3.clone(upsampledTerrainEncoding.center, new Cartesian3()),
@@ -1134,7 +1129,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     upsampledWestIndicesBuffer,
     upsampledSouthIndicesBuffer,
     upsampledEastIndicesBuffer,
-    upsampledNorthIndicesBuffer
+    upsampledNorthIndicesBuffer,
   );
 
   addSkirtsToMesh(
@@ -1145,7 +1140,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     maxPosEnu,
     enuToEcef,
     ecefToEnu,
-    skirtHeight
+    skirtHeight,
   );
 
   return upsampledMesh;
@@ -1175,7 +1170,7 @@ function addSkirtsToMesh(
   enuMaximum,
   enuToEcef,
   ecefToEnu,
-  skirtHeight
+  skirtHeight,
 ) {
   const encoding = mesh.encoding;
   const vertexStride = encoding.stride;
@@ -1207,7 +1202,7 @@ function addSkirtsToMesh(
     northIndices,
     vertexCountWithoutSkirts,
     indices,
-    indexCountWithoutSkirts
+    indexCountWithoutSkirts,
   );
 
   const westOffset = 0;
@@ -1221,11 +1216,11 @@ function addSkirtsToMesh(
 
   const minimumPositionENUWithSkirts = Cartesian3.clone(
     enuMinimum,
-    scratchMinimumPositionENUSkirt
+    scratchMinimumPositionENUSkirt,
   );
   const maximumPositionENUWithSkirts = Cartesian3.clone(
     enuMaximum,
-    scratchMaximumPositionENUSkirt
+    scratchMaximumPositionENUSkirt,
   );
   const maximumHeight = mesh.maximumHeight;
   const minimumHeightWithSkirts = mesh.minimumHeight - skirtHeight;
@@ -1241,7 +1236,7 @@ function addSkirtsToMesh(
     const uv = encoding.decodeTextureCoordinates(
       vertexBuffer,
       vertexIndex,
-      scratchUVSkirt
+      scratchUVSkirt,
     );
 
     const skirtLonLatOffsetPercent = 0.0001;
@@ -1252,13 +1247,13 @@ function addSkirtsToMesh(
     const longitude = CesiumMath.lerp(
       rectangle.west,
       rectangle.east,
-      longitudeT
+      longitudeT,
     );
     // Don't offset the skirt past the poles, it will screw up the cartographic -> cartesian
     const latitude = CesiumMath.clamp(
       CesiumMath.lerp(rectangle.south, rectangle.north, latitudeT),
       -CesiumMath.PI_OVER_TWO,
-      +CesiumMath.PI_OVER_TWO
+      +CesiumMath.PI_OVER_TWO,
     );
 
     const vertHeight = encoding.decodeHeight(vertexBuffer, vertexIndex);
@@ -1268,13 +1263,13 @@ function addSkirtsToMesh(
       longitude,
       latitude,
       height,
-      scratchCartographicSkirt
+      scratchCartographicSkirt,
     );
 
     const positionEcef = Cartographic.toCartesian(
       cartographic,
       ellipsoid,
-      scratchPosEcefSkirt
+      scratchPosEcefSkirt,
     );
 
     let normalOct;
@@ -1282,7 +1277,7 @@ function addSkirtsToMesh(
       normalOct = encoding.getOctEncodedNormal(
         vertexBuffer,
         vertexIndex,
-        scratchNormalOctSkirt
+        scratchNormalOctSkirt,
       );
     }
 
@@ -1295,7 +1290,7 @@ function addSkirtsToMesh(
     if (hasGeodeticSurfaceNormals) {
       geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
         positionEcef,
-        scratchGeodeticSurfaceNormalSkirt
+        scratchGeodeticSurfaceNormalSkirt,
       );
     }
 
@@ -1307,30 +1302,30 @@ function addSkirtsToMesh(
       height,
       normalOct,
       webMercatorT,
-      geodeticSurfaceNormal
+      geodeticSurfaceNormal,
     );
 
     const positionENU = Matrix4.multiplyByPoint(
       ecefToEnu,
       positionEcef,
-      scratchPosEnuSkirt
+      scratchPosEnuSkirt,
     );
     Cartesian3.minimumByComponent(
       positionENU,
       minimumPositionENUWithSkirts,
-      minimumPositionENUWithSkirts
+      minimumPositionENUWithSkirts,
     );
     Cartesian3.maximumByComponent(
       positionENU,
       maximumPositionENUWithSkirts,
-      maximumPositionENUWithSkirts
+      maximumPositionENUWithSkirts,
     );
   }
 
   const aabbEnuWithSkirts = AxisAlignedBoundingBox.fromCorners(
     minimumPositionENUWithSkirts,
     maximumPositionENUWithSkirts,
-    scratchAABBEnuSkirt
+    scratchAABBEnuSkirt,
   );
 
   // Check if the final terrain encoding has a different quantization. If so,
@@ -1346,13 +1341,13 @@ function addSkirtsToMesh(
     encoding.hasWebMercatorT,
     hasGeodeticSurfaceNormals,
     exaggeration,
-    exaggerationRelativeHeight
+    exaggerationRelativeHeight,
   );
   if (encoding.quantization !== encodingWithSkirts.quantization) {
     const finalEncoding = encodingWithSkirts;
     const finalVertexStride = finalEncoding.stride;
     const finalVertexBuffer = new Float32Array(
-      vertexCountWithSkirts * finalVertexStride
+      vertexCountWithSkirts * finalVertexStride,
     );
     let finalVertexBufferOffset = 0;
     for (let i = 0; i < vertexCountWithSkirts; i++) {
@@ -1372,9 +1367,9 @@ function addSkirtsToMesh(
           ? encoding.decodeGeodeticSurfaceNormal(
               vertexBuffer,
               i,
-              scratchGeodeticSurfaceNormalSkirt
+              scratchGeodeticSurfaceNormalSkirt,
             )
-          : undefined
+          : undefined,
       );
     }
     mesh.vertices = finalVertexBuffer;
@@ -1543,7 +1538,7 @@ function clipTriangleAgainstBoxEdgeRange(
   p0,
   p1,
   p2,
-  result
+  result,
 ) {
   let inputLength = 0;
   let inputPoints = scratchInPoints;
@@ -1596,7 +1591,7 @@ function clipTriangleAgainstBoxEdgeRange(
           edgeId,
           prevPoint,
           currPoint,
-          scratchIntersection
+          scratchIntersection,
         );
         const x = intersection.x;
         const y = intersection.y;
@@ -1659,15 +1654,15 @@ function clipTriangleFromQuadrant(
   p0,
   p1,
   p2,
-  result
+  result,
 ) {
   const edgeStart = isEastChild
     ? isNorthChild
       ? EDGE_ID_BOTTOM
       : EDGE_ID_LEFT
     : isNorthChild
-    ? EDGE_ID_RIGHT
-    : EDGE_ID_TOP;
+      ? EDGE_ID_RIGHT
+      : EDGE_ID_TOP;
 
   return clipTriangleAgainstBoxEdgeRange(
     edgeStart,
@@ -1677,7 +1672,7 @@ function clipTriangleFromQuadrant(
     p0,
     p1,
     p2,
-    result
+    result,
   );
 }
 
@@ -1726,7 +1721,7 @@ function clipTileFromQuadrant(
   resultNorthIndices,
   resultTriIds,
   resultBary,
-  resultUVs
+  resultUVs,
 ) {
   /** @type Object.<number, number> */
   const upsampledVertexMap = {};
@@ -1755,17 +1750,17 @@ function clipTileFromQuadrant(
     const uvA = vertexEncoding.decodeTextureCoordinates(
       vertices,
       indexA,
-      scratchUvA
+      scratchUvA,
     );
     const uvB = vertexEncoding.decodeTextureCoordinates(
       vertices,
       indexB,
-      scratchUvB
+      scratchUvB,
     );
     const uvC = vertexEncoding.decodeTextureCoordinates(
       vertices,
       indexC,
-      scratchUvC
+      scratchUvC,
     );
 
     const clippedPolygon = clipTriangleFromQuadrant(
@@ -1776,7 +1771,7 @@ function clipTileFromQuadrant(
       uvA,
       uvB,
       uvC,
-      scratchPolygon
+      scratchPolygon,
     );
     const clippedPolygonLength = clippedPolygon.length;
     if (clippedPolygonLength < 3) {

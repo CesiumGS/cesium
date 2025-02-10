@@ -98,13 +98,13 @@ function CubeMap(options) {
     //>>includeStart('debug', pragmas.debug);
     if (
       !Object.values(CubeMap.FaceName).every((faceName) =>
-        defined(source[faceName])
+        defined(source[faceName]),
       )
     ) {
       throw new DeveloperError(
         `options.source requires faces ${Object.values(CubeMap.FaceName).join(
-          ", "
-        )}.`
+          ", ",
+        )}.`,
       );
     }
     //>>includeEnd('debug');
@@ -116,7 +116,7 @@ function CubeMap(options) {
       const face = source[faceName];
       if (Number(face.width) !== width || Number(face.height) !== height) {
         throw new DeveloperError(
-          "Each face in options.source must have the same width and height."
+          "Each face in options.source must have the same width and height.",
         );
       }
     }
@@ -128,7 +128,7 @@ function CubeMap(options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {
     throw new DeveloperError(
-      "options requires a source field to create an initialized cube map or width and height fields to create a blank cube map."
+      "options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.",
     );
   }
 
@@ -142,7 +142,7 @@ function CubeMap(options) {
 
   if (size > ContextLimits.maximumCubeMapSize) {
     throw new DeveloperError(
-      `Width and height must be less than or equal to the maximum cube map size (${ContextLimits.maximumCubeMapSize}). Check maximumCubeMapSize.`
+      `Width and height must be less than or equal to the maximum cube map size (${ContextLimits.maximumCubeMapSize}). Check maximumCubeMapSize.`,
     );
   }
 
@@ -152,7 +152,7 @@ function CubeMap(options) {
 
   if (PixelFormat.isDepthFormat(pixelFormat)) {
     throw new DeveloperError(
-      "options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL."
+      "options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.",
     );
   }
 
@@ -162,7 +162,7 @@ function CubeMap(options) {
 
   if (pixelDatatype === PixelDatatype.FLOAT && !context.floatingPointTexture) {
     throw new DeveloperError(
-      "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension."
+      "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.",
     );
   }
 
@@ -171,7 +171,7 @@ function CubeMap(options) {
     !context.halfFloatingPointTexture
   ) {
     throw new DeveloperError(
-      "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension."
+      "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension.",
     );
   }
   //>>includeEnd('debug');
@@ -181,7 +181,7 @@ function CubeMap(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context
+    context,
   );
 
   const gl = context._gl;
@@ -213,7 +213,7 @@ function CubeMap(options) {
       size,
       preMultiplyAlpha,
       flipY,
-      initialized
+      initialized,
     );
   }
   this._positiveX = constructFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X);
@@ -234,7 +234,7 @@ function CubeMap(options) {
   } else {
     gl.pixelStorei(
       gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-      gl.BROWSER_DEFAULT_WEBGL
+      gl.BROWSER_DEFAULT_WEBGL,
     );
   }
 
@@ -267,7 +267,7 @@ CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel) {
     0,
     texture.width,
     texture.height,
-    defaultValue(mipLevel, 0)
+    defaultValue(mipLevel, 0),
   );
   framebuffer._unBind();
   framebuffer.destroy();
@@ -335,7 +335,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       0,
       pixelFormat,
       PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
+      null,
     );
     return;
   }
@@ -347,7 +347,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
     unpackAlignment = PixelFormat.alignmentInBytes(
       pixelFormat,
       pixelDatatype,
-      size
+      size,
     );
   }
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
@@ -361,7 +361,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
         pixelFormat,
         pixelDatatype,
         size,
-        size
+        size,
       );
     }
     gl.texImage2D(
@@ -373,7 +373,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       0,
       pixelFormat,
       PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      arrayBufferView
+      arrayBufferView,
     );
   } else {
     // Only valid for DOM-Element uploads
@@ -385,7 +385,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       internalFormat,
       pixelFormat,
       PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      source
+      source,
     );
   }
 }
@@ -546,7 +546,7 @@ function setupSampler(cubeMap, sampler) {
     gl.texParameteri(
       target,
       cubeMap._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
-      sampler.maximumAnisotropy
+      sampler.maximumAnisotropy,
     );
   }
   gl.bindTexture(target, null);
@@ -585,7 +585,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
   } else {
     gl.pixelStorei(
       gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-      gl.BROWSER_DEFAULT_WEBGL
+      gl.BROWSER_DEFAULT_WEBGL,
     );
   }
 
@@ -627,7 +627,7 @@ CubeMap.prototype.generateMipmap = function (hint) {
   //>>includeStart('debug', pragmas.debug);
   if (this._size > 1 && !CesiumMath.isPowerOfTwo(this._size)) {
     throw new DeveloperError(
-      "width and height must be a power of two to call generateMipmap()."
+      "width and height must be a power of two to call generateMipmap().",
     );
   }
   if (!MipmapHint.validate(hint)) {
@@ -656,11 +656,10 @@ CubeMap.createVertexArray = function (context) {
     BoxGeometry.fromDimensions({
       dimensions: new Cartesian3(2.0, 2.0, 2.0),
       vertexFormat: VertexFormat.POSITION_ONLY,
-    })
+    }),
   );
-  const attributeLocations = (this._attributeLocations = GeometryPipeline.createAttributeLocations(
-    geometry
-  ));
+  const attributeLocations = (this._attributeLocations =
+    GeometryPipeline.createAttributeLocations(geometry));
 
   return VertexArray.fromGeometry({
     context: context,

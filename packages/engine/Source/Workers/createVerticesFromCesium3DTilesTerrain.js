@@ -37,7 +37,7 @@ function createVerticesFromCesium3DTilesTerrain(options, transferableObjects) {
       westIndicesBuffer,
       southIndicesBuffer,
       eastIndicesBuffer,
-      northIndicesBuffer
+      northIndicesBuffer,
     );
 
     return {
@@ -56,5 +56,5 @@ function createVerticesFromCesium3DTilesTerrain(options, transferableObjects) {
 
 export default createTaskProcessorWorker(
   // @ts-ignore
-  createVerticesFromCesium3DTilesTerrain
+  createVerticesFromCesium3DTilesTerrain,
 );

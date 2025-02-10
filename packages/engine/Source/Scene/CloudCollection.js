@@ -168,7 +168,7 @@ function CloudCollection(options) {
    * @default Cartesian3.ZERO
    */
   this.noiseOffset = Cartesian3.clone(
-    defaultValue(options.noiseOffset, Cartesian3.ZERO)
+    defaultValue(options.noiseOffset, Cartesian3.ZERO),
   );
 
   this._loading = false;
@@ -447,14 +447,7 @@ CloudCollection.prototype.get = function (index) {
 };
 
 const texturePositions = new Float32Array([
-  -1.0,
-  -1.0,
-  1.0,
-  -1.0,
-  1.0,
-  1.0,
-  -1.0,
-  1.0,
+  -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
 ]);
 
 const textureIndices = new Uint16Array([0, 1, 2, 0, 2, 3]);
@@ -713,7 +706,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     textureSliceWidth % noiseTextureRows !== 0
   ) {
     throw new DeveloperError(
-      "noiseTextureRows must evenly divide textureSliceWidth"
+      "noiseTextureRows must evenly divide textureSliceWidth",
     );
   }
   //>>includeEnd('debug');

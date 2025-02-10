@@ -98,45 +98,45 @@ describe(
       promises.push(
         Resource.fetchImage("./Data/Images/Green.png").then(function (result) {
           greenImage = result;
-        })
+        }),
       );
       promises.push(
         Resource.fetchImage("./Data/Images/Blue.png").then(function (result) {
           blueImage = result;
-        })
+        }),
       );
       promises.push(
-        Resource.fetchImage("./Data/Images/BlueAlpha.png").then(function (
-          result
-        ) {
-          blueAlphaImage = result;
-        })
+        Resource.fetchImage("./Data/Images/BlueAlpha.png").then(
+          function (result) {
+            blueAlphaImage = result;
+          },
+        ),
       );
       promises.push(
-        Resource.fetchImage("./Data/Images/BlueOverRed.png").then(function (
-          result
-        ) {
-          blueOverRedImage = result;
-        })
+        Resource.fetchImage("./Data/Images/BlueOverRed.png").then(
+          function (result) {
+            blueOverRedImage = result;
+          },
+        ),
       );
       promises.push(
-        Resource.fetchImage("./Data/Images/Red16x16.png").then(function (
-          result
-        ) {
-          red16x16Image = result;
-        })
+        Resource.fetchImage("./Data/Images/Red16x16.png").then(
+          function (result) {
+            red16x16Image = result;
+          },
+        ),
       );
       promises.push(
         Resource.fetchImage("./Data/Images/Gamma.png").then(function (result) {
           gammaImage = result;
-        })
+        }),
       );
       promises.push(
         Resource.fetchImage("./Data/Images/CustomColorProfile.png").then(
           function (result) {
             customColorProfileImage = result;
-          }
-        )
+          },
+        ),
       );
 
       return Promise.all(promises);
@@ -175,22 +175,22 @@ describe(
 
       expect(cubeMap.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
       expect(cubeMap.positiveX.pixelDatatype).toEqual(
-        PixelDatatype.UNSIGNED_BYTE
+        PixelDatatype.UNSIGNED_BYTE,
       );
       expect(cubeMap.negativeX.pixelDatatype).toEqual(
-        PixelDatatype.UNSIGNED_BYTE
+        PixelDatatype.UNSIGNED_BYTE,
       );
       expect(cubeMap.positiveY.pixelDatatype).toEqual(
-        PixelDatatype.UNSIGNED_BYTE
+        PixelDatatype.UNSIGNED_BYTE,
       );
       expect(cubeMap.negativeY.pixelDatatype).toEqual(
-        PixelDatatype.UNSIGNED_BYTE
+        PixelDatatype.UNSIGNED_BYTE,
       );
       expect(cubeMap.positiveZ.pixelDatatype).toEqual(
-        PixelDatatype.UNSIGNED_BYTE
+        PixelDatatype.UNSIGNED_BYTE,
       );
       expect(cubeMap.negativeZ.pixelDatatype).toEqual(
-        PixelDatatype.UNSIGNED_BYTE
+        PixelDatatype.UNSIGNED_BYTE,
       );
     });
 
@@ -457,7 +457,7 @@ describe(
           level[faceName] = { width: 2, height: 2, arrayBufferView: colorData };
           return level;
         },
-        {}
+        {},
       );
 
       cubeMap = new CubeMap({
@@ -476,7 +476,7 @@ describe(
           level[faceName] = { width: 1, height: 1, arrayBufferView: colorData };
           return level;
         },
-        {}
+        {},
       );
 
       cubeMap.loadMipmaps([level1]);
@@ -513,7 +513,7 @@ describe(
           level[faceName] = { width: 2, height: 2, arrayBufferView: colorData };
           return level;
         },
-        {}
+        {},
       );
 
       cubeMap = new CubeMap({
@@ -532,7 +532,7 @@ describe(
           level[faceName] = { width: 1, height: 1, arrayBufferView: colorData };
           return level;
         },
-        {}
+        {},
       );
 
       cubeMap.loadMipmaps([level1]);
@@ -1319,7 +1319,7 @@ describe(
       // Allow for some leniency with the sizeInBytes approximation
       expect(cubeMap.sizeInBytes).toEqualEpsilon(
         (16 * 16 + 8 * 8 + 4 * 4 + 2 * 2 + 1) * 4 * 6,
-        10
+        10,
       );
     });
 
@@ -1331,13 +1331,13 @@ describe(
 
       expect(va.getAttribute(0).index).toEqual(0);
       expect(va.getAttribute(0).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
       expect(va.getAttribute(0).offsetInBytes).toEqual(0);
 
       expect(va.getAttribute(0).vertexBuffer.usage).toEqual(
-        BufferUsage.STATIC_DRAW
+        BufferUsage.STATIC_DRAW,
       );
     });
 
@@ -1672,7 +1672,7 @@ describe(
           0,
           0,
           0,
-          cubeMap.height + 1
+          cubeMap.height + 1,
         );
       }).toThrowDeveloperError();
     });
@@ -1748,5 +1748,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

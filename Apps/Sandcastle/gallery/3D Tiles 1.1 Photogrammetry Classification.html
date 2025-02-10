@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -40,7 +40,7 @@
         });
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2021-11-09T20:27:37.016064475348684937Z"
+          "2021-11-09T20:27:37.016064475348684937Z",
         );
 
         const scene = viewer.scene;
@@ -50,12 +50,12 @@
           destination: new Cesium.Cartesian3(
             -2703640.80485846,
             -4261161.990345464,
-            3887439.511104276
+            3887439.511104276,
           ),
           orientation: new Cesium.HeadingPitchRoll(
             0.22426651143535548,
             -0.2624145362506527,
-            0.000006972977223185239
+            0.000006972977223185239,
           ),
           duration: 0,
         });
@@ -67,7 +67,7 @@
           const translation = new Cesium.Cartesian3(
             -1.398521324920626,
             0.7823052871729486,
-            0.7015244410592609
+            0.7015244410592609,
           );
           tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 

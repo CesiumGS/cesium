@@ -48,7 +48,7 @@ function TerrainEncoding(
   hasWebMercatorT,
   hasGeodeticSurfaceNormals,
   exaggeration,
-  exaggerationRelativeHeight
+  exaggerationRelativeHeight,
 ) {
   let quantization = TerrainQuantization.NONE;
   let toENU;
@@ -66,7 +66,7 @@ function TerrainEncoding(
     const dimensions = Cartesian3.subtract(
       maximum,
       minimum,
-      cartesian3DimScratch
+      cartesian3DimScratch,
     );
     const hDim = maximumHeight - minimumHeight;
     const maxDim = Math.max(Cartesian3.maximumComponent(dimensions), hDim);
@@ -87,14 +87,14 @@ function TerrainEncoding(
         1.0 / dimensions.x,
         1.0 / dimensions.y,
         1.0 / dimensions.z,
-        cartesian3Scratch
+        cartesian3Scratch,
       ),
-      matrix4Scratch2
+      matrix4Scratch2,
     );
     invSt = Matrix4.multiplyByTranslation(
       invSt,
       Cartesian3.negate(minimum, cartesian3Scratch),
-      invSt
+      invSt,
     );
 
     matrix = Matrix4.clone(fromENU, new Matrix4());
@@ -170,7 +170,7 @@ function TerrainEncoding(
    */
   this.hasGeodeticSurfaceNormals = defaultValue(
     hasGeodeticSurfaceNormals,
-    false
+    false,
   );
 
   /**
@@ -184,7 +184,7 @@ function TerrainEncoding(
    */
   this.exaggerationRelativeHeight = defaultValue(
     exaggerationRelativeHeight,
-    0.0
+    0.0,
   );
 
   /**
@@ -218,7 +218,7 @@ TerrainEncoding.prototype.encode = function (
   height,
   normalToPack,
   webMercatorT,
-  geodeticSurfaceNormal
+  geodeticSurfaceNormal,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("vertexBuffer", vertexBuffer);
@@ -235,7 +235,7 @@ TerrainEncoding.prototype.encode = function (
     position = Matrix4.multiplyByPoint(
       this.toScaledENU,
       position,
-      cartesian3Scratch
+      cartesian3Scratch,
     );
 
     position.x = CesiumMath.clamp(position.x, 0.0, 1.0);
@@ -246,19 +246,16 @@ TerrainEncoding.prototype.encode = function (
     const h = CesiumMath.clamp((height - this.minimumHeight) / hDim, 0.0, 1.0);
 
     Cartesian2.fromElements(position.x, position.y, cartesian2Scratch);
-    const compressed0 = AttributeCompression.compressTextureCoordinates(
-      cartesian2Scratch
-    );
+    const compressed0 =
+      AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
 
     Cartesian2.fromElements(position.z, h, cartesian2Scratch);
-    const compressed1 = AttributeCompression.compressTextureCoordinates(
-      cartesian2Scratch
-    );
+    const compressed1 =
+      AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
 
     Cartesian2.fromElements(u, v, cartesian2Scratch);
-    const compressed2 = AttributeCompression.compressTextureCoordinates(
-      cartesian2Scratch
-    );
+    const compressed2 =
+      AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
 
     vertexBuffer[bufferIndex++] = compressed0;
     vertexBuffer[bufferIndex++] = compressed1;
@@ -266,9 +263,8 @@ TerrainEncoding.prototype.encode = function (
 
     if (this.hasWebMercatorT) {
       Cartesian2.fromElements(webMercatorT, 0.0, cartesian2Scratch);
-      const compressed3 = AttributeCompression.compressTextureCoordinates(
-        cartesian2Scratch
-      );
+      const compressed3 =
+        AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
       vertexBuffer[bufferIndex++] = compressed3;
     }
   } else {
@@ -285,9 +281,8 @@ TerrainEncoding.prototype.encode = function (
   }
 
   if (this.hasVertexNormals) {
-    vertexBuffer[bufferIndex++] = AttributeCompression.octPackFloat(
-      normalToPack
-    );
+    vertexBuffer[bufferIndex++] =
+      AttributeCompression.octPackFloat(normalToPack);
   }
 
   if (this.hasGeodeticSurfaceNormals) {
@@ -310,7 +305,7 @@ const scratchGeodeticSurfaceNormal = new Cartesian3();
 TerrainEncoding.prototype.addGeodeticSurfaceNormals = function (
   oldBuffer,
   newBuffer,
-  ellipsoid
+  ellipsoid,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("oldBuffer", oldBuffer);
@@ -337,7 +332,7 @@ TerrainEncoding.prototype.addGeodeticSurfaceNormals = function (
     const position = this.decodePosition(newBuffer, index, scratchPosition);
     const geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
       position,
-      scratchGeodeticSurfaceNormal
+      scratchGeodeticSurfaceNormal,
     );
 
     const bufferIndex = index * newStride + this._offsetGeodeticSurfaceNormal;
@@ -353,7 +348,7 @@ TerrainEncoding.prototype.addGeodeticSurfaceNormals = function (
  */
 TerrainEncoding.prototype.removeGeodeticSurfaceNormals = function (
   oldBuffer,
-  newBuffer
+  newBuffer,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("oldBuffer", oldBuffer);
@@ -397,14 +392,14 @@ TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
   if (this.quantization === TerrainQuantization.BITS12) {
     const xy = AttributeCompression.decompressTextureCoordinates(
       buffer[index],
-      cartesian2Scratch
+      cartesian2Scratch,
     );
     result.x = xy.x;
     result.y = xy.y;
 
     const zh = AttributeCompression.decompressTextureCoordinates(
       buffer[index + 1],
-      cartesian2Scratch
+      cartesian2Scratch,
     );
     result.z = zh.x;
 
@@ -420,7 +415,7 @@ TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
 TerrainEncoding.prototype.getExaggeratedPosition = function (
   buffer,
   index,
-  result
+  result,
 ) {
   result = this.decodePosition(buffer, index, result);
 
@@ -431,14 +426,14 @@ TerrainEncoding.prototype.getExaggeratedPosition = function (
     const geodeticSurfaceNormal = this.decodeGeodeticSurfaceNormal(
       buffer,
       index,
-      scratchGeodeticSurfaceNormal
+      scratchGeodeticSurfaceNormal,
     );
     const rawHeight = this.decodeHeight(buffer, index);
     const heightDifference =
       VerticalExaggeration.getHeight(
         rawHeight,
         exaggeration,
-        exaggerationRelativeHeight
+        exaggerationRelativeHeight,
       ) - rawHeight;
 
     // some math is unrolled for better performance
@@ -459,7 +454,7 @@ TerrainEncoding.prototype.getExaggeratedPosition = function (
 TerrainEncoding.prototype.decodeTextureCoordinates = function (
   buffer,
   index,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("buffer", buffer);
@@ -472,7 +467,7 @@ TerrainEncoding.prototype.decodeTextureCoordinates = function (
   if (this.quantization === TerrainQuantization.BITS12) {
     return AttributeCompression.decompressTextureCoordinates(
       buffer[index + 2],
-      result
+      result,
     );
   }
 
@@ -495,7 +490,7 @@ TerrainEncoding.prototype.decodeHeight = function (buffer, index) {
   if (this.quantization === TerrainQuantization.BITS12) {
     const zh = AttributeCompression.decompressTextureCoordinates(
       buffer[index + 1],
-      cartesian2Scratch
+      cartesian2Scratch,
     );
     return (
       zh.y * (this.maximumHeight - this.minimumHeight) + this.minimumHeight
@@ -521,7 +516,7 @@ TerrainEncoding.prototype.decodeWebMercatorT = function (buffer, index) {
   if (this.quantization === TerrainQuantization.BITS12) {
     return AttributeCompression.decompressTextureCoordinates(
       buffer[index + 3],
-      cartesian2Scratch
+      cartesian2Scratch,
     ).x;
   }
 
@@ -537,7 +532,7 @@ TerrainEncoding.prototype.decodeWebMercatorT = function (buffer, index) {
 TerrainEncoding.prototype.getOctEncodedNormal = function (
   buffer,
   index,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("buffer", buffer);
@@ -580,7 +575,7 @@ TerrainEncoding.prototype.decodeNormal = function (buffer, index, result) {
 TerrainEncoding.prototype.decodeGeodeticSurfaceNormal = function (
   buffer,
   index,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("buffer", buffer);
@@ -667,7 +662,7 @@ TerrainEncoding.prototype.getAttributes = function (buffer) {
     componentsTexCoordAndNormals += this.hasVertexNormals ? 1 : 0;
     addAttribute(
       attributesIndicesNone.textureCoordAndEncodedNormals,
-      componentsTexCoordAndNormals
+      componentsTexCoordAndNormals,
     );
 
     if (this.hasGeodeticSurfaceNormals) {
@@ -683,7 +678,7 @@ TerrainEncoding.prototype.getAttributes = function (buffer) {
       this.hasWebMercatorT && this.hasVertexNormals;
     addAttribute(
       attributesIndicesBits12.compressed0,
-      usingAttribute0Component4 ? 4 : 3
+      usingAttribute0Component4 ? 4 : 3,
     );
 
     if (usingAttribute1Component1) {

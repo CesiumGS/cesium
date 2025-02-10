@@ -62,8 +62,8 @@ describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
       Cartesian3.equalsEpsilon(
         actualAnchorPoint.position,
         expectedPosition,
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toBeTrue();
 
     const expectedAdjustmentParams = new Cartesian3(0.1, 0.2, 0.3);
@@ -71,21 +71,21 @@ describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
       Cartesian3.equalsEpsilon(
         actualAnchorPoint.adjustmentParams,
         expectedAdjustmentParams,
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toBeTrue();
 
     const expectedCovarianceDirect = Matrix3.fromArray(
       [0.1, 0.2, 0.4, 0.2, 0.3, 0.5, 0.4, 0.5, 0.6],
       0,
-      new Matrix3()
+      new Matrix3(),
     );
     expect(
       Matrix3.equalsEpsilon(
         result.covarianceDirect,
         expectedCovarianceDirect,
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toBeTrue();
   });
 
@@ -151,8 +151,8 @@ describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
       Cartesian3.equalsEpsilon(
         actualAnchorPoint.position,
         expectedPosition,
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toBeTrue();
 
     const expectedAdjustmentParams = new Cartesian3(0.1, 0.2, 0.3);
@@ -160,21 +160,21 @@ describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
       Cartesian3.equalsEpsilon(
         actualAnchorPoint.adjustmentParams,
         expectedAdjustmentParams,
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toBeTrue();
 
     const expectedCovarianceMatrix = Matrix3.fromArray(
       [0.1, 0.2, 0.4, 0.2, 0.3, 0.5, 0.4, 0.5, 0.6],
       0,
-      new Matrix3()
+      new Matrix3(),
     );
     expect(
       Matrix3.equalsEpsilon(
         actualAnchorPoint.covarianceMatrix,
         expectedCovarianceMatrix,
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toBeTrue();
 
     expect(result.intraTileCorrelationGroups.length).toBe(1);
@@ -188,8 +188,8 @@ describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
       Cartesian3.equalsEpsilon(
         correlationGroup.rotationThetas,
         expectedRotationThetas,
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toBeTrue();
 
     const params = correlationGroup.params;

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -120,10 +120,10 @@
                   position,
                   hpRoll,
                   Cesium.Ellipsoid.WGS84,
-                  converter
+                  converter,
                 ),
                 minimumPixelSize: 128,
-              })
+              }),
             );
 
             primitives.push({
@@ -138,14 +138,14 @@
             position,
             hprRollZero,
             Cesium.Ellipsoid.WGS84,
-            converter
+            converter,
           );
           scene.primitives.add(
             new Cesium.DebugModelMatrixPrimitive({
               modelMatrix: modelMatrix,
               length: 300.0,
               width: 10.0,
-            })
+            }),
           );
 
           const positionLabel = position.clone();
@@ -242,7 +242,7 @@
               hpRoll,
               Cesium.Ellipsoid.WGS84,
               converter,
-              primitive.modelMatrix
+              primitive.modelMatrix,
             );
           }
         });

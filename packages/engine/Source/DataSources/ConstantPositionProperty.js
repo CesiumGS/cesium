@@ -114,7 +114,7 @@ ConstantPositionProperty.prototype.setValue = function (value, referenceFrame) {
 ConstantPositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
@@ -130,7 +130,7 @@ ConstantPositionProperty.prototype.getValueInReferenceFrame = function (
     this._value,
     this._referenceFrame,
     referenceFrame,
-    result
+    result,
   );
 };
 

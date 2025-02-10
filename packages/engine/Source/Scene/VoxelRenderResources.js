@@ -54,7 +54,7 @@ function VoxelRenderResources(primitive) {
       shaderBuilder.addUniform(
         uniform.type,
         uniformName,
-        ShaderDestination.FRAGMENT
+        ShaderDestination.FRAGMENT,
       );
     }
   }
@@ -63,7 +63,7 @@ function VoxelRenderResources(primitive) {
   shaderBuilder.addUniform(
     "sampler2D",
     "u_megatextureTextures[METADATA_COUNT]",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   /**
@@ -99,18 +99,18 @@ function VoxelRenderResources(primitive) {
     shaderBuilder.addDefine(
       "CLIPPING_PLANES",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addDefine(
       "CLIPPING_PLANES_COUNT",
       clippingPlanesLength,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     if (clippingPlanes.unionClippingRegions) {
       shaderBuilder.addDefine(
         "CLIPPING_PLANES_UNION",
         undefined,
-        ShaderDestination.FRAGMENT
+        ShaderDestination.FRAGMENT,
       );
     }
     shaderBuilder.addFragmentLines([IntersectClippingPlanes]);
@@ -119,7 +119,7 @@ function VoxelRenderResources(primitive) {
     shaderBuilder.addDefine(
       "DEPTH_TEST",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFragmentLines([IntersectDepth]);
   }
@@ -142,7 +142,7 @@ function VoxelRenderResources(primitive) {
     shaderBuilder.addDefine(
       "SHAPE_ELLIPSOID",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFragmentLines([
       convertUvToEllipsoid,
@@ -174,7 +174,7 @@ function VoxelRenderResources(primitive) {
     shaderBuilder.addDefine(
       "CLIPPING_PLANES_INTERSECTION_INDEX",
       intersectionCount,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     if (clippingPlanesLength === 1) {
       intersectionCount += 1;
@@ -188,14 +188,14 @@ function VoxelRenderResources(primitive) {
     shaderBuilder.addDefine(
       "DEPTH_INTERSECTION_INDEX",
       intersectionCount,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     intersectionCount += 1;
   }
   shaderBuilder.addDefine(
     "INTERSECTION_COUNT",
     intersectionCount,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // Additional fragment shader defines
@@ -212,21 +212,21 @@ function VoxelRenderResources(primitive) {
     shaderBuilder.addDefine(
       "LOG_DEPTH_READ_ONLY",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
   if (primitive._nearestSampling) {
     shaderBuilder.addDefine(
       "NEAREST_SAMPLING",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
   const traversal = primitive._traversal;
   shaderBuilder.addDefine(
     "SAMPLE_COUNT",
     `${traversal._sampleCount}`,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 }
 

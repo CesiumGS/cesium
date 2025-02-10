@@ -75,7 +75,7 @@ function ImageryProviderBuilder(options) {
   const ellipsoid = options.ellipsoid;
   this.tilingScheme = defaultValue(
     options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: ellipsoid })
+    new GeographicTilingScheme({ ellipsoid: ellipsoid }),
   );
   this.rectangle = defaultValue(options.rectangle, this.tilingScheme.rectangle);
   this.ellipsoid = ellipsoid;
@@ -169,43 +169,43 @@ function metadataSuccess(data, imageryProviderBuilder) {
               Math.max(
                 extent.xmin,
                 -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
+                  Math.PI,
               ),
               Math.max(
                 extent.ymin,
                 -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
+                  Math.PI,
               ),
-              0.0
-            )
+              0.0,
+            ),
           );
           const ne = projection.unproject(
             new Cartesian3(
               Math.min(
                 extent.xmax,
                 imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
+                  Math.PI,
               ),
               Math.min(
                 extent.ymax,
                 imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
+                  Math.PI,
               ),
-              0.0
-            )
+              0.0,
+            ),
           );
           imageryProviderBuilder.rectangle = new Rectangle(
             sw.longitude,
             sw.latitude,
             ne.longitude,
-            ne.latitude
+            ne.latitude,
           );
         } else if (data.fullExtent.spatialReference.wkid === 4326) {
           imageryProviderBuilder.rectangle = Rectangle.fromDegrees(
             data.fullExtent.xmin,
             data.fullExtent.ymin,
             data.fullExtent.xmax,
-            data.fullExtent.ymax
+            data.fullExtent.ymax,
           );
         } else {
           const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
@@ -319,12 +319,12 @@ function ArcGisMapServerImageryProvider(options) {
   this._maximumLevel = options.maximumLevel;
   this._tilingScheme = defaultValue(
     options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: options.ellipsoid })
+    new GeographicTilingScheme({ ellipsoid: options.ellipsoid }),
   );
   this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
   this._rectangle = defaultValue(
     options.rectangle,
-    this._tilingScheme.rectangle
+    this._tilingScheme.rectangle,
   );
   this._layers = options.layers;
   this._credit = options.credit;
@@ -377,7 +377,7 @@ function ArcGisMapServerImageryProvider(options) {
 
 ArcGisMapServerImageryProvider.fromBasemapType = async function (
   style,
-  options
+  options,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("style", style);
@@ -392,15 +392,14 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       {
         accessToken = defaultValue(
           options.token,
-          ArcGisMapService.defaultAccessToken
+          ArcGisMapService.defaultAccessToken,
         );
         server = Resource.createIfNeeded(
-          ArcGisMapService.defaultWorldImageryServer
+          ArcGisMapService.defaultWorldImageryServer,
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(
-          accessToken
-        );
+        const defaultTokenCredit =
+          ArcGisMapService.getDefaultTokenCredit(accessToken);
         if (defined(defaultTokenCredit)) {
           warningCredit = Credit.clone(defaultTokenCredit);
         }
@@ -410,15 +409,14 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       {
         accessToken = defaultValue(
           options.token,
-          ArcGisMapService.defaultAccessToken
+          ArcGisMapService.defaultAccessToken,
         );
         server = Resource.createIfNeeded(
-          ArcGisMapService.defaultWorldOceanServer
+          ArcGisMapService.defaultWorldOceanServer,
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(
-          accessToken
-        );
+        const defaultTokenCredit =
+          ArcGisMapService.getDefaultTokenCredit(accessToken);
         if (defined(defaultTokenCredit)) {
           warningCredit = Credit.clone(defaultTokenCredit);
         }
@@ -428,15 +426,14 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       {
         accessToken = defaultValue(
           options.token,
-          ArcGisMapService.defaultAccessToken
+          ArcGisMapService.defaultAccessToken,
         );
         server = Resource.createIfNeeded(
-          ArcGisMapService.defaultWorldHillshadeServer
+          ArcGisMapService.defaultWorldHillshadeServer,
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(
-          accessToken
-        );
+        const defaultTokenCredit =
+          ArcGisMapService.getDefaultTokenCredit(accessToken);
         if (defined(defaultTokenCredit)) {
           warningCredit = Credit.clone(defaultTokenCredit);
         }
@@ -464,11 +461,8 @@ function buildImageResource(imageryProvider, x, y, level, request) {
       request: request,
     });
   } else {
-    const nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(
-      x,
-      y,
-      level
-    );
+    const nativeRectangle =
+      imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
     const bbox = `${nativeRectangle.west},${nativeRectangle.south},${nativeRectangle.east},${nativeRectangle.north}`;
 
     const query = {
@@ -752,7 +746,7 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
 ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
   x,
   y,
-  level
+  level,
 ) {
   return this._tileCredits;
 };
@@ -771,11 +765,11 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   return ImageryProvider.loadImage(
     this,
-    buildImageResource(this, x, y, level, request)
+    buildImageResource(this, x, y, level, request),
   );
 };
 
@@ -798,7 +792,7 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   if (!this.enablePickFeatures) {
     return undefined;
@@ -815,7 +809,7 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
     sr = "4326";
   } else {
     const projected = this._tilingScheme.projection.project(
-      new Cartographic(longitude, latitude, 0.0)
+      new Cartographic(longitude, latitude, 0.0),
     );
     horizontal = projected.x;
     vertical = projected.y;
@@ -871,7 +865,7 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
           featureInfo.position = Cartographic.fromDegrees(
             feature.geometry.x,
             feature.geometry.y,
-            feature.geometry.z
+            feature.geometry.z,
           );
         } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
           const projection = new WebMercatorProjection();
@@ -879,8 +873,8 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
             new Cartesian3(
               feature.geometry.x,
               feature.geometry.y,
-              feature.geometry.z
-            )
+              feature.geometry.z,
+            ),
           );
         }
       }

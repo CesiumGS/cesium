@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -32,8 +32,8 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             Cesium.TileMapServiceImageryProvider.fromUrl(
-              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
-            )
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            ),
           ),
           baseLayerPicker: false,
           geocoder: false,
@@ -121,7 +121,7 @@
             const voxelCountZ = dimensions.z * dimAtLevel;
             const voxelsPerLevel = voxelCountX * voxelCountY * voxelCountZ;
             const levelData = (allVoxelData[level] = new Array(
-              voxelsPerLevel * channelCount
+              voxelsPerLevel * channelCount,
             ));
 
             for (let z = 0; z < voxelCountX; z++) {
@@ -152,25 +152,25 @@
           const paddedDimensions = Cesium.Cartesian3.fromElements(
             dimensions.x + paddingBefore.x + paddingAfter.x,
             dimensions.y + paddingBefore.y + paddingAfter.y,
-            dimensions.z + paddingBefore.z + paddingAfter.z
+            dimensions.z + paddingBefore.z + paddingAfter.z,
           );
           const dimAtLevel = Math.pow(2, tileLevel);
           const dimensionsGlobal = Cesium.Cartesian3.fromElements(
             dimensions.x * dimAtLevel,
             dimensions.y * dimAtLevel,
-            dimensions.z * dimAtLevel
+            dimensions.z * dimAtLevel,
           );
           const minimumGlobalCoord = Cesium.Cartesian3.ZERO;
           const maximumGlobalCoord = new Cesium.Cartesian3(
             dimensionsGlobal.x - 1,
             dimensionsGlobal.y - 1,
-            dimensionsGlobal.z - 1
+            dimensionsGlobal.z - 1,
           );
           let coordGlobal = new Cesium.Cartesian3();
 
           const dataGlobal = this._allVoxelData;
           const dataTile = new Float32Array(
-            paddedDimensions.x * paddedDimensions.y * paddedDimensions.z * channelCount
+            paddedDimensions.x * paddedDimensions.y * paddedDimensions.z * channelCount,
           );
 
           for (let z = 0; z < paddedDimensions.z; z++) {
@@ -185,11 +185,11 @@
                     tileX * dimensions.x + (x - paddingBefore.x),
                     tileY * dimensions.y + (y - paddingBefore.y),
                     tileZ * dimensions.z + (z - paddingBefore.z),
-                    coordGlobal
+                    coordGlobal,
                   ),
                   minimumGlobalCoord,
                   maximumGlobalCoord,
-                  coordGlobal
+                  coordGlobal,
                 );
 
                 const indexGlobal =
@@ -215,7 +215,7 @@
               provider: provider,
               customShader: customShader,
               modelMatrix: modelMatrix,
-            })
+            }),
           );
 
           viewer.voxelInspector.viewModel.voxelPrimitive = voxelPrimitive;
@@ -250,8 +250,8 @@
           Cesium.Cartesian3.fromElements(
             Cesium.Ellipsoid.WGS84.maximumRadius,
             Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius
-          )
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+          ),
         );
 
         Sandcastle.addToolbarMenu([
@@ -259,7 +259,7 @@
             text: "Ellipsoid - Procedural Tile",
             onselect: function () {
               const provider = new ProceduralSingleTileVoxelProvider(
-                Cesium.VoxelShapeType.ELLIPSOID
+                Cesium.VoxelShapeType.ELLIPSOID,
               );
               provider.minBounds.z = 0.0;
               provider.maxBounds.z = 1000000.0;
@@ -270,7 +270,7 @@
             text: "Cylinder - Procedural Tile",
             onselect: function () {
               const provider = new ProceduralSingleTileVoxelProvider(
-                Cesium.VoxelShapeType.CYLINDER
+                Cesium.VoxelShapeType.CYLINDER,
               );
               const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
@@ -279,7 +279,7 @@
             text: "Box - Procedural Tile",
             onselect: function () {
               const provider = new ProceduralSingleTileVoxelProvider(
-                Cesium.VoxelShapeType.BOX
+                Cesium.VoxelShapeType.BOX,
               );
               const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
@@ -288,7 +288,7 @@
             text: "Box - Procedural Tileset",
             onselect: function () {
               const provider = new ProceduralMultiTileVoxelProvider(
-                Cesium.VoxelShapeType.BOX
+                Cesium.VoxelShapeType.BOX,
               );
               const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
@@ -297,7 +297,7 @@
             text: "Box - 3D Tiles",
             onselect: async function () {
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json"
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
               );
               const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
             },
@@ -306,7 +306,7 @@
             text: "Ellipsoid - Procedural Tileset",
             onselect: function () {
               const provider = new ProceduralMultiTileVoxelProvider(
-                Cesium.VoxelShapeType.ELLIPSOID
+                Cesium.VoxelShapeType.ELLIPSOID,
               );
               provider.minBounds.z = 0.0;
               provider.maxBounds.z = 1000000.0;
@@ -317,12 +317,12 @@
             text: "Ellipsoid - 3D Tiles",
             onselect: async function () {
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
               );
               const primitive = createPrimitive(
                 provider,
                 customShaderWhite,
-                Cesium.Matrix4.IDENTITY
+                Cesium.Matrix4.IDENTITY,
               );
             },
           },
@@ -330,7 +330,7 @@
             text: "Cylinder - Procedural Tileset",
             onselect: function () {
               const provider = new ProceduralMultiTileVoxelProvider(
-                Cesium.VoxelShapeType.CYLINDER
+                Cesium.VoxelShapeType.CYLINDER,
               );
               const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
@@ -339,7 +339,7 @@
             text: "Cylinder - 3D Tiles",
             onselect: async function () {
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json"
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
               );
               const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
             },

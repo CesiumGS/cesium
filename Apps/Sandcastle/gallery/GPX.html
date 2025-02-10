@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -46,7 +46,7 @@
                   .add(
                     Cesium.GpxDataSource.load("../../SampleData/gpx/lamina.gpx", {
                       clampToGround: true,
-                    })
+                    }),
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);
@@ -60,7 +60,7 @@
                   .add(
                     Cesium.GpxDataSource.load("../../SampleData/gpx/route.gpx", {
                       clampToGround: true,
-                    })
+                    }),
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);
@@ -74,7 +74,7 @@
                   .add(
                     Cesium.GpxDataSource.load("../../SampleData/gpx/wpt.gpx", {
                       clampToGround: true,
-                    })
+                    }),
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);
@@ -88,7 +88,7 @@
                   .add(
                     Cesium.GpxDataSource.load("../../SampleData/gpx/complexTrk.gpx", {
                       clampToGround: true,
-                    })
+                    }),
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);
@@ -106,9 +106,9 @@
                       waypointImage: pinBuilder.fromMakiIconId(
                         "bicycle",
                         Cesium.Color.BLUE,
-                        48
+                        48,
                       ),
-                    })
+                    }),
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);
@@ -116,7 +116,7 @@
               },
             },
           ],
-          "toolbar"
+          "toolbar",
         );
 
         Sandcastle.reset = function () {

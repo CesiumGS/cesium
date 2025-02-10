@@ -48,7 +48,7 @@ describe("Core/PolylineGeometry", function () {
         vertexFormat: VertexFormat.ALL,
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
-      })
+      }),
     );
 
     expect(line).toBeUndefined();
@@ -67,7 +67,7 @@ describe("Core/PolylineGeometry", function () {
         vertexFormat: VertexFormat.ALL,
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
-      })
+      }),
     );
 
     expect(line.attributes.position).toBeDefined();
@@ -81,7 +81,7 @@ describe("Core/PolylineGeometry", function () {
     expect(line.attributes.prevPosition.values.length).toEqual(numVertices * 3);
     expect(line.attributes.nextPosition.values.length).toEqual(numVertices * 3);
     expect(line.attributes.expandAndWidth.values.length).toEqual(
-      numVertices * 2
+      numVertices * 2,
     );
     expect(line.attributes.st.values.length).toEqual(numVertices * 2);
     expect(line.indices.length).toEqual(positions.length * 6 - 6);
@@ -97,7 +97,7 @@ describe("Core/PolylineGeometry", function () {
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
         arcType: ArcType.RHUMB,
-      })
+      }),
     );
 
     expect(line.attributes.position).toBeDefined();
@@ -111,7 +111,7 @@ describe("Core/PolylineGeometry", function () {
     expect(line.attributes.prevPosition.values.length).toEqual(numVertices * 3);
     expect(line.attributes.nextPosition.values.length).toEqual(numVertices * 3);
     expect(line.attributes.expandAndWidth.values.length).toEqual(
-      numVertices * 2
+      numVertices * 2,
     );
     expect(line.attributes.st.values.length).toEqual(numVertices * 2);
     expect(line.indices.length).toEqual(positions.length * 6 - 6);
@@ -136,7 +136,7 @@ describe("Core/PolylineGeometry", function () {
         vertexFormat: VertexFormat.ALL,
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
-      })
+      }),
     );
 
     expect(line.attributes.color).toBeDefined();
@@ -165,7 +165,7 @@ describe("Core/PolylineGeometry", function () {
         vertexFormat: VertexFormat.ALL,
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
-      })
+      }),
     );
 
     expect(line.attributes.color).toBeDefined();
@@ -184,19 +184,14 @@ describe("Core/PolylineGeometry", function () {
         width: 10.0,
         vertexFormat: VertexFormat.POSITION_ONLY,
         arcType: ArcType.NONE,
-      })
+      }),
     );
     expect(geometry).not.toBeDefined();
   });
 
   it("createGeometry returns positions if their endpoints'longtitude and latitude are the same for rhumb line", function () {
     const positions = Cartesian3.fromDegreesArrayHeights([
-      30.0,
-      30.0,
-      10.0,
-      30.0,
-      30.0,
-      5.0,
+      30.0, 30.0, 10.0, 30.0, 30.0, 5.0,
     ]);
     const geometry = PolylineGeometry.createGeometry(
       new PolylineGeometry({
@@ -204,7 +199,7 @@ describe("Core/PolylineGeometry", function () {
         width: 10.0,
         vertexFormat: VertexFormat.POSITION_ONLY,
         arcType: ArcType.RHUMB,
-      })
+      }),
     );
 
     const attributePositions = geometry.attributes.position.values;
@@ -215,8 +210,8 @@ describe("Core/PolylineGeometry", function () {
       Cartesian3.equalsEpsilon(
         geometryPosition,
         positions[0],
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     Cartesian3.fromArray(attributePositions, 3, geometryPosition);
@@ -224,8 +219,8 @@ describe("Core/PolylineGeometry", function () {
       Cartesian3.equalsEpsilon(
         geometryPosition,
         positions[0],
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     Cartesian3.fromArray(attributePositions, 6, geometryPosition);
@@ -233,8 +228,8 @@ describe("Core/PolylineGeometry", function () {
       Cartesian3.equalsEpsilon(
         geometryPosition,
         positions[1],
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     Cartesian3.fromArray(attributePositions, 9, geometryPosition);
@@ -242,8 +237,8 @@ describe("Core/PolylineGeometry", function () {
       Cartesian3.equalsEpsilon(
         geometryPosition,
         positions[1],
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
   });
 
@@ -273,7 +268,7 @@ describe("Core/PolylineGeometry", function () {
         width: 10.0,
         vertexFormat: VertexFormat.POSITION_ONLY,
         arcType: ArcType.NONE,
-      })
+      }),
     );
 
     const numVertices = expectedPositions.length * 4 - 4;
@@ -285,7 +280,7 @@ describe("Core/PolylineGeometry", function () {
   function attributeArrayEqualsColorArray(
     attributeArray,
     colorArray,
-    colorsPerVertex
+    colorsPerVertex,
   ) {
     colorsPerVertex = defaultValue(colorsPerVertex, false);
     let i;
@@ -366,7 +361,7 @@ describe("Core/PolylineGeometry", function () {
         width: 10.0,
         vertexFormat: VertexFormat.POSITION_ONLY,
         arcType: ArcType.NONE,
-      })
+      }),
     );
 
     const numVertices = expectedPositions.length * 4 - 4;
@@ -374,8 +369,8 @@ describe("Core/PolylineGeometry", function () {
     expect(
       attributeArrayEqualsColorArray(
         line.attributes.color.values,
-        expectedColors
-      )
+        expectedColors,
+      ),
     ).toBe(true);
   });
 
@@ -430,7 +425,7 @@ describe("Core/PolylineGeometry", function () {
         width: 10.0,
         vertexFormat: VertexFormat.DEFAULT,
         arcType: ArcType.NONE,
-      })
+      }),
     );
 
     const numVertices = expectedPositions.length * 4 - 4;
@@ -439,8 +434,8 @@ describe("Core/PolylineGeometry", function () {
       attributeArrayEqualsColorArray(
         line.attributes.color.values,
         expectedColors,
-        true
-      )
+        true,
+      ),
     ).toBe(true);
   });
 
@@ -479,7 +474,7 @@ describe("Core/PolylineGeometry", function () {
         width: 10.0,
         vertexFormat: VertexFormat.DEFAULT,
         arcType: ArcType.NONE,
-      })
+      }),
     );
 
     const numVertices = expectedPositions.length * 4 - 4;
@@ -488,8 +483,8 @@ describe("Core/PolylineGeometry", function () {
       attributeArrayEqualsColorArray(
         line.attributes.color.values,
         expectedColors,
-        true
-      )
+        true,
+      ),
     ).toBe(true);
   });
 
@@ -509,48 +504,14 @@ describe("Core/PolylineGeometry", function () {
     ellipsoid: new Ellipsoid(12, 13, 14),
   });
   let packedInstance = [
-    3,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    3,
-    1,
-    0,
-    0,
-    1,
-    0,
-    1,
-    0,
-    1,
-    0,
-    0,
-    1,
-    1,
-    12,
-    13,
-    14,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    10,
-    1,
-    0,
-    11,
+    3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13,
+    14, 1, 0, 0, 0, 0, 0, 10, 1, 0, 11,
   ];
   createPackableSpecs(
     PolylineGeometry,
     line,
     packedInstance,
-    "per vertex colors"
+    "per vertex colors",
   );
 
   line = new PolylineGeometry({
@@ -563,30 +524,7 @@ describe("Core/PolylineGeometry", function () {
     ellipsoid: new Ellipsoid(12, 13, 14),
   });
   packedInstance = [
-    3,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    0,
-    12,
-    13,
-    14,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    10,
-    0,
-    0,
-    11,
+    3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 0, 11,
   ];
   createPackableSpecs(PolylineGeometry, line, packedInstance, "straight line");
 
@@ -600,30 +538,7 @@ describe("Core/PolylineGeometry", function () {
     ellipsoid: new Ellipsoid(12, 13, 14),
   });
   packedInstance = [
-    3,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    0,
-    12,
-    13,
-    14,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    10,
-    0,
-    1,
-    11,
+    3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 1, 11,
   ];
   createPackableSpecs(PolylineGeometry, line, packedInstance, "geodesic line");
 
@@ -637,30 +552,7 @@ describe("Core/PolylineGeometry", function () {
     ellipsoid: new Ellipsoid(12, 13, 14),
   });
   packedInstance = [
-    3,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    0,
-    12,
-    13,
-    14,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    10,
-    0,
-    2,
-    11,
+    3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 2, 11,
   ];
   createPackableSpecs(PolylineGeometry, line, packedInstance, "rhumb line");
 });

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -34,14 +34,13 @@
         // Add a WMS imagery layer
         const layer = new Cesium.ImageryLayer(
           new Cesium.WebMapServiceImageryProvider({
-            url:
-              "https://services.ga.gov.au/gis/services/NM_Hydrology_and_Marine_Points/MapServer/WMSServer",
+            url: "https://services.ga.gov.au/gis/services/NM_Hydrology_and_Marine_Points/MapServer/WMSServer",
             layers: "Bores",
             parameters: {
               transparent: true,
               format: "image/png",
             },
-          })
+          }),
         );
         viewer.imageryLayers.add(layer);
 

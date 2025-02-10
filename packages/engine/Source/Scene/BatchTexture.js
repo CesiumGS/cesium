@@ -220,7 +220,7 @@ function checkBatchId(batchId, featuresLength) {
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
       `batchId is required and between zero and featuresLength - 1 (${featuresLength}` -
-        +")."
+        +").",
     );
   }
 }
@@ -413,7 +413,7 @@ BatchTexture.prototype.getColor = function (batchId, result) {
     batchValues[offset + 1],
     batchValues[offset + 2],
     showAlphaProperties[propertyOffset + 1],
-    result
+    result,
   );
 };
 

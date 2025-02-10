@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -43,7 +43,7 @@
         const modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, radii.z),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create a ellipsoid geometry.
         const ellipsoidGeometry = new Cesium.EllipsoidGeometry({
@@ -67,7 +67,7 @@
               translucent: false,
               closed: true,
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

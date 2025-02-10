@@ -7,7 +7,7 @@ function createRectangleOutlineGeometry(rectangleGeometry, offset) {
   if (defined(offset)) {
     rectangleGeometry = RectangleOutlineGeometry.unpack(
       rectangleGeometry,
-      offset
+      offset,
     );
   }
   rectangleGeometry._ellipsoid = Ellipsoid.clone(rectangleGeometry._ellipsoid);

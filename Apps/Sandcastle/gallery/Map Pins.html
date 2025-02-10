@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -56,7 +56,7 @@
 
         const url = Cesium.buildModuleUrl("Assets/Textures/maki/grocery.png");
         const groceryPin = Promise.resolve(
-          pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48)
+          pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48),
         ).then(function (canvas) {
           return viewer.entities.add({
             name: "Grocery store",
@@ -70,7 +70,7 @@
 
         //Create a red pin representing a hospital from the maki icon set.
         const hospitalPin = Promise.resolve(
-          pinBuilder.fromMakiIconId("hospital", Cesium.Color.RED, 48)
+          pinBuilder.fromMakiIconId("hospital", Cesium.Color.RED, 48),
         ).then(function (canvas) {
           return viewer.entities.add({
             name: "Hospital",
@@ -83,11 +83,11 @@
         });
 
         //Since some of the pins are created asynchronously, wait for them all to load before zooming/
-        Promise.all([bluePin, questionPin, groceryPin, hospitalPin]).then(function (
-          pins
-        ) {
-          viewer.zoomTo(pins);
-        });
+        Promise.all([bluePin, questionPin, groceryPin, hospitalPin]).then(
+          function (pins) {
+            viewer.zoomTo(pins);
+          },
+        );
 
         //Sandcastle_End
       };

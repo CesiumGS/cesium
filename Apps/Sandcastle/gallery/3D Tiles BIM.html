@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -82,40 +82,10 @@
         // Workaround until 3D Tiles has the concept of global batch ids: https://github.com/CesiumGS/3d-tiles/issues/265
         const elementMap = {}; // Build a map of elements to features.
         const hiddenElements = [
-          112001,
-          113180,
-          131136,
-          113167,
-          71309,
-          109652,
-          111178,
-          113156,
-          113170,
-          124846,
-          114076,
-          131122,
-          113179,
-          114325,
-          131134,
-          113164,
-          113153,
-          113179,
-          109656,
-          114095,
-          114093,
-          39225,
-          39267,
-          113149,
-          113071,
-          112003,
-          39229,
-          113160,
-          39227,
-          39234,
-          113985,
-          39230,
-          112004,
-          39223,
+          112001, 113180, 131136, 113167, 71309, 109652, 111178, 113156, 113170, 124846,
+          114076, 131122, 113179, 114325, 131134, 113164, 113153, 113179, 109656, 114095,
+          114093, 39225, 39267, 113149, 113071, 112003, 39229, 113160, 39227, 39234,
+          113985, 39230, 112004, 39223,
         ];
 
         function getElement(feature) {
@@ -182,7 +152,7 @@
 
           viewer.zoomTo(
             tileset,
-            new Cesium.HeadingPitchRange(0.5, -0.2, tileset.boundingSphere.radius * 4.0)
+            new Cesium.HeadingPitchRange(0.5, -0.2, tileset.boundingSphere.radius * 4.0),
           );
 
           tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;

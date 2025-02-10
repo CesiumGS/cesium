@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -36,12 +36,12 @@
         const particlesOffset = new Cesium.Cartesian3(
           -8.950115473940969,
           34.852766731753945,
-          -30.235411095432937
+          -30.235411095432937,
         );
         const cameraLocation = Cesium.Cartesian3.add(
           planePosition,
           particlesOffset,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
         const resetCamera = function () {
           viewer.camera.lookAt(cameraLocation, new Cesium.Cartesian3(-450, -300, 200));
@@ -69,7 +69,7 @@
         const hpr = new Cesium.HeadingPitchRoll(0.0, Cesium.Math.PI_OVER_TWO, 0.0);
         const orientation = Cesium.Transforms.headingPitchRollQuaternion(
           planePosition,
-          hpr
+          hpr,
         );
         const entity = viewer.entities.add({
           model: {
@@ -83,16 +83,16 @@
         // creating particles model matrix
         const translationOffset = Cesium.Matrix4.fromTranslation(
           particlesOffset,
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         const translationOfPlane = Cesium.Matrix4.fromTranslation(
           planePosition,
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         const particlesModelMatrix = Cesium.Matrix4.multiplyTransformation(
           translationOfPlane,
           translationOffset,
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
 
         // creating the particle systems
@@ -166,24 +166,24 @@
 
             scratchCartesian3 = Cesium.Cartesian3.normalize(
               particle.position,
-              new Cesium.Cartesian3()
+              new Cesium.Cartesian3(),
             );
             scratchCartesian3 = Cesium.Cartesian3.multiplyByScalar(
               scratchCartesian3,
               -40.0 * dt,
-              scratchCartesian3
+              scratchCartesian3,
             );
 
             scratchCartesian3 = Cesium.Cartesian3.add(
               particle.position,
               scratchCartesian3,
-              scratchCartesian3
+              scratchCartesian3,
             );
 
             scratchCartographic = Cesium.Cartographic.fromCartesian(
               scratchCartesian3,
               Cesium.Ellipsoid.WGS84,
-              scratchCartographic
+              scratchCartographic,
             );
 
             const angle = (Cesium.Math.PI * 2.0 * iteration) / options.numberOfSystems;
@@ -210,10 +210,10 @@
 
             const emitterModelMatrix = Cesium.Matrix4.fromTranslation(
               scratchOffset,
-              matrix4Scratch
+              matrix4Scratch,
             );
             const color = Cesium.Color.fromRandom(
-              options.colorOptions[i % options.colorOptions.length]
+              options.colorOptions[i % options.colorOptions.length],
             );
             const force = forceFunction(options, i);
 
@@ -231,7 +231,7 @@
                 updateCallback: force,
                 modelMatrix: particlesModelMatrix,
                 emitterModelMatrix: emitterModelMatrix,
-              })
+              }),
             );
             systemsArray.push(item);
           }

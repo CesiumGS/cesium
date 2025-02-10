@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -52,7 +52,7 @@
           // If this is not specified, or the URL is invalid no geoid conversion will be applied.
           // The source data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
           const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
           );
 
           // Create i3s options to pass optional parameters useful for debugging and visualizing
@@ -63,7 +63,7 @@
           // Create I3S data provider
           const i3sProvider = await Cesium.I3SDataProvider.fromUrl(
             tours.Frankfurt,
-            i3sOptions
+            i3sOptions,
           );
 
           // Add the i3s layer provider as a primitive data type

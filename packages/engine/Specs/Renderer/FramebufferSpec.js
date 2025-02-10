@@ -292,12 +292,11 @@ describe(
           }),
         ],
       });
-      renderColorTexture(framebuffer, new Color(0.0, 1.0, 0.0, 1.0), [
-        0,
-        255,
-        0,
-        255,
-      ]);
+      renderColorTexture(
+        framebuffer,
+        new Color(0.0, 1.0, 0.0, 1.0),
+        [0, 255, 0, 255],
+      );
     });
 
     it("draws to a floating-point color attachment", function () {
@@ -316,12 +315,11 @@ describe(
           }),
         ],
       });
-      renderColorTexture(framebuffer, new Color(0.5, 1.5, 2.0, 1.0), [
-        0.5,
-        1.5,
-        2.0,
-        1.0,
-      ]);
+      renderColorTexture(
+        framebuffer,
+        new Color(0.5, 1.5, 2.0, 1.0),
+        [0.5, 1.5, 2.0, 1.0],
+      );
     });
 
     it("draws to a half floating-point color attachment", function () {
@@ -340,12 +338,11 @@ describe(
           }),
         ],
       });
-      renderColorTexture(framebuffer, new Color(0.5, 1.5, 2.0, 1.0), [
-        14336,
-        15872,
-        16384,
-        15360,
-      ]);
+      renderColorTexture(
+        framebuffer,
+        new Color(0.5, 1.5, 2.0, 1.0),
+        [14336, 15872, 16384, 15360],
+      );
     });
 
     function renderDepthAttachment(framebuffer, texture) {
@@ -456,7 +453,7 @@ describe(
 
         if (framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE) {
           expect(
-            renderDepthAttachment(framebuffer, framebuffer.depthTexture)
+            renderDepthAttachment(framebuffer, framebuffer.depthTexture),
           ).toEqualEpsilon([128, 128, 128, 255], 1);
         }
       }
@@ -484,7 +481,7 @@ describe(
 
         if (framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE) {
           expect(
-            renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)
+            renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture),
           ).toEqualEpsilon([128, 128, 128, 255], 1);
         }
       }
@@ -741,7 +738,7 @@ describe(
         }),
       });
       expect(framebuffer.status).not.toEqual(
-        WebGLConstants.FRAMEBUFFER_COMPLETE
+        WebGLConstants.FRAMEBUFFER_COMPLETE,
       );
     });
 
@@ -928,7 +925,7 @@ describe(
         return new Framebuffer({
           context: context,
           colorRenderbuffers: new Array(
-            ContextLimits.maximumColorAttachments + 1
+            ContextLimits.maximumColorAttachments + 1,
           ),
         });
       }).toThrowDeveloperError();
@@ -965,7 +962,7 @@ describe(
 
       expect(function () {
         framebuffer.getColorRenderbuffer(
-          ContextLimits.maximumColorAttachments + 1
+          ContextLimits.maximumColorAttachments + 1,
         );
       }).toThrowDeveloperError();
     });
@@ -1025,5 +1022,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

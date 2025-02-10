@@ -12,21 +12,21 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
 
   it("fromUrl throws if url is not provided", async function () {
     await expectAsync(
-      Cesium3DTilesTerrainProvider.fromUrl()
+      Cesium3DTilesTerrainProvider.fromUrl(),
     ).toBeRejectedWithError(DeveloperError);
   });
 
   it("fromUrl rejects when url rejects", async function () {
     const error = new Error();
     await expectAsync(
-      Cesium3DTilesTerrainProvider.fromUrl(Promise.reject(error))
+      Cesium3DTilesTerrainProvider.fromUrl(Promise.reject(error)),
     ).toBeRejectedWithError();
   });
 
   it("fromUrl rejects when url is invalid", async function () {
     const path = "made/up/url";
     await expectAsync(
-      Cesium3DTilesTerrainProvider.fromUrl(path)
+      Cesium3DTilesTerrainProvider.fromUrl(path),
     ).toBeRejectedWithError();
   });
 
@@ -42,7 +42,7 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
     const path = "Data/Cesium3DTiles/Terrain/Test/tileset.json";
 
     const provider = await Cesium3DTilesTerrainProvider.fromUrl(
-      Promise.resolve(path)
+      Promise.resolve(path),
     );
 
     expect(provider).toBeInstanceOf(Cesium3DTilesTerrainProvider);

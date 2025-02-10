@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -111,7 +111,7 @@
                 reset();
                 filenameToSave = "Satellites.kmz";
                 dataSourcePromise = Cesium.CzmlDataSource.load(
-                  "../../SampleData/simple.czml"
+                  "../../SampleData/simple.czml",
                 );
                 viewer.dataSources.add(dataSourcePromise);
 
@@ -130,7 +130,7 @@
               },
             },
           ],
-          "propertiesMenu"
+          "propertiesMenu",
         );
 
         Sandcastle.addToolbarButton("Download", function () {

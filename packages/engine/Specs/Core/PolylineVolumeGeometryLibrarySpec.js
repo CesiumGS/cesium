@@ -28,7 +28,7 @@ describe("Core/PolylineVolumeGeometryLibrary", () => {
       const ellipsoidStub = new Ellipsoid(
         6378137.0,
         6378137.0,
-        6356752.3142451793
+        6356752.3142451793,
       );
       // It's easier to stub the function than to predict the values to be collinear after calling the function
       ellipsoidStub.scaleToGeodeticSurface = function (cartesian, result) {
@@ -48,8 +48,8 @@ describe("Core/PolylineVolumeGeometryLibrary", () => {
           shape,
           boundingRectangle,
           geometry,
-          true
-        )
+          true,
+        ),
       ).not.toThrowDeveloperError();
     });
   });

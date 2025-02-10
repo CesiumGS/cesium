@@ -192,38 +192,38 @@ HeightmapTessellator.computeVertices = function (options) {
   const exaggeration = defaultValue(options.exaggeration, 1.0);
   const exaggerationRelativeHeight = defaultValue(
     options.exaggerationRelativeHeight,
-    0.0
+    0.0,
   );
   const hasExaggeration = exaggeration !== 1.0;
   const includeGeodeticSurfaceNormals = hasExaggeration;
 
   const structure = defaultValue(
     options.structure,
-    HeightmapTessellator.DEFAULT_STRUCTURE
+    HeightmapTessellator.DEFAULT_STRUCTURE,
   );
   const heightScale = defaultValue(
     structure.heightScale,
-    HeightmapTessellator.DEFAULT_STRUCTURE.heightScale
+    HeightmapTessellator.DEFAULT_STRUCTURE.heightScale,
   );
   const heightOffset = defaultValue(
     structure.heightOffset,
-    HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset
+    HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset,
   );
   const elementsPerHeight = defaultValue(
     structure.elementsPerHeight,
-    HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight
+    HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight,
   );
   const stride = defaultValue(
     structure.stride,
-    HeightmapTessellator.DEFAULT_STRUCTURE.stride
+    HeightmapTessellator.DEFAULT_STRUCTURE.stride,
   );
   const elementMultiplier = defaultValue(
     structure.elementMultiplier,
-    HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier
+    HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier,
   );
   const isBigEndian = defaultValue(
     structure.isBigEndian,
-    HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian
+    HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian,
   );
 
   let rectangleWidth = Rectangle.computeWidth(nativeRectangle);
@@ -247,16 +247,15 @@ HeightmapTessellator.computeVertices = function (options) {
 
   const fromENU = Transforms.eastNorthUpToFixedFrame(
     relativeToCenter,
-    ellipsoid
+    ellipsoid,
   );
   const toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
 
   let southMercatorY;
   let oneOverMercatorHeight;
   if (includeWebMercatorT) {
-    southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-      geographicSouth
-    );
+    southMercatorY =
+      WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicSouth);
     oneOverMercatorHeight =
       1.0 /
       (WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicNorth) -
@@ -465,9 +464,8 @@ HeightmapTessellator.computeVertices = function (options) {
       }
 
       if (includeGeodeticSurfaceNormals) {
-        geodeticSurfaceNormals[index] = ellipsoid.geodeticSurfaceNormal(
-          position
-        );
+        geodeticSurfaceNormals[index] =
+          ellipsoid.geodeticSurfaceNormal(position);
       }
     }
   }
@@ -479,18 +477,19 @@ HeightmapTessellator.computeVertices = function (options) {
       rectangle,
       minimumHeight,
       maximumHeight,
-      ellipsoid
+      ellipsoid,
     );
   }
 
   let occludeePointInScaledSpace;
   if (hasRelativeToCenter) {
     const occluder = new EllipsoidalOccluder(ellipsoid);
-    occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
-      relativeToCenter,
-      positions,
-      minimumHeight
-    );
+    occludeePointInScaledSpace =
+      occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
+        relativeToCenter,
+        positions,
+        minimumHeight,
+      );
   }
 
   const aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
@@ -504,7 +503,7 @@ HeightmapTessellator.computeVertices = function (options) {
     includeWebMercatorT,
     includeGeodeticSurfaceNormals,
     exaggeration,
-    exaggerationRelativeHeight
+    exaggerationRelativeHeight,
   );
   const vertices = new Float32Array(vertexCount * encoding.stride);
 
@@ -518,7 +517,7 @@ HeightmapTessellator.computeVertices = function (options) {
       heights[j],
       undefined,
       webMercatorTs[j],
-      geodeticSurfaceNormals[j]
+      geodeticSurfaceNormals[j],
     );
   }
 

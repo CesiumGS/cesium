@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -188,8 +188,8 @@
             new Cesium.HeadingPitchRange(
               camera.heading,
               camera.pitch,
-              boundingSphere.radius * 2.0
-            )
+              boundingSphere.radius * 2.0,
+            ),
           );
         });
 
@@ -340,7 +340,7 @@
           .getObservable(lightingViewModel, "directionalLightIntensity")
           .subscribe(function () {
             const directionalLightIntensity = Number(
-              lightingViewModel.directionalLightIntensity
+              lightingViewModel.directionalLightIntensity,
             );
             if (!isNaN(directionalLightIntensity)) {
               scene.light.intensity = directionalLightIntensity;
@@ -369,10 +369,11 @@
 
         function updateModelLightingProperties() {
           const atmosphereScatteringIntensity = Number(
-            lightingViewModel.atmosphereScatteringIntensity
+            lightingViewModel.atmosphereScatteringIntensity,
           );
           if (!isNaN(atmosphereScatteringIntensity)) {
-            model.environmentMapManager.atmosphereScatteringIntensity = atmosphereScatteringIntensity;
+            model.environmentMapManager.atmosphereScatteringIntensity =
+              atmosphereScatteringIntensity;
           }
 
           const gamma = Number(lightingViewModel.gamma);
@@ -432,7 +433,7 @@
             Cesium.Matrix4.multiplyByUniformScale(
               model.modelMatrix,
               scale,
-              model.modelMatrix
+              model.modelMatrix,
             );
             radius *= scale;
           }
@@ -441,7 +442,7 @@
           const pitch = 0.0;
           camera.lookAt(
             model.boundingSphere.center,
-            new Cesium.HeadingPitchRange(heading, pitch, radius * 2.0)
+            new Cesium.HeadingPitchRange(heading, pitch, radius * 2.0),
           );
         }
         loadModel(2681028);
@@ -456,7 +457,7 @@
             scene.atmosphere.dynamicLighting = checked
               ? Cesium.DynamicAtmosphereLightingType.SUNLIGHT
               : Cesium.DynamicAtmosphereLightingType.NONE;
-          }
+          },
         );
 
         Sandcastle.addToggleButton("Shadows", viewer.shadows, function (checked) {

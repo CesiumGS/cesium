@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -46,11 +46,11 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
-              Cesium.ArcGisBaseMapType.SATELLITE
+              Cesium.ArcGisBaseMapType.SATELLITE,
               // other supported styles include:
               // Cesium.ArcGisMapServerImageryProvider.HILLSHADE
               // Cesium.ArcGisMapServerImageryProvider.OCEANS
-            )
+            ),
           ),
         });
 

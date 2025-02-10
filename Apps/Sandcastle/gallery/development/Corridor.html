@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -38,12 +38,7 @@
         // Create the corridor geometry.
         let corridorGeometry = new Cesium.CorridorGeometry({
           positions: Cesium.Cartesian3.fromDegreesArray([
-            -100.0,
-            40.0,
-            -105.0,
-            40.0,
-            -105.0,
-            35.0,
+            -100.0, 40.0, -105.0, 40.0, -105.0, 35.0,
           ]),
           width: 200000.0,
           vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -55,7 +50,7 @@
           geometry: corridorGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5),
             ),
           },
         });
@@ -66,7 +61,7 @@
             appearance: new Cesium.PerInstanceColorAppearance({
               closed: true,
             }),
-          })
+          }),
         );
 
         // Example 2: Draw a green corridor at a height.
@@ -77,12 +72,7 @@
         // option to draw mitered corners.
         corridorGeometry = new Cesium.CorridorGeometry({
           positions: Cesium.Cartesian3.fromDegreesArray([
-            -90.0,
-            40.0,
-            -95.0,
-            40.0,
-            -95.0,
-            35.0,
+            -90.0, 40.0, -95.0, 40.0, -95.0, 35.0,
           ]),
           height: 100000.0,
           width: 200000.0,
@@ -106,7 +96,7 @@
               closed: true,
               translucent: false,
             }),
-          })
+          }),
         );
 
         // Example 3: Draw a blue extruded corridor.
@@ -117,12 +107,7 @@
         // to draw beveled corners.
         corridorGeometry = new Cesium.CorridorGeometry({
           positions: Cesium.Cartesian3.fromDegreesArray([
-            -80.0,
-            40.0,
-            -85.0,
-            40.0,
-            -85.0,
-            35.0,
+            -80.0, 40.0, -85.0, 40.0, -85.0, 35.0,
           ]),
           height: 200000.0,
           extrudedHeight: 100000.0,
@@ -136,7 +121,7 @@
           geometry: corridorGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(0.0, 0.0, 1.0, 0.5)
+              new Cesium.Color(0.0, 0.0, 1.0, 0.5),
             ),
           },
         });
@@ -147,7 +132,7 @@
             appearance: new Cesium.PerInstanceColorAppearance({
               closed: true,
             }),
-          })
+          }),
         ); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

@@ -55,7 +55,7 @@ function getImplicitTileCoordinatesFromGeographicCoordinates(
   implicitTileset,
   level,
   x,
-  y
+  y,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("implicitTileset", implicitTileset);
@@ -127,7 +127,7 @@ function computeDescendantCoordinatesAtUv(
   subtreeCoord,
   u,
   v,
-  levelOffset
+  levelOffset,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("implicitTileset", implicitTileset);
@@ -144,7 +144,7 @@ function computeDescendantCoordinatesAtUv(
     implicitTileset,
     levelOffset,
     localX,
-    localY
+    localY,
   );
   // @ts-ignore
   return subtreeCoord.getDescendantCoordinates(offset);
@@ -268,7 +268,7 @@ function Cesium3DTilesTerrainProvider(options) {
    */
   this._requestVertexNormals = defaultValue(
     options.requestVertexNormals,
-    false
+    false,
   );
 
   /**
@@ -333,12 +333,12 @@ Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
   provider._tileset0 = new ImplicitTileset(
     resource,
     child0Json,
-    metadataSchema
+    metadataSchema,
   );
   provider._tileset1 = new ImplicitTileset(
     resource,
     child1Json,
-    metadataSchema
+    metadataSchema,
   );
 
   return provider;
@@ -383,11 +383,11 @@ async function loadWaterMask(gltf, gltfResource) {
   }
 
   const propertyTextureData = extension.propertyTextures.find(
-    (data) => data.class === metadataClass.id
+    (data) => data.class === metadataClass.id,
   );
   if (!defined(propertyTextureData)) {
     throw new DeveloperError(
-      `Expected a propertyTexture with a class ${metadataClass.id}`
+      `Expected a propertyTexture with a class ${metadataClass.id}`,
     );
   }
 
@@ -445,7 +445,7 @@ async function loadWaterMask(gltf, gltfResource) {
  */
 Cesium3DTilesTerrainProvider.fromIonAssetId = async function (
   assetId,
-  options
+  options,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("assetId", assetId);
@@ -475,7 +475,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const rootId = getRootIdFromGeographic(level, x);
   const implicitTileset = rootId === 0 ? this._tileset0 : this._tileset1;
@@ -484,7 +484,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
     implicitTileset,
     level,
     x,
-    y
+    y,
   );
 
   // @ts-ignore
@@ -500,12 +500,11 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   let subtreePromise;
   if (subtree === undefined) {
     // @ts-ignore
-    const subtreeRelative = implicitTileset.subtreeUriTemplate.getDerivedResource(
-      {
+    const subtreeRelative =
+      implicitTileset.subtreeUriTemplate.getDerivedResource({
         // @ts-ignore
         templateValues: subtreeCoord.getTemplateValues(),
-      }
-    );
+      });
     // @ts-ignore
     const subtreeResource = implicitTileset.baseResource.getDerivedResource({
       // @ts-ignore
@@ -524,7 +523,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
             undefined,
             bufferU8,
             implicitTileset,
-            subtreeCoord
+            subtreeCoord,
           );
           cache.addSubtree(rootId, subtree);
         }
@@ -541,7 +540,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
     {
       // @ts-ignore
       templateValues: tileCoord.getTemplateValues(),
-    }
+    },
   );
   // @ts-ignore
   const glbResource = implicitTileset.baseResource.getDerivedResource({
@@ -558,7 +557,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   }
 
   const gltfPromise = glbPromise.then((glbBuffer) =>
-    parseGlb(new Uint8Array(glbBuffer))
+    parseGlb(new Uint8Array(glbBuffer)),
   );
 
   const promises = scratchPromises;
@@ -580,27 +579,27 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
 
       // @ts-ignore
       const minimumHeight = metadataView.getPropertyBySemantic(
-        MetadataSemantic.TILE_MINIMUM_HEIGHT
+        MetadataSemantic.TILE_MINIMUM_HEIGHT,
       );
 
       // @ts-ignore
       const maximumHeight = metadataView.getPropertyBySemantic(
-        MetadataSemantic.TILE_MAXIMUM_HEIGHT
+        MetadataSemantic.TILE_MAXIMUM_HEIGHT,
       );
 
       // @ts-ignore
       const boundingSphereArray = metadataView.getPropertyBySemantic(
-        MetadataSemantic.TILE_BOUNDING_SPHERE
+        MetadataSemantic.TILE_BOUNDING_SPHERE,
       );
       const boundingSphere = BoundingSphere.unpack(
         boundingSphereArray,
         0,
-        new BoundingSphere()
+        new BoundingSphere(),
       );
 
       // @ts-ignore
       const horizonOcclusionPoint = metadataView.getPropertyBySemantic(
-        MetadataSemantic.TILE_HORIZON_OCCLUSION_POINT
+        MetadataSemantic.TILE_HORIZON_OCCLUSION_POINT,
       );
 
       const tilingScheme = that._tilingScheme;
@@ -610,7 +609,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
         x,
         y,
         level,
-        new Rectangle()
+        new Rectangle(),
       );
 
       const ellipsoid = that._ellipsoid;
@@ -620,7 +619,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
         minimumHeight,
         maximumHeight,
         ellipsoid,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
 
       const skirtHeight = that.getLevelMaximumGeometricError(level) * 5.0;
@@ -650,11 +649,11 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
     })
     .catch(function (err) {
       console.log(
-        `Could not load subtree: ${rootId} ${subtreeCoord.level} ${subtreeCoord.x} ${subtreeCoord.y}: ${err}`
+        `Could not load subtree: ${rootId} ${subtreeCoord.level} ${subtreeCoord.x} ${subtreeCoord.y}: ${err}`,
       );
 
       console.log(
-        `Could not load tile: ${rootId} ${tileCoord.level} ${tileCoord.x} ${tileCoord.y}: ${err}`
+        `Could not load tile: ${rootId} ${tileCoord.level} ${tileCoord.x} ${tileCoord.y}: ${err}`,
       );
       return undefined;
     });
@@ -671,7 +670,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
 Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
   x,
   y,
-  level
+  level,
 ) {
   const cache = this._subtreeCache;
 
@@ -681,7 +680,7 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
     implicitTileset,
     level,
     x,
-    y
+    y,
   );
 
   // @ts-ignore
@@ -714,9 +713,8 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
   const parentSubtree = cache.find(rootId, parentSubtreeCoord);
   if (parentSubtree !== undefined) {
     // @ts-ignore
-    const isChildSubtreeAvailable = parentSubtree.childSubtreeIsAvailableAtCoordinates(
-      subtreeCoord
-    );
+    const isChildSubtreeAvailable =
+      parentSubtree.childSubtreeIsAvailableAtCoordinates(subtreeCoord);
 
     return isChildSubtreeAvailable
       ? // @ts-ignore
@@ -744,7 +742,7 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
 Cesium3DTilesTerrainProvider.prototype.loadTileDataAvailability = function (
   _x,
   _y,
-  _level
+  _level,
 ) {
   return undefined;
 };
@@ -755,17 +753,17 @@ Cesium3DTilesTerrainProvider.prototype.loadTileDataAvailability = function (
  * @param {Number} level The tile level for which to get the maximum geometric error.
  * @returns {Number} The maximum geometric error.
  */
-Cesium3DTilesTerrainProvider.prototype.getLevelMaximumGeometricError = function (
-  level
-) {
-  const ellipsoid = this._ellipsoid;
-  const rootError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-    ellipsoid,
-    64,
-    2
-  );
-  return rootError / (1 << level);
-};
+Cesium3DTilesTerrainProvider.prototype.getLevelMaximumGeometricError =
+  function (level) {
+    const ellipsoid = this._ellipsoid;
+    const rootError =
+      TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+        ellipsoid,
+        64,
+        2,
+      );
+    return rootError / (1 << level);
+  };
 
 Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
   /**
@@ -912,7 +910,7 @@ ImplicitSubtreeCache.prototype.addSubtree = function (rootId, subtree) {
   const cacheNode = new ImplicitSubtreeCacheNode(
     rootId,
     subtree,
-    this._subtreeRequestCounter
+    this._subtreeRequestCounter,
   );
   this._queue.insert(cacheNode);
 
@@ -992,123 +990,127 @@ ImplicitSubtreeCache.prototype.find = function (rootId, subtreeCoord) {
  * @throws {DeveloperError} If position is outside any tile according to the tiling scheme.
  */
 
-ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition = function (
-  position
-) {
-  const provider = this._provider;
-  const rootId = position.longitude < 0.0 ? 0 : 1;
-  const implicitTileset =
-    rootId === 0 ? provider._tileset0 : provider._tileset1;
-  // @ts-ignore
-  const subtreeLevels = implicitTileset.subtreeLevels;
-  const rootSubtreeCoord = getImplicitTileCoordinates(implicitTileset, 0, 0, 0);
-
-  let subtree = this.find(rootId, rootSubtreeCoord);
-  if (subtree === undefined) {
-    // Nothing has been loaded yet
-    return undefined;
-  }
-
-  // @ts-ignore
-  let subtreeCoord = subtree.implicitCoordinates;
-  // @ts-ignore
-  let subtreeX = subtreeCoord.x;
-  // @ts-ignore
-  let subtreeY = subtreeCoord.y;
-  // @ts-ignore
-  let subtreeLevel = subtreeCoord.level;
-
-  const longitude = position.longitude;
-  const latitude = position.latitude;
-
-  const globalMinimumLongitude = -CesiumMath.PI;
-  const globalMaximumLongitude = +CesiumMath.PI;
-  const rootLongitudeStart = CesiumMath.lerp(
-    globalMinimumLongitude,
-    globalMaximumLongitude,
-    rootId / 2.0
-  );
-  const rootLongitudeEnd = CesiumMath.lerp(
-    globalMinimumLongitude,
-    globalMaximumLongitude,
-    (rootId + 1) / 2
-  );
-  const rootLatitudeStart = -CesiumMath.PI * 0.5;
-  const rootLatitudeEnd = +CesiumMath.PI * 0.5;
-
-  let u = 0.0;
-  let v = 0.0;
-
-  // Find the deepest available subtree
-  let childSubtreeLoaded = true;
-  while (childSubtreeLoaded) {
-    const invDim = 1.0 / (1 << subtreeLevel);
-
-    const lonLength = (rootLongitudeEnd - rootLongitudeStart) * invDim;
-    const lonMin = rootLongitudeStart + subtreeX * lonLength;
-
-    const latLength = (rootLatitudeEnd - rootLatitudeStart) * invDim;
-    const latMin = rootLatitudeStart + subtreeY * latLength;
-
-    u = (longitude - lonMin) / lonLength;
-    v = (latitude - latMin) / latLength;
-
-    const childSubtreeCoord = computeDescendantCoordinatesAtUv(
+ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition =
+  function (position) {
+    const provider = this._provider;
+    const rootId = position.longitude < 0.0 ? 0 : 1;
+    const implicitTileset =
+      rootId === 0 ? provider._tileset0 : provider._tileset1;
+    // @ts-ignore
+    const subtreeLevels = implicitTileset.subtreeLevels;
+    const rootSubtreeCoord = getImplicitTileCoordinates(
       implicitTileset,
-      subtreeCoord,
-      u,
-      v,
-      subtreeLevels
+      0,
+      0,
+      0,
     );
 
+    let subtree = this.find(rootId, rootSubtreeCoord);
+    if (subtree === undefined) {
+      // Nothing has been loaded yet
+      return undefined;
+    }
+
     // @ts-ignore
-    if (subtree.childSubtreeIsAvailableAtCoordinates(childSubtreeCoord)) {
-      const childSubtree = this.find(rootId, childSubtreeCoord);
-      if (childSubtree !== undefined) {
-        // Update all constiables and keep looping
-        subtree = childSubtree;
-        // @ts-ignore
-        subtreeCoord = subtree.implicitCoordinates;
-        // @ts-ignore
-        subtreeX = subtreeCoord.x;
-        // @ts-ignore
-        subtreeY = subtreeCoord.y;
-        // @ts-ignore
-        subtreeLevel = subtreeCoord.level;
+    let subtreeCoord = subtree.implicitCoordinates;
+    // @ts-ignore
+    let subtreeX = subtreeCoord.x;
+    // @ts-ignore
+    let subtreeY = subtreeCoord.y;
+    // @ts-ignore
+    let subtreeLevel = subtreeCoord.level;
+
+    const longitude = position.longitude;
+    const latitude = position.latitude;
+
+    const globalMinimumLongitude = -CesiumMath.PI;
+    const globalMaximumLongitude = +CesiumMath.PI;
+    const rootLongitudeStart = CesiumMath.lerp(
+      globalMinimumLongitude,
+      globalMaximumLongitude,
+      rootId / 2.0,
+    );
+    const rootLongitudeEnd = CesiumMath.lerp(
+      globalMinimumLongitude,
+      globalMaximumLongitude,
+      (rootId + 1) / 2,
+    );
+    const rootLatitudeStart = -CesiumMath.PI * 0.5;
+    const rootLatitudeEnd = +CesiumMath.PI * 0.5;
+
+    let u = 0.0;
+    let v = 0.0;
+
+    // Find the deepest available subtree
+    let childSubtreeLoaded = true;
+    while (childSubtreeLoaded) {
+      const invDim = 1.0 / (1 << subtreeLevel);
+
+      const lonLength = (rootLongitudeEnd - rootLongitudeStart) * invDim;
+      const lonMin = rootLongitudeStart + subtreeX * lonLength;
+
+      const latLength = (rootLatitudeEnd - rootLatitudeStart) * invDim;
+      const latMin = rootLatitudeStart + subtreeY * latLength;
+
+      u = (longitude - lonMin) / lonLength;
+      v = (latitude - latMin) / latLength;
+
+      const childSubtreeCoord = computeDescendantCoordinatesAtUv(
+        implicitTileset,
+        subtreeCoord,
+        u,
+        v,
+        subtreeLevels,
+      );
+
+      // @ts-ignore
+      if (subtree.childSubtreeIsAvailableAtCoordinates(childSubtreeCoord)) {
+        const childSubtree = this.find(rootId, childSubtreeCoord);
+        if (childSubtree !== undefined) {
+          // Update all constiables and keep looping
+          subtree = childSubtree;
+          // @ts-ignore
+          subtreeCoord = subtree.implicitCoordinates;
+          // @ts-ignore
+          subtreeX = subtreeCoord.x;
+          // @ts-ignore
+          subtreeY = subtreeCoord.y;
+          // @ts-ignore
+          subtreeLevel = subtreeCoord.level;
+        } else {
+          // Child subtree is available but has not been loaded yet
+          // Since the root node of a subtree is always available, return the level of the child subtree
+          // sampleTerrainMostDetailed will keep calling this function until all available subtrees in the chain have been loaded
+          // @ts-ignore
+          return childSubtreeCoord;
+        }
       } else {
-        // Child subtree is available but has not been loaded yet
-        // Since the root node of a subtree is always available, return the level of the child subtree
-        // sampleTerrainMostDetailed will keep calling this function until all available subtrees in the chain have been loaded
-        // @ts-ignore
-        return childSubtreeCoord;
+        // Child subtree is not available
+        childSubtreeLoaded = false;
       }
-    } else {
-      // Child subtree is not available
-      childSubtreeLoaded = false;
     }
-  }
 
-  // Find the deepest level in the subtree
-  let deepestTileCoord;
-  for (let localLevel = 0; localLevel < subtreeLevels; localLevel++) {
-    const childCoord = computeDescendantCoordinatesAtUv(
-      implicitTileset,
-      subtreeCoord,
-      u,
-      v,
-      localLevel
-    );
+    // Find the deepest level in the subtree
+    let deepestTileCoord;
+    for (let localLevel = 0; localLevel < subtreeLevels; localLevel++) {
+      const childCoord = computeDescendantCoordinatesAtUv(
+        implicitTileset,
+        subtreeCoord,
+        u,
+        v,
+        localLevel,
+      );
 
-    // @ts-ignore
-    if (subtree.tileIsAvailableAtCoordinates(childCoord)) {
-      deepestTileCoord = childCoord;
-    } else {
-      break;
+      // @ts-ignore
+      if (subtree.tileIsAvailableAtCoordinates(childCoord)) {
+        deepestTileCoord = childCoord;
+      } else {
+        break;
+      }
     }
-  }
 
-  return deepestTileCoord;
-};
+    return deepestTileCoord;
+  };
 
 // NOTE: ImplicitSubtreeCache implements just enough of the TileAvailability interface to support `sampleTerrain` and `sampleTerrainMostDetailed`. Right now this just means implementing `computeMaximumLevelAtPosition`. It's more difficult to implement the rest of the methods because doing everything in terms of ranges instead of bits is kind of awkward.
 
@@ -1120,11 +1122,10 @@ ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition 
  * @throws {DeveloperError} If position is outside any tile according to the tiling scheme.
  */
 ImplicitSubtreeCache.prototype.computeMaximumLevelAtPosition = function (
-  position
+  position,
 ) {
-  const tileCoordinates = this._computeMaximumImplicitTileCoordinatesAtPosition(
-    position
-  );
+  const tileCoordinates =
+    this._computeMaximumImplicitTileCoordinatesAtPosition(position);
   if (tileCoordinates === undefined) {
     return 0;
   }

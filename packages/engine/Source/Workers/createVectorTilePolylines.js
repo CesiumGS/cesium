@@ -66,7 +66,7 @@ function createVectorTilePolylines(parameters, transferableObjects) {
     rectangle,
     minimumHeight,
     maximumHeight,
-    ellipsoid
+    ellipsoid,
   );
 
   const positionsLength = positions.length / 3;
@@ -103,14 +103,14 @@ function createVectorTilePolylines(parameters, transferableObjects) {
         previous = Cartesian3.unpack(
           positions,
           (offset + j - 1) * 3,
-          scratchPrev
+          scratchPrev,
         );
       }
 
       const current = Cartesian3.unpack(
         positions,
         (offset + j) * 3,
-        scratchCur
+        scratchCur,
       );
 
       let next;
@@ -118,12 +118,12 @@ function createVectorTilePolylines(parameters, transferableObjects) {
         const p2 = Cartesian3.unpack(
           positions,
           (offset + count - 1) * 3,
-          scratchP0
+          scratchP0,
         );
         const p3 = Cartesian3.unpack(
           positions,
           (offset + count - 2) * 3,
-          scratchP1
+          scratchP1,
         );
 
         next = Cartesian3.subtract(p2, p3, scratchNext);
@@ -175,12 +175,12 @@ function createVectorTilePolylines(parameters, transferableObjects) {
   transferableObjects.push(
     curPositions.buffer,
     prevPositions.buffer,
-    nextPositions.buffer
+    nextPositions.buffer,
   );
   transferableObjects.push(
     expandAndWidth.buffer,
     vertexBatchIds.buffer,
-    indices.buffer
+    indices.buffer,
   );
 
   let results = {

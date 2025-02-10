@@ -76,7 +76,7 @@ describe(
       options.contextOptions = defaultValue(options.contextOptions, {});
       options.contextOptions.webgl = defaultValue(
         options.contextOptions.webgl,
-        {}
+        {},
       );
       if (!!window.webglStub) {
         options.contextOptions.getWebGLStub = getWebGLStub;
@@ -99,7 +99,7 @@ describe(
       expect(widget.camera).toBeInstanceOf(Camera);
       expect(widget.clock).toBeInstanceOf(Clock);
       expect(widget.screenSpaceEventHandler).toBeInstanceOf(
-        ScreenSpaceEventHandler
+        ScreenSpaceEventHandler,
       );
       expect(widget.useBrowserRecommendedResolution).toBe(true);
       widget.render();
@@ -295,13 +295,13 @@ describe(
       expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
       expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
       expect(contextAttributes.premultipliedAlpha).toEqual(
-        webglOptions.premultipliedAlpha
+        webglOptions.premultipliedAlpha,
       );
       expect(contextAttributes.powerPreference).toEqual(
-        webglOptions.powerPreference
+        webglOptions.powerPreference,
       );
       expect(contextAttributes.preserveDrawingBuffer).toEqual(
-        webglOptions.preserveDrawingBuffer
+        webglOptions.preserveDrawingBuffer,
       );
     });
 
@@ -326,7 +326,7 @@ describe(
       });
 
       expect(widget.scene.maximumRenderTimeChange).toBe(
-        Number.POSITIVE_INFINITY
+        Number.POSITIVE_INFINITY,
       );
     });
 
@@ -335,7 +335,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantProperty(
-        new Cartesian3(123456, 123456, 123456)
+        new Cartesian3(123456, 123456, 123456),
       );
 
       widget.trackedEntity = entity;
@@ -353,7 +353,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(123456, 123456, 123456)
+        new Cartesian3(123456, 123456, 123456),
       );
 
       dataSource.entities.add(entity);
@@ -376,7 +376,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantProperty(
-        new Cartesian3(123456, 123456, 123456)
+        new Cartesian3(123456, 123456, 123456),
       );
 
       const dataSource = new MockDataSource();
@@ -392,9 +392,9 @@ describe(
         return Cartesian3.equals(
           Matrix4.getTranslation(
             widget.scene.camera.transform,
-            new Cartesian3()
+            new Cartesian3(),
           ),
-          entity.position.getValue()
+          entity.position.getValue(),
         );
       }).then(function () {
         dataSource.entities.remove(entity);
@@ -413,9 +413,9 @@ describe(
           return Cartesian3.equals(
             Matrix4.getTranslation(
               widget.scene.camera.transform,
-              new Cartesian3()
+              new Cartesian3(),
             ),
-            entity.position.getValue()
+            entity.position.getValue(),
           );
         }).then(function () {
           widget.dataSources.remove(dataSource);
@@ -492,9 +492,8 @@ describe(
       dataSource.clock = new DataSourceClock();
       dataSource.clock.startTime = JulianDate.fromIso8601("2013-08-01T18:00Z");
       dataSource.clock.stopTime = JulianDate.fromIso8601("2013-08-21T02:00Z");
-      dataSource.clock.currentTime = JulianDate.fromIso8601(
-        "2013-08-02T00:00Z"
-      );
+      dataSource.clock.currentTime =
+        JulianDate.fromIso8601("2013-08-02T00:00Z");
       dataSource.clock.clockRange = ClockRange.CLAMPED;
       dataSource.clock.clockStep = ClockStep.TICK_DEPENDENT;
       dataSource.clock.multiplier = 20.0;
@@ -515,9 +514,8 @@ describe(
       dataSource1.clock = new DataSourceClock();
       dataSource1.clock.startTime = JulianDate.fromIso8601("2013-08-01T18:00Z");
       dataSource1.clock.stopTime = JulianDate.fromIso8601("2013-08-21T02:00Z");
-      dataSource1.clock.currentTime = JulianDate.fromIso8601(
-        "2013-08-02T00:00Z"
-      );
+      dataSource1.clock.currentTime =
+        JulianDate.fromIso8601("2013-08-02T00:00Z");
 
       let dataSource2, dataSource3;
       widget = createCesiumWidget(container);
@@ -529,15 +527,12 @@ describe(
 
           dataSource2 = new MockDataSource();
           dataSource2.clock = new DataSourceClock();
-          dataSource2.clock.startTime = JulianDate.fromIso8601(
-            "2014-08-01T18:00Z"
-          );
-          dataSource2.clock.stopTime = JulianDate.fromIso8601(
-            "2014-08-21T02:00Z"
-          );
-          dataSource2.clock.currentTime = JulianDate.fromIso8601(
-            "2014-08-02T00:00Z"
-          );
+          dataSource2.clock.startTime =
+            JulianDate.fromIso8601("2014-08-01T18:00Z");
+          dataSource2.clock.stopTime =
+            JulianDate.fromIso8601("2014-08-21T02:00Z");
+          dataSource2.clock.currentTime =
+            JulianDate.fromIso8601("2014-08-02T00:00Z");
 
           widget.dataSources.add(dataSource2);
         })
@@ -547,15 +542,12 @@ describe(
 
           dataSource3 = new MockDataSource();
           dataSource3.clock = new DataSourceClock();
-          dataSource3.clock.startTime = JulianDate.fromIso8601(
-            "2015-08-01T18:00Z"
-          );
-          dataSource3.clock.stopTime = JulianDate.fromIso8601(
-            "2015-08-21T02:00Z"
-          );
-          dataSource3.clock.currentTime = JulianDate.fromIso8601(
-            "2015-08-02T00:00Z"
-          );
+          dataSource3.clock.startTime =
+            JulianDate.fromIso8601("2015-08-01T18:00Z");
+          dataSource3.clock.stopTime =
+            JulianDate.fromIso8601("2015-08-21T02:00Z");
+          dataSource3.clock.currentTime =
+            JulianDate.fromIso8601("2015-08-02T00:00Z");
 
           widget.dataSources.add(dataSource3);
         })
@@ -580,22 +572,19 @@ describe(
       dataSource.clock = new DataSourceClock();
       dataSource.clock.startTime = JulianDate.fromIso8601("2013-08-01T18:00Z");
       dataSource.clock.stopTime = JulianDate.fromIso8601("2013-08-21T02:00Z");
-      dataSource.clock.currentTime = JulianDate.fromIso8601(
-        "2013-08-02T00:00Z"
-      );
+      dataSource.clock.currentTime =
+        JulianDate.fromIso8601("2013-08-02T00:00Z");
       dataSource.clock.clockRange = ClockRange.CLAMPED;
       dataSource.clock.clockStep = ClockStep.TICK_DEPENDENT;
       dataSource.clock.multiplier = 20.0;
 
       widget = createCesiumWidget(container);
       return widget.dataSources.add(dataSource).then(function () {
-        dataSource.clock.startTime = JulianDate.fromIso8601(
-          "2014-08-01T18:00Z"
-        );
+        dataSource.clock.startTime =
+          JulianDate.fromIso8601("2014-08-01T18:00Z");
         dataSource.clock.stopTime = JulianDate.fromIso8601("2014-08-21T02:00Z");
-        dataSource.clock.currentTime = JulianDate.fromIso8601(
-          "2014-08-02T00:00Z"
-        );
+        dataSource.clock.currentTime =
+          JulianDate.fromIso8601("2014-08-02T00:00Z");
         dataSource.clock.clockRange = ClockRange.UNBOUNDED;
         dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         dataSource.clock.multiplier = 10.0;
@@ -623,9 +612,8 @@ describe(
       dataSource1.clock = new DataSourceClock();
       dataSource1.clock.startTime = JulianDate.fromIso8601("2013-08-01T18:00Z");
       dataSource1.clock.stopTime = JulianDate.fromIso8601("2013-08-21T02:00Z");
-      dataSource1.clock.currentTime = JulianDate.fromIso8601(
-        "2013-08-02T00:00Z"
-      );
+      dataSource1.clock.currentTime =
+        JulianDate.fromIso8601("2013-08-02T00:00Z");
 
       widget = createCesiumWidget(container, {
         automaticallyTrackDataSourceClocks: false,
@@ -640,7 +628,7 @@ describe(
           expect(widget.clockTrackedDataSource).not.toBeDefined();
           // The mock data source time is in the past, so will not be the default time.
           expect(widget.clock.startTime).not.toEqual(
-            dataSource1.clock.startTime
+            dataSource1.clock.startTime,
           );
 
           // Manually set the first data source as the tracked data source.
@@ -650,15 +638,12 @@ describe(
 
           dataSource2 = new MockDataSource();
           dataSource2.clock = new DataSourceClock();
-          dataSource2.clock.startTime = JulianDate.fromIso8601(
-            "2014-08-01T18:00Z"
-          );
-          dataSource2.clock.stopTime = JulianDate.fromIso8601(
-            "2014-08-21T02:00Z"
-          );
-          dataSource2.clock.currentTime = JulianDate.fromIso8601(
-            "2014-08-02T00:00Z"
-          );
+          dataSource2.clock.startTime =
+            JulianDate.fromIso8601("2014-08-01T18:00Z");
+          dataSource2.clock.stopTime =
+            JulianDate.fromIso8601("2014-08-21T02:00Z");
+          dataSource2.clock.currentTime =
+            JulianDate.fromIso8601("2014-08-02T00:00Z");
 
           // Adding a second data source in manual mode still leaves the first one tracked.
           widget.dataSources.add(dataSource2);
@@ -767,11 +752,11 @@ describe(
         return !widget.useDefaultRenderLoop;
       }).then(function () {
         expect(
-          widget._element.querySelector(".cesium-widget-errorPanel")
+          widget._element.querySelector(".cesium-widget-errorPanel"),
         ).not.toBeNull();
 
         const messages = widget._element.querySelectorAll(
-          ".cesium-widget-errorPanel-message"
+          ".cesium-widget-errorPanel-message",
         );
 
         let found = false;
@@ -785,11 +770,11 @@ describe(
 
         // click the OK button to dismiss the panel
         DomEventSimulator.fireClick(
-          widget._element.querySelector(".cesium-button")
+          widget._element.querySelector(".cesium-button"),
         );
 
         expect(
-          widget._element.querySelector(".cesium-widget-errorPanel")
+          widget._element.querySelector(".cesium-widget-errorPanel"),
         ).toBeNull();
       });
     });
@@ -808,7 +793,7 @@ describe(
         return !widget.useDefaultRenderLoop;
       }).then(function () {
         expect(
-          widget._element.querySelector(".cesium-widget-errorPanel")
+          widget._element.querySelector(".cesium-widget-errorPanel"),
         ).toBeNull();
       });
     });
@@ -832,18 +817,17 @@ describe(
       const expectedOffset = new HeadingPitchRange(
         0.0,
         -0.5,
-        expectedBoundingSphere.radius
+        expectedBoundingSphere.radius,
       );
 
       let wasCompleted = false;
-      spyOn(widget.camera, "viewBoundingSphere").and.callFake(function (
-        boundingSphere,
-        offset
-      ) {
-        expect(boundingSphere).toEqual(expectedBoundingSphere);
-        expect(offset).toEqual(expectedOffset);
-        wasCompleted = true;
-      });
+      spyOn(widget.camera, "viewBoundingSphere").and.callFake(
+        function (boundingSphere, offset) {
+          expect(boundingSphere).toEqual(expectedBoundingSphere);
+          expect(offset).toEqual(expectedOffset);
+          wasCompleted = true;
+        },
+      );
       const promise = widget.zoomTo(tileset);
 
       widget._postRender();
@@ -864,19 +848,18 @@ describe(
       const expectedOffset = new HeadingPitchRange(
         0.4,
         1.2,
-        4.0 * expectedBoundingSphere.radius
+        4.0 * expectedBoundingSphere.radius,
       );
 
       const promise = widget.zoomTo(tileset, expectedOffset);
       let wasCompleted = false;
-      spyOn(widget.camera, "viewBoundingSphere").and.callFake(function (
-        boundingSphere,
-        offset
-      ) {
-        expect(boundingSphere).toEqual(expectedBoundingSphere);
-        expect(offset).toEqual(expectedOffset);
-        wasCompleted = true;
-      });
+      spyOn(widget.camera, "viewBoundingSphere").and.callFake(
+        function (boundingSphere, offset) {
+          expect(boundingSphere).toEqual(expectedBoundingSphere);
+          expect(offset).toEqual(expectedOffset);
+          wasCompleted = true;
+        },
+      );
 
       widget._postRender();
 
@@ -899,12 +882,11 @@ describe(
         };
       }
 
-      const timeIntervalCollection = TimeIntervalCollection.fromIso8601DateArray(
-        {
+      const timeIntervalCollection =
+        TimeIntervalCollection.fromIso8601DateArray({
           iso8601Dates: dates,
           dataCallback: dataCallback,
-        }
-      );
+        });
 
       const pointCloud = new TimeDynamicPointCloud({
         intervals: timeIntervalCollection,
@@ -934,19 +916,18 @@ describe(
         const expectedOffset = new HeadingPitchRange(
           0.0,
           -0.5,
-          expectedBoundingSphere.radius
+          expectedBoundingSphere.radius,
         );
 
         const promise = widget.zoomTo(pointCloud);
         let wasCompleted = false;
-        spyOn(widget.camera, "viewBoundingSphere").and.callFake(function (
-          boundingSphere,
-          offset
-        ) {
-          expect(boundingSphere).toEqual(expectedBoundingSphere);
-          expect(offset).toEqual(expectedOffset);
-          wasCompleted = true;
-        });
+        spyOn(widget.camera, "viewBoundingSphere").and.callFake(
+          function (boundingSphere, offset) {
+            expect(boundingSphere).toEqual(expectedBoundingSphere);
+            expect(offset).toEqual(expectedOffset);
+            wasCompleted = true;
+          },
+        );
 
         widget._postRender();
 
@@ -964,19 +945,18 @@ describe(
         const expectedOffset = new HeadingPitchRange(
           0.4,
           1.2,
-          4.0 * expectedBoundingSphere.radius
+          4.0 * expectedBoundingSphere.radius,
         );
 
         const promise = widget.zoomTo(pointCloud, expectedOffset);
         let wasCompleted = false;
-        spyOn(widget.camera, "viewBoundingSphere").and.callFake(function (
-          boundingSphere,
-          offset
-        ) {
-          expect(boundingSphere).toEqual(expectedBoundingSphere);
-          expect(offset).toEqual(expectedOffset);
-          wasCompleted = true;
-        });
+        spyOn(widget.camera, "viewBoundingSphere").and.callFake(
+          function (boundingSphere, offset) {
+            expect(boundingSphere).toEqual(expectedBoundingSphere);
+            expect(offset).toEqual(expectedOffset);
+            wasCompleted = true;
+          },
+        );
 
         widget._postRender();
 
@@ -990,7 +970,7 @@ describe(
     async function loadVoxelPrimitive(widget) {
       const voxelPrimitive = new VoxelPrimitive({
         provider: await Cesium3DTilesVoxelProvider.fromUrl(
-          "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+          "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
         ),
       });
       widget.scene.primitives.add(voxelPrimitive);
@@ -1005,19 +985,18 @@ describe(
         const expectedOffset = new HeadingPitchRange(
           0.0,
           -0.5,
-          expectedBoundingSphere.radius
+          expectedBoundingSphere.radius,
         );
 
         const promise = widget.zoomTo(voxelPrimitive);
         let wasCompleted = false;
-        spyOn(widget.camera, "viewBoundingSphere").and.callFake(function (
-          boundingSphere,
-          offset
-        ) {
-          expect(boundingSphere).toEqual(expectedBoundingSphere);
-          expect(offset).toEqual(expectedOffset);
-          wasCompleted = true;
-        });
+        spyOn(widget.camera, "viewBoundingSphere").and.callFake(
+          function (boundingSphere, offset) {
+            expect(boundingSphere).toEqual(expectedBoundingSphere);
+            expect(offset).toEqual(expectedOffset);
+            wasCompleted = true;
+          },
+        );
 
         widget._postRender();
 
@@ -1035,19 +1014,18 @@ describe(
         const expectedOffset = new HeadingPitchRange(
           0.4,
           1.2,
-          4.0 * expectedBoundingSphere.radius
+          4.0 * expectedBoundingSphere.radius,
         );
 
         const promise = widget.zoomTo(voxelPrimitive, expectedOffset);
         let wasCompleted = false;
-        spyOn(widget.camera, "viewBoundingSphere").and.callFake(function (
-          boundingSphere,
-          offset
-        ) {
-          expect(boundingSphere).toEqual(expectedBoundingSphere);
-          expect(offset).toEqual(expectedOffset);
-          wasCompleted = true;
-        });
+        spyOn(widget.camera, "viewBoundingSphere").and.callFake(
+          function (boundingSphere, offset) {
+            expect(boundingSphere).toEqual(expectedBoundingSphere);
+            expect(offset).toEqual(expectedOffset);
+            wasCompleted = true;
+          },
+        );
 
         widget._postRender();
 
@@ -1075,18 +1053,17 @@ describe(
       spyOn(widget.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
-        }
+        },
       );
 
-      spyOn(widget.camera, "viewBoundingSphere").and.callFake(function (
-        boundingSphere,
-        offset
-      ) {
-        expect(boundingSphere).toBeDefined();
-        // expect offset to be undefined - doesn't use default bc of how zoomTo for entities is set up
-        expect(offset).toBeUndefined();
-        wasCompleted = true;
-      });
+      spyOn(widget.camera, "viewBoundingSphere").and.callFake(
+        function (boundingSphere, offset) {
+          expect(boundingSphere).toBeDefined();
+          // expect offset to be undefined - doesn't use default bc of how zoomTo for entities is set up
+          expect(offset).toBeUndefined();
+          wasCompleted = true;
+        },
+      );
 
       widget._postRender();
 
@@ -1115,15 +1092,14 @@ describe(
       spyOn(widget.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
-        }
+        },
       );
-      spyOn(widget.camera, "viewBoundingSphere").and.callFake(function (
-        boundingSphere,
-        offset
-      ) {
-        expect(expectedOffset).toEqual(offset);
-        wasCompleted = true;
-      });
+      spyOn(widget.camera, "viewBoundingSphere").and.callFake(
+        function (boundingSphere, offset) {
+          expect(expectedOffset).toEqual(offset);
+          wasCompleted = true;
+        },
+      );
 
       widget._postRender();
 
@@ -1178,16 +1154,15 @@ describe(
       const promise = widget.flyTo(tileset);
       let wasCompleted = false;
 
-      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-        target,
-        options
-      ) {
-        expect(options.offset).toBeDefined();
-        expect(options.duration).toBeUndefined();
-        expect(options.maximumHeight).toBeUndefined();
-        wasCompleted = true;
-        options.complete();
-      });
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+        function (target, options) {
+          expect(options.offset).toBeDefined();
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        },
+      );
 
       widget._postRender();
 
@@ -1208,16 +1183,15 @@ describe(
       const promise = widget.flyTo(tileset, options);
       let wasCompleted = false;
 
-      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-        target,
-        options
-      ) {
-        expect(options.offset).toBeDefined();
-        expect(options.duration).toBeUndefined();
-        expect(options.maximumHeight).toBeUndefined();
-        wasCompleted = true;
-        options.complete();
-      });
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+        function (target, options) {
+          expect(options.offset).toBeDefined();
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        },
+      );
 
       widget._postRender();
 
@@ -1243,15 +1217,14 @@ describe(
       const promise = widget.flyTo(tileset, options);
       let wasCompleted = false;
 
-      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-        target,
-        options
-      ) {
-        expect(options.duration).toBeDefined();
-        expect(options.maximumHeight).toBeDefined();
-        wasCompleted = true;
-        options.complete();
-      });
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+        function (target, options) {
+          expect(options.duration).toBeDefined();
+          expect(options.maximumHeight).toBeDefined();
+          wasCompleted = true;
+          options.complete();
+        },
+      );
 
       widget._postRender();
 
@@ -1266,16 +1239,15 @@ describe(
         const promise = widget.flyTo(pointCloud);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.offset).toBeDefined();
-          expect(options.duration).toBeUndefined();
-          expect(options.maximumHeight).toBeUndefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.offset).toBeDefined();
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1293,16 +1265,15 @@ describe(
         const promise = widget.flyTo(pointCloud, options);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.offset).toBeDefined();
-          expect(options.duration).toBeUndefined();
-          expect(options.maximumHeight).toBeUndefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.offset).toBeDefined();
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1325,15 +1296,14 @@ describe(
         const promise = widget.flyTo(pointCloud, options);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.duration).toBeDefined();
-          expect(options.maximumHeight).toBeDefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.duration).toBeDefined();
+            expect(options.maximumHeight).toBeDefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1351,16 +1321,15 @@ describe(
         const promise = widget.flyTo(voxelPrimitive);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.offset).toBeDefined();
-          expect(options.duration).toBeUndefined();
-          expect(options.maximumHeight).toBeUndefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.offset).toBeDefined();
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1378,16 +1347,15 @@ describe(
         const promise = widget.flyTo(voxelPrimitive, options);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.offset).toBeDefined();
-          expect(options.duration).toBeUndefined();
-          expect(options.maximumHeight).toBeUndefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.offset).toBeDefined();
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1412,15 +1380,14 @@ describe(
         const promise = widget.flyTo(voxelPrimitive, options);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.duration).toBeDefined();
-          expect(options.maximumHeight).toBeDefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.duration).toBeDefined();
+            expect(options.maximumHeight).toBeDefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1448,17 +1415,16 @@ describe(
       spyOn(widget.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
-        }
+        },
       );
-      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-        target,
-        options
-      ) {
-        expect(options.duration).toBeUndefined();
-        expect(options.maximumHeight).toBeUndefined();
-        wasCompleted = true;
-        options.complete();
-      });
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+        function (target, options) {
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        },
+      );
 
       widget._postRender();
 
@@ -1488,16 +1454,15 @@ describe(
         const promise = widget.flyTo(voxelPrimitive);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.offset).toBeDefined();
-          expect(options.duration).toBeUndefined();
-          expect(options.maximumHeight).toBeUndefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.offset).toBeDefined();
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1515,16 +1480,15 @@ describe(
         const promise = widget.flyTo(voxelPrimitive, options);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.offset).toBeDefined();
-          expect(options.duration).toBeUndefined();
-          expect(options.maximumHeight).toBeUndefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.offset).toBeDefined();
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1549,15 +1513,14 @@ describe(
         const promise = widget.flyTo(voxelPrimitive, options);
         let wasCompleted = false;
 
-        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.duration).toBeDefined();
-          expect(options.maximumHeight).toBeDefined();
-          wasCompleted = true;
-          options.complete();
-        });
+        spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+          function (target, options) {
+            expect(options.duration).toBeDefined();
+            expect(options.maximumHeight).toBeDefined();
+            wasCompleted = true;
+            options.complete();
+          },
+        );
 
         widget._postRender();
 
@@ -1587,17 +1550,16 @@ describe(
       spyOn(widget.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
-        }
+        },
       );
-      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-        target,
-        options
-      ) {
-        expect(options.duration).toBeUndefined();
-        expect(options.maximumHeight).toBeUndefined();
-        wasCompleted = true;
-        options.complete();
-      });
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+        function (target, options) {
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        },
+      );
 
       widget._postRender();
 
@@ -1631,17 +1593,16 @@ describe(
       spyOn(widget.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
-        }
+        },
       );
-      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-        target,
-        options
-      ) {
-        expect(options.duration).toBeDefined();
-        expect(options.maximumHeight).toBeDefined();
-        wasCompleted = true;
-        options.complete();
-      });
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+        function (target, options) {
+          expect(options.duration).toBeDefined();
+          expect(options.maximumHeight).toBeDefined();
+          wasCompleted = true;
+          options.complete();
+        },
+      );
 
       widget._postRender();
 
@@ -1673,17 +1634,16 @@ describe(
       spyOn(widget.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
-        }
+        },
       );
-      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(function (
-        target,
-        options
-      ) {
-        expect(options.duration).toBeUndefined();
-        expect(options.maximumHeight).toBeUndefined();
-        wasCompleted = true;
-        options.complete();
-      });
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake(
+        function (target, options) {
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        },
+      );
 
       widget._postRender();
 
@@ -1713,13 +1673,13 @@ describe(
           widget = widget.destroy();
 
           expect(
-            preMixinDataSource.entities.collectionChanged._listeners.length
+            preMixinDataSource.entities.collectionChanged._listeners.length,
           ).not.toEqual(preMixinListenerCount);
           expect(
-            postMixinDataSource.entities.collectionChanged._listeners.length
+            postMixinDataSource.entities.collectionChanged._listeners.length,
           ).not.toEqual(postMixinListenerCount);
         });
     });
   },
-  "WebGL"
+  "WebGL",
 );

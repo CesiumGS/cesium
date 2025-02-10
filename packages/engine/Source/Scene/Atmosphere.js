@@ -136,12 +136,12 @@ Atmosphere.requiresColorCorrect = function (atmosphere) {
     CesiumMath.equalsEpsilon(
       atmosphere.saturationShift,
       0.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     ) &&
     CesiumMath.equalsEpsilon(
       atmosphere.brightnessShift,
       0.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     )
   );
 };

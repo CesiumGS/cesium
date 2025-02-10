@@ -123,11 +123,11 @@ Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
   options = defaultValue(options, {});
   options.cullRequestsWhileMoving = defaultValue(
     options.cullRequestsWhileMoving,
-    false
+    false,
   );
   options.imageBasedLighting = defaultValue(
     options.imageBasedLighting,
-    defaultIbl
+    defaultIbl,
   );
   options.environmentMapOptions = {
     enabled: false, // disable other diffuse lighting by default
@@ -144,7 +144,7 @@ Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
 
 Cesium3DTilesTester.createContentForMockTile = async function (
   arrayBuffer,
-  type
+  type,
 ) {
   const tileset = {};
   const url = Resource.createIfNeeded("");
@@ -153,19 +153,19 @@ Cesium3DTilesTester.createContentForMockTile = async function (
     mockTile,
     url,
     arrayBuffer,
-    0
+    0,
   );
 };
 
 Cesium3DTilesTester.tileDestroys = function (scene, url, options) {
-  return Cesium3DTilesTester.loadTileset(scene, url, options).then(function (
-    tileset
-  ) {
-    const content = tileset.root.content;
-    expect(content.isDestroyed()).toEqual(false);
-    scene.primitives.remove(tileset);
-    expect(content.isDestroyed()).toEqual(true);
-  });
+  return Cesium3DTilesTester.loadTileset(scene, url, options).then(
+    function (tileset) {
+      const content = tileset.root.content;
+      expect(content.isDestroyed()).toEqual(false);
+      scene.primitives.remove(tileset);
+      expect(content.isDestroyed()).toEqual(true);
+    },
+  );
 };
 
 Cesium3DTilesTester.generateBatchedTileBuffer = function (options) {
@@ -233,7 +233,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
 
   const featureTableBinary = defaultValue(
     options.featureTableBinary,
-    new Uint8Array(0)
+    new Uint8Array(0),
   );
   const featureTableBinaryByteLength = featureTableBinary.length;
 
@@ -247,7 +247,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
 
   const batchTableBinary = defaultValue(
     options.batchTableBinary,
-    new Uint8Array(0)
+    new Uint8Array(0),
   );
   const batchTableBinaryByteLength = batchTableBinary.length;
 
@@ -317,7 +317,7 @@ Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
   featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 4);
   const featureTableJsonByteLength = defaultValue(
     options.featureTableJsonByteLength,
-    featureTableJsonString.length
+    featureTableJsonString.length,
   );
 
   const featureTableBinary = new ArrayBuffer(12); // Enough space to hold 3 floats

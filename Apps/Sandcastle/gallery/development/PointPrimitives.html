@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -36,7 +36,7 @@
           Sandcastle.declare(addPointPrimitive);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             color: Cesium.Color.YELLOW,
@@ -48,7 +48,7 @@
           Sandcastle.declare(setPointPrimitiveProperties);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -64,7 +64,7 @@
           Sandcastle.declare(changePointPrimitiveProperties);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
 
           // add() returns a PointPrimitive object containing functions to change
@@ -82,7 +82,7 @@
           Sandcastle.declare(addMultiplePointPrimitives);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -105,7 +105,7 @@
           Sandcastle.declare(scaleByDistance);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -120,7 +120,7 @@
           Sandcastle.declare(fadeByDistance);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           pointPrimitives.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -133,7 +133,7 @@
           Sandcastle.declare(inReferenceFrame);
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
           pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
@@ -170,7 +170,7 @@
           const numPoints = 100000;
 
           const pointPrimitives = scene.primitives.add(
-            new Cesium.PointPrimitiveCollection()
+            new Cesium.PointPrimitiveCollection(),
           );
           const base = scene.globe.ellipsoid.radii.x;
           const color = Cesium.Color.LIGHTSKYBLUE;
@@ -180,7 +180,7 @@
             const position = new Cesium.Cartesian3(
               16000000 * Math.random() - 8000000,
               -((4000000 * j) / numPoints + base),
-              2000000 * Math.random() - 1000000
+              2000000 * Math.random() - 1000000,
             );
 
             pointPrimitives.add({

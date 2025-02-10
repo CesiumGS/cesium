@@ -94,19 +94,19 @@ function combine(computedPositions, cornerType) {
       leftPos = Cartesian3.fromArray(
         firstEndPositions,
         (halfLength - 1 - i) * 3,
-        leftPos
+        leftPos,
       );
       rightPos = Cartesian3.fromArray(
         firstEndPositions,
         (halfLength + i) * 3,
-        rightPos
+        rightPos,
       );
       CorridorGeometryLibrary.addAttribute(finalPositions, rightPos, front);
       CorridorGeometryLibrary.addAttribute(
         finalPositions,
         leftPos,
         undefined,
-        back
+        back,
       );
 
       LL = front / 3;
@@ -164,7 +164,7 @@ function combine(computedPositions, cornerType) {
           finalPositions,
           outsidePoint,
           undefined,
-          back
+          back,
         );
         back -= 3;
       }
@@ -184,7 +184,7 @@ function combine(computedPositions, cornerType) {
         CorridorGeometryLibrary.addAttribute(
           finalPositions,
           outsidePoint,
-          front
+          front,
         );
         front += 3;
       }
@@ -230,14 +230,14 @@ function combine(computedPositions, cornerType) {
       leftPos = Cartesian3.fromArray(
         lastEndPositions,
         (endPositionLength - i - 1) * 3,
-        leftPos
+        leftPos,
       );
       rightPos = Cartesian3.fromArray(lastEndPositions, i * 3, rightPos);
       CorridorGeometryLibrary.addAttribute(
         finalPositions,
         leftPos,
         undefined,
-        back
+        back,
       );
       CorridorGeometryLibrary.addAttribute(finalPositions, rightPos, front);
 
@@ -292,12 +292,12 @@ function computePositionsExtruded(params) {
   positions = PolygonPipeline.scaleToGeodeticHeight(
     positions,
     height,
-    ellipsoid
+    ellipsoid,
   );
   extrudedPositions = PolygonPipeline.scaleToGeodeticHeight(
     extrudedPositions,
     extrudedHeight,
-    ellipsoid
+    ellipsoid,
   );
   newPositions.set(positions);
   newPositions.set(extrudedPositions, length);
@@ -325,7 +325,7 @@ function computePositionsExtruded(params) {
   const iLength = indices.length;
   const newIndices = IndexDatatype.createTypedArray(
     newPositions.length / 3,
-    (iLength + wallIndices.length) * 2
+    (iLength + wallIndices.length) * 2,
   );
   newIndices.set(indices);
   let index = iLength;
@@ -390,7 +390,7 @@ function CorridorOutlineGeometry(options) {
 
   this._positions = positions;
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default)
+    defaultValue(options.ellipsoid, Ellipsoid.default),
   );
   this._width = width;
   this._height = Math.max(height, extrudedHeight);
@@ -398,7 +398,7 @@ function CorridorOutlineGeometry(options) {
   this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
   this._granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   this._offsetAttribute = options.offsetAttribute;
   this._workerName = "createCorridorOutlineGeometry";
@@ -532,7 +532,7 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
   positions = scaleToSurface(positions, ellipsoid);
   const cleanPositions = arrayRemoveDuplicates(
     positions,
-    Cartesian3.equalsEpsilon
+    Cartesian3.equalsEpsilon,
   );
 
   if (cleanPositions.length < 2 || width <= 0) {
@@ -545,7 +545,7 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
     height,
     extrudedHeight,
     0,
-    CesiumMath.EPSILON2
+    CesiumMath.EPSILON2,
   );
 
   const params = {
@@ -568,7 +568,7 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
     attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
       attr.attributes.position.values,
       height,
-      ellipsoid
+      ellipsoid,
     );
 
     if (defined(corridorOutlineGeometry._offsetAttribute)) {
@@ -590,7 +590,7 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
   const boundingSphere = BoundingSphere.fromVertices(
     attributes.position.values,
     undefined,
-    3
+    3,
   );
 
   return new Geometry({

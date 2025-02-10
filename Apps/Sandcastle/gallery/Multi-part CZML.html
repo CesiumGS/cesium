@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -93,9 +93,8 @@
 
             // Follow the vehicle with the camera.
             if (!viewer.trackedEntity) {
-              viewer.trackedEntity = vehicleEntity = dataSource.entities.getById(
-                "Vehicle"
-              );
+              viewer.trackedEntity = vehicleEntity =
+                dataSource.entities.getById("Vehicle");
             }
           });
         }
@@ -111,7 +110,7 @@
           // This example uses time offsets from the start to identify which parts need loading.
           const timeOffset = Cesium.JulianDate.secondsDifference(
             clock.currentTime,
-            clock.startTime
+            clock.startTime,
           );
 
           // Filter the list of parts to just the ones that need loading right now.
@@ -130,7 +129,7 @@
 
           if (vehicleEntity) {
             const fuel = vehicleEntity.properties.fuel_remaining.getValue(
-              clock.currentTime
+              clock.currentTime,
             );
             if (Cesium.defined(fuel)) {
               fuelDisplay.textContent = `Fuel: ${fuel.toFixed(2)} gal`;

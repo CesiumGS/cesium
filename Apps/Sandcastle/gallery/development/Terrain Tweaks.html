@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -127,7 +127,7 @@
         function updateFillHighlight() {
           if (viewModel.fillHighlightEnabled) {
             viewer.scene.globe.fillHighlightColor = Cesium.Color.fromCssColorString(
-              viewModel.fillHighlightColor
+              viewModel.fillHighlightColor,
             );
           } else {
             viewer.scene.globe.fillHighlightColor = undefined;

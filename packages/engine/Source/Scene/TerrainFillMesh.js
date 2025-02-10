@@ -50,7 +50,7 @@ function TerrainFillMesh(tile) {
 TerrainFillMesh.prototype.update = function (
   tileProvider,
   frameState,
-  vertexArraysToDestroy
+  vertexArraysToDestroy,
 ) {
   if (this.changedThisFrame) {
     createFillMesh(tileProvider, frameState, this.tile, vertexArraysToDestroy);
@@ -73,7 +73,7 @@ TerrainFillMesh.prototype.destroy = function (vertexArraysToDestroy) {
 };
 
 TerrainFillMesh.prototype._destroyVertexArray = function (
-  vertexArraysToDestroy
+  vertexArraysToDestroy,
 ) {
   if (defined(this.vertexArray)) {
     if (defined(vertexArraysToDestroy)) {
@@ -91,7 +91,7 @@ TerrainFillMesh.updateFillTiles = function (
   tileProvider,
   renderedTiles,
   frameState,
-  vertexArraysToDestroy
+  vertexArraysToDestroy,
 ) {
   // We want our fill tiles to look natural, which means they should align perfectly with
   // adjacent loaded tiles, and their edges that are not adjacent to loaded tiles should have
@@ -136,7 +136,7 @@ TerrainFillMesh.updateFillTiles = function (
       TileEdge.EAST,
       false,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
     visitRenderedTiles(
       tileProvider,
@@ -147,7 +147,7 @@ TerrainFillMesh.updateFillTiles = function (
       TileEdge.NORTH,
       false,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
     visitRenderedTiles(
       tileProvider,
@@ -158,7 +158,7 @@ TerrainFillMesh.updateFillTiles = function (
       TileEdge.WEST,
       false,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
     visitRenderedTiles(
       tileProvider,
@@ -169,7 +169,7 @@ TerrainFillMesh.updateFillTiles = function (
       TileEdge.SOUTH,
       false,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
 
     const tileToNorthwest = tileToWest.findTileToNorth(levelZeroTiles);
@@ -185,7 +185,7 @@ TerrainFillMesh.updateFillTiles = function (
       TileEdge.SOUTHEAST,
       false,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
     visitRenderedTiles(
       tileProvider,
@@ -196,7 +196,7 @@ TerrainFillMesh.updateFillTiles = function (
       TileEdge.SOUTHWEST,
       false,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
     visitRenderedTiles(
       tileProvider,
@@ -207,7 +207,7 @@ TerrainFillMesh.updateFillTiles = function (
       TileEdge.NORTHEAST,
       false,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
     visitRenderedTiles(
       tileProvider,
@@ -218,7 +218,7 @@ TerrainFillMesh.updateFillTiles = function (
       TileEdge.NORTHWEST,
       false,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
 
     tile = traversalQueue.dequeue();
@@ -234,7 +234,7 @@ function visitRenderedTiles(
   tileEdge,
   downOnly,
   traversalQueue,
-  vertexArraysToDestroy
+  vertexArraysToDestroy,
 ) {
   if (startTile === undefined) {
     // There are no tiles North or South of the poles.
@@ -295,7 +295,7 @@ function visitRenderedTiles(
       tileEdge,
       currentFrameNumber,
       traversalQueue,
-      vertexArraysToDestroy
+      vertexArraysToDestroy,
     );
     return;
   }
@@ -320,7 +320,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       visitRenderedTiles(
         tileProvider,
@@ -331,7 +331,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       break;
     case TileEdge.EAST:
@@ -344,7 +344,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       visitRenderedTiles(
         tileProvider,
@@ -355,7 +355,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       break;
     case TileEdge.SOUTH:
@@ -368,7 +368,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       visitRenderedTiles(
         tileProvider,
@@ -379,7 +379,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       break;
     case TileEdge.NORTH:
@@ -392,7 +392,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       visitRenderedTiles(
         tileProvider,
@@ -403,7 +403,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       break;
     case TileEdge.NORTHWEST:
@@ -416,7 +416,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       break;
     case TileEdge.NORTHEAST:
@@ -429,7 +429,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       break;
     case TileEdge.SOUTHWEST:
@@ -442,7 +442,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       break;
     case TileEdge.SOUTHEAST:
@@ -455,7 +455,7 @@ function visitRenderedTiles(
         tileEdge,
         true,
         traversalQueue,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       break;
     default:
@@ -471,7 +471,7 @@ function visitTile(
   tileEdge,
   frameNumber,
   traversalQueue,
-  vertexArraysToDestroy
+  vertexArraysToDestroy,
 ) {
   const destinationSurfaceTile = destinationTile.data;
 
@@ -495,7 +495,7 @@ function visitTile(
     sourceTile,
     destinationTile,
     tileEdge,
-    vertexArraysToDestroy
+    vertexArraysToDestroy,
   );
 }
 
@@ -505,7 +505,7 @@ function propagateEdge(
   sourceTile,
   destinationTile,
   tileEdge,
-  vertexArraysToDestroy
+  vertexArraysToDestroy,
 ) {
   const destinationFill = destinationTile.data.fill;
 
@@ -520,7 +520,7 @@ function propagateEdge(
         tileProvider,
         frameState,
         sourceTile,
-        vertexArraysToDestroy
+        vertexArraysToDestroy,
       );
       sourceFill.changedThisFrame = false;
     }
@@ -614,7 +614,7 @@ function propagateEdge(
           CesiumMath.greaterThan(
             sourceRectangle.north,
             existingRectangle.south,
-            epsilon
+            epsilon,
           )
         ) {
           break;
@@ -627,7 +627,7 @@ function propagateEdge(
           CesiumMath.greaterThanOrEquals(
             sourceRectangle.south,
             existingRectangle.north,
-            epsilon
+            epsilon,
           )
         ) {
           break;
@@ -646,7 +646,7 @@ function propagateEdge(
           CesiumMath.lessThan(
             sourceRectangle.west,
             existingRectangle.east,
-            epsilon
+            epsilon,
           )
         ) {
           break;
@@ -659,7 +659,7 @@ function propagateEdge(
           CesiumMath.lessThanOrEquals(
             sourceRectangle.east,
             existingRectangle.west,
-            epsilon
+            epsilon,
           )
         ) {
           break;
@@ -678,7 +678,7 @@ function propagateEdge(
           CesiumMath.lessThan(
             sourceRectangle.south,
             existingRectangle.north,
-            epsilon
+            epsilon,
           )
         ) {
           break;
@@ -691,7 +691,7 @@ function propagateEdge(
           CesiumMath.lessThanOrEquals(
             sourceRectangle.north,
             existingRectangle.south,
-            epsilon
+            epsilon,
           )
         ) {
           break;
@@ -710,7 +710,7 @@ function propagateEdge(
           CesiumMath.greaterThan(
             sourceRectangle.east,
             existingRectangle.west,
-            epsilon
+            epsilon,
           )
         ) {
           break;
@@ -723,7 +723,7 @@ function propagateEdge(
           CesiumMath.greaterThanOrEquals(
             sourceRectangle.west,
             existingRectangle.east,
-            epsilon
+            epsilon,
           )
         ) {
           break;
@@ -766,7 +766,7 @@ function fillMissingCorner(
   adjacentCorner1,
   adjacentCorner2,
   oppositeCorner,
-  vertex
+  vertex,
 ) {
   if (defined(corner)) {
     return corner;
@@ -823,7 +823,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   GlobeSurfaceTile.initialize(
     tile,
     tileProvider.terrainProvider,
-    tileProvider._imageryLayers
+    tileProvider._imageryLayers,
   );
 
   const surfaceTile = tile.data;
@@ -848,7 +848,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     fill.northMeshes,
     fill.westTiles,
     fill.westMeshes,
-    nwVertexScratch
+    nwVertexScratch,
   );
   let swCorner = getCorner(
     fill,
@@ -861,7 +861,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     fill.westMeshes,
     fill.southTiles,
     fill.southMeshes,
-    swVertexScratch
+    swVertexScratch,
   );
   let seCorner = getCorner(
     fill,
@@ -874,7 +874,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     fill.southMeshes,
     fill.eastTiles,
     fill.eastMeshes,
-    seVertexScratch
+    seVertexScratch,
   );
   let neCorner = getCorner(
     fill,
@@ -887,7 +887,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     fill.eastMeshes,
     fill.northTiles,
     fill.northMeshes,
-    neVertexScratch
+    neVertexScratch,
   );
 
   nwCorner = fillMissingCorner(
@@ -899,7 +899,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     swCorner,
     neCorner,
     seCorner,
-    nwVertexScratch
+    nwVertexScratch,
   );
   swCorner = fillMissingCorner(
     fill,
@@ -910,7 +910,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     nwCorner,
     seCorner,
     neCorner,
-    swVertexScratch
+    swVertexScratch,
   );
   seCorner = fillMissingCorner(
     fill,
@@ -921,7 +921,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     swCorner,
     neCorner,
     nwCorner,
-    seVertexScratch
+    seVertexScratch,
   );
   neCorner = fillMissingCorner(
     fill,
@@ -932,7 +932,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     seCorner,
     nwCorner,
     swCorner,
-    neVertexScratch
+    neVertexScratch,
   );
 
   const southwestHeight = swCorner.height;
@@ -944,13 +944,13 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     southwestHeight,
     southeastHeight,
     northwestHeight,
-    northeastHeight
+    northeastHeight,
   );
   let maximumHeight = Math.max(
     southwestHeight,
     southeastHeight,
     northwestHeight,
-    northeastHeight
+    northeastHeight,
   );
 
   const middleHeight = (minimumHeight + maximumHeight) * 0.5;
@@ -997,19 +997,20 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     createMeshSyncOptions.y = tile.y;
     createMeshSyncOptions.level = tile.level;
     createMeshSyncOptions.exaggeration = exaggeration;
-    createMeshSyncOptions.exaggerationRelativeHeight = exaggerationRelativeHeight;
+    createMeshSyncOptions.exaggerationRelativeHeight =
+      exaggerationRelativeHeight;
 
     fill.mesh = terrainData._createMeshSync(createMeshSyncOptions);
   } else {
     const hasGeodeticSurfaceNormals = hasExaggeration;
     const centerCartographic = Rectangle.center(
       rectangle,
-      centerCartographicScratch
+      centerCartographicScratch,
     );
     centerCartographic.height = middleHeight;
     const center = ellipsoid.cartographicToCartesian(
       centerCartographic,
-      scratchCenter
+      scratchCenter,
     );
     const encoding = new TerrainEncoding(
       center,
@@ -1021,7 +1022,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       true,
       hasGeodeticSurfaceNormals,
       exaggeration,
-      exaggerationRelativeHeight
+      exaggerationRelativeHeight,
     );
 
     // At _most_, we have vertices for the 4 corners, plus 1 center, plus every adjacent edge vertex.
@@ -1071,7 +1072,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       nwCorner.height,
       nwCorner.encodedNormal,
       1.0,
-      heightRange
+      heightRange,
     );
     nextIndex = addEdge(
       fill,
@@ -1082,7 +1083,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       fill.westTiles,
       fill.westMeshes,
       TileEdge.EAST,
-      heightRange
+      heightRange,
     );
     const southwestIndex = nextIndex;
     nextIndex = addVertexWithComputedPosition(
@@ -1096,7 +1097,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       swCorner.height,
       swCorner.encodedNormal,
       0.0,
-      heightRange
+      heightRange,
     );
     nextIndex = addEdge(
       fill,
@@ -1107,7 +1108,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       fill.southTiles,
       fill.southMeshes,
       TileEdge.NORTH,
-      heightRange
+      heightRange,
     );
     const southeastIndex = nextIndex;
     nextIndex = addVertexWithComputedPosition(
@@ -1121,7 +1122,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       seCorner.height,
       seCorner.encodedNormal,
       0.0,
-      heightRange
+      heightRange,
     );
     nextIndex = addEdge(
       fill,
@@ -1132,7 +1133,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       fill.eastTiles,
       fill.eastMeshes,
       TileEdge.WEST,
-      heightRange
+      heightRange,
     );
     const northeastIndex = nextIndex;
     nextIndex = addVertexWithComputedPosition(
@@ -1146,7 +1147,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       neCorner.height,
       neCorner.encodedNormal,
       1.0,
-      heightRange
+      heightRange,
     );
     nextIndex = addEdge(
       fill,
@@ -1157,7 +1158,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       fill.northTiles,
       fill.northMeshes,
       TileEdge.SOUTH,
-      heightRange
+      heightRange,
     );
 
     minimumHeight = heightRange.minimumHeight;
@@ -1167,31 +1168,30 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       rectangle,
       minimumHeight,
       maximumHeight,
-      tile.tilingScheme.ellipsoid
+      tile.tilingScheme.ellipsoid,
     );
 
     // Add a single vertex at the center of the tile.
-    const southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-      rectangle.south
-    );
+    const southMercatorY =
+      WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.south);
     const oneOverMercatorHeight =
       1.0 /
       (WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.north) -
         southMercatorY);
     const centerWebMercatorT =
       (WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-        centerCartographic.latitude
+        centerCartographic.latitude,
       ) -
         southMercatorY) *
       oneOverMercatorHeight;
 
     const geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(
       cartographicScratch,
-      normalScratch
+      normalScratch,
     );
     const centerEncodedNormal = AttributeCompression.octEncode(
       geodeticSurfaceNormal,
-      octEncodedNormalScratch
+      octEncodedNormalScratch,
     );
 
     const centerIndex = nextIndex;
@@ -1203,7 +1203,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       middleHeight,
       centerEncodedNormal,
       centerWebMercatorT,
-      geodeticSurfaceNormal
+      geodeticSurfaceNormal,
     );
     ++nextIndex;
 
@@ -1280,7 +1280,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
         obb.center,
         rectangle,
         minimumHeight,
-        maximumHeight
+        maximumHeight,
       ),
       encoding.stride,
       obb,
@@ -1288,7 +1288,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       westIndicesSouthToNorth,
       southIndicesEastToWest,
       eastIndicesNorthToSouth,
-      northIndicesWestToEast
+      northIndicesWestToEast,
     );
   }
 
@@ -1298,13 +1298,13 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
 
   fill.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(
     context,
-    fill.mesh
+    fill.mesh,
   );
   surfaceTile.processImagery(
     tile,
     tileProvider.terrainProvider,
     frameState,
-    true
+    true,
   );
 
   const oldTexture = fill.waterMaskTexture;
@@ -1321,7 +1321,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       surfaceTile._computeWaterMaskTranslationAndScale(
         tile,
         waterSourceTile,
-        fill.waterMaskTranslationAndScale
+        fill.waterMaskTranslationAndScale,
       );
     }
   }
@@ -1345,7 +1345,7 @@ function addVertexWithComputedPosition(
   height,
   encodedNormal,
   webMercatorT,
-  heightRange
+  heightRange,
 ) {
   const cartographic = cartographicScratch;
   cartographic.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
@@ -1353,14 +1353,14 @@ function addVertexWithComputedPosition(
   cartographic.height = height;
   const position = ellipsoid.cartographicToCartesian(
     cartographic,
-    cartesianScratch
+    cartesianScratch,
   );
 
   let geodeticSurfaceNormal;
   if (encoding.hasGeodeticSurfaceNormals) {
     geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
       position,
-      normalScratch
+      normalScratch,
     );
   }
 
@@ -1376,7 +1376,7 @@ function addVertexWithComputedPosition(
     height,
     encodedNormal,
     webMercatorT,
-    geodeticSurfaceNormal
+    geodeticSurfaceNormal,
   );
 
   heightRange.minimumHeight = Math.min(heightRange.minimumHeight, height);
@@ -1391,7 +1391,7 @@ function transformTextureCoordinates(
   sourceTile,
   targetTile,
   coordinates,
-  result
+  result,
 ) {
   let sourceRectangle = sourceTile.rectangle;
   const targetRectangle = targetTile.rectangle;
@@ -1405,7 +1405,7 @@ function transformTextureCoordinates(
   ) {
     sourceRectangle = Rectangle.clone(
       sourceTile.rectangle,
-      sourceRectangleScratch
+      sourceRectangleScratch,
     );
     sourceRectangle.west -= CesiumMath.TWO_PI;
     sourceRectangle.east -= CesiumMath.TWO_PI;
@@ -1417,7 +1417,7 @@ function transformTextureCoordinates(
   ) {
     sourceRectangle = Rectangle.clone(
       sourceTile.rectangle,
-      sourceRectangleScratch
+      sourceRectangleScratch,
     );
     sourceRectangle.west += CesiumMath.TWO_PI;
     sourceRectangle.east += CesiumMath.TWO_PI;
@@ -1464,7 +1464,7 @@ function getVertexFromTileAtCorner(sourceMesh, sourceIndex, u, v, vertex) {
     sourceEncoding.getOctEncodedNormal(
       sourceVertices,
       sourceIndex,
-      vertex.encodedNormal
+      vertex.encodedNormal,
     );
   } else {
     const normal = vertex.encodedNormal;
@@ -1486,7 +1486,7 @@ function getInterpolatedVertexAtCorner(
   u,
   v,
   interpolateU,
-  vertex
+  vertex,
 ) {
   const sourceEncoding = sourceMesh.encoding;
   const sourceVertices = sourceMesh.vertices;
@@ -1497,9 +1497,9 @@ function getInterpolatedVertexAtCorner(
     sourceEncoding.decodeTextureCoordinates(
       sourceVertices,
       previousIndex,
-      uvScratch
+      uvScratch,
     ),
-    uvScratch
+    uvScratch,
   );
   const nextUv = transformTextureCoordinates(
     sourceTile,
@@ -1507,9 +1507,9 @@ function getInterpolatedVertexAtCorner(
     sourceEncoding.decodeTextureCoordinates(
       sourceVertices,
       nextIndex,
-      uvScratch2
+      uvScratch2,
     ),
-    uvScratch2
+    uvScratch2,
   );
 
   let ratio;
@@ -1526,17 +1526,17 @@ function getInterpolatedVertexAtCorner(
   cartographicScratch.longitude = CesiumMath.lerp(
     targetRectangle.west,
     targetRectangle.east,
-    u
+    u,
   );
   cartographicScratch.latitude = CesiumMath.lerp(
     targetRectangle.south,
     targetRectangle.north,
-    v
+    v,
   );
   vertex.height = cartographicScratch.height = CesiumMath.lerp(
     height1,
     height2,
-    ratio
+    ratio,
   );
 
   let normal;
@@ -1544,22 +1544,22 @@ function getInterpolatedVertexAtCorner(
     const encodedNormal1 = sourceEncoding.getOctEncodedNormal(
       sourceVertices,
       previousIndex,
-      encodedNormalScratch
+      encodedNormalScratch,
     );
     const encodedNormal2 = sourceEncoding.getOctEncodedNormal(
       sourceVertices,
       nextIndex,
-      encodedNormalScratch2
+      encodedNormalScratch2,
     );
     const normal1 = AttributeCompression.octDecode(
       encodedNormal1.x,
       encodedNormal1.y,
-      cartesianScratch
+      cartesianScratch,
     );
     const normal2 = AttributeCompression.octDecode(
       encodedNormal2.x,
       encodedNormal2.y,
-      cartesianScratch2
+      cartesianScratch2,
     );
     normal = Cartesian3.lerp(normal1, normal2, ratio, cartesianScratch);
     Cartesian3.normalize(normal, normal);
@@ -1567,7 +1567,7 @@ function getInterpolatedVertexAtCorner(
   } else {
     normal = ellipsoid.geodeticSurfaceNormalCartographic(
       cartographicScratch,
-      cartesianScratch
+      cartesianScratch,
     );
     AttributeCompression.octEncode(normal, vertex.encodedNormal);
   }
@@ -1579,12 +1579,12 @@ function getVertexWithHeightAtCorner(
   u,
   v,
   height,
-  vertex
+  vertex,
 ) {
   vertex.height = height;
   const normal = ellipsoid.geodeticSurfaceNormalCartographic(
     cartographicScratch,
-    cartesianScratch
+    cartesianScratch,
   );
   AttributeCompression.octEncode(normal, vertex.encodedNormal);
 }
@@ -1600,7 +1600,7 @@ function getCorner(
   previousEdgeMeshes,
   nextEdgeTiles,
   nextEdgeMeshes,
-  vertex
+  vertex,
 ) {
   const gotCorner =
     getCornerFromEdge(
@@ -1611,7 +1611,7 @@ function getCorner(
       false,
       u,
       v,
-      vertex
+      vertex,
     ) ||
     getCornerFromEdge(
       terrainFillMesh,
@@ -1621,7 +1621,7 @@ function getCorner(
       true,
       u,
       v,
-      vertex
+      vertex,
     );
   if (gotCorner) {
     return vertex;
@@ -1667,7 +1667,7 @@ function getCorner(
         terrainFillMesh.southTiles,
         TileEdge.NORTH,
         u,
-        v
+        v,
       );
     } else {
       // northwest
@@ -1679,7 +1679,7 @@ function getCorner(
         terrainFillMesh.westTiles,
         TileEdge.EAST,
         u,
-        v
+        v,
       );
     }
   } else if (v === 0.0) {
@@ -1692,7 +1692,7 @@ function getCorner(
       terrainFillMesh.eastTiles,
       TileEdge.WEST,
       u,
-      v
+      v,
     );
   } else {
     // northeast
@@ -1704,7 +1704,7 @@ function getCorner(
       terrainFillMesh.northTiles,
       TileEdge.SOUTH,
       u,
-      v
+      v,
     );
   }
 
@@ -1715,7 +1715,7 @@ function getCorner(
       u,
       v,
       height,
-      vertex
+      vertex,
     );
     return vertex;
   }
@@ -1732,7 +1732,7 @@ function getClosestHeightToCorner(
   nextTiles,
   nextEdge,
   u,
-  v
+  v,
 ) {
   const height1 = getNearestHeightOnEdge(
     previousMeshes,
@@ -1740,7 +1740,7 @@ function getClosestHeightToCorner(
     false,
     previousEdge,
     u,
-    v
+    v,
   );
   const height2 = getNearestHeightOnEdge(
     nextMeshes,
@@ -1748,7 +1748,7 @@ function getClosestHeightToCorner(
     true,
     nextEdge,
     u,
-    v
+    v,
   );
   if (defined(height1) && defined(height2)) {
     // It would be slightly better to do a weighted average of the two heights
@@ -1769,7 +1769,7 @@ function addEdge(
   edgeTiles,
   edgeMeshes,
   tileEdge,
-  heightRange
+  heightRange,
 ) {
   for (let i = 0; i < edgeTiles.length; ++i) {
     nextIndex = addEdgeMesh(
@@ -1781,7 +1781,7 @@ function addEdge(
       edgeTiles[i],
       edgeMeshes[i],
       tileEdge,
-      heightRange
+      heightRange,
     );
   }
   return nextIndex;
@@ -1796,21 +1796,21 @@ function addEdgeMesh(
   edgeTile,
   edgeMesh,
   tileEdge,
-  heightRange
+  heightRange,
 ) {
   // Handle copying edges across the anti-meridian.
   let sourceRectangle = edgeTile.rectangle;
   if (tileEdge === TileEdge.EAST && terrainFillMesh.tile.x === 0) {
     sourceRectangle = Rectangle.clone(
       edgeTile.rectangle,
-      sourceRectangleScratch
+      sourceRectangleScratch,
     );
     sourceRectangle.west -= CesiumMath.TWO_PI;
     sourceRectangle.east -= CesiumMath.TWO_PI;
   } else if (tileEdge === TileEdge.WEST && edgeTile.x === 0) {
     sourceRectangle = Rectangle.clone(
       edgeTile.rectangle,
-      sourceRectangleScratch
+      sourceRectangleScratch,
     );
     sourceRectangle.west += CesiumMath.TWO_PI;
     sourceRectangle.east += CesiumMath.TWO_PI;
@@ -1859,12 +1859,12 @@ function addEdgeMesh(
   let oneOverMercatorHeight;
   if (sourceEncoding.hasWebMercatorT) {
     southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-      targetRectangle.south
+      targetRectangle.south,
     );
     oneOverMercatorHeight =
       1.0 /
       (WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-        targetRectangle.north
+        targetRectangle.north,
       ) -
         southMercatorY);
   }
@@ -1875,7 +1875,7 @@ function addEdgeMesh(
     const uv = sourceEncoding.decodeTextureCoordinates(
       sourceVertices,
       index,
-      uvScratch
+      uvScratch,
     );
     transformTextureCoordinates(sourceTile, targetTile, uv, uv);
     const u = uv.x;
@@ -1910,7 +1910,7 @@ function addEdgeMesh(
     const position = sourceEncoding.decodePosition(
       sourceVertices,
       index,
-      cartesianScratch
+      cartesianScratch,
     );
     const height = sourceEncoding.decodeHeight(sourceVertices, index);
 
@@ -1919,7 +1919,7 @@ function addEdgeMesh(
       normal = sourceEncoding.getOctEncodedNormal(
         sourceVertices,
         index,
-        octEncodedNormalScratch
+        octEncodedNormalScratch,
       );
     } else {
       normal = octEncodedNormalScratch;
@@ -1932,7 +1932,7 @@ function addEdgeMesh(
       const latitude = CesiumMath.lerp(
         targetRectangle.south,
         targetRectangle.north,
-        v
+        v,
       );
       webMercatorT =
         (WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude) -
@@ -1944,7 +1944,7 @@ function addEdgeMesh(
     if (encoding.hasGeodeticSurfaceNormals) {
       geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
         position,
-        normalScratch
+        normalScratch,
       );
     }
 
@@ -1956,7 +1956,7 @@ function addEdgeMesh(
       height,
       normal,
       webMercatorT,
-      geodeticSurfaceNormal
+      geodeticSurfaceNormal,
     );
 
     heightRange.minimumHeight = Math.min(heightRange.minimumHeight, height);
@@ -2034,7 +2034,7 @@ function getCornerFromEdge(
   isNext,
   u,
   v,
-  vertex
+  vertex,
 ) {
   let edgeVertices;
   let compareU;
@@ -2085,13 +2085,13 @@ function getCornerFromEdge(
       sourceMesh.encoding.decodeTextureCoordinates(
         sourceMesh.vertices,
         vertexIndex,
-        uvScratch
+        uvScratch,
       );
       const targetUv = transformTextureCoordinates(
         sourceTile,
         terrainFillMesh.tile,
         uvScratch,
-        uvScratch
+        uvScratch,
       );
       if (targetUv.x === u && targetUv.y === v) {
         // Vertex is good!
@@ -2100,31 +2100,32 @@ function getCornerFromEdge(
       }
 
       // The last vertex is not the one we need, try binary searching for the right one.
-      vertexIndexIndex = binarySearch(edgeVertices, compareU ? u : v, function (
-        vertexIndex,
-        textureCoordinate
-      ) {
-        sourceMesh.encoding.decodeTextureCoordinates(
-          sourceMesh.vertices,
-          vertexIndex,
-          uvScratch
-        );
-        const targetUv = transformTextureCoordinates(
-          sourceTile,
-          terrainFillMesh.tile,
-          uvScratch,
-          uvScratch
-        );
-        if (increasing) {
-          if (compareU) {
-            return targetUv.x - u;
+      vertexIndexIndex = binarySearch(
+        edgeVertices,
+        compareU ? u : v,
+        function (vertexIndex, textureCoordinate) {
+          sourceMesh.encoding.decodeTextureCoordinates(
+            sourceMesh.vertices,
+            vertexIndex,
+            uvScratch,
+          );
+          const targetUv = transformTextureCoordinates(
+            sourceTile,
+            terrainFillMesh.tile,
+            uvScratch,
+            uvScratch,
+          );
+          if (increasing) {
+            if (compareU) {
+              return targetUv.x - u;
+            }
+            return targetUv.y - v;
+          } else if (compareU) {
+            return u - targetUv.x;
           }
-          return targetUv.y - v;
-        } else if (compareU) {
-          return u - targetUv.x;
-        }
-        return v - targetUv.y;
-      });
+          return v - targetUv.y;
+        },
+      );
 
       if (vertexIndexIndex < 0) {
         vertexIndexIndex = ~vertexIndexIndex;
@@ -2141,7 +2142,7 @@ function getCornerFromEdge(
             u,
             v,
             compareU,
-            vertex
+            vertex,
           );
           return true;
         }
@@ -2152,7 +2153,7 @@ function getCornerFromEdge(
           edgeVertices[vertexIndexIndex],
           u,
           v,
-          vertex
+          vertex,
         );
         return true;
       }
@@ -2175,7 +2176,7 @@ function computeOccludeePoint(
   rectangle,
   minimumHeight,
   maximumHeight,
-  result
+  result,
 ) {
   const ellipsoidalOccluder = tileProvider.quadtree._occluders.ellipsoid;
   const ellipsoid = ellipsoidalOccluder.ellipsoid;
@@ -2186,35 +2187,35 @@ function computeOccludeePoint(
     rectangle.south,
     maximumHeight,
     ellipsoid,
-    cornerPositions[0]
+    cornerPositions[0],
   );
   Cartesian3.fromRadians(
     rectangle.east,
     rectangle.south,
     maximumHeight,
     ellipsoid,
-    cornerPositions[1]
+    cornerPositions[1],
   );
   Cartesian3.fromRadians(
     rectangle.west,
     rectangle.north,
     maximumHeight,
     ellipsoid,
-    cornerPositions[2]
+    cornerPositions[2],
   );
   Cartesian3.fromRadians(
     rectangle.east,
     rectangle.north,
     maximumHeight,
     ellipsoid,
-    cornerPositions[3]
+    cornerPositions[3],
   );
 
   return ellipsoidalOccluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
     center,
     cornerPositions,
     minimumHeight,
-    result
+    result,
   );
 }
 export default TerrainFillMesh;

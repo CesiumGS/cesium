@@ -40,7 +40,7 @@ function Sampler(options) {
   Check.typeOf.number.greaterThanOrEquals(
     "maximumAnisotropy",
     maximumAnisotropy,
-    1.0
+    1.0,
   );
   //>>includeEnd('debug');
 
@@ -98,6 +98,6 @@ Sampler.NEAREST = Object.freeze(
     wrapT: TextureWrap.CLAMP_TO_EDGE,
     minificationFilter: TextureMinificationFilter.NEAREST,
     magnificationFilter: TextureMagnificationFilter.NEAREST,
-  })
+  }),
 );
 export default Sampler;

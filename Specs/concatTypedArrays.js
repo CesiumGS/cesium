@@ -14,7 +14,7 @@ function concatTypedArrays(arrays) {
     const data = new Uint8Array(
       array.buffer,
       array.byteOffset,
-      array.byteLength
+      array.byteLength,
     );
     buffer.set(data, byteOffset);
     byteOffset += data.length;

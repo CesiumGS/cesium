@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -49,8 +49,8 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             Cesium.TileMapServiceImageryProvider.fromUrl(
-              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
-            )
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            ),
           ),
           baseLayerPicker: false,
         });
@@ -75,13 +75,13 @@
         const logo = Cesium.ImageryLayer.fromProviderAsync(
           Cesium.SingleTileImageryProvider.fromUrl("../images/Cesium_Logo_overlay.png", {
             rectangle: defaultImageryLayerCutout,
-          })
+          }),
         );
         layers.add(logo);
 
         // Add an Earth at Night layer and a "traveling" cutout
         const earthAtNight = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(3812)
+          Cesium.IonImageryProvider.fromAssetId(3812),
         );
         earthAtNight.cutoutRectangle = Cesium.Rectangle.fromDegrees(-100, 10, -60, 50);
         earthAtNight.alpha = 0.9;
@@ -118,7 +118,7 @@
               flags[flagName] = true;
             }
           },
-          false
+          false,
         );
 
         document.addEventListener(
@@ -129,7 +129,7 @@
               flags[flagName] = false;
             }
           },
-          false
+          false,
         );
 
         const moveIncrement = 0.05;

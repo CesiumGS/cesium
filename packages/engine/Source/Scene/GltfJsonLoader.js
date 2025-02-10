@@ -187,7 +187,7 @@ async function upgradeVersion(gltfJsonLoader, gltf) {
           }
 
           buffer.extras._pipeline.source = bufferLoader.typedArray;
-        })
+        }),
       );
     }
   });
@@ -209,7 +209,7 @@ function decodeDataUris(gltf) {
       promises.push(
         Resource.fetchArrayBuffer(bufferUri).then(function (arrayBuffer) {
           buffer.extras._pipeline.source = new Uint8Array(arrayBuffer);
-        })
+        }),
       );
     }
   });

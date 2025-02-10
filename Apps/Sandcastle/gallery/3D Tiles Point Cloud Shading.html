@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -186,12 +186,12 @@
             const initialPosition = Cesium.Cartesian3.fromRadians(
               -2.1344873183780484,
               0.8071380277370774,
-              5743.394497982162
+              5743.394497982162,
             );
             const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
               112.99596671210358,
               -21.34390550872461,
-              0.0716951918898415
+              0.0716951918898415,
             );
             viewer.scene.camera.setView({
               destination: initialPosition,
@@ -244,12 +244,12 @@
               destination: new Cesium.Cartesian3(
                 4401744.644145314,
                 225051.41078911052,
-                4595420.374784433
+                4595420.374784433,
               ),
               orientation: new Cesium.HeadingPitchRoll(
                 5.646733805039757,
                 -0.276607153839886,
-                6.281110875400085
+                6.281110875400085,
               ),
             });
 
@@ -296,9 +296,8 @@
           .getObservable(viewModel, "geometricErrorScale")
           .subscribe(function (newValue) {
             if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.geometricErrorScale = parseFloat(
-                newValue
-              );
+              viewModelTileset.pointCloudShading.geometricErrorScale =
+                parseFloat(newValue);
             }
           });
 
@@ -322,9 +321,8 @@
           .getObservable(viewModel, "eyeDomeLightingStrength")
           .subscribe(function (newValue) {
             if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.eyeDomeLightingStrength = parseFloat(
-                newValue
-              );
+              viewModelTileset.pointCloudShading.eyeDomeLightingStrength =
+                parseFloat(newValue);
             }
           });
 
@@ -332,9 +330,8 @@
           .getObservable(viewModel, "eyeDomeLightingRadius")
           .subscribe(function (newValue) {
             if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.eyeDomeLightingRadius = parseFloat(
-                newValue
-              );
+              viewModelTileset.pointCloudShading.eyeDomeLightingRadius =
+                parseFloat(newValue);
             }
           });
 

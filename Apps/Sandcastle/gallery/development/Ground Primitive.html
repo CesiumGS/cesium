@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -55,22 +55,22 @@
             new Cesium.Cartesian3(
               -2358138.847340281,
               -3744072.459541374,
-              4581158.5714175375
+              4581158.5714175375,
             ),
             new Cesium.Cartesian3(
               -2357231.4925370603,
               -3745103.7886602185,
-              4580702.9757762635
+              4580702.9757762635,
             ),
             new Cesium.Cartesian3(
               -2355912.902205431,
               -3744249.029778454,
-              4582402.154378103
+              4582402.154378103,
             ),
             new Cesium.Cartesian3(
               -2357208.0209552636,
               -3743553.4420488174,
-              4581961.863286629
+              4581961.863286629,
             ),
           ];
           let polygonHierarchy = { positions: positions };
@@ -92,7 +92,7 @@
                 id: "polygon 1",
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           // Same polygon slightly offset and overlapping.
@@ -116,7 +116,7 @@
                 id: "polygon 2",
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           // Same polygon slightly offset and overlapping.
@@ -140,7 +140,7 @@
                 id: "polygon 3",
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
         }
 
@@ -149,13 +149,13 @@
             new Cesium.Cartesian3(
               -2354331.3069306486,
               -3742016.2427205616,
-              4581875.591571755
+              4581875.591571755,
             ),
             new Cesium.HeadingPitchRange(
               Cesium.Math.toRadians(20.0),
               Cesium.Math.toRadians(-35.0),
-              10000.0
-            )
+              10000.0,
+            ),
           );
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         }
@@ -175,20 +175,20 @@
             if (Cesium.defined(pickedObject) && pickedObject !== currentObject) {
               if (Cesium.defined(currentObject)) {
                 currentObject.primitive.getGeometryInstanceAttributes(
-                  currentObject.id
+                  currentObject.id,
                 ).color = lastColor;
               }
 
               currentObject = pickedObject;
 
               const attributes = currentObject.primitive.getGeometryInstanceAttributes(
-                currentObject.id
+                currentObject.id,
               );
               lastColor = attributes.color;
               attributes.color = [255, 255, 0, 128];
             } else if (!Cesium.defined(pickedObject) && Cesium.defined(currentObject)) {
               currentObject.primitive.getGeometryInstanceAttributes(
-                currentObject.id
+                currentObject.id,
               ).color = lastColor;
               currentObject = undefined;
             }
@@ -241,7 +241,7 @@
                   show: show,
                 },
                 id: `rectangle${i}`,
-              })
+              }),
             );
           }
 
@@ -256,7 +256,7 @@
             new Cesium.GroundPrimitive({
               geometryInstances: instances,
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           viewOverlappingPolygons();
@@ -271,7 +271,7 @@
             new Cesium.GroundPrimitive({
               geometryInstances: instances,
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           color = new Cesium.ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 0.5);
@@ -288,7 +288,7 @@
             new Cesium.GroundPrimitive({
               geometryInstances: instances,
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           viewOverlappingPolygons();
@@ -306,7 +306,7 @@
               if (Cesium.defined(currentObject)) {
                 primitive.getGeometryInstanceAttributes(currentObject.id).show = [1];
                 pickPrimitive.getGeometryInstanceAttributes(
-                  pickIdPrefix + currentObject.id
+                  pickIdPrefix + currentObject.id,
                 ).show = [0];
               }
 
@@ -314,12 +314,12 @@
 
               primitive.getGeometryInstanceAttributes(currentObject.id).show = [0];
               pickPrimitive.getGeometryInstanceAttributes(
-                pickIdPrefix + currentObject.id
+                pickIdPrefix + currentObject.id,
               ).show = [1];
             } else if (!Cesium.defined(pickedObject) && Cesium.defined(currentObject)) {
               primitive.getGeometryInstanceAttributes(currentObject.id).show = [1];
               pickPrimitive.getGeometryInstanceAttributes(
-                pickIdPrefix + currentObject.id
+                pickIdPrefix + currentObject.id,
               ).show = [0];
               currentObject = undefined;
             }
@@ -337,13 +337,13 @@
                 }),
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+                    new Cesium.Color(1.0, 0.0, 0.0, 0.5),
                   ),
                 },
                 id: "circle",
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           // Ellipse Geometry
@@ -357,13 +357,13 @@
                 }),
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    new Cesium.Color(0.0, 1.0, 1.0, 0.5)
+                    new Cesium.Color(0.0, 1.0, 1.0, 0.5),
                   ),
                 },
                 id: "ellipse",
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           // Corridor Geometry
@@ -372,24 +372,19 @@
               geometryInstances: new Cesium.GeometryInstance({
                 geometry: new Cesium.CorridorGeometry({
                   positions: Cesium.Cartesian3.fromDegreesArray([
-                    -112.0,
-                    40.0,
-                    -117.0,
-                    40.0,
-                    -117.0,
-                    35.0,
+                    -112.0, 40.0, -117.0, 40.0, -117.0, 35.0,
                   ]),
                   width: 200000.0,
                 }),
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    new Cesium.Color(0.0, 0.0, 1.0, 0.5)
+                    new Cesium.Color(0.0, 0.0, 1.0, 0.5),
                   ),
                 },
                 id: "corridor",
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           // Rectangle geometry
@@ -402,13 +397,13 @@
                 }),
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    new Cesium.Color(0.0, 1.0, 0.0, 0.5)
+                    new Cesium.Color(0.0, 1.0, 0.0, 0.5),
                   ),
                 },
                 id: "rectangle",
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           // Rhumb line polygon geometry
@@ -418,27 +413,20 @@
                 geometry: new Cesium.PolygonGeometry({
                   polygonHierarchy: new Cesium.PolygonHierarchy(
                     Cesium.Cartesian3.fromDegreesArray([
-                      -130,
-                      55,
-                      -100,
-                      55,
-                      -100,
-                      45,
-                      -130,
-                      45,
-                    ])
+                      -130, 55, -100, 55, -100, 45, -130, 45,
+                    ]),
                   ),
                   arcType: Cesium.ArcType.RHUMB,
                 }),
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    new Cesium.Color(1.0, 1.0, 0.0, 0.5)
+                    new Cesium.Color(1.0, 1.0, 0.0, 0.5),
                   ),
                 },
                 id: "rhumbPolygon",
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
         });
 
@@ -449,7 +437,7 @@
           //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
           viewer.camera.lookAt(
             Cesium.Cartesian3.fromDegrees(-98.0, 40.0),
-            new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0)
+            new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0),
           );
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         };

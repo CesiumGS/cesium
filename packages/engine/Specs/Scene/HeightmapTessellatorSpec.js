@@ -102,18 +102,18 @@ describe("Scene/HeightmapTessellator", function () {
     vertices,
     heightmap,
     ellipsoid,
-    skirtHeight
+    skirtHeight,
   ) {
     let latitude = CesiumMath.lerp(
       nativeRectangle.north,
       nativeRectangle.south,
-      j / (height - 1)
+      j / (height - 1),
     );
     latitude = CesiumMath.toRadians(latitude);
     let longitude = CesiumMath.lerp(
       nativeRectangle.west,
       nativeRectangle.east,
-      i / (width - 1)
+      i / (width - 1),
     );
     longitude = CesiumMath.toRadians(longitude);
 
@@ -133,18 +133,18 @@ describe("Scene/HeightmapTessellator", function () {
     const vertexPosition = new Cartesian3(
       vertices[index],
       vertices[index + 1],
-      vertices[index + 2]
+      vertices[index + 2],
     );
 
     expect(vertexPosition).toEqualEpsilon(expectedVertexPosition, 1.0);
     expect(vertices[index + 3]).toEqual(heightSample);
     expect(vertices[index + 4]).toEqualEpsilon(
       i / (width - 1),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(vertices[index + 5]).toEqualEpsilon(
       1.0 - j / (height - 1),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   }
 
@@ -160,18 +160,18 @@ describe("Scene/HeightmapTessellator", function () {
     heightmap,
     ellipsoid,
     skirtHeight,
-    encoding
+    encoding,
   ) {
     let latitude = CesiumMath.lerp(
       nativeRectangle.north,
       nativeRectangle.south,
-      j / (height - 1)
+      j / (height - 1),
     );
     latitude = CesiumMath.toRadians(latitude);
     let longitude = CesiumMath.lerp(
       nativeRectangle.west,
       nativeRectangle.east,
-      i / (width - 1)
+      i / (width - 1),
     );
     longitude = CesiumMath.toRadians(longitude);
 
@@ -188,7 +188,7 @@ describe("Scene/HeightmapTessellator", function () {
     });
 
     expect(
-      encoding.decodePosition(vertices, index, new Cartesian3())
+      encoding.decodePosition(vertices, index, new Cartesian3()),
     ).toEqualEpsilon(expectedVertexPosition, 1.0);
   }
 
@@ -210,7 +210,7 @@ describe("Scene/HeightmapTessellator", function () {
         CesiumMath.toRadians(10.0),
         CesiumMath.toRadians(30.0),
         CesiumMath.toRadians(20.0),
-        CesiumMath.toRadians(40.0)
+        CesiumMath.toRadians(40.0),
       ),
     };
     const results = HeightmapTessellator.computeVertices(options);
@@ -234,7 +234,7 @@ describe("Scene/HeightmapTessellator", function () {
           vertices,
           options.heightmap,
           ellipsoid,
-          options.skirtHeight
+          options.skirtHeight,
         );
       }
     }
@@ -277,7 +277,7 @@ describe("Scene/HeightmapTessellator", function () {
           vertices,
           options.heightmap,
           ellipsoid,
-          options.skirtHeight
+          options.skirtHeight,
         );
       }
     }
@@ -297,7 +297,7 @@ describe("Scene/HeightmapTessellator", function () {
         vertices,
         options.heightmap,
         ellipsoid,
-        options.skirtHeight
+        options.skirtHeight,
       );
     }
 
@@ -314,7 +314,7 @@ describe("Scene/HeightmapTessellator", function () {
         vertices,
         options.heightmap,
         ellipsoid,
-        options.skirtHeight
+        options.skirtHeight,
       );
     }
 
@@ -331,7 +331,7 @@ describe("Scene/HeightmapTessellator", function () {
         vertices,
         options.heightmap,
         ellipsoid,
-        options.skirtHeight
+        options.skirtHeight,
       );
     }
 
@@ -348,7 +348,7 @@ describe("Scene/HeightmapTessellator", function () {
         vertices,
         options.heightmap,
         ellipsoid,
-        options.skirtHeight
+        options.skirtHeight,
       );
     }
   });
@@ -391,7 +391,7 @@ describe("Scene/HeightmapTessellator", function () {
           options.heightmap,
           ellipsoid,
           options.skirtHeight,
-          results.encoding
+          results.encoding,
         );
       }
     }
@@ -412,7 +412,7 @@ describe("Scene/HeightmapTessellator", function () {
         options.heightmap,
         ellipsoid,
         options.skirtHeight,
-        results.encoding
+        results.encoding,
       );
     }
 
@@ -430,7 +430,7 @@ describe("Scene/HeightmapTessellator", function () {
         options.heightmap,
         ellipsoid,
         options.skirtHeight,
-        results.encoding
+        results.encoding,
       );
     }
 
@@ -448,7 +448,7 @@ describe("Scene/HeightmapTessellator", function () {
         options.heightmap,
         ellipsoid,
         options.skirtHeight,
-        results.encoding
+        results.encoding,
       );
     }
 
@@ -466,7 +466,7 @@ describe("Scene/HeightmapTessellator", function () {
         options.heightmap,
         ellipsoid,
         options.skirtHeight,
-        results.encoding
+        results.encoding,
       );
     }
   });
@@ -495,23 +495,23 @@ describe("Scene/HeightmapTessellator", function () {
     const nativeRectangle = options.nativeRectangle;
 
     const geographicSouthwest = projection.unproject(
-      new Cartesian2(nativeRectangle.west, nativeRectangle.south)
+      new Cartesian2(nativeRectangle.west, nativeRectangle.south),
     );
     const geographicNortheast = projection.unproject(
-      new Cartesian2(nativeRectangle.east, nativeRectangle.north)
+      new Cartesian2(nativeRectangle.east, nativeRectangle.north),
     );
 
     for (let j = 0; j < height; ++j) {
       const y = CesiumMath.lerp(
         nativeRectangle.north,
         nativeRectangle.south,
-        j / (height - 1)
+        j / (height - 1),
       );
       for (let i = 0; i < width; ++i) {
         const x = CesiumMath.lerp(
           nativeRectangle.west,
           nativeRectangle.east,
-          i / (width - 1)
+          i / (width - 1),
         );
 
         const latLon = projection.unproject(new Cartesian2(x, y));
@@ -530,7 +530,7 @@ describe("Scene/HeightmapTessellator", function () {
         const vertexPosition = new Cartesian3(
           vertices[index],
           vertices[index + 1],
-          vertices[index + 2]
+          vertices[index + 2],
         );
 
         const expectedU =
@@ -544,11 +544,11 @@ describe("Scene/HeightmapTessellator", function () {
         expect(vertices[index + 3]).toEqual(heightSample);
         expect(vertices[index + 4]).toEqualEpsilon(
           expectedU,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         expect(vertices[index + 5]).toEqualEpsilon(
           expectedV,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
       }
     }
@@ -559,33 +559,9 @@ describe("Scene/HeightmapTessellator", function () {
     const height = 3;
     const options = {
       heightmap: [
-        1.0,
-        2.0,
-        100.0,
-        3.0,
-        4.0,
-        100.0,
-        5.0,
-        6.0,
-        100.0,
-        7.0,
-        8.0,
-        100.0,
-        9.0,
-        10.0,
-        100.0,
-        11.0,
-        12.0,
-        100.0,
-        13.0,
-        14.0,
-        100.0,
-        15.0,
-        16.0,
-        100.0,
-        17.0,
-        18.0,
-        100.0,
+        1.0, 2.0, 100.0, 3.0, 4.0, 100.0, 5.0, 6.0, 100.0, 7.0, 8.0, 100.0, 9.0,
+        10.0, 100.0, 11.0, 12.0, 100.0, 13.0, 14.0, 100.0, 15.0, 16.0, 100.0,
+        17.0, 18.0, 100.0,
       ],
       width: width,
       height: height,
@@ -600,7 +576,7 @@ describe("Scene/HeightmapTessellator", function () {
         CesiumMath.toRadians(10.0),
         CesiumMath.toRadians(30.0),
         CesiumMath.toRadians(20.0),
-        CesiumMath.toRadians(40.0)
+        CesiumMath.toRadians(40.0),
       ),
       structure: {
         stride: 3,
@@ -618,14 +594,14 @@ describe("Scene/HeightmapTessellator", function () {
       let latitude = CesiumMath.lerp(
         nativeRectangle.north,
         nativeRectangle.south,
-        j / (height - 1)
+        j / (height - 1),
       );
       latitude = CesiumMath.toRadians(latitude);
       for (let i = 0; i < width; ++i) {
         let longitude = CesiumMath.lerp(
           nativeRectangle.west,
           nativeRectangle.east,
-          i / (width - 1)
+          i / (width - 1),
         );
         longitude = CesiumMath.toRadians(longitude);
 
@@ -644,18 +620,18 @@ describe("Scene/HeightmapTessellator", function () {
         const vertexPosition = new Cartesian3(
           vertices[index],
           vertices[index + 1],
-          vertices[index + 2]
+          vertices[index + 2],
         );
 
         expect(vertexPosition).toEqualEpsilon(expectedVertexPosition, 1.0);
         expect(vertices[index + 3]).toEqual(heightSample);
         expect(vertices[index + 4]).toEqualEpsilon(
           i / (width - 1),
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         expect(vertices[index + 5]).toEqualEpsilon(
           1.0 - j / (height - 1),
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
       }
     }
@@ -666,33 +642,9 @@ describe("Scene/HeightmapTessellator", function () {
     const height = 3;
     const options = {
       heightmap: [
-        1.0,
-        2.0,
-        100.0,
-        3.0,
-        4.0,
-        100.0,
-        5.0,
-        6.0,
-        100.0,
-        7.0,
-        8.0,
-        100.0,
-        9.0,
-        10.0,
-        100.0,
-        11.0,
-        12.0,
-        100.0,
-        13.0,
-        14.0,
-        100.0,
-        15.0,
-        16.0,
-        100.0,
-        17.0,
-        18.0,
-        100.0,
+        1.0, 2.0, 100.0, 3.0, 4.0, 100.0, 5.0, 6.0, 100.0, 7.0, 8.0, 100.0, 9.0,
+        10.0, 100.0, 11.0, 12.0, 100.0, 13.0, 14.0, 100.0, 15.0, 16.0, 100.0,
+        17.0, 18.0, 100.0,
       ],
       width: width,
       height: height,
@@ -707,7 +659,7 @@ describe("Scene/HeightmapTessellator", function () {
         CesiumMath.toRadians(10.0),
         CesiumMath.toRadians(30.0),
         CesiumMath.toRadians(20.0),
-        CesiumMath.toRadians(40.0)
+        CesiumMath.toRadians(40.0),
       ),
       structure: {
         stride: 3,
@@ -726,14 +678,14 @@ describe("Scene/HeightmapTessellator", function () {
       let latitude = CesiumMath.lerp(
         nativeRectangle.north,
         nativeRectangle.south,
-        j / (height - 1)
+        j / (height - 1),
       );
       latitude = CesiumMath.toRadians(latitude);
       for (let i = 0; i < width; ++i) {
         let longitude = CesiumMath.lerp(
           nativeRectangle.west,
           nativeRectangle.east,
-          i / (width - 1)
+          i / (width - 1),
         );
         longitude = CesiumMath.toRadians(longitude);
 
@@ -752,18 +704,18 @@ describe("Scene/HeightmapTessellator", function () {
         const vertexPosition = new Cartesian3(
           vertices[index],
           vertices[index + 1],
-          vertices[index + 2]
+          vertices[index + 2],
         );
 
         expect(vertexPosition).toEqualEpsilon(expectedVertexPosition, 1.0);
         expect(vertices[index + 3]).toEqual(heightSample);
         expect(vertices[index + 4]).toEqualEpsilon(
           i / (width - 1),
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         expect(vertices[index + 5]).toEqualEpsilon(
           1.0 - j / (height - 1),
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
       }
     }

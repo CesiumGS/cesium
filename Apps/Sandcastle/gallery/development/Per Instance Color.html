@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -42,16 +42,16 @@
                   -120.0 + i * 10,
                   30.0,
                   -110.0 + i * 10,
-                  40.0
+                  40.0,
                 ),
                 vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
               }),
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  Cesium.Color.fromRandom({ alpha: 0.7 })
+                  Cesium.Color.fromRandom({ alpha: 0.7 }),
                 ),
               },
-            })
+            }),
           );
         }
 
@@ -59,7 +59,7 @@
           new Cesium.Primitive({
             geometryInstances: instances,
             appearance: new Cesium.PerInstanceColorAppearance(),
-          })
+          }),
         );
         //Sandcastle_End
       };

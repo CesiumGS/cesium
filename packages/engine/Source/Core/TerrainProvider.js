@@ -105,7 +105,7 @@ TerrainProvider.getRegularGridIndices = function (width, height) {
   //>>includeStart('debug', pragmas.debug);
   if (width * height >= CesiumMath.FOUR_GIGABYTES) {
     throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296."
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
     );
   }
   //>>includeEnd('debug');
@@ -119,11 +119,11 @@ TerrainProvider.getRegularGridIndices = function (width, height) {
   if (!defined(indices)) {
     if (width * height < CesiumMath.SIXTY_FOUR_KILOBYTES) {
       indices = byWidth[height] = new Uint16Array(
-        (width - 1) * (height - 1) * 6
+        (width - 1) * (height - 1) * 6,
       );
     } else {
       indices = byWidth[height] = new Uint32Array(
-        (width - 1) * (height - 1) * 6
+        (width - 1) * (height - 1) * 6,
       );
     }
     addRegularGridIndices(width, height, indices, 0);
@@ -141,7 +141,7 @@ TerrainProvider.getRegularGridIndicesAndEdgeIndices = function (width, height) {
   //>>includeStart('debug', pragmas.debug);
   if (width * height >= CesiumMath.FOUR_GIGABYTES) {
     throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296."
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
     );
   }
   //>>includeEnd('debug');
@@ -180,12 +180,12 @@ const regularGridAndSkirtAndEdgeIndicesCache = [];
  */
 TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
   width,
-  height
+  height,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (width * height >= CesiumMath.FOUR_GIGABYTES) {
     throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296."
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
     );
   }
   //>>includeEnd('debug');
@@ -219,7 +219,7 @@ TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
       northIndicesWestToEast,
       gridVertexCount,
       indices,
-      gridIndexCount
+      gridIndexCount,
     );
 
     indicesAndEdges = byWidth[height] = {
@@ -247,7 +247,7 @@ TerrainProvider.getSkirtVertexCount = function (
   westIndicesSouthToNorth,
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
-  northIndicesWestToEast
+  northIndicesWestToEast,
 ) {
   return (
     westIndicesSouthToNorth.length +
@@ -291,7 +291,7 @@ TerrainProvider.getSkirtIndexCount = function (skirtVertexCount) {
  * @returns {Number}
  */
 TerrainProvider.getSkirtIndexCountWithFilledCorners = function (
-  skirtVertexCount
+  skirtVertexCount,
 ) {
   return ((skirtVertexCount - 4) * 2 + 4) * 3;
 };
@@ -306,28 +306,28 @@ TerrainProvider.addSkirtIndices = function (
   northIndicesWestToEast,
   vertexCount,
   indices,
-  offset
+  offset,
 ) {
   let vertexIndex = vertexCount;
   offset = addSkirtIndices(
     westIndicesSouthToNorth,
     vertexIndex,
     indices,
-    offset
+    offset,
   );
   vertexIndex += westIndicesSouthToNorth.length;
   offset = addSkirtIndices(
     southIndicesEastToWest,
     vertexIndex,
     indices,
-    offset
+    offset,
   );
   vertexIndex += southIndicesEastToWest.length;
   offset = addSkirtIndices(
     eastIndicesNorthToSouth,
     vertexIndex,
     indices,
-    offset
+    offset,
   );
   vertexIndex += eastIndicesNorthToSouth.length;
   addSkirtIndices(northIndicesWestToEast, vertexIndex, indices, offset);
@@ -340,7 +340,7 @@ TerrainProvider.addSkirtIndicesWithFilledCorners = function (
   northIndicesWestToEast,
   vertexCount,
   indices,
-  offset
+  offset,
 ) {
   // Add skirt indices without filled corners
   TerrainProvider.addSkirtIndices(
@@ -350,18 +350,17 @@ TerrainProvider.addSkirtIndicesWithFilledCorners = function (
     northIndicesWestToEast,
     vertexCount,
     indices,
-    offset
+    offset,
   );
 
   const skirtVertexCount = TerrainProvider.getSkirtVertexCount(
     westIndicesSouthToNorth,
     southIndicesEastToWest,
     eastIndicesNorthToSouth,
-    northIndicesWestToEast
+    northIndicesWestToEast,
   );
-  const skirtIndexCountWithoutCaps = TerrainProvider.getSkirtIndexCount(
-    skirtVertexCount
-  );
+  const skirtIndexCountWithoutCaps =
+    TerrainProvider.getSkirtIndexCount(skirtVertexCount);
 
   const cornerStartIdx = offset + skirtIndexCountWithoutCaps;
 
@@ -489,7 +488,7 @@ TerrainProvider.heightmapTerrainQuality = 0.25;
 TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function (
   ellipsoid,
   tileImageWidth,
-  numberOfTilesAtLevelZero
+  numberOfTilesAtLevelZero,
 ) {
   return (
     (ellipsoid.maximumRadius *

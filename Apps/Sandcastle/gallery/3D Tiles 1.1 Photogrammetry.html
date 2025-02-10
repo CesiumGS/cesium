@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -174,10 +174,10 @@
         // Create two primitive collections, one for each half of the screen.
         // This way we can clear one half of the screen at a time.
         const leftCollection = viewer.scene.primitives.add(
-          new Cesium.PrimitiveCollection()
+          new Cesium.PrimitiveCollection(),
         );
         const rightCollection = viewer.scene.primitives.add(
-          new Cesium.PrimitiveCollection()
+          new Cesium.PrimitiveCollection(),
         );
 
         // Load a tileset to one half of the screen, returning the tileset
@@ -288,7 +288,7 @@
           async function () {
             benchmarkTilesets(selectedTilesetName);
           },
-          "toolbarSelect"
+          "toolbarSelect",
         );
 
         // A note to the user that load time requires a button press
@@ -305,9 +305,8 @@
         }
 
         function updateLoadTime(side, tileLoadTimeSeconds) {
-          document.getElementById(
-            `${side}TileLoadTime`
-          ).innerHTML = tileLoadTimeSeconds.toPrecision(3);
+          document.getElementById(`${side}TileLoadTime`).innerHTML =
+            tileLoadTimeSeconds.toPrecision(3);
         }
 
         function updateStatsPanel(side, tileset) {
@@ -319,9 +318,8 @@
 
           const gpuMemoryBytes = stats.geometryByteLength + stats.texturesByteLength;
           const gpuMemoryMB = gpuMemoryBytes / 1024 / 1024;
-          document.getElementById(
-            `${side}GpuMemoryMB`
-          ).innerHTML = gpuMemoryMB.toPrecision(3);
+          document.getElementById(`${side}GpuMemoryMB`).innerHTML =
+            gpuMemoryMB.toPrecision(3);
         }
 
         // maximum SSE Slider -------------------------------------------------

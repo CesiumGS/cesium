@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -35,7 +35,7 @@
         // The Earth at Night, also known as Black Marble 2017 and Night Lights
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayer: new Cesium.ImageryLayer.fromProviderAsync(
-            Cesium.IonImageryProvider.fromAssetId(3812)
+            Cesium.IonImageryProvider.fromAssetId(3812),
           ),
         });
 
@@ -47,7 +47,7 @@
         const imageryLayers = viewer.imageryLayers;
         const nightLayer = imageryLayers.get(0);
         const dayLayer = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(3845)
+          Cesium.IonImageryProvider.fromAssetId(3845),
         );
         imageryLayers.add(dayLayer);
         imageryLayers.lowerToBottom(dayLayer);
@@ -64,11 +64,13 @@
 
         updateLighting(dynamicLighting);
 
-        Sandcastle.addToggleButton("Dynamic lighting", dynamicLighting, function (
-          checked
-        ) {
-          updateLighting(checked);
-        });
+        Sandcastle.addToggleButton(
+          "Dynamic lighting",
+          dynamicLighting,
+          function (checked) {
+            updateLighting(checked);
+          },
+        );
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

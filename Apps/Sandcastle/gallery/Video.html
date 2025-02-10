@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -99,7 +99,7 @@
 
         sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(function (
           time,
-          result
+          result,
         ) {
           if (!Cesium.defined(result)) {
             result = new Cesium.Cartesian2();
@@ -112,8 +112,7 @@
             result.y = 1;
           }
           return result;
-        },
-        false);
+        }, false);
 
         // Like Image, the video element doesn't have to be part of the DOM or
         // otherwise on the screen to be used as a texture.
@@ -134,7 +133,7 @@
           viewer.cesiumWidget.showErrorPanel(
             "This browser does not support cross-origin WebGL video textures.",
             "",
-            ""
+            "",
           );
         });
 

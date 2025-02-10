@@ -21,7 +21,7 @@ function CompositePositionProperty(referenceFrame) {
   this._composite = new CompositeProperty();
   this._composite.definitionChanged.addEventListener(
     CompositePositionProperty.prototype._raiseDefinitionChanged,
-    this
+    this,
   );
 }
 
@@ -110,7 +110,7 @@ CompositePositionProperty.prototype.getValue = function (time, result) {
 CompositePositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
@@ -121,9 +121,8 @@ CompositePositionProperty.prototype.getValueInReferenceFrame = function (
   }
   //>>includeEnd('debug');
 
-  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
-    time
-  );
+  const innerProperty =
+    this._composite._intervals.findDataForIntervalContainingDate(time);
   if (defined(innerProperty)) {
     return innerProperty.getValueInReferenceFrame(time, referenceFrame, result);
   }

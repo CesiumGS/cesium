@@ -63,7 +63,7 @@ function createTerrainDataFromScratch(options) {
   }
 
   const positionsCartesian = ellipsoid.cartographicArrayToCartesianArray(
-    positionsCartographic
+    positionsCartographic,
   );
 
   const centerCartographic = Rectangle.center(rectangle);
@@ -71,30 +71,30 @@ function createTerrainDataFromScratch(options) {
   const centerCartesian = ellipsoid.cartographicToCartesian(centerCartographic);
   const enuToFf = Transforms.eastNorthUpToFixedFrame(
     centerCartesian,
-    ellipsoid
+    ellipsoid,
   );
   const gltfTransform = Matrix4.multiply(
     Axis.Z_UP_TO_Y_UP,
     enuToFf,
-    new Matrix4()
+    new Matrix4(),
   );
   const gltfTransformAsArray = Matrix4.pack(gltfTransform, new Array(16));
   const ffToEnu = Matrix4.inverseTransformation(enuToFf, new Matrix4());
   const boundingSphere = BoundingSphere.fromRectangle3D(
     rectangle,
     ellipsoid,
-    centerCartographic.height
+    centerCartographic.height,
   );
   const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
     rectangle,
     minimumHeight,
     maximumHeight,
-    ellipsoid
+    ellipsoid,
   );
   const ellipsoidalOccluser = new EllipsoidalOccluder(ellipsoid);
   let horizonOcclusionPoint = ellipsoidalOccluser.computeHorizonCullingPoint(
     centerCartesian,
-    positionsCartesian
+    positionsCartesian,
   );
 
   // Hemisphere sized tiles can produce undefined occlusion points
@@ -106,13 +106,13 @@ function createTerrainDataFromScratch(options) {
   let minPositionLocal = Cartesian3.fromElements(
     +Number.MAX_VALUE,
     +Number.MAX_VALUE,
-    +Number.MAX_VALUE
+    +Number.MAX_VALUE,
   );
 
   let maxPositionLocal = Cartesian3.fromElements(
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
-    -Number.MAX_VALUE
+    -Number.MAX_VALUE,
   );
 
   for (let i = 0; i < vertexCount; i++) {
@@ -123,23 +123,23 @@ function createTerrainDataFromScratch(options) {
     minPositionLocal = Cartesian3.minimumByComponent(
       local,
       minPositionLocal,
-      minPositionLocal
+      minPositionLocal,
     );
     maxPositionLocal = Cartesian3.maximumByComponent(
       local,
       maxPositionLocal,
-      maxPositionLocal
+      maxPositionLocal,
     );
   }
 
   const positionsBuffer = Cartesian3.packArray(
     positionsLocal,
-    new Float32Array(3 * vertexCount)
+    new Float32Array(3 * vertexCount),
   );
 
   const normalsBuffer = Cartesian3.packArray(
     normals,
-    new Float32Array(3 * vertexCount)
+    new Float32Array(3 * vertexCount),
   );
 
   const indices = options.indices;
@@ -185,19 +185,19 @@ function createTerrainDataFromScratch(options) {
   binBuffer.set(new Uint8Array(indices.buffer), indicesByteOffset);
   binBuffer.set(
     new Uint8Array(edgeIndicesWest.buffer),
-    edgeIndicesWestByteOffset
+    edgeIndicesWestByteOffset,
   );
   binBuffer.set(
     new Uint8Array(edgeIndicesSouth.buffer),
-    edgeIndicesSouthByteOffset
+    edgeIndicesSouthByteOffset,
   );
   binBuffer.set(
     new Uint8Array(edgeIndicesEast.buffer),
-    edgeIndicesEastByteOffset
+    edgeIndicesEastByteOffset,
   );
   binBuffer.set(
     new Uint8Array(edgeIndicesNorth.buffer),
-    edgeIndicesNorthByteOffset
+    edgeIndicesNorthByteOffset,
   );
 
   const gltf = {
@@ -411,7 +411,7 @@ function normalEqual(normalA, normalB) {
     normalA,
     normalB,
     undefined,
-    CesiumMath.EPSILON2
+    CesiumMath.EPSILON2,
   );
 }
 
@@ -450,18 +450,19 @@ function checkMeshGeometry(options) {
     mesh.westIndicesSouthToNorth,
     mesh.southIndicesEastToWest,
     mesh.eastIndicesNorthToSouth,
-    mesh.northIndicesWestToEast
+    mesh.northIndicesWestToEast,
   );
 
-  const expectedSkirtIndexCount = TerrainProvider.getSkirtIndexCountWithFilledCorners(
-    expectedSkirtVertexCount
-  );
+  const expectedSkirtIndexCount =
+    TerrainProvider.getSkirtIndexCountWithFilledCorners(
+      expectedSkirtVertexCount,
+    );
 
   const indexCount = mesh.indices.length;
   const vertexCount = mesh.vertices.length / mesh.stride;
 
   expect(vertexCount).toBe(
-    positionsCartographic.length + expectedSkirtVertexCount
+    positionsCartographic.length + expectedSkirtVertexCount,
   );
   expect(indexCount).toBe(indices.length + expectedSkirtIndexCount);
 
@@ -473,32 +474,32 @@ function checkMeshGeometry(options) {
     const positionMesh0 = mesh.encoding.decodePosition(
       mesh.vertices,
       indexMesh0,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const positionMesh1 = mesh.encoding.decodePosition(
       mesh.vertices,
       indexMesh1,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const positionMesh2 = mesh.encoding.decodePosition(
       mesh.vertices,
       indexMesh2,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const normalMesh0 = mesh.encoding.decodeNormal(
       mesh.vertices,
       indexMesh0,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const normalMesh1 = mesh.encoding.decodeNormal(
       mesh.vertices,
       indexMesh1,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const normalMesh2 = mesh.encoding.decodeNormal(
       mesh.vertices,
       indexMesh2,
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     let foundTriangle = false;
@@ -511,15 +512,15 @@ function checkMeshGeometry(options) {
 
         const positionOther0 = ellipsoid.cartographicToCartesian(
           positionsCartographic[indexOther0],
-          new Cartesian3()
+          new Cartesian3(),
         );
         const positionOther1 = ellipsoid.cartographicToCartesian(
           positionsCartographic[indexOther1],
-          new Cartesian3()
+          new Cartesian3(),
         );
         const positionOther2 = ellipsoid.cartographicToCartesian(
           positionsCartographic[indexOther2],
-          new Cartesian3()
+          new Cartesian3(),
         );
         const normalOther0 = normals[indexOther0];
         const normalOther1 = normals[indexOther1];
@@ -565,11 +566,11 @@ function checkMeshGeometry(options) {
       const positionMesh = mesh.encoding.decodePosition(
         mesh.vertices,
         indexMesh,
-        new Cartesian3()
+        new Cartesian3(),
       );
       const positionOther = ellipsoid.cartographicToCartesian(
         positionsCartographic[indexOther],
-        new Cartesian3()
+        new Cartesian3(),
       );
 
       expect(positionEqual(positionMesh, positionOther)).toBe(true);
@@ -685,7 +686,7 @@ function checkUpsampledTerrainData(options) {
       x: options.tileX,
       y: options.tileY,
       level: options.tileLevel,
-    })
+    }),
   )
     .then(function (terrainMesh) {
       checkMeshGeometry({
@@ -707,7 +708,7 @@ function checkUpsampledTerrainData(options) {
         options.tileLevel,
         options.tileX * 2 + 0,
         options.tileY * 2 + 1,
-        options.tileLevel + 1
+        options.tileLevel + 1,
       );
       const nwPromise = terrainData.upsample(
         options.tilingScheme,
@@ -716,7 +717,7 @@ function checkUpsampledTerrainData(options) {
         options.tileLevel,
         options.tileX * 2 + 0,
         options.tileY * 2 + 0,
-        options.tileLevel + 1
+        options.tileLevel + 1,
       );
       const sePromise = terrainData.upsample(
         options.tilingScheme,
@@ -725,7 +726,7 @@ function checkUpsampledTerrainData(options) {
         options.tileLevel,
         options.tileX * 2 + 1,
         options.tileY * 2 + 1,
-        options.tileLevel + 1
+        options.tileLevel + 1,
       );
       const nePromise = terrainData.upsample(
         options.tilingScheme,
@@ -734,7 +735,7 @@ function checkUpsampledTerrainData(options) {
         options.tileLevel,
         options.tileX * 2 + 1,
         options.tileY * 2 + 0,
-        options.tileLevel + 1
+        options.tileLevel + 1,
       );
       return Promise.all([swPromise, nwPromise, sePromise, nePromise]);
     })
@@ -773,7 +774,7 @@ function lerpCartographic(cartographicA, cartographicB, t) {
   return new Cartographic(
     CesiumMath.lerp(cartographicA.longitude, cartographicB.longitude, t),
     CesiumMath.lerp(cartographicA.latitude, cartographicB.latitude, t),
-    CesiumMath.lerp(cartographicA.height, cartographicB.height, t)
+    CesiumMath.lerp(cartographicA.height, cartographicB.height, t),
   );
 }
 
@@ -788,7 +789,7 @@ function barycentricCartographic(
   cartographicA,
   cartographicB,
   cartographicC,
-  barycentricCoordinates
+  barycentricCoordinates,
 ) {
   const longitude =
     cartographicA.longitude * barycentricCoordinates.x +
@@ -949,7 +950,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
               level,
               x * 4,
               y * 4,
-              level + 2
+              level + 2,
             );
           }).toThrowDeveloperError();
         });
@@ -981,7 +982,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       });
 
       expect(
-        data.upsample(tilingScheme, x, y, level, x * 2, y * 2, level + 1)
+        data.upsample(tilingScheme, x, y, level, x * 2, y * 2, level + 1),
       ).toBeUndefined();
     });
 
@@ -1057,7 +1058,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       const extra = new Cartographic(
         CesiumMath.lerp(rectangle.west, rectangle.east, 0.25),
         CesiumMath.lerp(rectangle.south, rectangle.north, 0.75),
-        4.0
+        4.0,
       );
       const cw = lerpCartographic(sw, nw, 0.5);
       const ce = lerpCartographic(se, ne, 0.5);
@@ -1124,7 +1125,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       const extra = new Cartographic(
         CesiumMath.lerp(rectangle.west, rectangle.east, 0.5),
         CesiumMath.lerp(rectangle.south, rectangle.north, 0.75),
-        4.0
+        4.0,
       );
       const cw = lerpCartographic(sw, nw, 0.5);
       const ce = lerpCartographic(se, ne, 0.5);
@@ -1228,7 +1229,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
               tileLevel,
               upsampledTileX,
               upsampledTileY,
-              upsampledTileLevel
+              upsampledTileLevel,
             )
             .then(function (upsampledTerrainData) {
               expect(upsampledTerrainData.wasCreatedByUpsampling()).toBe(true);
@@ -1248,11 +1249,11 @@ describe("Core/Cesium3DTilesTerrainData", function () {
                       upsampledTileLevel,
                       doublyUpsampledTileX,
                       doublyUpsampledTileY,
-                      doublyUpsampledTileLevel
+                      doublyUpsampledTileLevel,
                     )
                     .then(function (doublyUpsampleTerrainData) {
                       expect(
-                        doublyUpsampleTerrainData.wasCreatedByUpsampling()
+                        doublyUpsampleTerrainData.wasCreatedByUpsampling(),
                       ).toBe(true);
                       return doublyUpsampleTerrainData
                         .createMesh({
@@ -1271,7 +1272,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
                             mesh: doublyUpsampledMesh,
                             positionsCartographic: [sw2, nw2, ne2, se2],
                             normals: new Array(4).fill(
-                              new Cartesian3(1.0, 0.0, 0.0)
+                              new Cartesian3(1.0, 0.0, 0.0),
                             ),
                             indices: new Uint16Array([0, 2, 1, 0, 3, 2]),
                             edgeIndicesWest: new Uint16Array([0, 1]),
@@ -1396,7 +1397,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
           expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
           expect(mesh.orientedBoundingBox).toEqual(data._orientedBoundingBox);
           expect(mesh.occludeePointInScaledSpace).toEqual(
-            data._horizonOcclusionPoint
+            data._horizonOcclusionPoint,
           );
         });
     });
@@ -1432,7 +1433,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
           expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
           expect(mesh.orientedBoundingBox).toEqual(data._orientedBoundingBox);
           expect(mesh.occludeePointInScaledSpace).toEqual(
-            data._horizonOcclusionPoint
+            data._horizonOcclusionPoint,
           );
         });
     });

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -125,14 +125,14 @@
         Cesium.knockout.getObservable(viewModel, "color").subscribe(function (newValue) {
           model.color = Cesium.Color.fromAlpha(
             getColor(newValue),
-            Number(viewModel.alpha)
+            Number(viewModel.alpha),
           );
         });
 
         Cesium.knockout.getObservable(viewModel, "alpha").subscribe(function (newValue) {
           model.color = Cesium.Color.fromAlpha(
             getColor(viewModel.color),
-            Number(newValue)
+            Number(newValue),
           );
         });
 
@@ -168,13 +168,13 @@
                 url: url,
                 modelMatrix: modelMatrix,
                 minimumPixelSize: 128,
-              })
+              }),
             );
 
             model.readyEvent.addEventListener(() => {
               model.color = Cesium.Color.fromAlpha(
                 getColor(viewModel.color),
-                Number(viewModel.alpha)
+                Number(viewModel.alpha),
               );
               model.colorBlendMode = getColorBlendMode(viewModel.colorBlendMode);
               model.colorBlendAmount = Number(viewModel.colorBlendAmount);
@@ -196,7 +196,7 @@
               const pitch = Cesium.Math.toRadians(-20.0);
               camera.lookAt(
                 center,
-                new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
+                new Cesium.HeadingPitchRange(heading, pitch, r * 2.0),
               );
             });
           } catch (error) {
@@ -232,7 +232,7 @@
                 height,
                 heading,
                 pitch,
-                roll
+                roll,
               );
             },
           },
@@ -248,7 +248,7 @@
                 height,
                 heading,
                 pitch,
-                roll
+                roll,
               );
             },
           },

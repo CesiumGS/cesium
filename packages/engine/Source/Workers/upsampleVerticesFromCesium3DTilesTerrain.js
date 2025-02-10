@@ -22,7 +22,7 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 function upsampleVerticesFromCesium3DTilesTerrain(
   options,
-  transferableObjects
+  transferableObjects,
 ) {
   const mesh = Cesium3DTilesTerrainGeometryProcessor.upsampleMesh(options);
 
@@ -45,7 +45,7 @@ function upsampleVerticesFromCesium3DTilesTerrain(
     westIndicesBuffer,
     southIndicesBuffer,
     eastIndicesBuffer,
-    northIndicesBuffer
+    northIndicesBuffer,
   );
 
   /** @type {TerrainMeshProxy} */
@@ -69,5 +69,5 @@ function upsampleVerticesFromCesium3DTilesTerrain(
 }
 
 export default createTaskProcessorWorker(
-  upsampleVerticesFromCesium3DTilesTerrain
+  upsampleVerticesFromCesium3DTilesTerrain,
 );
