@@ -1,5 +1,4 @@
 import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import CesiumMath from "../Core/Math.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defined from "../Core/defined.js";
@@ -51,6 +50,12 @@ function VoxelTraversal(
   this._primitive = primitive;
 
   /**
+   * @type {number}
+   * @private
+   */
+  this.textureMemoryByteLength = 0;
+
+  /**
    * @type {Megatexture[]}
    * @readonly
    */
@@ -69,6 +74,9 @@ function VoxelTraversal(
       componentType,
       maximumTextureMemoryByteLength,
     );
+
+    this.textureMemoryByteLength +=
+      this.megatextures[i].textureMemoryByteLength;
   }
 
   const maximumTileCount = this.megatextures[0].maximumTileCount;
@@ -222,8 +230,6 @@ function VoxelTraversal(
    */
   this.leafNodeTexelSizeUv = new Cartesian2();
 }
-
-const scratchDimensions = new Cartesian3();
 
 /**
  * Finds a keyframe node in the traversal
@@ -382,6 +388,7 @@ VoxelTraversal.prototype.destroy = function () {
   for (let i = 0; i < megatextureLength; i++) {
     megatextures[i] = megatextures[i] && megatextures[i].destroy();
   }
+  this.textureMemoryByteLength = 0;
 
   this.internalNodeTexture =
     this.internalNodeTexture && this.internalNodeTexture.destroy();
@@ -683,18 +690,6 @@ function loadAndUnload(that, frameState) {
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
   }
-
-  const dimensions = Cartesian3.clone(
-    primitive._provider.dimensions,
-    scratchDimensions,
-  );
-  primitive.statistics.textureByteLength =
-    VoxelTraversal.getApproximateTextureMemoryByteLength(
-      that.megatextures[0].occupiedCount,
-      dimensions,
-      primitive._provider.types,
-      primitive._provider.componentTypes,
-    );
 }
 
 /**

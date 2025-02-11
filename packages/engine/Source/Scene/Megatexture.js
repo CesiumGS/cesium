@@ -117,6 +117,12 @@ function Megatexture(
   this.componentType = componentType;
 
   /**
+   * @type {number}
+   * @readonly
+   */
+  this.textureMemoryByteLength = textureMemoryByteLength;
+
+  /**
    * @type {Cartesian3}
    * @readonly
    */

@@ -23,7 +23,7 @@
 #### Additions :tada:
 
 - Add `ITwinData.loadGeospatialFeatures(iTwinId, collectionId)` function to load data from the [Geospatial Features API](https://developer.bentley.com/apis/geospatial-features/operations/get-features/) [#12449](https://github.com/CesiumGS/cesium/pull/12449)
-- Implemented `textureByteLength`, `visited`, and `numberOfTilesWithContentReady` in `VoxelPrimitive.statistics`.
+- Implemented `texturesByteLength`, `visited`, and `numberOfTilesWithContentReady` in `VoxelPrimitive.statistics`.
 
 #### Fixes :wrench:
 

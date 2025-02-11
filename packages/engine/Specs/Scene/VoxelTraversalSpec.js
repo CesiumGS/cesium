@@ -147,6 +147,12 @@ describe(
       expect(traversal.isDestroyed()).toBe(true);
     });
 
+    it("shows texture memory allocation statistic", function () {
+      expect(traversal.textureMemoryByteLength).toBe(textureMemory);
+      traversal.destroy();
+      expect(traversal.textureMemoryByteLength).toBe(0);
+    });
+
     it("loads tiles into megatexture", async function () {
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
@@ -161,13 +167,15 @@ describe(
         scene.renderForSpecs();
         return (
           traversal.megatextures[0].occupiedCount > 0 &&
-          traversal._primitive.statistics.textureByteLength > 0
+          traversal._primitive.statistics.texturesByteLength > 0
         );
       });
 
       const megatexture = traversal.megatextures[0];
       expect(megatexture.occupiedCount).toBe(1);
-      expect(traversal._primitive.statistics.textureByteLength).toEqual(64);
+      expect(traversal._primitive.statistics.texturesByteLength).toEqual(
+        134217728,
+      );
     });
 
     it("tile failed event is raised", async function () {
@@ -196,7 +204,6 @@ describe(
         traversal._primitive.statistics.numberOfTilesWithContentReady,
       ).toEqual(0);
       expect(traversal._primitive.statistics.visited).toEqual(3);
-      expect(traversal._primitive.statistics.textureByteLength).toEqual(0);
     });
 
     it("finds keyframe node with expected metadata values", async function () {

@@ -1434,6 +1434,8 @@ function initFromProvider(primitive, provider, context) {
 
   // Create the VoxelTraversal, and set related uniforms
   primitive._traversal = setupTraversal(primitive, provider, context);
+  primitive.statistics.texturesByteLength =
+    primitive._traversal.textureMemoryByteLength;
   setTraversalUniforms(primitive._traversal, uniforms);
 }
 
@@ -1812,6 +1814,7 @@ VoxelPrimitive.prototype.destroy = function () {
 
   this._pickId = this._pickId && this._pickId.destroy();
   this._traversal = this._traversal && this._traversal.destroy();
+  this.statistics.texturesByteLength = 0;
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
   return destroyObject(this);

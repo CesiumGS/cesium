@@ -70,7 +70,7 @@ describe(
       expect(spyUpdate.calls.count()).toEqual(1);
     });
 
-    it("initial tiles loaded and all tiles loaded events are raised", async function () {
+    it("initial tiles loaded and all tiles loaded events are raised and statistics are updates", async function () {
       const spyUpdate1 = jasmine.createSpy("listener");
       const spyUpdate2 = jasmine.createSpy("listener");
       const primitive = new VoxelPrimitive({ provider });
@@ -85,7 +85,7 @@ describe(
       expect(spyUpdate2.calls.count()).toEqual(1);
       expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
       expect(primitive.statistics.visited).toEqual(1);
-      expect(primitive.statistics.textureByteLength).toEqual(64);
+      expect(primitive.statistics.texturesByteLength).toEqual(134217728);
     });
 
     it("tile load, load progress and tile visible events are raised", async function () {
@@ -266,6 +266,7 @@ describe(
       expect(primitive.isDestroyed()).toBe(true);
       expect(primitive._pickId).toBeUndefined();
       expect(primitive._traversal).toBeUndefined();
+      expect(primitive.statistics).toBeDefined();
     });
   },
   "WebGL",
