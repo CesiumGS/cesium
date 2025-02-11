@@ -1,6 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import CesiumMath from "../Core/Math.js";
 import CullingVolume from "../Core/CullingVolume.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
@@ -92,6 +93,15 @@ function VoxelTraversal(
    * @private
    */
   this._debugPrint = false;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._calculateStatistics = defaultValue(
+    this._primitive._calculateStatistics,
+    false,
+  );
 
   /**
    * @type {number}
@@ -332,16 +342,23 @@ VoxelTraversal.prototype.update = function (
   generateOctree(this, sampleCount, levelBlendFactor);
   const timestamp2 = getTimestamp();
 
-  const loadAndUnloadTimeMs = timestamp1 - timestamp0;
-  const generateOctreeTimeMs = timestamp2 - timestamp1;
-  const totalTimeMs = timestamp2 - timestamp0;
-  postPassesUpdate(
-    this,
-    frameState,
-    loadAndUnloadTimeMs,
-    generateOctreeTimeMs,
-    totalTimeMs,
-  );
+  const checkEventListeners =
+    primitive.loadProgress.numberOfListeners > 0 ||
+    primitive.allTilesLoaded.numberOfListeners > 0 ||
+    primitive.initialTilesLoaded.numberOfListeners > 0;
+
+  if (this._debugPrint || this._calculateStatistics || checkEventListeners) {
+    const loadAndUnloadTimeMs = timestamp1 - timestamp0;
+    const generateOctreeTimeMs = timestamp2 - timestamp1;
+    const totalTimeMs = timestamp2 - timestamp0;
+    postPassesUpdate(
+      this,
+      frameState,
+      loadAndUnloadTimeMs,
+      generateOctreeTimeMs,
+      totalTimeMs,
+    );
+  }
 };
 
 /**
@@ -793,14 +810,6 @@ function postPassesUpdate(
   primitive.statistics.numberOfTilesWithContentReady =
     loadStateByCount[KeyframeNode.LoadState.LOADED];
   primitive.statistics.visited = nodeCountTotal;
-
-  const checkEventListeners =
-    primitive.loadProgress.numberOfListeners > 0 ||
-    primitive.allTilesLoaded.numberOfListeners > 0 ||
-    primitive.initialTilesLoaded.numberOfListeners > 0;
-  if (!that._debugPrint && !checkEventListeners) {
-    return;
-  }
 
   const numberOfPendingRequests =
     loadStateByCount[KeyframeNode.LoadState.RECEIVING];

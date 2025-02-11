@@ -38,6 +38,7 @@ import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix used to transform the primitive.
  * @param {CustomShader} [options.customShader] The custom shader used to style the primitive.
  * @param {Clock} [options.clock] The clock used to control time dynamic behavior.
+ * @param {Boolean} [options.calculateStatistics] Generate statistics for performance profile.
  *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
@@ -76,6 +77,12 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._statistics = new Cesium3DTilesetStatistics();
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._calculateStatistics = defaultValue(options.calculateStatistics, false);
 
   /**
    * This member is not created until the provider is ready.
@@ -1062,6 +1069,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    *  Loading and rendering information for requested content
+   * To use `visited` and `numberOfTilesWithContentReady` statistics, set options._calculateStatistics` to `true` in the constructor.
    * @type {Cesium3DTilesetStatistics}
    * @readonly
    * @private
@@ -1144,8 +1152,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     provider.timeIntervalCollection,
     this._clock,
   );
-
-  this.statistics.clear();
 
   const traversal = this._traversal;
   const sampleCountOld = traversal._sampleCount;

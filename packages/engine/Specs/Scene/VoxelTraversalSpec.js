@@ -173,12 +173,11 @@ describe(
 
       const megatexture = traversal.megatextures[0];
       expect(megatexture.occupiedCount).toBe(1);
-      expect(traversal._primitive.statistics.texturesByteLength).toEqual(
-        134217728,
-      );
+      expect(traversal.textureMemoryByteLength).toEqual(500);
     });
 
     it("tile failed event is raised", async function () {
+      traversal._calculateStatistics = true;
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
       const pauseUpdate = false;

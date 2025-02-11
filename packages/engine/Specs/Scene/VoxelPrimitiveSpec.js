@@ -70,7 +70,7 @@ describe(
       expect(spyUpdate.calls.count()).toEqual(1);
     });
 
-    it("initial tiles loaded and all tiles loaded events are raised and statistics are updates", async function () {
+    it("initial tiles loaded and all tiles loaded events are raised", async function () {
       const spyUpdate1 = jasmine.createSpy("listener");
       const spyUpdate2 = jasmine.createSpy("listener");
       const primitive = new VoxelPrimitive({ provider });
@@ -83,9 +83,54 @@ describe(
       });
       expect(spyUpdate1.calls.count()).toEqual(1);
       expect(spyUpdate2.calls.count()).toEqual(1);
+    });
+
+    it("statistics are updated when event listeners are assigned", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      primitive.allTilesLoaded.addEventListener(spyUpdate1);
+      primitive.initialTilesLoaded.addEventListener(spyUpdate2);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
       expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
       expect(primitive.statistics.visited).toEqual(1);
       expect(primitive.statistics.texturesByteLength).toEqual(134217728);
+    });
+
+    it("statistics are updated when constructor option is true", async function () {
+      const primitive = new VoxelPrimitive({
+        provider,
+        calculateStatistics: true,
+      });
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
+      expect(primitive.statistics.visited).toEqual(1);
+    });
+
+    it("statistics are not updated when constructor option is false", async function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
+      for (let i = 0; i < 10; i++) {
+        scene.renderForSpecs();
+      }
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(0);
+      expect(primitive.statistics.visited).toEqual(0);
     });
 
     it("tile load, load progress and tile visible events are raised", async function () {
