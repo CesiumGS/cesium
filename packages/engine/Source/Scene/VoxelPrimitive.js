@@ -98,6 +98,14 @@ function VoxelPrimitive(options) {
    * @type {Cartesian3}
    * @private
    */
+  this._dimensions = new Cartesian3();
+
+  /**
+   * This member is not created until the provider is ready.
+   *
+   * @type {Cartesian3}
+   * @private
+   */
   this._paddingBefore = new Cartesian3();
 
   /**
@@ -714,7 +722,33 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    */
   dimensions: {
     get: function () {
-      return this._provider.dimensions;
+      return this._dimensions;
+    },
+  },
+
+  /**
+   * Gets the padding before the voxel data.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {Cartesian3}
+   * @readonly
+   */
+  paddingBefore: {
+    get: function () {
+      return this._paddingBefore;
+    },
+  },
+
+  /**
+   * Gets the padding after the voxel data.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {Cartesian3}
+   * @readonly
+   */
+  paddingAfter: {
+    get: function () {
+      return this._paddingAfter;
     },
   },
 
@@ -1398,8 +1432,12 @@ function initFromProvider(primitive, provider, context) {
 
   // Set uniforms that come from the provider.
   // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
-  uniforms.dimensions = Cartesian3.clone(
+  primitive._dimensions = Cartesian3.clone(
     provider.dimensions,
+    primitive._dimensions,
+  );
+  uniforms.dimensions = Cartesian3.clone(
+    primitive._dimensions,
     uniforms.dimensions,
   );
   primitive._paddingBefore = Cartesian3.clone(
@@ -1412,7 +1450,7 @@ function initFromProvider(primitive, provider, context) {
   );
   primitive._paddingAfter = Cartesian3.clone(
     defaultValue(provider.paddingAfter, Cartesian3.ZERO),
-    primitive._paddingBefore,
+    primitive._paddingAfter,
   );
   uniforms.paddingAfter = Cartesian3.clone(
     primitive._paddingAfter,
@@ -1566,9 +1604,9 @@ function updateShapeAndTransforms(primitive, shape, provider) {
  * @private
  */
 function setupTraversal(primitive, provider, context) {
-  const dimensions = Cartesian3.clone(provider.dimensions, scratchDimensions);
-  Cartesian3.add(dimensions, primitive._paddingBefore, dimensions);
-  Cartesian3.add(dimensions, primitive._paddingAfter, dimensions);
+  const dimensions = Cartesian3.clone(primitive.dimensions, scratchDimensions);
+  Cartesian3.add(dimensions, primitive.paddingBefore, dimensions);
+  Cartesian3.add(dimensions, primitive.paddingAfter, dimensions);
 
   // It's ok for memory byte length to be undefined.
   // The system will choose a default memory size.
