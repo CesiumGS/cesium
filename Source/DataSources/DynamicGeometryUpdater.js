@@ -81,12 +81,12 @@ define([
 
         var primitives = this._primitives;
         var orderedGroundPrimitives = this._orderedGroundPrimitives;
-        if (onTerrain) {
+        if(orderedGroundPrimitives.contains(this._primitive)){
             orderedGroundPrimitives.remove(this._primitive);
-        } else {
+        } else if(primitives.contains(this._primitive)){
             primitives.removeAndDestroy(this._primitive);
             primitives.removeAndDestroy(this._outlinePrimitive);
-            this._outlinePrimitive = undefined;
+            this._outlinePrimitive = void 0;
         }
         this._primitive = undefined;
 
