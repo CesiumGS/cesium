@@ -43,51 +43,19 @@ function Megatexture(
     componentType = MetadataComponentType.FLOAT32;
   }
 
-  const supportsFloatingPointTexture = context.floatingPointTexture;
   if (
     componentType === MetadataComponentType.FLOAT32 &&
-    !supportsFloatingPointTexture
+    !context.floatingPointTexture
   ) {
     throw new RuntimeError("Floating point texture not supported");
   }
 
-  // TODO support more
-  let pixelType;
-  if (
-    componentType === MetadataComponentType.FLOAT32 ||
-    componentType === MetadataComponentType.FLOAT64
-  ) {
-    pixelType = PixelDatatype.FLOAT;
-  } else if (componentType === MetadataComponentType.UINT8) {
-    pixelType = PixelDatatype.UNSIGNED_BYTE;
-  }
-
-  let pixelFormat;
-  if (channelCount === 1) {
-    pixelFormat = context.webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE;
-  } else if (channelCount === 2) {
-    pixelFormat = context.webgl2 ? PixelFormat.RG : PixelFormat.LUMINANCE_ALPHA;
-  } else if (channelCount === 3) {
-    pixelFormat = PixelFormat.RGB;
-  } else if (channelCount === 4) {
-    pixelFormat = PixelFormat.RGBA;
-  }
-
-  const maximumTextureMemoryByteLength = 512 * 1024 * 1024;
-  const defaultTextureMemoryByteLength = 128 * 1024 * 1024;
-  textureMemoryByteLength = Math.min(
-    defaultValue(textureMemoryByteLength, defaultTextureMemoryByteLength),
-    maximumTextureMemoryByteLength,
-  );
-  const maximumTextureDimensionContext = ContextLimits.maximumTextureSize;
-  const componentTypeByteLength =
-    MetadataComponentType.getSizeInBytes(componentType);
-  const texelCount = Math.floor(
-    textureMemoryByteLength / (channelCount * componentTypeByteLength),
-  );
-  const textureDimension = Math.min(
-    maximumTextureDimensionContext,
-    CesiumMath.previousPowerOfTwo(Math.floor(Math.sqrt(texelCount))),
+  const pixelDataType = getPixelDataType(componentType);
+  const pixelFormat = getPixelFormat(channelCount, context.webgl2);
+  const textureDimension = getTextureDimension(
+    textureMemoryByteLength,
+    channelCount,
+    componentType,
   );
 
   const sliceCountPerRegionX = Math.ceil(Math.sqrt(dimensions.x));
@@ -191,7 +159,7 @@ function Megatexture(
   this.texture = new Texture({
     context: context,
     pixelFormat: pixelFormat,
-    pixelDatatype: pixelType,
+    pixelDatatype: pixelDataType,
     flipY: false,
     width: textureDimension,
     height: textureDimension,
@@ -248,6 +216,82 @@ function Megatexture(
    * @readonly
    */
   this.occupiedCount = 0;
+}
+
+/**
+ * Get the pixel data type to use in a megatexture.
+ * TODO support more
+ *
+ * @param {MetadataComponentType} componentType The component type of the metadata.
+ * @returns {PixelDatatype} The pixel datatype to use for a megatexture.
+ *
+ * @private
+ */
+function getPixelDataType(componentType) {
+  if (
+    componentType === MetadataComponentType.FLOAT32 ||
+    componentType === MetadataComponentType.FLOAT64
+  ) {
+    return PixelDatatype.FLOAT;
+  } else if (componentType === MetadataComponentType.UINT8) {
+    return PixelDatatype.UNSIGNED_BYTE;
+  }
+}
+
+/**
+ * Get the pixel format to use for a megatexture.
+ *
+ * @param {number} channelCount The number of channels in the metadata. Must be 1 to 4.
+ * @param {boolean} webgl2 true if the context is using webgl2
+ * @returns {PixelFormat} The pixel format to use for a megatexture.
+ *
+ * @private
+ */
+function getPixelFormat(channelCount, webgl2) {
+  if (channelCount === 1) {
+    return webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE;
+  } else if (channelCount === 2) {
+    return webgl2 ? PixelFormat.RG : PixelFormat.LUMINANCE_ALPHA;
+  } else if (channelCount === 3) {
+    return PixelFormat.RGB;
+  } else if (channelCount === 4) {
+    return PixelFormat.RGBA;
+  }
+}
+
+/**
+ * Compute the largest size of a square texture that will fit in the available memory.
+ *
+ * @param {number} textureMemoryByteLength An upper limit on the texture memory size.
+ * @param {number} channelCount The number of metadata channels per texel.
+ * @param {MetadataComponentType} componentType The component type of the metadata.
+ * @returns {number} The dimension of the square texture to use for the megatexture.
+ *
+ * @private
+ */
+function getTextureDimension(
+  textureMemoryByteLength,
+  channelCount,
+  componentType,
+) {
+  // Find how much memory is available for the texture
+  const maximumTextureMemoryByteLength = 512 * 1024 * 1024;
+  const defaultTextureMemoryByteLength = 128 * 1024 * 1024;
+  textureMemoryByteLength = Math.min(
+    defaultValue(textureMemoryByteLength, defaultTextureMemoryByteLength),
+    maximumTextureMemoryByteLength,
+  );
+  // Compute how many texels will fit in the available memory
+  const componentTypeByteLength =
+    MetadataComponentType.getSizeInBytes(componentType);
+  const texelCount = Math.floor(
+    textureMemoryByteLength / (channelCount * componentTypeByteLength),
+  );
+  // Return the largest power of two texture size that will fit in memory
+  return Math.min(
+    ContextLimits.maximumTextureSize,
+    CesiumMath.previousPowerOfTwo(Math.floor(Math.sqrt(texelCount))),
+  );
 }
 
 /**
