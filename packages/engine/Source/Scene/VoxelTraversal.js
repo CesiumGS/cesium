@@ -759,7 +759,6 @@ function postPassesUpdate(
 ) {
   const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
-  const primitive = that._primitive;
 
   const loadStateCount = Object.keys(KeyframeNode.LoadState).length;
   const loadStatesByKeyframe = new Array(loadStateCount);
@@ -807,9 +806,9 @@ function postPassesUpdate(
   }
   traverseRecursive(rootNode);
 
-  primitive.statistics.numberOfTilesWithContentReady =
+  that._primitive.statistics.numberOfTilesWithContentReady =
     loadStateByCount[KeyframeNode.LoadState.LOADED];
-  primitive.statistics.visited = nodeCountTotal;
+  that._primitive.statistics.visited = nodeCountTotal;
 
   const numberOfPendingRequests =
     loadStateByCount[KeyframeNode.LoadState.RECEIVING];
@@ -833,8 +832,8 @@ function postPassesUpdate(
     });
   }
 
-  primitive.statistics.numberOfPendingRequests = numberOfPendingRequests;
-  primitive.statistics.numberOfTilesProcessing = numberOfTilesProcessing;
+  that._primitive.statistics.numberOfPendingRequests = numberOfPendingRequests;
+  that._primitive.statistics.numberOfTilesProcessing = numberOfTilesProcessing;
 
   const tilesLoaded =
     numberOfPendingRequests === 0 && numberOfTilesProcessing === 0;
@@ -844,13 +843,13 @@ function postPassesUpdate(
   // model's readyEvent
   if (progressChanged && tilesLoaded) {
     frameState.afterRender.push(function () {
-      primitive.allTilesLoaded.raiseEvent();
+      that._primitive.allTilesLoaded.raiseEvent();
       return true;
     });
     if (!that._initialTilesLoaded) {
       that._initialTilesLoaded = true;
       frameState.afterRender.push(function () {
-        primitive.initialTilesLoaded.raiseEvent();
+        that._primitive.initialTilesLoaded.raiseEvent();
         return true;
       });
     }
