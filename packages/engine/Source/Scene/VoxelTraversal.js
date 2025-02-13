@@ -31,15 +31,15 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
  * @private
  */
 function VoxelTraversal(primitive, context, keyframeCount) {
-  const { provider, dimensions } = primitive;
+  const { provider, dimensions, paddingBefore, paddingAfter } = primitive;
   const { types, componentTypes } = provider;
 
   const inputDimensions = Cartesian3.add(
     dimensions,
-    primitive.paddingBefore,
+    paddingBefore,
     new Cartesian3(),
   );
-  Cartesian3.add(inputDimensions, primitive.paddingAfter, inputDimensions);
+  Cartesian3.add(inputDimensions, paddingAfter, inputDimensions);
 
   // It's ok for memory byte length to be undefined.
   // The system will choose a default memory size.
