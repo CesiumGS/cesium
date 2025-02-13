@@ -6,7 +6,6 @@ import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
@@ -51,6 +50,11 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
   // How many times cancelPendingRequests() has been called. This is
   // used to help short-circuit computations after a tile was canceled.
   this._cancelCount = 0;
+
+  // The number of contents that turned out to be external tilesets
+  // in createInnerContent. When all contents are external tilesets,
+  // then tile.hasRenderableContent will become `false`
+  this._externalTilesetCount = 0;
 
   const contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
@@ -505,6 +509,16 @@ async function createInnerContents(multipleContents) {
   const contents = await Promise.all(promises);
   multipleContents._contentsCreated = true;
   multipleContents._contents = contents.filter(defined);
+
+  // If each content is an external tileset, then the tile
+  // itself does not have any renderable content
+  if (
+    multipleContents._externalTilesetCount === multipleContents._contents.length
+  ) {
+    const tile = multipleContents._tile;
+    tile.hasRenderableContent = false;
+  }
+
   return contents;
 }
 
@@ -518,20 +532,19 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
   try {
     const preprocessed = preprocess3DTileContent(arrayBuffer);
 
+    const tileset = multipleContents._tileset;
+    const resource = multipleContents._innerContentResources[index];
+    const tile = multipleContents._tile;
+
     if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
-      throw new RuntimeError(
-        "External tilesets are disallowed inside multiple contents",
-      );
+      multipleContents._externalTilesetCount++;
+      tile.hasTilesetContent = true;
     }
 
     multipleContents._disableSkipLevelOfDetail =
       multipleContents._disableSkipLevelOfDetail ||
       preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
       preprocessed.contentType === Cesium3DTileContentType.VECTOR;
-
-    const tileset = multipleContents._tileset;
-    const resource = multipleContents._innerContentResources[index];
-    const tile = multipleContents._tile;
 
     let content;
     const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
