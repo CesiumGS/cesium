@@ -1096,7 +1096,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 });
 
-const scratchDimensions = new Cartesian3();
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
 const scratchScale = new Cartesian3();
@@ -1458,7 +1457,8 @@ function initFromProvider(primitive, provider, context) {
   );
 
   // Create the VoxelTraversal, and set related uniforms
-  primitive._traversal = setupTraversal(primitive, provider, context);
+  const keyframeCount = defaultValue(provider.keyframeCount, 1);
+  primitive._traversal = new VoxelTraversal(primitive, context, keyframeCount);
   setTraversalUniforms(primitive._traversal, uniforms);
 }
 
@@ -1593,44 +1593,6 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   );
 
   return true;
-}
-
-/**
- * Set up a VoxelTraversal based on dimensions and types from the primitive and provider
- * @param {VoxelPrimitive} primitive
- * @param {VoxelProvider} provider
- * @param {Context} context
- * @returns {VoxelTraversal}
- * @private
- */
-function setupTraversal(primitive, provider, context) {
-  const dimensions = Cartesian3.clone(primitive.dimensions, scratchDimensions);
-  Cartesian3.add(dimensions, primitive.paddingBefore, dimensions);
-  Cartesian3.add(dimensions, primitive.paddingAfter, dimensions);
-
-  // It's ok for memory byte length to be undefined.
-  // The system will choose a default memory size.
-  const maximumTileCount = provider.maximumTileCount;
-  const maximumTextureMemoryByteLength = defined(maximumTileCount)
-    ? VoxelTraversal.getApproximateTextureMemoryByteLength(
-        maximumTileCount,
-        dimensions,
-        provider.types,
-        provider.componentTypes,
-      )
-    : undefined;
-
-  const keyframeCount = defaultValue(provider.keyframeCount, 1);
-
-  return new VoxelTraversal(
-    primitive,
-    context,
-    dimensions,
-    provider.types,
-    provider.componentTypes,
-    keyframeCount,
-    maximumTextureMemoryByteLength,
-  );
 }
 
 /**

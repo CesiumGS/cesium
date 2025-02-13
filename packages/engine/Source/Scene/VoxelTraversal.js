@@ -1,4 +1,5 @@
 import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import CesiumMath from "../Core/Math.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defined from "../Core/defined.js";
@@ -25,23 +26,32 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
  *
  * @param {VoxelPrimitive} primitive
  * @param {Context} context
- * @param {Cartesian3} dimensions
- * @param {MetadataType[]} types
- * @param {MetadataComponentType[]} componentTypes
  * @param {number} keyframeCount
- * @param {number} [maximumTextureMemoryByteLength]
  *
  * @private
  */
-function VoxelTraversal(
-  primitive,
-  context,
-  dimensions,
-  types,
-  componentTypes,
-  keyframeCount,
-  maximumTextureMemoryByteLength,
-) {
+function VoxelTraversal(primitive, context, keyframeCount) {
+  const { provider, dimensions } = primitive;
+  const { types, componentTypes } = provider;
+
+  const inputDimensions = Cartesian3.add(
+    dimensions,
+    primitive.paddingBefore,
+    new Cartesian3(),
+  );
+  Cartesian3.add(inputDimensions, primitive.paddingAfter, inputDimensions);
+
+  // It's ok for memory byte length to be undefined.
+  // The system will choose a default memory size.
+  const maximumTextureMemoryByteLength = defined(provider.maximumTileCount)
+    ? getApproximateTextureMemoryByteLength(
+        provider.maximumTileCount,
+        inputDimensions,
+        types,
+        componentTypes,
+      )
+    : undefined;
+
   /**
    * @type {VoxelPrimitive}
    * @private
@@ -62,7 +72,7 @@ function VoxelTraversal(
 
     this.megatextures[i] = new Megatexture(
       context,
-      dimensions,
+      inputDimensions,
       componentCount,
       componentType,
       maximumTextureMemoryByteLength,
@@ -1187,8 +1197,9 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
  * @param {Cartesian3} dimensions
  * @param {MetadataType[]} types
  * @param {MetadataComponentType[]} componentTypes
+ * @private
  */
-VoxelTraversal.getApproximateTextureMemoryByteLength = function (
+function getApproximateTextureMemoryByteLength(
   tileCount,
   dimensions,
   types,
@@ -1212,6 +1223,6 @@ VoxelTraversal.getApproximateTextureMemoryByteLength = function (
   }
 
   return textureMemoryByteLength;
-};
+}
 
 export default VoxelTraversal;

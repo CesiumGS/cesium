@@ -25,7 +25,6 @@ describe(
   "Scene/VoxelTraversal",
   function () {
     const keyframeCount = 3;
-    const textureMemory = 500;
 
     let scene;
     let provider;
@@ -48,15 +47,7 @@ describe(
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      traversal = new VoxelTraversal(
-        primitive,
-        scene.context,
-        provider.dimensions,
-        provider.types,
-        provider.componentTypes,
-        keyframeCount,
-        textureMemory,
-      );
+      traversal = new VoxelTraversal(primitive, scene.context, keyframeCount);
     });
 
     afterEach(function () {
