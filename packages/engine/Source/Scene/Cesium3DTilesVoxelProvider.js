@@ -20,6 +20,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import VoxelBoxShape from "./VoxelBoxShape.js";
 import VoxelContent from "./VoxelContent.js";
 import VoxelCylinderShape from "./VoxelCylinderShape.js";
+import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 
 /**
@@ -108,6 +109,7 @@ function Cesium3DTilesVoxelProvider(options) {
   this._names = names;
   this._types = types;
   this._componentTypes = componentTypes;
+  this._metadataOrder = VoxelMetadataOrder.GLTF;
   this._minimumValues = minimumValues;
   this._maximumValues = maximumValues;
   this._maximumTileCount = maximumTileCount;
@@ -276,6 +278,19 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
   componentTypes: {
     get: function () {
       return this._componentTypes;
+    },
+  },
+
+  /**
+   * Gets the ordering of the metadata in the buffers.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {VoxelMetadataOrder}
+   * @readonly
+   */
+  metadataOrder: {
+    get: function () {
+      return this._metadataOrder;
     },
   },
 
