@@ -1245,6 +1245,7 @@ try {
 - Fixed an incorrect model matrix computation for `i3dm` tilesets that are loaded using `ModelExperimental`. [#10302](https://github.com/CesiumGS/cesium/pull/10302)
 - Fixed race condition during billboard clamping when the height reference changes. [#10191](https://github.com/CesiumGS/cesium/issues/10191)
 - Fixed ability to run `test` and other support tasks from within the release zip file. [#10311](https://github.com/CesiumGS/cesium/pull/10311)
+- Fixed `Expression` multi-variable substitution. [#12455](https://github.com/CesiumGS/cesium/issues/12455)
 
 ## 1.92 - 2022-04-01
 
