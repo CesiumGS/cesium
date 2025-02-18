@@ -47,6 +47,7 @@ import {
   PerInstanceColorAppearance,
   ColorGeometryInstanceAttribute,
   Resource,
+  HeightReference,
 } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -2943,6 +2944,37 @@ describe(
       scene.renderForSpecs();
 
       expect(mockTileset.updateHeight).toHaveBeenCalled();
+    });
+
+    it("adds nested primitive collection to scene", function () {
+      const expectedHeight = 100;
+
+      const mockTileset = new TilesetMockPrimitive();
+      mockTileset.enableCollision = true;
+      mockTileset.getHeight = function () {
+        return expectedHeight;
+      };
+      mockTileset.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+      const mockTileset2 = new TilesetMockPrimitive();
+      mockTileset2.enableCollision = true;
+      mockTileset2.getHeight = function () {
+        return 80;
+      };
+      mockTileset2.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+      const nestedCollection = new PrimitiveCollection();
+      nestedCollection.add(mockTileset);
+      nestedCollection.add(mockTileset2);
+
+      scene.primitives.add(nestedCollection);
+
+      const actualHeight = scene.getHeight(
+        scene.camera.positionCartographic,
+        HeightReference.CLAMP_TO_GROUND,
+      );
+
+      expect(actualHeight).toEqual(expectedHeight);
     });
   },
 
