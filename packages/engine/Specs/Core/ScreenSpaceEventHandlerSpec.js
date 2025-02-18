@@ -542,6 +542,13 @@ describe("Core/ScreenSpaceEventHandler", function () {
       const action = createCloningSpy("action");
       handler.setInputAction(action, eventType, modifier);
 
+      spyOn(element, "getBoundingClientRect").and.returnValue({
+        left: 0,
+        right: 100,
+        top: 0,
+        bottom: 100,
+      });
+
       expect(handler.getInputAction(eventType, modifier)).toEqual(action);
 
       function simulateInput() {
@@ -595,6 +602,56 @@ describe("Core/ScreenSpaceEventHandler", function () {
     const possibleEventTypes = [ScreenSpaceEventType.MOUSE_MOVE];
     createAllMouseSpecCombinations(
       testMouseMoveEvent,
+      possibleButtons,
+      possibleModifiers,
+      possibleEventTypes,
+    );
+  });
+
+  describe("handles out of bounds mouse move", function () {
+    function testOutOfBoundsMouseMoveEvent(eventType, modifier, eventOptions) {
+      const action = createCloningSpy("action");
+      handler.setInputAction(action, eventType, modifier);
+
+      expect(handler.getInputAction(eventType, modifier)).toEqual(action);
+
+      function simulateInput() {
+        simulateMouseMove(
+          element,
+          combine(
+            {
+              clientX: 1,
+              clientY: 2,
+            },
+            eventOptions,
+          ),
+        );
+      }
+
+      simulateInput();
+
+      expect(action.calls.count()).toEqual(0);
+
+      // should not be fired after removal
+      action.calls.reset();
+
+      handler.removeInputAction(eventType, modifier);
+
+      simulateInput();
+
+      expect(action).not.toHaveBeenCalled();
+    }
+
+    const possibleButtons = [undefined];
+    const possibleModifiers = [
+      undefined,
+      KeyboardEventModifier.SHIFT,
+      KeyboardEventModifier.CTRL,
+      KeyboardEventModifier.ALT,
+    ];
+    const possibleEventTypes = [ScreenSpaceEventType.MOUSE_MOVE];
+    createAllMouseSpecCombinations(
+      testOutOfBoundsMouseMoveEvent,
       possibleButtons,
       possibleModifiers,
       possibleEventTypes,
