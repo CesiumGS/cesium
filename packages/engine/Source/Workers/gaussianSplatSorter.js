@@ -1,11 +1,7 @@
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 
-import {
-  initSync,
-  radix_sort_gaussians_attrs,
-  radix_sort_gaussians_indexes,
-} from "@cesium/wasm-splats";
+import { initSync, radix_sort_gaussians_indexes } from "@cesium/wasm-splats";
 
 //load built wasm modules for sorting. Ensure we can load webassembly and we support SIMD.
 async function initWorker(parameters, transferableObjects) {
@@ -17,8 +13,6 @@ async function initWorker(parameters, transferableObjects) {
   }
 }
 
-const TEXTURE_WIDTH = 2048;
-
 function generateGaussianSortWorker(parameters, transferableObjects) {
   // Handle initialization
   const wasmConfig = parameters.webAssemblyConfig;
@@ -28,27 +22,20 @@ function generateGaussianSortWorker(parameters, transferableObjects) {
 
   const { primitive, sortType } = parameters;
 
-  if (sortType === "Attribute") {
-    return radix_sort_gaussians_attrs(
-      primitive.attributes,
+  if (sortType === "Index") {
+    return radix_sort_gaussians_indexes(
+      primitive.positions,
       primitive.modelView,
       primitive.count,
     );
-  } else if (sortType === "Index") {
+  } /* else if (sortType === "SIMD Index") {
     return radix_sort_gaussians_indexes(
       primitive.positions,
       primitive.modelView,
       TEXTURE_WIDTH,
       primitive.count,
     );
-  } else if (sortType === "SIMD Index") {
-    return radix_sort_gaussians_indexes(
-      primitive.positions,
-      primitive.modelView,
-      TEXTURE_WIDTH,
-      primitive.count,
-    );
-  }
+  }*/
 }
 
 export default createTaskProcessorWorker(generateGaussianSortWorker);
