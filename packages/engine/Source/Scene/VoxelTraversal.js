@@ -16,6 +16,7 @@ import SpatialNode from "./SpatialNode.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
+import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * Handles tileset traversal, tile requests, and GPU resources. Intended to be
@@ -32,7 +33,7 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
  */
 function VoxelTraversal(primitive, context, keyframeCount) {
   const { provider, dimensions, paddingBefore, paddingAfter } = primitive;
-  const { types, componentTypes } = provider;
+  const { types, componentTypes, metadataOrder } = provider;
 
   const inputDimensions = Cartesian3.add(
     dimensions,
@@ -40,6 +41,12 @@ function VoxelTraversal(primitive, context, keyframeCount) {
     new Cartesian3(),
   );
   Cartesian3.add(inputDimensions, paddingAfter, inputDimensions);
+
+  if (metadataOrder === VoxelMetadataOrder.GLTF) {
+    const inputDimensionsY = inputDimensions.y;
+    inputDimensions.y = inputDimensions.z;
+    inputDimensions.z = inputDimensionsY;
+  }
 
   // It's ok for memory byte length to be undefined.
   // The system will choose a default memory size.

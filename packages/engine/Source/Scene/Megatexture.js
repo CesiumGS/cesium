@@ -16,7 +16,6 @@ import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * @alias Megatexture
@@ -322,10 +321,9 @@ function MegatextureNode(index) {
 /**
  * Add an array of tile metadata to the megatexture.
  * @param {Array} data The data to be added.
- * @param {VoxelMetadataOrder} [order=VoxelMetadataOrder.XYZ] The ordering of the data in the array.
  * @returns {number} The index of the tile's location in the megatexture.
  */
-Megatexture.prototype.add = function (data, order) {
+Megatexture.prototype.add = function (data) {
   if (this.isFull()) {
     throw new DeveloperError("Trying to add when there are no empty spots");
   }
@@ -345,7 +343,7 @@ Megatexture.prototype.add = function (data, order) {
   this.occupiedList = node;
 
   const index = node.index;
-  this.writeDataToTexture(index, data, order);
+  this.writeDataToTexture(index, data);
 
   this.occupiedCount++;
   return index;
@@ -440,9 +438,8 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
  * Write an array of tile metadata to the megatexture.
  * @param {number} index The index of the tile's location in the megatexture.
  * @param {Float32Array|Uint16Array|Uint8Array} data The data to be written.
- * @param {VoxelMetadataOrder} [order=VoxelMetadataOrder.XYZ] The ordering of the data in the array
  */
-Megatexture.prototype.writeDataToTexture = function (index, data, order) {
+Megatexture.prototype.writeDataToTexture = function (index, data) {
   // Unsigned short textures not allowed in webgl 1, so treat as float
   const tileData =
     data.constructor === Uint16Array ? new Float32Array(data) : data;
@@ -461,7 +458,7 @@ Megatexture.prototype.writeDataToTexture = function (index, data, order) {
     const sliceVoxelOffsetY =
       Math.floor(z / sliceCountPerRegion.x) * voxelCountPerTile.y;
     for (let y = 0; y < voxelCountPerTile.y; y++) {
-      const readOffset = getReadOffset(order, voxelCountPerTile, y, z);
+      const readOffset = getReadOffset(voxelCountPerTile, y, z);
       const writeOffset =
         (sliceVoxelOffsetY + y) * voxelCountPerRegion.x + sliceVoxelOffsetX;
       for (let x = 0; x < voxelCountPerTile.x; x++) {
@@ -498,23 +495,16 @@ Megatexture.prototype.writeDataToTexture = function (index, data, order) {
 /**
  * Get the offset into the data array for a given row of contiguous voxel data.
  *
- * @param {VoxelMetadataOrder} order
  * @param {Cartesian3} dimensions The number of voxels in each dimension of the tile.
  * @param {number} y The y index of the voxel row
  * @param {number} z The z index of the voxel row
  * @returns {number} The offset into the data array
  * @private
  */
-function getReadOffset(order, dimensions, y, z) {
-  if (order !== VoxelMetadataOrder.GLTF) {
-    const voxelsPerInputSlice = dimensions.y * dimensions.x;
-    const sliceIndex = z;
-    const rowIndex = y;
-    return sliceIndex * voxelsPerInputSlice + rowIndex * dimensions.x;
-  }
-  const voxelsPerInputSlice = dimensions.z * dimensions.x;
-  const sliceIndex = y;
-  const rowIndex = dimensions.z - 1 - z;
+function getReadOffset(dimensions, y, z) {
+  const voxelsPerInputSlice = dimensions.y * dimensions.x;
+  const sliceIndex = z;
+  const rowIndex = y;
   return sliceIndex * voxelsPerInputSlice + rowIndex * dimensions.x;
 }
 

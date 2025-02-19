@@ -6,7 +6,6 @@ import defined from "../Core/defined.js";
 import GltfLoader from "./GltfLoader.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
-import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * <div class="notice">
@@ -20,7 +19,6 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @privateParam {object} options An object with the following properties:
  * @privateParam {ResourceLoader} [options.loader] The loader used to load the voxel content.
  * @privateParam {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]} [options.metadata] The metadata for this voxel content.
- * @privateParam {VoxelMetadataOrder} [options.order=VoxelMetadataOrder.XYZ] The order of the metadata.
  *
  * @exception {DeveloperError} One of loader and metadata must be defined.
  * @exception {DeveloperError} metadata must be an array of TypedArrays.
@@ -40,11 +38,10 @@ function VoxelContent(options) {
   }
   //>>includeEnd('debug');
 
-  const { loader, metadata, order = VoxelMetadataOrder.XYZ } = options;
+  const { loader, metadata } = options;
 
   this._loader = loader;
   this._metadata = metadata;
-  this._order = order;
   this._resourcesLoaded = false;
   this._ready = false;
 }
@@ -77,17 +74,6 @@ Object.defineProperties(VoxelContent.prototype, {
       return this._metadata;
     },
   },
-
-  /**
-   * The order of the metadata.
-   * @type {VoxelMetadataOrder}
-   * @readonly
-   */
-  order: {
-    get: function () {
-      return this._order;
-    },
-  },
 });
 
 /**
@@ -104,10 +90,7 @@ VoxelContent.fromMetadataArray = function (metadata) {
   }
   //>>includeEnd('debug');
 
-  return new VoxelContent({
-    metadata,
-    order: VoxelMetadataOrder.XYZ,
-  });
+  return new VoxelContent({ metadata });
 };
 
 /**
@@ -140,10 +123,7 @@ VoxelContent.fromGltf = async function (resource) {
     throw error;
   }
 
-  return new VoxelContent({
-    loader: loader,
-    order: VoxelMetadataOrder.GLTF,
-  });
+  return new VoxelContent({ loader });
 };
 
 /**

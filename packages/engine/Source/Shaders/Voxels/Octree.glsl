@@ -13,6 +13,11 @@ uniform sampler2D u_octreeLeafNodeTexture;
 uniform vec2 u_octreeLeafNodeTexelSizeUv;
 uniform int u_octreeLeafNodeTilesPerRow;
 #endif
+uniform ivec3 u_dimensions; // does not include padding
+#if defined(PADDING)
+    uniform ivec3 u_paddingBefore;
+    uniform ivec3 u_paddingAfter;
+#endif
 
 struct OctreeNodeData {
     int data;
@@ -28,6 +33,7 @@ struct SampleData {
     int megatextureIndex;
     ivec4 tileCoords;
     vec3 tileUv;
+    vec3 inputCoordinate;
     #if (SAMPLE_COUNT > 1)
         float weight;
     #endif
@@ -86,6 +92,27 @@ vec3 getTileUv(in vec3 shapePosition, in ivec4 octreeCoords) {
 vec3 getClampedTileUv(in vec3 shapePosition, in ivec4 octreeCoords) {
     vec3 tileUv = getTileUv(shapePosition, octreeCoords);
     return clamp(tileUv, vec3(0.0), vec3(1.0));
+}
+
+void addSampleCoordinates(in vec3 shapePosition, inout SampleData sampleData) {
+    vec3 tileUv = getClampedTileUv(shapePosition, sampleData.tileCoords);
+
+    vec3 inputCoordinate = tileUv * vec3(u_dimensions);
+#if defined(PADDING)
+    inputCoordinate += vec3(u_paddingBefore);
+#endif
+#if defined(GLTF_METADATA_ORDER)
+    ivec3 paddedDimensions = u_dimensions;
+#if defined(PADDING)
+    paddedDimensions += u_paddingBefore + u_paddingAfter;
+#endif
+    float inputY = inputCoordinate.y;
+    inputCoordinate.y = float(paddedDimensions.z) - inputCoordinate.z;
+    inputCoordinate.z = inputY;
+#endif
+
+    sampleData.tileUv = tileUv;
+    sampleData.inputCoordinate = inputCoordinate;
 }
 
 void getOctreeLeafSampleData(in OctreeNodeData data, in ivec4 octreeCoords, out SampleData sampleData) {
@@ -172,11 +199,11 @@ void traverseOctreeFromBeginning(in vec3 shapePosition, out TraversalData traver
 
     #if (SAMPLE_COUNT == 1)
         getOctreeLeafSampleData(nodeData, traversalData.octreeCoords, sampleDatas[0]);
-        sampleDatas[0].tileUv = getClampedTileUv(shapePosition, sampleDatas[0].tileCoords);
+        addSampleCoordinates(shapePosition, sampleDatas[0]);
     #else
         getOctreeLeafSampleDatas(nodeData, traversalData.octreeCoords, sampleDatas);
-        sampleDatas[0].tileUv = getClampedTileUv(shapePosition, sampleDatas[0].tileCoords);
-        sampleDatas[1].tileUv = getClampedTileUv(shapePosition, sampleDatas[1].tileCoords);
+        addSampleCoordinates(shapePosition, sampleDatas[0]);
+        addSampleCoordinates(shapePosition, sampleDatas[1]);
     #endif
 }
 
@@ -194,7 +221,7 @@ bool insideTile(in vec3 shapePosition, in ivec4 octreeCoords) {
 void traverseOctreeFromExisting(in vec3 shapePosition, inout TraversalData traversalData, inout SampleData sampleDatas[SAMPLE_COUNT]) {
     if (insideTile(shapePosition, traversalData.octreeCoords)) {
         for (int i = 0; i < SAMPLE_COUNT; i++) {
-            sampleDatas[0].tileUv = getClampedTileUv(shapePosition, sampleDatas[0].tileCoords);
+            addSampleCoordinates(shapePosition, sampleDatas[i]);
         }
         return;
     }
@@ -216,10 +243,10 @@ void traverseOctreeFromExisting(in vec3 shapePosition, inout TraversalData trave
 
     #if (SAMPLE_COUNT == 1)
         getOctreeLeafSampleData(nodeData, traversalData.octreeCoords, sampleDatas[0]);
-        sampleDatas[0].tileUv = getClampedTileUv(shapePosition, sampleDatas[0].tileCoords);
+        addSampleCoordinates(shapePosition, sampleDatas[0]);
     #else
         getOctreeLeafSampleDatas(nodeData, traversalData.octreeCoords, sampleDatas);
-        sampleDatas[0].tileUv = getClampedTileUv(shapePosition, sampleDatas[0].tileCoords);
-        sampleDatas[1].tileUv = getClampedTileUv(shapePosition, sampleDatas[1].tileCoords);
+        addSampleCoordinates(shapePosition, sampleDatas[0]);
+        addSampleCoordinates(shapePosition, sampleDatas[1]);
     #endif
 }

@@ -19,6 +19,7 @@ import convertUvToCylinder from "../Shaders/Voxels/convertUvToCylinder.js";
 import convertUvToEllipsoid from "../Shaders/Voxels/convertUvToEllipsoid.js";
 import Octree from "../Shaders/Voxels/Octree.js";
 import Megatexture from "../Shaders/Voxels/Megatexture.js";
+import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * Set up render resources, including basic shader code, for rendering
@@ -85,6 +86,14 @@ function VoxelRenderResources(primitive) {
 
   // Build shader
   shaderBuilder.addVertexLines([VoxelVS]);
+
+  if (primitive.provider.metadataOrder === VoxelMetadataOrder.GLTF) {
+    shaderBuilder.addDefine(
+      "GLTF_METADATA_ORDER",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  }
 
   shaderBuilder.addFragmentLines([
     customShader.fragmentShaderText,

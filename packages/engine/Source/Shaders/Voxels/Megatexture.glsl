@@ -12,12 +12,6 @@ uniform vec2 u_megatextureVoxelSizeUv;
 uniform vec2 u_megatextureSliceSizeUv;
 uniform vec2 u_megatextureTileSizeUv;
 
-uniform ivec3 u_dimensions; // does not include padding
-#if defined(PADDING)
-    uniform ivec3 u_paddingBefore;
-    uniform ivec3 u_paddingAfter;
-#endif
-
 // Integer min, max, clamp: For WebGL1 only
 int intMin(int a, int b) {
     return a <= b ? a : b;
@@ -72,12 +66,17 @@ vec2 index1DTo2DTexcoord(int index, ivec2 dimensions, vec2 uvScale)
 
 Properties getPropertiesFromMegatexture(in SampleData sampleData) {
     int tileIndex = sampleData.megatextureIndex;
-    vec3 voxelCoord = sampleData.tileUv * vec3(u_dimensions);
-    ivec3 voxelDimensions = u_dimensions;
 
+    vec3 voxelCoord = sampleData.inputCoordinate;
+
+    ivec3 voxelDimensions = u_dimensions;
     #if defined(PADDING)
         voxelDimensions += u_paddingBefore + u_paddingAfter;
-        voxelCoord += vec3(u_paddingBefore);
+    #endif
+    #if defined(GLTF_METADATA_ORDER)
+        int voxelDimensionsZ = voxelDimensions.z;
+        voxelDimensions.z = voxelDimensions.y;
+        voxelDimensions.y = voxelDimensionsZ;
     #endif
 
     #if defined(NEAREST_SAMPLING)
@@ -88,7 +87,7 @@ Properties getPropertiesFromMegatexture(in SampleData sampleData) {
     // Tile location
     vec2 tileUvOffset = index1DTo2DTexcoord(tileIndex, u_megatextureTileDimensions, u_megatextureTileSizeUv);
 
-    // Slice location
+    // Slice location. TODO: why the -0.5? Assumes nearest sampling? Won't this have rounding error?
     float slice = voxelCoord.z - 0.5;
     int sliceIndex = int(floor(slice));
     int sliceIndex0 = intClamp(sliceIndex, 0, voxelDimensions.z - 1);
