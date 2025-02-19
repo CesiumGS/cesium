@@ -23,7 +23,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
  * @property {boolean} [skipColorSpaceConversion=false] If true, color space conversions will be skipped when reading the texel values.
- * @property {Sampler} [sampler] Information about how to sample the cubemap texture.
+ * @property {Sampler} [sampler] Information about how to sample the texture.
  * @property {number} [width] The pixel width of the texture. If not supplied, must be available from the source.
  * @property {number} [height] The pixel height of the texture. If not supplied, must be available from the source.
  * @property {boolean} [preMultiplyAlpha] If true, the alpha channel will be multiplied into the other channels.
