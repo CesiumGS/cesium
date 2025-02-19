@@ -1969,6 +1969,14 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       loader._generateGaussianSplatTexture;
   }
 
+  if (loader.gltfJson.extensionsUsed.includes("EXT_spz_compression")) {
+    needsPostProcessing = true;
+    primitivePlan.needsSpzDecompression = true;
+    primitivePlan.needsGaussianSplats = true;
+    primitivePlan.generateGaussianSplatTexture =
+      loader._generateGaussianSplatTexture;
+  }
+
   const loadForClassification = loader._loadForClassification;
   const draco = extensions.KHR_draco_mesh_compression;
 

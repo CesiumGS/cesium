@@ -10,6 +10,8 @@ import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 
+import { loadSpz } from "@spz-loader/core";
+
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -196,6 +198,9 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
 
   //handle splat post-processing for point primitives
   if (this.needsGaussianSplats) {
+    if (this.needsSpzDecompression) {
+      decompressSpz(this, context);
+    }
     this.primitive.isGaussianSplatPrimitive = true;
     setupGaussianSplatBuffers(this, context);
     if (this.generateGaussianSplatTexture) {
@@ -255,6 +260,32 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   attribute.count = outlineCoordinatesTypedArray.length / 3;
 
   return attribute;
+}
+
+function decompressSpz(loadPlan, context) {
+  let _spz;
+  //there should be only one
+  for (let i = 0; i < loadPlan.attributePlans.length; i++) {
+    const attr = loadPlan.attributePlans[i].attribute;
+    if (attr.name === "_SPZ") {
+      _spz = attr;
+    }
+  }
+
+  let _gs;
+  // No await version
+  loadSpz(_spz.typedArray)
+    .then((gs) => {
+      _gs = gs;
+      // MUST handle all dependent code here
+      console.log(_gs.numPoints);
+      // ... rest of your code that needs _gs
+    })
+    .catch((error) => {
+      console.error(`Failed to load SPZ: ${error}`);
+    });
+
+  console.log(`${_gs}`);
 }
 
 /**
