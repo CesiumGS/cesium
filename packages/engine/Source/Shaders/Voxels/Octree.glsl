@@ -13,10 +13,10 @@ uniform sampler2D u_octreeLeafNodeTexture;
 uniform vec2 u_octreeLeafNodeTexelSizeUv;
 uniform int u_octreeLeafNodeTilesPerRow;
 #endif
-uniform ivec3 u_dimensions; // does not include padding
+uniform ivec3 u_dimensions; // does not include padding, and is in the z-up orientation
+uniform ivec3 u_inputDimensions; // includes padding, and is in the orientation of the input data
 #if defined(PADDING)
     uniform ivec3 u_paddingBefore;
-    uniform ivec3 u_paddingAfter;
 #endif
 
 struct OctreeNodeData {
@@ -102,12 +102,8 @@ void addSampleCoordinates(in vec3 shapePosition, inout SampleData sampleData) {
     inputCoordinate += vec3(u_paddingBefore);
 #endif
 #if defined(GLTF_METADATA_ORDER)
-    ivec3 paddedDimensions = u_dimensions;
-#if defined(PADDING)
-    paddedDimensions += u_paddingBefore + u_paddingAfter;
-#endif
     float inputY = inputCoordinate.y;
-    inputCoordinate.y = float(paddedDimensions.z) - inputCoordinate.z;
+    inputCoordinate.y = float(u_inputDimensions.y) - inputCoordinate.z;
     inputCoordinate.z = inputY;
 #endif
 

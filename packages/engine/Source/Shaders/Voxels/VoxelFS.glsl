@@ -101,25 +101,14 @@ vec2 packFloatToVec2(float value) {
 }
 
 int getSampleIndex(in SampleData sampleData) {
-    // TODO: construct inputDimensions as a uniform
-    ivec3 voxelDimensions = u_dimensions;
-#if defined(PADDING)
-    voxelDimensions += u_paddingBefore + u_paddingAfter;
-#endif
-#if defined(GLTF_METADATA_ORDER)
-    int voxelDimensionsZ = voxelDimensions.z;
-    voxelDimensions.z = voxelDimensions.y;
-    voxelDimensions.y = voxelDimensionsZ;
-#endif
-    vec3 inputCoordinate = sampleData.inputCoordinate;
-    // tileUv = 1.0 is a valid coordinate but sampleIndex = voxelDimensions is not.
-    // (tileUv = 1.0 corresponds to the last sample, at index = voxelDimensions - 1).
+    // tileUv = 1.0 is a valid coordinate but sampleIndex = u_inputDimensions is not.
+    // (tileUv = 1.0 corresponds to the far edge of the last sample, at index = u_inputDimensions - 1).
     // Clamp to [0, voxelDimensions - 0.5) to avoid numerical error before flooring
-    vec3 maxCoordinate = vec3(voxelDimensions) - vec3(0.5);
-    inputCoordinate = clamp(inputCoordinate, vec3(0.0), maxCoordinate);
+    vec3 maxCoordinate = vec3(u_inputDimensions) - vec3(0.5);
+    vec3 inputCoordinate = clamp(sampleData.inputCoordinate, vec3(0.0), maxCoordinate);
     ivec3 sampleIndex = ivec3(floor(inputCoordinate));
     // Convert to a 1D index for lookup in a 1D data array
-    return sampleIndex.x + voxelDimensions.x * (sampleIndex.y + voxelDimensions.y * sampleIndex.z);
+    return sampleIndex.x + u_inputDimensions.x * (sampleIndex.y + u_inputDimensions.y * sampleIndex.z);
 }
 
 void main()

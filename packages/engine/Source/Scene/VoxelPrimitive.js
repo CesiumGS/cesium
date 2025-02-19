@@ -27,6 +27,7 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import VoxelContent from "./VoxelContent.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 import VoxelTraversal from "./VoxelTraversal.js";
+import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * A primitive that renders voxel data from a {@link VoxelProvider}.
@@ -99,6 +100,14 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._dimensions = new Cartesian3();
+
+  /**
+   * This member is not created until the provider is ready.
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._inputDimensions = new Cartesian3();
 
   /**
    * This member is not created until the provider is ready.
@@ -427,6 +436,7 @@ function VoxelPrimitive(options) {
     megatextureSliceSizeUv: new Cartesian2(),
     megatextureTileSizeUv: new Cartesian2(),
     dimensions: new Cartesian3(),
+    inputDimensions: new Cartesian3(),
     paddingBefore: new Cartesian3(),
     paddingAfter: new Cartesian3(),
     transformPositionViewToUv: new Matrix4(),
@@ -714,7 +724,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets the voxel dimensions.
+   * Gets the dimensions of each voxel tile, in z-up orientation.
+   * Does not include padding.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -723,6 +734,16 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   dimensions: {
     get: function () {
       return this._dimensions;
+    },
+  },
+
+  /**
+   * Gets the dimensions of one tile of the input voxel data, in the input orientation.
+   * Includes padding.
+   */
+  inputDimensions: {
+    get: function () {
+      return this._inputDimensions;
     },
   },
 
@@ -1454,6 +1475,25 @@ function initFromProvider(primitive, provider, context) {
   uniforms.paddingAfter = Cartesian3.clone(
     primitive._paddingAfter,
     uniforms.paddingAfter,
+  );
+  primitive._inputDimensions = Cartesian3.add(
+    primitive._dimensions,
+    primitive._paddingBefore,
+    primitive._inputDimensions,
+  );
+  primitive._inputDimensions = Cartesian3.add(
+    primitive._inputDimensions,
+    primitive._paddingAfter,
+    primitive._inputDimensions,
+  );
+  if (provider.metadataOrder === VoxelMetadataOrder.GLTF) {
+    const inputDimensionsY = primitive._inputDimensions.y;
+    primitive._inputDimensions.y = primitive._inputDimensions.z;
+    primitive._inputDimensions.z = inputDimensionsY;
+  }
+  uniforms.inputDimensions = Cartesian3.clone(
+    primitive._inputDimensions,
+    uniforms.inputDimensions,
   );
 
   // Create the VoxelTraversal, and set related uniforms
