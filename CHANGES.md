@@ -8,6 +8,7 @@
 
 - Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
 - Fixed error when there are duplicated points in polygon/polyline geometries with `ArcType.RHUMB` [#12460](https://github.com/CesiumGS/cesium/pull/12460)
+- Fixed camera zooming in 3D orthographic mode when pixelRatio is not 1 [#12487](https://github.com/CesiumGS/cesium/pull/12487)
 
 ## 1.126 - 2025-02-03
 
