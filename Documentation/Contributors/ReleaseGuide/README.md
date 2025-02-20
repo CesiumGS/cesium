@@ -8,6 +8,7 @@ There is no release manager; instead, our community shares the responsibility. A
 
 1. Check for any outdated dependencies with `npm outdated`.
 2. If one or more dependencies are outdated, checkout a new branch and run `npm install <packagename>@latest` for each package to increment the version.
+   - If `prettier` needs updated you _should_ still update it but keep the version pinned. If you run `npm install prettier@latest` you must remove the `^` in `package.json`. If the number of changes when running `npm run prettier` is large it may be worth opening a separate PR for only those.
 3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatible, open an issue. Check the [`dependencies` label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue+is%3Aopen+label%3Adependencies) for any open issues pinning versions.
 4. Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release). If there are any outstanding items, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be addressed before we can release.
 5. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
