@@ -53,7 +53,7 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
 
   this._ready = false;
 
-  initialize(this, arrayBuffer, byteOffset, tileset.scene);
+  initialize(this, arrayBuffer, byteOffset);
 }
 
 Object.defineProperties(Vector3DTileContent.prototype, {
@@ -288,7 +288,7 @@ function createClampedPolylines(options) {
   return new Vector3DTileClampedPolylines(options);
 }
 
-function initialize(content, arrayBuffer, byteOffset, scene) {
+function initialize(content, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
 
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -629,7 +629,7 @@ function initialize(content, arrayBuffer, byteOffset, scene) {
       rectangle: rectangle,
       batchTable: batchTable,
       heightReference: tileset.heightReference,
-      scene: scene,
+      scene: tileset.scene,
     });
   }
 }
