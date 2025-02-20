@@ -9,14 +9,25 @@ function pollWhilePromise(promise, f, options) {
   return new Promise(function (resolve, reject) {
     const startTimestamp = getTimestamp();
     const endTimestamp = startTimestamp + timeout;
+    let resolvedOrRejected = false;
 
-    promise.then(resolve).catch(reject);
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => {
+        resolvedOrRejected = true;
+      });
 
     function poller() {
+      if (resolvedOrRejected) {
+        return;
+      }
+
       try {
         f();
       } catch (e) {
         reject(e);
+        resolvedOrRejected = true;
         return;
       }
 
@@ -24,9 +35,11 @@ function pollWhilePromise(promise, f, options) {
         reject(
           new Error(`Timeout - function did not complete within ${timeout}ms`),
         );
-      } else {
-        setTimeout(poller, pollInterval);
+        resolvedOrRejected = true;
+        return;
       }
+
+      setTimeout(poller, pollInterval);
     }
 
     poller();

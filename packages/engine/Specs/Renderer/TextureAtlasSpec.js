@@ -512,7 +512,7 @@ describe("Scene/TextureAtlas", function () {
 
         const promiseB = atlas.addImage("Another image", greenImage);
 
-        await pollWhilePromise(promiseA, () => {
+        await pollWhilePromise(promiseB, () => {
           atlas.update(scene.frameState.context);
         });
 
@@ -988,9 +988,12 @@ describe("Scene/TextureAtlas", function () {
 
         expect(atlas.numberOfImages).toEqual(5);
 
-        await pollWhilePromise(promise, () => {
-          atlas.update(scene.frameState.context);
-        });
+        await pollWhilePromise(
+          Promise.all([promise, promiseA, promiseB, promiseC, promiseD]),
+          () => {
+            atlas.update(scene.frameState.context);
+          },
+        );
 
         const index = await promise;
         const indexA = await promiseA;
@@ -1070,6 +1073,143 @@ describe("Scene/TextureAtlas", function () {
         ).contextToRender([255, 0, 0, 255]);
       });
 
+      it("caches subregions of the same image and equivalent bounds", async function () {
+        atlas = new TextureAtlas({
+          borderWidthInPixels: 0,
+        });
+
+        const redPromise = atlas.addImage(bigRedGuid, bigRedImage);
+
+        const promiseA = atlas.addImageSubRegion(
+          bigRedGuid,
+          new BoundingRectangle(0, 0, 4, 4),
+        );
+        const promiseB = atlas.addImageSubRegion(
+          bigRedGuid,
+          new BoundingRectangle(0, 4, 4, 4),
+        );
+        const promiseC = atlas.addImageSubRegion(
+          bigRedGuid,
+          new BoundingRectangle(0, 4, 4, 4),
+        );
+
+        await pollWhilePromise(
+          Promise.all([redPromise, promiseA, promiseB, promiseC]),
+          () => {
+            atlas.update(scene.frameState.context);
+          },
+        );
+
+        const redIndex = await redPromise;
+        expect(atlas.getImageIndex(bigRedGuid)).toEqual(redIndex);
+
+        const bluePromise = atlas.addImage(bigBlueGuid, bigBlueImage);
+
+        const promiseD = atlas.addImageSubRegion(
+          bigBlueGuid,
+          new BoundingRectangle(0, 0, 4, 4),
+        );
+        const promiseE = atlas.addImageSubRegion(
+          bigBlueGuid,
+          new BoundingRectangle(0, 4, 4, 4),
+        );
+        const promiseF = atlas.addImageSubRegion(
+          bigBlueGuid,
+          new BoundingRectangle(0, 4, 4, 4),
+        );
+
+        await pollWhilePromise(
+          Promise.all([bluePromise, promiseD, promiseE, promiseF]),
+          () => {
+            atlas.update(scene.frameState.context);
+          },
+        );
+
+        const blueIndex = await bluePromise;
+        expect(atlas.getImageIndex(bigBlueGuid)).toEqual(blueIndex);
+
+        expect(atlas.numberOfImages).toEqual(6);
+
+        const indexA = await promiseA;
+        const indexB = await promiseB;
+        const indexC = await promiseC;
+        const indexD = await promiseD;
+        const indexE = await promiseE;
+        const indexF = await promiseF;
+
+        expect(redIndex).toEqual(0);
+        expect(indexA).toEqual(1);
+        expect(indexB).toEqual(2);
+        expect(indexC).toEqual(2);
+        expect(blueIndex).toEqual(3);
+        expect(indexD).toEqual(4);
+        expect(indexE).toEqual(5);
+        expect(indexF).toEqual(5);
+
+        const atlasWidth = 32;
+        const atlasHeight = 16;
+
+        let rectangle = atlas.rectangles[indexB];
+        expect(rectangle.x).toEqual(0);
+        expect(rectangle.y).toEqual(4);
+        expect(rectangle.width).toEqual(4);
+        expect(rectangle.height).toEqual(4);
+
+        let coordinates = atlas.computeTextureCoordinates(indexB);
+        expect(coordinates.x).toEqual(0 / atlasWidth);
+        expect(coordinates.y).toEqual(4 / atlasHeight);
+        expect(coordinates.width).toEqual(4 / atlasWidth);
+        expect(coordinates.height).toEqual(4 / atlasHeight);
+        expect(
+          createRenderResources(atlas.texture, coordinates),
+        ).contextToRender([255, 0, 0, 255]);
+
+        rectangle = atlas.rectangles[indexC];
+        expect(rectangle.x).toEqual(0);
+        expect(rectangle.y).toEqual(4);
+        expect(rectangle.width).toEqual(4);
+        expect(rectangle.height).toEqual(4);
+
+        coordinates = atlas.computeTextureCoordinates(indexC);
+        expect(coordinates.x).toEqual(0 / atlasWidth);
+        expect(coordinates.y).toEqual(4 / atlasHeight);
+        expect(coordinates.width).toEqual(4 / atlasWidth);
+        expect(coordinates.height).toEqual(4 / atlasHeight);
+        expect(
+          createRenderResources(atlas.texture, coordinates),
+        ).contextToRender([255, 0, 0, 255]);
+
+        rectangle = atlas.rectangles[indexE];
+        expect(rectangle.x).toEqual(0);
+        expect(rectangle.y).toEqual(4);
+        expect(rectangle.width).toEqual(4);
+        expect(rectangle.height).toEqual(4);
+
+        coordinates = atlas.computeTextureCoordinates(indexE);
+        expect(coordinates.x).toEqual(16 / atlasWidth);
+        expect(coordinates.y).toEqual(4 / atlasHeight);
+        expect(coordinates.width).toEqual(4 / atlasWidth);
+        expect(coordinates.height).toEqual(4 / atlasHeight);
+        expect(
+          createRenderResources(atlas.texture, coordinates),
+        ).contextToRender([0, 0, 255, 255]);
+
+        rectangle = atlas.rectangles[indexF];
+        expect(rectangle.x).toEqual(0);
+        expect(rectangle.y).toEqual(4);
+        expect(rectangle.width).toEqual(4);
+        expect(rectangle.height).toEqual(4);
+
+        coordinates = atlas.computeTextureCoordinates(indexF);
+        expect(coordinates.x).toEqual(16 / atlasWidth);
+        expect(coordinates.y).toEqual(4 / atlasHeight);
+        expect(coordinates.width).toEqual(4 / atlasWidth);
+        expect(coordinates.height).toEqual(4 / atlasHeight);
+        expect(
+          createRenderResources(atlas.texture, coordinates),
+        ).contextToRender([0, 0, 255, 255]);
+      });
+
       it("computeTextureCoordinates works for subregions when texture atlas resizes", async function () {
         atlas = new TextureAtlas({
           borderWidthInPixels: 0,
@@ -1088,9 +1228,12 @@ describe("Scene/TextureAtlas", function () {
 
         expect(atlas.numberOfImages).toEqual(3);
 
-        await pollWhilePromise(greenPromise, () => {
-          atlas.update(scene.frameState.context);
-        });
+        await pollWhilePromise(
+          Promise.all([greenPromise, promiseA, promiseB]),
+          () => {
+            atlas.update(scene.frameState.context);
+          },
+        );
 
         const indexGreen = await greenPromise;
         const indexA = await promiseA;

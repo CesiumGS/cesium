@@ -55,13 +55,12 @@ function TextureAtlas(options) {
 
   this._texturePacker = undefined;
   this._rectangles = [];
-  this._subRegions = {};
+  this._subRegions = new Map();
   this._guid = createGuid();
 
   this._imagesToAddQueue = [];
-  this._imagesToRemoveQueue = [];
-  this._indexById = {};
-  this._indexPromiseById = {};
+  this._indexById = new Map();
+  this._indexPromiseById = new Map();
   this._nextIndex = 0;
 }
 
@@ -173,7 +172,7 @@ TextureAtlas.prototype.computeTextureCoordinates = function (index, result) {
   let x = rectangle.x;
   let y = rectangle.y;
 
-  const parentIndex = this._subRegions[index];
+  const parentIndex = this._subRegions.get(index);
   if (defined(parentIndex)) {
     const parentRectangle = this._rectangles[parentIndex];
 
@@ -202,7 +201,6 @@ TextureAtlas.prototype._copyFromTexture = function (
   width,
   height,
   rectangles,
-  queueOffset,
 ) {
   const pixelFormat = this._pixelFormat;
   const newTexture = new Texture({
@@ -211,15 +209,6 @@ TextureAtlas.prototype._copyFromTexture = function (
     width,
     pixelFormat,
   });
-
-  // Some rectangles may have been packed but are not yet stored in the texture
-  const oldRectangles = this.rectangles;
-  const copyCount = oldRectangles.length - queueOffset;
-  if (copyCount === 0) {
-    // No images exist in the texture which need copying
-    newTexture._initialized = true;
-    return newTexture;
-  }
 
   const gl = context._gl;
   const target = newTexture._textureTarget;
@@ -237,15 +226,16 @@ TextureAtlas.prototype._copyFromTexture = function (
   framebuffer._bind();
 
   // Copy any textures from the old atlas to its new position in the new atlas
+  const oldRectangles = this.rectangles;
   const subRegions = this._subRegions;
-  for (let index = 0; index < copyCount; ++index) {
+  for (let index = 0; index < oldRectangles.length; ++index) {
     const rectangle = rectangles[index];
     const frameBufferOffset = oldRectangles[index];
 
     if (
       !defined(rectangle) ||
       !defined(frameBufferOffset) ||
-      defined(subRegions[index]) // The rectangle corresponds to a subregion of a parent image
+      defined(subRegions.get(index)) // The rectangle corresponds to a subregion of a parent image
     ) {
       continue;
     }
@@ -286,19 +276,14 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
   let width = oldTexture.width;
   let height = oldTexture.height;
 
-  let areaRemoved = 0;
-  const indexesToRemove = this._imagesToRemoveQueue;
-  for (const index of indexesToRemove) {
-    const { height, width } = oldRectangles[index];
-    areaRemoved += height * width;
-    oldRectangles[index] = undefined;
-  }
-  indexesToRemove.length = 0;
-
-  // Get the rectangles (width and height) of the current set of images
-  const toPack = oldRectangles.filter(defined).map((image, index) => {
-    return new AddImageRequest({ index, image });
-  });
+  // Get the rectangles (width and height) of the current set of images,
+  // ignoring the subregions, which don't get packed
+  const subRegions = this._subRegions;
+  const toPack = oldRectangles
+    .filter((image, index) => defined(image) && !defined(subRegions.get(index)))
+    .map((image, index) => {
+      return new AddImageRequest({ index, image });
+    });
 
   // Add the new set of images
   let maxWidth = 0;
@@ -317,7 +302,7 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
   height = Math.max(maxHeight, height);
 
   // Determine by what factor the texture need to be sclaed by at minimum
-  const areaDifference = Math.max(areaQueued - areaRemoved, 0);
+  const areaDifference = areaQueued;
   let scalingFactor = 1.0;
   while (areaDifference / width / height >= 1.0) {
     scalingFactor *= 2.0;
@@ -335,13 +320,22 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
       imageB.height * imageB.width - imageA.height * imageA.width,
   );
 
-  const subRegions = this._subRegions;
-  const newRectangles = [];
-  let texturePacker;
-  while (newRectangles.length === 0) {
+  const newRectangles = Array(this._nextIndex);
+  for (const index of this._subRegions.keys()) {
+    // Subregions are specified relative to their parents,
+    // so we can copy them directly
+    if (defined(subRegions.get(index))) {
+      newRectangles[index] = oldRectangles[index];
+    }
+  }
+
+  let texturePacker,
+    packed = false;
+  while (!packed) {
     texturePacker = new TexturePacker({ height, width, borderPadding });
 
-    for (let i = 0; i < toPack.length; ++i) {
+    let i;
+    for (i = 0; i < toPack.length; ++i) {
       const { index, image } = toPack[i];
       if (!defined(image)) {
         continue;
@@ -366,22 +360,17 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
           width *= 2.0;
         }
 
-        newRectangles.length = 0;
         break;
       }
 
       newRectangles[index] = repackedNode.rectangle;
     }
+
+    packed = i === toPack.length;
   }
 
   this._texturePacker = texturePacker;
-  this._texture = this._copyFromTexture(
-    context,
-    width,
-    height,
-    newRectangles,
-    queueOffset,
-  );
+  this._texture = this._copyFromTexture(context, width, height, newRectangles);
 
   oldTexture.destroy();
 
@@ -399,7 +388,7 @@ TextureAtlas.prototype.getImageIndex = function (id) {
   Check.typeOf.string("id", id);
   //>>includeEnd('debug');
 
-  return this._indexById[id];
+  return this._indexById.get(id);
 };
 
 /**
@@ -430,8 +419,6 @@ TextureAtlas.prototype._copyImageToTexture = function ({
       reject(e);
       return;
     }
-
-    throw e;
   }
 };
 
@@ -442,8 +429,8 @@ TextureAtlas.prototype._copyImageToTexture = function ({
  * @param {object} options Object with the following properties:
  * @param {number} options.index An identifier
  * @param {TexturePacker.PackableObject} options.image An object, such as an <code>Image</code> with <code>width</code> and <code>height</code> properties in pixels
- * @param {function} options.resolve The promise resolver
- * @param {function} options.reject The promise rejecter
+ * @param {function} [options.resolve] The promise resolver
+ * @param {function} [options.reject] The promise rejecter
  */
 function AddImageRequest({ index, image, resolve, reject }) {
   this.index = index;
@@ -496,8 +483,8 @@ TextureAtlas.prototype._processImageQueue = function (context) {
     return false;
   }
 
-  let error;
-  for (let i = 0; i < queue.length; ++i) {
+  let i, error;
+  for (i = 0; i < queue.length; ++i) {
     const imageRequest = queue[i];
     const { image, index } = imageRequest;
     const node = this._texturePacker.pack(index, image);
@@ -508,18 +495,29 @@ TextureAtlas.prototype._processImageQueue = function (context) {
         this._resize(context, i);
       } catch (e) {
         error = e;
+
+        if (defined(imageRequest.reject)) {
+          imageRequest.reject(error);
+        }
       }
       break;
     }
     this._rectangles[index] = node.rectangle;
   }
 
-  for (let i = 0; i < queue.length; ++i) {
-    if (defined(error)) {
-      queue[i].reject(error);
-      continue;
+  if (defined(error)) {
+    for (i = i + 1; i < queue.length; ++i) {
+      const { resolve } = queue[i];
+      if (defined(resolve)) {
+        resolve(-1);
+      }
     }
 
+    queue.length = 0;
+    return false;
+  }
+
+  for (let i = 0; i < queue.length; ++i) {
     this._copyImageToTexture(queue[i]);
   }
 
@@ -585,15 +583,14 @@ TextureAtlas.prototype.addImage = function (id, image) {
   Check.defined("image", image);
   //>>includeEnd('debug');
 
-  let promise = this._indexPromiseById[id];
+  let promise = this._indexPromiseById.get(id);
   if (defined(promise)) {
     // This image has already been added
     return promise;
   }
 
   const index = this._nextIndex++;
-  this._lastIndex = index;
-  this._indexById[id] = index;
+  this._indexById.set(id, index);
 
   const resolveAndAddImage = async () => {
     image = await resolveImage(image, id);
@@ -609,7 +606,7 @@ TextureAtlas.prototype.addImage = function (id, image) {
   };
 
   promise = resolveAndAddImage();
-  this._indexPromiseById[id] = promise;
+  this._indexPromiseById.set(id, promise);
   return promise;
 };
 
@@ -626,13 +623,32 @@ TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
   Check.defined("subRegion", subRegion);
   //>>includeEnd('debug');
 
-  const indexPromise = this._indexPromiseById[id];
-  if (!defined(indexPromise)) {
+  const imageIndex = this._indexById.get(id);
+  if (!defined(imageIndex)) {
     throw new RuntimeError(`image with id "${id}" not found in the atlas.`);
   }
 
+  const indexPromise = this._indexPromiseById.get(id);
+  for (const [index, parentIndex] of this._subRegions.entries()) {
+    if (imageIndex === parentIndex) {
+      const boundingRegion = this._rectangles[index];
+      if (boundingRegion.equals(subRegion)) {
+        // The subregion is already being tracked
+        return indexPromise.then((resolvedImageIndex) => {
+          if (resolvedImageIndex === -1) {
+            // The atlas has been destroyed
+            return -1;
+          }
+
+          return index;
+        });
+      }
+    }
+  }
+
   const index = this._nextIndex++;
-  this._lastIndex = index;
+  this._subRegions.set(index, imageIndex);
+  this._rectangles[index] = subRegion.clone();
 
   return indexPromise.then((imageIndex) => {
     if (imageIndex === -1) {
@@ -664,14 +680,6 @@ TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
       rectangle.height,
     );
     //>>includeEnd('debug');
-
-    const x = rectangle.x + subRegion.x;
-    const y = rectangle.y + subRegion.y;
-    const w = subRegion.width;
-    const h = subRegion.height;
-    this._rectangles[index] = new BoundingRectangle(x, y, w, h);
-
-    this._subRegions[index] = imageIndex;
 
     return index;
   });
@@ -708,7 +716,11 @@ TextureAtlas.prototype.isDestroyed = function () {
  */
 TextureAtlas.prototype.destroy = function () {
   this._texture = this._texture && this._texture.destroy();
-  this._imagesToAddQueue.forEach(({ resolve }) => resolve(-1));
+  this._imagesToAddQueue.forEach(({ resolve }) => {
+    if (defined(resolve)) {
+      resolve(-1);
+    }
+  });
 
   return destroyObject(this);
 };
