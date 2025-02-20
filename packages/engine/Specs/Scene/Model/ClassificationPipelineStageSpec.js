@@ -1,4 +1,5 @@
 import {
+  addAllToArray,
   ClassificationPipelineStage,
   PrimitiveType,
   RuntimeError,
@@ -19,7 +20,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
       const batchLength = batchLengths[id];
       const batch = new Array(batchLength);
       batch.fill(id);
-      featureIds.push.apply(featureIds, batch);
+      addAllToArray(featureIds, batch);
     }
 
     return featureIds;
