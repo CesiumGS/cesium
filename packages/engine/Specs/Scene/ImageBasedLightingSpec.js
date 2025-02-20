@@ -19,10 +19,9 @@ describe("Scene/ImageBasedLighting", function () {
     expect(
       Cartesian2.equals(
         imageBasedLighting.imageBasedLightingFactor,
-        new Cartesian2(1.0, 1.0)
-      )
+        new Cartesian2(1.0, 1.0),
+      ),
     ).toBe(true);
-    expect(imageBasedLighting.luminanceAtZenith).toEqual(0.2);
     expect(imageBasedLighting.sphericalHarmonicCoefficients).toBeUndefined();
     expect(imageBasedLighting.specularEnvironmentMaps).toBeUndefined();
   });
@@ -73,24 +72,15 @@ describe("Scene/ImageBasedLighting", function () {
     expect(
       Cartesian2.equals(
         imageBasedLighting.imageBasedLightingFactor,
-        new Cartesian2(1.0, 1.0)
-      )
+        new Cartesian2(1.0, 1.0),
+      ),
     ).toBe(true);
     expect(
       Cartesian2.equals(
         imageBasedLighting._previousImageBasedLightingFactor,
-        Cartesian2.ZERO
-      )
+        Cartesian2.ZERO,
+      ),
     ).toBe(true);
-  });
-
-  it("luminanceAtZenith saves previous value", function () {
-    const imageBasedLighting = new ImageBasedLighting({
-      luminanceAtZenith: 0.0,
-    });
-    imageBasedLighting.luminanceAtZenith = 0.5;
-    expect(imageBasedLighting.luminanceAtZenith).toBe(0.5);
-    expect(imageBasedLighting._previousLuminanceAtZenith).toBe(0.0);
   });
 
   it("sphericalHarmonicCoefficients saves previous value", function () {
@@ -101,7 +91,7 @@ describe("Scene/ImageBasedLighting", function () {
     imageBasedLighting.sphericalHarmonicCoefficients = undefined;
     expect(imageBasedLighting.sphericalHarmonicCoefficients).toBeUndefined();
     expect(imageBasedLighting._previousSphericalHarmonicCoefficients).toBe(
-      testCoefficients
+      testCoefficients,
     );
   });
 
@@ -114,16 +104,5 @@ describe("Scene/ImageBasedLighting", function () {
 
     imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.5, 0.0);
     expect(imageBasedLighting.enabled).toBe(true);
-  });
-
-  it("useSphericalHarmonicCoefficients returns correct values", function () {
-    const imageBasedLighting = new ImageBasedLighting();
-    expect(imageBasedLighting.useSphericalHarmonicCoefficients).toBe(false);
-
-    imageBasedLighting.sphericalHarmonicCoefficients = testCoefficients;
-    expect(imageBasedLighting.useSphericalHarmonicCoefficients).toBe(true);
-
-    imageBasedLighting.sphericalHarmonicCoefficients = undefined;
-    expect(imageBasedLighting.useSphericalHarmonicCoefficients).toBe(false);
   });
 });

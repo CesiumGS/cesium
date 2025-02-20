@@ -55,7 +55,7 @@ describe("Scene/Appearance", function () {
     });
 
     expect(appearance.getFragmentShaderSource().indexOf(fs)).toBeGreaterThan(
-      -1
+      -1,
     );
   });
 

@@ -10,6 +10,8 @@ const url = "https://dev.virtualearth.net/REST/v1/Locations";
 
 /**
  * Provides geocoding through Bing Maps.
+ *
+ * @see {@link https://www.microsoft.com/en-us/maps/bing-maps/product|Microsoft Bing Maps Platform APIs Terms Of Use}
  * @alias BingMapsGeocoderService
  * @constructor
  *
@@ -43,7 +45,7 @@ function BingMapsGeocoderService(options) {
 
   this._credit = new Credit(
     `<img src="http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png"\/>`,
-    false
+    false,
   );
 }
 

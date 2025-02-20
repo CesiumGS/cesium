@@ -5,6 +5,9 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";
 
 /**
+ * @alias PickDepth
+ * @constructor
+ *
  * @private
  */
 function PickDepth() {
@@ -23,29 +26,36 @@ Object.defineProperties(PickDepth.prototype, {
 });
 
 function updateFramebuffers(pickDepth, context, depthTexture) {
-  const width = depthTexture.width;
-  const height = depthTexture.height;
+  const { width, height } = depthTexture;
   pickDepth._framebuffer.update(context, width, height);
 }
 
 function updateCopyCommands(pickDepth, context, depthTexture) {
   if (!defined(pickDepth._copyDepthCommand)) {
-    const fs =
-      "uniform highp sampler2D u_texture;\n" +
-      "in vec2 v_textureCoordinates;\n" +
-      "void main()\n" +
-      "{\n" +
-      "    out_FragColor = czm_packDepth(texture(u_texture, v_textureCoordinates).r);\n" +
-      "}\n";
-    pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
-      renderState: RenderState.fromCache(),
-      uniformMap: {
-        u_texture: function () {
-          return pickDepth._textureToCopy;
+    pickDepth._copyDepthCommand = context.createViewportQuadCommand(
+      `uniform highp sampler2D colorTexture;
+
+in vec2 v_textureCoordinates;
+
+void main()
+{
+  vec4 globeDepthPacked = texture(czm_globeDepthTexture, v_textureCoordinates);
+  float globeDepth = czm_unpackDepth(globeDepthPacked);
+  float depth = texture(colorTexture, v_textureCoordinates).r;
+  out_FragColor = czm_branchFreeTernary(globeDepth <= 0.0 || globeDepth >= 1.0 || depth < globeDepth && depth > 0.0 && depth < 1.0,
+    czm_packDepth(depth), globeDepthPacked);
+}
+`,
+      {
+        renderState: RenderState.fromCache(),
+        uniformMap: {
+          colorTexture: function () {
+            return pickDepth._textureToCopy;
+          },
         },
+        owner: pickDepth,
       },
-      owner: pickDepth,
-    });
+    );
   }
 
   pickDepth._textureToCopy = depthTexture;
@@ -62,9 +72,19 @@ const packedDepthScale = new Cartesian4(
   1.0,
   1.0 / 255.0,
   1.0 / 65025.0,
-  1.0 / 16581375.0
+  1.0 / 16581375.0,
 );
 
+/**
+ * Read the depth from the framebuffer at the given coordinate.
+ *
+ * @param {Context} context
+ * @param {number} x The x-coordinate at which to read the depth.
+ * @param {number} y The y-coordinate at which to read the depth.
+ * @returns {number} The depth read from the framebuffer.
+ *
+ * @private
+ */
 PickDepth.prototype.getDepth = function (context, x, y) {
   // If this function is called before the framebuffer is created, the depth is undefined.
   if (!defined(this.framebuffer)) {

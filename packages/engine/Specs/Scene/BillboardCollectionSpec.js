@@ -9,6 +9,7 @@ import {
   createGuid,
   DistanceDisplayCondition,
   Globe,
+  Math as CesiumMath,
   NearFarScalar,
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
@@ -21,9 +22,8 @@ import {
   HorizontalOrigin,
   TextureAtlas,
   VerticalOrigin,
+  SplitDirection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -47,26 +47,26 @@ describe(
       camera = scene.camera;
 
       return Promise.all([
-        Resource.fetchImage("./Data/Images/Green2x2.png").then(function (
-          result
-        ) {
-          greenImage = result;
-        }),
-        Resource.fetchImage("./Data/Images/Blue2x2.png").then(function (
-          result
-        ) {
-          blueImage = result;
-        }),
-        Resource.fetchImage("./Data/Images/White2x2.png").then(function (
-          result
-        ) {
-          whiteImage = result;
-        }),
-        Resource.fetchImage("./Data/Images/Blue10x10.png").then(function (
-          result
-        ) {
-          largeBlueImage = result;
-        }),
+        Resource.fetchImage("./Data/Images/Green2x2.png").then(
+          function (result) {
+            greenImage = result;
+          },
+        ),
+        Resource.fetchImage("./Data/Images/Blue2x2.png").then(
+          function (result) {
+            blueImage = result;
+          },
+        ),
+        Resource.fetchImage("./Data/Images/White2x2.png").then(
+          function (result) {
+            whiteImage = result;
+          },
+        ),
+        Resource.fetchImage("./Data/Images/Blue10x10.png").then(
+          function (result) {
+            largeBlueImage = result;
+          },
+        ),
       ]);
     });
 
@@ -121,6 +121,7 @@ describe(
       expect(b.sizeInMeters).toEqual(false);
       expect(b.distanceDisplayCondition).toBeUndefined();
       expect(b.disableDepthTestDistance).toBeUndefined();
+      expect(b.splitDirection).toEqual(SplitDirection.NONE);
     });
 
     it("can add and remove before first update.", function () {
@@ -156,6 +157,7 @@ describe(
         distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
         disableDepthTestDistance: 10.0,
         id: "id",
+        splitDirection: SplitDirection.LEFT,
       });
 
       expect(b.show).toEqual(false);
@@ -173,22 +175,23 @@ describe(
       expect(b.rotation).toEqual(1.0);
       expect(b.alignedAxis).toEqual(Cartesian3.UNIT_Z);
       expect(b.scaleByDistance).toEqual(
-        new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
+        new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
       );
       expect(b.translucencyByDistance).toEqual(
-        new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
+        new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
       );
       expect(b.pixelOffsetScaleByDistance).toEqual(
-        new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
+        new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
       );
       expect(b.width).toEqual(300.0);
       expect(b.height).toEqual(200.0);
       expect(b.sizeInMeters).toEqual(true);
       expect(b.distanceDisplayCondition).toEqual(
-        new DistanceDisplayCondition(10.0, 100.0)
+        new DistanceDisplayCondition(10.0, 100.0),
       );
       expect(b.disableDepthTestDistance).toEqual(10.0);
       expect(b.id).toEqual("id");
+      expect(b.splitDirection).toEqual(SplitDirection.LEFT);
     });
 
     it("sets billboard properties", function () {
@@ -212,6 +215,7 @@ describe(
       b.sizeInMeters = true;
       b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
       b.disableDepthTestDistance = 10.0;
+      b.splitDirection = SplitDirection.LEFT;
 
       expect(b.show).toEqual(false);
       expect(b.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -228,21 +232,22 @@ describe(
       expect(b.rotation).toEqual(1.0);
       expect(b.alignedAxis).toEqual(Cartesian3.UNIT_Z);
       expect(b.scaleByDistance).toEqual(
-        new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0)
+        new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0),
       );
       expect(b.translucencyByDistance).toEqual(
-        new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0)
+        new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0),
       );
       expect(b.pixelOffsetScaleByDistance).toEqual(
-        new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0)
+        new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0),
       );
       expect(b.width).toEqual(300.0);
       expect(b.height).toEqual(200.0);
       expect(b.sizeInMeters).toEqual(true);
       expect(b.distanceDisplayCondition).toEqual(
-        new DistanceDisplayCondition(10.0, 100.0)
+        new DistanceDisplayCondition(10.0, 100.0),
       );
       expect(b.disableDepthTestDistance).toEqual(10.0);
+      expect(b.splitDirection).toEqual(SplitDirection.LEFT);
     });
 
     it("required properties throw for undefined", function () {
@@ -1573,7 +1578,7 @@ describe(
       scene.renderForSpecs();
       expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(
         new Cartesian2(0.5, 0.5),
-        CesiumMath.EPSILON1
+        CesiumMath.EPSILON1,
       );
     });
 
@@ -1587,7 +1592,7 @@ describe(
       expect(actual).toEqual(result);
       expect(result).toEqualEpsilon(
         new Cartesian2(0.5, 0.5),
-        CesiumMath.EPSILON1
+        CesiumMath.EPSILON1,
       );
     });
 
@@ -1599,7 +1604,7 @@ describe(
       scene.renderForSpecs();
       expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(
         new Cartesian2(1, 1.0),
-        CesiumMath.EPSILON1
+        CesiumMath.EPSILON1,
       );
     });
 
@@ -1611,7 +1616,7 @@ describe(
       scene.renderForSpecs();
       expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(
         new Cartesian2(0.5, 0.5),
-        CesiumMath.EPSILON1
+        CesiumMath.EPSILON1,
       );
     });
 
@@ -1624,7 +1629,7 @@ describe(
       scene.renderForSpecs();
       expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(
         new Cartesian2(0.5, 0.5),
-        CesiumMath.EPSILON1
+        CesiumMath.EPSILON1,
       );
     });
 
@@ -1637,7 +1642,7 @@ describe(
       scene.renderForSpecs();
       expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(
         new Cartesian2(0.5, 0.5),
-        CesiumMath.EPSILON1
+        CesiumMath.EPSILON1,
       );
     });
 
@@ -1702,7 +1707,7 @@ describe(
       const bbox = Billboard.getScreenSpaceBoundingBox(
         b,
         Cartesian2.ZERO,
-        result
+        result,
       );
       expect(bbox.x).toEqual(-halfWidth);
       expect(bbox.y).toEqual(-halfHeight);
@@ -1902,11 +1907,11 @@ describe(
         expected.center = new Cartesian3(
           0.0,
           expected.center.x,
-          expected.center.y
+          expected.center.y,
         );
         expect(actual.center).toEqualEpsilon(
           expected.center,
-          CesiumMath.EPSILON8
+          CesiumMath.EPSILON8,
         );
         expect(actual.radius).toBeGreaterThanOrEqual(expected.radius);
       });
@@ -1958,11 +1963,11 @@ describe(
         expected.center = new Cartesian3(
           0.0,
           expected.center.x,
-          expected.center.y
+          expected.center.y,
         );
         expect(actual.center).toEqualEpsilon(
           expected.center,
-          CesiumMath.EPSILON8
+          CesiumMath.EPSILON8,
         );
         expect(actual.radius).toBeGreaterThan(expected.radius);
       });
@@ -1995,16 +2000,16 @@ describe(
         const diff = Cartesian3.subtract(
           actual.center,
           camera.position,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const vectorProjection = Cartesian3.multiplyByScalar(
           camera.direction,
           Cartesian3.dot(diff, camera.direction),
-          new Cartesian3()
+          new Cartesian3(),
         );
         const distance = Math.max(
           0.0,
-          Cartesian3.magnitude(vectorProjection) - bs.radius
+          Cartesian3.magnitude(vectorProjection) - bs.radius,
         );
 
         const pixelSize = camera.frustum.getPixelDimensions(
@@ -2012,7 +2017,7 @@ describe(
           dimensions.y,
           distance,
           scene.pixelRatio,
-          new Cartesian2()
+          new Cartesian2(),
         );
         bs.radius +=
           pixelSize.y * 0.25 * Math.max(greenImage.width, greenImage.height) +
@@ -2429,7 +2434,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Cartographic.fromCartesian(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       });
 
@@ -2445,7 +2450,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Cartographic.fromCartesian(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       });
 
@@ -2461,7 +2466,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Cartographic.fromCartesian(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
 
         b.heightReference = HeightReference.RELATIVE_TO_GROUND;
@@ -2469,7 +2474,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Cartographic.fromCartesian(position),
           jasmine.any(Function),
-          HeightReference.RELATIVE_TO_GROUND
+          HeightReference.RELATIVE_TO_GROUND,
         );
       });
 
@@ -2500,7 +2505,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Cartographic.fromCartesian(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
 
         position = b.position = Cartesian3.fromDegrees(-73.0, 40.0);
@@ -2509,7 +2514,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Cartographic.fromCartesian(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       });
 
@@ -2521,7 +2526,7 @@ describe(
               cartographic.height = height;
               updateCallback(cartographic);
             };
-          }
+          },
         );
 
         const position = Cartesian3.fromDegrees(-72.0, 40.0);
@@ -2533,14 +2538,14 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalled();
 
         let cartographic = scene.globe.ellipsoid.cartesianToCartographic(
-          b._clampedPosition
+          b._clampedPosition,
         );
         expect(cartographic.height).toEqual(0.0);
 
         invokeCallback(100.0);
 
         cartographic = scene.globe.ellipsoid.cartesianToCartographic(
-          b._clampedPosition
+          b._clampedPosition,
         );
         expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
 
@@ -2582,14 +2587,14 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Cartographic.fromCartesian(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
 
         const terrainProvider = await CesiumTerrainProvider.fromUrl(
           "made/up/url",
           {
             requestVertexNormals: true,
-          }
+          },
         );
 
         scene.terrainProvider = terrainProvider;
@@ -2597,7 +2602,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Cartographic.fromCartesian(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
         expect(removeCallback).toHaveBeenCalled();
       });
@@ -2648,5 +2653,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

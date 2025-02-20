@@ -2,11 +2,10 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  Math as CesiumMath,
   Matrix4,
   OrthographicOffCenterFrustum,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/OrthographicOffCenterFrustum", function () {
   let frustum, planes;
@@ -22,7 +21,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
     planes = frustum.computeCullingVolume(
       new Cartesian3(),
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      Cartesian3.UNIT_Y
+      Cartesian3.UNIT_Y,
     ).planes;
   });
 
@@ -148,7 +147,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
       frustum.top,
       frustum.near,
       frustum.far,
-      new Matrix4()
+      new Matrix4(),
     );
     expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
   });
@@ -160,7 +159,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
         undefined,
         0.0,
         1.0,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -172,7 +171,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
         1.0,
         0.0,
         1.0,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -196,7 +195,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
         1.0,
         0.0,
         undefined,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -213,7 +212,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
       1.0,
       0.0,
       1.0,
-      new Cartesian2()
+      new Cartesian2(),
     );
     expect(pixelSize.x).toEqual(2.0);
     expect(pixelSize.y).toEqual(2.0);
@@ -225,7 +224,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
       1.0,
       0.0,
       2.0,
-      new Cartesian2()
+      new Cartesian2(),
     );
     expect(pixelSize.x).toEqual(4.0);
     expect(pixelSize.y).toEqual(4.0);

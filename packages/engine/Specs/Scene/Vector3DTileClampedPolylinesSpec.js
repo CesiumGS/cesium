@@ -65,9 +65,8 @@ describe(
 
     beforeEach(function () {
       rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
-      const depthpolylineColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 0.0, 1.0, 1.0)
-      );
+      const depthpolylineColorAttribute =
+        ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
       const primitive = new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({
@@ -98,7 +97,7 @@ describe(
     xit("renders clamped polylines", function () {
       scene.camera.lookAt(
         Cartesian3.fromDegrees(0.0, 0.0, 1.5),
-        new Cartesian3(0.0, 0.0, 1.0)
+        new Cartesian3(0.0, 0.0, 1.0),
       );
       return Cesium3DTilesTester.loadTileset(scene, vectorPolylines, {
         classificationType: ClassificationType.TERRAIN,
@@ -115,7 +114,7 @@ describe(
     xit("picks a clamped polyline", function () {
       scene.camera.lookAt(
         Cartesian3.fromDegrees(0.0, 0.0, 1.5),
-        new Cartesian3(0.0, 0.0, 1.0)
+        new Cartesian3(0.0, 0.0, 1.0),
       );
       return Cesium3DTilesTester.loadTileset(scene, vectorPolylines, {
         classificationType: ClassificationType.TERRAIN,
@@ -138,5 +137,5 @@ describe(
       expect(polylines.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

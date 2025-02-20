@@ -28,17 +28,16 @@ function createGeometryFromPositions(
   positions,
   minDistance,
   perPositionHeight,
-  arcType
+  arcType,
 ) {
   const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
   const positions2D = tangentPlane.projectPointsOntoPlane(
     positions,
-    createGeometryFromPositionsPositions
+    createGeometryFromPositionsPositions,
   );
 
-  const originalWindingOrder = PolygonPipeline.computeWindingOrder2D(
-    positions2D
-  );
+  const originalWindingOrder =
+    PolygonPipeline.computeWindingOrder2D(positions2D);
   if (originalWindingOrder === WindingOrder.CLOCKWISE) {
     positions2D.reverse();
     positions = positions.slice().reverse();
@@ -57,7 +56,7 @@ function createGeometryFromPositions(
         numVertices += PolygonGeometryLibrary.subdivideLineCount(
           positions[i],
           positions[(i + 1) % length],
-          minDistance
+          minDistance,
         );
       }
     } else if (arcType === ArcType.RHUMB) {
@@ -66,7 +65,7 @@ function createGeometryFromPositions(
           ellipsoid,
           positions[i],
           positions[(i + 1) % length],
-          minDistance
+          minDistance,
         );
       }
     }
@@ -78,7 +77,7 @@ function createGeometryFromPositions(
           positions[i],
           positions[(i + 1) % length],
           minDistance,
-          createGeometryFromPositionsSubdivided
+          createGeometryFromPositionsSubdivided,
         );
       } else if (arcType === ArcType.RHUMB) {
         tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(
@@ -86,7 +85,7 @@ function createGeometryFromPositions(
           positions[i],
           positions[(i + 1) % length],
           minDistance,
-          createGeometryFromPositionsSubdivided
+          createGeometryFromPositionsSubdivided,
         );
       }
       const tempPositionsLength = tempPositions.length;
@@ -139,17 +138,16 @@ function createGeometryFromPositionsExtruded(
   positions,
   minDistance,
   perPositionHeight,
-  arcType
+  arcType,
 ) {
   const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
   const positions2D = tangentPlane.projectPointsOntoPlane(
     positions,
-    createGeometryFromPositionsPositions
+    createGeometryFromPositionsPositions,
   );
 
-  const originalWindingOrder = PolygonPipeline.computeWindingOrder2D(
-    positions2D
-  );
+  const originalWindingOrder =
+    PolygonPipeline.computeWindingOrder2D(positions2D);
   if (originalWindingOrder === WindingOrder.CLOCKWISE) {
     positions2D.reverse();
     positions = positions.slice().reverse();
@@ -169,7 +167,7 @@ function createGeometryFromPositionsExtruded(
         numVertices += PolygonGeometryLibrary.subdivideLineCount(
           positions[i],
           positions[(i + 1) % length],
-          minDistance
+          minDistance,
         );
       }
     } else if (arcType === ArcType.RHUMB) {
@@ -178,7 +176,7 @@ function createGeometryFromPositionsExtruded(
           ellipsoid,
           positions[i],
           positions[(i + 1) % length],
-          minDistance
+          minDistance,
         );
       }
     }
@@ -192,7 +190,7 @@ function createGeometryFromPositionsExtruded(
           positions[i],
           positions[(i + 1) % length],
           minDistance,
-          createGeometryFromPositionsSubdivided
+          createGeometryFromPositionsSubdivided,
         );
       } else if (arcType === ArcType.RHUMB) {
         tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(
@@ -200,7 +198,7 @@ function createGeometryFromPositionsExtruded(
           positions[i],
           positions[(i + 1) % length],
           minDistance,
-          createGeometryFromPositionsSubdivided
+          createGeometryFromPositionsSubdivided,
         );
       }
       const tempPositionsLength = tempPositions.length;
@@ -230,7 +228,7 @@ function createGeometryFromPositionsExtruded(
   const indicesSize = (length * 2 + cornersLength) * 2;
   const indices = IndexDatatype.createTypedArray(
     length + cornersLength,
-    indicesSize
+    indicesSize,
   );
 
   index = 0;
@@ -273,7 +271,7 @@ function createGeometryFromPositionsExtruded(
  * @param {number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
  * @param {number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
@@ -355,7 +353,7 @@ function PolygonOutlineGeometry(options) {
 
   if (options.perPositionHeight && defined(options.height)) {
     throw new DeveloperError(
-      "Cannot use both options.perPositionHeight and options.height"
+      "Cannot use both options.perPositionHeight and options.height",
     );
   }
   if (
@@ -364,16 +362,16 @@ function PolygonOutlineGeometry(options) {
     options.arcType !== ArcType.RHUMB
   ) {
     throw new DeveloperError(
-      "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB."
+      "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.",
     );
   }
   //>>includeEnd('debug');
 
   const polygonHierarchy = options.polygonHierarchy;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   const perPositionHeight = defaultValue(options.perPositionHeight, false);
   const perPositionHeightExtrude =
@@ -407,7 +405,7 @@ function PolygonOutlineGeometry(options) {
   this.packedLength =
     PolygonGeometryLibrary.computeHierarchyPackedLength(
       polygonHierarchy,
-      Cartesian3
+      Cartesian3,
     ) +
     Ellipsoid.packedLength +
     8;
@@ -434,7 +432,7 @@ PolygonOutlineGeometry.pack = function (value, array, startingIndex) {
     value._polygonHierarchy,
     array,
     startingIndex,
-    Cartesian3
+    Cartesian3,
   );
 
   Ellipsoid.pack(value._ellipsoid, array, startingIndex);
@@ -475,7 +473,7 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
     startingIndex,
-    Cartesian3
+    Cartesian3,
   );
   startingIndex = polygonHierarchy.startingIndex;
   delete polygonHierarchy.startingIndex;
@@ -518,7 +516,7 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
  * @param {number} [options.height=0.0] The height of the polygon.
  * @param {number} [options.extrudedHeight] The height of the polygon extrusion.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link LinkType.GEODESIC} and {@link ArcType.RHUMB}.
@@ -578,7 +576,7 @@ PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
   const polygons = PolygonGeometryLibrary.polygonOutlinesFromHierarchy(
     polygonHierarchy,
     !perPositionHeight,
-    ellipsoid
+    ellipsoid,
   );
 
   if (polygons.length === 0) {
@@ -589,7 +587,7 @@ PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
   const geometries = [];
   const minDistance = CesiumMath.chordLength(
     granularity,
-    ellipsoid.maximumRadius
+    ellipsoid.maximumRadius,
   );
 
   const height = polygonGeometry._height;
@@ -606,15 +604,16 @@ PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
         polygons[i],
         minDistance,
         perPositionHeight,
-        arcType
+        arcType,
       );
-      geometryInstance.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(
-        geometryInstance.geometry,
-        height,
-        extrudedHeight,
-        ellipsoid,
-        perPositionHeight
-      );
+      geometryInstance.geometry =
+        PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(
+          geometryInstance.geometry,
+          height,
+          extrudedHeight,
+          ellipsoid,
+          perPositionHeight,
+        );
       if (defined(polygonGeometry._offsetAttribute)) {
         const size =
           geometryInstance.geometry.attributes.position.values.length / 3;
@@ -629,13 +628,12 @@ PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
           offsetAttribute = offsetAttribute.fill(offsetValue);
         }
 
-        geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute(
-          {
+        geometryInstance.geometry.attributes.applyOffset =
+          new GeometryAttribute({
             componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
             componentsPerAttribute: 1,
             values: offsetAttribute,
-          }
-        );
+          });
       }
       geometries.push(geometryInstance);
     }
@@ -646,14 +644,15 @@ PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
         polygons[i],
         minDistance,
         perPositionHeight,
-        arcType
+        arcType,
       );
-      geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
-        geometryInstance.geometry.attributes.position.values,
-        height,
-        ellipsoid,
-        !perPositionHeight
-      );
+      geometryInstance.geometry.attributes.position.values =
+        PolygonPipeline.scaleToGeodeticHeight(
+          geometryInstance.geometry.attributes.position.values,
+          height,
+          ellipsoid,
+          !perPositionHeight,
+        );
 
       if (defined(polygonGeometry._offsetAttribute)) {
         const length =
@@ -663,13 +662,12 @@ PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
             ? 0
             : 1;
         const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
-        geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute(
-          {
+        geometryInstance.geometry.attributes.applyOffset =
+          new GeometryAttribute({
             componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
             componentsPerAttribute: 1,
             values: applyOffset,
-          }
-        );
+          });
       }
 
       geometries.push(geometryInstance);
@@ -678,7 +676,7 @@ PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
 
   const geometry = GeometryPipeline.combineInstances(geometries)[0];
   const boundingSphere = BoundingSphere.fromVertices(
-    geometry.attributes.position.values
+    geometry.attributes.position.values,
   );
 
   return new Geometry({

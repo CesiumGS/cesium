@@ -85,12 +85,12 @@ describe("Scene/BingMapsImageryProvider", function () {
   function installFakeMetadataRequest(url, mapStyle, mapLayer, culture) {
     const baseUri = new Uri(appendForwardSlash(url));
     const expectedUri = new Uri(
-      `REST/v1/Imagery/Metadata/${mapStyle}`
+      `REST/v1/Imagery/Metadata/${mapStyle}`,
     ).absoluteTo(baseUri);
 
     Resource._Implementations.loadAndExecuteScript = function (
       url,
-      functionName
+      functionName,
     ) {
       const uri = new Uri(url);
 
@@ -120,7 +120,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
@@ -131,7 +131,7 @@ describe("Scene/BingMapsImageryProvider", function () {
           deferred,
           true,
           false,
-          true
+          true,
         );
       } else {
         if (defined(expectedUrl)) {
@@ -153,7 +153,7 @@ describe("Scene/BingMapsImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       }
     };
@@ -165,7 +165,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       if (defined(expectedUrl)) {
         let uri = new Uri(url);
@@ -190,24 +190,24 @@ describe("Scene/BingMapsImageryProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
   }
 
   it("fromUrl throws if url is not provided", async function () {
     await expectAsync(
-      BingMapsImageryProvider.fromUrl()
+      BingMapsImageryProvider.fromUrl(),
     ).toBeRejectedWithDeveloperError(
-      "url is required, actual value was undefined"
+      "url is required, actual value was undefined",
     );
   });
 
   it("fromUrl throws if key is not provided", async function () {
     await expectAsync(
-      BingMapsImageryProvider.fromUrl("http://fake.fake.invalid/")
+      BingMapsImageryProvider.fromUrl("http://fake.fake.invalid/"),
     ).toBeRejectedWithDeveloperError(
-      "options.key is required, actual value was undefined"
+      "options.key is required, actual value was undefined",
     );
   });
 
@@ -243,7 +243,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     });
 
     //These are the same instance only if the cache has been used
-    expect(provider._attributionList).toBe(provider2._attributionList);
+    expect(provider._imageUrlSubdomains).toBe(provider2._imageUrlSubdomains);
 
     installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
     installFakeImageRequest();
@@ -253,8 +253,10 @@ describe("Scene/BingMapsImageryProvider", function () {
       mapStyle: BingMapsStyle.AERIAL,
     });
 
-    // Because the road is different, a non-cached request should have happened
-    expect(provider3._attributionList).not.toBe(provider._attributionList);
+    // Because the style is different, a non-cached request should have happened
+    expect(provider3._imageUrlSubdomains).not.toBe(
+      provider._imageUrlSubdomains,
+    );
   });
 
   it("fromUrl resolves with a path", async function () {
@@ -334,10 +336,10 @@ describe("Scene/BingMapsImageryProvider", function () {
     await expectAsync(
       BingMapsImageryProvider.fromUrl(url, {
         key: "",
-      })
+      }),
     ).toBeRejectedWithError(
       RuntimeError,
-      new RegExp("An error occurred while accessing")
+      new RegExp("An error occurred while accessing"),
     );
   });
 
@@ -346,12 +348,12 @@ describe("Scene/BingMapsImageryProvider", function () {
 
     const baseUri = new Uri(appendForwardSlash(url));
     const expectedUri = new Uri(
-      `REST/v1/Imagery/Metadata/${BingMapsStyle.AERIAL}`
+      `REST/v1/Imagery/Metadata/${BingMapsStyle.AERIAL}`,
     ).absoluteTo(baseUri);
 
     Resource._Implementations.loadAndExecuteScript = function (
       url,
-      functionName
+      functionName,
     ) {
       const uri = new Uri(url);
       const query = queryToObject(uri.query());
@@ -364,7 +366,7 @@ describe("Scene/BingMapsImageryProvider", function () {
 
       setTimeout(function () {
         const response = createFakeBingMapsMetadataResponse(
-          BingMapsStyle.AERIAL
+          BingMapsStyle.AERIAL,
         );
         response.resourceSets = [];
         window[functionName](response);
@@ -375,10 +377,10 @@ describe("Scene/BingMapsImageryProvider", function () {
     await expectAsync(
       BingMapsImageryProvider.fromUrl(url, {
         key: "",
-      })
+      }),
     ).toBeRejectedWithError(
       RuntimeError,
-      new RegExp("metadata does not specify one resource in resourceSets")
+      new RegExp("metadata does not specify one resource in resourceSets"),
     );
   });
 
@@ -418,7 +420,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     expect(provider.maximumLevel).toEqual(20);
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.tileDiscardPolicy).toBeInstanceOf(
-      DiscardEmptyTileImagePolicy
+      DiscardEmptyTileImagePolicy,
     );
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
     expect(provider.credit).toBeInstanceOf(Object);
@@ -428,7 +430,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       {
         g: "3031",
         mkt: "",
-      }
+      },
     );
 
     const image = await provider.requestImage(0, 0, 0);
@@ -456,7 +458,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       {
         g: "3031",
         mkt: "ja-jp",
-      }
+      },
     );
 
     const image = await provider.requestImage(0, 0, 0);
@@ -492,7 +494,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       const url = request.url;
       if (/^blob:/.test(url)) {
@@ -500,14 +502,14 @@ describe("Scene/BingMapsImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred
+          deferred,
         );
       } else if (tries === 2) {
         // Succeed after 2 tries
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       } else {
         // fail
@@ -524,7 +526,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
@@ -534,7 +536,7 @@ describe("Scene/BingMapsImageryProvider", function () {
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       } else {
         // fail

@@ -5,9 +5,8 @@ import {
   KmlCamera,
   KmlLookAt,
   KmlTourFlyTo,
+  Math as CesiumMath,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -17,7 +16,7 @@ describe("DataSources/KmlTourFlyTo", function () {
     const hpr = new HeadingPitchRange(
       CesiumMath.toRadians(10.0),
       CesiumMath.toRadians(45.0),
-      10000
+      10000,
     );
 
     const flyto = new KmlTourFlyTo(10, "bounce", new KmlLookAt(position, hpr));
@@ -36,7 +35,7 @@ describe("DataSources/KmlTourFlyTo", function () {
     const hpr = new HeadingPitchRoll(
       CesiumMath.toRadians(10.0),
       CesiumMath.toRadians(45.0),
-      0
+      0,
     );
 
     const flyto = new KmlTourFlyTo(10, "bounce", new KmlCamera(position, hpr));
@@ -57,7 +56,7 @@ describe("DataSources/KmlTourFlyTo", function () {
     const hpr = new HeadingPitchRange(
       CesiumMath.toRadians(10.0),
       CesiumMath.toRadians(45.0),
-      10000
+      10000,
     );
 
     const flyto = new KmlTourFlyTo(10, "bounce", new KmlLookAt(position, hpr));
@@ -74,13 +73,13 @@ describe("DataSources/KmlTourFlyTo", function () {
     const hpr = new HeadingPitchRoll(
       CesiumMath.toRadians(10.0),
       CesiumMath.toRadians(45.0),
-      0
+      0,
     );
 
     const flyto = new KmlTourFlyTo(
       0.01,
       "bounce",
-      new KmlCamera(position, hpr)
+      new KmlCamera(position, hpr),
     );
     const doneSpy = jasmine.createSpy("cameraDone");
     const flyFake = jasmine.createSpy("flyTo").and.callFake(function (options) {
@@ -98,7 +97,7 @@ describe("DataSources/KmlTourFlyTo", function () {
     }).then(function () {
       expect(fakeCamera.flyTo).toHaveBeenCalled();
       expect(fakeCamera.flyTo.calls.mostRecent().args[0].destination).toBe(
-        position
+        position,
       );
       expect(fakeCamera.flyTo.calls.mostRecent().args[0].orientation).toBe(hpr);
       expect(doneSpy).toHaveBeenCalled();
@@ -110,13 +109,13 @@ describe("DataSources/KmlTourFlyTo", function () {
     const hpr = new HeadingPitchRange(
       CesiumMath.toRadians(10.0),
       CesiumMath.toRadians(45.0),
-      10000
+      10000,
     );
 
     const flyto = new KmlTourFlyTo(
       0.01,
       "bounce",
-      new KmlLookAt(position, hpr)
+      new KmlLookAt(position, hpr),
     );
     const doneSpy = jasmine.createSpy("cameraDone");
     const flyFake = jasmine
@@ -136,16 +135,16 @@ describe("DataSources/KmlTourFlyTo", function () {
     }).then(function () {
       expect(fakeCamera.flyToBoundingSphere).toHaveBeenCalled();
       expect(
-        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.x
+        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.x,
       ).toEqual(position.x);
       expect(
-        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.y
+        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.y,
       ).toEqual(position.y);
       expect(
-        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.z
+        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.z,
       ).toEqual(position.z);
       expect(
-        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[1].offset
+        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[1].offset,
       ).toBe(hpr);
       expect(doneSpy).toHaveBeenCalled();
     });

@@ -2,12 +2,11 @@ import {
   Cartesian4,
   Color,
   createElevationBandMaterial,
+  Math as CesiumMath,
   PixelFormat,
   Texture,
   TextureMinificationFilter,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 
@@ -1150,7 +1149,7 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(
       0,
       new Color(0, 0, 0, 1),
-      createElevationBandMaterial._minimumHeight
+      createElevationBandMaterial._minimumHeight,
     );
   });
 
@@ -1171,7 +1170,7 @@ describe("Scene/createElevationBandMaterial", function () {
     ];
 
     spyOn(createElevationBandMaterial, "_useFloatTexture").and.returnValue(
-      false
+      false,
     );
     createElevationBandMaterial({
       scene: scene,
@@ -1200,7 +1199,7 @@ describe("Scene/createElevationBandMaterial", function () {
     ];
 
     spyOn(createElevationBandMaterial, "_useFloatTexture").and.returnValue(
-      true
+      true,
     );
     createElevationBandMaterial({
       scene: scene,

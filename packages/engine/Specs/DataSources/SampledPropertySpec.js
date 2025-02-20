@@ -6,12 +6,11 @@ import {
   JulianDate,
   LagrangePolynomialApproximation,
   LinearApproximation,
+  Math as CesiumMath,
   Quaternion,
   TimeInterval,
   SampledProperty,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("DataSources/SampledProperty", function () {
   it("constructor sets expected defaults", function () {
@@ -111,6 +110,28 @@ describe("DataSources/SampledProperty", function () {
     expect(property.getValue(new JulianDate(0.5, 0))).toEqual(7.5);
   });
 
+  it("getSample works", function () {
+    const times = [
+      new JulianDate(0, 0),
+      new JulianDate(1, 0),
+      new JulianDate(2, 0),
+    ];
+    const values = [7, 8, 9];
+
+    const property = new SampledProperty(Number);
+    property.addSamples(times, values);
+
+    expect(property.getSample(0)).toEqual(times[0]);
+    expect(property.getSample(1)).toEqual(times[1]);
+    expect(property.getSample(2)).toEqual(times[2]);
+    expect(property.getSample(3)).toBe(undefined);
+
+    expect(property.getSample(-1)).toBe(times[2]);
+    expect(property.getSample(-2)).toBe(times[1]);
+    expect(property.getSample(-3)).toBe(times[0]);
+    expect(property.getSample(-4)).toBe(undefined);
+  });
+
   it("can remove a sample at a date", function () {
     const times = [
       new JulianDate(0, 0),
@@ -179,7 +200,7 @@ describe("DataSources/SampledProperty", function () {
       new TimeInterval({
         start: times[1],
         stop: times[3],
-      })
+      }),
     );
 
     expect(listener).toHaveBeenCalledWith(property);
@@ -202,7 +223,7 @@ describe("DataSources/SampledProperty", function () {
       new TimeInterval({
         start: JulianDate.addSeconds(times[1], 4, new JulianDate()),
         stop: times[3],
-      })
+      }),
     );
 
     expect(listener).toHaveBeenCalledWith(property);
@@ -220,7 +241,7 @@ describe("DataSources/SampledProperty", function () {
       new TimeInterval({
         start: JulianDate.addSeconds(times[1], 4, new JulianDate()),
         stop: JulianDate.addSeconds(times[3], -4, new JulianDate()),
-      })
+      }),
     );
 
     expect(listener).toHaveBeenCalledWith(property);
@@ -261,7 +282,7 @@ describe("DataSources/SampledProperty", function () {
         stop: times[3],
         isStartIncluded: false,
         isStopIncluded: true,
-      })
+      }),
     );
 
     expect(listener).toHaveBeenCalledWith(property);
@@ -279,7 +300,7 @@ describe("DataSources/SampledProperty", function () {
         stop: times[3],
         isStartIncluded: true,
         isStopIncluded: false,
-      })
+      }),
     );
 
     expect(listener).toHaveBeenCalledWith(property);
@@ -297,7 +318,7 @@ describe("DataSources/SampledProperty", function () {
         stop: times[3],
         isStartIncluded: false,
         isStopIncluded: false,
-      })
+      }),
     );
 
     expect(listener).toHaveBeenCalledWith(property);
@@ -325,7 +346,7 @@ describe("DataSources/SampledProperty", function () {
       packedArray,
       startingIndex,
       lastIndex,
-      result
+      result,
     ) {
       for (let i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
         const offset = i * 2;
@@ -339,7 +360,7 @@ describe("DataSources/SampledProperty", function () {
       sourceArray,
       firstIndex,
       lastIndex,
-      result
+      result,
     ) {
       if (!defined(result)) {
         result = new CustomType();
@@ -428,7 +449,7 @@ describe("DataSources/SampledProperty", function () {
 
     expect(property.getValue(time)).toEqual(value);
     expect(
-      property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))
+      property.getValue(JulianDate.addSeconds(time, 4, new JulianDate())),
     ).toBeUndefined();
   });
 
@@ -602,51 +623,15 @@ describe("DataSources/SampledProperty", function () {
     {
       epoch: JulianDate.fromIso8601("20130205T150405.704999999999927Z"),
       values: [
-        0.0,
-        1,
-        120.0,
-        2,
-        240.0,
-        3,
-        360.0,
-        4,
-        480.0,
-        6,
-        600.0,
-        8,
-        720.0,
-        10,
-        840.0,
-        12,
-        960.0,
-        14,
-        1080.0,
-        16,
+        0.0, 1, 120.0, 2, 240.0, 3, 360.0, 4, 480.0, 6, 600.0, 8, 720.0, 10,
+        840.0, 12, 960.0, 14, 1080.0, 16,
       ],
     },
     {
       epoch: JulianDate.fromIso8601("20130205T151151.60499999999956Z"),
       values: [
-        0.0,
-        5,
-        120.0,
-        7,
-        240.0,
-        9,
-        360.0,
-        11,
-        480.0,
-        13,
-        600.0,
-        15,
-        720.0,
-        17,
-        840.0,
-        18,
-        960.0,
-        19,
-        1080.0,
-        20,
+        0.0, 5, 120.0, 7, 240.0, 9, 360.0, 11, 480.0, 13, 600.0, 15, 720.0, 17,
+        840.0, 18, 960.0, 19, 1080.0, 20,
       ],
     },
   ];
@@ -659,14 +644,14 @@ describe("DataSources/SampledProperty", function () {
       times,
       values,
       interwovenData[0].values,
-      1
+      1,
     );
     SampledProperty._mergeNewSamples(
       interwovenData[1].epoch,
       times,
       values,
       interwovenData[1].values,
-      1
+      1,
     );
     for (let i = 0; i < values.length; i++) {
       expect(values[i]).toBe(i + 1);
@@ -760,16 +745,9 @@ describe("DataSources/SampledProperty", function () {
   //The remaining tests were verified with STK Components available from http://www.agi.com.
   it("addSample works with multiple derivatives", function () {
     const results = [
-      0,
-      -3.39969163485071,
-      0.912945250727628,
-      -6.17439797860995,
-      0.745113160479349,
-      -1.63963048028446,
-      -0.304810621102217,
-      4.83619040459681,
-      -0.993888653923375,
-      169.448966391543,
+      0, -3.39969163485071, 0.912945250727628, -6.17439797860995,
+      0.745113160479349, -1.63963048028446, -0.304810621102217,
+      4.83619040459681, -0.993888653923375, 169.448966391543,
     ];
 
     const property = new SampledProperty(Number, [Number, Number]);
@@ -783,17 +761,17 @@ describe("DataSources/SampledProperty", function () {
       property.addSample(
         JulianDate.addSeconds(epoch, x, new JulianDate()),
         Math.sin(x),
-        [Math.cos(x), -Math.sin(x)]
+        [Math.cos(x), -Math.sin(x)],
       );
     }
     let resultIndex = 0;
     for (let i = 0; i < 100; i += 10) {
       const result = property.getValue(
-        JulianDate.addSeconds(epoch, i, new JulianDate())
+        JulianDate.addSeconds(epoch, i, new JulianDate()),
       );
       expect(result).toEqualEpsilon(
         results[resultIndex++],
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     }
   });
@@ -894,11 +872,11 @@ describe("DataSources/SampledProperty", function () {
     let resultIndex = 0;
     for (let i = 0; i < 420; i += 20) {
       const result = property.getValue(
-        JulianDate.addSeconds(epoch, i, new JulianDate())
+        JulianDate.addSeconds(epoch, i, new JulianDate()),
       );
       expect(result).toEqualEpsilon(
         order1Results[resultIndex++],
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     }
   });
@@ -917,11 +895,11 @@ describe("DataSources/SampledProperty", function () {
     let resultIndex = 0;
     for (let i = 0; i < 420; i += 20) {
       const result = property.getValue(
-        JulianDate.addSeconds(epoch, i, new JulianDate())
+        JulianDate.addSeconds(epoch, i, new JulianDate()),
       );
       expect(result).toEqualEpsilon(
         order0Results[resultIndex++],
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     }
   });
@@ -937,11 +915,11 @@ describe("DataSources/SampledProperty", function () {
     let resultIndex = 0;
     for (let i = 0; i < 420; i += 20) {
       const result = property.getValue(
-        JulianDate.addSeconds(epoch, i, new JulianDate())
+        JulianDate.addSeconds(epoch, i, new JulianDate()),
       );
       expect(result).toEqualEpsilon(
         order1Results[resultIndex++],
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     }
   });
@@ -957,11 +935,11 @@ describe("DataSources/SampledProperty", function () {
     let resultIndex = 0;
     for (let i = 0; i < 420; i += 20) {
       const result = property.getValue(
-        JulianDate.addSeconds(epoch, i, new JulianDate())
+        JulianDate.addSeconds(epoch, i, new JulianDate()),
       );
       expect(result).toEqualEpsilon(
         order0Results[resultIndex++],
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     }
   });
@@ -984,11 +962,11 @@ describe("DataSources/SampledProperty", function () {
     let resultIndex = 0;
     for (let i = 0; i < 420; i += 20) {
       const result = property.getValue(
-        JulianDate.addSeconds(epoch, i, new JulianDate())
+        JulianDate.addSeconds(epoch, i, new JulianDate()),
       );
       expect(result).toEqualEpsilon(
         order1Results[resultIndex++],
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     }
   });
@@ -1010,11 +988,11 @@ describe("DataSources/SampledProperty", function () {
     let resultIndex = 0;
     for (let i = 0; i < 420; i += 20) {
       const result = property.getValue(
-        JulianDate.addSeconds(epoch, i, new JulianDate())
+        JulianDate.addSeconds(epoch, i, new JulianDate()),
       );
       expect(result).toEqualEpsilon(
         order0Results[resultIndex++],
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       );
     }
   });

@@ -5,6 +5,7 @@ import {
   defaultValue,
   defined,
   GeometryInstance,
+  Math as CesiumMath,
   PerspectiveFrustum,
   Rectangle,
   RectangleGeometry,
@@ -22,8 +23,6 @@ import {
   VerticalOrigin,
 } from "../../index.js";
 
-import { Math as CesiumMath } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -39,11 +38,11 @@ describe(
       scene = createScene();
       scene.primitives.destroyPrimitives = false;
 
-      return Resource.fetchImage("./Data/Images/Green.png").then(function (
-        image
-      ) {
-        greenImage = image;
-      });
+      return Resource.fetchImage("./Data/Images/Green.png").then(
+        function (image) {
+          greenImage = image;
+        },
+      );
     });
 
     afterAll(function () {
@@ -159,9 +158,8 @@ describe(
       // render until all labels have been updated
       return pollToPromise(function () {
         scene.renderForSpecs();
-        const backgroundBillboard = labels._backgroundBillboardCollection.get(
-          0
-        );
+        const backgroundBillboard =
+          labels._backgroundBillboardCollection.get(0);
         return (
           (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
           labels._labelsToUpdate.length === 0
@@ -338,5 +336,5 @@ describe(
       testOcclusionCull(primitive);
     });
   },
-  "WebGL"
+  "WebGL",
 );

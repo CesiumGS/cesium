@@ -1,6 +1,7 @@
-import { Resource, SceneMode, SkyBox } from "../../index.js";
+import { defined, Resource, SceneMode, SkyBox } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/SkyBox",
@@ -10,26 +11,22 @@ describe(
     let loadedImage;
 
     beforeAll(function () {
-      scene = createScene();
-
-      return Resource.fetchImage("./Data/Images/Blue.png").then(function (
-        image
-      ) {
-        loadedImage = image;
-      });
-    });
-
-    afterAll(function () {
-      scene.destroyForSpecs();
+      return Resource.fetchImage("./Data/Images/Blue.png").then(
+        function (image) {
+          loadedImage = image;
+        },
+      );
     });
 
     beforeEach(function () {
+      scene = createScene();
       scene.mode = SceneMode.SCENE3D;
     });
 
     afterEach(function () {
       skyBox = skyBox && skyBox.destroy();
       scene.skyBox = undefined;
+      scene.destroyForSpecs();
     });
 
     it("draws a sky box from Images", function () {
@@ -355,6 +352,32 @@ describe(
         return scene.render();
       }).toThrowDeveloperError();
     });
+
+    it("defers throwing error when Resources fail to load until next call to update", async () => {
+      const error = new Error("intentional error for test");
+      spyOn(Resource.prototype, "fetchImage").and.rejectWith(error);
+
+      skyBox = new SkyBox({
+        sources: {
+          positiveX: "./Data/Images/Blue.png",
+          negativeX: "./Data/Images/Blue.png",
+          positiveY: "./Data/Images/Blue.png",
+          negativeY: "./Data/Images/Blue.png",
+          positiveZ: "./Data/Images/Blue.png",
+          negativeZ: "./Data/Images/Blue.png",
+        },
+      });
+
+      scene.frameState.passes.render = true;
+      scene.skyBox = skyBox;
+      skyBox.update(scene.frameState);
+
+      await pollToPromise(() => defined(skyBox._cubeMap) || skyBox._hasError);
+
+      expect(skyBox._hasError).toBeTrue();
+      expect(skyBox._error).toEqual(error);
+      expect(() => skyBox.update(scene.frameState)).toThrow(error);
+    });
   },
-  "WebGL"
+  "WebGL",
 );

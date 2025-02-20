@@ -4,6 +4,7 @@ import {
   GeographicProjection,
   GeographicTilingScheme,
   getAbsoluteUri,
+  Math as CesiumMath,
   Rectangle,
   Request,
   RequestErrorEvent,
@@ -18,8 +19,6 @@ import {
   ImageryState,
   UrlTemplateImageryProvider,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -48,7 +47,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       // We can't resolve the promise immediately, because then the error would be raised
       // before we could subscribe to it.  This a problem particular to tests.
@@ -68,7 +67,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       // We can't resolve the promise immediately, because then the error would be raised
       // before we could subscribe to it.  This a problem particular to tests.
@@ -98,14 +97,14 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("fromUrl throws without url", async function () {
     await expectAsync(
-      TileMapServiceImageryProvider.fromUrl()
+      TileMapServiceImageryProvider.fromUrl(),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("fromUrl resolves to created provider", async function () {
     patchRequestScheduler(validSampleXmlString);
     const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server/"
+      "made/up/tms/server/",
     );
     expect(provider).toBeInstanceOf(TileMapServiceImageryProvider);
   });
@@ -136,12 +135,12 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
     await expectAsync(
-      TileMapServiceImageryProvider.fromUrl("made/up/tms/server")
+      TileMapServiceImageryProvider.fromUrl("made/up/tms/server"),
     ).toBeRejectedWithError(
       RuntimeError,
       new RegExp(
-        "made/up/tms/server/tilemapresource.xml specifies an unsupported profile attribute, foobar."
-      )
+        "made/up/tms/server/tilemapresource.xml specifies an unsupported profile attribute, foobar.",
+      ),
     );
   });
 
@@ -160,17 +159,17 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
     await expectAsync(
-      TileMapServiceImageryProvider.fromUrl("made/up/tms/server")
+      TileMapServiceImageryProvider.fromUrl("made/up/tms/server"),
     ).toBeRejectedWithError(
       RuntimeError,
-      new RegExp("Unable to find expected tilesets or bbox attributes")
+      new RegExp("Unable to find expected tilesets or bbox attributes"),
     );
   });
 
   it("returns valid value for hasAlphaChannel", async function () {
     patchRequestScheduler(validSampleXmlString);
     const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server/"
+      "made/up/tms/server/",
     );
 
     expect(typeof provider.hasAlphaChannel).toBe("boolean");
@@ -181,20 +180,18 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     const baseUrl = "made/up/tms/server/";
     const provider = await TileMapServiceImageryProvider.fromUrl(baseUrl);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toStartWith(getAbsoluteUri(baseUrl));
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toStartWith(getAbsoluteUri(baseUrl));
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     const image = await provider.requestImage(0, 0, 0);
     expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -204,23 +201,21 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   it("supports no slash at the end of the URL", async function () {
     patchRequestScheduler(validSampleXmlString);
     const provider = await TileMapServiceImageryProvider.fromUrl(
-      "http://made/up/tms/server"
+      "http://made/up/tms/server",
     );
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toContain("made/up/tms/server/");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toContain("made/up/tms/server/");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     const image = await provider.requestImage(0, 0, 0);
     expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -231,23 +226,21 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     patchRequestScheduler(validSampleXmlString);
     const baseUrl = "made/up/tms/server/";
     const provider = await TileMapServiceImageryProvider.fromUrl(
-      `${baseUrl}?a=some&b=query`
+      `${baseUrl}?a=some&b=query`,
     );
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toStartWith(getAbsoluteUri(baseUrl));
-      expect(request.url).toContain("?a=some&b=query");
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toStartWith(getAbsoluteUri(baseUrl));
+        expect(request.url).toContain("?a=some&b=query");
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     const image = await provider.requestImage(0, 0, 0);
     expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -257,7 +250,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   it("requestImage returns a promise for an image and loads it for cross-origin use", async function () {
     patchRequestScheduler(validSampleXmlString);
     const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server/"
+      "made/up/tms/server/",
     );
 
     // check some details about the tilemapresource.xml so we know we got parsed/configured properly
@@ -268,18 +261,16 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     expect(provider.tileWidth).toEqual(256);
     expect(provider.tileHeight).toEqual(256);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     const image = await provider.requestImage(0, 0, 0);
     expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -289,7 +280,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   it("when no credit is supplied, the provider has no logo", async function () {
     patchRequestScheduler(validSampleXmlString);
     const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server/"
+      "made/up/tms/server/",
     );
     expect(provider.credit).toBeUndefined();
   });
@@ -300,28 +291,30 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "made/up/gms/server",
       {
         credit: "Thanks to our awesome made up source of this imagery!",
-      }
+      },
     );
     expect(provider.credit).toBeDefined();
   });
 
   it("resource request takes a query string", async function () {
     /*eslint-disable no-unused-vars*/
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(/\?query=1$/.test(url)).toEqual(true);
-      deferred.reject(new RequestErrorEvent(404)); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(/\?query=1$/.test(url)).toEqual(true);
+        deferred.reject(new RequestErrorEvent(404)); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
+      },
+    );
 
     const provider = await TileMapServiceImageryProvider.fromUrl(
-      "http://server.invalid?query=1"
+      "http://server.invalid?query=1",
     );
   });
 
@@ -333,7 +326,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "made/up/tms/server",
       {
         rectangle: rectangle,
-      }
+      },
     );
 
     // check some values coming from tilemapresource.xml
@@ -344,36 +337,34 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     // check our rectangle from the constructor is correctly used
     expect(provider.rectangle.west).toEqualEpsilon(
       rectangle.west,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.east).toEqualEpsilon(
       rectangle.east,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.north).toEqualEpsilon(
       rectangle.north,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.south).toEqualEpsilon(
       rectangle.south,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.tileDiscardPolicy).toBeUndefined();
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toContain("/0/0/0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toContain("/0/0/0");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     const image = await provider.requestImage(0, 0, 0);
     expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -386,7 +377,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "made/up/tms/server",
       {
         maximumLevel: 5,
-      }
+      },
     );
 
     expect(provider.maximumLevel).toEqual(5);
@@ -394,9 +385,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("raises error event when image cannot be loaded", async function () {
     patchRequestScheduler(validSampleXmlString);
-    const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server"
-    );
+    const provider =
+      await TileMapServiceImageryProvider.fromUrl("made/up/tms/server");
 
     const layer = new ImageryLayer(provider);
 
@@ -415,14 +405,14 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       } else {
         // fail
@@ -460,37 +450,36 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "  </TileSets>" +
       "</TileMap>";
     patchRequestScheduler(xmlString);
-    const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server"
-    );
+    const provider =
+      await TileMapServiceImageryProvider.fromUrl("made/up/tms/server");
 
     expect(provider.rectangle.west).toEqualEpsilon(
       CesiumMath.toRadians(-180.0),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.west).toBeGreaterThanOrEqual(
-      provider.tilingScheme.rectangle.west
+      provider.tilingScheme.rectangle.west,
     );
     expect(provider.rectangle.east).toEqualEpsilon(
       CesiumMath.toRadians(180.0),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.east).toBeLessThanOrEqual(
-      provider.tilingScheme.rectangle.east
+      provider.tilingScheme.rectangle.east,
     );
     expect(provider.rectangle.south).toEqualEpsilon(
       -WebMercatorProjection.MaximumLatitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.south).toBeGreaterThanOrEqual(
-      provider.tilingScheme.rectangle.south
+      provider.tilingScheme.rectangle.south,
     );
     expect(provider.rectangle.north).toEqualEpsilon(
       WebMercatorProjection.MaximumLatitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.north).toBeLessThanOrEqual(
-      provider.tilingScheme.rectangle.north
+      provider.tilingScheme.rectangle.north,
     );
   });
 
@@ -510,9 +499,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server"
-    );
+    const provider =
+      await TileMapServiceImageryProvider.fromUrl("made/up/tms/server");
 
     expect(provider.maximumLevel).toBe(8);
     expect(provider.minimumLevel).toBe(7);
@@ -534,9 +522,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server"
-    );
+    const provider =
+      await TileMapServiceImageryProvider.fromUrl("made/up/tms/server");
 
     expect(provider.maximumLevel).toBe(8);
     expect(provider.minimumLevel).toBe(0);
@@ -558,9 +545,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</Tilemap>";
     patchRequestScheduler(xmlString);
 
-    const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server"
-    );
+    const provider =
+      await TileMapServiceImageryProvider.fromUrl("made/up/tms/server");
 
     expect(provider.maximumLevel).toBe(8);
     expect(provider.minimumLevel).toBe(7);
@@ -582,28 +568,27 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server"
-    );
+    const provider =
+      await TileMapServiceImageryProvider.fromUrl("made/up/tms/server");
 
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.tilingScheme.projection).toBeInstanceOf(
-      WebMercatorProjection
+      WebMercatorProjection,
     );
 
     const projection = provider.tilingScheme.projection;
     const expectedSW = projection.unproject(
-      new Cartesian2(-11877789.667642293, 1707163.7595205167)
+      new Cartesian2(-11877789.667642293, 1707163.7595205167),
     );
     const expectedNE = projection.unproject(
-      new Cartesian2(-4696205.4540757351, 7952627.0736533012)
+      new Cartesian2(-4696205.4540757351, 7952627.0736533012),
     );
 
     expect(provider.rectangle.west).toEqual(expectedSW.longitude);
     expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       expectedNE.longitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.north).toEqual(expectedNE.latitude);
   });
@@ -624,26 +609,25 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    const provider = await TileMapServiceImageryProvider.fromUrl(
-      "made/up/tms/server"
-    );
+    const provider =
+      await TileMapServiceImageryProvider.fromUrl("made/up/tms/server");
 
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.tilingScheme.projection).toBeInstanceOf(
-      GeographicProjection
+      GeographicProjection,
     );
 
     const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
     const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-    expect(provider.rectangle.west).toBeCloseTo(
+    expect(provider.rectangle.west).toEqualEpsilon(
       expectedSW.longitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       expectedNE.longitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.north).toEqual(expectedNE.latitude);
   });
@@ -668,25 +652,25 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "made/up/tms/server",
       {
         flipXY: true,
-      }
+      },
     );
 
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.tilingScheme.projection).toBeInstanceOf(
-      WebMercatorProjection
+      WebMercatorProjection,
     );
 
     const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
     const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-    expect(provider.rectangle.west).toBeCloseTo(
+    expect(provider.rectangle.west).toEqualEpsilon(
       expectedSW.longitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       expectedNE.longitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.north).toEqual(expectedNE.latitude);
   });
@@ -711,25 +695,25 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "made/up/tms/server",
       {
         flipXY: true,
-      }
+      },
     );
 
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.tilingScheme.projection).toBeInstanceOf(
-      GeographicProjection
+      GeographicProjection,
     );
 
     const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
     const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-    expect(provider.rectangle.west).toBeCloseTo(
+    expect(provider.rectangle.west).toEqualEpsilon(
       expectedSW.longitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       expectedNE.longitude,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.north).toEqual(expectedNE.latitude);
   });
@@ -740,7 +724,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "made/up/tms/server",
       {
         minimumLevel: 10,
-      }
+      },
     );
 
     // we expect that our minimum detail level was forced to 0, even though we requested 10.
@@ -762,9 +746,9 @@ describe("Scene/TileMapServiceImageryProvider", function () {
           CesiumMath.toRadians(131.020889),
           CesiumMath.toRadians(-25.35473),
           CesiumMath.toRadians(131.054363),
-          CesiumMath.toRadians(-25.335803)
+          CesiumMath.toRadians(-25.335803),
         ),
-      }
+      },
     );
 
     // we expect that our minimum detail level remains at 12, which is quite high, but that's okay

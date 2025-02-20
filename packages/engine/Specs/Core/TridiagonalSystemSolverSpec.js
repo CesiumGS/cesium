@@ -1,6 +1,8 @@
-import { Cartesian3, TridiagonalSystemSolver } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  TridiagonalSystemSolver,
+} from "../../index.js";
 
 describe("Core/TridiagonalSystemSolver", function () {
   it("solve throws exception without lower diagonal", function () {
@@ -71,14 +73,7 @@ describe("Core/TridiagonalSystemSolver", function () {
   it("solve nine unknowns", function () {
     const l = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
     const d = [
-      -2.0304,
-      -2.0288,
-      -2.0272,
-      -2.0256,
-      -2.024,
-      -2.0224,
-      -2.0208,
-      -2.0192,
+      -2.0304, -2.0288, -2.0272, -2.0256, -2.024, -2.0224, -2.0208, -2.0192,
       -2.0176,
     ];
     const u = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];

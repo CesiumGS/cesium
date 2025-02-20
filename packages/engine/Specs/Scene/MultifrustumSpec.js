@@ -8,6 +8,7 @@ import {
   defined,
   destroyObject,
   GeometryPipeline,
+  Math as CesiumMath,
   Matrix4,
   Resource,
   BufferUsage,
@@ -21,8 +22,6 @@ import {
   BlendingState,
   TextureAtlas,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -217,7 +216,7 @@ describe(
         this._rs = undefined;
         this._modelMatrix = Matrix4.fromTranslation(
           new Cartesian3(0.0, 0.0, -50000.0),
-          new Matrix4()
+          new Matrix4(),
         );
 
         this.color = new Color(1.0, 1.0, 0.0, 1.0);
@@ -254,18 +253,17 @@ describe(
           const maximum = Cartesian3.multiplyByScalar(
             dimensions,
             0.5,
-            new Cartesian3()
+            new Cartesian3(),
           );
           const minimum = Cartesian3.negate(maximum, new Cartesian3());
           const geometry = BoxGeometry.createGeometry(
             new BoxGeometry({
               minimum: minimum,
               maximum: maximum,
-            })
+            }),
           );
-          const attributeLocations = GeometryPipeline.createAttributeLocations(
-            geometry
-          );
+          const attributeLocations =
+            GeometryPipeline.createAttributeLocations(geometry);
           this._va = VertexArray.fromGeometry({
             context: frameState.context,
             geometry: geometry,
@@ -297,7 +295,7 @@ describe(
               ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0)
               : undefined,
             pass: Pass.OPAQUE,
-          })
+          }),
         );
       };
 
@@ -376,5 +374,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

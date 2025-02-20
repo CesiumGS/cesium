@@ -41,6 +41,7 @@ import Cesium3DTilesetHeatmap from "./Cesium3DTilesetHeatmap.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
@@ -60,6 +61,7 @@ import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedT
 import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
 import Ray from "../Core/Ray.js";
+import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
 
 /**
  * @typedef {Object} Cesium3DTileset.ConstructorOptions
@@ -97,6 +99,7 @@ import Ray from "../Core/Ray.js";
  * @property {boolean} [immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
  * @property {boolean} [loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
  * @property {ClippingPlaneCollection} [clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+ * @property {ClippingPolygonCollection} [clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the tileset.
  * @property {ClassificationType} [classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
  * @property {HeightReference} [heightReference] Sets the {@link HeightReference} for point features in vector tilesets.
  * @property {Scene} [scene] The {@link CesiumWidget#scene}. Must be passed in for tilesets that use {@link HeightReference} to clamp billboards and labels of vector tiles.
@@ -104,6 +107,7 @@ import Ray from "../Core/Ray.js";
  * @property {object} [pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @property {Cartesian3} [lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @property {ImageBasedLighting} [imageBasedLighting] The properties for managing image-based lighting for this tileset.
+ * @property {DynamicEnvironmentMapManager.ConstructorOptions} [environmentMapOptions] The properties for managing dynamic environment maps on this tileset.
  * @property {boolean} [backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @property {boolean} [enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
  * @property {boolean} [showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
@@ -229,7 +233,7 @@ function Cesium3DTileset(options) {
 
   this._cullWithChildrenBounds = defaultValue(
     options.cullWithChildrenBounds,
-    true
+    true,
   );
   this._allTilesAdditive = true;
 
@@ -240,7 +244,7 @@ function Cesium3DTileset(options) {
 
   this._maximumScreenSpaceError = defaultValue(
     options.maximumScreenSpaceError,
-    16
+    16,
   );
   this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
 
@@ -251,13 +255,13 @@ function Cesium3DTileset(options) {
 
   const maximumCacheOverflowBytes = defaultValue(
     options.maximumCacheOverflowBytes,
-    512 * 1024 * 1024
+    512 * 1024 * 1024,
   );
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals(
     "maximumCacheOverflowBytes",
     maximumCacheOverflowBytes,
-    0
+    0,
   );
   //>>includeEnd('debug');
   this._maximumCacheOverflowBytes = maximumCacheOverflowBytes;
@@ -294,7 +298,7 @@ function Cesium3DTileset(options) {
     reverseScreenSpaceError: Number.MAX_VALUE,
   };
   this._heatmap = new Cesium3DTilesetHeatmap(
-    options.debugHeatmapTilePropertyName
+    options.debugHeatmapTilePropertyName,
   );
 
   /**
@@ -305,7 +309,7 @@ function Cesium3DTileset(options) {
    */
   this.cullRequestsWhileMoving = defaultValue(
     options.cullRequestsWhileMoving,
-    true
+    true,
   );
   this._cullRequestsWhileMoving = false;
 
@@ -317,7 +321,7 @@ function Cesium3DTileset(options) {
    */
   this.cullRequestsWhileMovingMultiplier = defaultValue(
     options.cullRequestsWhileMovingMultiplier,
-    60.0
+    60.0,
   );
 
   /**
@@ -329,7 +333,7 @@ function Cesium3DTileset(options) {
   this.progressiveResolutionHeightFraction = CesiumMath.clamp(
     defaultValue(options.progressiveResolutionHeightFraction, 0.3),
     0.0,
-    0.5
+    0.5,
   );
 
   /**
@@ -357,12 +361,12 @@ function Cesium3DTileset(options) {
 
   this._vectorClassificationOnly = defaultValue(
     options.vectorClassificationOnly,
-    false
+    false,
   );
 
   this._vectorKeepDecodedPositions = defaultValue(
     options.vectorKeepDecodedPositions,
-    false
+    false,
   );
 
   /**
@@ -381,7 +385,7 @@ function Cesium3DTileset(options) {
    */
   this.preloadFlightDestinations = defaultValue(
     options.preloadFlightDestinations,
-    true
+    true,
   );
   this._pass = undefined; // Cesium3DTilePass
 
@@ -397,7 +401,7 @@ function Cesium3DTileset(options) {
    */
   this.dynamicScreenSpaceError = defaultValue(
     options.dynamicScreenSpaceError,
-    true
+    true,
   );
 
   /**
@@ -410,12 +414,12 @@ function Cesium3DTileset(options) {
    */
   this.foveatedScreenSpaceError = defaultValue(
     options.foveatedScreenSpaceError,
-    true
+    true,
   );
   this._foveatedConeSize = defaultValue(options.foveatedConeSize, 0.1);
   this._foveatedMinimumScreenSpaceErrorRelaxation = defaultValue(
     options.foveatedMinimumScreenSpaceErrorRelaxation,
-    0.0
+    0.0,
   );
 
   /**
@@ -426,7 +430,7 @@ function Cesium3DTileset(options) {
    */
   this.foveatedInterpolationCallback = defaultValue(
     options.foveatedInterpolationCallback,
-    CesiumMath.lerp
+    CesiumMath.lerp,
   );
 
   /**
@@ -463,7 +467,7 @@ function Cesium3DTileset(options) {
    */
   this.dynamicScreenSpaceErrorDensity = defaultValue(
     options.dynamicScreenSpaceErrorDensity,
-    2.0e-4
+    2.0e-4,
   );
 
   /**
@@ -484,7 +488,7 @@ function Cesium3DTileset(options) {
    */
   this.dynamicScreenSpaceErrorFactor = defaultValue(
     options.dynamicScreenSpaceErrorFactor,
-    24.0
+    24.0,
   );
 
   /**
@@ -498,7 +502,7 @@ function Cesium3DTileset(options) {
    */
   this.dynamicScreenSpaceErrorHeightFalloff = defaultValue(
     options.dynamicScreenSpaceErrorHeightFalloff,
-    0.25
+    0.25,
   );
 
   // Updated based on the camera position and direction
@@ -761,7 +765,7 @@ function Cesium3DTileset(options) {
    */
   this.skipScreenSpaceErrorFactor = defaultValue(
     options.skipScreenSpaceErrorFactor,
-    16
+    16,
   );
 
   /**
@@ -788,7 +792,7 @@ function Cesium3DTileset(options) {
    */
   this.immediatelyLoadDesiredLevelOfDetail = defaultValue(
     options.immediatelyLoadDesiredLevelOfDetail,
-    false
+    false,
   );
 
   /**
@@ -804,7 +808,22 @@ function Cesium3DTileset(options) {
   this.loadSiblings = defaultValue(options.loadSiblings, false);
 
   this._clippingPlanes = undefined;
-  this.clippingPlanes = options.clippingPlanes;
+  if (defined(options.clippingPlanes)) {
+    ClippingPlaneCollection.setOwner(
+      options.clippingPlanes,
+      this,
+      "_clippingPlanes",
+    );
+  }
+
+  this._clippingPolygons = undefined;
+  if (defined(options.clippingPolygons)) {
+    ClippingPolygonCollection.setOwner(
+      options.clippingPolygons,
+      this,
+      "_clippingPolygons",
+    );
+  }
 
   if (defined(options.imageBasedLighting)) {
     this._imageBasedLighting = options.imageBasedLighting;
@@ -813,6 +832,10 @@ function Cesium3DTileset(options) {
     this._imageBasedLighting = new ImageBasedLighting();
     this._shouldDestroyImageBasedLighting = true;
   }
+
+  this._environmentMapManager = new DynamicEnvironmentMapManager(
+    options.environmentMapOptions,
+  );
 
   /**
    * The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
@@ -864,7 +887,7 @@ function Cesium3DTileset(options) {
    */
   this.splitDirection = defaultValue(
     options.splitDirection,
-    SplitDirection.NONE
+    SplitDirection.NONE,
   );
 
   /**
@@ -905,7 +928,7 @@ function Cesium3DTileset(options) {
 
   this._enableDebugWireframe = defaultValue(
     options.enableDebugWireframe,
-    false
+    false,
   );
 
   /**
@@ -923,7 +946,7 @@ function Cesium3DTileset(options) {
   if (this.debugWireframe === true && this._enableDebugWireframe === false) {
     oneTimeWarning(
       "tileset-debug-wireframe-ignored",
-      "enableDebugWireframe must be set to true in the Cesium3DTileset constructor, otherwise debugWireframe will be ignored."
+      "enableDebugWireframe must be set to true in the Cesium3DTileset constructor, otherwise debugWireframe will be ignored.",
     );
   }
 
@@ -940,7 +963,7 @@ function Cesium3DTileset(options) {
    */
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
 
   /**
@@ -955,7 +978,7 @@ function Cesium3DTileset(options) {
    */
   this.debugShowContentBoundingVolume = defaultValue(
     options.debugShowContentBoundingVolume,
-    false
+    false,
   );
 
   /**
@@ -969,7 +992,7 @@ function Cesium3DTileset(options) {
    */
   this.debugShowViewerRequestVolume = defaultValue(
     options.debugShowViewerRequestVolume,
-    false
+    false,
   );
 
   /**
@@ -992,7 +1015,7 @@ function Cesium3DTileset(options) {
    */
   this.debugShowGeometricError = defaultValue(
     options.debugShowGeometricError,
-    false
+    false,
   );
 
   /**
@@ -1006,7 +1029,7 @@ function Cesium3DTileset(options) {
    */
   this.debugShowRenderingStatistics = defaultValue(
     options.debugShowRenderingStatistics,
-    false
+    false,
   );
 
   /**
@@ -1055,7 +1078,7 @@ function Cesium3DTileset(options) {
 
   let instanceFeatureIdLabel = defaultValue(
     options.instanceFeatureIdLabel,
-    "instanceFeatureId_0"
+    "instanceFeatureId_0",
   );
   if (typeof instanceFeatureIdLabel === "number") {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
@@ -1121,6 +1144,22 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
+    },
+  },
+
+  /**
+   * The {@link ClippingPolygonCollection} used to selectively disable rendering the tileset.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {ClippingPolygonCollection}
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._clippingPolygons;
+    },
+    set: function (value) {
+      ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
     },
   },
 
@@ -1195,7 +1234,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     get: function () {
       deprecationWarning(
         "Cesium3DTileset.basePath",
-        "Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset JSON file that contains them. Use the url property instead."
+        "Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset JSON file that contains them. Use the url property instead.",
       );
       return this._basePath;
     },
@@ -1411,7 +1450,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       Check.typeOf.number.greaterThanOrEquals(
         "maximumScreenSpaceError",
         value,
-        0
+        0,
       );
       //>>includeEnd('debug');
 
@@ -1646,7 +1685,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
         Matrix4.multiply(
           this.root.computedTransform,
           this._initialClippingPlanesOriginMatrix,
-          this._clippingPlanesOriginMatrix
+          this._clippingPlanesOriginMatrix,
         );
         this._clippingPlanesOriginMatrixDirty = false;
       }
@@ -1808,12 +1847,12 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       Check.typeOf.number.greaterThanOrEquals(
         "foveatedMinimumScreenSpaceErrorRelaxation",
         value,
-        0.0
+        0.0,
       );
       Check.typeOf.number.lessThanOrEquals(
         "foveatedMinimumScreenSpaceErrorRelaxation",
         value,
-        this.maximumScreenSpaceError
+        this.maximumScreenSpaceError,
       );
       //>>includeEnd('debug');
 
@@ -1863,6 +1902,25 @@ Object.defineProperties(Cesium3DTileset.prototype, {
         this._imageBasedLighting = value;
         this._shouldDestroyImageBasedLighting = false;
       }
+    },
+  },
+
+  /**
+   * The properties for managing dynamic environment maps on this model. Affects lighting.
+   *
+   * @memberof Cesium3DTileset.prototype
+   * @readonly
+   *
+   * @example
+   * // Change the ground color used for a tileset's environment map to a forest green
+   * const environmentMapManager = tileset.environmentMapManager;
+   * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
+   *
+   * @type {DynamicEnvironmentMapManager}
+   */
+  environmentMapManager: {
+    get: function () {
+      return this._environmentMapManager;
     },
   },
 
@@ -2087,7 +2145,7 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   const tilesetJson = await Cesium3DTileset.loadJson(resource);
   const metadataExtension = await processMetadataExtension(
     resource,
-    tilesetJson
+    tilesetJson,
   );
 
   const tileset = new Cesium3DTileset(options);
@@ -2125,27 +2183,25 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   // the tile transform and model matrix at run time
   const boundingVolume = tileset._root.createBoundingVolume(
     tilesetJson.root.boundingVolume,
-    Matrix4.IDENTITY
+    Matrix4.IDENTITY,
   );
   const clippingPlanesOrigin = boundingVolume.boundingSphere.center;
   // If this origin is above the surface of the earth
   // we want to apply an ENU orientation as our best guess of orientation.
   // Otherwise, we assume it gets its position/orientation completely from the
   // root tile transform and the tileset's model matrix
-  const originCartographic = tileset._ellipsoid.cartesianToCartographic(
-    clippingPlanesOrigin
-  );
+  const originCartographic =
+    tileset._ellipsoid.cartesianToCartographic(clippingPlanesOrigin);
   if (
     defined(originCartographic) &&
     originCartographic.height >
       ApproximateTerrainHeights._defaultMinTerrainHeight
   ) {
-    tileset._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(
-      clippingPlanesOrigin
-    );
+    tileset._initialClippingPlanesOriginMatrix =
+      Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
   }
   tileset._clippingPlanesOriginMatrix = Matrix4.clone(
-    tileset._initialClippingPlanesOriginMatrix
+    tileset._initialClippingPlanesOriginMatrix,
   );
 
   return tileset;
@@ -2181,7 +2237,7 @@ Cesium3DTileset.prototype.makeStyleDirty = function () {
 Cesium3DTileset.prototype.loadTileset = function (
   resource,
   tilesetJson,
-  parentTile
+  parentTile,
 ) {
   const asset = tilesetJson.asset;
   if (!defined(asset)) {
@@ -2193,7 +2249,7 @@ Cesium3DTileset.prototype.loadTileset = function (
     asset.version !== "1.1"
   ) {
     throw new RuntimeError(
-      "The tileset must be 3D Tiles version 0.0, 1.0, or 1.1"
+      "The tileset must be 3D Tiles version 0.0, 1.0, or 1.1",
     );
   }
 
@@ -2276,7 +2332,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
   const implicitTileset = new ImplicitTileset(
     baseResource,
     tileHeader,
-    metadataSchema
+    metadataSchema,
   );
   const rootCoordinates = new ImplicitTileCoordinates({
     subdivisionScheme: implicitTileset.subdivisionScheme,
@@ -2392,21 +2448,21 @@ function updateDynamicScreenSpaceError(tileset, frameState) {
     // Transform camera position and direction into the local coordinate system of the tileset
     const transformLocal = Matrix4.inverseTransformation(
       root.computedTransform,
-      scratchMatrix
+      scratchMatrix,
     );
     const ellipsoid = frameState.mapProjection.ellipsoid;
     const boundingVolume = tileBoundingVolume.boundingVolume;
     const centerLocal = Matrix4.multiplyByPoint(
       transformLocal,
       boundingVolume.center,
-      scratchCenter
+      scratchCenter,
     );
     if (Cartesian3.magnitude(centerLocal) > ellipsoid.minimumRadius) {
       // The tileset is defined in WGS84. Approximate the minimum and maximum height.
       const centerCartographic = Cartographic.fromCartesian(
         centerLocal,
         ellipsoid,
-        scratchCartographic
+        scratchCartographic,
       );
       up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
       direction = camera.directionWC;
@@ -2418,13 +2474,13 @@ function updateDynamicScreenSpaceError(tileset, frameState) {
       const positionLocal = Matrix4.multiplyByPoint(
         transformLocal,
         camera.positionWC,
-        scratchPosition
+        scratchPosition,
       );
       up = Cartesian3.UNIT_Z;
       direction = Matrix4.multiplyByPointAsVector(
         transformLocal,
         camera.directionWC,
-        scratchDirection
+        scratchDirection,
       );
       direction = Cartesian3.normalize(direction, direction);
       height = positionLocal.z;
@@ -2434,7 +2490,7 @@ function updateDynamicScreenSpaceError(tileset, frameState) {
         const halfHeightVector = Matrix3.getColumn(
           boundingVolume.halfAxes,
           2,
-          scratchHalfHeight
+          scratchHalfHeight,
         );
         const halfHeight = Cartesian3.magnitude(halfHeightVector);
         minimumHeight = centerLocal.z - halfHeight;
@@ -2456,7 +2512,7 @@ function updateDynamicScreenSpaceError(tileset, frameState) {
   const t = CesiumMath.clamp(
     (height - heightClose) / (heightFar - heightClose),
     0.0,
-    1.0
+    1.0,
   );
 
   // Increase density as the camera tilts towards the horizon
@@ -2559,12 +2615,18 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
     clippingPlanes.update(frameState);
   }
 
+  // Update clipping polygons
+  const clippingPolygons = this._clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.enabled) {
+    clippingPolygons.update(frameState);
+  }
+
   if (!defined(this._loadTimestamp)) {
     this._loadTimestamp = JulianDate.clone(frameState.time);
   }
   this._timeSinceLoad = Math.max(
     JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000,
-    0.0
+    0.0,
   );
 
   if (this.dynamicScreenSpaceError) {
@@ -2647,6 +2709,7 @@ function handleTileFailure(error, tileset, tile) {
   } else {
     console.log(`A 3D tile failed to load: ${url}`);
     console.log(`Error: ${message}`);
+    console.log(error.stack);
   }
 }
 
@@ -2694,12 +2757,12 @@ function processUpdateHeight(tileset, tile, frameState) {
     const ellipsoid = callbackData.ellipsoid;
     const positionCartographic = Cartographic.clone(
       callbackData.positionCartographic,
-      scratchUpdateHeightCartographic
+      scratchUpdateHeightCartographic,
     );
     const centerCartographic = Cartographic.fromCartesian(
       boundingSphere.center,
       ellipsoid,
-      scratchUpdateHeightCartographic2
+      scratchUpdateHeightCartographic2,
     );
 
     // This can be undefined when the bounding sphere is at the origin
@@ -2710,7 +2773,7 @@ function processUpdateHeight(tileset, tile, frameState) {
     const position = Cartographic.toCartesian(
       positionCartographic,
       ellipsoid,
-      scratchUpdateHeightCartesian
+      scratchUpdateHeightCartesian,
     );
     if (
       Cartesian3.distance(position, boundingSphere.center) <=
@@ -2774,7 +2837,7 @@ function increaseScreenSpaceError(tileset) {
     "increase-screenSpaceError",
     `The tiles needed to meet maximumScreenSpaceError would use more memory than allocated for this tileset.
     The tileset will be rendered with a larger screen space error (see memoryAdjustedScreenSpaceError).
-    Consider using larger values for cacheBytes and maximumCacheOverflowBytes.`
+    Consider using larger values for cacheBytes and maximumCacheOverflowBytes.`,
   );
   //>>includeEnd('debug');
 
@@ -2789,7 +2852,7 @@ function increaseScreenSpaceError(tileset) {
 function decreaseScreenSpaceError(tileset) {
   tileset._memoryAdjustedScreenSpaceError = Math.max(
     tileset.memoryAdjustedScreenSpaceError / 1.02,
-    tileset.maximumScreenSpaceError
+    tileset.maximumScreenSpaceError,
   );
 }
 
@@ -2830,7 +2893,7 @@ function computeTileLabelPosition(tile) {
     normal = Cartesian3.multiplyByScalar(
       normal,
       0.75 * radius,
-      scratchCartesian
+      scratchCartesian,
     );
     position = Cartesian3.add(normal, center, scratchCartesian);
   }
@@ -2876,10 +2939,10 @@ function addTileDebugLabel(tile, tileset, position) {
 
   if (tileset.debugShowMemoryUsage) {
     labelString += `\nTexture Memory: ${formatMemoryString(
-      tile.content.texturesByteLength
+      tile.content.texturesByteLength,
     )}`;
     labelString += `\nGeometry Memory: ${formatMemoryString(
-      tile.content.geometryByteLength
+      tile.content.geometryByteLength,
     )}`;
     attributes += 2;
   }
@@ -2929,7 +2992,7 @@ function updateTileDebugLabels(tileset, frameState) {
       const label = addTileDebugLabel(
         tileset.debugPickedTile,
         tileset,
-        position
+        position,
       );
       label.pixelOffset = new Cartesian2(15, -15); // Offset to avoid picking the label.
     }
@@ -3069,7 +3132,7 @@ function updateTiles(tileset, frameState, passOptions) {
       frameState,
       numberOfInitialCommands,
       tileset.pointCloudShading,
-      tileset.boundingSphere
+      tileset.boundingSphere,
     );
   }
 
@@ -3173,7 +3236,7 @@ function raiseLoadProgressEvent(tileset, frameState) {
     frameState.afterRender.push(function () {
       tileset.loadProgress.raiseEvent(
         numberOfPendingRequests,
-        numberOfTilesProcessing
+        numberOfTilesProcessing,
       );
 
       return true;
@@ -3235,12 +3298,12 @@ function detectModelMatrixChanged(tileset, frameState) {
   tileset._updatedModelMatrixFrame = frameState.frameNumber;
   tileset._modelMatrixChanged = !Matrix4.equals(
     tileset.modelMatrix,
-    tileset._previousModelMatrix
+    tileset._previousModelMatrix,
   );
   if (tileset._modelMatrixChanged) {
     tileset._previousModelMatrix = Matrix4.clone(
       tileset.modelMatrix,
-      tileset._previousModelMatrix
+      tileset._previousModelMatrix,
     );
   }
 }
@@ -3330,7 +3393,7 @@ function createCredits(tileset) {
   credits.forEach(
     (credit) =>
       (credit.showOnScreen =
-        credit.showOnScreen || tileset._showCreditsOnScreen)
+        credit.showOnScreen || tileset._showCreditsOnScreen),
   );
 
   tileset._credits = credits;
@@ -3369,7 +3432,7 @@ Cesium3DTileset.prototype.update = function (frameState) {
  */
 Cesium3DTileset.prototype.updateForPass = function (
   frameState,
-  tilesetPassState
+  tilesetPassState,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
@@ -3401,7 +3464,7 @@ Cesium3DTileset.prototype.updateForPass = function (
 
   const commandList = defaultValue(
     tilesetPassState.commandList,
-    originalCommandList
+    originalCommandList,
   );
   const commandStart = commandList.length;
 
@@ -3409,8 +3472,22 @@ Cesium3DTileset.prototype.updateForPass = function (
   frameState.camera = defaultValue(tilesetPassState.camera, originalCamera);
   frameState.cullingVolume = defaultValue(
     tilesetPassState.cullingVolume,
-    originalCullingVolume
+    originalCullingVolume,
   );
+
+  if (passOptions.isRender) {
+    const environmentMapManager = this._environmentMapManager;
+    if (defined(this._root)) {
+      environmentMapManager.position = this.boundingSphere.center;
+    }
+    environmentMapManager.update(frameState);
+  }
+
+  // Update clipping polygons
+  const clippingPolygons = this._clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.enabled) {
+    clippingPolygons.queueCommands(frameState);
+  }
 
   const passStatistics = this._statisticsPerPass[pass];
 
@@ -3420,7 +3497,7 @@ Cesium3DTileset.prototype.updateForPass = function (
       this,
       frameState,
       passStatistics,
-      passOptions
+      passOptions,
     );
   }
 
@@ -3480,6 +3557,8 @@ Cesium3DTileset.prototype.destroy = function () {
   this._tileDebugLabels =
     this._tileDebugLabels && this._tileDebugLabels.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+  this._clippingPolygons =
+    this._clippingPolygons && this._clippingPolygons.destroy();
 
   // Traverse the tree and destroy all tiles
   if (defined(this._root)) {
@@ -3505,6 +3584,11 @@ Cesium3DTileset.prototype.destroy = function () {
     this._imageBasedLighting.destroy();
   }
   this._imageBasedLighting = undefined;
+
+  if (!this._environmentMapManager.isDestroyed()) {
+    this._environmentMapManager.destroy();
+  }
+  this._environmentMapManager = undefined;
 
   return destroyObject(this);
 };
@@ -3532,7 +3616,7 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
   for (let i = 0; i < extensionsRequired.length; i++) {
     if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
       throw new RuntimeError(
-        `Unsupported 3D Tiles Extension: ${extensionsRequired[i]}`
+        `Unsupported 3D Tiles Extension: ${extensionsRequired[i]}`,
       );
     }
   }
@@ -3561,7 +3645,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
   Check.typeOf.object("scene", scene);
   //>>includeEnd('debug');
 
-  let ellipsoid = scene.globe?.ellipsoid;
+  let ellipsoid = scene.ellipsoid;
   if (!defined(ellipsoid)) {
     ellipsoid = Ellipsoid.WGS84;
   }
@@ -3569,7 +3653,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
   const ray = scratchGetHeightRay;
   const position = ellipsoid.cartographicToCartesian(
     cartographic,
-    ray.direction
+    ray.direction,
   );
   Cartesian3.normalize(ray.direction, ray.direction);
 
@@ -3578,7 +3662,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
   ray.origin = Cartesian3.multiplyByScalar(
     ray.direction,
     -2 * ellipsoid.maximumRadius,
-    ray.origin
+    ray.origin,
   );
 
   const intersection = this.pick(ray, scene.frameState, scratchIntersection);
@@ -3588,7 +3672,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
 
   return ellipsoid.cartesianToCartographic(
     intersection,
-    scratchGetHeightCartographic
+    scratchGetHeightCartographic,
   )?.height;
 };
 
@@ -3607,7 +3691,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
 Cesium3DTileset.prototype.updateHeight = function (
   cartographic,
   callback,
-  ellipsoid
+  ellipsoid,
 ) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
@@ -3664,7 +3748,7 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
     const boundsIntersection = IntersectionTests.raySphere(
       ray,
       tile.contentBoundingVolume.boundingSphere,
-      scratchSphereIntersection
+      scratchSphereIntersection,
     );
     if (!defined(boundsIntersection) || !defined(tile.content)) {
       continue;
@@ -3677,11 +3761,11 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
   candidates.sort((a, b) => {
     const aDist = BoundingSphere.distanceSquaredTo(
       a.contentBoundingVolume.boundingSphere,
-      ray.origin
+      ray.origin,
     );
     const bDist = BoundingSphere.distanceSquaredTo(
       b.contentBoundingVolume.boundingSphere,
-      ray.origin
+      ray.origin,
     );
 
     return aDist - bDist;
@@ -3693,7 +3777,7 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
     const candidate = tile.content.pick(
       ray,
       frameState,
-      scratchPickIntersection
+      scratchPickIntersection,
     );
 
     if (defined(candidate)) {

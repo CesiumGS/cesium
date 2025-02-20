@@ -1,6 +1,4 @@
-import { Cartesian3, Spherical } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import { Cartesian3, Math as CesiumMath, Spherical } from "../../index.js";
 
 describe("Core/Spherical", function () {
   //Mock object to make sure methods take non-sphericals.
@@ -38,13 +36,13 @@ describe("Core/Spherical", function () {
   const spherical = new Spherical(
     sixtyDegrees,
     fortyFiveDegrees + Math.PI / 2.0,
-    Math.sqrt(8.0)
+    Math.sqrt(8.0),
   );
 
   it("Can convert Cartesian3 to a new spherical instance", function () {
     expect(spherical).toEqualEpsilon(
       Spherical.fromCartesian3(cartesian),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -52,7 +50,7 @@ describe("Core/Spherical", function () {
     const existing = new Spherical();
     expect(spherical).toEqualEpsilon(
       Spherical.fromCartesian3(cartesian, existing),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(spherical).toEqualEpsilon(existing, CesiumMath.EPSILON15);
   });
@@ -112,7 +110,7 @@ describe("Core/Spherical", function () {
   it("equalsEpsilon returns false for expected values.", function () {
     expect(new Spherical(1, 2, 1)).not.toEqualEpsilon(
       new NotSpherical(1, 2, 3),
-      1
+      1,
     );
   });
 

@@ -6,11 +6,10 @@ import {
   Geometry,
   GeometryAttribute,
   GeometryType,
+  Math as CesiumMath,
   PrimitiveType,
   Rectangle,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Geometry", function () {
   it("constructor", function () {
@@ -24,7 +23,7 @@ describe("Core/Geometry", function () {
     const indices = new Uint16Array([0, 1, 2]);
     const boundingSphere = new BoundingSphere(
       new Cartesian3(0.5, 0.5, 0.0),
-      1.0
+      1.0,
     );
 
     const geometry = new Geometry({
@@ -66,7 +65,7 @@ describe("Core/Geometry", function () {
     const indices = new Uint16Array([0, 1, 2]);
     const boundingSphere = new BoundingSphere(
       new Cartesian3(0.5, 0.5, 0.0),
-      1.0
+      1.0,
     );
 
     const geometry = new Geometry({
@@ -95,7 +94,7 @@ describe("Core/Geometry", function () {
     const indices = new Uint16Array([0, 1, 2]);
     const boundingSphere = new BoundingSphere(
       new Cartesian3(0.5, 0.5, 0.0),
-      1.0
+      1.0,
     );
 
     const geometry = new Geometry({
@@ -118,50 +117,40 @@ describe("Core/Geometry", function () {
 
   it("computes textureCoordinateRotationPoints for collections of points", function () {
     const positions = Cartesian3.fromDegreesArrayHeights([
-      -10.0,
-      -10.0,
-      0,
-      -10.0,
-      10.0,
-      0,
-      10.0,
-      -10.0,
-      0,
-      10.0,
-      10.0,
-      0,
+      -10.0, -10.0, 0, -10.0, 10.0, 0, 10.0, -10.0, 0, 10.0, 10.0, 0,
     ]);
     const boundingRectangle = Rectangle.fromCartesianArray(positions);
-    const textureCoordinateRotationPoints = Geometry._textureCoordinateRotationPoints(
-      positions,
-      0.0,
-      Ellipsoid.WGS84,
-      boundingRectangle
-    );
+    const textureCoordinateRotationPoints =
+      Geometry._textureCoordinateRotationPoints(
+        positions,
+        0.0,
+        Ellipsoid.WGS84,
+        boundingRectangle,
+      );
     expect(textureCoordinateRotationPoints.length).toEqual(6);
     expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 });

@@ -1,30 +1,30 @@
-ul {
+.cesium-viewer-i3s-explorer ul {
   list-style-type: none;
 }
 
-.layersList {
+.cesium-viewer-i3s-explorer .layersList {
   padding: 0;
 }
 
-input {
+.cesium-viewer-i3s-explorer input {
   margin: 0 3px 0 0;
 }
-.expandItem {
+.cesium-viewer-i3s-explorer .expandItem {
   cursor: pointer;
   user-select: none;
   width: 20px;
 }
 
-.nested,
-#bsl-wrapper {
+.cesium-viewer-i3s-explorer .nested,
+.cesium-viewer-i3s-explorer #bsl-wrapper {
   display: none;
 }
 
-.active {
+.cesium-viewer-i3s-explorer .active {
   display: block;
 }
 
-.li-wrapper {
+.cesium-viewer-i3s-explorer .li-wrapper {
   display: flex;
   flex-direction: row;
   align-content: center;

@@ -3,6 +3,7 @@ import {
   Color,
   DistanceDisplayCondition,
   JulianDate,
+  Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
   CallbackProperty,
@@ -12,8 +13,6 @@ import {
   TimeIntervalCollectionProperty,
   ShadowMode,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -34,7 +33,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       scene.primitives,
       scene,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const entity = new Entity({
@@ -92,7 +91,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: Color.RED,
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -114,7 +113,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       scene.primitives,
       scene,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -150,7 +149,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: new DistanceDisplayCondition(1.0, 2.0),
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -173,7 +172,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       scene.primitives,
       scene,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -190,7 +189,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqualEpsilon(
         [1.0, 2.0],
-        CesiumMath.EPSILON6
+        CesiumMath.EPSILON6,
       );
 
       batch.update(outOfRangeTime);
@@ -212,7 +211,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: true,
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -234,7 +233,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       scene.primitives,
       scene,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -267,7 +266,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       scene.primitives,
       scene,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     function buildEntity() {
@@ -336,7 +335,7 @@ describe("DataSources/StaticOutlineGeometryBatch", function () {
       scene.primitives,
       scene,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     function buildEntity() {

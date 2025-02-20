@@ -129,13 +129,13 @@ function getECShaderProgram(context, shaderProgram) {
     fs.sources.splice(
       0,
       0,
-      `layout (location = 0) out vec4 out_FragData_0;\nlayout (location = 1) out vec4 out_FragData_1;`
+      `layout (location = 0) out vec4 out_FragData_0;\nlayout (location = 1) out vec4 out_FragData_1;`,
     );
 
     fs.sources = fs.sources.map(function (source) {
       source = ShaderSource.replaceMain(
         source,
-        "czm_point_cloud_post_process_main"
+        "czm_point_cloud_post_process_main",
       );
       source = source.replaceAll(/out_FragColor/g, "out_FragData_0");
       return source;
@@ -151,7 +151,7 @@ function getECShaderProgram(context, shaderProgram) {
         "#else\n" +
         "    out_FragData_1 = czm_packDepth(gl_FragCoord.z);\n" +
         "#endif\n" +
-        "}"
+        "}",
     );
 
     shader = context.shaderCache.createDerivedShaderProgram(
@@ -161,7 +161,7 @@ function getECShaderProgram(context, shaderProgram) {
         vertexShaderSource: shaderProgram.vertexShaderSource,
         fragmentShaderSource: fs,
         attributeLocations: attributeLocations,
-      }
+      },
     );
   }
 
@@ -172,7 +172,7 @@ PointCloudEyeDomeLighting.prototype.update = function (
   frameState,
   commandStart,
   pointCloudShading,
-  boundingVolume
+  boundingVolume,
 ) {
   if (!isSupported(frameState.context)) {
     return;
@@ -219,7 +219,7 @@ PointCloudEyeDomeLighting.prototype.update = function (
       derivedCommand.framebuffer = this.framebuffer;
       derivedCommand.shaderProgram = getECShaderProgram(
         frameState.context,
-        command.shaderProgram
+        command.shaderProgram,
       );
       derivedCommand.castShadows = false;
       derivedCommand.receiveShadows = false;

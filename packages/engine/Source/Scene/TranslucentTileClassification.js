@@ -117,12 +117,12 @@ function updateTextures(transpClass, context, width, height) {
 function updateFramebuffers(transpClass, context, width, height) {
   destroyFramebuffers(transpClass);
   transpClass._drawClassificationFBO.setDepthStencilTexture(
-    transpClass._translucentDepthStencilTexture
+    transpClass._translucentDepthStencilTexture,
   );
   transpClass._drawClassificationFBO.update(context, width, height);
 
   transpClass._accumulationFBO.setDepthStencilTexture(
-    transpClass._translucentDepthStencilTexture
+    transpClass._translucentDepthStencilTexture,
   );
   transpClass._accumulationFBO.update(context, width, height);
 
@@ -133,7 +133,7 @@ function updateResources(
   transpClass,
   context,
   passState,
-  globeDepthStencilTexture
+  globeDepthStencilTexture,
 ) {
   if (!transpClass.isSupported()) {
     return;
@@ -206,7 +206,7 @@ function updateResources(
           defines: ["PICK"],
         }),
         attributeLocations: compositeProgram._attributeLocations,
-      }
+      },
     );
     const compositePickCommand = DrawCommand.shallowClone(compositeCommand);
     compositePickCommand.shaderProgram = compositePickProgram;
@@ -252,7 +252,7 @@ function updateResources(
 
   const useScissorTest = !BoundingRectangle.equals(
     transpClass._viewport,
-    passState.viewport
+    passState.viewport,
   );
   let updateScissor = useScissorTest !== transpClass._useScissorTest;
   transpClass._useScissorTest = useScissorTest;
@@ -262,7 +262,7 @@ function updateResources(
   ) {
     transpClass._scissorRectangle = BoundingRectangle.clone(
       passState.viewport,
-      transpClass._scissorRectangle
+      transpClass._scissorRectangle,
     );
     updateScissor = true;
   }
@@ -271,7 +271,7 @@ function updateResources(
     !defined(transpClass._rsDepth) ||
     !BoundingRectangle.equals(
       transpClass._viewport,
-      transpClass._rsDepth.viewport
+      transpClass._rsDepth.viewport,
     ) ||
     updateScissor
   ) {
@@ -292,7 +292,7 @@ function updateResources(
     !defined(transpClass._rsAccumulate) ||
     !BoundingRectangle.equals(
       transpClass._viewport,
-      transpClass._rsAccumulate.viewport
+      transpClass._rsAccumulate.viewport,
     ) ||
     updateScissor
   ) {
@@ -318,7 +318,7 @@ function updateResources(
     !defined(transpClass._rsComp) ||
     !BoundingRectangle.equals(
       transpClass._viewport,
-      transpClass._rsComp.viewport
+      transpClass._rsComp.viewport,
     ) ||
     updateScissor
   ) {
@@ -344,19 +344,15 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
   executeCommand,
   passState,
   commands,
-  globeDepthStencilTexture
+  globeDepthStencilTexture,
 ) {
   // Check for translucent commands that should be classified
-  const length = commands.length;
-  let command;
-  let i;
-
   const useLogDepth = scene.frameState.useLogDepth;
   const context = scene.context;
   const framebuffer = passState.framebuffer;
 
-  for (i = 0; i < length; ++i) {
-    command = commands[i];
+  for (let i = 0; i < commands.length; ++i) {
+    let command = commands[i];
     command = useLogDepth ? command.derivedCommands.logDepth.command : command;
 
     if (command.depthForTranslucentClassification) {
@@ -377,8 +373,8 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
   // Clear depth for multifrustum
   this._clearDepthStencilCommand.execute(context, passState);
 
-  for (i = 0; i < length; ++i) {
-    command = commands[i];
+  for (let i = 0; i < commands.length; ++i) {
+    let command = commands[i];
     command = useLogDepth ? command.derivedCommands.logDepth.command : command;
 
     if (!command.depthForTranslucentClassification) {
@@ -387,7 +383,7 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
 
     // Depth-only commands are created for all translucent 3D Tiles commands
     const depthOnlyCommand = command.derivedCommands.depth.depthOnlyCommand;
-    executeCommand(depthOnlyCommand, scene, context, passState);
+    executeCommand(depthOnlyCommand, scene, passState);
   }
 
   this._frustumsDrawn += this._hasTranslucentDepth ? 1 : 0;
@@ -401,52 +397,46 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
   passState.framebuffer = framebuffer;
 };
 
-TranslucentTileClassification.prototype.executeClassificationCommands = function (
-  scene,
-  executeCommand,
-  passState,
-  frustumCommands
-) {
-  if (!this._hasTranslucentDepth) {
-    return;
-  }
+TranslucentTileClassification.prototype.executeClassificationCommands =
+  function (scene, executeCommand, passState, frustumCommands) {
+    if (!this._hasTranslucentDepth) {
+      return;
+    }
 
-  const context = scene.context;
-  const us = context.uniformState;
-  const framebuffer = passState.framebuffer;
+    const context = scene.context;
+    const uniformState = context.uniformState;
+    const framebuffer = passState.framebuffer;
 
-  if (this._frustumsDrawn === 2) {
-    // copy classification from first frustum
     passState.framebuffer = this._accumulationFBO.framebuffer;
-    this._copyCommand.execute(context, passState);
-  }
+    this._accumulateCommand.execute(context, passState);
 
-  passState.framebuffer = this._drawClassificationFBO.framebuffer;
-  if (this._frustumsDrawn > 1) {
-    this._clearColorCommand.execute(context, passState);
-  }
+    passState.framebuffer = this._drawClassificationFBO.framebuffer;
+    if (this._frustumsDrawn > 1) {
+      this._clearColorCommand.execute(context, passState);
+    }
 
-  us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-  const swapGlobeDepth = us.globeDepthTexture;
-  us.globeDepthTexture = this._packFBO.getColorTexture();
-  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-  const length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-  for (let i = 0; i < length; ++i) {
-    executeCommand(commands[i], scene, context, passState);
-  }
+    uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+    const swapGlobeDepth = uniformState.globeDepthTexture;
+    uniformState.globeDepthTexture = this._packFBO.getColorTexture();
+    const commands =
+      frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+    const length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+    for (let i = 0; i < length; ++i) {
+      executeCommand(commands[i], scene, passState);
+    }
 
-  us.globeDepthTexture = swapGlobeDepth;
-  passState.framebuffer = framebuffer;
+    uniformState.globeDepthTexture = swapGlobeDepth;
+    passState.framebuffer = framebuffer;
 
-  if (this._frustumsDrawn === 1) {
-    return;
-  }
+    if (this._frustumsDrawn === 1) {
+      return;
+    }
 
-  passState.framebuffer = this._accumulationFBO.framebuffer;
-  this._accumulateCommand.execute(context, passState);
+    passState.framebuffer = this._accumulationFBO.framebuffer;
+    this._accumulateCommand.execute(context, passState);
 
-  passState.framebuffer = framebuffer;
-};
+    passState.framebuffer = framebuffer;
+  };
 
 TranslucentTileClassification.prototype.execute = function (scene, passState) {
   if (!this._hasTranslucentDepth) {
@@ -477,7 +467,7 @@ function clear(translucentTileClassification, scene, passState) {
     translucentTileClassification._drawClassificationFBO.framebuffer;
   translucentTileClassification._clearColorCommand.execute(
     scene._context,
-    passState
+    passState,
   );
 
   passState.framebuffer = framebuffer;
@@ -487,7 +477,7 @@ function clear(translucentTileClassification, scene, passState) {
       translucentTileClassification._accumulationFBO.framebuffer;
     translucentTileClassification._clearColorCommand.execute(
       scene._context,
-      passState
+      passState,
     );
   }
 

@@ -191,7 +191,7 @@ Cartesian3.packArray = function (array, result) {
   } else if (!Array.isArray(result) && result.length !== resultLength) {
     //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
-      "If result is a typed array, it must have exactly array.length * 3 elements"
+      "If result is a typed array, it must have exactly array.length * 3 elements",
     );
     //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
@@ -679,8 +679,8 @@ Cartesian3.angleBetween = function (left, right) {
     Cartesian3.cross(
       angleBetweenScratch,
       angleBetweenScratch2,
-      angleBetweenScratch
-    )
+      angleBetweenScratch,
+    ),
   );
   return Math.atan2(sine, cosine);
 };
@@ -780,7 +780,7 @@ Cartesian3.equalsEpsilon = function (
   left,
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return (
     left === right ||
@@ -790,19 +790,19 @@ Cartesian3.equalsEpsilon = function (
         left.x,
         right.x,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.y,
         right.y,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.z,
         right.z,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ))
   );
 };
@@ -866,7 +866,7 @@ Cartesian3.midpoint = function (left, right, result) {
  * @param {number} longitude The longitude, in degrees
  * @param {number} latitude The latitude, in degrees
  * @param {number} [height=0.0] The height, in meters, above the ellipsoid.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the position lies.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The position
  *
@@ -878,7 +878,7 @@ Cartesian3.fromDegrees = function (
   latitude,
   height,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("longitude", longitude);
@@ -892,10 +892,12 @@ Cartesian3.fromDegrees = function (
 
 let scratchN = new Cartesian3();
 let scratchK = new Cartesian3();
-const wgs84RadiiSquared = new Cartesian3(
+
+// To prevent a circular dependency, this value is overridden by Ellipsoid when Ellipsoid.default is set
+Cartesian3._ellipsoidRadiiSquared = new Cartesian3(
   6378137.0 * 6378137.0,
   6378137.0 * 6378137.0,
-  6356752.3142451793 * 6356752.3142451793
+  6356752.3142451793 * 6356752.3142451793,
 );
 
 /**
@@ -904,7 +906,7 @@ const wgs84RadiiSquared = new Cartesian3(
  * @param {number} longitude The longitude, in radians
  * @param {number} latitude The latitude, in radians
  * @param {number} [height=0.0] The height, in meters, above the ellipsoid.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the position lies.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The position
  *
@@ -916,7 +918,7 @@ Cartesian3.fromRadians = function (
   latitude,
   height,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("longitude", longitude);
@@ -924,9 +926,10 @@ Cartesian3.fromRadians = function (
   //>>includeEnd('debug');
 
   height = defaultValue(height, 0.0);
-  const radiiSquared = defined(ellipsoid)
-    ? ellipsoid.radiiSquared
-    : wgs84RadiiSquared;
+
+  const radiiSquared = !defined(ellipsoid)
+    ? Cartesian3._ellipsoidRadiiSquared
+    : ellipsoid.radiiSquared;
 
   const cosLatitude = Math.cos(latitude);
   scratchN.x = cosLatitude * Math.cos(longitude);
@@ -949,7 +952,7 @@ Cartesian3.fromRadians = function (
  * Returns an array of Cartesian3 positions given an array of longitude and latitude values given in degrees.
  *
  * @param {number[]} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the coordinates lie.
  * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
  * @returns {Cartesian3[]} The array of positions.
  *
@@ -961,7 +964,7 @@ Cartesian3.fromDegreesArray = function (coordinates, ellipsoid, result) {
   Check.defined("coordinates", coordinates);
   if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
     throw new DeveloperError(
-      "the number of coordinates must be a multiple of 2 and at least 2"
+      "the number of coordinates must be a multiple of 2 and at least 2",
     );
   }
   //>>includeEnd('debug');
@@ -982,7 +985,7 @@ Cartesian3.fromDegreesArray = function (coordinates, ellipsoid, result) {
       latitude,
       0,
       ellipsoid,
-      result[index]
+      result[index],
     );
   }
 
@@ -993,7 +996,7 @@ Cartesian3.fromDegreesArray = function (coordinates, ellipsoid, result) {
  * Returns an array of Cartesian3 positions given an array of longitude and latitude values given in radians.
  *
  * @param {number[]} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the coordinates lie.
  * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
  * @returns {Cartesian3[]} The array of positions.
  *
@@ -1005,7 +1008,7 @@ Cartesian3.fromRadiansArray = function (coordinates, ellipsoid, result) {
   Check.defined("coordinates", coordinates);
   if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
     throw new DeveloperError(
-      "the number of coordinates must be a multiple of 2 and at least 2"
+      "the number of coordinates must be a multiple of 2 and at least 2",
     );
   }
   //>>includeEnd('debug');
@@ -1026,7 +1029,7 @@ Cartesian3.fromRadiansArray = function (coordinates, ellipsoid, result) {
       latitude,
       0,
       ellipsoid,
-      result[index]
+      result[index],
     );
   }
 
@@ -1037,7 +1040,7 @@ Cartesian3.fromRadiansArray = function (coordinates, ellipsoid, result) {
  * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in degrees.
  *
  * @param {number[]} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height, longitude, latitude, height...].
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the position lies.
  * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
  * @returns {Cartesian3[]} The array of positions.
  *
@@ -1049,7 +1052,7 @@ Cartesian3.fromDegreesArrayHeights = function (coordinates, ellipsoid, result) {
   Check.defined("coordinates", coordinates);
   if (coordinates.length < 3 || coordinates.length % 3 !== 0) {
     throw new DeveloperError(
-      "the number of coordinates must be a multiple of 3 and at least 3"
+      "the number of coordinates must be a multiple of 3 and at least 3",
     );
   }
   //>>includeEnd('debug');
@@ -1071,7 +1074,7 @@ Cartesian3.fromDegreesArrayHeights = function (coordinates, ellipsoid, result) {
       latitude,
       height,
       ellipsoid,
-      result[index]
+      result[index],
     );
   }
 
@@ -1082,7 +1085,7 @@ Cartesian3.fromDegreesArrayHeights = function (coordinates, ellipsoid, result) {
  * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in radians.
  *
  * @param {number[]} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height, longitude, latitude, height...].
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the position lies.
  * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
  * @returns {Cartesian3[]} The array of positions.
  *
@@ -1094,7 +1097,7 @@ Cartesian3.fromRadiansArrayHeights = function (coordinates, ellipsoid, result) {
   Check.defined("coordinates", coordinates);
   if (coordinates.length < 3 || coordinates.length % 3 !== 0) {
     throw new DeveloperError(
-      "the number of coordinates must be a multiple of 3 and at least 3"
+      "the number of coordinates must be a multiple of 3 and at least 3",
     );
   }
   //>>includeEnd('debug');
@@ -1116,7 +1119,7 @@ Cartesian3.fromRadiansArrayHeights = function (coordinates, ellipsoid, result) {
       latitude,
       height,
       ellipsoid,
-      result[index]
+      result[index],
     );
   }
 
@@ -1197,13 +1200,13 @@ Cartesian3.prototype.equals = function (right) {
 Cartesian3.prototype.equalsEpsilon = function (
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return Cartesian3.equalsEpsilon(
     this,
     right,
     relativeEpsilon,
-    absoluteEpsilon
+    absoluteEpsilon,
   );
 };
 

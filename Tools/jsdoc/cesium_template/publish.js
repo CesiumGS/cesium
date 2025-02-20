@@ -304,7 +304,7 @@ exports.publish = function (taffyData, opts, tutorials) {
 
         if (
           example.match(
-            /^\s*<caption>([\s\S]+?)<\/caption>(\s*[\n\r])([\s\S]+)$/i
+            /^\s*<caption>([\s\S]+?)<\/caption>(\s*[\n\r])([\s\S]+)$/i,
           )
         ) {
           caption = RegExp.$1;
@@ -373,7 +373,7 @@ exports.publish = function (taffyData, opts, tutorials) {
           .replace("{filename}", docletPath);
         if (process.env.CESIUM_PACKAGES) {
           doclet.meta.package = process.env.CESIUM_PACKAGES.split(",").find(
-            (package) => doclet.meta.sourceUrl.indexOf(package) > -1
+            (package) => doclet.meta.sourceUrl.indexOf(package) > -1,
           );
         }
       }
@@ -425,7 +425,7 @@ exports.publish = function (taffyData, opts, tutorials) {
   view.nav = buildNav(members);
   attachModuleSymbols(
     find({ kind: ["class", "function"], longname: { left: "module:" } }),
-    members.modules
+    members.modules,
   );
 
   if (members.globals.length) {
@@ -449,7 +449,7 @@ exports.publish = function (taffyData, opts, tutorials) {
         },
       ])
       .concat(files),
-    indexUrl
+    indexUrl,
   );
   view.layout = origLayout;
 

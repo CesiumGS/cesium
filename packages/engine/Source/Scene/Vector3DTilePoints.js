@@ -107,8 +107,8 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    */
   texturesByteLength: {
     get: function () {
-      const billboardSize = this._billboardCollection.textureAtlas.texture
-        .sizeInBytes;
+      const billboardSize =
+        this._billboardCollection.textureAtlas.texture.sizeInBytes;
       const labelSize = this._labelCollection._textureAtlas.texture.sizeInBytes;
       return billboardSize + labelSize;
     },
@@ -137,7 +137,7 @@ function packBuffer(points, ellipsoid) {
 
 const createVerticesTaskProcessor = new TaskProcessor(
   "createVectorTilePoints",
-  5
+  5,
 );
 const scratchPosition = new Cartesian3();
 
@@ -161,7 +161,7 @@ function createPoints(points, ellipsoid) {
 
   const verticesPromise = createVerticesTaskProcessor.scheduleTask(
     parameters,
-    transferrableObjects
+    transferrableObjects,
   );
   if (!defined(verticesPromise)) {
     // Postponed
@@ -243,7 +243,7 @@ Vector3DTilePoints.prototype.createFeatures = function (content, features) {
       batchId,
       billboard,
       label,
-      polyline
+      polyline,
     );
   }
 };
@@ -347,7 +347,7 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     if (defined(style.pointOutlineColor)) {
       feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(
         feature,
-        scratchColor2
+        scratchColor2,
       );
     }
 
@@ -358,14 +358,14 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     if (defined(style.labelColor)) {
       feature.labelColor = style.labelColor.evaluateColor(
         feature,
-        scratchColor3
+        scratchColor3,
       );
     }
 
     if (defined(style.labelOutlineColor)) {
       feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(
         feature,
-        scratchColor4
+        scratchColor4,
       );
     }
 
@@ -390,7 +390,7 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     if (defined(style.backgroundColor)) {
       feature.backgroundColor = style.backgroundColor.evaluateColor(
         feature,
-        scratchColor5
+        scratchColor5,
       );
     }
 
@@ -418,9 +418,8 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.translucencyByDistance)) {
-      const translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(
-        feature
-      );
+      const translucencyByDistanceCart4 =
+        style.translucencyByDistance.evaluate(feature);
       if (defined(translucencyByDistanceCart4)) {
         scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
         scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
@@ -435,9 +434,8 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.distanceDisplayCondition)) {
-      const distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(
-        feature
-      );
+      const distanceDisplayConditionCart2 =
+        style.distanceDisplayCondition.evaluate(feature);
       if (defined(distanceDisplayConditionCart2)) {
         scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
         scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
@@ -460,7 +458,7 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     if (defined(style.anchorLineColor)) {
       feature.anchorLineColor = style.anchorLineColor.evaluateColor(
         feature,
-        scratchColor6
+        scratchColor6,
       );
     }
 
@@ -471,9 +469,8 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.disableDepthTestDistance)) {
-      feature.disableDepthTestDistance = style.disableDepthTestDistance.evaluate(
-        feature
-      );
+      feature.disableDepthTestDistance =
+        style.disableDepthTestDistance.evaluate(feature);
     }
 
     if (defined(style.horizontalOrigin)) {
@@ -485,9 +482,8 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.labelHorizontalOrigin)) {
-      feature.labelHorizontalOrigin = style.labelHorizontalOrigin.evaluate(
-        feature
-      );
+      feature.labelHorizontalOrigin =
+        style.labelHorizontalOrigin.evaluate(feature);
     }
 
     if (defined(style.labelVerticalOrigin)) {

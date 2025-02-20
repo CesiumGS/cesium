@@ -306,10 +306,10 @@ describe(
       expect(propertyAttribute.class).toBe(pointsClass);
       expect(propertyAttribute.getProperty("color").attribute).toBe("_COLOR");
       expect(propertyAttribute.getProperty("intensity").attribute).toBe(
-        "_INTENSITY"
+        "_INTENSITY",
       );
       expect(propertyAttribute.getProperty("pointSize").attribute).toBe(
-        "_POINT_SIZE"
+        "_POINT_SIZE",
       );
     });
 
@@ -366,5 +366,5 @@ describe(
       expect(metadata.extensions).toBe(extensions);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -3,10 +3,9 @@ import {
   FeatureDetection,
   Iso8601,
   JulianDate,
+  Math as CesiumMath,
   VideoSynchronizer,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -103,7 +102,7 @@ describe("Core/VideoSynchronizer", function () {
           return CesiumMath.equalsEpsilon(
             element.currentTime,
             60 - element.duration,
-            CesiumMath.EPSILON3
+            CesiumMath.EPSILON3,
           );
         });
       })
@@ -114,7 +113,7 @@ describe("Core/VideoSynchronizer", function () {
           return CesiumMath.equalsEpsilon(
             element.currentTime,
             element.duration - 1,
-            CesiumMath.EPSILON1
+            CesiumMath.EPSILON1,
           );
         });
       })
@@ -155,7 +154,7 @@ describe("Core/VideoSynchronizer", function () {
           return CesiumMath.equalsEpsilon(
             element.currentTime,
             element.duration,
-            CesiumMath.EPSILON3
+            CesiumMath.EPSILON3,
           );
         });
       })

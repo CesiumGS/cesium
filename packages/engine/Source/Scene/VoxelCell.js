@@ -61,7 +61,7 @@ VoxelCell.fromKeyframeNode = function (
   primitive,
   tileIndex,
   sampleIndex,
-  keyframeNode
+  keyframeNode,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("primitive", primitive);
@@ -77,7 +77,7 @@ VoxelCell.fromKeyframeNode = function (
     primitive,
     spatialNode,
     sampleIndex,
-    voxelCell._orientedBoundingBox
+    voxelCell._orientedBoundingBox,
   );
   return voxelCell;
 };
@@ -100,7 +100,7 @@ function getMetadataForSample(primitive, metadata, sampleIndex) {
     const componentCount = MetadataType.getComponentCount(types[i]);
     const samples = metadata[i].slice(
       sampleIndex * componentCount,
-      (sampleIndex + 1) * componentCount
+      (sampleIndex + 1) * componentCount,
     );
     metadataMap[name] = samples;
   }
@@ -130,7 +130,7 @@ function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
     xIndex,
     yIndex,
     zIndex,
-    tileCoordinateScratch
+    tileCoordinateScratch,
   );
 
   // Remove padding, and convert to a fraction in [0, 1], where the limits are
@@ -139,10 +139,10 @@ function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
     Cartesian3.subtract(
       tileCoordinate,
       primitive._paddingBefore,
-      tileCoordinateScratch
+      tileCoordinateScratch,
     ),
     primitive.dimensions,
-    tileUvScratch
+    tileUvScratch,
   );
 
   const shape = primitive._shape;
@@ -150,7 +150,7 @@ function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
     spatialNode,
     primitive.dimensions,
     tileUv,
-    result
+    result,
   );
 }
 

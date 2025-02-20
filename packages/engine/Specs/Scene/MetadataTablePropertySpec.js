@@ -111,10 +111,10 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
     expect(property._stringOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataComponentType.UINT16,
     );
     expect(property._arrayOffsets._componentType).toBe(
-      MetadataComponentType.UINT8
+      MetadataComponentType.UINT8,
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
@@ -163,10 +163,10 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
     expect(property._stringOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataComponentType.UINT16,
     );
     expect(property._arrayOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataComponentType.UINT16,
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
@@ -377,13 +377,8 @@ describe("Scene/MetadataTableProperty", function () {
     if (disableBigInt64ArraySupport && disableBigIntSupport) {
       // Precision loss is expected if INT64 is converted to JS numbers
       expectedValues = [
-        -9223372036854776000,
-        -4611686018427388000,
-        -10,
-        0,
-        10,
-        4611686018427388000,
-        9223372036854776000,
+        -9223372036854776000, -4611686018427388000, -10, 0, 10,
+        4611686018427388000, 9223372036854776000,
       ];
     }
 

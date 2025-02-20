@@ -49,7 +49,7 @@ uniform vec4 u_colorsToAlpha[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
-#ifdef SHOW_REFLECTIVE_OCEAN
+#if defined(HAS_WATER_MASK) && (defined(SHOW_REFLECTIVE_OCEAN) || defined(APPLY_MATERIAL))
 uniform sampler2D u_waterMask;
 uniform vec4 u_waterMaskTranslationAndScale;
 uniform float u_zoomedOutOceanSpecularIntensity;
@@ -75,6 +75,12 @@ uniform vec2 u_nightFadeDistance;
 uniform highp sampler2D u_clippingPlanes;
 uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
+#endif
+
+#ifdef ENABLE_CLIPPING_POLYGONS
+uniform highp sampler2D u_clippingDistance;
+in vec2 v_clippingPosition;
+flat in int v_regionIndex;
 #endif
 
 #if defined(GROUND_ATMOSPHERE) || defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
@@ -201,7 +207,7 @@ vec4 sampleAndBlend(
 
 #ifdef APPLY_COLOR_TO_ALPHA
     vec3 colorDiff = abs(color.rgb - colorToAlpha.rgb);
-    colorDiff.r = max(max(colorDiff.r, colorDiff.g), colorDiff.b);
+    colorDiff.r = czm_maximumComponent(colorDiff);
     alpha = czm_branchFreeTernary(colorDiff.r < colorToAlpha.a, 0.0, alpha);
 #endif
 
@@ -356,7 +362,7 @@ void main()
     float fade = 0.0;
 #endif
 
-#ifdef SHOW_REFLECTIVE_OCEAN
+#if defined(HAS_WATER_MASK) && (defined(SHOW_REFLECTIVE_OCEAN) || defined(APPLY_MATERIAL))
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
     vec2 waterMaskTextureCoordinates = v_textureCoordinates.xy * waterMaskScale + waterMaskTranslation;
@@ -364,17 +370,19 @@ void main()
 
     float mask = texture(u_waterMask, waterMaskTextureCoordinates).r;
 
+    #ifdef SHOW_REFLECTIVE_OCEAN
     if (mask > 0.0)
     {
         mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
 
-        vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
-        vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC.zyx);
+        vec2 ellipsoidTextureCoordinates = czm_ellipsoidTextureCoordinates(normalMC);
+        vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidTextureCoordinates(normalMC.zyx);
 
         vec2 textureCoordinates = mix(ellipsoidTextureCoordinates, ellipsoidFlippedTextureCoordinates, czm_morphTime * smoothstep(0.9, 0.95, normalMC.z));
 
         color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, color, mask, fade);
     }
+    #endif
 #endif
 
 #ifdef APPLY_MATERIAL
@@ -386,6 +394,10 @@ void main()
     materialInput.slope = v_slope;
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;
+    #ifdef HAS_WATER_MASK
+        materialInput.waterMask = mask;
+    #endif
+
     czm_material material = czm_getMaterial(materialInput);
     vec4 materialColor = vec4(material.diffuse, material.alpha);
     color = alphaBlend(materialColor, color);
@@ -411,6 +423,12 @@ void main()
     {
         finalColor = clippingPlanesEdgeColor;
     }
+#endif
+
+#ifdef ENABLE_CLIPPING_POLYGONS
+    vec2 clippingPosition = v_clippingPosition;
+    int regionIndex = v_regionIndex;
+    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE
@@ -477,12 +495,11 @@ void main()
             #endif
 
             #ifndef HDR
-                fogColor.rgb = czm_acesTonemapping(fogColor.rgb);
+                fogColor.rgb = czm_pbrNeutralTonemapping(fogColor.rgb);
                 fogColor.rgb = czm_inverseGamma(fogColor.rgb);
             #endif
 
-            const float modifier = 0.15;
-            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
+            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, czm_fogVisualDensityScalar), finalColor.a);
 
         #else
             // Apply ground atmosphere. This happens when the camera is far away from the earth.

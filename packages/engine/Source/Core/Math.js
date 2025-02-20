@@ -205,7 +205,6 @@ CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
  * @param {number} value The value to return the sign of.
  * @returns {number} The sign of value.
  */
-// eslint-disable-next-line es/no-math-sign
 CesiumMath.sign = defaultValue(Math.sign, function sign(value) {
   value = +value; // coerce to number
   if (value === 0 || value !== value) {
@@ -237,7 +236,7 @@ CesiumMath.signNotZero = function (value) {
 CesiumMath.toSNorm = function (value, rangeMaximum) {
   rangeMaximum = defaultValue(rangeMaximum, 255);
   return Math.round(
-    (CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum
+    (CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum,
   );
 };
 
@@ -292,7 +291,6 @@ CesiumMath.normalize = function (value, rangeMinimum, rangeMaximum) {
  * @param {number} value The number whose hyperbolic sine is to be returned.
  * @returns {number} The hyperbolic sine of <code>value</code>.
  */
-// eslint-disable-next-line es/no-math-sinh
 CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
   return (Math.exp(value) - Math.exp(-value)) / 2.0;
 });
@@ -317,7 +315,6 @@ CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
  * @param {number} value The number whose hyperbolic cosine is to be returned.
  * @returns {number} The hyperbolic cosine of <code>value</code>.
  */
-// eslint-disable-next-line es/no-math-cosh
 CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
   return (Math.exp(value) + Math.exp(-value)) / 2.0;
 });
@@ -512,7 +509,7 @@ CesiumMath.clampToLatitudeRange = function (angle) {
   return CesiumMath.clamp(
     angle,
     -1 * CesiumMath.PI_OVER_TWO,
-    CesiumMath.PI_OVER_TWO
+    CesiumMath.PI_OVER_TWO,
   );
 };
 
@@ -613,7 +610,7 @@ CesiumMath.equalsEpsilon = function (
   left,
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(left)) {
@@ -756,7 +753,7 @@ CesiumMath.factorial = function (n) {
   //>>includeStart('debug', pragmas.debug);
   if (typeof n !== "number" || n < 0) {
     throw new DeveloperError(
-      "A number greater than or equal to 0 is required."
+      "A number greater than or equal to 0 is required.",
     );
   }
   //>>includeEnd('debug');
@@ -1034,7 +1031,6 @@ CesiumMath.logBase = function (number, base) {
  * @param {number} [number] The number.
  * @returns {number} The result.
  */
-// eslint-disable-next-line es/no-math-cbrt
 CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
   const result = Math.pow(Math.abs(number), 1.0 / 3.0);
   return number < 0.0 ? -result : result;
@@ -1047,12 +1043,13 @@ CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
  * @param {number} number The number.
  * @returns {number} The result.
  */
-// eslint-disable-next-line es/no-math-log2
 CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
   return Math.log(number) * Math.LOG2E;
 });
 
 /**
+ * Calculate the fog impact at a given distance. Useful for culling.
+ * Matches the equation in `fog.glsl`
  * @private
  */
 CesiumMath.fog = function (distanceToCamera, density) {

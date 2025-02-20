@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Multiple views synced across time and space."
-    />
+    <meta name="description" content="Multiple views synced across time and space." />
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #cesiumContainer {
@@ -82,12 +76,10 @@
           // The center of the view is the point that the 3D camera is focusing on
           const viewCenter = new Cesium.Cartesian2(
             Math.floor(view3D.canvas.clientWidth / 2),
-            Math.floor(view3D.canvas.clientHeight / 2)
+            Math.floor(view3D.canvas.clientHeight / 2),
           );
           // Given the pixel in the center, get the world position
-          const newWorldPosition = view3D.scene.camera.pickEllipsoid(
-            viewCenter
-          );
+          const newWorldPosition = view3D.scene.camera.pickEllipsoid(viewCenter);
           if (Cesium.defined(newWorldPosition)) {
             // Guard against the case where the center of the screen
             // does not fall on a position on the globe
@@ -96,13 +88,13 @@
           // Get the distance between the world position of the point the camera is focusing on, and the camera's world position
           distance = Cesium.Cartesian3.distance(
             worldPosition,
-            view3D.scene.camera.positionWC
+            view3D.scene.camera.positionWC,
           );
           // Tell the 2D camera to look at the point of focus. The distance controls how zoomed in the 2D view is
           // (try replacing `distance` in the line below with `1e7`. The view will still sync, but will have a constant zoom)
           view2D.scene.camera.lookAt(
             worldPosition,
-            new Cesium.Cartesian3(0.0, 0.0, distance)
+            new Cesium.Cartesian3(0.0, 0.0, distance),
           );
         }
 

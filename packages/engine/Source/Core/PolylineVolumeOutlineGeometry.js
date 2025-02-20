@@ -33,7 +33,7 @@ function computeAttributes(positions, shape) {
   const shapeCount = positionLength / shapeLength;
   const indices = IndexDatatype.createTypedArray(
     vertexCount,
-    2 * shapeLength * (shapeCount + 1)
+    2 * shapeLength * (shapeCount + 1),
   );
   let i, j;
   let index = 0;
@@ -83,7 +83,7 @@ function computeAttributes(positions, shape) {
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.polylinePositions An array of positions that define the center of the polyline volume.
  * @param {Cartesian2[]} options.shapePositions An array of positions that define the shape to be extruded along the polyline
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
  *
@@ -124,12 +124,12 @@ function PolylineVolumeOutlineGeometry(options) {
   this._positions = positions;
   this._shape = shape;
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.WGS84)
+    defaultValue(options.ellipsoid, Ellipsoid.default),
   );
   this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
   this._granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   this._workerName = "createPolylineVolumeOutlineGeometry";
 
@@ -266,12 +266,12 @@ const brScratch = new BoundingRectangle();
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 PolylineVolumeOutlineGeometry.createGeometry = function (
-  polylineVolumeOutlineGeometry
+  polylineVolumeOutlineGeometry,
 ) {
   const positions = polylineVolumeOutlineGeometry._positions;
   const cleanPositions = arrayRemoveDuplicates(
     positions,
-    Cartesian3.equalsEpsilon
+    Cartesian3.equalsEpsilon,
   );
   let shape2D = polylineVolumeOutlineGeometry._shape;
   shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
@@ -292,7 +292,7 @@ PolylineVolumeOutlineGeometry.createGeometry = function (
     shape2D,
     boundingRectangle,
     polylineVolumeOutlineGeometry,
-    false
+    false,
   );
   return computeAttributes(computedPositions, shape2D);
 };

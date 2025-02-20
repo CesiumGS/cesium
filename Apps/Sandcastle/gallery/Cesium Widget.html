@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -40,7 +37,27 @@
         // it does not include the animation, imagery selection,
         // and other widgets, nor does it depend on the third-party
         // Knockout library.
-        const widget = new Cesium.CesiumWidget("cesiumContainer");
+        const widget = new Cesium.CesiumWidget("cesiumContainer", {
+          shouldAnimate: true,
+        });
+
+        const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 500);
+        const heading = Cesium.Math.toRadians(135);
+        const pitch = 0;
+        const roll = 0;
+        const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+
+        const entity = widget.entities.add({
+          position: position,
+          orientation: orientation,
+          model: {
+            uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+            minimumPixelSize: 128,
+            maximumScale: 20000,
+          },
+        });
+        widget.trackedEntity = entity;
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

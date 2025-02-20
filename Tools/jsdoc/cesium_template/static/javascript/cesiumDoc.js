@@ -22,7 +22,7 @@
 
   function getQueryParameter(name) {
     var match = new RegExp("[?&]" + name + "=([^&]*)").exec(
-      window.location.search
+      window.location.search,
     );
     return match && decodeURIComponent(match[1].replace(/\+/g, " "));
   }
@@ -61,4 +61,28 @@
       updateMenuLinks();
     };
   }
+
+  function shortcutHandler(e) {
+    if (e.key === "k" && e.ctrlKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      classFilter.focus();
+      classFilter.select();
+    }
+  }
+  document.body.addEventListener("keydown", shortcutHandler);
+
+  classFilter.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      // Open the first "result" from the classlist when hitting enter
+      const firstResult = document.querySelector(
+        '#ClassList li:not([style="display: none;"]) a',
+      );
+      if (firstResult !== null) {
+        // call click instead of just navigating to trigger the onclick handlers
+        // that are set up above
+        firstResult.click();
+      }
+    }
+  });
 })();

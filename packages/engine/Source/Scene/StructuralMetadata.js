@@ -231,7 +231,7 @@ StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
  * @private
  */
 StructuralMetadata.prototype.getPropertyAttribute = function (
-  propertyAttributeId
+  propertyAttributeId,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("propertyAttributeId", propertyAttributeId);

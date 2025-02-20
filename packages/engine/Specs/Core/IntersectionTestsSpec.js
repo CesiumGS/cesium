@@ -3,17 +3,16 @@ import {
   Cartesian3,
   Ellipsoid,
   IntersectionTests,
+  Math as CesiumMath,
   Plane,
   Ray,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/IntersectionTests", function () {
   it("rayPlane intersects", function () {
     const ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     const plane = new Plane(Cartesian3.UNIT_X, -1.0);
 
@@ -25,7 +24,7 @@ describe("Core/IntersectionTests", function () {
   it("rayPlane misses", function () {
     const ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
     const plane = new Plane(Cartesian3.UNIT_X, -1.0);
 
@@ -37,7 +36,7 @@ describe("Core/IntersectionTests", function () {
   it("rayPlane misses (parallel)", function () {
     const ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(0.0, 1.0, 0.0)
+      new Cartesian3(0.0, 1.0, 0.0),
     );
     const plane = new Plane(Cartesian3.UNIT_X, -1.0);
 
@@ -81,7 +80,7 @@ describe("Core/IntersectionTests", function () {
       IntersectionTests.rayTriangle(
         new Ray(),
         new Cartesian3(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -93,7 +92,7 @@ describe("Core/IntersectionTests", function () {
 
     const ray = new Ray(
       Cartesian3.UNIT_Z,
-      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
+      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
     );
 
     const intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
@@ -107,7 +106,7 @@ describe("Core/IntersectionTests", function () {
 
     const ray = new Ray(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
 
     const intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
@@ -121,7 +120,7 @@ describe("Core/IntersectionTests", function () {
 
     const ray = new Ray(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
 
     const intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2, true);
@@ -135,7 +134,7 @@ describe("Core/IntersectionTests", function () {
 
     const ray = new Ray(
       new Cartesian3(0.0, -1.0, 1.0),
-      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
+      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
     );
 
     const intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
@@ -149,7 +148,7 @@ describe("Core/IntersectionTests", function () {
 
     const ray = new Ray(
       new Cartesian3(1.0, 1.0, 1.0),
-      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
+      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
     );
 
     const intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
@@ -163,7 +162,7 @@ describe("Core/IntersectionTests", function () {
 
     const ray = new Ray(
       new Cartesian3(-1.0, 1.0, 1.0),
-      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
+      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
     );
 
     const intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
@@ -215,7 +214,7 @@ describe("Core/IntersectionTests", function () {
       IntersectionTests.lineSegmentTriangle(
         new Cartesian3(),
         new Cartesian3(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -226,7 +225,7 @@ describe("Core/IntersectionTests", function () {
         new Cartesian3(),
         new Cartesian3(),
         new Cartesian3(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -244,7 +243,7 @@ describe("Core/IntersectionTests", function () {
       v1,
       p0,
       p1,
-      p2
+      p2,
     );
     expect(intersection).toEqual(Cartesian3.ZERO);
   });
@@ -262,7 +261,7 @@ describe("Core/IntersectionTests", function () {
       v1,
       p0,
       p1,
-      p2
+      p2,
     );
     expect(intersection).toEqual(Cartesian3.ZERO);
   });
@@ -281,7 +280,7 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      true
+      true,
     );
     expect(intersection).not.toBeDefined();
   });
@@ -295,7 +294,7 @@ describe("Core/IntersectionTests", function () {
     const v1 = Cartesian3.add(
       v0,
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     const intersection = IntersectionTests.lineSegmentTriangle(
@@ -303,7 +302,7 @@ describe("Core/IntersectionTests", function () {
       v1,
       p0,
       p1,
-      p2
+      p2,
     );
     expect(intersection).not.toBeDefined();
   });
@@ -317,7 +316,7 @@ describe("Core/IntersectionTests", function () {
     const v1 = Cartesian3.add(
       v0,
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     const intersection = IntersectionTests.lineSegmentTriangle(
@@ -325,7 +324,7 @@ describe("Core/IntersectionTests", function () {
       v1,
       p0,
       p1,
-      p2
+      p2,
     );
     expect(intersection).not.toBeDefined();
   });
@@ -339,7 +338,7 @@ describe("Core/IntersectionTests", function () {
     const v1 = Cartesian3.add(
       v0,
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     const intersection = IntersectionTests.lineSegmentTriangle(
@@ -347,7 +346,7 @@ describe("Core/IntersectionTests", function () {
       v1,
       p0,
       p1,
-      p2
+      p2,
     );
     expect(intersection).not.toBeDefined();
   });
@@ -365,7 +364,7 @@ describe("Core/IntersectionTests", function () {
       v1,
       p0,
       p1,
-      p2
+      p2,
     );
     expect(intersection).not.toBeDefined();
   });
@@ -379,7 +378,7 @@ describe("Core/IntersectionTests", function () {
     const v1 = Cartesian3.multiplyByScalar(
       Cartesian3.UNIT_Z,
       2.0,
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     const intersection = IntersectionTests.lineSegmentTriangle(
@@ -387,7 +386,7 @@ describe("Core/IntersectionTests", function () {
       v1,
       p0,
       p1,
-      p2
+      p2,
     );
     expect(intersection).not.toBeDefined();
   });
@@ -400,7 +399,7 @@ describe("Core/IntersectionTests", function () {
     const v0 = Cartesian3.multiplyByScalar(
       Cartesian3.UNIT_Z,
       2.0,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const v1 = Cartesian3.UNIT_Z;
 
@@ -409,7 +408,7 @@ describe("Core/IntersectionTests", function () {
       v1,
       p0,
       p1,
-      p2
+      p2,
     );
     expect(intersection).not.toBeDefined();
   });
@@ -431,7 +430,7 @@ describe("Core/IntersectionTests", function () {
 
     let ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     let intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -439,7 +438,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, 2.0, 0.0),
-      new Cartesian3(0.0, -1.0, 0.0)
+      new Cartesian3(0.0, -1.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -447,7 +446,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, 0.0, 2.0),
-      new Cartesian3(0.0, 0.0, -1.0)
+      new Cartesian3(0.0, 0.0, -1.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -455,14 +454,14 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(1.0, 1.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
     ray = new Ray(
       new Cartesian3(-2.0, 0.0, 0.0),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -470,7 +469,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, -2.0, 0.0),
-      new Cartesian3(0.0, 1.0, 0.0)
+      new Cartesian3(0.0, 1.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -478,7 +477,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, 0.0, -2.0),
-      new Cartesian3(0.0, 0.0, 1.0)
+      new Cartesian3(0.0, 0.0, 1.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -486,28 +485,28 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(-1.0, -1.0, 0.0),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
     ray = new Ray(
       new Cartesian3(-2.0, 0.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).toBeUndefined();
 
     ray = new Ray(
       new Cartesian3(0.0, -2.0, 0.0),
-      new Cartesian3(0.0, -1.0, 0.0)
+      new Cartesian3(0.0, -1.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).toBeUndefined();
 
     ray = new Ray(
       new Cartesian3(0.0, 0.0, -2.0),
-      new Cartesian3(0.0, 0.0, -1.0)
+      new Cartesian3(0.0, 0.0, -1.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).toBeUndefined();
@@ -519,7 +518,7 @@ describe("Core/IntersectionTests", function () {
     const origin = new Cartesian3(200.0, 0.0, 0.0);
     const direction = Cartesian3.negate(
       Cartesian3.normalize(origin, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(origin, direction);
 
@@ -565,14 +564,14 @@ describe("Core/IntersectionTests", function () {
 
     let ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(0.0, 0.0, 1.0)
+      new Cartesian3(0.0, 0.0, 1.0),
     );
     let intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).not.toBeDefined();
 
     ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(0.0, 0.0, -1.0)
+      new Cartesian3(0.0, 0.0, -1.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).not.toBeDefined();
@@ -583,7 +582,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(0.0, -1.0, 0.0)
+      new Cartesian3(0.0, -1.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).not.toBeDefined();
@@ -594,7 +593,7 @@ describe("Core/IntersectionTests", function () {
 
     let ray = new Ray(
       new Cartesian3(202.0, 0.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     let intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -602,7 +601,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(200.0, 2.0, 0.0),
-      new Cartesian3(0.0, -1.0, 0.0)
+      new Cartesian3(0.0, -1.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -610,7 +609,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(200.0, 0.0, 2.0),
-      new Cartesian3(0.0, 0.0, -1.0)
+      new Cartesian3(0.0, 0.0, -1.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -618,14 +617,14 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(201.0, 1.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
     ray = new Ray(
       new Cartesian3(198.0, 0.0, 0.0),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -633,7 +632,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(200.0, -2.0, 0.0),
-      new Cartesian3(0.0, 1.0, 0.0)
+      new Cartesian3(0.0, 1.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -641,7 +640,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(200.0, 0.0, -2.0),
-      new Cartesian3(0.0, 0.0, 1.0)
+      new Cartesian3(0.0, 0.0, 1.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -649,28 +648,28 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(199.0, -1.0, 0.0),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
     ray = new Ray(
       new Cartesian3(198.0, 0.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).toBeUndefined();
 
     ray = new Ray(
       new Cartesian3(200.0, -2.0, 0.0),
-      new Cartesian3(0.0, -1.0, 0.0)
+      new Cartesian3(0.0, -1.0, 0.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).toBeUndefined();
 
     ray = new Ray(
       new Cartesian3(200.0, 0.0, -2.0),
-      new Cartesian3(0.0, 0.0, -1.0)
+      new Cartesian3(0.0, 0.0, -1.0),
     );
     intersections = IntersectionTests.raySphere(ray, unitSphere);
     expect(intersections).toBeUndefined();
@@ -685,7 +684,7 @@ describe("Core/IntersectionTests", function () {
   it("rayEllipsoid throws without ellipsoid", function () {
     expect(function () {
       IntersectionTests.rayEllipsoid(
-        new Ray(new Cartesian3(), new Cartesian3())
+        new Ray(new Cartesian3(), new Cartesian3()),
       );
     }).toThrowDeveloperError();
   });
@@ -695,7 +694,7 @@ describe("Core/IntersectionTests", function () {
 
     let ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     let intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -703,7 +702,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, 2.0, 0.0),
-      new Cartesian3(0.0, -1.0, 0.0)
+      new Cartesian3(0.0, -1.0, 0.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -711,7 +710,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, 0.0, 2.0),
-      new Cartesian3(0.0, 0.0, -1.0)
+      new Cartesian3(0.0, 0.0, -1.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -719,14 +718,14 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(1.0, 1.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
     ray = new Ray(
       new Cartesian3(-2.0, 0.0, 0.0),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -734,7 +733,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, -2.0, 0.0),
-      new Cartesian3(0.0, 1.0, 0.0)
+      new Cartesian3(0.0, 1.0, 0.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -742,7 +741,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, 0.0, -2.0),
-      new Cartesian3(0.0, 0.0, 1.0)
+      new Cartesian3(0.0, 0.0, 1.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -750,28 +749,28 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(-1.0, -1.0, 0.0),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
     ray = new Ray(
       new Cartesian3(-2.0, 0.0, 0.0),
-      new Cartesian3(-1.0, 0.0, 0.0)
+      new Cartesian3(-1.0, 0.0, 0.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections).toBeUndefined();
 
     ray = new Ray(
       new Cartesian3(0.0, -2.0, 0.0),
-      new Cartesian3(0.0, -1.0, 0.0)
+      new Cartesian3(0.0, -1.0, 0.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections).toBeUndefined();
 
     ray = new Ray(
       new Cartesian3(0.0, 0.0, -2.0),
-      new Cartesian3(0.0, 0.0, -1.0)
+      new Cartesian3(0.0, 0.0, -1.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections).toBeUndefined();
@@ -783,7 +782,7 @@ describe("Core/IntersectionTests", function () {
     const origin = new Cartesian3(20000.0, 0.0, 0.0);
     const direction = Cartesian3.negate(
       Cartesian3.normalize(origin, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(origin, direction);
 
@@ -829,14 +828,14 @@ describe("Core/IntersectionTests", function () {
 
     let ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(0.0, 0.0, 1.0)
+      new Cartesian3(0.0, 0.0, 1.0),
     );
     let intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections).not.toBeDefined();
 
     ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(0.0, 0.0, -1.0)
+      new Cartesian3(0.0, 0.0, -1.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections).not.toBeDefined();
@@ -847,7 +846,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(2.0, 0.0, 0.0),
-      new Cartesian3(0.0, -1.0, 0.0)
+      new Cartesian3(0.0, -1.0, 0.0),
     );
     intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
     expect(intersections).not.toBeDefined();
@@ -869,7 +868,7 @@ describe("Core/IntersectionTests", function () {
     const ellipsoid = Ellipsoid.UNIT_SPHERE;
     const ray = new Ray(new Cartesian3(3.0, 0.0, 0.0), Cartesian3.UNIT_X);
     expect(IntersectionTests.grazingAltitudeLocation(ray, ellipsoid)).toEqual(
-      ray.origin
+      ray.origin,
     );
   });
 
@@ -882,7 +881,7 @@ describe("Core/IntersectionTests", function () {
 
     ray = new Ray(
       new Cartesian3(0.0, 2.0, 2.0),
-      Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3())
+      Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()),
     );
     expected = new Cartesian3(0.0, 0.0, 2.0);
     actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
@@ -894,18 +893,18 @@ describe("Core/IntersectionTests", function () {
     const origin = new Cartesian3(
       6502435.411150063,
       -6350860.759819263,
-      -7230794.954832983
+      -7230794.954832983,
     );
     const direction = new Cartesian3(
       -0.6053473557455881,
       0.002372596412575323,
-      0.7959578818493397
+      0.7959578818493397,
     );
     const ray = new Ray(origin, direction);
     const expected = new Cartesian3(
       628106.8386515155,
       -6327836.936616249,
-      493230.07552381355
+      493230.07552381355,
     );
     const actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON8);
@@ -916,18 +915,18 @@ describe("Core/IntersectionTests", function () {
     const origin = new Cartesian3(
       -6546204.940468501,
       -10625195.62660887,
-      -6933745.82875373
+      -6933745.82875373,
     );
     const direction = new Cartesian3(
       0.5130076305689283,
       0.38589525779680295,
-      0.766751603185799
+      0.766751603185799,
     );
     const ray = new Ray(origin, direction);
     const expected = new Cartesian3(
       -125.9063174739769,
       -5701095.640722358,
-      2850156.57342018
+      2850156.57342018,
     );
     const actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON10);
@@ -944,7 +943,7 @@ describe("Core/IntersectionTests", function () {
     const ellipsoid = Ellipsoid.UNIT_SPHERE;
     const ray = new Ray(Cartesian3.ZERO, Cartesian3.UNIT_Z);
     expect(
-      IntersectionTests.grazingAltitudeLocation(ray, ellipsoid)
+      IntersectionTests.grazingAltitudeLocation(ray, ellipsoid),
     ).not.toBeDefined();
   });
 
@@ -959,7 +958,7 @@ describe("Core/IntersectionTests", function () {
     const intersectionPoint = IntersectionTests.lineSegmentPlane(
       endPoint0,
       endPoint1,
-      plane
+      plane,
     );
 
     expect(intersectionPoint).toEqual(new Cartesian3(1.0, 2.0, 0.0));
@@ -974,7 +973,7 @@ describe("Core/IntersectionTests", function () {
     const intersectionPoint = IntersectionTests.lineSegmentPlane(
       endPoint0,
       endPoint1,
-      plane
+      plane,
     );
 
     expect(intersectionPoint).not.toBeDefined();
@@ -989,7 +988,7 @@ describe("Core/IntersectionTests", function () {
     const intersectionPoint = IntersectionTests.lineSegmentPlane(
       endPoint0,
       endPoint1,
-      plane
+      plane,
     );
 
     expect(intersectionPoint).not.toBeDefined();
@@ -1004,7 +1003,7 @@ describe("Core/IntersectionTests", function () {
     const intersectionPoint = IntersectionTests.lineSegmentPlane(
       endPoint0,
       endPoint1,
-      plane
+      plane,
     );
 
     expect(intersectionPoint).not.toBeDefined();
@@ -1038,7 +1037,7 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      plane
+      plane,
     );
     expect(triangles).not.toBeDefined();
   });
@@ -1046,7 +1045,7 @@ describe("Core/IntersectionTests", function () {
   it("triangle is behind a plane", function () {
     const plane = new Plane(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      0.0
+      0.0,
     );
     const p0 = new Cartesian3(0.0, 0.0, 2.0);
     const p1 = new Cartesian3(0.0, 1.0, 2.0);
@@ -1056,7 +1055,7 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      plane
+      plane,
     );
     expect(triangles).not.toBeDefined();
   });
@@ -1071,12 +1070,12 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      plane
+      plane,
     );
     expect(triangles).toBeDefined();
     expect(triangles.indices.length).toEqual(3 + 6);
     expect(
-      Cartesian3.equals(triangles.positions[triangles.indices[0]], p0)
+      Cartesian3.equals(triangles.positions[triangles.indices[0]], p0),
     ).toEqual(true);
   });
 
@@ -1090,12 +1089,12 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      plane
+      plane,
     );
     expect(triangles).toBeDefined();
     expect(triangles.indices.length).toEqual(3 + 6);
     expect(
-      Cartesian3.equals(triangles.positions[triangles.indices[0]], p1)
+      Cartesian3.equals(triangles.positions[triangles.indices[0]], p1),
     ).toEqual(true);
   });
 
@@ -1109,12 +1108,12 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      plane
+      plane,
     );
     expect(triangles).toBeDefined();
     expect(triangles.indices.length).toEqual(3 + 6);
     expect(
-      Cartesian3.equals(triangles.positions[triangles.indices[0]], p2)
+      Cartesian3.equals(triangles.positions[triangles.indices[0]], p2),
     ).toEqual(true);
   });
 
@@ -1128,15 +1127,15 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      plane
+      plane,
     );
     expect(triangles).toBeDefined();
     expect(triangles.indices.length).toEqual(6 + 3);
     expect(
-      Cartesian3.equals(triangles.positions[triangles.indices[0]], p1)
+      Cartesian3.equals(triangles.positions[triangles.indices[0]], p1),
     ).toEqual(true); // p0 is in front
     expect(
-      Cartesian3.equals(triangles.positions[triangles.indices[1]], p2)
+      Cartesian3.equals(triangles.positions[triangles.indices[1]], p2),
     ).toEqual(true);
   });
 
@@ -1150,15 +1149,15 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      plane
+      plane,
     );
     expect(triangles).toBeDefined();
     expect(triangles.indices.length).toEqual(6 + 3);
     expect(
-      Cartesian3.equals(triangles.positions[triangles.indices[0]], p2)
+      Cartesian3.equals(triangles.positions[triangles.indices[0]], p2),
     ).toEqual(true); // p1 is in front
     expect(
-      Cartesian3.equals(triangles.positions[triangles.indices[1]], p0)
+      Cartesian3.equals(triangles.positions[triangles.indices[1]], p0),
     ).toEqual(true);
   });
 
@@ -1172,16 +1171,16 @@ describe("Core/IntersectionTests", function () {
       p0,
       p1,
       p2,
-      plane
+      plane,
     );
     expect(triangles).toBeDefined();
     expect(triangles.indices.length).toEqual(6 + 3);
     expect(
       Cartesian3.equals(triangles.positions[triangles.indices[0]], p0),
-      true
+      true,
     ); // p2 is in front
     expect(
-      Cartesian3.equals(triangles.positions[triangles.indices[1]], p1)
+      Cartesian3.equals(triangles.positions[triangles.indices[1]], p1),
     ).toEqual(true);
   });
 

@@ -1,6 +1,9 @@
-import { Cartesian3, Quaternion, QuaternionSpline } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  Quaternion,
+  QuaternionSpline,
+} from "../../index.js";
 
 describe("Core/QuaternionSpline", function () {
   let points;
@@ -77,7 +80,7 @@ describe("Core/QuaternionSpline", function () {
       points[1],
       points[2],
       t,
-      new Quaternion()
+      new Quaternion(),
     );
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
   });
@@ -109,7 +112,7 @@ describe("Core/QuaternionSpline", function () {
       points[0],
       points[1],
       t,
-      new Quaternion()
+      new Quaternion(),
     );
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
   });
@@ -130,7 +133,7 @@ describe("Core/QuaternionSpline", function () {
       points[0],
       points[1],
       t,
-      new Quaternion()
+      new Quaternion(),
     );
     expect(actual).toBe(result);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);

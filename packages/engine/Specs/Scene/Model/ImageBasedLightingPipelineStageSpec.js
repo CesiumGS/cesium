@@ -14,6 +14,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     context: {
       floatingPointTexture: true,
       colorBufferFloat: true,
+      supportsTextureLod: true,
     },
   };
 
@@ -21,6 +22,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     const imageBasedLighting = new ImageBasedLighting();
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
+      environmentMapManager: {},
       _iblReferenceFrameMatrix: Matrix3.clone(Matrix3.IDENTITY),
     };
 
@@ -34,17 +36,15 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ImageBasedLightingPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "USE_IBL_LIGHTING",
-      "USE_SUN_LUMINANCE",
     ]);
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
       "uniform vec2 model_iblFactor;",
       "uniform mat3 model_iblReferenceFrameMatrix;",
-      "uniform float model_luminanceAtZenith;",
     ]);
 
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
@@ -55,20 +55,16 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     expect(
       Cartesian2.equals(
         uniformMap.model_iblFactor(),
-        imageBasedLighting.imageBasedLightingFactor
-      )
+        imageBasedLighting.imageBasedLightingFactor,
+      ),
     ).toBe(true);
 
     expect(
       Matrix3.equals(
         uniformMap.model_iblReferenceFrameMatrix(),
-        mockModel._iblReferenceFrameMatrix
-      )
+        mockModel._iblReferenceFrameMatrix,
+      ),
     ).toBe(true);
-
-    expect(uniformMap.model_luminanceAtZenith()).toEqual(
-      imageBasedLighting.luminanceAtZenith
-    );
   });
 
   // These are dummy values, not meant to represent valid spherical harmonic coefficients.
@@ -88,10 +84,10 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     const imageBasedLighting = new ImageBasedLighting({
       sphericalHarmonicCoefficients: testCoefficients,
     });
-    imageBasedLighting.luminanceAtZenith = undefined;
 
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
+      environmentMapManager: {},
       _iblReferenceFrameMatrix: Matrix3.clone(Matrix3.IDENTITY),
     };
 
@@ -105,7 +101,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ImageBasedLightingPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
@@ -123,24 +119,24 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     expect(
       Cartesian2.equals(
         uniformMap.model_iblFactor(),
-        imageBasedLighting.imageBasedLightingFactor
-      )
+        imageBasedLighting.imageBasedLightingFactor,
+      ),
     ).toBe(true);
 
     expect(
       Matrix3.equals(
         uniformMap.model_iblReferenceFrameMatrix(),
-        mockModel._iblReferenceFrameMatrix
-      )
+        mockModel._iblReferenceFrameMatrix,
+      ),
     ).toBe(true);
 
     expect(uniformMap.model_sphericalHarmonicCoefficients()).toBe(
-      testCoefficients
+      testCoefficients,
     );
   });
 
   it("configures the render resources for specular environment maps", function () {
-    const mockAtlas = {
+    const mockCubeMap = {
       texture: {
         dimensions: {},
       },
@@ -150,11 +146,11 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     const imageBasedLighting = new ImageBasedLighting({
       specularEnvironmentMaps: "example.ktx2",
     });
-    imageBasedLighting.luminanceAtZenith = undefined;
-    imageBasedLighting._specularEnvironmentMapAtlas = mockAtlas;
+    imageBasedLighting._specularEnvironmentCubeMap = mockCubeMap;
 
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
+      environmentMapManager: {},
       _iblReferenceFrameMatrix: Matrix3.clone(Matrix3.IDENTITY),
     };
 
@@ -168,7 +164,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ImageBasedLightingPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
@@ -179,8 +175,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
       "uniform vec2 model_iblFactor;",
       "uniform mat3 model_iblReferenceFrameMatrix;",
-      "uniform sampler2D model_specularEnvironmentMaps;",
-      "uniform vec2 model_specularEnvironmentMapsSize;",
+      "uniform samplerCube model_specularEnvironmentMaps;",
       "uniform float model_specularEnvironmentMapsMaximumLOD;",
     ]);
 
@@ -188,19 +183,18 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     expect(
       Cartesian2.equals(
         uniformMap.model_iblFactor(),
-        imageBasedLighting.imageBasedLightingFactor
-      )
+        imageBasedLighting.imageBasedLightingFactor,
+      ),
     ).toBe(true);
 
     expect(
       Matrix3.equals(
         uniformMap.model_iblReferenceFrameMatrix(),
-        mockModel._iblReferenceFrameMatrix
-      )
+        mockModel._iblReferenceFrameMatrix,
+      ),
     ).toBe(true);
 
     expect(uniformMap.model_specularEnvironmentMaps()).toBeDefined();
-    expect(uniformMap.model_specularEnvironmentMapsSize()).toBeDefined();
     expect(uniformMap.model_specularEnvironmentMapsMaximumLOD()).toBeDefined();
   });
 });

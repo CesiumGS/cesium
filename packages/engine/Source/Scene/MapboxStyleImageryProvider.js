@@ -7,7 +7,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const trailingSlashRegex = /\/$/;
 const defaultCredit = new Credit(
-  '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>'
+  '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>',
 );
 
 /**
@@ -21,7 +21,7 @@ const defaultCredit = new Credit(
  * @property {string} accessToken The public access token for the imagery.
  * @property {number} [tilesize=512] The size of the image tiles.
  * @property {boolean} [scaleFactor] Determines if tiles are rendered at a @2x scale factor.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
@@ -76,7 +76,7 @@ function MapboxStyleImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://api.mapbox.com/styles/v1/")
+    defaultValue(options.url, "https://api.mapbox.com/styles/v1/"),
   );
 
   this._styleId = styleId;
@@ -307,7 +307,7 @@ MapboxStyleImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   return this._imageryProvider.requestImage(x, y, level, request);
 };
@@ -332,7 +332,7 @@ MapboxStyleImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
 };

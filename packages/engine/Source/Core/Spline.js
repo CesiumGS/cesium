@@ -60,7 +60,7 @@ Spline.getPointType = function (point) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "point must be a Cartesian3, Quaternion, or number."
+    "point must be a Cartesian3, Quaternion, or number.",
   );
   //>>includeEnd('debug');
 };
