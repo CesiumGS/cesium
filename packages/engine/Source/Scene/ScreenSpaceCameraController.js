@@ -623,14 +623,6 @@ function handleZoom(
   orientation.pitch = camera.pitch;
   orientation.roll = camera.roll;
 
-  if (camera.frustum instanceof OrthographicFrustum) {
-    if (Math.abs(distance) > 0.0) {
-      camera.zoomIn(distance);
-      camera._adjustOrthographicFrustum(true);
-    }
-    return;
-  }
-
   const sameStartPosition = defaultValue(
     movement.inertiaEnabled,
     Cartesian2.equals(startPosition, object._zoomMouseStart),
