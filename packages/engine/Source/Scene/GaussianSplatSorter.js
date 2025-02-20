@@ -41,24 +41,6 @@ GaussianSplatSorter._getSorterTaskProcessor = function () {
   return GaussianSplatSorter._sorterTaskProcessor;
 };
 
-GaussianSplatSorter.radixSort = function (parameters) {
-  const sorterTaskProcessor = GaussianSplatSorter._getSorterTaskProcessor();
-  if (defined(GaussianSplatSorter._error)) {
-    throw GaussianSplatSorter._error;
-  }
-
-  if (!GaussianSplatSorter._taskProcessorReady) {
-    return;
-  }
-
-  return sorterTaskProcessor.scheduleTask(parameters, [
-    parameters.primitive.attributes,
-    parameters.primitive.modelView,
-    parameters.primitive.count,
-    parameters.sortType,
-  ]);
-};
-
 GaussianSplatSorter.radixSortIndexes = function (parameters) {
   const sorterTaskProcessor = GaussianSplatSorter._getSorterTaskProcessor();
   if (defined(GaussianSplatSorter._error)) {

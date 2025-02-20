@@ -5,6 +5,7 @@ Specs/SpecList.js
 Source/Shaders/**/*.js
 Source/ThirdParty/Shaders/**/*.js
 Source/ThirdParty/_commonjsHelpers*
+Source/ThirdParty/wasm_splats_bg.wasm
 Source/ThirdParty/draco_decoder.wasm
 Source/ThirdParty/Workers/draco_decoder_nodejs.js
 Source/ThirdParty/Workers/pako_inflate.min.js
