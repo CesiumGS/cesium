@@ -410,7 +410,9 @@
 
           let itemsLoaded = 1;
           let currentOffset = 1;
-          const geoJson = await Cesium.GeoJsonDataSource.load(oneItem);
+          const geoJson = await Cesium.GeoJsonDataSource.load(oneItem, {
+            preventDuplicates: true,
+          });
           loadedGeoJson = geoJson;
 
           // TODO: I'm not sure how we want to manage this yet? it'd be nice to add it as early as possible
@@ -437,7 +439,7 @@
               offset: currentOffset,
             });
             try {
-              await geoJson.process(pageResource);
+              await geoJson.process(pageResource, { preventDuplicates: true });
             } catch (error) {
               console.error("failed to load page");
               console.error(error);
@@ -486,7 +488,9 @@
           let nextUrl = firstPage.links?.find((link) => link.rel === "next")?.href;
 
           let itemsLoaded = firstPage.numberReturned ?? firstPage.features?.length;
-          const geoJson = await Cesium.GeoJsonDataSource.load(firstPage);
+          const geoJson = await Cesium.GeoJsonDataSource.load(firstPage, {
+            preventDuplicates: true,
+          });
           loadedGeoJson = geoJson;
 
           // TODO: I'm not sure how we want to manage this yet? it'd be nice to add it as early as possible
@@ -528,7 +532,7 @@
               console.log("canceled loading");
               return;
             }
-            geoJson.process(nextPage);
+            geoJson.process(nextPage, { preventDuplicates: true });
 
             itemsLoaded += nextPage.numberReturned ?? nextPage.features?.length;
             nextUrl = nextPage.links?.find((link) => link.rel === "next")?.href;

@@ -107,15 +107,25 @@ function defaultDescribeProperty(properties, nameProperty) {
   );
 }
 
-//GeoJSON specifies only the Feature object has a usable id property
-//But since "multi" geometries create multiple entity,
-//we can't use it for them either.
+/**
+ * Create the base Entity for the given geojson and adds it to the provided EntityCollection
+ *
+ * @private
+ * @param {Object} geoJson
+ * @param {EntityCollection} entityCollection
+ * @param {any} describe
+ * @param {boolean} preventDuplicates
+ * @returns {Entity|undefined}
+ */
 function createObject(
   geoJson,
   entityCollection,
   describe,
   preventDuplicates = false,
 ) {
+  //GeoJSON specifies only the Feature object has a usable id property
+  //But since "multi" geometries create multiple entity,
+  //we can't use it for them either.
   let id = geoJson.id;
   if (!defined(id) || geoJson.type !== "Feature") {
     id = createGuid();
@@ -561,6 +571,11 @@ function processMultiPolygon(
 ) {
   const polygons = geometry.coordinates;
   for (let i = 0; i < polygons.length; i++) {
+    if (options.preventDuplicates && polygons.length > 1) {
+      // without this all "sub parts" of multi-polygons are clobbered
+      // TODO: this logic should be applied to the other Multi* types if we keep the option
+      geoJson.id = `${geoJson.id}_${i}`;
+    }
     createPolygon(dataSource, geoJson, crsFunction, polygons[i], options);
   }
 }
@@ -940,7 +955,7 @@ GeoJsonDataSource.prototype.process = function (data, options) {
  * @param {Resource|string|object} data
  * @param {GeoJsonDataSource.LoadOptions} options
  * @param {boolean} clear
- * @returns
+ * @returns {Promise<any>}
  */
 function preload(that, data, options, clear) {
   //>>includeStart('debug', pragmas.debug);
