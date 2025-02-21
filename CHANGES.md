@@ -8,6 +8,8 @@
 
 - Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
 - Fixed error when there are duplicated points in polygon/polyline geometries with `ArcType.RHUMB` [#12460](https://github.com/CesiumGS/cesium/pull/12460)
+- Fixed ground atmosphere shaders in 3D orthographic mode [#12484](https://github.com/CesiumGS/cesium/pull/12484)
+- Fixed zoom in 3D orthographic mode [#12483](https://github.com/CesiumGS/cesium/pull/12483)
 - Fixed z-fighting and performance issues in 2D infinite scroll mode [#12488](https://github.com/CesiumGS/cesium/pull/12488)
 
 ## 1.126 - 2025-02-03
