@@ -322,9 +322,11 @@ async function decompressSpz(loadPlan, context) {
   positionAttr.componentDatatype = ComponentDatatype.FLOAT;
   positionAttr.type = AttributeType.VEC3;
   positionAttr.normalized = false;
-  positionAttr.count = count / 3;
+  positionAttr.count = count;
   positionAttr.constant = 0;
   positionAttr.instanceDivisor = 1;
+
+  gs.scales.map((v) => Math.exp(v));
 
   scaleAttr.name = "_SCALE";
   scaleAttr.semantic = VertexAttributeSemantic.SCALE;
@@ -332,7 +334,7 @@ async function decompressSpz(loadPlan, context) {
   scaleAttr.componentDatatype = ComponentDatatype.FLOAT;
   scaleAttr.type = AttributeType.VEC3;
   scaleAttr.normalized = false;
-  scaleAttr.count = count / 3;
+  scaleAttr.count = count;
   scaleAttr.constant = 0;
   scaleAttr.instanceDivisor = 1;
 
@@ -342,18 +344,18 @@ async function decompressSpz(loadPlan, context) {
   rotationAttr.componentDatatype = ComponentDatatype.FLOAT;
   rotationAttr.type = AttributeType.VEC4;
   rotationAttr.normalized = false;
-  rotationAttr.count = count / 4;
+  rotationAttr.count = count;
   rotationAttr.constant = 0;
   rotationAttr.instanceDivisor = 1;
 
   const interleaveRGBA = (rgb, alpha) => {
-    const rgba = new Float32Array((rgb.length / 3) * 4);
-
+    const rgba = new Uint8Array((rgb.length / 3) * 4);
+    const SH_C0 = 0.28209479177387814;
     for (let i = 0; i < rgb.length / 3; i++) {
-      rgba[i * 4] = rgb[i * 3];
-      rgba[i * 4 + 1] = rgb[i * 3 + 1];
-      rgba[i * 4 + 2] = rgb[i * 3 + 2];
-      rgba[i * 4 + 3] = alpha[i];
+      rgba[i * 4] = (0.5 + SH_C0 * rgb[i * 3]) * 255.0;
+      rgba[i * 4 + 1] = (0.5 + SH_C0 * rgb[i * 3 + 1]) * 255.0;
+      rgba[i * 4 + 2] = (0.5 + SH_C0 * rgb[i * 3 + 2]) * 255.0;
+      rgba[i * 4 + 3] = (1.0 / (1.0 + Math.exp(-alpha[i]))) * 255.0;
     }
 
     return rgba;

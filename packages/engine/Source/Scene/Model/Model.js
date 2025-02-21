@@ -2243,7 +2243,7 @@ function generateSplatTexture(primitive, frameState) {
       flipY: false,
       sampler: Sampler.NEAREST,
     });
-    const count = primitive.attributes[0].count;
+    const count = Math.floor(primitive.attributes[0].count);
     const attribute = new ModelComponents.Attribute();
 
     //index attribute for indexing into attribute texture
