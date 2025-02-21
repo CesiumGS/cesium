@@ -369,6 +369,8 @@ async function decompressSpz(loadPlan, context) {
   colorAttr.constant = 0;
   colorAttr.instanceDivisor = 1;
 
+  primitive.attributes.shift();
+
   primitive.attributes.push(positionAttr);
   primitive.attributes.push(scaleAttr);
   primitive.attributes.push(rotationAttr);
