@@ -1208,8 +1208,8 @@ function calculateOrthographicFrustumWidth(camera) {
   const globe = scene.globe;
 
   const mousePosition = scratchAdjustOrthographicFrustumMousePosition;
-  mousePosition.x = scene.drawingBufferWidth / 2.0;
-  mousePosition.y = scene.drawingBufferHeight / 2.0;
+  mousePosition.x = scene.drawingBufferWidth / scene.pixelRatio / 2.0;
+  mousePosition.y = scene.drawingBufferHeight / scene.pixelRatio / 2.0;
 
   let rayIntersection;
   if (defined(globe)) {
