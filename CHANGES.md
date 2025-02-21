@@ -8,6 +8,8 @@
 
 - Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
 - Fixed error when there are duplicated points in polygon/polyline geometries with `ArcType.RHUMB` [#12460](https://github.com/CesiumGS/cesium/pull/12460)
+- Fixed ground atmosphere shaders in 3D orthographic mode [#12484](https://github.com/CesiumGS/cesium/pull/12484)
+- Fixed zoom in 3D orthographic mode [#12483](https://github.com/CesiumGS/cesium/pull/12483)
 
 ## 1.126 - 2025-02-03
 
@@ -1245,6 +1247,7 @@ try {
 - Fixed an incorrect model matrix computation for `i3dm` tilesets that are loaded using `ModelExperimental`. [#10302](https://github.com/CesiumGS/cesium/pull/10302)
 - Fixed race condition during billboard clamping when the height reference changes. [#10191](https://github.com/CesiumGS/cesium/issues/10191)
 - Fixed ability to run `test` and other support tasks from within the release zip file. [#10311](https://github.com/CesiumGS/cesium/pull/10311)
+- Fixed `Expression` multi-variable substitution. [#12455](https://github.com/CesiumGS/cesium/issues/12455)
 
 ## 1.92 - 2022-04-01
 
