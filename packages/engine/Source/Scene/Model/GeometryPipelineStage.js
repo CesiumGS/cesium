@@ -55,6 +55,9 @@ const GeometryPipelineStage = {
  *  <li> adds an additional attribute object and declaration if the node containing this primitive is not instanced
  * </ul>
  *
+ * If the primitive has Gaussian splats, this stage also toggles their rendering (points or splats)
+ * and sets the appropriat buffers for instanced rendering.
+ *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.

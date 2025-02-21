@@ -213,6 +213,7 @@ function GltfLoader(options) {
     renameBatchIdSemantic = false,
     loadGaussianSplatting = true,
     generateGaussianSplatTexture = true,
+    loadSpzResource = true,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -239,6 +240,11 @@ function GltfLoader(options) {
   this._renameBatchIdSemantic = renameBatchIdSemantic;
   this._loadGaussianSplatting = loadGaussianSplatting;
   this._generateGaussianSplatTexture = generateGaussianSplatTexture;
+  this._loadSpzResource = loadSpzResource;
+
+  if (loadSpzResource) {
+    this.spzUnpacked = false;
+  }
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -510,14 +516,18 @@ function postProcessGeometry(loader, context) {
   const loadPlans = loader._primitiveLoadPlans;
   for (let i = 0; i < loadPlans.length; i++) {
     const loadPlan = loadPlans[i];
-    loadPlan.postProcess(context);
+    loadPlan.postProcess(context).then(() => {
+      if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
+        // The glTF loader takes ownership of any buffers generated in the
+        // post-process stage since they were created after the geometry loaders
+        // finished. This way they can be destroyed when the loader is destroyed.
+        gatherPostProcessBuffers(loader, loadPlan);
+      }
 
-    if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
-      // The glTF loader takes ownership of any buffers generated in the
-      // post-process stage since they were created after the geometry loaders
-      // finished. This way they can be destroyed when the loader is destroyed.
-      gatherPostProcessBuffers(loader, loadPlan);
-    }
+      if (loader._loadSpzResource) {
+        loader.spzUnpacked = true;
+      }
+    });
   }
 }
 
@@ -1969,12 +1979,13 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       loader._generateGaussianSplatTexture;
   }
 
-  if (loader.gltfJson.extensionsUsed.includes("EXT_spz_compression")) {
+  if (loader.gltfJson.extensionsUsed.includes("KHR_spz_compression")) {
     needsPostProcessing = true;
     primitivePlan.needsSpzDecompression = true;
     primitivePlan.needsGaussianSplats = true;
     primitivePlan.generateGaussianSplatTexture =
       loader._generateGaussianSplatTexture;
+    loader.spzUnpacked = false;
   }
 
   const loadForClassification = loader._loadForClassification;

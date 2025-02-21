@@ -12,6 +12,19 @@ const GaussianSplatPipelineStage = {
   name: "GaussianSplatPipelineStage",
 };
 
+/**
+ * This pipeline stage sets up the Gaussian splat shaders for rendering from vertex buffers
+ * and modifies the rendering resource for instanced rendering.
+ *
+ * It also sorts the splats back to front from the camera view.
+ *
+ * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
+ * @param {ModelComponents.Primitive} primitive The primitive.
+ * @param {FrameState} frameState The frame state.
+ *
+ * @private
+ */
+
 GaussianSplatPipelineStage.process = function (
   renderResources,
   primitive,
@@ -33,14 +46,6 @@ GaussianSplatPipelineStage.process = function (
     ShaderDestination.BOTH,
   );
 
-  if (primitive.hasAttributeTexture) {
-    shaderBuilder.addDefine(
-      "HAS_SPLAT_TEXTURE",
-      undefined,
-      ShaderDestination.BOTH,
-    );
-  }
-
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("vec3", "a_splatPosition");
   shaderBuilder.addAttribute("vec4", "a_splatColor");
@@ -56,7 +61,6 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addUniform("float", "u_focalX", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_focalY", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
-  shaderBuilder.addUniform("mat4", "u_scalingMatrix", ShaderDestination.VERTEX);
 
   const uniformMap = renderResources.uniformMap;
   const camera = frameState.camera;
@@ -88,12 +92,7 @@ GaussianSplatPipelineStage.process = function (
     return renderResources.model?.style?.splatScale ?? 1.0;
   };
 
-  uniformMap.u_scalingMatrix = function () {
-    return renderResources.model.sceneGraph.components.nodes[0].matrix;
-  };
-
   const radixSort = () => {
-    //const attributes = primitive.attributes;
     const modelView = new Matrix4();
     const modelMat = renderResources.model.modelMatrix;
     Matrix4.multiply(camera.viewMatrix, modelMat, modelView);

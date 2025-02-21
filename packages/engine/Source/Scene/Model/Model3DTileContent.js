@@ -544,6 +544,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     showOutline: tileset.showOutline,
     outlineColor: tileset.outlineColor,
     showGaussianSplatting: tileset.showGaussianSplatting,
+    generateGaussianSplatTexture: true,
   };
 
   return combine(additionalOptions, mainOptions);

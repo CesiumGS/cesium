@@ -9,6 +9,17 @@ const GaussianSplatTexturePipelineStage = {
   name: "GaussianSplatTexturePipelineStage",
 };
 
+/**
+ * This pipeline stage sets up the Gaussian splat shaders for rendering from an attribute texture
+ * and modifies the rendering resource for instanced rendering.
+ *
+ * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
+ * @param {ModelComponents.Primitive} primitive The primitive.
+ * @param {FrameState} frameState The frame state.
+ *
+ * @private
+ */
+
 GaussianSplatTexturePipelineStage.process = function (
   renderResources,
   primitive,

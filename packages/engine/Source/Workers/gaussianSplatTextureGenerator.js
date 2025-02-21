@@ -1,7 +1,7 @@
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 
-import { initSync, generate_texture_from_attrs } from "@cesium/wasm-splats";
+import { initSync, generate_splat_texture } from "@cesium/wasm-splats";
 
 //load built wasm modules for sorting. Ensure we can load webassembly and we support SIMD.
 async function initWorker(parameters, transferableObjects) {
@@ -21,7 +21,7 @@ async function generateSplatTextureWorker(parameters, transferableObjects) {
   }
 
   const { attributes, count } = parameters;
-  const result = generate_texture_from_attrs(
+  const result = generate_splat_texture(
     attributes.positions,
     attributes.scales,
     attributes.rotations,

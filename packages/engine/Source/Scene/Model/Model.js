@@ -1967,6 +1967,10 @@ Model.prototype.update = function (frameState) {
   // for specular maps.
   updateImageBasedLighting(this, frameState);
 
+  if (defined(this._loader.spzUnpacked) && this._loader.spzUnpacked === false) {
+    return;
+  }
+
   if (!this._resourcesLoaded && finishedProcessing) {
     this._resourcesLoaded = true;
 
@@ -3237,6 +3241,7 @@ Model.fromGltfAsync = async function (options) {
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
     loadGaussianSplatting: options.enableShowGaussianSplatting,
+    loadSpzResource: true,
   };
 
   const basePath = defaultValue(options.basePath, "");

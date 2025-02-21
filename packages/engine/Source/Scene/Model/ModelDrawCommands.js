@@ -207,7 +207,7 @@ function buildDrawCommandForModel(
 
 /**
  * Builds the {@link DrawCommand} that serves as the basis for either creating
- * a {@link ModelDrawCommand} or a {@link ModelRuntimePrimitive}
+ * a {@link ModelDrawCommand} or a {@link ModelRuntimePrimitive} that has Gaussian splats
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {ShaderProgram} shaderProgram The shader program
@@ -280,7 +280,6 @@ function buildDrawCommandForGaussianSplatPrimitive(
       });
     }
     const splatQuadAttrLocations = {
-      //    5: 5,
       splatIndex: 5,
     };
     const geometry = new Geometry({
@@ -388,8 +387,6 @@ function buildDrawCommandForGaussianSplatPrimitive(
     debugShowBoundingVolume: model.debugShowBoundingVolume,
     castShadows: castShadows,
     receiveShadows: receiveShadows,
-    orientedBoundingBox:
-      primitiveRenderResources.model.content.tile.boundingVolume.boundingVolume,
   });
   return command;
 }

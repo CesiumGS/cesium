@@ -6,4 +6,3 @@ void gaussianSplatStage(inout vec4 color, in ProcessedAttributes attributes) {
     mediump float B = exp(-A * scale) * (v_splatColor.a);
     color = vec4(v_splatColor.rgb * B, B);
 }
-

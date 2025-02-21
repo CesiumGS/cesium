@@ -9,6 +9,7 @@ import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 import { loadSpz } from "@spz-loader/core";
 
@@ -187,7 +188,7 @@ function PrimitiveLoadPlan(primitive) {
  *
  * @param {Context} context The context for generating buffers on the GPU
  */
-PrimitiveLoadPlan.prototype.postProcess = function (context) {
+PrimitiveLoadPlan.prototype.postProcess = async function (context) {
   // Handle CESIUM_primitive_outline. This modifies indices and attributes and
   // also generates a new attribute for the outline coordinates. These steps
   // are synchronous.
@@ -196,11 +197,19 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
     generateBuffers(this, context);
   }
 
+  if (this.needsSpzDecompression) {
+    decompressSpz(this, context).then(() => {
+      setupGaussianSplatBuffers(this, context);
+      if (this.generateGaussianSplatTexture) {
+        this.attributePlans.forEach((attr) => {
+          this.primitive.needsGaussianSplatTexture = true;
+        });
+      }
+    });
+  }
+
   //handle splat post-processing for point primitives
   if (this.needsGaussianSplats) {
-    if (this.needsSpzDecompression) {
-      decompressSpz(this, context);
-    }
     this.primitive.isGaussianSplatPrimitive = true;
     setupGaussianSplatBuffers(this, context);
     if (this.generateGaussianSplatTexture) {
@@ -262,7 +271,7 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   return attribute;
 }
 
-function decompressSpz(loadPlan, context) {
+async function decompressSpz(loadPlan, context) {
   let _spz;
   //there should be only one
   for (let i = 0; i < loadPlan.attributePlans.length; i++) {
@@ -272,20 +281,100 @@ function decompressSpz(loadPlan, context) {
     }
   }
 
-  let _gs;
-  // No await version
-  loadSpz(_spz.typedArray)
-    .then((gs) => {
-      _gs = gs;
-      // MUST handle all dependent code here
-      console.log(_gs.numPoints);
-      // ... rest of your code that needs _gs
-    })
-    .catch((error) => {
-      console.error(`Failed to load SPZ: ${error}`);
-    });
+  const primitive = loadPlan.primitive;
+  const gs = await loadSpz(_spz.typedArray);
 
-  console.log(`${_gs}`);
+  const count = gs.numPoints;
+  const positionAttr = new ModelComponents.Attribute();
+  const scaleAttr = new ModelComponents.Attribute();
+  const rotationAttr = new ModelComponents.Attribute();
+  const colorAttr = new ModelComponents.Attribute();
+
+  const findMinMaxXY = (flatArray) => {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+
+    for (let i = 0; i < flatArray.length; i += 3) {
+      const x = flatArray[i];
+      const y = flatArray[i + 1];
+      const z = flatArray[i + 2];
+
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+      minZ = Math.min(minZ, z);
+      maxZ = Math.max(maxZ, z);
+    }
+
+    return [new Cartesian3(minX, minY, minZ), new Cartesian3(maxX, maxY, maxZ)];
+  };
+
+  [positionAttr.min, positionAttr.max] = findMinMaxXY(gs.positions);
+
+  positionAttr.name = "POSITION";
+  positionAttr.semantic = VertexAttributeSemantic.POSITION;
+  positionAttr.typedArray = new Float32Array(gs.positions);
+  positionAttr.componentDatatype = ComponentDatatype.FLOAT;
+  positionAttr.type = AttributeType.VEC3;
+  positionAttr.normalized = false;
+  positionAttr.count = count / 3;
+  positionAttr.constant = 0;
+  positionAttr.instanceDivisor = 1;
+
+  scaleAttr.name = "_SCALE";
+  scaleAttr.semantic = VertexAttributeSemantic.SCALE;
+  scaleAttr.typedArray = new Float32Array(gs.scales);
+  scaleAttr.componentDatatype = ComponentDatatype.FLOAT;
+  scaleAttr.type = AttributeType.VEC3;
+  scaleAttr.normalized = false;
+  scaleAttr.count = count / 3;
+  scaleAttr.constant = 0;
+  scaleAttr.instanceDivisor = 1;
+
+  rotationAttr.name = "_ROTATION";
+  rotationAttr.semantic = VertexAttributeSemantic.ROTATION;
+  rotationAttr.typedArray = new Float32Array(gs.rotations);
+  rotationAttr.componentDatatype = ComponentDatatype.FLOAT;
+  rotationAttr.type = AttributeType.VEC4;
+  rotationAttr.normalized = false;
+  rotationAttr.count = count / 4;
+  rotationAttr.constant = 0;
+  rotationAttr.instanceDivisor = 1;
+
+  const interleaveRGBA = (rgb, alpha) => {
+    const rgba = new Float32Array((rgb.length / 3) * 4);
+
+    for (let i = 0; i < rgb.length / 3; i++) {
+      rgba[i * 4] = rgb[i * 3];
+      rgba[i * 4 + 1] = rgb[i * 3 + 1];
+      rgba[i * 4 + 2] = rgb[i * 3 + 2];
+      rgba[i * 4 + 3] = alpha[i];
+    }
+
+    return rgba;
+  };
+
+  colorAttr.name = "COLOR_0";
+  colorAttr.semantic = VertexAttributeSemantic.COLOR;
+  colorAttr.typedArray = interleaveRGBA(gs.colors, gs.alphas);
+  colorAttr.componentDatatype = ComponentDatatype.FLOAT;
+  colorAttr.type = AttributeType.VEC4;
+  colorAttr.normalized = false;
+  colorAttr.count = count / 4;
+  colorAttr.constant = 0;
+  colorAttr.instanceDivisor = 1;
+
+  primitive.attributes.push(positionAttr);
+  primitive.attributes.push(scaleAttr);
+  primitive.attributes.push(rotationAttr);
+  primitive.attributes.push(colorAttr);
+
+  primitive.spzUnpacked = true;
 }
 
 /**
