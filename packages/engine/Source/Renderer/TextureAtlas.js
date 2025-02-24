@@ -142,10 +142,10 @@ Object.defineProperties(TextureAtlas.prototype, {
 });
 
 /**
- * Get texture coordinate for reading on the GPU.
- * @param {number} index
- * @param {BoundingRectangle} [result]
- * @return {BoundingRectangle}
+ * Get the texture coordinates for reading the associated image in shaders.
+ * @param {number} index The index of the image region.
+ * @param {BoundingRectangle} [result] The object into which to store the result.
+ * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
  *
  * @example
  * const index = await atlas.addImage("myImage", image);
@@ -162,6 +162,15 @@ TextureAtlas.prototype.computeTextureCoordinates = function (index, result) {
 
   if (!defined(result)) {
     result = new BoundingRectangle();
+  }
+
+  if (!defined(rectangle)) {
+    result.x = 0;
+    result.y = 0;
+    result.width = 0;
+    result.height = 0;
+
+    return result;
   }
 
   const atlasWidth = texture.width;
@@ -265,7 +274,7 @@ TextureAtlas.prototype._copyFromTexture = function (
 /**
  * Recreates the texture atlas texture with new dimensions and repacks images as needed.
  * @param {Context} context The rendering context
- * @param {number}[queueOffset = 0] Index of the last queued item that was successfully packed
+ * @param {number} [queueOffset = 0] Index of the last queued item that was successfully packed
  */
 TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
   const borderPadding = this._borderWidthInPixels;

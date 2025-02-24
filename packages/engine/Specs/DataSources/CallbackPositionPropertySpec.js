@@ -7,7 +7,10 @@ import {
 } from "../../index.js";
 
 describe("DataSources/CallbackPositionProperty", function () {
-  const time = JulianDate.now();
+  let time;
+  beforeEach(function () {
+    time = JulianDate.now();
+  });
 
   it("constructor throws with undefined isConstant", function () {
     expect(function () {

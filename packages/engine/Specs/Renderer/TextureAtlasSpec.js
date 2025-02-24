@@ -11,11 +11,6 @@ import createScene from "../../../../Specs/createScene.js";
 import pollWhilePromise from "../../../../Specs/pollWhilePromise.js";
 
 describe("Scene/TextureAtlas", function () {
-  let atlas;
-  afterEach(function () {
-    atlas = atlas && atlas.destroy();
-  });
-
   let greenImage;
   let tallGreenImage;
   let blueImage;
@@ -29,6 +24,7 @@ describe("Scene/TextureAtlas", function () {
   let bigRedGuid;
   let bigBlueGuid;
   let bigGreenGuid;
+
   beforeAll(function () {
     return Promise.all([
       Resource.fetchImage("./Data/Images/Green.png").then(function (image) {
@@ -56,6 +52,11 @@ describe("Scene/TextureAtlas", function () {
         bigBlueGuid = createGuid();
       }),
     ]);
+  });
+
+  let atlas;
+  afterEach(function () {
+    atlas = atlas && atlas.destroy();
   });
 
   it("throws with a negative borderWidthInPixels", function () {
