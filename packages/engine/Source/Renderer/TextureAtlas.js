@@ -119,6 +119,7 @@ Object.defineProperties(TextureAtlas.prototype, {
    * important to check {@link TextureAtlas#guid} before using old values.
    * @memberof TextureAtlas.prototype
    * @type {number}
+   * @readonly
    */
   numberOfImages: {
     get: function () {
@@ -133,10 +134,26 @@ Object.defineProperties(TextureAtlas.prototype, {
    * has changed before processing the atlas data.
    * @memberof TextureAtlas.prototype
    * @type {string}
+   * @readonly
    */
   guid: {
     get: function () {
       return this._guid;
+    },
+  },
+
+  /**
+   * Returns the size in bytes of the texture.
+   * @memberof TextureAtlas.prototype
+   * @type {number}
+   */
+  sizeInBytes: {
+    get: function () {
+      if (!defined(this._texture)) {
+        return 0;
+      }
+
+      return this._texture.sizeInBytes;
     },
   },
 });
@@ -289,10 +306,13 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
   // ignoring the subregions, which don't get packed
   const subRegions = this._subRegions;
   const toPack = oldRectangles
-    .filter((image, index) => defined(image) && !defined(subRegions.get(index)))
     .map((image, index) => {
       return new AddImageRequest({ index, image });
-    });
+    })
+    .filter(
+      (request, index) =>
+        defined(request.image) && !defined(subRegions.get(index)),
+    );
 
   // Add the new set of images
   let maxWidth = 0;
@@ -329,7 +349,7 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
       imageB.height * imageB.width - imageA.height * imageA.width,
   );
 
-  const newRectangles = Array(this._nextIndex);
+  const newRectangles = new Array(this._nextIndex);
   for (const index of this._subRegions.keys()) {
     // Subregions are specified relative to their parents,
     // so we can copy them directly
@@ -347,13 +367,6 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
     for (i = 0; i < toPack.length; ++i) {
       const { index, image } = toPack[i];
       if (!defined(image)) {
-        continue;
-      }
-
-      // Subregions are specified relative to their parents
-      // There's no need to update them
-      if (defined(subRegions[index])) {
-        newRectangles[index] = oldRectangles[index];
         continue;
       }
 
@@ -491,6 +504,8 @@ TextureAtlas.prototype._processImageQueue = function (context) {
   if (queue.length === 0) {
     return false;
   }
+
+  this._rectangles.length = this._nextIndex;
 
   let i, error;
   for (i = 0; i < queue.length; ++i) {

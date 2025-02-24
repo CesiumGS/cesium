@@ -835,6 +835,25 @@ describe("Scene/BillboardCollection", function () {
         expect(scene).toRender([0, 255, 0, 255]);
       });
 
+      it("adds and renders multiple billboard", async function () {
+        const greenBillboard = billboards.add({
+          position: Cartesian3.ZERO,
+          image: greenImage,
+        });
+
+        const blueBillboard = billboards.add({
+          position: new Cartesian3(0.5, 0.0, 0.0), // Closer to camera
+          image: blueImage,
+        });
+
+        await pollToPromise(() => {
+          scene.renderForSpecs();
+          return greenBillboard.ready && blueBillboard.ready;
+        });
+
+        expect(scene).toRender([0, 0, 255, 255]);
+      });
+
       it("can add a billboard without a globe", function () {
         scene.globe = undefined;
 

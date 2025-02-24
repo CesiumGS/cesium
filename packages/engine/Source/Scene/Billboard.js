@@ -984,12 +984,10 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * When <code>true</code>, this billboard is ready to render, i.e., the image
    * has been downloaded and the WebGL resources are created.
-   *
    * @memberof Billboard.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
+   * @private
    * @default false
    */
   ready: {
@@ -1000,15 +998,30 @@ Object.defineProperties(Billboard.prototype, {
 
   /**
    * If defined, this error was encountered during the loading process.
-   *
    * @memberof Billboard.prototype
-   *
    * @type {Error|undefined}
    * @readonly
+   * @private
    */
   loadError: {
     get: function () {
       return this._imageTexture.loadError;
+    },
+  },
+
+  /**
+   * Used by <code>billboardCollection</code> to track which billboards to update based on image load status.
+   * @memberof Billboard.prototype
+   * @type {boolean}
+   * @private
+   * @default false
+   */
+  textureDirty: {
+    get: function () {
+      return this._imageTexture.dirty;
+    },
+    set: function (value) {
+      this._imageTexture.dirty = value;
     },
   },
 

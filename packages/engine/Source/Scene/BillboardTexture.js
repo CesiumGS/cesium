@@ -2,9 +2,6 @@ import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import BillboardLoadState from "./BillboardLoadState.js";
 
-// TODO: Move this to billboard collection instead of Billboard
-const IMAGE_INDEX_INDEX = 7;
-
 /**
  * @private
  * Tracks a reference to an image and it's loading state, as used in a BillboardCollection and stored in a texture atlas.
@@ -28,6 +25,12 @@ function BillboardTexture(billboardCollection) {
   this._index = -1;
   this._width = undefined;
   this._height = undefined;
+
+  /**
+   * Used by billboardCollection to track whcih billboards to update.
+   * @type {boolean}
+   */
+  this.dirty = false;
 }
 
 Object.defineProperties(BillboardTexture.prototype, {
@@ -139,9 +142,7 @@ BillboardTexture.prototype.unload = async function () {
   this._width = undefined;
   this._height = undefined;
 
-  // TODO: Mark as dirty?
-  ++this._billboardCollection._propertiesChanged[IMAGE_INDEX_INDEX];
-  //billboard._dirty = true;
+  this.dirty = true;
 };
 
 /**
@@ -199,9 +200,7 @@ BillboardTexture.prototype.loadImage = async function (id, image) {
   this._index = index;
   this._loadState = BillboardLoadState.LOADED;
 
-  // TODO: Mark as dirty?
-  ++this._billboardCollection._propertiesChanged[IMAGE_INDEX_INDEX];
-  //billboard._dirty = true;
+  this.dirty = true;
 };
 
 /**
@@ -242,7 +241,7 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
   this._index = index;
   this._loadState = BillboardLoadState.LOADED;
 
-  ++this._billboardCollection._propertiesChanged[IMAGE_INDEX_INDEX];
+  this.dirty = true;
 };
 
 /**

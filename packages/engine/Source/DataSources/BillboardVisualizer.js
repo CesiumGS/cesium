@@ -131,7 +131,7 @@ BillboardVisualizer.prototype.update = function (time) {
     }
 
     billboard.show = show;
-    if (!defined(billboard.image) || item.textureValue !== textureValue) {
+    if (item.textureValue !== textureValue) {
       billboard.image = textureValue;
       item.textureValue = textureValue;
     }
@@ -233,7 +233,7 @@ BillboardVisualizer.prototype.update = function (time) {
       boundingRectangleScratch,
     );
     if (defined(subRegion)) {
-      billboard.setImageSubRegion(billboard._imageId, subRegion);
+      billboard.setImageSubRegion(billboard.image, subRegion);
     }
   }
   return true;

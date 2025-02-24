@@ -356,6 +356,7 @@ Object.defineProperties(BillboardCollection.prototype, {
    * in the collection.
    * @memberof BillboardCollection.prototype
    * @type {number}
+   * @readonly
    */
   length: {
     get: function () {
@@ -417,6 +418,19 @@ Object.defineProperties(BillboardCollection.prototype, {
     },
     set: function (value) {
       this._destroyTextureAtlas = value;
+    },
+  },
+
+  /**
+   * Returns the size in bytes of the WebGL texture resources.
+   * @private
+   * @memberof BillboardCollection.prototype
+   * @type {number}
+   * @readonly
+   */
+  sizeInBytes: {
+    get: function () {
+      return this._textureAtlas.sizeInBytes;
     },
   },
 });
@@ -1764,7 +1778,10 @@ BillboardCollection.prototype.update = function (frameState) {
         `Error loading image for billboard: ${billboard.loadError}`,
       );
       billboard.image = undefined;
-      throw billboard.loadError;
+    }
+
+    if (billboard.textureDirty) {
+      this._updateBillboard(billboard, IMAGE_INDEX_INDEX);
     }
   }
 
@@ -1818,6 +1835,7 @@ BillboardCollection.prototype.update = function (frameState) {
       for (let i = 0; i < billboardsLength; ++i) {
         const billboard = this._billboards[i];
         billboard._dirty = false; // In case it needed an update.
+        billboard.textureDirty = false;
         writeBillboard(this, frameState, vafWriters, billboard);
       }
 
@@ -1909,6 +1927,7 @@ BillboardCollection.prototype.update = function (frameState) {
       for (let m = 0; m < billboardsToUpdateLength; ++m) {
         const b = billboardsToUpdate[m];
         b._dirty = false;
+        b.textureDirty = false;
 
         for (let n = 0; n < numWriters; ++n) {
           writers[n](this, frameState, vafWriters, b);
@@ -1919,6 +1938,7 @@ BillboardCollection.prototype.update = function (frameState) {
       for (let h = 0; h < billboardsToUpdateLength; ++h) {
         const bb = billboardsToUpdate[h];
         bb._dirty = false;
+        bb.textureDirty = false;
 
         for (let o = 0; o < numWriters; ++o) {
           writers[o](this, frameState, vafWriters, bb);
