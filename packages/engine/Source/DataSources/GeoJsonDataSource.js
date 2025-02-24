@@ -26,6 +26,10 @@ import EntityCollection from "./EntityCollection.js";
 import PolygonGraphics from "./PolygonGraphics.js";
 import PolylineGraphics from "./PolylineGraphics.js";
 
+/**
+ * @import Entity from "./Entity";
+ */
+
 function defaultCrsFunction(coordinates) {
   return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
 }
@@ -591,6 +595,13 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
 }
 
 /**
+ * This callback is displayed as part of the GeoJsonDataSource class.
+ * @callback GeoJsonDataSource.describe
+ * @param {object} properties The properties of the feature.
+ * @param {string} nameProperty The property key that Cesium estimates to have the name of the feature.
+ */
+
+/**
  * @typedef {object} GeoJsonDataSource.LoadOptions
  *
  * Initialization options for the <code>load</code> method.
@@ -1107,10 +1118,4 @@ function load(that, geoJson, options, sourceUri, clear) {
   });
 }
 
-/**
- * This callback is displayed as part of the GeoJsonDataSource class.
- * @callback GeoJsonDataSource.describe
- * @param {object} properties The properties of the feature.
- * @param {string} nameProperty The property key that Cesium estimates to have the name of the feature.
- */
 export default GeoJsonDataSource;
