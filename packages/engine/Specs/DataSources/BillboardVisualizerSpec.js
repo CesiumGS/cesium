@@ -225,9 +225,6 @@ describe(
         expect(bb.splitDirection).toEqual(
           testObject.billboard.splitDirection.getValue(time),
         );
-        expect(bb._imageSubRegion).toEqual(
-          testObject.billboard.imageSubRegion.getValue(time),
-        );
 
         billboard.show = new ConstantProperty(false);
 

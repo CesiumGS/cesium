@@ -1142,8 +1142,7 @@ Billboard.prototype._updateClamping = function () {
 
 const scratchCartographic = new Cartographic();
 Billboard._updateClamping = function (collection, owner) {
-  const scene = collection._scene;
-  if (!defined(scene)) {
+  if (!defined(collection) || !defined(collection._scene)) {
     //>>includeStart('debug', pragmas.debug);
     if (owner._heightReference !== HeightReference.NONE) {
       throw new DeveloperError(
@@ -1153,11 +1152,10 @@ Billboard._updateClamping = function (collection, owner) {
     //>>includeEnd('debug');
     return;
   }
-
+  const scene = collection._scene;
   const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   const mode = scene.frameState.mode;
-
   const modeChanged = mode !== owner._mode;
   owner._mode = mode;
 
