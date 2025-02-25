@@ -57,9 +57,9 @@
   "devDependencies": {
     "@playwright/test": "^1.41.1",
     "chokidar": "^4.0.1",
-    "cloc": "^2.2.0-cloc",
+    "cloc": "^2.4.0-cloc",
     "compression": "^1.7.4",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.25.0",
     "eslint": "^9.1.1",
     "eslint-config-cesium": "^11.0.1",
     "eslint-plugin-html": "^8.1.1",
