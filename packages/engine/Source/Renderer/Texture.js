@@ -704,7 +704,8 @@ Object.defineProperties(Texture.prototype, {
    * coordinates in both directions, uses linear filtering for both magnification and minification,
    * and uses a maximum anisotropy of 1.0.
    * @memberof Texture.prototype
-   * @type {object}
+   * @type {Sampler}
+   * @private
    */
   sampler: {
     get: function () {
@@ -842,7 +843,7 @@ function setupSampler(texture, sampler) {
  * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
  * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- *
+ * @private
  * @example
  * texture.copyFrom({
  *  source: {
@@ -965,7 +966,7 @@ Texture.prototype.copyFrom = function (options) {
  * @param {number} [framebufferYOffset=0] optional
  * @param {number} [width=width] optional
  * @param {number} [height=height] optional
- *
+ * @private
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
@@ -1060,7 +1061,7 @@ Texture.prototype.copyFromFramebuffer = function (
 
 /**
  * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
- *
+ * @private
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
  * @exception {DeveloperError} hint is invalid.

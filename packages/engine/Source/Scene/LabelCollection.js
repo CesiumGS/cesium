@@ -29,18 +29,21 @@ function Glyph() {
    * Object containing dimensions of the character as rendered to a canvas.
    * @see {writeTextToCanvas}
    * @type {object}
+   * @private
    */
   this.dimensions = undefined;
 
   /**
    * Reference to loaded image data for a single character, drawn in a particular style, shared and referenced across all labels.
    * @type {BillboardTexture}
+   * @private
    */
   this.billboardTexture = undefined;
 
   /**
    * The individual billboard used to render the glyph. This may be <code>undefined</code> if the associated character is whitespace.
    * @type {Billboard|undefined}
+   * @private
    */
   this.billboard = undefined;
 }

@@ -3,9 +3,9 @@ import defined from "../Core/defined.js";
 import BillboardLoadState from "./BillboardLoadState.js";
 
 /**
- * @private
  * Tracks a reference to an image and it's loading state, as used in a BillboardCollection and stored in a texture atlas.
  * @constructor
+ * @private
  * @see BillboardCollection
  * @see Billboard#image
  * @alias BillboardTexture
@@ -29,6 +29,7 @@ function BillboardTexture(billboardCollection) {
   /**
    * Used by billboardCollection to track whcih billboards to update.
    * @type {boolean}
+   * @private
    */
   this.dirty = false;
 }
@@ -39,6 +40,7 @@ Object.defineProperties(BillboardTexture.prototype, {
    * @memberof BillboardTexture.prototype
    * @type {Error|undefined}
    * @readonly
+   * @private
    */
   loadError: {
     get: function () {
@@ -49,13 +51,11 @@ Object.defineProperties(BillboardTexture.prototype, {
   /**
    * The current status of the image load. When <code>BillboardLoadState.LOADED</code>, this billboard is ready to render, i.e., the image
    * has been downloaded and the WebGL resources are created.
-   *
    * @memberof BillboardTexture.prototype
-   *
    * @type {BillboardLoadState}
    * @readonly
-   *
    * @default BillboardLoadState.NONE
+   * @private
    */
   loadState: {
     get: function () {
@@ -70,6 +70,7 @@ Object.defineProperties(BillboardTexture.prototype, {
    * @type {boolean}
    * @readonly
    * @default false
+   * @private
    */
   ready: {
     get: function () {
@@ -82,6 +83,7 @@ Object.defineProperties(BillboardTexture.prototype, {
    * @memberof BillboardTexture.prototype
    * @type {boolean}
    * @readonly
+   * @private
    */
   hasImage: {
     get: function () {
@@ -94,6 +96,7 @@ Object.defineProperties(BillboardTexture.prototype, {
    * @memberof BillboardTexture.prototype
    * @type {string|undefined}
    * @readonly
+   * @private
    */
   id: {
     get: function () {
@@ -106,6 +109,7 @@ Object.defineProperties(BillboardTexture.prototype, {
    * @memberof BillboardTexture.prototype
    * @type {number|undefined}
    * @readonly
+   * @private
    */
   width: {
     get: function () {
@@ -118,6 +122,7 @@ Object.defineProperties(BillboardTexture.prototype, {
    * @memberof BillboardTexture.prototype
    * @type {number|undefined}
    * @readonly
+   * @private
    */
   height: {
     get: function () {
@@ -128,6 +133,7 @@ Object.defineProperties(BillboardTexture.prototype, {
 
 /**
  * Releases reference to any associated image data.
+ * @private
  */
 BillboardTexture.prototype.unload = async function () {
   if (this._loadState === BillboardLoadState.NONE) {
@@ -147,9 +153,8 @@ BillboardTexture.prototype.unload = async function () {
 
 /**
  * Starts loading an image into the texture atlas.
- *
  * @see {TextureAtlas#addImage}
- *
+ * @private
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
@@ -205,9 +210,8 @@ BillboardTexture.prototype.loadImage = async function (id, image) {
 
 /**
  * Track a reference to a sub-region of an existing image.
- *
  * @see {TextureAtlas#addImageSubRegion}
- *
+ * @private
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
  */
@@ -246,6 +250,7 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
 
 /**
  * Get the texture coordinates for reading the loaded texture in shaders.
+ * @private
  * @param {BoundingRectangle} [result] The modified result parameter or a new BoundingRectangle instance if one was not provided.
  * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
  */

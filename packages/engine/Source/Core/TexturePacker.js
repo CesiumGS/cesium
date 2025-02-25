@@ -3,19 +3,17 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 
 /**
- * @private
  * @typedef {object} TexturePacker.PackableObject
- *
  * Any object, such as an <code>Image</code> with the following properties:
- *
+ * @private
  * @property {number} width The width of the image, or other object, usually in pixels
  * @property {number} height The height of the image, or other object, usually in pixels
  */
 
 /**
- * @private
  * A texture atlas is recursively broken down into regions of space called nodes.
  * Nodes contain either an image reference or child nodes.
+ * @private
  * @constructor
  * @param {object} options An options object with the following properties:
  * @param {number} options.x The x-offset of the texture node
@@ -46,10 +44,10 @@ function TextureNode({ x, y, width, height }) {
 }
 
 /**
- * @private
  * Typically used with {@link TextureAtlas} to calculate efficient regions of the larger areas to store images or other data. Typically, all units are specified in pixels.
  * @alias TexturePacker
  * @constructor
+ * @private
  * @param {options} options Object with the following properties:
  * @param {number} width Width of the atlas, in pixels
  * @param {number} height Height of atlas, in pixels
@@ -71,6 +69,7 @@ function TexturePacker({ width, height, borderPadding }) {
 
 /**
  * Inserts the given object into the next available region based on it's dimensions. Where convienient, it's most efficient to pack items largest to smallest.
+ * @private
  * @param {number} index An identifier referencing the image or other stored data
  * @param {TexturePacker.PackableObject} packableObject An object, such as an <code>Image</code> with <code>width</code> and <code>height</code> properties in pixels.
  * @returns {TextureNode|undefined} The created region, or <code>undefined</code> if there is no region large enough to accomodate the object's dimensions.

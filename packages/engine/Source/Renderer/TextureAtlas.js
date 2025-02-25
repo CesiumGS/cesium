@@ -71,6 +71,8 @@ Object.defineProperties(TextureAtlas.prototype, {
    * The amount of spacing between adjacent images in pixels.
    * @memberof TextureAtlas.prototype
    * @type {number}
+   * @readonly
+   * @private
    */
   borderWidthInPixels: {
     get: function () {
@@ -84,6 +86,8 @@ Object.defineProperties(TextureAtlas.prototype, {
    * The coordinates are in the order that the corresponding images were added to the atlas.
    * @memberof TextureAtlas.prototype
    * @type {BoundingRectangle[]}
+   * @readonly
+   * @private
    */
   rectangles: {
     get: function () {
@@ -95,6 +99,8 @@ Object.defineProperties(TextureAtlas.prototype, {
    * The texture that all of the images are being written to. The value will be <code>undefined</code> until the first update.
    * @memberof TextureAtlas.prototype
    * @type {Texture|undefined}
+   * @readonly
+   * @private
    */
   texture: {
     get: function () {
@@ -106,11 +112,25 @@ Object.defineProperties(TextureAtlas.prototype, {
    * The pixel format of the texture.
    * @memberof TextureAtlas.prototype
    * @type {PixelFormat}
-   * @default PixelFormat.RGBA
+   * @readonly
+   * @private
    */
   pixelFormat: {
     get: function () {
       return this._pixelFormat;
+    },
+  },
+
+  /**
+   * The sampler to use when sampling this texture.
+   * @memberof TextureAtlas.prototype
+   * @type {Sampler}
+   * @readonly
+   * @private
+   */
+  sampler: {
+    get: function () {
+      return this._sampler;
     },
   },
 
@@ -122,6 +142,7 @@ Object.defineProperties(TextureAtlas.prototype, {
    * @memberof TextureAtlas.prototype
    * @type {number}
    * @readonly
+   * @private
    */
   numberOfImages: {
     get: function () {
@@ -137,6 +158,7 @@ Object.defineProperties(TextureAtlas.prototype, {
    * @memberof TextureAtlas.prototype
    * @type {string}
    * @readonly
+   * @private
    */
   guid: {
     get: function () {
@@ -148,6 +170,8 @@ Object.defineProperties(TextureAtlas.prototype, {
    * Returns the size in bytes of the texture.
    * @memberof TextureAtlas.prototype
    * @type {number}
+   * @readonly
+   * @private
    */
   sizeInBytes: {
     get: function () {
@@ -165,7 +189,7 @@ Object.defineProperties(TextureAtlas.prototype, {
  * @param {number} index The index of the image region.
  * @param {BoundingRectangle} [result] The object into which to store the result.
  * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
- *
+ * @private
  * @example
  * const index = await atlas.addImage("myImage", image);
  * const rectangle = atlas.computeTextureCoordinates(index);
@@ -223,6 +247,7 @@ TextureAtlas.prototype.computeTextureCoordinates = function (index, result) {
  * @param {number} height The pixel height of the texture
  * @param {BoundingRectangle[]} rectangles The packed bounding rectangles for the reszied texture
  * @param {number} queueOffset Index of the last queued item that was successfully packed
+ * @private
  */
 TextureAtlas.prototype._copyFromTexture = function (
   context,
@@ -296,6 +321,7 @@ TextureAtlas.prototype._copyFromTexture = function (
  * Recreates the texture atlas texture with new dimensions and repacks images as needed.
  * @param {Context} context The rendering context
  * @param {number} [queueOffset = 0] Index of the last queued item that was successfully packed
+ * @private
  */
 TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
   const borderPadding = this._borderWidthInPixels;
@@ -408,6 +434,7 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
  * Return the index of the image region for the specified ID. If the image is already in the atlas, the existing index is returned. Otherwise, the result is undefined.
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @returns {number|undefined} The image index, or undefined if the image does not exist in the atlas.
+ * @private
  */
 TextureAtlas.prototype.getImageIndex = function (id) {
   //>>includeStart('debug', pragmas.debug);
@@ -420,6 +447,7 @@ TextureAtlas.prototype.getImageIndex = function (id) {
 /**
  * Copy image data into the underlying texture atlas.
  * @param {AddImageRequest} imageRequest The data needed to resolve the call to addImage in the queue
+ * @private
  */
 TextureAtlas.prototype._copyImageToTexture = function ({
   index,
@@ -449,9 +477,9 @@ TextureAtlas.prototype._copyImageToTexture = function ({
 };
 
 /**
- * @private
  * Info needed to add a queued image to the texture atlas when update operatons are executed, typically at the end of a frame.
  * @constructor
+ * @private
  * @param {object} options Object with the following properties:
  * @param {number} options.index An identifier
  * @param {TexturePacker.PackableObject} options.image An object, such as an <code>Image</code> with <code>width</code> and <code>height</code> properties in pixels
@@ -500,6 +528,7 @@ TextureAtlas.prototype._addImage = function (index, image) {
 
 /**
  * Process the image queue for this frame, copying to the texture atlas and resizing the texture as needed.
+ * @private
  * @param {Context} context The rendering context
  * @return {boolean} true if the texture was updated this frame
  */
@@ -555,6 +584,7 @@ TextureAtlas.prototype._processImageQueue = function (context) {
 
 /**
  * Processes any updates queued this frame, and updates rendering resources accordingly. Call before or after a frame has been rendered to avoid any race conditions for any dependant render commands.
+ * @private
  * @param {Context} context The rendering context
  * @return {boolean} true if rendering resources were updated.
  */
@@ -601,7 +631,7 @@ async function resolveImage(image, id) {
 /**
  * Adds an image to the atlas.  If the image is already in the atlas, the atlas is unchanged and
  * the existing index is used.
- *
+ * @private
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
@@ -642,7 +672,7 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
 /**
  * Add a sub-region of an existing atlas image as additional image indices.
- *
+ * @private
  * @param {string} id The identifier of the existing image.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
  * @returns {Promise<number>} A Promise that resolves to the image region index. -1 is returned if resouces are in the process of being destroyed.
@@ -720,9 +750,8 @@ TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
+ * @private
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see TextureAtlas#destroy
  */
 TextureAtlas.prototype.isDestroyed = function () {
@@ -736,12 +765,10 @@ TextureAtlas.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
+ * @private
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
  * @example
  * atlas = atlas && atlas.destroy();
- *
  * @see TextureAtlas#isDestroyed
  */
 TextureAtlas.prototype.destroy = function () {
@@ -757,8 +784,10 @@ TextureAtlas.prototype.destroy = function () {
 
 /**
  * A function that creates an image.
+ * @private
  * @callback TextureAtlas.CreateImageCallback
  * @param {string} id The identifier of the image to load.
  * @returns {HTMLImageElement|Promise<HTMLImageElement>} The image, or a promise that will resolve to an image.
  */
+
 export default TextureAtlas;
