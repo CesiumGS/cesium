@@ -26,6 +26,7 @@ const defaultInitialSize = Object.freeze(new Cartesian2(16.0, 16.0));
  *
  * @param {object} options Object with the following properties:
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
+ * @param {Sampler} [options.sampler=new Sampler()] Information about how to sample the texture.
  * @param {number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
  * @param {Cartesian2} [options.initialSize=new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
  *
@@ -50,6 +51,7 @@ function TextureAtlas(options) {
   //>>includeEnd('debug');
 
   this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+  this._sampler = options.sampler;
   this._borderWidthInPixels = borderWidthInPixels;
   this._initialSize = initialSize;
 
@@ -229,11 +231,13 @@ TextureAtlas.prototype._copyFromTexture = function (
   rectangles,
 ) {
   const pixelFormat = this._pixelFormat;
+  const sampler = this._sampler;
   const newTexture = new Texture({
     context,
     height,
     width,
     pixelFormat,
+    sampler,
   });
 
   const gl = context._gl;
@@ -559,6 +563,7 @@ TextureAtlas.prototype.update = function (context) {
     const width = this._initialSize.x;
     const height = this._initialSize.y;
     const pixelFormat = this._pixelFormat;
+    const sampler = this._sampler;
     const borderPadding = this._borderWidthInPixels;
 
     this._texture = new Texture({
@@ -566,6 +571,7 @@ TextureAtlas.prototype.update = function (context) {
       width,
       height,
       pixelFormat,
+      sampler,
     });
 
     this._texturePacker = new TexturePacker({
