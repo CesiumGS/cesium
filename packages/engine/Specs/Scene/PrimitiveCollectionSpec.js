@@ -49,20 +49,7 @@ describe(
       // render until all labels have been updated
       return pollToPromise(function () {
         scene.renderForSpecs();
-        const backgroundBillboard =
-          labels._backgroundBillboardCollection.get(0);
-        if (defined(backgroundBillboard) && !backgroundBillboard.ready) {
-          return false;
-        }
-
-        const glyphs = labels._glyphBillboardCollection;
-        for (let i = 0; i < glyphs.length; ++i) {
-          if (!glyphs.get(i).ready) {
-            return false;
-          }
-        }
-
-        return true;
+        return labels.ready;
       });
     }
 

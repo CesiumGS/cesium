@@ -495,8 +495,6 @@ Vector3DTilePoints.prototype.update = function (frameState) {
       this._error = undefined;
       throw error;
     }
-
-    return;
   }
 
   this._polylineCollection.update(frameState);

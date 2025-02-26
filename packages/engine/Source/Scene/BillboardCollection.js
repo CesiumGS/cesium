@@ -209,6 +209,8 @@ function BillboardCollection(options) {
 
   this._colorCommands = [];
 
+  this._allBillboardsReady = false;
+
   /**
    * Determines if billboards in this collection will be shown.
    *
@@ -431,6 +433,19 @@ Object.defineProperties(BillboardCollection.prototype, {
   sizeInBytes: {
     get: function () {
       return this._textureAtlas.sizeInBytes;
+    },
+  },
+
+  /**
+   * True when all billboards currently in the collection are ready. Exposed for testing.
+   * @private
+   * @memberof BillboardCollection.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  ready: {
+    get: function () {
+      return this._allBillboardsReady;
     },
   },
 });
@@ -1771,6 +1786,7 @@ BillboardCollection.prototype.update = function (frameState) {
 
   let billboards = this._billboards;
   let billboardsLength = billboards.length;
+  let allBillboardsReady = true;
   for (let i = 0; i < billboardsLength; ++i) {
     const billboard = billboards[i];
     if (defined(billboard.loadError)) {
@@ -1783,6 +1799,8 @@ BillboardCollection.prototype.update = function (frameState) {
     if (billboard.textureDirty) {
       this._updateBillboard(billboard, IMAGE_INDEX_INDEX);
     }
+
+    allBillboardsReady = allBillboardsReady && billboard.ready;
   }
 
   if (!defined(textureAtlas.texture)) {
@@ -2305,6 +2323,8 @@ BillboardCollection.prototype.update = function (frameState) {
       commandList.push(this.debugCommand);
     }
   }
+
+  this._allBillboardsReady = allBillboardsReady;
 };
 
 /**

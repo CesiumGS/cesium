@@ -716,6 +716,24 @@ Object.defineProperties(LabelCollection.prototype, {
       );
     },
   },
+
+  /**
+   * True when all billboards currently in the collection are ready. Exposed for testing.
+   * @private
+   * @memberof LabelCollection.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  ready: {
+    get: function () {
+      const backgroundBillboard = this._backgroundBillboardCollection.get(0);
+      if (defined(backgroundBillboard) && !backgroundBillboard.ready) {
+        return false;
+      }
+
+      return this._glyphBillboardCollection.ready;
+    },
+  },
 });
 
 /**

@@ -877,13 +877,13 @@ EntityCluster.prototype.update = function (frameState) {
     frameState.commandList = commandList;
   }
 
-  // If clustering is enabled before the billboard collection is updated,
+  // If clustering is enabled before the billboard collections are updated,
   // the images haven't been added to the image atlas so the screen space bounding boxes
   // are incorrect.
   if (
     defined(this._billboardCollection) &&
     this._billboardCollection.length > 0 &&
-    !defined(this._billboardCollection.get(0).width)
+    !this._billboardCollection.ready
   ) {
     commandList = frameState.commandList;
     frameState.commandList = [];

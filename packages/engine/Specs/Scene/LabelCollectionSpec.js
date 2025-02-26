@@ -5,7 +5,6 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defined,
   DistanceDisplayCondition,
   Math as CesiumMath,
   NearFarScalar,
@@ -493,20 +492,7 @@ describe("Scene/LabelCollection", function () {
         // render until all labels have been updated
         return pollToPromise(function () {
           scene.renderForSpecs();
-          const backgroundBillboard =
-            labels._backgroundBillboardCollection.get(0);
-          if (defined(backgroundBillboard) && !backgroundBillboard.ready) {
-            return false;
-          }
-
-          const glyphs = labels._glyphBillboardCollection;
-          for (let i = 0; i < glyphs.length; ++i) {
-            if (!glyphs.get(i).ready) {
-              return false;
-            }
-          }
-
-          return true;
+          return labels.ready;
         });
       }
 
@@ -1956,7 +1942,7 @@ describe("Scene/LabelCollection", function () {
           });
         });
 
-        it("Correctly updates billboard position when height reference changes", function () {
+        it("Correctly updates billboard position when height reference changes", async function () {
           scene.globe = new Globe();
           const labelsWithScene = new LabelCollection({ scene: scene });
           scene.primitives.add(labelsWithScene);
@@ -1968,17 +1954,20 @@ describe("Scene/LabelCollection", function () {
             heightReference: HeightReference.CLAMP_TO_GROUND,
           });
 
-          return allLabelsReady().then(function () {
-            const glyph = label._glyphs[0];
-            const billboard = glyph.billboard;
-            expect(billboard.position).toEqual(label.position);
-
-            label.heightReference = HeightReference.NONE;
+          await pollToPromise(() => {
             scene.renderForSpecs();
-
-            expect(billboard.position).toEqual(label.position);
-            scene.primitives.remove(labelsWithScene);
+            return labelsWithScene.ready;
           });
+
+          const glyph = label._glyphs[0];
+          const billboard = glyph.billboard;
+          expect(billboard.position).toEqual(label.position);
+
+          label.heightReference = HeightReference.NONE;
+          scene.renderForSpecs();
+
+          expect(billboard.position).toEqual(label.position);
+          scene.primitives.remove(labelsWithScene);
         });
 
         it("should set vertexTranslate of billboards correctly when font size changes", function () {
@@ -2441,40 +2430,47 @@ describe("Scene/LabelCollection", function () {
           );
         });
 
-        it("resets the clamped position when HeightReference.NONE", function () {
+        it("resets the clamped position when HeightReference.NONE", async function () {
           spyOn(scene.camera, "update");
           const l = labelsWithHeight.add({
             heightReference: HeightReference.CLAMP_TO_GROUND,
             text: "t",
             position: Cartesian3.fromDegrees(-72.0, 40.0),
           });
-          return allLabelsReady().then(function () {
-            expect(l._clampedPosition).toBeDefined();
-            expect(l._glyphs[0].billboard._clampedPosition).toBeDefined();
 
-            l.heightReference = HeightReference.NONE;
-            expect(l._clampedPosition).toBeUndefined();
-            expect(l._glyphs[0].billboard._clampedPosition).toBeUndefined();
+          await pollToPromise(() => {
+            scene.renderForSpecs();
+            return labelsWithHeight.ready;
           });
+
+          expect(l._clampedPosition).toBeDefined();
+          expect(l._glyphs[0].billboard._clampedPosition).toBeDefined();
+
+          l.heightReference = HeightReference.NONE;
+          expect(l._clampedPosition).toBeUndefined();
+          expect(l._glyphs[0].billboard._clampedPosition).toBeUndefined();
         });
 
-        it("clears the billboard height reference callback when the label is removed", function () {
-          spyOn(scene.camera, "update");
+        it("clears the billboard height reference callback when the label is removed", async function () {
           const l = labelsWithHeight.add({
             heightReference: HeightReference.CLAMP_TO_GROUND,
             text: "t",
             position: Cartesian3.fromDegrees(-72.0, 40.0),
           });
-          return allLabelsReady().then(function () {
-            const billboard = l._glyphs[0].billboard;
-            expect(billboard._removeCallbackFunc).toBeDefined();
-            const spy = spyOn(billboard, "_removeCallbackFunc");
-            labelsWithHeight.remove(l);
-            expect(spy).toHaveBeenCalled();
-            expect(
-              labelsWithHeight._spareBillboards[0]._removeCallbackFunc,
-            ).toBeUndefined();
+
+          await pollToPromise(() => {
+            scene.renderForSpecs();
+            return labelsWithHeight.ready;
           });
+
+          const billboard = l._glyphs[0].billboard;
+          expect(billboard._removeCallbackFunc).toBeDefined();
+          const spy = spyOn(billboard, "_removeCallbackFunc");
+          labelsWithHeight.remove(l);
+          expect(spy).toHaveBeenCalled();
+          expect(
+            labelsWithHeight._spareBillboards[0]._removeCallbackFunc,
+          ).toBeUndefined();
         });
       });
     },

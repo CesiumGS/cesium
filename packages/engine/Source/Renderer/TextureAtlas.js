@@ -658,7 +658,7 @@ TextureAtlas.prototype.addImage = function (id, image) {
     Check.defined("image", image);
     //>>includeEnd('debug');
 
-    if (this.isDestroyed()) {
+    if (this.isDestroyed() || !defined(image)) {
       return -1;
     }
 
