@@ -5,6 +5,7 @@ import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -359,6 +360,11 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
   // At minimum, the texture will need to scale to accomodate the largest width and height
   width = Math.max(maxWidth, width);
   height = Math.max(maxHeight, height);
+
+  if (!context.webgl2) {
+    width = CesiumMath.nextPowerOfTwo(width);
+    height = CesiumMath.nextPowerOfTwo(height);
+  }
 
   // Determine by what factor the texture need to be sclaed by at minimum
   const areaDifference = areaQueued;
