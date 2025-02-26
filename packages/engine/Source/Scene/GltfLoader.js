@@ -213,7 +213,6 @@ function GltfLoader(options) {
     renameBatchIdSemantic = false,
     loadGaussianSplatting = true,
     generateGaussianSplatTexture = true,
-    loadSpzResource = true,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -240,11 +239,6 @@ function GltfLoader(options) {
   this._renameBatchIdSemantic = renameBatchIdSemantic;
   this._loadGaussianSplatting = loadGaussianSplatting;
   this._generateGaussianSplatTexture = generateGaussianSplatTexture;
-  this._loadSpzResource = loadSpzResource;
-
-  if (loadSpzResource) {
-    this.spzUnpacked = false;
-  }
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -522,10 +516,6 @@ function postProcessGeometry(loader, context) {
       // post-process stage since they were created after the geometry loaders
       // finished. This way they can be destroyed when the loader is destroyed.
       gatherPostProcessBuffers(loader, loadPlan);
-    }
-
-    if (loader._loadSpzResource) {
-      loader.spzUnpacked = true;
     }
   }
 }

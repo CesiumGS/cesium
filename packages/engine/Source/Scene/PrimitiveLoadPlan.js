@@ -339,7 +339,7 @@ function buildSpzAttributes(loadPlan, context) {
   scaleAttr.constant = 0;
   scaleAttr.instanceDivisor = 1;
 
-  //we have to change handedness and invert z
+  //we have to change handedness and invert
   for (let q = 0; q < gs.rotations.length; q += 4) {
     const x = gs.rotations[q];
     const y = gs.rotations[q + 1];
@@ -412,6 +412,18 @@ function dequantizeSplatMeshopt(attribute) {
       attribute.count,
     );
     attribute.componentDatatype = ComponentDatatype.FLOAT;
+    const quats = attribute.typedArray;
+    for (let q = 0; q < quats.length; q += 4) {
+      const x = quats[q];
+      const y = quats[q + 1];
+      const z = quats[q + 2];
+      const w = quats[q + 3];
+
+      quats[q] = -x;
+      quats[q + 1] = -y;
+      quats[q + 2] = -z;
+      quats[q + 3] = -w;
+    }
   }
 
   if (

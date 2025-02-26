@@ -3237,7 +3237,6 @@ Model.fromGltfAsync = async function (options) {
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
     loadGaussianSplatting: options.enableShowGaussianSplatting,
-    loadSpzResource: true,
   };
 
   const basePath = defaultValue(options.basePath, "");

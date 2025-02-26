@@ -115,11 +115,19 @@ vec4 calcCovVectors(vec3 worldPos, mat3 Vrk, mat3 viewmatrix) {
         0.0, 0.0, 0.0
     );
 
-    //assuming a uniform scale, should get us close enough
-    float scale = length(viewmatrix[0]);
+    vec3 scale;
+    scale.x = length(viewmatrix[0].xyz);
+    scale.y = length(viewmatrix[1].xyz);
+    scale.z = length(viewmatrix[2].xyz);
 
-    mat3 T = viewmatrix * J;
-    mat3 cov = transpose(T) * Vrk * T / (scale*scale);
+    mat3 R = mat3(
+    viewmatrix[0].xyz / scale.x,
+    viewmatrix[1].xyz / scale.y,
+    viewmatrix[2].xyz / scale.z
+);
+
+mat3 T = R * J;
+    mat3 cov = transpose(T) * Vrk * T;
 
     float diagonal1 = cov[0][0] + .3;
     float offDiagonal = cov[0][1];
