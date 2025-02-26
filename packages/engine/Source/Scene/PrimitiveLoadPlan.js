@@ -316,6 +316,7 @@ function buildSpzAttributes(loadPlan, context) {
   [positionAttr.min, positionAttr.max] = findMinMaxXY(gs.positions);
 
   for (let i = 0; i < gs.positions.length; i += 3) {
+    gs.positions[i + 1] = -gs.positions[i + 1];
     gs.positions[i + 2] = -gs.positions[i + 2];
   }
   positionAttr.name = "POSITION";
@@ -346,9 +347,9 @@ function buildSpzAttributes(loadPlan, context) {
     const w = gs.rotations[q + 3];
 
     gs.rotations[q] = -x;
-    gs.rotations[q + 1] = y;
+    gs.rotations[q + 1] = -y;
     gs.rotations[q + 2] = -z;
-    gs.rotations[q + 3] = w;
+    gs.rotations[q + 3] = -w;
   }
 
   rotationAttr.name = "_ROTATION";
