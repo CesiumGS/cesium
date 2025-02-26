@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -29,7 +26,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -38,12 +35,7 @@
           name: "Red dashed line",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              -75,
-              38,
-              250000,
-              -125,
-              38,
-              250000,
+              -75, 38, 250000, -125, 38, 250000,
             ]),
             width: 5,
             material: new Cesium.PolylineDashMaterialProperty({
@@ -56,12 +48,7 @@
           name: "Wide blue dashed line with a gap color",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              -75,
-              40,
-              250000,
-              -125,
-              40,
-              250000,
+              -75, 40, 250000, -125, 40, 250000,
             ]),
             width: 30,
             material: new Cesium.PolylineDashMaterialProperty({
@@ -75,12 +62,7 @@
           name: "Orange dashed line with a short dash length",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              -75,
-              42,
-              250000,
-              -125,
-              42,
-              250000,
+              -75, 42, 250000, -125, 42, 250000,
             ]),
             width: 5,
             material: new Cesium.PolylineDashMaterialProperty({
@@ -94,12 +76,7 @@
           name: "Cyan dashed line with a dash pattern.",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              -75,
-              44,
-              250000,
-              -125,
-              44,
-              250000,
+              -75, 44, 250000, -125, 44, 250000,
             ]),
             width: 10,
             material: new Cesium.PolylineDashMaterialProperty({
@@ -113,12 +90,7 @@
           name: "Yellow dashed line with a dash pattern.",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              -75,
-              46,
-              250000,
-              -125,
-              46,
-              250000,
+              -75, 46, 250000, -125, 46, 250000,
             ]),
             width: 10,
             material: new Cesium.PolylineDashMaterialProperty({
@@ -130,11 +102,14 @@
 
         viewer.zoomTo(viewer.entities);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

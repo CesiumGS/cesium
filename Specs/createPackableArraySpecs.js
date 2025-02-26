@@ -1,11 +1,11 @@
-import { defaultValue } from "../Source/Cesium.js";
+import { defaultValue } from "@cesium/engine";
 
 function createPackableArraySpecs(
   packable,
   unpackedArray,
   packedArray,
   stride,
-  namePrefix
+  namePrefix,
 ) {
   namePrefix = defaultValue(namePrefix, "");
 

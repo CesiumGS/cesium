@@ -1,13 +1,11 @@
-import { defaultValue } from "../Source/Cesium.js";
-import { Ellipsoid } from "../Source/Cesium.js";
-import { Event } from "../Source/Cesium.js";
+import { defaultValue, Ellipsoid, Event } from "@cesium/engine";
 
 function createGlobe(ellipsoid) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
   const globe = {
-    callback: undefined,
-    removedCallback: false,
+    _callback: undefined,
+    _removedCallback: false,
     ellipsoid: ellipsoid,
     beginFrame: function () {},
     endFrame: function () {},
@@ -20,14 +18,18 @@ function createGlobe(ellipsoid) {
     imageryLayersUpdatedEvent: new Event(),
     _terrainProvider: undefined,
     terrainProviderChanged: new Event(),
+    tileLoadProgressEvent: new Event(),
     destroy: function () {},
+    isDestroyed: function () {
+      return false;
+    },
   };
 
   globe._surface.updateHeight = function (position, callback) {
-    globe.callback = callback;
+    globe._callback = callback;
     return function () {
-      globe.removedCallback = true;
-      globe.callback = undefined;
+      globe._removedCallback = true;
+      globe._callback = undefined;
     };
   };
 

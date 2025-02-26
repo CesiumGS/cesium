@@ -1,0 +1,17 @@
+{
+  "default": true,
+  "line-length": false,
+  "no-bare-urls": false,
+  "no-duplicate-heading": {
+    "siblings_only": true
+  },
+  "ol-prefix": {
+    "style": "ordered"
+  },
+  "no-inline-html": {
+    "allowed_elements": ["details", "summary"]
+  },
+  "blanks-around-fences": {
+    "list_items": false
+  }
+}

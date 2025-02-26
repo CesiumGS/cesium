@@ -1,0 +1,81 @@
+name: dev
+on: 
+  push:
+    branches: 
+      - main
+  pull_request:
+concurrency:
+  group: dev-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: npm install
+        run: npm install
+      - name: lint *.js
+        run: npm run eslint
+      - name: lint *.md
+        run: npm run markdownlint
+      - name: format code
+        run: npm run prettier-check
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
+      BRANCH: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: npm install
+        run: npm install
+      - name: build
+        run: npm run build
+      - name: coverage (firefox)
+        run: npm run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+      - name: upload coverage artifacts
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
+  release-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: npm install
+        run: npm install
+      - name: release build
+        run: npm run make-zip
+      - name: release tests (chrome)
+        run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+      - name: cloc
+        run: npm run cloc
+  node-18:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: npm install
+        run: npm install
+      - name: release build
+        run: npm run build-release
+      - name: package cesium module
+        run: npm pack &> /dev/null
+      - name: package workspace modules
+        run: npm pack --workspaces &> /dev/null
+      - uses: ./.github/actions/verify-package

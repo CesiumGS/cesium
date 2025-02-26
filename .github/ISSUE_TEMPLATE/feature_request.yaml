@@ -1,0 +1,20 @@
+name: Request a feature
+description: New ideas & improvements to CesiumJS are always welcome.
+labels: ["needs triage", "type - enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make CesiumJS better!
+
+        When suggesting an idea, give examples of the intended use case. Features that benefit the wider community are more likely to be prioritized.
+  - type: textarea
+    id: new-feature
+    attributes:
+      label: Feature
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        The best way to get your ideas into CesiumJS is to help us! We love contributions and are always happy to be provide feedback and advice. Check out the contributor guide to get started: [CONTRIBUTING.md](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md)

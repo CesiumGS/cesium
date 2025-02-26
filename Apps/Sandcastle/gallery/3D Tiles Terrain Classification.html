@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -22,10 +22,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -33,11 +30,11 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const geocoder = viewer.geocoder.viewModel;
@@ -45,17 +42,19 @@
         geocoder.flightDuration = 0.0;
         geocoder.search();
 
-        // Vector 3D Tiles are experimental and the format is subject to change in the future.
-        // For more details, see:
-        //    https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/VectorData
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(5737),
-        });
-        viewer.scene.primitives.add(tileset);
+        try {
+          // Vector 3D Tiles are experimental and the format is subject to change in the future.
+          // For more details, see:
+          //    https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/VectorData
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(5737);
+          viewer.scene.primitives.add(tileset);
 
-        tileset.style = new Cesium.Cesium3DTileStyle({
-          color: "rgba(255, 255, 255, 0.5)",
-        });
+          tileset.style = new Cesium.Cesium3DTileStyle({
+            color: "rgba(255, 255, 255, 0.5)",
+          });
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // Information about the currently highlighted feature
         const highlighted = {
@@ -64,9 +63,7 @@
         };
 
         // Color a feature yellow on hover.
-        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(
-          movement
-        ) {
+        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
           // If a feature was previously highlighted, undo the highlight
           if (Cesium.defined(highlighted.feature)) {
             highlighted.feature.color = highlighted.originalColor;
@@ -83,14 +80,16 @@
           highlighted.feature = pickedFeature;
           Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
           pickedFeature.color = Cesium.Color.YELLOW;
-        },
-        Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

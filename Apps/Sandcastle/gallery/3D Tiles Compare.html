@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -22,10 +22,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -49,28 +46,28 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        const left = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(69380),
-          })
-        );
+        try {
+          const left = await Cesium.Cesium3DTileset.fromIonAssetId(69380);
+          viewer.scene.primitives.add(left);
+          left.splitDirection = Cesium.SplitDirection.LEFT;
 
-        left.splitDirection = Cesium.SplitDirection.LEFT;
+          viewer.zoomTo(left);
 
-        const right = viewer.scene.primitives.add(Cesium.createOsmBuildings());
-        right.splitDirection = Cesium.SplitDirection.RIGHT;
-
-        viewer.zoomTo(left);
+          const right = await Cesium.createOsmBuildingsAsync();
+          viewer.scene.primitives.add(right);
+          right.splitDirection = Cesium.SplitDirection.RIGHT;
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // Sync the position of the slider with the split position
         const slider = document.getElementById("slider");
-        viewer.scene.splitPosition =
-          slider.offsetLeft / slider.parentElement.offsetWidth;
+        viewer.scene.splitPosition = slider.offsetLeft / slider.parentElement.offsetWidth;
 
         const handler = new Cesium.ScreenSpaceEventHandler(slider);
 
@@ -83,8 +80,7 @@
 
           const relativeOffset = movement.endPosition.x;
           const splitPosition =
-            (slider.offsetLeft + relativeOffset) /
-            slider.parentElement.offsetWidth;
+            (slider.offsetLeft + relativeOffset) / slider.parentElement.offsetWidth;
           slider.style.left = `${100.0 * splitPosition}%`;
           viewer.scene.splitPosition = splitPosition;
         }
@@ -106,11 +102,14 @@
           moveActive = false;
         }, Cesium.ScreenSpaceEventType.PINCH_END);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar input[type="range"] {
@@ -38,16 +35,15 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-
         const viewer = new Cesium.Viewer("cesiumContainer", {
           scene3DOnly: true,
           infoBox: false,
           selectionIndicator: false,
           timeline: false,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const scene = viewer.scene;
@@ -73,28 +69,29 @@
 
           shadowMap.enabled = true;
 
-          const model = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url:
-                "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
-              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
-                center,
-                new Cesium.HeadingPitchRoll(heading, 0.0, 0.0)
-              ),
-            })
-          );
+          (async () => {
+            try {
+              const model = scene.primitives.add(
+                await Cesium.Model.fromGltfAsync({
+                  url: "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
+                  modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                    center,
+                    new Cesium.HeadingPitchRoll(heading, 0.0, 0.0),
+                  ),
+                }),
+              );
 
-          model.readyPromise
-            .then(function (model) {
-              // Play and loop all animations at half-speed
-              model.activeAnimations.addAll({
-                multiplier: 0.5,
-                loop: Cesium.ModelAnimationLoop.REPEAT,
+              model.readyEvent.addEventListener(() => {
+                // Play and loop all animations at half-speed
+                model.activeAnimations.addAll({
+                  multiplier: 0.5,
+                  loop: Cesium.ModelAnimationLoop.REPEAT,
+                });
               });
-            })
-            .catch(function (error) {
+            } catch (error) {
               window.alert(error);
-            });
+            }
+          })();
 
           return shadowMap;
         }
@@ -103,18 +100,8 @@
         const latitude = 0.6954224325279967;
         const height = 200.0;
 
-        const shadowMap1 = addPrimitive(
-          longitude + 0.00005,
-          latitude,
-          height,
-          0.0
-        );
-        const shadowMap2 = addPrimitive(
-          longitude - 0.00005,
-          latitude,
-          height,
-          Math.PI
-        );
+        const shadowMap1 = addPrimitive(longitude + 0.00005, latitude, height, 0.0);
+        const shadowMap2 = addPrimitive(longitude - 0.00005, latitude, height, Math.PI);
 
         shadowMap1.debugShow = true;
         shadowMap2.debugShow = false;
@@ -126,7 +113,7 @@
 
         scene.shadowMap = shadowMap1;
 
-        // TODO : workaround until Cesium supports multiple light sources
+        // Workaround until Cesium supports multiple light sources
         const CustomPrimitive = function (shadowMap) {
           this.shadowMap = shadowMap;
         };
@@ -136,13 +123,15 @@
         };
 
         scene.primitives.add(new CustomPrimitive(shadowMap2));
-
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

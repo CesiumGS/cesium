@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Explore node transformations of 3D models."
-    />
+    <meta name="description" content="Explore node transformations of 3D models." />
     <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -74,7 +68,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // this can be changed to any glTF model
@@ -104,88 +98,88 @@
         const origin = Cesium.Cartesian3.fromDegrees(-74.693, 28.243, height);
         const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
           origin,
-          new Cesium.HeadingPitchRoll()
+          new Cesium.HeadingPitchRoll(),
         );
 
-        const model = scene.primitives.add(
-          Cesium.Model.fromGltf({
-            url: modelUrl,
-            modelMatrix: modelMatrix,
-            minimumPixelSize: 128,
-          })
-        );
+        try {
+          const model = scene.primitives.add(
+            await Cesium.Model.fromGltfAsync({
+              url: modelUrl,
+              modelMatrix: modelMatrix,
+              minimumPixelSize: 128,
+            }),
+          );
 
-        model.readyPromise
-          .then(function (model) {
+          model.readyEvent.addEventListener(() => {
             const camera = viewer.camera;
 
             // Zoom to model
             const controller = scene.screenSpaceCameraController;
-            const r =
-              2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            const r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.2;
 
             const center = Cesium.Matrix4.multiplyByPoint(
               model.modelMatrix,
               Cesium.Cartesian3.ZERO,
-              new Cesium.Cartesian3()
+              new Cesium.Cartesian3(),
             );
             const heading = Cesium.Math.toRadians(0.0);
             const pitch = Cesium.Math.toRadians(-10.0);
-            camera.lookAt(
-              center,
-              new Cesium.HeadingPitchRange(heading, pitch, r * 0.8)
-            );
+            camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 0.8));
 
-            viewModel.articulations = Object.keys(
-              model._runtime.articulationsByName
-            ).map(function (articulationName) {
-              return {
-                name: articulationName,
-                stages: model._runtime.articulationsByName[
-                  articulationName
-                ].stages.map(function (stage) {
-                  const stageModel = {
-                    name: stage.name,
-                    minimum: stage.minimumValue,
-                    maximum: stage.maximumValue,
-                    current: stage.currentValue,
-                  };
-                  Cesium.knockout.track(stageModel);
-                  Cesium.knockout.defineProperty(stageModel, "currentText", {
-                    get: function () {
-                      return stageModel.current.toString();
+            const articulations = model.sceneGraph._runtimeArticulations;
+            viewModel.articulations = Object.keys(articulations).map(
+              function (articulationName) {
+                return {
+                  name: articulationName,
+                  stages: articulations[articulationName]._runtimeStages.map(
+                    function (stage) {
+                      const stageModel = {
+                        name: stage.name,
+                        minimum: stage.minimumValue,
+                        maximum: stage.maximumValue,
+                        current: stage.currentValue,
+                      };
+                      Cesium.knockout.track(stageModel);
+                      Cesium.knockout.defineProperty(stageModel, "currentText", {
+                        get: function () {
+                          return stageModel.current.toString();
+                        },
+                        set: function (value) {
+                          // coerce values to number
+                          stageModel.current = +value;
+                        },
+                      });
+                      Cesium.knockout
+                        .getObservable(stageModel, "current")
+                        .subscribe(function (newValue) {
+                          model.setArticulationStage(
+                            `${articulationName} ${stage.name}`,
+                            +stageModel.current,
+                          );
+                          model.applyArticulations();
+                        });
+                      return stageModel;
                     },
-                    set: function (value) {
-                      // coerce values to number
-                      stageModel.current = +value;
-                    },
-                  });
-                  Cesium.knockout
-                    .getObservable(stageModel, "current")
-                    .subscribe(function (newValue) {
-                      model.setArticulationStage(
-                        `${articulationName} ${stage.name}`,
-                        +stageModel.current
-                      );
-                      model.applyArticulations();
-                    });
-                  return stageModel;
-                }),
-              };
-            });
+                  ),
+                };
+              },
+            );
             viewModel.selectedArticulation = viewModel.articulations[0];
-          })
-          .catch(function (error) {
-            console.error(error);
           });
+        } catch (error) {
+          console.log(`Error loading model: ${error}`);
+        }
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

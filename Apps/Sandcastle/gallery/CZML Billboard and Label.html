@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -30,7 +27,7 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const czml = [
@@ -66,11 +63,7 @@
               },
             },
             position: {
-              cartesian: [
-                1216361.4096947117,
-                -4736253.175342511,
-                4081267.4865667094,
-              ],
+              cartesian: [1216361.4096947117, -4736253.175342511, 4081267.4865667094],
             },
           },
         ];
@@ -78,11 +71,14 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

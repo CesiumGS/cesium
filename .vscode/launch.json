@@ -18,7 +18,7 @@
         {
             "name": "Launch in Chrome",
             "request": "launch",
-            "type": "pwa-chrome",
+            "type": "chrome",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
         }

@@ -1,8 +1,10 @@
-import { clone } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { DeveloperError } from "../Source/Cesium.js";
-import { WebGLConstants } from "../Source/Cesium.js";
+import {
+  clone,
+  defaultValue,
+  defined,
+  DeveloperError,
+  WebGLConstants,
+} from "@cesium/engine";
 
 function getWebGLStub(canvas, options) {
   const stub = clone(WebGLConstants);
@@ -151,6 +153,13 @@ function getWebGLStub(canvas, options) {
   return stub;
 }
 
+// ANGLE_instanced_arrays
+const instancedArraysStub = {
+  drawElementsInstancedANGLE: noop,
+  drawArraysInstancedANGLE: noop,
+  vertexAttribDivisorANGLE: noop,
+};
+
 function noop() {}
 
 function createStub() {
@@ -164,7 +173,7 @@ function getStub() {
 function getStubWarning() {
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "A stub for this get/is function is not defined.  Can it use getStub() or does it need a new one?"
+    "A stub for this get/is function is not defined.  Can it use getStub() or does it need a new one?",
   );
   //>>includeEnd('debug');
 }
@@ -184,7 +193,7 @@ function getContextAttributesStub(options) {
     powerPreference: defaultValue(options.powerPreference, false),
     failIfMajorPerformanceCaveat: defaultValue(
       options.failIfMajorPerformanceCaveat,
-      false
+      false,
     ),
   };
 
@@ -198,7 +207,17 @@ function getErrorStub() {
 }
 
 function getExtensionStub(name) {
-  // No extensions are stubbed.
+  // Many 3D Tiles tests rely on instanced arrays
+  if (name === "ANGLE_instanced_arrays") {
+    return instancedArraysStub;
+  }
+
+  // Voxel tests rely on floating point textures
+  if (name === "OES_texture_float") {
+    return {};
+  }
+
+  // No other extensions are stubbed.
   return null;
 }
 
@@ -230,7 +249,7 @@ function getParameterStub(options) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(value)) {
       throw new DeveloperError(
-        `A WebGL parameter stub for ${pname} is not defined. Add it.`
+        `A WebGL parameter stub for ${pname} is not defined. Add it.`,
       );
     }
     //>>includeEnd('debug');
@@ -256,7 +275,7 @@ function getProgramParameterStub(program, pname) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    `A WebGL parameter stub for ${pname} is not defined. Add it.`
+    `A WebGL parameter stub for ${pname} is not defined. Add it.`,
   );
   //>>includeEnd('debug');
 }
@@ -265,7 +284,7 @@ function getShaderParameterStub(shader, pname) {
   //>>includeStart('debug', pragmas.debug);
   if (pname !== WebGLConstants.COMPILE_STATUS) {
     throw new DeveloperError(
-      `A WebGL parameter stub for ${pname} is not defined. Add it.`
+      `A WebGL parameter stub for ${pname} is not defined. Add it.`,
     );
   }
   //>>includeEnd('debug');
@@ -277,7 +296,7 @@ function getShaderPrecisionStub(shadertype, precisiontype) {
   //>>includeStart('debug', pragmas.debug);
   if (shadertype !== WebGLConstants.FRAGMENT_SHADER) {
     throw new DeveloperError(
-      "getShaderPrecision only has a stub for FRAGMENT_SHADER. Update it."
+      "getShaderPrecision only has a stub for FRAGMENT_SHADER. Update it.",
     );
   }
 
@@ -286,7 +305,7 @@ function getShaderPrecisionStub(shadertype, precisiontype) {
     precisiontype !== WebGLConstants.HIGH_INT
   ) {
     throw new DeveloperError(
-      "getShaderPrecision only has a stub for HIGH_FLOAT and HIGH_INT. Update it."
+      "getShaderPrecision only has a stub for HIGH_FLOAT and HIGH_INT. Update it.",
     );
   }
   //>>includeEnd('debug');

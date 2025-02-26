@@ -1,0 +1,20 @@
+{{#if errorCla}}
+:red_circle: There was an error checking the CLA! If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md#contributor-license-agreement-cla).
+```
+    {{ errorCla }}
+```
+{{else}}
+{{#if hasCla}}
+Thank you for the pull request, @{{ username }}! 
+
+:white_check_mark: We can confirm we have a CLA on file for you.
+{{else}}
+Thank you for the pull request, @{{ username }}! Welcome to the Cesium community!
+
+In order for us to review your PR, please complete the following steps:
+ - [ ] Send in a [Contributor License Agreement](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA)
+ - [ ] Add yourself to the [contributors]({{ contributorsUrl }}) file
+
+Review [Pull Request Guidelines](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md#pull-request-guidelines) to make sure your PR gets accepted quickly.
+{{/if}}
+{{/if}}

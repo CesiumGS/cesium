@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -32,12 +29,14 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // The Earth at Night, also known as Black Marble 2017 and Night Lights
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          imageryProvider: new Cesium.IonImageryProvider({ assetId: 3812 }),
+          baseLayer: new Cesium.ImageryLayer.fromProviderAsync(
+            Cesium.IonImageryProvider.fromAssetId(3812),
+          ),
         });
 
         // The rest of the code is for dynamic lighting
@@ -47,11 +46,10 @@
 
         const imageryLayers = viewer.imageryLayers;
         const nightLayer = imageryLayers.get(0);
-        const dayLayer = imageryLayers.addImageryProvider(
-          new Cesium.IonImageryProvider({
-            assetId: 3845,
-          })
+        const dayLayer = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.IonImageryProvider.fromAssetId(3845),
         );
+        imageryLayers.add(dayLayer);
         imageryLayers.lowerToBottom(dayLayer);
 
         function updateLighting(dynamicLighting) {
@@ -71,14 +69,17 @@
           dynamicLighting,
           function (checked) {
             updateLighting(checked);
-          }
+          },
         );
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

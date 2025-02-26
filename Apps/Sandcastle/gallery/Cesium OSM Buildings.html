@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -11,10 +11,7 @@
       name="description"
       content="Worldwide 3D buildings with rich metadata from OpenStreetMap."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Showcases, ion Assets"
-    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases, ion Assets" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -35,14 +29,15 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        viewer.scene.primitives.add(Cesium.createOsmBuildings());
+        const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
+        viewer.scene.primitives.add(osmBuildingsTileset);
 
         viewer.scene.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(-74.019, 40.6912, 750),
@@ -50,12 +45,16 @@
             heading: Cesium.Math.toRadians(20),
             pitch: Cesium.Math.toRadians(-20),
           },
+          duration: 0,
         }); //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

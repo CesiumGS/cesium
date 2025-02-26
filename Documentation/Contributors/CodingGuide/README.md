@@ -17,6 +17,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 - [Coding Guide](#coding-guide)
   - [Naming](#naming)
   - [Formatting](#formatting)
+  - [Spelling](#spelling)
   - [Linting](#linting)
   - [Units](#units)
   - [Basic Code Construction](#basic-code-construction)
@@ -80,6 +81,14 @@ Cartesian3.maximumComponent(); // Not Cartesian3.maxComponent()
 Ellipsoid.WGS84; // Not Ellipsoid.WORLD_GEODETIC_SYSTEM_1984
 ```
 
+- If you do use abbreviations, use the recommended casing and do not capitalize all letters in the abbreviation. e.g.
+
+```javascript
+new UrlTemplateImageryProvider(); // Not URLTemplateImageryProvider
+
+resource.url; // Not resource.URL
+```
+
 - Prefer short and descriptive names for local variables, e.g., if a function has only one length variable,
 
 ```javascript
@@ -109,9 +118,17 @@ A few more naming conventions are introduced below along with their design patte
 - For HTML code, keep the existing style. Use double quotes.
 - Text files, end with a newline to minimize the noise in diffs.
 
+## Spelling
+
+- We have a basic setup for `cspell` to spellcheck our files. This is currently not enforced but recommended to use and check while programming. This is especially true for JSDoc comments that well end up in our documentation or Readme files
+  - Run `npm run cspell` to check all files
+  - Run `npx cspell -c .vscode/cspell.json [file path]` to check a specific file
+- If you are using VSCode you can use the [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) extension to highlight misspelled words and add them to our wordlist if they are valid.
+- Using cspell is optional while we build up the wordlist but may eventually be required as part of our git hooks and CI. See [this issue](https://github.com/CesiumGS/cesium/issues/11954) for an active status on that.
+
 ## Linting
 
-For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/cesium/blob/main/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/CesiumGS/cesium/blob/main/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/CesiumGS/cesium/blob/main/Tools/eslint-config-cesium/node.js).
+For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
 
 **General rules:**
 
@@ -128,14 +145,11 @@ For syntax and style guidelines, we use the ESLint recommended settings (the lis
 - [no-trailing-spaces](http://eslint.org/docs/rules/no-trailing-spaces)
 - [no-lonely-if](http://eslint.org/docs/rules/no-lonely-if)
 - [quotes](http://eslint.org/docs/rules/quotes) to enforce using single-quotes
-- [no-sequences](http://eslint.org/docs/rules/no-sequences)
-- [no-unused-expressions](http://eslint.org/docs/rules/no-unused-expressions)
 
 **Node-specific rules:**
 
 - [global-require](http://eslint.org/docs/rules/global-require)
-- [no-buffer-constructor](http://eslint.org/docs/rules/no-buffer-constructor)
-- [no-new-require](http://eslint.org/docs/rules/no-new-require)
+- [n/no-new-require](https://github.com/eslint-community/eslint-plugin-n/blob/master/docs/rules/no-new-require.md)
 
 **[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
 
@@ -161,21 +175,13 @@ try {
 ## Units
 
 - Cesium uses SI units:
-  - meters for distances,
-  - radians for angles, and
-  - seconds for time durations.
+  - meters for distances
+  - radians for angles
+  - seconds for time durations
 - If a function has a parameter with a non-standard unit, such as degrees, put the unit in the function name, e.g.,
 
 ```javascript
-Cartesian3.fromDegrees = function (
-  longitude,
-  latitude,
-  height,
-  ellipsoid,
-  result
-) {
-  /* ... */
-};
+Cartesian3.fromDegrees(); // Not Cartesin3.fromAngle()
 ```
 
 ## Basic Code Construction
@@ -184,7 +190,6 @@ Cartesian3.fromDegrees = function (
 
 ```javascript
 "use strict";
-
 ```
 
 - :speedboat: To avoid type coercion (implicit type conversion), test for equality with `===` and `!==`, e.g.,
@@ -248,7 +253,7 @@ console.log(i); // i is undefined here.  Never use a variable before it is decla
 let i = 0.0;
 ```
 
-- A `const` variables is preferred when a value is not updated. This ensures immutability.
+- A `const` variable is preferred when a value is not updated. This ensures immutability.
 
 - :speedboat: Avoid redundant nested property access. This
 
@@ -286,31 +291,26 @@ function radiiEquals(left, right) {
 ```
 
 - Use `undefined` instead of `null`.
-- Test if a variable is defined using Cesium's `defined` function, e.g.,
+- Test if a variable is defined using Cesium's `defined` function. It checks specifically for `undefined` and `null` values allowing _falsy_ values to be defined, e.g.,
 
 ```javascript
-const v = undefined;
-if (defined(v)) {
-  // False
-}
+defined(undefined); // False
+defined(null); // False
 
-const u = {};
-if (defined(u)) {
-  // True
-}
+defined({}); // True
+defined(""); // True
+defined(0); // True
 ```
 
 - Use `Object.freeze` function to create enums, e.g.,
 
 ```javascript
+const ModelAnimationState = {
+  STOPPED: 0,
+  ANIMATING: 1,
+};
 
-    const ModelAnimationState = {
-        STOPPED : 0,
-        ANIMATING : 1
-    };
-
-    return Object.freeze(ModelAnimationState);
-});
+return Object.freeze(ModelAnimationState);
 ```
 
 - Use descriptive comments for non-obvious code, e.g.,
@@ -327,6 +327,7 @@ byteOffset += sizeOfUint32; // Skip length field
 
 - `TODO` comments need to be removed or addressed before the code is merged into main. Used sparingly, `PERFORMANCE_IDEA`, can be handy later when profiling.
 - Remove commented out code before merging into main.
+- Modern language features may provide handy shortcuts and cleaner syntax, but they should be used with consideration for their performance implications, especially in code that is invoked per-frame.
 
 ## Functions
 
@@ -376,7 +377,7 @@ function getTransform(node) {
     return Matrix4.fromTranslationQuaternionRotationScale(
       node.translation,
       node.rotation,
-      node.scale
+      node.scale,
     );
   }
 }
@@ -393,7 +394,7 @@ function getTransform(node) {
   return Matrix4.fromTranslationQuaternionRotationScale(
     node.translation,
     node.rotation,
-    node.scale
+    node.scale,
   );
 }
 ```
@@ -451,7 +452,7 @@ Cartesian3.fromRadians = function (longitude, latitude, height) {
 ```javascript
 this._mapProjection = defaultValue(
   options.mapProjection,
-  new GeographicProjection()
+  new GeographicProjection(),
 );
 ```
 
@@ -482,7 +483,7 @@ Some common sensible defaults are
 
 ### Throwing Exceptions
 
-Use the functions of Cesium's [Check](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
+Use the functions of Cesium's [Check](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of range.
 
 - For example, to check that a parameter is defined and is an object:
 
@@ -672,7 +673,7 @@ Functions that start with `to` return a new type of object, e.g.,
 
 ```javascript
 Cartesian3.prototype.toString = function () {
-  return "(${this.x}, ${this.y}, ${this.z})";
+  return `(${this.x}, ${this.y}, ${this.z})`;
 };
 ```
 
@@ -827,7 +828,7 @@ When the overhead of getter/setter functions is prohibitive or reference-type se
 ```javascript
 function Model(options) {
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
 }
@@ -888,7 +889,7 @@ even though it relies on implicitly hoisting the `loadTileset` function to the t
 
 It is usually obvious what directory a file belongs in. When it isn't, the decision is usually between `Core` and another directory. Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/CesiumGS/cesium/blob/main/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
 
-![](1.jpg)
+![CesiumJS Design](1.jpg)
 
 Modules (files) should only reference modules in the same level or a lower level of the stack. For example, a module in `Scene` can use modules in `Scene`, `Renderer`, and `Core`, but not in `DataSources` or `Widgets`.
 
@@ -929,7 +930,7 @@ A public identifier (class, function, property) should be deprecated before bein
 function Foo() {
   deprecationWarning(
     "Foo",
-    "Foo was deprecated in Cesium 1.01.  It will be removed in 1.03.  Use newFoo instead."
+    "Foo was deprecated in CesiumJS 1.01.  It will be removed in 1.03.  Use newFoo instead.",
   );
   // ...
 }
@@ -939,6 +940,7 @@ function Foo() {
 - Remove all use of the deprecated API inside Cesium except for unit tests that specifically test the deprecated API.
 - Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/CesiumGS/cesium/blob/main/CHANGES.md). Include what Cesium version it will be removed in.
 - Create an [issue](https://github.com/CesiumGS/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
+- Upon removal of the API, add a mention of it in the `Breaking Changes` section of [`CHANGES.md`](https://github.com/CesiumGS/cesium/blob/main/CHANGES.md).
 
 ## Third-Party Libraries
 
@@ -949,6 +951,15 @@ function Foo() {
 - Be lightweight, tested, maintained, and reasonably widely used.
 - Not pollute the global namespace.
 - Provide enough value to justify adding a third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
+
+When adding or updating a third-party library:
+
+- Ensure [LICENSE.md](../../../LICENSE.md) is updated with the library's name and full copyright notice.
+- If a library is shipped as part of the CesiumJS release, it should be included in the generated [`ThirdParty.json`](../../../ThirdParty.json).
+  1. Update [`ThirdParty.extra.json`](../../../ThirdParty.extra.json) with the package `name`. If it is an npm module included in [`package.json`](../../../package.json), use the exact package name.
+  2. If the library is _not_ an npm module included in `package.json`, provide the `license`, `version`, and `url` fields. Otherwise, this information can be detected using `package.json`.
+  3. If there is a special case regarding the license, such as choosing to use a single license from a list of multiple available ones, providing the `license` field will override information detected using `package.json`. The `notes` field should also be provided in the case explaining the exception.
+  4. Run `npm run build-third-party` and commit the resulting `ThirdParty.json`
 
 ## Widgets
 
@@ -970,7 +981,7 @@ Cesium includes a [`subscribeAndEvaluate`](https://github.com/CesiumGS/cesium/bl
 
 When using a subscription, always be sure to [dispose the subscription](https://github.com/CesiumGS/cesium/blob/main/Source/Widgets/Viewer/Viewer.js#L1413) when the viewmodel is no longer using it. Otherwise the listener will continue to be notified for the lifetime of the observable.
 
-```
+```javascript
 fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) { ... });
 // ...then later...
 fullscreenSubscription.dispose();
@@ -984,10 +995,11 @@ fullscreenSubscription.dispose();
 - Files for vertex shaders have a `VS` suffix; fragment shaders have an `FS` suffix. For example: `BillboardCollectionVS.glsl` and `BillboardCollectionFS.glsl`.
 - Generally, identifiers, such as functions and variables, use `camelCase`.
 - Cesium built-in identifiers start with `czm_`, for example, [`czm_material`](https://github.com/CesiumGS/cesium/blob/main/Source/Shaders/Builtin/Structs/material.glsl). Files have the same name without the `czm_` prefix, e.g., `material.glsl`.
+- Use `czm_textureCube` when sampling a cube map instead of `texture`. This is to preserve backwards compatibility with WebGL 1.
 - Varyings start with `v_`, e.g.,
 
 ```javascript
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 ```
 
 - Uniforms start with `u_`, e.g.,

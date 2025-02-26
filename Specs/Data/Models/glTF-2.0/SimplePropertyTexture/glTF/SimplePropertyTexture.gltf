@@ -1,0 +1,245 @@
+{
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schema": {
+        "classes": {
+          "buildingComponents": {
+            "name": "Building properties",
+            "properties": {
+              "insideTemperature": {
+                "name": "Inside Temperature",
+                "type": "SCALAR",
+                "componentType": "UINT8"
+              },
+              "outsideTemperature": {
+                "name": "Outside Temperature",
+                "type": "SCALAR",
+                "componentType": "UINT8"
+              },
+              "insulation": {
+                "name": "Insulation Thickness",
+                "type": "SCALAR",
+                "componentType": "UINT8",
+                "normalized": true,
+                "default": "1"
+              }
+            }
+          }
+        }
+      },
+      "propertyTextures": [
+        {
+          "class": "buildingComponents",
+          "properties": {
+            "insideTemperature": {
+              "index": 1,
+              "texCoord": 0,
+              "channels": [
+                0
+              ]
+            },
+            "outsideTemperature": {
+              "index": 1,
+              "texCoord": 0,
+              "channels": [
+                1
+              ]
+            },
+            "insulation": {
+              "index": 1,
+              "texCoord": 0,
+              "channels": [
+                2
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "extensionsUsed": [
+    "EXT_structural_metadata"
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 6,
+      "type": "SCALAR",
+      "max": [
+        3
+      ],
+      "min": [
+        0
+      ]
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 4,
+      "type": "VEC3",
+      "max": [
+        1,
+        1,
+        0
+      ],
+      "min": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 4,
+      "type": "VEC3",
+      "max": [
+        0,
+        0,
+        1
+      ],
+      "min": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 4,
+      "type": "VEC2",
+      "max": [
+        1,
+        1
+      ],
+      "min": [
+        0,
+        0
+      ]
+    }
+  ],
+  "asset": {
+    "generator": "JglTF from https://github.com/javagl/JglTF",
+    "version": "2.0"
+  },
+  "buffers": [
+    {
+      "uri": "data:application/gltf-buffer;base64,AAABAAIAAQADAAIAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAIA/AACAPwAAAAAAAAAAAACAPwAAAAA=",
+      "byteLength": 140
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 12,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 12,
+      "byteLength": 48,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 60,
+      "byteLength": 48,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 108,
+      "byteLength": 32,
+      "target": 34962
+    }
+  ],
+  "images": [
+    {
+      "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABmUlEQVR42u3cwWnFQAwFQJWm0tT5GhewxgfbGGkIyuXdlPkreCSJzFxm7sT5bUVsR947BwAACwLAggCwIAAsCAALGgnA6AF8QpwACwLAggCwIAAsCAALAsCC9ABGD+AT5ATIAZADIAdADoAcALkewDTrAeLiS947BwAACwLAggCwIAAsCAALGgnA6AF8QpwACwLAggCwIAAsCAALAsCC9ABGD3BP2P4XTv6RewFePgEAAAAAAAAAAAAAAAAAgB7A6AG8AE4AAAAAAAAAAAAAAAAAAKAHMHoAL4ATAAAAAAAAAAAAAAAAAADoAYz/DyD3p2FyAOQAyAGQAyAHQK4HMHoAuRMgB0AOgBwAOQByAOR6AKMH+C6vqu08kTsBAAAAAAAAAAAAAAAAAIAewOgBvABOAAAAAAAAAAAAAAAAAACgBzB6AC+AEwAAAAAAAAAAAAAAAAAA6AGMHsAL4AQAAAAAAAAAAAAAAAAAAHoAowfwAjgBAAAAAAAAAAAAAAAAAIAewOgBvABOAAAAAOAHDAAAAAAAAAATARwo5JLGUHtRqwAAAABJRU5ErkJggg==",
+      "mimeType": "image/png"
+    },
+    {
+      "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABLUlEQVR42mVSSxbDIAh0GzUxKZrmCF3n/oerIx9pupgHIswAGtblE7bIKN0vqSOyXSOjPLAtktv9sCFxmcXj7EgsFj8zN00yYxrBZZJBRYk2LdC4WCDUfAdab7bpDm1lCyBW+7lpDnyNS34gcTQRltTPbAeEdFjcSQ0X9EOhGPYjhgLA7xh3kjxEEpMj1qQj7iAzAYoPELzYtuwK02M06WywAFDfX1MdJEoOtSZ7Allz1mYmWZDNL0pNF6ezu9jsQJUcNK7qzbWvMdSYQ8Jo7KKK8/uo4dxreHe0/HgF2/IqBen/za+Di69Sf8cZz5jmk+hcuhdd2tWLz8IE5MbFnRWT+yyU5vZJRtAOqlvq6MDeOrstu0UidsoO0Ak9xGwE+67+34salNEBSCxX7Bexg0rbq6TFvwAAAABJRU5ErkJggg==",
+      "mimeType": "image/png"
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "baseColorTexture": {
+          "index": 0,
+          "texCoord": 0
+        },
+        "metallicFactor": 0,
+        "roughnessFactor": 1
+      },
+      "alphaMode": "OPAQUE",
+      "doubleSided": true
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "extensions": {
+            "EXT_structural_metadata": {
+              "propertyTextures": [
+                0
+              ]
+            }
+          },
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3
+          },
+          "indices": 0,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9728,
+      "minFilter": 9728
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    }
+  ]
+}

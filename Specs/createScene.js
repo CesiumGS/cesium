@@ -1,16 +1,30 @@
-import { Cartesian2 } from "../Source/Cesium.js";
-import { clone } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { Scene } from "../Source/Cesium.js";
+import {
+  Cartesian2,
+  clone,
+  defaultValue,
+  defined,
+  Scene,
+} from "@cesium/engine";
+
 import createCanvas from "./createCanvas.js";
 import getWebGLStub from "./getWebGLStub.js";
 
 function createScene(options) {
   options = defaultValue(options, {});
 
+  // Render tests can be difficult to debug. Let the caller choose a larger
+  // canvas size temporarily. By stepping through a render test, you can see
+  // what the camera sees after each render call.
+  const debugWidth = window.debugCanvasWidth;
+  const debugHeight = defaultValue(
+    window.debugCanvasHeight,
+    window.debugCanvasWidth,
+  );
+
   // save the canvas so we don't try to clone an HTMLCanvasElement
-  const canvas = defined(options.canvas) ? options.canvas : createCanvas();
+  const canvas = defined(options.canvas)
+    ? options.canvas
+    : createCanvas(debugWidth, debugHeight);
   options.canvas = undefined;
 
   options = clone(options, true);
@@ -22,11 +36,11 @@ function createScene(options) {
   contextOptions.webgl = defaultValue(contextOptions.webgl, {});
   contextOptions.webgl.antialias = defaultValue(
     contextOptions.webgl.antialias,
-    false
+    false,
   );
   contextOptions.webgl.stencil = defaultValue(
     contextOptions.webgl.stencil,
-    true
+    true,
   );
   if (!!window.webglStub) {
     contextOptions.getWebGLStub = getWebGLStub;
@@ -34,6 +48,13 @@ function createScene(options) {
 
   const scene = new Scene(options);
   scene.highDynamicRange = false;
+
+  if (
+    scene.context.drawingBufferWidth <= 2 ||
+    scene.context.drawingBufferHeight <= 2
+  ) {
+    scene.msaaSamples = 1;
+  }
 
   if (!!window.webglValidation) {
     const context = scene.context;

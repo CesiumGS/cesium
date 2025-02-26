@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -104,11 +101,12 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayerPicker: false,
+          geocoder: false,
         });
         const imageryLayers = viewer.imageryLayers;
 
@@ -133,9 +131,7 @@
           lower: function (layer, index) {
             imageryLayers.lower(layer);
             viewModel.upLayer =
-              viewModel.layers[
-                Math.min(viewModel.layers.length - 1, index + 1)
-              ];
+              viewModel.layers[Math.min(viewModel.layers.length - 1, index + 1)];
             viewModel.downLayer = layer;
             updateLayerList();
             window.setTimeout(function () {
@@ -158,24 +154,20 @@
           // These base layers aren't really special.  It's possible to have multiple of them
           // enabled at once, just like the other layers, but it doesn't make much sense because
           // all of these layers cover the entire globe and are opaque.
-          addBaseLayerOption("Bing Maps Aerial", undefined); // the current base layer
+          addBaseLayerOption("Bing Maps Aerial", Cesium.createWorldImageryAsync());
           addBaseLayerOption(
             "Bing Maps Road",
-            Cesium.createWorldImagery({
+            Cesium.createWorldImageryAsync({
               style: Cesium.IonWorldImageryStyle.ROAD,
-            })
+            }),
           );
           addBaseLayerOption(
             "ArcGIS World Street Maps",
-            new Cesium.ArcGisMapServerImageryProvider({
-              url:
-                "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
-            })
+            Cesium.ArcGisMapServerImageryProvider.fromUrl(
+              "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
+            ),
           );
-          addBaseLayerOption(
-            "OpenStreetMaps",
-            new Cesium.OpenStreetMapImageryProvider()
-          );
+          addBaseLayerOption("OpenStreetMaps", new Cesium.OpenStreetMapImageryProvider());
           addBaseLayerOption(
             "Stamen Maps",
             new Cesium.OpenStreetMapImageryProvider({
@@ -183,108 +175,109 @@
               fileExtension: "jpg",
               credit:
                 "Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.",
-            })
+            }),
           );
           addBaseLayerOption(
             "Natural Earth II (local)",
-            new Cesium.TileMapServiceImageryProvider({
-              url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-            })
+            Cesium.TileMapServiceImageryProvider.fromUrl(
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            ),
           );
           addBaseLayerOption(
             "USGS Shaded Relief (via WMTS)",
             new Cesium.WebMapTileServiceImageryProvider({
-              url:
-                "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS",
+              url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS",
               layer: "USGSShadedReliefOnly",
               style: "default",
               format: "image/jpeg",
               tileMatrixSetID: "default028mm",
               maximumLevel: 19,
               credit: "U. S. Geological Survey",
-            })
+            }),
           );
 
           // Create the additional layers
           addAdditionalLayerOption(
             "United States GOES Infrared",
             new Cesium.WebMapServiceImageryProvider({
-              url:
-                "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?",
+              url: "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?",
               layers: "goes_conus_ir",
               credit: "Infrared data courtesy Iowa Environmental Mesonet",
               parameters: {
                 transparent: "true",
                 format: "image/png",
               },
-            })
+            }),
           );
           addAdditionalLayerOption(
             "United States Weather Radar",
             new Cesium.WebMapServiceImageryProvider({
-              url:
-                "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?",
+              url: "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?",
               layers: "nexrad-n0r",
               credit: "Radar data courtesy Iowa Environmental Mesonet",
               parameters: {
                 transparent: "true",
                 format: "image/png",
               },
-            })
+            }),
           );
           addAdditionalLayerOption(
             "TileMapService Image",
-            new Cesium.TileMapServiceImageryProvider({
-              url: "../images/cesium_maptiler/Cesium_Logo_Color",
-            }),
-            0.2
+            Cesium.TileMapServiceImageryProvider.fromUrl(
+              "../images/cesium_maptiler/Cesium_Logo_Color",
+            ),
+            0.2,
           );
           addAdditionalLayerOption(
             "Single Image",
-            new Cesium.SingleTileImageryProvider({
-              url: "../images/Cesium_Logo_overlay.png",
-              rectangle: Cesium.Rectangle.fromDegrees(
-                -115.0,
-                38.0,
-                -107,
-                39.75
-              ),
-            }),
-            1.0
-          );
-          addAdditionalLayerOption(
-            "Grid",
-            new Cesium.GridImageryProvider(),
+            Cesium.SingleTileImageryProvider.fromUrl(
+              "../images/Cesium_Logo_overlay.png",
+              {
+                rectangle: Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75),
+              },
+            ),
             1.0,
-            false
           );
+          addAdditionalLayerOption("Grid", new Cesium.GridImageryProvider(), 1.0, false);
           addAdditionalLayerOption(
             "Tile Coordinates",
             new Cesium.TileCoordinatesImageryProvider(),
             1.0,
-            false
+            false,
           );
         }
 
-        function addBaseLayerOption(name, imageryProvider) {
-          let layer;
-          if (typeof imageryProvider === "undefined") {
-            layer = imageryLayers.get(0);
-            viewModel.selectedLayer = layer;
-          } else {
-            layer = new Cesium.ImageryLayer(imageryProvider);
-          }
+        async function addBaseLayerOption(name, imageryProviderPromise) {
+          try {
+            const imageryProvider = await Promise.resolve(imageryProviderPromise);
 
-          layer.name = name;
-          baseLayers.push(layer);
+            const layer = new Cesium.ImageryLayer(imageryProvider);
+            layer.name = name;
+            baseLayers.push(layer);
+            updateLayerList();
+          } catch (error) {
+            console.error(`There was an error while creating ${name}. ${error}`);
+          }
         }
 
-        function addAdditionalLayerOption(name, imageryProvider, alpha, show) {
-          const layer = imageryLayers.addImageryProvider(imageryProvider);
-          layer.alpha = Cesium.defaultValue(alpha, 0.5);
-          layer.show = Cesium.defaultValue(show, true);
-          layer.name = name;
-          Cesium.knockout.track(layer, ["alpha", "show", "name"]);
+        async function addAdditionalLayerOption(
+          name,
+          imageryProviderPromise,
+          alpha,
+          show,
+        ) {
+          try {
+            const imageryProvider = await Promise.resolve(imageryProviderPromise);
+            const layer = new Cesium.ImageryLayer(imageryProvider);
+            layer.alpha = Cesium.defaultValue(alpha, 0.5);
+            layer.show = Cesium.defaultValue(show, true);
+            layer.name = name;
+            imageryLayers.add(layer);
+            Cesium.knockout.track(layer, ["alpha", "show", "name"]);
+            updateLayerList();
+          } catch (error) {
+            console.error(`There was an error while creating ${name}. ${error}`);
+          }
         }
 
         function updateLayerList() {
@@ -296,7 +289,6 @@
         }
 
         setupLayers();
-        updateLayerList();
 
         //Bind the viewModel to the DOM elements of the UI that call for it.
         const toolbar = document.getElementById("toolbar");
@@ -325,11 +317,14 @@
           });
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

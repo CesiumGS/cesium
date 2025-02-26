@@ -1,10 +1,13 @@
-import { defaultValue } from "../Source/Cesium.js";
-import { GeographicProjection } from "../Source/Cesium.js";
-import { JulianDate } from "../Source/Cesium.js";
-import { Camera } from "../Source/Cesium.js";
-import { CreditDisplay } from "../Source/Cesium.js";
-import { FrameState } from "../Source/Cesium.js";
-import { JobScheduler } from "../Source/Cesium.js";
+import {
+  Atmosphere,
+  defaultValue,
+  GeographicProjection,
+  JulianDate,
+  Camera,
+  CreditDisplay,
+  FrameState,
+  JobScheduler,
+} from "@cesium/engine";
 
 function createFrameState(context, camera, frameNumber, time) {
   // Mock frame-state for testing.
@@ -13,9 +16,9 @@ function createFrameState(context, camera, frameNumber, time) {
     new CreditDisplay(
       document.createElement("div"),
       undefined,
-      document.createElement("div")
+      document.createElement("div"),
     ),
-    new JobScheduler()
+    new JobScheduler(),
   );
 
   const projection = new GeographicProjection();
@@ -23,7 +26,7 @@ function createFrameState(context, camera, frameNumber, time) {
   frameState.frameNumber = defaultValue(frameNumber, 1.0);
   frameState.time = defaultValue(
     time,
-    JulianDate.fromDate(new Date("January 1, 2011 12:00:00 EST"))
+    JulianDate.fromDate(new Date("January 1, 2011 12:00:00 EST")),
   );
 
   camera = defaultValue(
@@ -32,22 +35,24 @@ function createFrameState(context, camera, frameNumber, time) {
       drawingBufferWidth: 1,
       drawingBufferHeight: 1,
       mapProjection: projection,
-    })
+    }),
   );
   frameState.camera = camera;
   frameState.cullingVolume = camera.frustum.computeCullingVolume(
     camera.position,
     camera.direction,
-    camera.up
+    camera.up,
   );
 
-  frameState.terrainExaggeration = 1.0;
-  frameState.terrainExaggerationRelativeHeight = 0.0;
+  frameState.verticalExaggeration = 1.0;
+  frameState.verticalExaggerationRelativeHeight = 0.0;
 
   frameState.passes.render = true;
   frameState.passes.pick = false;
 
   frameState.minimumDisableDepthTestDistance = 0.0;
+
+  frameState.atmosphere = new Atmosphere();
 
   return frameState;
 }

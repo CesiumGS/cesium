@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -66,9 +63,7 @@
             </td>
           </tr>
           <tr>
-            <td
-              data-bind="style: { color: colorBlendAmountEnabled ? '' : 'gray'}"
-            >
+            <td data-bind="style: { color: colorBlendAmountEnabled ? '' : 'gray'}">
               Mix
             </td>
             <td>
@@ -90,7 +85,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -127,23 +122,19 @@
         const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
-        Cesium.knockout
-          .getObservable(viewModel, "color")
-          .subscribe(function (newValue) {
-            model.color = Cesium.Color.fromAlpha(
-              getColor(newValue),
-              Number(viewModel.alpha)
-            );
-          });
+        Cesium.knockout.getObservable(viewModel, "color").subscribe(function (newValue) {
+          model.color = Cesium.Color.fromAlpha(
+            getColor(newValue),
+            Number(viewModel.alpha),
+          );
+        });
 
-        Cesium.knockout
-          .getObservable(viewModel, "alpha")
-          .subscribe(function (newValue) {
-            model.color = Cesium.Color.fromAlpha(
-              getColor(viewModel.color),
-              Number(newValue)
-            );
-          });
+        Cesium.knockout.getObservable(viewModel, "alpha").subscribe(function (newValue) {
+          model.color = Cesium.Color.fromAlpha(
+            getColor(viewModel.color),
+            Number(newValue),
+          );
+        });
 
         Cesium.knockout
           .getObservable(viewModel, "colorBlendMode")
@@ -157,45 +148,36 @@
         Cesium.knockout
           .getObservable(viewModel, "colorBlendAmount")
           .subscribe(function (newValue) {
-            model.colorBlendAmount = newValue;
+            model.colorBlendAmount = Number(newValue);
           });
 
-        function createModel(url, height, heading, pitch, roll) {
+        async function createModel(url, height, heading, pitch, roll) {
           height = Cesium.defaultValue(height, 0.0);
           heading = Cesium.defaultValue(heading, 0.0);
           pitch = Cesium.defaultValue(pitch, 0.0);
           roll = Cesium.defaultValue(roll, 0.0);
           const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
 
-          const origin = Cesium.Cartesian3.fromDegrees(
-            -123.0744619,
-            44.0503706,
-            height
-          );
-          const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
-            origin,
-            hpr
-          );
+          const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+          const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
 
           scene.primitives.removeAll(); // Remove previous model
-          model = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: url,
-              modelMatrix: modelMatrix,
-              minimumPixelSize: 128,
-            })
-          );
+          try {
+            model = scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                modelMatrix: modelMatrix,
+                minimumPixelSize: 128,
+              }),
+            );
 
-          model.readyPromise
-            .then(function (model) {
+            model.readyEvent.addEventListener(() => {
               model.color = Cesium.Color.fromAlpha(
                 getColor(viewModel.color),
-                Number(viewModel.alpha)
+                Number(viewModel.alpha),
               );
-              model.colorBlendMode = getColorBlendMode(
-                viewModel.colorBlendMode
-              );
-              model.colorBlendAmount = viewModel.colorBlendAmount;
+              model.colorBlendMode = getColorBlendMode(viewModel.colorBlendMode);
+              model.colorBlendAmount = Number(viewModel.colorBlendAmount);
               // Play and loop all animations at half-speed
               model.activeAnimations.addAll({
                 multiplier: 0.5,
@@ -206,26 +188,20 @@
 
               // Zoom to model
               const controller = scene.screenSpaceCameraController;
-              const r =
-                2.0 *
-                Math.max(model.boundingSphere.radius, camera.frustum.near);
+              const r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
               controller.minimumZoomDistance = r * 0.5;
 
-              const center = Cesium.Matrix4.multiplyByPoint(
-                model.modelMatrix,
-                model.boundingSphere.center,
-                new Cesium.Cartesian3()
-              );
+              const center = model.boundingSphere.center;
               const heading = Cesium.Math.toRadians(230.0);
               const pitch = Cesium.Math.toRadians(-20.0);
               camera.lookAt(
                 center,
-                new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
+                new Cesium.HeadingPitchRange(heading, pitch, r * 2.0),
               );
-            })
-            .catch(function (error) {
-              window.alert(error);
             });
+          } catch (error) {
+            window.alert(error);
+          }
         }
 
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -256,7 +232,7 @@
                 height,
                 heading,
                 pitch,
-                roll
+                roll,
               );
             },
           },
@@ -272,24 +248,20 @@
                 height,
                 heading,
                 pitch,
-                roll
+                roll,
               );
             },
           },
           {
             text: "Ground Vehicle",
             onselect: function () {
-              createModel(
-                "../../SampleData/models/GroundVehicle/GroundVehicle.glb"
-              );
+              createModel("../../SampleData/models/GroundVehicle/GroundVehicle.glb");
             },
           },
           {
             text: "Milk Truck",
             onselect: function () {
-              createModel(
-                "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb"
-              );
+              createModel("../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb");
             },
           },
           {
@@ -302,18 +274,19 @@
 
         Sandcastle.addToolbarMenu(options);
 
-        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (checked) {
           viewer.shadows = checked;
         });
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

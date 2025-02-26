@@ -1,6 +1,4 @@
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { Math as CesiumMath } from "../Source/Cesium.js";
+import { defaultValue, defined, Math as CesiumMath } from "@cesium/engine";
 
 function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
   namePrefix = defaultValue(namePrefix, "");
@@ -67,13 +65,13 @@ function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
         packedInstance,
         0,
         0,
-        packedForInterpolation
+        packedForInterpolation,
       );
       const value = packable.unpackInterpolationResult(
         packedForInterpolation,
         packedInstance,
         0,
-        0
+        0,
       );
       const result = packable.unpack(packedInstance);
       expect(value).toEqual(result);

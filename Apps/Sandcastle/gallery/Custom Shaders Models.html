@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -8,7 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Create 3D models using glTF." />
-    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -39,29 +36,24 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.ExperimentalFeatures.enableModelExperimental = true;
         const viewer = new Cesium.Viewer("cesiumContainer", {
           orderIndependentTranslucency: false,
         });
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2021-11-09T20:27:37.016064475348684937Z"
+          "2021-11-09T20:27:37.016064475348684937Z",
         );
 
         // Model positioning ===============================================
 
-        const position = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          0
-        );
+        const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0);
         const hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
         const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
           "north",
-          "west"
+          "west",
         );
 
         // Custom Shader Definitions ========================================
@@ -106,7 +98,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0 + 0.1 * vec2(u_time, 0.0);
-                material.diffuse = texture2D(u_stripes, texCoord).rgb;
+                material.diffuse = texture(u_stripes, texCoord).rgb;
             }
             `,
         });
@@ -153,11 +145,11 @@
               value: checkerboardTexture,
             },
           },
-          fragmentShaderText: `  
+          fragmentShaderText: `
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 material.diffuse = mix(material.diffuse, vec3(0.0), checkerboard.r);
             }
             `,
@@ -172,13 +164,14 @@
               value: checkerboardTexture,
             },
           },
-          // necessary when setting material.alpha
-          isTranslucent: true,
+          // This model normally renders opaque so material.alpha would be ignored.
+          // this setting forces the shader to render in the translucent pass.
+          translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
           fragmentShaderText: `
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 material.diffuse = checkerboard.rgb;
                 material.alpha = checkerboard.a;
             }
@@ -197,7 +190,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 if (checkerboard.r > 0.0) {
                     discard;
                 }
@@ -245,7 +238,7 @@
           fragmentShaderText: `
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
-                material.diffuse = texture2D(u_gradient, fsInput.attributes.texCoord_0).rgb;
+                material.diffuse = texture(u_gradient, fsInput.attributes.texCoord_0).rgb;
             }
             `,
         });
@@ -325,12 +318,9 @@
           balloon: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
           drone: "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
           pawns: "../../SampleData/models/CesiumDrone/Pawns.glb",
-          milkTruck:
-            "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
-          groundVehicle:
-            "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
-          pointCloudWave:
-            "../../SampleData/models/PointCloudWave/PointCloudWave.glb",
+          milkTruck: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+          groundVehicle: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+          pointCloudWave: "../../SampleData/models/PointCloudWave/PointCloudWave.glb",
         };
 
         let needsDrag = false;
@@ -393,26 +383,32 @@
           },
         ];
 
-        function selectModel(url, customShader) {
+        async function selectModel(url, customShader) {
           viewer.scene.primitives.removeAll();
-          const model = viewer.scene.primitives.add(
-            Cesium.ModelExperimental.fromGltf({
-              gltf: url,
-              customShader: customShader,
-              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
-                position,
-                hpr,
-                Cesium.Ellipsoid.WGS84,
-                fixedFrameTransform
-              ),
-            })
-          );
+          try {
+            const model = viewer.scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                customShader: customShader,
+                modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                  position,
+                  hpr,
+                  Cesium.Ellipsoid.WGS84,
+                  fixedFrameTransform,
+                ),
+              }),
+            );
 
-          model.readyPromise.then(function (model) {
-            viewer.camera.flyToBoundingSphere(model.boundingSphere, {
-              duration: 0.5,
+            const removeListener = model.readyEvent.addEventListener(() => {
+              viewer.camera.flyToBoundingSphere(model.boundingSphere, {
+                duration: 0.0,
+              });
+
+              removeListener();
             });
-          });
+          } catch (error) {
+            console.log(`Error loading model: ${error}`);
+          }
         }
         Sandcastle.addToolbarMenu(demos);
 
@@ -456,7 +452,7 @@
             const drag = Cesium.Cartesian3.subtract(
               movement.endPosition,
               dragCenter,
-              scratchDrag
+              scratchDrag,
             );
 
             // Update uniforms
@@ -476,11 +472,14 @@
         }, Cesium.ScreenSpaceEventType.LEFT_UP);
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

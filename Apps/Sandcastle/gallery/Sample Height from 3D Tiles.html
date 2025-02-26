@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -32,56 +29,51 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         const scene = viewer.scene;
 
         if (!scene.clampToHeightSupported) {
-          window.alert(
-            "This browser does not support clampToHeightMostDetailed."
-          );
+          window.alert("This browser does not support clampToHeightMostDetailed.");
         }
-
-        const tileset = scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          })
-        );
 
         scene.camera.setView({
           destination: new Cesium.Cartesian3(
             1216411.0748779264,
             -4736313.10747583,
-            4081359.5125561724
+            4081359.5125561724,
           ),
           orientation: new Cesium.HeadingPitchRoll(
             4.239925103568368,
             -0.4911293834802475,
-            6.279849292088564
+            6.279849292088564,
           ),
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        Sandcastle.addToolbarButton("Sample heights", function () {
-          sampleHeights();
-        });
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+          scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
-        function sampleHeights() {
+        async function sampleHeights() {
           viewer.entities.removeAll();
 
           const cartesian1 = new Cesium.Cartesian3(
             1216390.063324395,
             -4736314.814479433,
-            4081341.9787972216
+            4081341.9787972216,
           );
           const cartesian2 = new Cesium.Cartesian3(
             1216329.5413318684,
             -4736272.029009798,
-            4081407.9342479417
+            4081407.9342479417,
           );
 
           const count = 30;
@@ -92,46 +84,47 @@
               cartesian1,
               cartesian2,
               offset,
-              new Cesium.Cartesian3()
+              new Cesium.Cartesian3(),
             );
           }
 
-          scene
-            .clampToHeightMostDetailed(cartesians)
-            .then(function (clampedCartesians) {
-              for (let i = 0; i < count; ++i) {
-                viewer.entities.add({
-                  position: clampedCartesians[i],
-                  ellipsoid: {
-                    radii: new Cesium.Cartesian3(0.2, 0.2, 0.2),
-                    material: Cesium.Color.RED,
-                  },
-                });
-              }
+          const clampedCartesians = await scene.clampToHeightMostDetailed(cartesians);
 
-              viewer.entities.add({
-                polyline: {
-                  positions: clampedCartesians,
-                  arcType: Cesium.ArcType.NONE,
-                  width: 2,
-                  material: new Cesium.PolylineOutlineMaterialProperty({
-                    color: Cesium.Color.YELLOW,
-                  }),
-                  depthFailMaterial: new Cesium.PolylineOutlineMaterialProperty(
-                    {
-                      color: Cesium.Color.YELLOW,
-                    }
-                  ),
-                },
-              });
+          for (let i = 0; i < count; ++i) {
+            viewer.entities.add({
+              position: clampedCartesians[i],
+              ellipsoid: {
+                radii: new Cesium.Cartesian3(0.2, 0.2, 0.2),
+                material: Cesium.Color.RED,
+              },
             });
+          }
+
+          viewer.entities.add({
+            polyline: {
+              positions: clampedCartesians,
+              arcType: Cesium.ArcType.NONE,
+              width: 2,
+              material: new Cesium.PolylineOutlineMaterialProperty({
+                color: Cesium.Color.YELLOW,
+              }),
+              depthFailMaterial: new Cesium.PolylineOutlineMaterialProperty({
+                color: Cesium.Color.YELLOW,
+              }),
+            },
+          });
         }
+
+        sampleHeights();
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

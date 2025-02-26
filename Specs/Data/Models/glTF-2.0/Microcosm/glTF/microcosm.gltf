@@ -1,0 +1,251 @@
+{
+  "asset": {
+    "version": "2.0"
+  },
+  "extensionsUsed": [
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
+  ],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schema": {
+        "classes": {
+          "vegetation": {
+            "properties": {
+              "vegetationDensity": {
+                "type": "SCALAR",
+                "componentType": "UINT8",
+                "normalized": true
+              }
+            }
+          },
+          "landCover": {
+            "properties": {
+              "name": {
+                "type": "STRING"
+              },
+              "color": {
+                "type": "VEC3",
+                "componentType": "UINT8"
+              }
+            }
+          }
+        }
+      },
+      "propertyTables": [
+        {
+          "name": "Land Cover",
+          "class": "landCover",
+          "count": 256,
+          "properties": {
+            "name": {
+              "values": 4,
+              "stringOffsets": 5
+            },
+            "color": {
+              "values": 6
+            }
+          }
+        }
+      ],
+      "propertyTextures": [
+        {
+          "name": "Vegetation",
+          "class": "vegetation",
+          "properties": {
+            "vegetationDensity": {
+              "index": 1,
+              "texCoord": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "Photogrammetry",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0,
+          "texCoord": 1
+        },
+        "metallicFactor": 0,
+        "roughnessFactor": 0.5
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "TEXCOORD_0": 1,
+            "TEXCOORD_1": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "extensions": {
+            "EXT_mesh_features": {
+              "featureIds": [
+                {
+                  "featureCount": 256,
+                  "propertyTable": 0,
+                  "label": "landCover",
+                  "texture": {
+                    "index": 2,
+                    "texCoord": 0
+                  }
+                }
+              ]
+            },
+            "EXT_structural_metadata": {
+              "propertyTextures": [
+                0
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "name": "Photogrammetry Texture",
+      "source": 0
+    },
+    {
+      "name": "Vegetation Texture",
+      "source": 1
+    },
+    {
+      "name": "Land Cover Texture",
+      "source": 2
+    }
+  ],
+  "images": [
+    {
+      "name": "Photogrammetry",
+      "uri": "photogrammetry.jpg"
+    },
+    {
+      "name": "Vegetation",
+      "uri": "vegetation.png"
+    },
+    {
+      "name": "Land Cover",
+      "uri": "land-cover.png"
+    }
+  ],
+  "accessors": [
+    {
+      "name": "Positions",
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 1830,
+      "max": [
+        50.01457214355469,
+        19.920944213867188,
+        50.0020866394043
+      ],
+      "min": [
+        -50.00897979736328,
+        -16.473196029663086,
+        -50.006893157958984
+      ],
+      "type": "VEC3"
+    },
+    {
+      "name": "Ortho UVs",
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 1830,
+      "type": "VEC2"
+    },
+    {
+      "name": "Photogrammetry UVs",
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1830,
+      "type": "VEC2"
+    },
+    {
+      "name": "Indices",
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 5964,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "name": "Positions",
+      "buffer": 0,
+      "byteLength": 21960,
+      "byteOffset": 0
+    },
+    {
+      "name": "Ortho UVs",
+      "buffer": 0,
+      "byteLength": 14640,
+      "byteOffset": 21960
+    },
+    {
+      "name": "Photogrammetry UVs",
+      "buffer": 0,
+      "byteLength": 14640,
+      "byteOffset": 36600
+    },
+    {
+      "name": "Indices",
+      "buffer": 0,
+      "byteLength": 11928,
+      "byteOffset": 51240
+    },
+    {
+      "name": "Land Cover Name",
+      "buffer": 1,
+      "byteLength": 1546,
+      "byteOffset": 768
+    },
+    {
+      "name": "Land Cover String Offsets",
+      "buffer": 1,
+      "byteLength": 1028,
+      "byteOffset": 2320
+    },
+    {
+      "name": "Land Cover Color",
+      "buffer": 1,
+      "byteLength": 768,
+      "byteOffset": 0
+    }
+  ],
+  "buffers": [
+    {
+      "name": "Geometry Buffer",
+      "byteLength": 63168,
+      "uri": "microcosm.bin"
+    },
+    {
+      "name": "Metadata Buffer",
+      "byteLength": 3348,
+      "uri": "microcosm-metadata.bin"
+    }
+  ]
+}

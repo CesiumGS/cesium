@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -29,7 +26,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
@@ -46,7 +43,7 @@
         const boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create a box geometry.
         const boxGeometry = Cesium.BoxGeometry.fromDimensions({
@@ -60,7 +57,7 @@
           modelMatrix: boxModelMatrix,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5),
             ),
           },
         });
@@ -71,14 +68,17 @@
             appearance: new Cesium.PerInstanceColorAppearance({
               closed: true,
             }),
-          })
+          }),
         );
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -209,7 +209,7 @@ function attachModuleSymbols(doclets, modules) {
  * @return {string} The HTML for the navigation sidebar.
  */
 function buildNav(members) {
-  var nav = '<ul id="ClassList">',
+  var nav = '<div id="ClassList">',
     seen = {},
     hasClassList = false,
     classNav = "",
@@ -223,21 +223,36 @@ function buildNav(members) {
       return a.longname.toLowerCase().localeCompare(b.longname.toLowerCase());
     });
 
-  if (items.length) {
-    items.forEach(function (m) {
-      if (!hasOwnProp.call(seen, m.longname)) {
-        nav +=
-          '<li data-name="' +
-          m.name +
-          '">' +
-          linkto(m.longname, m.name) +
-          "</li>";
-      }
-      seen[m.longname] = true;
-    });
+  const addItems = (items) => {
+    if (items.length) {
+      items.forEach(function (m) {
+        if (!hasOwnProp.call(seen, m.longname)) {
+          nav +=
+            '<li data-name="' +
+            m.name +
+            '">' +
+            linkto(m.longname, m.name) +
+            "</li>";
+        }
+        seen[m.longname] = true;
+      });
+    }
+  };
 
+  if (process.env.CESIUM_PACKAGES) {
+    process.env.CESIUM_PACKAGES.split(",").forEach((package) => {
+      nav += `<h5>${package}</h5>`;
+      nav += "<ul>";
+      addItems(items.filter((item) => item.meta.package === package));
+      nav += "</ul>";
+    });
+  } else {
+    nav += "<ul>";
+    addItems(items);
     nav += "</ul>";
   }
+
+  nav += "</div>";
 
   return nav;
 }
@@ -289,7 +304,7 @@ exports.publish = function (taffyData, opts, tutorials) {
 
         if (
           example.match(
-            /^\s*<caption>([\s\S]+?)<\/caption>(\s*[\n\r])([\s\S]+)$/i
+            /^\s*<caption>([\s\S]+?)<\/caption>(\s*[\n\r])([\s\S]+)$/i,
           )
         ) {
           caption = RegExp.$1;
@@ -356,6 +371,11 @@ exports.publish = function (taffyData, opts, tutorials) {
         doclet.meta.sourceUrl = conf["sourceUrl"]
           .replace("{version}", process.env.CESIUM_VERSION)
           .replace("{filename}", docletPath);
+        if (process.env.CESIUM_PACKAGES) {
+          doclet.meta.package = process.env.CESIUM_PACKAGES.split(",").find(
+            (package) => doclet.meta.sourceUrl.indexOf(package) > -1,
+          );
+        }
       }
     }
   });
@@ -405,7 +425,7 @@ exports.publish = function (taffyData, opts, tutorials) {
   view.nav = buildNav(members);
   attachModuleSymbols(
     find({ kind: ["class", "function"], longname: { left: "module:" } }),
-    members.modules
+    members.modules,
   );
 
   if (members.globals.length) {
@@ -429,7 +449,7 @@ exports.publish = function (taffyData, opts, tutorials) {
         },
       ])
       .concat(files),
-    indexUrl
+    indexUrl,
   );
   view.layout = origLayout;
 
