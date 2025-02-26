@@ -1774,16 +1774,6 @@ BillboardCollection.prototype.update = function (frameState) {
     ? getIndexBufferInstanced
     : getIndexBufferBatched;
 
-  // Queue any texture resource updates for after the frame is rendered
-  const textureAtlas = this._textureAtlas;
-  frameState.afterRender.push(() => {
-    if (this.isDestroyed()) {
-      return;
-    }
-
-    return textureAtlas.update(frameState.context);
-  });
-
   let billboards = this._billboards;
   let billboardsLength = billboards.length;
   let allBillboardsReady = true;
@@ -1800,8 +1790,19 @@ BillboardCollection.prototype.update = function (frameState) {
       this._updateBillboard(billboard, IMAGE_INDEX_INDEX);
     }
 
-    allBillboardsReady = allBillboardsReady && billboard.ready;
+    allBillboardsReady =
+      allBillboardsReady && billboard.show && billboard.ready;
   }
+
+  // Queue any texture resource updates for after the frame is rendered
+  const textureAtlas = this._textureAtlas;
+  frameState.afterRender.push(() => {
+    if (this.isDestroyed()) {
+      return;
+    }
+
+    return textureAtlas.update(frameState.context);
+  });
 
   if (!defined(textureAtlas.texture)) {
     // Can't write billboard vertices until the texture atlas

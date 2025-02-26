@@ -1275,6 +1275,19 @@ Billboard.prototype.setImage = function (id, image) {
 };
 
 /**
+ * Copy the values of an existing bill texture into this one.
+ * @private
+ * @param {BillboardTexture} billboardTexture
+ */
+Billboard.prototype.setImageTexture = function (billboardTexture) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("billboardTexture", billboardTexture);
+  //>>includeEnd('debug');
+
+  BillboardTexture.clone(billboardTexture, this._imageTexture);
+};
+
+/**
  * Uses a sub-region of the image with the given id as the image for this billboard,
  * measured in pixels from the bottom-left.
  *

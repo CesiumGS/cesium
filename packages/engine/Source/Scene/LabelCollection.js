@@ -61,21 +61,31 @@ const whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
  * @param {LabelCollection} labelCollection
  * @returns {Billboard}
  */
-function createWhitePixelBillboard(billboardCollection, labelCollection) {
-  const canvas = document.createElement("canvas");
-  canvas.width = whitePixelSize.x;
-  canvas.height = whitePixelSize.y;
+function getWhitePixelBillboard(billboardCollection, labelCollection) {
+  const billboardTexture = labelCollection._backgroundBillboardTexture;
+  if (!billboardTexture.hasImage) {
+    const canvas = document.createElement("canvas");
+    canvas.width = whitePixelSize.x;
+    canvas.height = whitePixelSize.y;
 
-  const context2D = canvas.getContext("2d");
-  context2D.fillStyle = "#fff";
-  context2D.fillRect(0, 0, canvas.width, canvas.height);
+    const context2D = canvas.getContext("2d");
+    context2D.fillStyle = "#fff";
+    context2D.fillRect(0, 0, canvas.width, canvas.height);
 
-  return billboardCollection.add({
+    billboardTexture.loadImage(whitePixelCanvasId, canvas);
+    billboardTexture.addImageSubRegion(
+      whitePixelCanvasId,
+      whitePixelBoundingRegion,
+    );
+  }
+
+  const billboard = billboardCollection.add({
     collection: labelCollection,
-    imageId: whitePixelCanvasId,
-    image: canvas,
-    imageSubRegion: whitePixelBoundingRegion,
   });
+
+  billboard.setImageTexture(billboardTexture);
+
+  return billboard;
 }
 
 // reusable object for calling writeTextToCanvas
@@ -152,7 +162,7 @@ function rebindAllGlyphs(labelCollection, label) {
     }
   } else {
     if (!defined(backgroundBillboard)) {
-      backgroundBillboard = createWhitePixelBillboard(
+      backgroundBillboard = getWhitePixelBillboard(
         backgroundBillboardCollection,
         labelCollection,
       );
@@ -288,7 +298,7 @@ function rebindAllGlyphs(labelCollection, label) {
       glyph.billboard = billboard;
     }
 
-    billboard._imageTexture = glyphBillboardTexture;
+    billboard.setImageTexture(glyphBillboardTexture);
 
     billboard.show = label._show;
     billboard.position = label._position;
@@ -594,12 +604,16 @@ function LabelCollection(options) {
   this._scene = options.scene;
   this._batchTable = options.batchTable;
 
-  this._backgroundBillboardCollection = new BillboardCollection({
+  const backgroundBillboardCollection = new BillboardCollection({
     scene: this._scene,
     textureAtlas: new TextureAtlas({
       initialSize: whitePixelSize,
     }),
   });
+  this._backgroundBillboardCollection = backgroundBillboardCollection;
+  this._backgroundBillboardTexture = new BillboardTexture(
+    backgroundBillboardCollection,
+  );
 
   this._glyphBillboardCollection = new BillboardCollection({
     scene: this._scene,

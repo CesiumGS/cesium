@@ -26,6 +26,8 @@ function BillboardTexture(billboardCollection) {
   this._width = undefined;
   this._height = undefined;
 
+  this._hasSubregion = false;
+
   /**
    * Used by billboardCollection to track whcih billboards to update.
    * @type {boolean}
@@ -219,6 +221,7 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
   this._id = id;
   this._loadState = BillboardLoadState.LOADING;
   this._loadError = undefined;
+  this._hasSubregion = true;
 
   let index;
   const atlas = this._billboardCollection.textureAtlas;
@@ -257,6 +260,48 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
 BillboardTexture.prototype.computeTextureCoordinates = function (result) {
   const atlas = this._billboardCollection.textureAtlas;
   return atlas.computeTextureCoordinates(this._index, result);
+};
+
+BillboardTexture.clone = function (billboardTexture, target) {
+  target._id = billboardTexture._id;
+  target._loadState = billboardTexture._loadState;
+  target._loadError = undefined;
+  target._index = billboardTexture._index;
+  target._width = billboardTexture._width;
+  target._height = billboardTexture._height;
+  target._hasSubregion = billboardTexture._hasSubregion;
+
+  if (billboardTexture.ready) {
+    target.dirty = true;
+    return;
+  }
+
+  const completeLoad = async () => {
+    const id = billboardTexture._id;
+    const atlas = billboardTexture._billboardCollection.textureAtlas;
+    await atlas._indexPromiseById.get(id);
+
+    // Any errors should have already been handled
+    if (target._id !== id) {
+      // Another load was initiated and resolved resolved before this one. This operation is cancelled.
+      return;
+    }
+
+    if (billboardTexture._hasSubregion) {
+      // Subregions must wait an additional frame to be ready
+      await Promise.resolve();
+    }
+
+    target._id = id;
+    target._loadState = billboardTexture._loadState;
+    target._loadError = billboardTexture._loadError;
+    target._index = billboardTexture._index;
+    target._width = billboardTexture._width;
+    target._height = billboardTexture._height;
+    target.dirty = true;
+  };
+
+  completeLoad();
 };
 
 export default BillboardTexture;
