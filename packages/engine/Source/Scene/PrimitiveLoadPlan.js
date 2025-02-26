@@ -10,8 +10,7 @@ import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-
-import { loadSpz } from "@spz-loader/core";
+import CesiumMath from "../Core/Math.js";
 
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
@@ -188,7 +187,7 @@ function PrimitiveLoadPlan(primitive) {
  *
  * @param {Context} context The context for generating buffers on the GPU
  */
-PrimitiveLoadPlan.prototype.postProcess = async function (context) {
+PrimitiveLoadPlan.prototype.postProcess = function (context) {
   // Handle CESIUM_primitive_outline. This modifies indices and attributes and
   // also generates a new attribute for the outline coordinates. These steps
   // are synchronous.
@@ -197,15 +196,15 @@ PrimitiveLoadPlan.prototype.postProcess = async function (context) {
     generateBuffers(this, context);
   }
 
-  if (this.needsSpzDecompression) {
-    decompressSpz(this, context).then(() => {
-      setupGaussianSplatBuffers(this, context);
-      if (this.generateGaussianSplatTexture) {
-        this.attributePlans.forEach((attr) => {
-          this.primitive.needsGaussianSplatTexture = true;
-        });
-      }
-    });
+  if (this.needsSpzAttributes) {
+    this.primitive.isGaussianSplatPrimitive = true;
+    buildSpzAttributes(this, context);
+    setupGaussianSplatBuffers(this, context);
+    if (this.generateGaussianSplatTexture) {
+      this.attributePlans.forEach((attr) => {
+        this.primitive.needsGaussianSplatTexture = true;
+      });
+    }
   }
 
   //handle splat post-processing for point primitives
@@ -271,7 +270,7 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   return attribute;
 }
 
-async function decompressSpz(loadPlan, context) {
+function buildSpzAttributes(loadPlan, context) {
   let _spz;
   //there should be only one
   for (let i = 0; i < loadPlan.attributePlans.length; i++) {
@@ -282,7 +281,7 @@ async function decompressSpz(loadPlan, context) {
   }
 
   const primitive = loadPlan.primitive;
-  const gs = await loadSpz(_spz.typedArray);
+  const gs = _spz.gaussianCloudData;
 
   const count = gs.numPoints;
   const positionAttr = new ModelComponents.Attribute();
@@ -316,6 +315,9 @@ async function decompressSpz(loadPlan, context) {
 
   [positionAttr.min, positionAttr.max] = findMinMaxXY(gs.positions);
 
+  for (let i = 0; i < gs.positions.length; i += 3) {
+    gs.positions[i + 2] = -gs.positions[i + 2];
+  }
   positionAttr.name = "POSITION";
   positionAttr.semantic = VertexAttributeSemantic.POSITION;
   positionAttr.typedArray = new Float32Array(gs.positions);
@@ -325,8 +327,6 @@ async function decompressSpz(loadPlan, context) {
   positionAttr.count = count;
   positionAttr.constant = 0;
   positionAttr.instanceDivisor = 1;
-
-  gs.scales.map((v) => Math.exp(v));
 
   scaleAttr.name = "_SCALE";
   scaleAttr.semantic = VertexAttributeSemantic.SCALE;
@@ -338,6 +338,19 @@ async function decompressSpz(loadPlan, context) {
   scaleAttr.constant = 0;
   scaleAttr.instanceDivisor = 1;
 
+  //we have to change handedness and invert z
+  for (let q = 0; q < gs.rotations.length; q += 4) {
+    const x = gs.rotations[q];
+    const y = gs.rotations[q + 1];
+    const z = gs.rotations[q + 2];
+    const w = gs.rotations[q + 3];
+
+    gs.rotations[q] = -x;
+    gs.rotations[q + 1] = y;
+    gs.rotations[q + 2] = -z;
+    gs.rotations[q + 3] = w;
+  }
+
   rotationAttr.name = "_ROTATION";
   rotationAttr.semantic = VertexAttributeSemantic.ROTATION;
   rotationAttr.typedArray = new Float32Array(gs.rotations);
@@ -348,13 +361,14 @@ async function decompressSpz(loadPlan, context) {
   rotationAttr.constant = 0;
   rotationAttr.instanceDivisor = 1;
 
+  //convert to integer components and interleave into rgba
+  //spz-loader handles the initial colorspace conversion for us
   const interleaveRGBA = (rgb, alpha) => {
     const rgba = new Uint8Array((rgb.length / 3) * 4);
-    const SH_C0 = 0.28209479177387814;
     for (let i = 0; i < rgb.length / 3; i++) {
-      rgba[i * 4] = (0.5 + SH_C0 * rgb[i * 3]) * 255.0;
-      rgba[i * 4 + 1] = (0.5 + SH_C0 * rgb[i * 3 + 1]) * 255.0;
-      rgba[i * 4 + 2] = (0.5 + SH_C0 * rgb[i * 3 + 2]) * 255.0;
+      rgba[i * 4] = CesiumMath.clamp(rgb[i * 3] * 255.0, 0.0, 255.0);
+      rgba[i * 4 + 1] = CesiumMath.clamp(rgb[i * 3 + 1] * 255.0, 0.0, 255.0);
+      rgba[i * 4 + 2] = CesiumMath.clamp(rgb[i * 3 + 2] * 255.0, 0.0, 255.0);
       rgba[i * 4 + 3] = (1.0 / (1.0 + Math.exp(-alpha[i]))) * 255.0;
     }
 
@@ -367,7 +381,7 @@ async function decompressSpz(loadPlan, context) {
   colorAttr.componentDatatype = ComponentDatatype.FLOAT;
   colorAttr.type = AttributeType.VEC4;
   colorAttr.normalized = false;
-  colorAttr.count = count / 4;
+  colorAttr.count = count;
   colorAttr.constant = 0;
   colorAttr.instanceDivisor = 1;
 
@@ -378,7 +392,7 @@ async function decompressSpz(loadPlan, context) {
   primitive.attributes.push(rotationAttr);
   primitive.attributes.push(colorAttr);
 
-  primitive.spzUnpacked = true;
+  _spz.gaussianCloudData = undefined;
 }
 
 /**

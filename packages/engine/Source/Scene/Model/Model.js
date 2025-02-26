@@ -1967,10 +1967,6 @@ Model.prototype.update = function (frameState) {
   // for specular maps.
   updateImageBasedLighting(this, frameState);
 
-  if (defined(this._loader.spzUnpacked) && this._loader.spzUnpacked === false) {
-    return;
-  }
-
   if (!this._resourcesLoaded && finishedProcessing) {
     this._resourcesLoaded = true;
 

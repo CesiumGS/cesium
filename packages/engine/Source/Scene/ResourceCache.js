@@ -10,6 +10,7 @@ import GltfIndexBufferLoader from "./GltfIndexBufferLoader.js";
 import GltfJsonLoader from "./GltfJsonLoader.js";
 import GltfTextureLoader from "./GltfTextureLoader.js";
 import GltfVertexBufferLoader from "./GltfVertexBufferLoader.js";
+import GltfSpzLoader from "./GltfSpzLoader.js";
 import MetadataSchemaLoader from "./MetadataSchemaLoader.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
 import ResourceCacheStatistics from "./ResourceCacheStatistics.js";
@@ -390,6 +391,43 @@ ResourceCache.getDracoLoader = function (options) {
   return ResourceCache.add(dracoLoader);
 };
 
+ResourceCache.getSpzLoader = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const { gltf, primitive, spz, gltfResource, baseResource } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.bool("options.spz", spz);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
+  const cacheKey = ResourceCacheKey.getSpzCacheKey({
+    gltf: gltf,
+    primitive: primitive,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+  });
+
+  let spzLoader = ResourceCache.get(cacheKey);
+  if (defined(spzLoader)) {
+    return spzLoader;
+  }
+
+  spzLoader = new GltfSpzLoader({
+    resourceCache: ResourceCache,
+    gltf: gltf,
+    primitive: primitive,
+    spz: spz,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    cacheKey: cacheKey,
+  });
+
+  return ResourceCache.add(spzLoader);
+};
+
 /**
  * Gets an existing glTF vertex buffer from the cache, or creates a new loader if one does not already exist.
  *
@@ -424,6 +462,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
     bufferViewId,
     primitive,
     draco,
+    spz,
     attributeSemantic,
     accessorId,
     asynchronous = true,
@@ -487,6 +526,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
     frameState: frameState,
     bufferViewId: bufferViewId,
     draco: draco,
+    spz: spz,
     attributeSemantic: attributeSemantic,
     dequantize: dequantize,
     loadBuffer: loadBuffer,
@@ -506,6 +546,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
     bufferViewId: bufferViewId,
     primitive: primitive,
     draco: draco,
+    spz: spz,
     attributeSemantic: attributeSemantic,
     accessorId: accessorId,
     cacheKey: cacheKey,

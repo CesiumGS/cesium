@@ -71,6 +71,25 @@ function getDracoCacheKey(gltf, draco, gltfResource, baseResource) {
   return `${bufferCacheKey}-range-${bufferViewCacheKey}`;
 }
 
+function getSpzCacheKey(gltf, primitive, gltfResource, baseResource) {
+  //const attr = primitive.attributes[0];
+  const bufferViewId = 0;
+  const bufferView = gltf.bufferViews[bufferViewId];
+  const bufferId = bufferView.buffer;
+  const buffer = gltf.buffers[bufferId];
+
+  const bufferCacheKey = getBufferCacheKey(
+    buffer,
+    bufferId,
+    gltfResource,
+    baseResource,
+  );
+
+  const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
+
+  return `${bufferCacheKey}-range-${bufferViewCacheKey}`;
+}
+
 function getImageCacheKey(gltf, imageId, gltfResource, baseResource) {
   const image = gltf.images[imageId];
   const bufferViewId = image.bufferView;
@@ -272,6 +291,19 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
   return `draco:${getDracoCacheKey(gltf, draco, gltfResource, baseResource)}`;
 };
 
+ResourceCacheKey.getSpzCacheKey = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const { gltf, primitive, gltfResource, baseResource } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
+  return `spz:${getSpzCacheKey(gltf, primitive, gltfResource, baseResource)}`;
+};
 /**
  * Gets the vertex buffer cache key.
  *

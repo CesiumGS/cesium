@@ -516,18 +516,17 @@ function postProcessGeometry(loader, context) {
   const loadPlans = loader._primitiveLoadPlans;
   for (let i = 0; i < loadPlans.length; i++) {
     const loadPlan = loadPlans[i];
-    loadPlan.postProcess(context).then(() => {
-      if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
-        // The glTF loader takes ownership of any buffers generated in the
-        // post-process stage since they were created after the geometry loaders
-        // finished. This way they can be destroyed when the loader is destroyed.
-        gatherPostProcessBuffers(loader, loadPlan);
-      }
+    loadPlan.postProcess(context);
+    if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
+      // The glTF loader takes ownership of any buffers generated in the
+      // post-process stage since they were created after the geometry loaders
+      // finished. This way they can be destroyed when the loader is destroyed.
+      gatherPostProcessBuffers(loader, loadPlan);
+    }
 
-      if (loader._loadSpzResource) {
-        loader.spzUnpacked = true;
-      }
-    });
+    if (loader._loadSpzResource) {
+      loader.spzUnpacked = true;
+    }
   }
 }
 
@@ -701,6 +700,7 @@ function getVertexBufferLoader(
   semantic,
   primitive,
   draco,
+  spzExtension,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -717,6 +717,7 @@ function getVertexBufferLoader(
     bufferViewId: bufferViewId,
     primitive: primitive,
     draco: draco,
+    spz: spzExtension,
     attributeSemantic: semantic,
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
@@ -725,6 +726,20 @@ function getVertexBufferLoader(
   });
 
   return vertexBufferLoader;
+}
+
+function getSpzBufferLoader(loader, primitive) {
+  const gltf = loader.gltfJson;
+
+  const spzBufferLoader = ResourceCache.getSpzLoader({
+    gltf: gltf,
+    primitive: primitive,
+    spz: true,
+    gltfResource: loader._gltfResource,
+    baseResource: loader._baseResource,
+  });
+
+  return spzBufferLoader;
 }
 
 function getIndexBufferLoader(
@@ -1177,6 +1192,7 @@ function loadAttribute(
   semanticInfo,
   primitive,
   draco,
+  spz,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -1202,7 +1218,7 @@ function loadAttribute(
     setIndex,
   );
 
-  if (!defined(draco) && !defined(bufferViewId)) {
+  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
     return attribute;
   }
 
@@ -1212,6 +1228,7 @@ function loadAttribute(
     gltfSemantic,
     primitive,
     draco,
+    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1221,6 +1238,7 @@ function loadAttribute(
   loader._geometryLoaders.push(vertexBufferLoader);
   const promise = vertexBufferLoader.load();
   loader._loaderPromises.push(promise);
+
   // This can only execute once vertexBufferLoader.process() has run and returns true
   // Save this finish callback by the loader index so it can be called
   // in process().
@@ -1248,6 +1266,20 @@ function loadAttribute(
     }
   };
 
+  if (spz) {
+    const spzLoader = getSpzBufferLoader(loader, primitive);
+    const nIndex = loader._geometryLoaders.length;
+    loader._geometryLoaders.push(spzLoader);
+    const spzPromise = spzLoader.load();
+    loader._loaderPromises.push(spzPromise);
+
+    loader._geometryCallbacks[nIndex] = () => {
+      if (defined(spz) && defined(spzLoader.decodedData)) {
+        attribute.gaussianCloudData = spzLoader.decodedData.gcloud;
+      }
+    };
+  }
+
   return attribute;
 }
 
@@ -1257,6 +1289,7 @@ function loadVertexAttribute(
   semanticInfo,
   primitive,
   draco,
+  spz,
   hasInstances,
   needsPostProcessing,
   frameState,
@@ -1304,6 +1337,7 @@ function loadVertexAttribute(
     semanticInfo,
     primitive,
     draco,
+    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1896,6 +1930,7 @@ function loadMorphTarget(
   // Don't pass in primitive or draco object since morph targets can't be draco compressed
   const primitive = undefined;
   const draco = undefined;
+  const spz = undefined;
   const hasInstances = false;
 
   for (const semantic in target) {
@@ -1916,6 +1951,7 @@ function loadMorphTarget(
       semanticInfo,
       primitive,
       draco,
+      spz,
       hasInstances,
       needsPostProcessing,
       frameState,
@@ -1979,13 +2015,15 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       loader._generateGaussianSplatTexture;
   }
 
-  if (loader.gltfJson.extensionsUsed.includes("KHR_spz_compression")) {
+  //gltfLoader will decompress the SPZ stream. load plan will extract the attributes.
+  const spzExtension = loader.gltfJson.extensionsUsed.includes(
+    "KHR_spz_compression",
+  );
+  if (spzExtension) {
     needsPostProcessing = true;
-    primitivePlan.needsSpzDecompression = true;
-    primitivePlan.needsGaussianSplats = true;
+    primitivePlan.needsSpzAttributes = true;
     primitivePlan.generateGaussianSplatTexture =
       loader._generateGaussianSplatTexture;
-    loader.spzUnpacked = false;
   }
 
   const loadForClassification = loader._loadForClassification;
@@ -2020,6 +2058,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
         semanticInfo,
         gltfPrimitive,
         draco,
+        spzExtension,
         hasInstances,
         needsPostProcessing,
         frameState,

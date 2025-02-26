@@ -113,6 +113,7 @@ function GltfVertexBufferLoader(options) {
   this._bufferViewId = bufferViewId;
   this._primitive = primitive;
   this._draco = draco;
+  this._spz = undefined;
   this._attributeSemantic = attributeSemantic;
   this._accessorId = accessorId;
   this._cacheKey = cacheKey;
@@ -210,6 +211,11 @@ GltfVertexBufferLoader.prototype.load = async function () {
     return this._promise;
   }
 
+  if (defined(this._spz)) {
+    this._promise = loadFromSpz(this);
+    return this._promise;
+  }
+
   if (hasDracoCompression(this._draco, this._attributeSemantic)) {
     this._promise = loadFromDraco(this);
     return this._promise;
@@ -268,6 +274,43 @@ function getQuantizationInformation(
   }
 
   return quantization;
+}
+
+async function loadFromSpz(vertexBufferLoader) {
+  vertexBufferLoader._state = ResourceLoaderState.LOADING;
+  const resourceCache = vertexBufferLoader._resourceCache;
+  try {
+    const spzLoader = resourceCache.getSpzLoader({
+      gltf: vertexBufferLoader._gltf,
+      primitive: vertexBufferLoader._primitive,
+      spz: vertexBufferLoader._spz,
+      gltfResource: vertexBufferLoader._gltfResource,
+      baseResource: vertexBufferLoader._baseResource,
+    });
+    vertexBufferLoader._spzLoader = spzLoader;
+    await spzLoader.load();
+
+    if (vertexBufferLoader.isDestroyed()) {
+      return;
+    }
+
+    vertexBufferLoader._state = ResourceLoaderState.LOADED;
+    return vertexBufferLoader;
+  } catch {
+    if (vertexBufferLoader.isDestroyed()) {
+      return;
+    }
+  }
+}
+
+//maybe not needed
+function processSpz(vertexBufferLoader) {
+  vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
+  const spzLoader = vertexBufferLoader._spzLoader;
+
+  const glcoudData = spzLoader.decodedData.gcloud;
+
+  vertexBufferLoader._typedArray = new Uint8Array(glcoudData.buffer);
 }
 
 async function loadFromDraco(vertexBufferLoader) {
@@ -427,6 +470,19 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     processDraco(this);
   }
 
+  if (defined(this._spzLoader)) {
+    try {
+      const ready = this._spzLoader.process(frameState);
+      if (!ready) {
+        return false;
+      }
+    } catch (error) {
+      handleError(this, error);
+    }
+
+    processSpz(this);
+  }
+
   let buffer;
   const typedArray = this._typedArray;
   if (this._loadBuffer && this._asynchronous) {
@@ -474,8 +530,13 @@ GltfVertexBufferLoader.prototype.unload = function () {
     resourceCache.unload(this._dracoLoader);
   }
 
+  if (defined(this._spzLoader)) {
+    resourceCache.unload(this._spzLoader);
+  }
+
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
+  this._spzLoader = undefined;
   this._typedArray = undefined;
   this._buffer = undefined;
   this._gltf = undefined;
