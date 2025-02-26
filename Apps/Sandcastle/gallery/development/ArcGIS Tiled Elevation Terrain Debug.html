@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Visualize worldwide, high-resolution terrain."
-    />
+    <meta name="description" content="Visualize worldwide, high-resolution terrain." />
     <meta name="cesium-sandcastle-labels" content="Development" />
     <title>ArcGIS Tiled Elevation Terrain Debug</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -68,21 +62,19 @@
         </tbody>
       </table>
       <script id="cesium_sandcastle_script">
-        function startup(Cesium) {
+        window.startup = async function (Cesium) {
           "use strict";
 
           //Sandcastle_Begin
-          const worldTerrain = Cesium.createWorldTerrain({
+          const worldTerrain = await Cesium.createWorldTerrainAsync({
             requestWaterMask: true,
             requestVertexNormals: true,
           });
 
-          const arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
-            {
-              url:
-                "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
-            }
-          );
+          const arcGisTerrainProvider =
+            await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+            );
 
           const locationOptions = [
             {
@@ -90,12 +82,12 @@
               target: new Cesium.Cartesian3(
                 300770.50872389384,
                 5634912.131394585,
-                2978152.2865545116
+                2978152.2865545116,
               ),
               offset: new Cesium.Cartesian3(
                 6344.974098678562,
                 -793.3419798081741,
-                2499.9508860763162
+                2499.9508860763162,
               ),
             },
             {
@@ -103,12 +95,12 @@
               target: new Cesium.Cartesian3(
                 -2489625.0836225147,
                 -4393941.44443024,
-                3882535.9454173897
+                3882535.9454173897,
               ),
               offset: new Cesium.Cartesian3(
                 -6857.40902037546,
                 412.3284835694358,
-                2147.5545426812023
+                2147.5545426812023,
               ),
             },
             {
@@ -116,12 +108,12 @@
               target: new Cesium.Cartesian3(
                 -2708814.85583248,
                 -4254159.450845907,
-                3891403.9457429945
+                3891403.9457429945,
               ),
               offset: new Cesium.Cartesian3(
                 70642.66030209465,
                 -31661.517948317807,
-                35505.179997143336
+                35505.179997143336,
               ),
             },
           ];
@@ -146,9 +138,7 @@
 
           function updateExaggeration() {
             globe.terrainExaggeration = Number(viewModel.exaggeration);
-            globe.terrainExaggerationRelativeHeight = Number(
-              viewModel.relativeHeight
-            );
+            globe.terrainExaggerationRelativeHeight = Number(viewModel.relativeHeight);
           }
 
           Cesium.knockout.track(viewModel);
@@ -172,10 +162,10 @@
           let selectedShowOBB = false;
 
           const intersectedTriangleDataSource = new Cesium.CustomDataSource(
-            "intersectedTriangleDataSource"
+            "intersectedTriangleDataSource",
           );
           const testedTrianglesDataSource = new Cesium.CustomDataSource(
-            "testedTrianglesDataSource"
+            "testedTrianglesDataSource",
           );
           const obbDataSource = new Cesium.CustomDataSource("obbDataSource");
           const axisPrimitiveCollection = new Cesium.PrimitiveCollection();
@@ -191,7 +181,7 @@
             return Cesium.Matrix4.multiplyByPoint(
               transform,
               local,
-              new Cesium.Cartesian3()
+              new Cesium.Cartesian3(),
             );
           }
 
@@ -228,18 +218,18 @@
             transform,
             triangles,
             triangleVerticesCallback,
-            isSpecial
+            isSpecial,
           ) {
             const aabb = onTheFlyNodeAABB(node.level, node.x, node.y, node.z);
             const min = new Cesium.Cartesian3(
               aabb.aabbMinX,
               aabb.aabbMinY,
-              aabb.aabbMinZ
+              aabb.aabbMinZ,
             );
             const max = new Cesium.Cartesian3(
               aabb.aabbMaxX,
               aabb.aabbMaxY,
-              aabb.aabbMaxZ
+              aabb.aabbMaxZ,
             );
             const box = new Cesium.BoxGeometry({
               maximum: max,
@@ -261,12 +251,12 @@
                       modelMatrix: transform,
                       attributes: {
                         color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                          color.withAlpha(0.2)
+                          color.withAlpha(0.2),
                         ),
                       },
                     }),
                   ],
-                })
+                }),
               );
             }
             prims.add(
@@ -282,12 +272,12 @@
                     modelMatrix: transform,
                     attributes: {
                       color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                        color.withAlpha(1)
+                        color.withAlpha(1),
                       ),
                     },
                   }),
                 ],
-              })
+              }),
             );
 
             const trianglePolygons = [];
@@ -308,7 +298,7 @@
                 geometry: outlineGeometry,
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    color.withAlpha(1)
+                    color.withAlpha(1),
                   ),
                 },
               });
@@ -322,7 +312,7 @@
                 geometry: geometry,
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    color.withAlpha(0.7)
+                    color.withAlpha(0.7),
                   ),
                 },
               });
@@ -336,7 +326,7 @@
                   flat: true,
                 }),
                 geometryInstances: trianglePolygonOutlines,
-              })
+              }),
             );
             prims.add(
               new Cesium.Primitive({
@@ -346,7 +336,7 @@
                   flat: true,
                 }),
                 geometryInstances: trianglePolygons,
-              })
+              }),
             );
           }
 
@@ -378,17 +368,10 @@
             let colorCycleIndex = 0;
             for (let j = 0; j < nodesToDraw.length; j++) {
               const n = nodesToDraw[j];
-              const color = Cesium.Color.fromCssColorString(
-                colors[colorCycleIndex % 8]
-              );
+              const color = Cesium.Color.fromCssColorString(colors[colorCycleIndex % 8]);
 
               const isSpecial = nodeHits.some(function (h) {
-                return (
-                  h.level === n.level &&
-                  h.x === n.x &&
-                  h.y === n.y &&
-                  h.z === n.z
-                );
+                return h.level === n.level && h.x === n.x && h.y === n.y && h.z === n.z;
               });
 
               drawOctreeNode(
@@ -398,7 +381,7 @@
                 transform,
                 n.intersectingTriangles,
                 root._triangleVerticesCallback,
-                isSpecial
+                isSpecial,
               );
               colorCycleIndex++;
             }
@@ -470,7 +453,7 @@
                 },
               };
             }),
-            "zoomButtons"
+            "zoomButtons",
           );
 
           function flattenOctree(node) {
@@ -493,22 +476,20 @@
               newTriangle &&
               isTriangleAlmostEqual(oldTriangle, newTriangle)
             ) {
-              drawTriangleList(
-                Cesium.Color.GREEN,
-                intersectedTriangleDataSource,
-                [newTriangle]
-              );
+              drawTriangleList(Cesium.Color.GREEN, intersectedTriangleDataSource, [
+                newTriangle,
+              ]);
             } else {
               drawTriangleList(
                 Cesium.Color.GOLD,
                 intersectedTriangleDataSource,
-                oldTriangle && [oldTriangle]
+                oldTriangle && [oldTriangle],
               );
 
               drawTriangleList(
                 Cesium.Color.BLUE,
                 intersectedTriangleDataSource,
-                newTriangle && [newTriangle]
+                newTriangle && [newTriangle],
               );
             }
           }
@@ -522,11 +503,7 @@
                   window.lastPickDetails.traceDetails &&
                   window.lastPickDetails.traceDetails.trianglesTested) ||
                 [];
-              drawTriangleList(
-                Cesium.Color.ORANGE,
-                testedTrianglesDataSource,
-                triangles
-              );
+              drawTriangleList(Cesium.Color.ORANGE, testedTrianglesDataSource, triangles);
             }
           }
 
@@ -547,8 +524,7 @@
             }
 
             const C = Cesium.Color;
-            const radius =
-              window.lastPickDetails.mesh.boundingSphere3D.radius / 50;
+            const radius = window.lastPickDetails.mesh.boundingSphere3D.radius / 50;
 
             let x;
             let y;
@@ -616,7 +592,7 @@
                 },
               },
             ],
-            "disableDefaultPickStrategy"
+            "disableDefaultPickStrategy",
           );
           window.disableDefaultPickStrategy = false;
 
@@ -635,7 +611,7 @@
                 },
               },
             ],
-            "pickTerrainProvider"
+            "pickTerrainProvider",
           );
           viewer.terrainProvider = arcGisTerrainProvider;
 
@@ -656,7 +632,7 @@
                 },
               },
             ],
-            "showTestedTriangles"
+            "showTestedTriangles",
           );
 
           Sandcastle.addToolbarMenu(
@@ -676,7 +652,7 @@
                 },
               },
             ],
-            "showOBB"
+            "showOBB",
           );
 
           const scene = viewer.scene;
@@ -727,11 +703,14 @@
           }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
           //Sandcastle_End
-          Sandcastle.finishedLoading();
-        }
+        };
         if (typeof Cesium !== "undefined") {
           window.startupCalled = true;
-          startup(Cesium);
+          window.startup(Cesium).catch((error) => {
+            "use strict";
+            console.error(error);
+          });
+          Sandcastle.finishedLoading();
         }
       </script>
     </div>
