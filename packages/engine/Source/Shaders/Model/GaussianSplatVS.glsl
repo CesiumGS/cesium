@@ -115,9 +115,9 @@ vec4 calcCovVectors(vec3 viewPos, mat3 Vrk) {
         0.0, 0.0, 0.0
     );
 
-    //We need to take our inverse view and remove the scale component
+    //We need to take our view and remove the scale component
     //quantized models can have a scaled matrix which will throw our splat size off
-    mat3 R = mat3(transpose(czm_inverseModelView));
+    mat3 R = mat3(czm_modelView);
     vec3 scale;
     scale.x = length(R[0].xyz);
     scale.y = length(R[1].xyz);
