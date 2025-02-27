@@ -103,8 +103,8 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
 
 #else
 
-vec4 calcCovVectors(vec3 worldPos, mat3 Vrk, mat3 viewmatrix) {
-    vec4 t = vec4(worldPos, 1.0);
+vec4 calcCovVectors(vec3 viewPos, mat3 Vrk) {
+    vec4 t = vec4(viewPos, 1.0);
     float focal = czm_viewport.z * czm_projection[0][0];
 
     float J1 = focal / t.z;
@@ -115,19 +115,25 @@ vec4 calcCovVectors(vec3 worldPos, mat3 Vrk, mat3 viewmatrix) {
         0.0, 0.0, 0.0
     );
 
+    //We need to take our inverse view and remove the scale component
+    //quantized models can have a scaled matrix which will throw our splat size off
+    mat3 R = mat3(transpose(czm_inverseModelView));
     vec3 scale;
-    scale.x = length(viewmatrix[0].xyz);
-    scale.y = length(viewmatrix[1].xyz);
-    scale.z = length(viewmatrix[2].xyz);
+    scale.x = length(R[0].xyz);
+    scale.y = length(R[1].xyz);
+    scale.z = length(R[2].xyz);
 
-    mat3 R = mat3(
-    viewmatrix[0].xyz / scale.x,
-    viewmatrix[1].xyz / scale.y,
-    viewmatrix[2].xyz / scale.z
-);
+    mat3 Rs = mat3(
+    R[0].xyz / scale.x,
+    R[1].xyz / scale.y,
+    R[2].xyz / scale.z
+    );
 
-mat3 T = R * J;
-    mat3 cov = transpose(T) * Vrk * T;
+    //transform our covariance into view space
+    //ensures orientation is correct
+    mat3 Vrk_view = Rs * Vrk * transpose(Rs);
+    
+    mat3 cov = transpose(J) * Vrk_view * J;
 
     float diagonal1 = cov[0][0] + .3;
     float offDiagonal = cov[0][1];
@@ -176,11 +182,7 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     //we can still apply scale here even though cov3d is pre-computed
     Vrk *= u_splatScale;
 
-    vec4 covVectors = calcCovVectors(
-        splatViewPos.xyz,
-        Vrk,
-        mat3(transpose(czm_modelView))
-    );
+    vec4 covVectors = calcCovVectors(splatViewPos.xyz, Vrk);
 
     if (dot(covVectors.xy, covVectors.xy) < 4.0 && dot(covVectors.zw, covVectors.zw) < 4.0) {
         gl_Position = discardVec;
