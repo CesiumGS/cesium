@@ -439,7 +439,7 @@ Object.defineProperties(BillboardCollection.prototype, {
   },
 
   /**
-   * True when all billboards currently in the collection are ready. Exposed for testing.
+   * True when all billboards currently in the collection are ready for rendering.
    * @private
    * @memberof BillboardCollection.prototype
    * @type {boolean}

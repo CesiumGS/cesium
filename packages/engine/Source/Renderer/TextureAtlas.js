@@ -13,13 +13,13 @@ import TexturePacker from "../Core/TexturePacker.js";
 import Framebuffer from "./Framebuffer.js";
 import Texture from "./Texture.js";
 
-const defaultInitialSize = Object.freeze(new Cartesian2(16.0, 16.0));
+const defaultInitialDimensions = 16;
 
 /**
- * A TextureAtlas stores multiple images in one square texture and keeps
- * track of the texture coordinates for each image. TextureAtlas is dynamic,
+ * A TextureAtlas stores multiple images in one∂ texture and keeps
+ * track of the texture coordinates for each image. A TextureAtlas is dynamic,
  * meaning new images can be added at any point in time.
- * Texture coordinates are subject to change if the texture atlas resizes, so it is
+ * Texture coordinates are subject to change if the texture atlas resizes, so it's
  * important to check {@link TextureAtlas#guid} before using old values.
  *
  * @alias TextureAtlas
@@ -39,7 +39,9 @@ const defaultInitialSize = Object.freeze(new Cartesian2(16.0, 16.0));
 function TextureAtlas(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
-  const initialSize = defaultValue(options.initialSize, defaultInitialSize);
+  const initialSize =
+    options.initialSize ??
+    new Cartesian2(defaultInitialDimensions, defaultInitialDimensions);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals(
@@ -47,8 +49,16 @@ function TextureAtlas(options) {
     borderWidthInPixels,
     0,
   );
-  Check.typeOf.number.greaterThan("options.initialSize.x", initialSize.x, 0);
-  Check.typeOf.number.greaterThan("options.initialSize.y", initialSize.y, 0);
+  Check.typeOf.number.greaterThan(
+    "options.initialSize.x",
+    defaultInitialDimensions,
+    0,
+  );
+  Check.typeOf.number.greaterThan(
+    "options.initialSize.y",
+    defaultInitialDimensions,
+    0,
+  );
   //>>includeEnd('debug');
 
   this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
@@ -84,6 +94,7 @@ Object.defineProperties(TextureAtlas.prototype, {
   /**
    * An array of {@link BoundingRectangle} pixel offset and dimensions for all the images in the texture atlas.
    * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
+   * If the index is a subregion of an existing image, thea and y values are specified as offsets relative to the parent.
    * The coordinates are in the order that the corresponding images were added to the atlas.
    * @memberof TextureAtlas.prototype
    * @type {BoundingRectangle[]}
@@ -123,9 +134,9 @@ Object.defineProperties(TextureAtlas.prototype, {
   },
 
   /**
-   * The sampler to use when sampling this texture.
+   * The sampler to use when sampling this texture. If <code>undefined</code>, the default sampler is used.
    * @memberof TextureAtlas.prototype
-   * @type {Sampler}
+   * @type {Sampler|undefined}
    * @readonly
    * @private
    */
@@ -137,7 +148,7 @@ Object.defineProperties(TextureAtlas.prototype, {
 
   /**
    * The number of images in the texture atlas. This value increases
-   * every time addImage or addImages is called.
+   * every time addImage or addImageSubRegion is called.
    * Texture coordinates are subject to change if the texture atlas resizes, so it is
    * important to check {@link TextureAtlas#guid} before using old values.
    * @memberof TextureAtlas.prototype

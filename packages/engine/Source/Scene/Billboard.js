@@ -987,7 +987,6 @@ Object.defineProperties(Billboard.prototype, {
    * @memberof Billboard.prototype
    * @type {boolean}
    * @readonly
-   * @private
    * @default false
    */
   ready: {
@@ -1275,7 +1274,7 @@ Billboard.prototype.setImage = function (id, image) {
 };
 
 /**
- * Copy the values of an existing bill texture into this one.
+ * Copy the values of an existing billboard texture into this one. Useful for prevent downtime for images that have already been loaded.
  * @private
  * @param {BillboardTexture} billboardTexture
  */

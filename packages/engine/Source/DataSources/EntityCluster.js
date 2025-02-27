@@ -921,7 +921,7 @@ EntityCluster.prototype.update = function (frameState) {
   if (this._clusterDirty) {
     this._cluster();
 
-    // Unless all existing billboards and labels were propperly clustered, the cluster will need to execute again
+    // Unless all existing billboards and labels were clustered, clustering will need to execute again next frame
     this._clusterDirty =
       (defined(labelCollection) && !labelCollection.ready) ||
       (defined(billboardCollection) && !billboardCollection.ready);

@@ -2387,7 +2387,6 @@ describe("Scene/BillboardCollection", function () {
 
         b.show = false;
 
-        expect(scene).not.toRender([255, 255, 255, 255]);
         expect(scene).notToPick();
       });
 

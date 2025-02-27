@@ -169,9 +169,6 @@ BillboardTexture.prototype.loadImage = async function (id, image) {
 
   const collection = this._billboardCollection;
   const cache = collection.billboardTextureCache;
-  if (!defined(cache)) {
-    console.log(collection);
-  }
   let billboardTexture = cache.get(id);
   if (
     (defined(billboardTexture) &&
@@ -299,6 +296,12 @@ BillboardTexture.prototype.computeTextureCoordinates = function (result) {
   return atlas.computeTextureCoordinates(this._index, result);
 };
 
+/**
+ * Clones an existing billboard texture, inlcuding any in-flight tracking, into the target billboard texture.
+ * @param {BillboardTexture} billboardTexture
+ * @param {BillboardTexture} target
+ * @returns {BillboardTexture} target
+ */
 BillboardTexture.clone = function (billboardTexture, target) {
   target._id = billboardTexture._id;
   target._loadState = billboardTexture._loadState;
@@ -339,6 +342,7 @@ BillboardTexture.clone = function (billboardTexture, target) {
   };
 
   completeLoad();
+  return target;
 };
 
 export default BillboardTexture;

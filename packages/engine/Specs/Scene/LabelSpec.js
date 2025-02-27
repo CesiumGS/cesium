@@ -8,7 +8,7 @@ import {
   VerticalOrigin,
 } from "../../index.js";
 
-describe("Scene/LabelCollection", function () {
+describe("Scene/Label", function () {
   it("equals returns true for another equivalent label", function () {
     const label = new Label({
       position: new Cartesian3(1.0, 2.0, 3.0),

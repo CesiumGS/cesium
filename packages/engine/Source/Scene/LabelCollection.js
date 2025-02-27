@@ -731,7 +731,7 @@ Object.defineProperties(LabelCollection.prototype, {
   },
 
   /**
-   * True when all billboards currently in the collection are ready. Exposed for testing.
+   * True when all labels currently in the collection are ready for rendering.
    * @private
    * @memberof LabelCollection.prototype
    * @type {boolean}
