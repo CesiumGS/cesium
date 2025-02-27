@@ -163,49 +163,86 @@ BillboardTexture.prototype.unload = async function () {
  */
 BillboardTexture.prototype.loadImage = async function (id, image) {
   if (this._id === id) {
-    // Image has already been loaded
+    // This image has already been loaded
     return;
   }
 
-  this._id = id;
-  this._loadState = BillboardLoadState.LOADING;
-  this._loadError = undefined;
+  const collection = this._billboardCollection;
+  const cache = collection.billboardTextureCache;
+  if (!defined(cache)) {
+    console.log(collection);
+  }
+  let billboardTexture = cache.get(id);
+  if (
+    (defined(billboardTexture) &&
+      image.loadState === BillboardLoadState.LOADING) ||
+    image.loadState === BillboardLoadState.LOADED
+  ) {
+    // Use the cached texture if it is in progress or successful.
+    BillboardTexture.clone(billboardTexture, this);
+    return;
+  }
+  // Otherwise, load if not yet assigned an image, and try the load again if anything failed during the last billboard creation
+  if (!defined(billboardTexture)) {
+    billboardTexture = new BillboardTexture(collection);
+    cache.set(id, billboardTexture);
+  }
+
+  billboardTexture._id = this._id = id;
+  billboardTexture._loadState = this._loadState = BillboardLoadState.LOADING;
+  billboardTexture._loadError = this._loadError = undefined;
 
   let index;
   const atlas = this._billboardCollection.textureAtlas;
   try {
     index = await atlas.addImage(id, image);
   } catch (error) {
+    // There was an error loading the image
+    billboardTexture._loadState = BillboardLoadState.ERROR;
+    billboardTexture._loadError = error;
+
     if (this._id !== id) {
       // Another load was initiated and resolved resolved before this one. This operation is cancelled.
       return;
     }
 
-    // There was an error loading the image
     this._loadState = BillboardLoadState.ERROR;
     this._loadError = error;
     return;
   }
+
+  if (!defined(index) || index === -1) {
+    // Resources destroyed or otherwise
+    billboardTexture._loadState = BillboardLoadState.FAILED;
+    billboardTexture._index = -1;
+
+    if (this._id !== id) {
+      // Another load was initiated and resolved resolved before this one. This operation is cancelled.
+      return;
+    }
+
+    this._loadState = BillboardLoadState.FAILED;
+    this._index = -1;
+
+    return;
+  }
+
+  billboardTexture._index = index;
+  billboardTexture._loadState = BillboardLoadState.LOADED;
+
+  const rectangle = atlas.rectangles[index];
+  billboardTexture._width = rectangle.width;
+  billboardTexture._height = rectangle.height;
 
   if (this._id !== id) {
     // Another load was initiated and resolved resolved before this one. This operation is cancelled.
     return;
   }
 
-  if (!defined(index) || index === -1) {
-    this._loadState = BillboardLoadState.FAILED;
-    this._index = -1;
-    this._width = undefined;
-    this._height = undefined;
-    return;
-  }
-
-  const rectangle = atlas.rectangles[index];
-  this._width = rectangle.width;
-  this._height = rectangle.height;
-
   this._index = index;
   this._loadState = BillboardLoadState.LOADED;
+  this._width = rectangle.width;
+  this._height = rectangle.height;
 
   this.dirty = true;
 };

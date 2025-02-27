@@ -1034,75 +1034,77 @@ describe("Scene/LabelCollection", function () {
           text: "a",
         });
 
+        const cache = labels._glyphBillboardCollection.billboardTextureCache;
+
         await allLabelsReady();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(1);
+        expect(cache.size).toEqual(1);
 
         labels.add({
           text: "a",
         });
 
         await allLabelsReady();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(1);
+        expect(cache.size).toEqual(1);
 
         labels.add({
           text: "abcd",
         });
 
         await allLabelsReady();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(4);
+        expect(cache.size).toEqual(4);
 
         labels.add({
           text: "abc",
         });
 
         await allLabelsReady();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(4);
+        expect(cache.size).toEqual(4);
 
         const label = labels.add({
           text: "de",
         });
 
         await allLabelsReady();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(5);
+        expect(cache.size).toEqual(5);
 
         const originalFont = label.font;
         label.font = '30px "Open Sans"';
         expect(label.font).not.toEqual(originalFont); // otherwise this test needs fixing.
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
+        expect(cache.size).toEqual(7);
 
         // Changing the outline doesn't cause new glyphs to be generated.
         label.style = LabelStyle.OUTLINE;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
+        expect(cache.size).toEqual(7);
 
         // Changing fill color doesn't cause new glyphs to be generated.
         label.fillColor = new Color(1.0, 165.0 / 255.0, 0.0, 1.0);
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
+        expect(cache.size).toEqual(7);
 
         // Changing outline color doesn't cause new glyphs to be generated.
         label.outlineColor = new Color(1.0, 1.0, 1.0, 1.0);
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
+        expect(cache.size).toEqual(7);
 
         // vertical origin only affects glyph positions, not glyphs themselves.
         label.verticalOrigin = VerticalOrigin.CENTER;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
+        expect(cache.size).toEqual(7);
         label.verticalOrigin = VerticalOrigin.TOP;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
+        expect(cache.size).toEqual(7);
 
         //even though we're resetting to the original font, other properties used to create the id have changed
         label.font = originalFont;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(9);
+        expect(cache.size).toEqual(9);
 
         //Changing thickness doesn't requires new glyphs
         label.outlineWidth = 3;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(9);
+        expect(cache.size).toEqual(9);
       });
 
       it("should reuse billboards that are not needed any more", async function () {

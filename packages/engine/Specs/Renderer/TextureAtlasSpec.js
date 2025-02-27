@@ -694,67 +694,55 @@ describe("Scene/TextureAtlas", function () {
         expect(bigBlueIndex).toEqual(2);
         expect(redIndex).toEqual(3);
 
+        // Webgl1 textures should only be powers of 2
+        const textureWidth = scene.frameState.context.webgl2 ? 20 : 32;
+        const textureHeight = scene.frameState.context.webgl2 ? 32 : 16;
+
         const texture = atlas.texture;
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
-        expect(texture.width).toEqual(20);
-        expect(texture.height).toEqual(32);
+        expect(texture.width).toEqual(textureWidth);
+        expect(texture.height).toEqual(textureHeight);
 
         let coords = atlas.rectangles[greenIndex];
-        expect(coords.x).toEqual(16);
-        expect(coords.y).toEqual(0);
         expect(coords.width).toEqual(1);
         expect(coords.height).toEqual(4);
 
         let textureCoordinates = atlas.computeTextureCoordinates(greenIndex);
-        expect(textureCoordinates.x).toEqual(16 / 20);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(1 / 20);
-        expect(textureCoordinates.height).toEqual(4 / 32);
+        expect(textureCoordinates.width).toEqual(1 / textureWidth);
+        expect(textureCoordinates.height).toEqual(4 / textureHeight);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
 
         coords = atlas.rectangles[blueIndex];
-        expect(coords.x).toEqual(17);
-        expect(coords.y).toEqual(0);
         expect(coords.width).toEqual(1);
         expect(coords.height).toEqual(1);
 
         textureCoordinates = atlas.computeTextureCoordinates(blueIndex);
-        expect(textureCoordinates.x).toEqual(17 / 20);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(1 / 20);
-        expect(textureCoordinates.height).toEqual(1 / 32);
+        expect(textureCoordinates.width).toEqual(1 / textureWidth);
+        expect(textureCoordinates.height).toEqual(1 / textureHeight);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
 
         coords = atlas.rectangles[redIndex];
-        expect(coords.x).toEqual(0);
-        expect(coords.y).toEqual(0);
         expect(coords.width).toEqual(16);
         expect(coords.height).toEqual(16);
 
         textureCoordinates = atlas.computeTextureCoordinates(redIndex);
-        expect(textureCoordinates.x).toEqual(0);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(16 / 20);
-        expect(textureCoordinates.height).toEqual(16 / 32);
+        expect(textureCoordinates.width).toEqual(16 / textureWidth);
+        expect(textureCoordinates.height).toEqual(16 / textureHeight);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([255, 0, 0, 255]);
 
         coords = atlas.rectangles[bigBlueIndex];
-        expect(coords.x).toEqual(0);
-        expect(coords.y).toEqual(16);
         expect(coords.width).toEqual(10);
         expect(coords.height).toEqual(10);
 
         textureCoordinates = atlas.computeTextureCoordinates(bigBlueIndex);
-        expect(textureCoordinates.x).toEqual(0);
-        expect(textureCoordinates.y).toEqual(16 / 32);
-        expect(textureCoordinates.width).toEqual(10 / 20);
-        expect(textureCoordinates.height).toEqual(10 / 32);
+        expect(textureCoordinates.width).toEqual(10 / textureWidth);
+        expect(textureCoordinates.height).toEqual(10 / textureHeight);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);

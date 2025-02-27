@@ -155,6 +155,8 @@ function BillboardCollection(options) {
   this._textureAtlas = textureAtlas;
   this._textureAtlasGUID = textureAtlas.guid;
   this._destroyTextureAtlas = true;
+  this._billboardTextureCache = new Map();
+
   this._sp = undefined;
   this._spTranslucent = undefined;
   this._rsOpaque = undefined;
@@ -446,6 +448,19 @@ Object.defineProperties(BillboardCollection.prototype, {
   ready: {
     get: function () {
       return this._allBillboardsReady;
+    },
+  },
+
+  /**
+   * Cache of loaded billboard images.
+   * @private
+   * @memberof BillboardCollection.prototype
+   * @type {Map<string, BillboardTexture>}
+   * @readonly
+   */
+  billboardTextureCache: {
+    get: function () {
+      return this._billboardTextureCache;
     },
   },
 });
@@ -1790,8 +1805,9 @@ BillboardCollection.prototype.update = function (frameState) {
       this._updateBillboard(billboard, IMAGE_INDEX_INDEX);
     }
 
-    allBillboardsReady =
-      allBillboardsReady && billboard.show && billboard.ready;
+    if (billboard.show) {
+      allBillboardsReady = allBillboardsReady && billboard.ready;
+    }
   }
 
   // Queue any texture resource updates for after the frame is rendered

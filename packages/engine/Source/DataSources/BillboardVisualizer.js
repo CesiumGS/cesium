@@ -126,8 +126,8 @@ BillboardVisualizer.prototype.update = function (time) {
     if (!defined(billboard)) {
       billboard = cluster.getBillboard(entity);
       billboard.id = entity;
-      billboard.image = undefined;
       item.billboard = billboard;
+      item.textureValue = undefined;
     }
 
     billboard.show = show;

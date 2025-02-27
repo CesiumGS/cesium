@@ -191,9 +191,9 @@ function rebindAllGlyphs(labelCollection, label) {
     backgroundBillboard.clusterShow = label.clusterShow;
   }
 
-  const glyphTextureCache = labelCollection._glyphTextureCache;
-  const textDimensionsCache = labelCollection._textDimensionsCache;
   const glyphBillboardCollection = labelCollection._glyphBillboardCollection;
+  const glyphTextureCache = glyphBillboardCollection.billboardTextureCache;
+  const textDimensionsCache = labelCollection._textDimensionsCache;
 
   // walk the text looking for new characters (creating new glyphs for each)
   // or changed characters (rebinding existing glyphs)
@@ -210,10 +210,10 @@ function rebindAllGlyphs(labelCollection, label) {
     ]);
 
     let dimensions = textDimensionsCache[id];
-    let glyphBillboardTexture = glyphTextureCache[id];
+    let glyphBillboardTexture = glyphTextureCache.get(id);
     if (!defined(glyphBillboardTexture) || !defined(dimensions)) {
       glyphBillboardTexture = new BillboardTexture(glyphBillboardCollection);
-      glyphTextureCache[id] = glyphBillboardTexture;
+      glyphTextureCache.set(id, glyphBillboardTexture);
 
       const glyphFont = `${label._fontStyle} ${label._fontWeight} ${SDFSettings.FONT_SIZE}px ${label._fontFamily}`;
 
@@ -289,7 +289,7 @@ function rebindAllGlyphs(labelCollection, label) {
       if (spareBillboards.length > 0) {
         billboard = spareBillboards.pop();
       } else {
-        billboard = labelCollection._glyphBillboardCollection.add({
+        billboard = glyphBillboardCollection.add({
           collection: labelCollection,
         });
         billboard._labelDimensions = new Cartesian2();
@@ -622,7 +622,6 @@ function LabelCollection(options) {
   this._glyphBillboardCollection._sdf = true;
 
   this._spareBillboards = [];
-  this._glyphTextureCache = {};
   this._textDimensionsCache = {};
   this._labels = [];
   this._labelsToUpdate = [];
