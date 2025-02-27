@@ -84,6 +84,9 @@ describe("Scene/Expression", function () {
     expression = new Expression("'replace ${string} multiple ${height}'");
     expect(expression.evaluate(feature)).toEqual("replace hello multiple 10");
 
+    expression = new Expression("'replace ${height} ${string}'");
+    expect(expression.evaluate(feature)).toEqual("replace 10 hello");
+
     expression = new Expression('"replace ${string}"');
     expect(expression.evaluate(feature)).toEqual("replace hello");
 
