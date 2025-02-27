@@ -49,16 +49,8 @@ function TextureAtlas(options) {
     borderWidthInPixels,
     0,
   );
-  Check.typeOf.number.greaterThan(
-    "options.initialSize.x",
-    defaultInitialDimensions,
-    0,
-  );
-  Check.typeOf.number.greaterThan(
-    "options.initialSize.y",
-    defaultInitialDimensions,
-    0,
-  );
+  Check.typeOf.number.greaterThan("options.initialSize.x", initialSize.x, 0);
+  Check.typeOf.number.greaterThan("options.initialSize.y", initialSize.y, 0);
   //>>includeEnd('debug');
 
   this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
