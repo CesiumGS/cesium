@@ -55,16 +55,16 @@
     "@cesium/widgets": "^10.2.0"
   },
   "devDependencies": {
+    "@cesium/eslint-config": "^12.0.0",
     "@playwright/test": "^1.41.1",
     "chokidar": "^4.0.1",
     "cloc": "^2.4.0-cloc",
     "compression": "^1.7.4",
     "esbuild": "^0.25.0",
     "eslint": "^9.1.1",
-    "eslint-config-cesium": "^11.0.1",
     "eslint-plugin-html": "^8.1.1",
     "express": "^4.17.1",
-    "globals": "^15.1.0",
+    "globals": "^16.0.0",
     "globby": "^14.0.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
