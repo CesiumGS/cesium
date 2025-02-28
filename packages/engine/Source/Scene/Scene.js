@@ -3808,7 +3808,7 @@ function getGlobeHeight(scene) {
 function getMaxPrimitiveHeight(primitive, cartographic, scene) {
   let maxHeight = Number.NEGATIVE_INFINITY;
 
-  if (defined(primitive.length)) {
+  if (primitive instanceof PrimitiveCollection) {
     // If it's a PrimitiveCollection, iterate through its children
     const length = primitive.length;
     for (let i = 0; i < length; ++i) {
