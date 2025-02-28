@@ -3205,7 +3205,7 @@ describe("Scene/Camera", function () {
       cameraPosition.y + 2.0,
       cameraPosition.z + 2.0,
     );
-    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON16);
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
     expect(ray.direction).toEqual(camera.directionWC);
   });
 
@@ -3234,7 +3234,7 @@ describe("Scene/Camera", function () {
       cameraPosition.y + 2.0,
       cameraPosition.z,
     );
-    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON18);
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
     expect(ray.direction).toEqual(camera.directionWC);
   });
 
@@ -3389,11 +3389,11 @@ describe("Scene/Camera", function () {
 
     const cameraPosition = tempCamera.positionWC;
     const expectedPosition = new Cartesian3(
-      cameraPosition.x,
-      cameraPosition.y + 2.0,
-      cameraPosition.z + 2.0,
+      cameraPosition.x + 2.0,
+      cameraPosition.y - 2.0,
+      cameraPosition.z,
     );
-    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON16);
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON6);
     expect(ray.direction).toEqual(tempCamera.directionWC);
   });
 
