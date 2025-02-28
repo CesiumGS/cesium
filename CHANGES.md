@@ -27,6 +27,10 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 - Fixed ground atmosphere shaders in 3D orthographic mode [#12484](https://github.com/CesiumGS/cesium/pull/12484)
 - Fixed zoom in 3D orthographic mode [#12483](https://github.com/CesiumGS/cesium/pull/12483)
 - Fixed issue with billboards not clamping properly when nested inside a PrimitiveCollection [#12482](https://github.com/CesiumGS/cesium/pull/12482)
+- Fixed error with black flashes on label and billboard updates. [#12231](https://github.com/CesiumGS/cesium/issues/12231)
+- `TextureAtlas` has been refactored and internal APIs have been updated. If relying on the private texture atlas API, see [#12495](https://github.com/CesiumGS/cesium/pull/12495) for details.
+  - Texture atlas now resizes more conservatively. This should help with texture memory overhead with may labels and billboards. [#172](https://github.com/CesiumGS/cesium/issues/172)
+  - Texture atlas now reuses coordinates for existing subregions. [#2094](https://github.com/CesiumGS/cesium/issues/2094)
 
 ## 1.126 - 2025-02-03
 
@@ -43,10 +47,6 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 
 #### Fixes :wrench:
 
-- Fixed error with black flashes on label and billboard updates. [#12231](https://github.com/CesiumGS/cesium/issues/12231)
-- `TextureAtlas` has been refactored and internal APIs have been updated. If relying on the private texture atlas API, see [#12495](https://github.com/CesiumGS/cesium/pull/12495) for details.
-  - Texture atlas now resizes more conservatively. This should help with texture memory overhead with may labels and billboards. [#172](https://github.com/CesiumGS/cesium/issues/172)
-  - Texture atlas now reuses coordinates for existing subregions. [#2094](https://github.com/CesiumGS/cesium/issues/2094)
 - Fixed error when resetting `Cesium3DTileset.modelMatrix` to its initial value. [#12409](https://github.com/CesiumGS/cesium/pull/12409)
 - Fixed the parameter types of the `ClippingPolygon.equals` function, and fixed cases where parameters to `equals` functions had erroneously not been marked as 'optional'. [#12394](https://github.com/CesiumGS/cesium/pull/12394)
 - Fixed Draco decoding for vertex colors that are normalized `UNSIGNED_BYTE` or `UNSIGNED_SHORT`. [#12417](https://github.com/CesiumGS/cesium/pull/12417)
