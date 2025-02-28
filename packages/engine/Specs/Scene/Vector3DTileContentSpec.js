@@ -329,70 +329,71 @@ describe(
         });
       });
 
-      it("styles points for color", () => {
-        return Cesium3DTilesTester.loadTileset(
+      it("styles points for color", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           vectorTilePointsTileset,
-        ).then((tileset) => {
-          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] =
-            subdivideRectangle(tilesetRectangle);
+        );
+        // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+        const [ulRect, urRect, lrRect, llRect] =
+          subdivideRectangle(tilesetRectangle);
 
-          return new Promise((resolve) => {
-            tileset.style = new Cesium3DTileStyle({
-              color: `color("black")`,
-            });
-            scene.renderForSpecs();
-            window.requestAnimationFrame(() => {
-              resolve();
-            });
-          }).then(() => {
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-              new Cartesian3(0.0, 0.0, 5.0),
-            );
-            expect(scene).toRender(blackPixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-              new Cartesian3(0.0, 0.0, 5.0),
-            );
-            expect(scene).toRender(blackPixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-              new Cartesian3(0.0, 0.0, 5.0),
-            );
-            expect(scene).toRender(blackPixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-              new Cartesian3(0.0, 0.0, 5.0),
-            );
-            expect(scene).toRender(blackPixel);
-
-            // Set style to undefined.
-
-            tileset.style = undefined;
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-              new Cartesian3(0.0, 0.0, 5.0),
-            );
-            expect(scene).toRender(whitePixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-              new Cartesian3(0.0, 0.0, 5.0),
-            );
-            expect(scene).toRender(whitePixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-              new Cartesian3(0.0, 0.0, 5.0),
-            );
-            expect(scene).toRender(whitePixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-              new Cartesian3(0.0, 0.0, 5.0),
-            );
-            expect(scene).toRender(whitePixel);
-          });
+        tileset.style = new Cesium3DTileStyle({
+          color: `color("black")`,
         });
+
+        // The billboards take an extra frame or so to update color
+        // from the batch texture
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(blackPixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(blackPixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(blackPixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(blackPixel);
+
+        // Set style to undefined.
+
+        tileset.style = undefined;
+
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(whitePixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(whitePixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(whitePixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(whitePixel);
       });
 
       it("renders batched points with batch ids", () => {
