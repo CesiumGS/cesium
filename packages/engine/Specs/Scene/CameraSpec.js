@@ -3201,11 +3201,11 @@ describe("Scene/Camera", function () {
 
     const cameraPosition = camera.positionWC;
     const expectedPosition = new Cartesian3(
-      cameraPosition.z,
-      cameraPosition.x + 2.0,
+      cameraPosition.x,
       cameraPosition.y + 2.0,
+      cameraPosition.z + 2.0,
     );
-    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON16);
     expect(ray.direction).toEqual(camera.directionWC);
   });
 
@@ -3231,10 +3231,10 @@ describe("Scene/Camera", function () {
     const cameraPosition = camera.positionWC;
     const expectedPosition = new Cartesian3(
       cameraPosition.x + 2.0,
-      cameraPosition.y + 2,
+      cameraPosition.y + 2.0,
       cameraPosition.z,
     );
-    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON18);
     expect(ray.direction).toEqual(camera.directionWC);
   });
 
@@ -3259,9 +3259,9 @@ describe("Scene/Camera", function () {
 
     const cameraPosition = camera.positionWC;
     const expectedPosition = new Cartesian3(
-      cameraPosition.z,
-      cameraPosition.x + 2.0,
-      cameraPosition.y + 2,
+      cameraPosition.x,
+      cameraPosition.y + 2.0,
+      cameraPosition.z + 2.0,
     );
     expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
     expect(ray.direction).toEqual(camera.directionWC);
@@ -3359,6 +3359,41 @@ describe("Scene/Camera", function () {
       cameraPosition.z,
     );
     expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON6);
+    expect(ray.direction).toEqual(tempCamera.directionWC);
+  });
+
+  it("get pick ray with lookAt orthographic in Columbus view", function () {
+    const target = Cartesian3.fromDegrees(1.0, 1.0);
+    const offset = new Cartesian3(0.0, 1.0, 0.0);
+
+    const tempCamera = Camera.clone(camera);
+    tempCamera.lookAt(target, offset);
+
+    const frustum = new OrthographicFrustum();
+    frustum.aspectRatio = 1.0;
+    frustum.width = 20.0;
+    frustum.near = 1.0;
+    frustum.far = 21.0;
+    tempCamera.frustum = frustum;
+
+    // force off center frustum to update
+    expect(frustum.projectionMatrix).toBeDefined();
+
+    tempCamera.update(SceneMode.COLUMBUS_VIEW);
+
+    const windowCoord = new Cartesian2(
+      (3.0 / 5.0) * scene.canvas.clientWidth,
+      (1.0 - 3.0 / 5.0) * scene.canvas.clientHeight,
+    );
+    const ray = tempCamera.getPickRay(windowCoord);
+
+    const cameraPosition = tempCamera.positionWC;
+    const expectedPosition = new Cartesian3(
+      cameraPosition.x,
+      cameraPosition.y + 2.0,
+      cameraPosition.z + 2.0,
+    );
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON16);
     expect(ray.direction).toEqual(tempCamera.directionWC);
   });
 
