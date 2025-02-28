@@ -72,7 +72,7 @@ function TexturePacker({ width, height, borderPadding }) {
  * @private
  * @param {number} index An identifier referencing the image or other stored data
  * @param {TexturePacker.PackableObject} packableObject An object, such as an <code>Image</code>, with <code>width</code> and <code>height</code> properties in pixels.
- * @returns {TextureNode|undefined} The created region, or <code>undefined</code> if there is no region large enough to accomodate the object's dimensions.
+ * @returns {TextureNode|undefined} The created region, or <code>undefined</code> if there is no region large enough to accommodate the object's dimensions.
  */
 TexturePacker.prototype.pack = function (index, { width, height }) {
   //>>includeStart('debug', pragmas.debug);

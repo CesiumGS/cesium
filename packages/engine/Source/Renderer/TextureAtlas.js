@@ -360,7 +360,7 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
     toPack.push(queue[i]);
   }
 
-  // At minimum, the texture will need to scale to accomodate the largest width and height
+  // At minimum, the texture will need to scale to accommodate the largest width and height
   width = Math.max(maxWidth, width);
   height = Math.max(maxHeight, height);
 
@@ -369,7 +369,7 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
     height = CesiumMath.nextPowerOfTwo(height);
   }
 
-  // Determine by what factor the texture need to be sclaed by at minimum
+  // Determine by what factor the texture need to be scaled by at minimum
   const areaDifference = areaQueued;
   let scalingFactor = 1.0;
   while (areaDifference / width / height >= 1.0) {
