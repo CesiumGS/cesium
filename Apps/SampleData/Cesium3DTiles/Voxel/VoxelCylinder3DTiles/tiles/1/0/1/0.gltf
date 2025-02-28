@@ -4,7 +4,7 @@
   },
   "extensionsUsed": [
     "KHR_implicit_shapes",
-    "EXT_implicit_cylinder_region",
+    "EXT_implicit_cylinder_region", 
     "EXT_primitive_voxels",
     "EXT_structural_metadata"
   ],
@@ -21,8 +21,10 @@
           "extensions": {
             "EXT_implicit_cylinder_region": {
               "minRadius": 0,
-              "maxRadius": 1,
-              "height": 2
+              "maxRadius": 0.5,
+              "height": 1,
+              "minAngle": 0,
+              "maxAngle": 3.14159265359
             }
           }
         }
@@ -63,7 +65,13 @@
   ],
   "nodes": [
     {
-      "mesh": 0
+      "mesh": 0,
+      "matrix": [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, -0.5, 0.0, 1.0
+      ]
     }
   ],
   "meshes": [
@@ -115,7 +123,7 @@
   ],
   "buffers": [
     {
-      "uri": "a.bin",
+      "uri": "a0.bin",
       "byteLength": 128
     }
   ]

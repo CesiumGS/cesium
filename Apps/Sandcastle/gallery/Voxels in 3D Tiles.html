@@ -52,6 +52,14 @@
   }`,
         });
 
+        const customShaderColor = new Cesium.CustomShader({
+          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+  {
+      material.diffuse = fsInput.metadata.a.rgb;
+      material.alpha = fsInput.metadata.a.a;
+  }`,
+        });
+
         const modelMatrix = Cesium.Matrix4.fromScale(
           Cesium.Cartesian3.fromElements(
             Cesium.Ellipsoid.WGS84.maximumRadius,
@@ -71,6 +79,8 @@
             }),
           );
 
+          voxelPrimitive.nearestSampling = true;
+
           viewer.voxelInspector.viewModel.voxelPrimitive = voxelPrimitive;
           viewer.camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
             duration: 0.0,
@@ -86,7 +96,16 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
               );
-              const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+            },
+          },
+          {
+            text: "Cylinder - 3D Tiles",
+            onselect: async function () {
+              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
+              );
+              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
           },
           {
@@ -100,15 +119,6 @@
                 customShaderWhite,
                 Cesium.Matrix4.IDENTITY,
               );
-            },
-          },
-          {
-            text: "Cylinder - 3D Tiles",
-            onselect: async function () {
-              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
-              );
-              const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
             },
           },
         ]);

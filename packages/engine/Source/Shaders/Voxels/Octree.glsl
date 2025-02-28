@@ -102,9 +102,23 @@ void addSampleCoordinates(in vec3 shapePosition, inout SampleData sampleData) {
     inputCoordinate += vec3(u_paddingBefore);
 #endif
 #if defined(GLTF_METADATA_ORDER)
+#if defined(SHAPE_BOX)
     float inputY = inputCoordinate.y;
     inputCoordinate.y = float(u_inputDimensions.y) - inputCoordinate.z;
     inputCoordinate.z = inputY;
+#elif defined(SHAPE_CYLINDER)
+    float angle = inputCoordinate.y;
+    float height = inputCoordinate.z;
+    #if (!defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE))
+    // Account for the different 0-angle convention in glTF vs 3DTiles
+    if (sampleData.tileCoords.w == 0) {
+        float angleCount = float(u_inputDimensions.z);
+        angle = mod(angle + angleCount / 2.0, angleCount);
+    }
+    #endif
+    inputCoordinate.y = height;
+    inputCoordinate.z = angle;
+#endif
 #endif
 
     sampleData.tileUv = tileUv;
