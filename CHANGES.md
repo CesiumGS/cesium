@@ -4,22 +4,8 @@
 
 ### @cesium/engine
 
-#### Fixes :wrench:
-
-- Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
-- Fixed error when there are duplicated points in polygon/polyline geometries with `ArcType.RHUMB` [#12460](https://github.com/CesiumGS/cesium/pull/12460)
-- Fixed ground atmosphere shaders in 3D orthographic mode [#12484](https://github.com/CesiumGS/cesium/pull/12484)
-- Fixed zoom in 3D orthographic mode [#12483](https://github.com/CesiumGS/cesium/pull/12483)
-- Fixed issue with billboards not clamping properly when nested inside a PrimitiveCollection [#12482](https://github.com/CesiumGS/cesium/pull/12482)
-
-## 1.126 - 2025-02-03
-
-### @cesium/engine
-
 #### Breaking Changes :mega:
 
-- `createGooglePhotorealistic3DTileset(key)` has been removed. Use `createGooglePhotorealistic3DTileset({key})` instead.
-- Changed behavior of `DataSourceDisplay.ready` to always stay `true` once it is initially set to `true`. [#12429](https://github.com/CesiumGS/cesium/pull/12429)
 - Updated `Cesium3DTilesVoxelProvider` to load glTF tiles using the new [`EXT_primitive_voxels` extension](https://github.com/CesiumGS/glTF/pull/69) to more closely align with the rest of the 3D Tiles ecosystem. Tilesets using the previous custom JSON format are no longer supported. [#12432](https://github.com/CesiumGS/cesium/pull/12432)
 - Updated the `requestData` method of the `VoxelProvider` interface to return a `Promise` to a `VoxelContent`. Custom providers should now use the `VoxelContent.fromMetadataArray` method to construct the returned data object. For example:
 
@@ -34,16 +20,33 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 
 - Changed `VoxelCylinderShape` to assume coordinates in the order (radius, angle, height). See [CesiumGS/3d-tiles#780](https://github.com/CesiumGS/3d-tiles/pull/780)
 
+#### Fixes :wrench:
+
+- Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
+- Fixed error when there are duplicated points in polygon/polyline geometries with `ArcType.RHUMB` [#12460](https://github.com/CesiumGS/cesium/pull/12460)
+- Fixed ground atmosphere shaders in 3D orthographic mode [#12484](https://github.com/CesiumGS/cesium/pull/12484)
+- Fixed zoom in 3D orthographic mode [#12483](https://github.com/CesiumGS/cesium/pull/12483)
+- Fixed issue with billboards not clamping properly when nested inside a PrimitiveCollection [#12482](https://github.com/CesiumGS/cesium/pull/12482)
+- Fixed error with black flashes on label and billboard updates. [#12231](https://github.com/CesiumGS/cesium/issues/12231)
+- `TextureAtlas` has been refactored and internal APIs have been updated. If relying on the private texture atlas API, see [#12495](https://github.com/CesiumGS/cesium/pull/12495) for details.
+  - Texture atlas now resizes more conservatively. This should help with texture memory overhead with may labels and billboards. [#172](https://github.com/CesiumGS/cesium/issues/172)
+  - Texture atlas now reuses coordinates for existing subregions. [#2094](https://github.com/CesiumGS/cesium/issues/2094)
+
+## 1.126 - 2025-02-03
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- `createGooglePhotorealistic3DTileset(key)` has been removed. Use `createGooglePhotorealistic3DTileset({key})` instead.
+- Changed behavior of `DataSourceDisplay.ready` to always stay `true` once it is initially set to `true`. [#12429](https://github.com/CesiumGS/cesium/pull/12429)
+
 #### Additions :tada:
 
 - Add `ITwinData.loadGeospatialFeatures(iTwinId, collectionId)` function to load data from the [Geospatial Features API](https://developer.bentley.com/apis/geospatial-features/operations/get-features/) [#12449](https://github.com/CesiumGS/cesium/pull/12449)
 
 #### Fixes :wrench:
 
-- Fixed error with black flashes on label and billboard updates. [#12231](https://github.com/CesiumGS/cesium/issues/12231)
-- `TextureAtlas` has been refactored and internal APIs have been updated. If relying on the private texture atlas API, see [#12495](https://github.com/CesiumGS/cesium/pull/12495) for details.
-  - Texture atlas now resizes more conservatively. This should help with texture memory overhead with may labels and billboards. [#172](https://github.com/CesiumGS/cesium/issues/172)
-  - Texture atlas now reuses coordinates for existing subregions. [#2094](https://github.com/CesiumGS/cesium/issues/2094)
 - Fixed error when resetting `Cesium3DTileset.modelMatrix` to its initial value. [#12409](https://github.com/CesiumGS/cesium/pull/12409)
 - Fixed the parameter types of the `ClippingPolygon.equals` function, and fixed cases where parameters to `equals` functions had erroneously not been marked as 'optional'. [#12394](https://github.com/CesiumGS/cesium/pull/12394)
 - Fixed Draco decoding for vertex colors that are normalized `UNSIGNED_BYTE` or `UNSIGNED_SHORT`. [#12417](https://github.com/CesiumGS/cesium/pull/12417)
