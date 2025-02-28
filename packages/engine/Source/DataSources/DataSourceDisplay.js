@@ -372,7 +372,8 @@ const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
  * @param {Entity} entity The entity whose bounding sphere to compute.
  * @param {boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
  *                               If false, the the function will halt and return pending if any of the bounding spheres are pending.
- * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+ * @param {BoundingSphere} [result] The bounding sphere onto which to store the result.
+ *                                  Result parameter may not be provided if one is only interested into the bounding sphere state.
  * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
  *                       BoundingSphereState.PENDING if the result is still being computed, or
  *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
@@ -386,7 +387,6 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
   //>>includeStart('debug', pragmas.debug);
   Check.defined("entity", entity);
   Check.typeOf.bool("allowPartial", allowPartial);
-  Check.defined("result", result);
   //>>includeEnd('debug');
 
   if (!this._ready) {
@@ -443,7 +443,9 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
   }
 
   boundingSpheres.length = count;
-  BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
+  if (defined(result)) {
+    BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
+  }
   return BoundingSphereState.DONE;
 };
 

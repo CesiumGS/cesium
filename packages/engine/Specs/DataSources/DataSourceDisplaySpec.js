@@ -291,15 +291,14 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("Compute bounding sphere throws without result.", function () {
+    it("Compute bounding sphere doesn't throw without result.", function () {
       display = new DataSourceDisplay({
         dataSourceCollection: dataSourceCollection,
         scene: scene,
       });
       const entity = new Entity();
-      expect(function () {
-        display.getBoundingSphere(entity, false, undefined);
-      }).toThrowDeveloperError();
+      const state = display.getBoundingSphere(entity, false);
+      expect(state).toBe(BoundingSphereState.PENDING);
     });
 
     it("Compute bounding sphere throws without allowPartial.", function () {
