@@ -425,3 +425,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Parth Petkar](https://github.com/parthpetkar)
 - [Yutao Liu](https://github.com/liuyutao)
 - [Andrew Dassonville](https://github.com/andrewda)
+- [Cody Butler](https://github.com/CodyBu)
