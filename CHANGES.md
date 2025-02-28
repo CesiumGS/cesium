@@ -4,6 +4,22 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- Updated `Cesium3DTilesVoxelProvider` to load glTF tiles using the new [`EXT_primitive_voxels` extension](https://github.com/CesiumGS/glTF/pull/69) to more closely align with the rest of the 3D Tiles ecosystem. Tilesets using the previous custom JSON format are no longer supported. [#12432](https://github.com/CesiumGS/cesium/pull/12432)
+- Updated the `requestData` method of the `VoxelProvider` interface to return a `Promise` to a `VoxelContent`. Custom providers should now use the `VoxelContent.fromMetadataArray` method to construct the returned data object. For example:
+
+```js
+CustomVoxelProvider.prototype.requestData = function (options) {
+  const metadataColumn = new Float32Array(options.dataLength);
+  // ... Fill metadataColumn with metadata values ...
+  const content = VoxelContent.fromMetadataArray([metadataColumn]);
+  return Promise.resolve(content);
+};
+```
+
+- Changed `VoxelCylinderShape` to assume coordinates in the order (radius, angle, height). See [CesiumGS/3d-tiles#780](https://github.com/CesiumGS/3d-tiles/pull/780)
+
 #### Fixes :wrench:
 
 - Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
@@ -20,19 +36,6 @@
 
 - `createGooglePhotorealistic3DTileset(key)` has been removed. Use `createGooglePhotorealistic3DTileset({key})` instead.
 - Changed behavior of `DataSourceDisplay.ready` to always stay `true` once it is initially set to `true`. [#12429](https://github.com/CesiumGS/cesium/pull/12429)
-- Updated `Cesium3DTilesVoxelProvider` to load glTF tiles using the new [`EXT_primitive_voxels` extension](https://github.com/CesiumGS/glTF/pull/69) to more closely align with the rest of the 3D Tiles ecosystem. Tilesets using the previous custom JSON format are no longer supported. [#12432](https://github.com/CesiumGS/cesium/pull/12432)
-- Updated the `requestData` method of the `VoxelProvider` interface to return a `Promise` to a `VoxelContent`. Custom providers should now use the `VoxelContent.fromMetadataArray` method to construct the returned data object. For example:
-
-```js
-CustomVoxelProvider.prototype.requestData = function (options) {
-  const metadataColumn = new Float32Array(options.dataLength);
-  // ... Fill metadataColumn with metadata values ...
-  const content = VoxelContent.fromMetadataArray([metadataColumn]);
-  return Promise.resolve(content);
-};
-```
-
-- Changed `VoxelCylinderShape` to assume coordinates in the order (radius, angle, height). See [CesiumGS/3d-tiles#780](https://github.com/CesiumGS/3d-tiles/pull/780)
 
 #### Additions :tada:
 
