@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- `Camera.getPickRay` now correctly returns a ray with origin in world coordinates in orthographic mode. [#12500](https://github.com/CesiumGS/cesium/pull/12500)
+
 #### Fixes :wrench:
 
 - Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
