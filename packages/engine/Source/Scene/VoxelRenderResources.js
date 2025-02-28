@@ -70,7 +70,7 @@ function VoxelRenderResources(primitive) {
   /**
    * A dictionary mapping uniform name to functions that return the uniform
    * values.
-   *
+   * @private
    * @type {Object<string, Function>}
    */
   this.uniformMap = uniformMap;

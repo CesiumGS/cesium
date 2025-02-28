@@ -740,6 +740,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets the dimensions of one tile of the input voxel data, in the input orientation.
    * Includes padding.
+   * @memberof VoxelPrimitive.prototype
+   * @type {Cartesian3}
+   * @readonly
    */
   inputDimensions: {
     get: function () {
