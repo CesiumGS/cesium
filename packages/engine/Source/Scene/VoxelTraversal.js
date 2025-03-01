@@ -26,13 +26,19 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @alias VoxelTraversal
  * @constructor
  *
- * @param {VoxelPrimitive} primitive
- * @param {Context} context
- * @param {number} keyframeCount
+ * @param {VoxelPrimitive} primitive The voxel primitive for which this traversal will be used.
+ * @param {Context} context The context in which to create GPU resources.
+ * @param {number} keyframeCount The number of keyframes in the tileset.
+ * @param {number} [maximumTextureMemoryByteLength] The maximum amount of memory to use for textures.
  *
  * @private
  */
-function VoxelTraversal(primitive, context, keyframeCount) {
+function VoxelTraversal(
+  primitive,
+  context,
+  keyframeCount,
+  maximumTextureMemoryByteLength,
+) {
   const { provider, dimensions, paddingBefore, paddingAfter } = primitive;
   const { types, componentTypes, metadataOrder } = provider;
 
@@ -49,16 +55,17 @@ function VoxelTraversal(primitive, context, keyframeCount) {
     inputDimensions.z = inputDimensionsY;
   }
 
-  // It's ok for memory byte length to be undefined.
-  // The system will choose a default memory size.
-  const maximumTextureMemoryByteLength = defined(provider.maximumTileCount)
-    ? getApproximateTextureMemoryByteLength(
-        provider.maximumTileCount,
-        inputDimensions,
-        types,
-        componentTypes,
-      )
-    : undefined;
+  if (
+    !defined(maximumTextureMemoryByteLength) &&
+    defined(provider.maximumTileCount)
+  ) {
+    maximumTextureMemoryByteLength = getApproximateTextureMemoryByteLength(
+      provider.maximumTileCount,
+      inputDimensions,
+      types,
+      componentTypes,
+    );
+  }
 
   /**
    * @type {VoxelPrimitive}

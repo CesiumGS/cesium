@@ -98,7 +98,7 @@ describe(
       });
       expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
       expect(primitive.statistics.visited).toEqual(1);
-      expect(primitive.statistics.texturesByteLength).toEqual(134217728);
+      expect(primitive.statistics.texturesByteLength).toEqual(67108864);
     });
 
     it("statistics are updated when constructor option is true", async function () {

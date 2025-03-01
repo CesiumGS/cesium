@@ -25,6 +25,7 @@ describe(
   "Scene/VoxelTraversal",
   function () {
     const keyframeCount = 3;
+    const textureMemoryByteLength = 256;
 
     let scene;
     let provider;
@@ -47,7 +48,12 @@ describe(
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      traversal = new VoxelTraversal(primitive, scene.context, keyframeCount);
+      traversal = new VoxelTraversal(
+        primitive,
+        scene.context,
+        keyframeCount,
+        textureMemoryByteLength,
+      );
     });
 
     afterEach(function () {
@@ -139,7 +145,7 @@ describe(
     });
 
     it("shows texture memory allocation statistic", function () {
-      expect(traversal.textureMemoryByteLength).toBe(500);
+      expect(traversal.textureMemoryByteLength).toBe(textureMemoryByteLength);
       traversal.destroy();
       expect(traversal.textureMemoryByteLength).toBe(0);
     });
@@ -164,7 +170,9 @@ describe(
 
       const megatexture = traversal.megatextures[0];
       expect(megatexture.occupiedCount).toBe(1);
-      expect(traversal.textureMemoryByteLength).toEqual(500);
+      expect(traversal.textureMemoryByteLength).toEqual(
+        textureMemoryByteLength,
+      );
     });
 
     it("tile failed event is raised", async function () {
