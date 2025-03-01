@@ -29,6 +29,7 @@ function VoxelEllipsoidShape() {
    * The update function must be called before accessing this value.
    * @type {OrientedBoundingBox}
    * @readonly
+   * @private
    */
   this.orientedBoundingBox = new OrientedBoundingBox();
 
@@ -37,6 +38,7 @@ function VoxelEllipsoidShape() {
    * The update function must be called before accessing this value.
    * @type {BoundingSphere}
    * @readonly
+   * @private
    */
   this.boundingSphere = new BoundingSphere();
 
@@ -45,6 +47,7 @@ function VoxelEllipsoidShape() {
    * The update function must be called before accessing this value.
    * @type {Matrix4}
    * @readonly
+   * @private
    */
   this.boundTransform = new Matrix4();
 
@@ -53,11 +56,13 @@ function VoxelEllipsoidShape() {
    * The update function must be called before accessing this value.
    * @type {Matrix4}
    * @readonly
+   * @private
    */
   this.shapeTransform = new Matrix4();
 
   /**
    * @type {Rectangle}
+   * @private
    */
   this._rectangle = new Rectangle();
 
@@ -81,17 +86,20 @@ function VoxelEllipsoidShape() {
 
   /**
    * @type {Cartesian3}
+   * @private
    */
   this._translation = new Cartesian3();
 
   /**
    * @type {Matrix3}
+   * @private
    */
   this._rotation = new Matrix3();
 
   /**
    * @type {Object<string, any>}
    * @readonly
+   * @private
    */
   this.shaderUniforms = {
     ellipsoidRadiiUv: new Cartesian3(),
@@ -110,6 +118,7 @@ function VoxelEllipsoidShape() {
   /**
    * @type {Object<string, any>}
    * @readonly
+   * @private
    */
   this.shaderDefines = {
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE: undefined,
@@ -138,6 +147,7 @@ function VoxelEllipsoidShape() {
    * The maximum number of intersections against the shape for any ray direction.
    * @type {number}
    * @readonly
+   * @private
    */
   this.shaderMaximumIntersectionsLength = 0; // not known until update
 }
@@ -157,7 +167,7 @@ const scratchRenderRectangle = new Rectangle();
 
 /**
  * Update the shape's state.
- *
+ * @private
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
@@ -660,7 +670,7 @@ const scratchRectangle = new Rectangle();
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- *
+ * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
  * @param {number} tileY The tile's y coordinate.
@@ -730,7 +740,7 @@ const scratchTileMaxBounds = new Cartesian3();
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
- *
+ * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
  * @param {Cartesian3} tileUv The sample coordinate within the tile
@@ -851,7 +861,7 @@ function getEllipsoidChunkObb(
 
 /**
  * Defines the minimum bounds of the shape. Corresponds to minimum longitude, latitude, height.
- *
+ * @private
  * @type {Cartesian3}
  * @constant
  * @readonly
@@ -866,7 +876,7 @@ VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
 
 /**
  * Defines the maximum bounds of the shape. Corresponds to maximum longitude, latitude, height.
- *
+ * @private
  * @type {Cartesian3}
  * @constant
  * @readonly

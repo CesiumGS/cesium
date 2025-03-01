@@ -25,7 +25,6 @@ describe(
   "Scene/VoxelTraversal",
   function () {
     const keyframeCount = 3;
-    const textureMemory = 500;
 
     let scene;
     let provider;
@@ -48,15 +47,7 @@ describe(
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      traversal = new VoxelTraversal(
-        primitive,
-        scene.context,
-        provider.dimensions,
-        provider.types,
-        provider.componentTypes,
-        keyframeCount,
-        textureMemory,
-      );
+      traversal = new VoxelTraversal(primitive, scene.context, keyframeCount);
     });
 
     afterEach(function () {
@@ -148,7 +139,7 @@ describe(
     });
 
     it("shows texture memory allocation statistic", function () {
-      expect(traversal.textureMemoryByteLength).toBe(textureMemory);
+      expect(traversal.textureMemoryByteLength).toBe(500);
       traversal.destroy();
       expect(traversal.textureMemoryByteLength).toBe(0);
     });
@@ -225,63 +216,7 @@ describe(
       expect(keyframeNode).toBeDefined();
       expect(keyframeNode.state).toBe(KeyframeNode.LoadState.LOADED);
       const expectedMetadata = new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]);
-      expect(keyframeNode.metadata[0]).toEqual(expectedMetadata);
-    });
-
-    xit("unloads tiles in megatexture", function () {
-      const keyFrameLocation = 0;
-      const recomputeBoundingVolumes = true;
-      const pauseUpdate = false;
-      function updateTraversalTenTimes() {
-        // to fully fetch data and copy to texture
-        function updateTraversal() {
-          traversal.update(
-            scene.frameState,
-            keyFrameLocation,
-            recomputeBoundingVolumes,
-            pauseUpdate,
-          );
-        }
-        for (let i = 0; i < 15; i++) {
-          updateTraversal();
-        }
-      }
-
-      const eps = CesiumMath.EPSILON7;
-      const bottomLeftNearCorner = Cartesian3.fromElements(
-        -0.5 - eps,
-        -0.5 - eps,
-        -0.5 - eps,
-      );
-      const topRightFarCorner = Cartesian3.fromElements(
-        0.5 + eps,
-        0.5 + eps,
-        0.5 + eps,
-      );
-      scene.camera.position = bottomLeftNearCorner;
-      updateTraversalTenTimes();
-      const numberOfNodesOnGPU = traversal._keyframeNodesInMegatexture.length;
-      const deepestNode =
-        traversal._keyframeNodesInMegatexture[numberOfNodesOnGPU - 1];
-      const deepestSpatialNode = deepestNode.spatialNode;
-      const nodeIsInMegatexture =
-        deepestNode.state === VoxelTraversal.LoadState.LOADED;
-      expect(nodeIsInMegatexture).toBe(true);
-
-      scene.camera.position = topRightFarCorner;
-      turnCameraAround(scene);
-      updateTraversalTenTimes();
-      const nodeNoLongerInMegatexture =
-        traversal._keyframeNodesInMegatexture.filter(function (keyFrameNode) {
-          const spatialNode = keyFrameNode.spatialNode;
-          return (
-            spatialNode.level === deepestSpatialNode.level &&
-            spatialNode.x === deepestSpatialNode.x &&
-            spatialNode.y === deepestSpatialNode.y &&
-            spatialNode.x === deepestSpatialNode.z
-          );
-        }).length === 0;
-      expect(nodeNoLongerInMegatexture).toBe(true);
+      expect(keyframeNode.content.metadata[0]).toEqual(expectedMetadata);
     });
   },
   "WebGL",
