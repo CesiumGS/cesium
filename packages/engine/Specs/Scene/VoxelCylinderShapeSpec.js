@@ -85,12 +85,12 @@ describe("Scene/VoxelCylinderShape", function () {
     // Half revolution
     const minRadius = 0.25;
     const maxRadius = 0.75;
-    const minHeight = -0.5;
-    const maxHeight = +0.5;
     const minAngle = -CesiumMath.PI;
     const maxAngle = 0.0;
-    const minBounds = new Cartesian3(minRadius, minHeight, minAngle);
-    const maxBounds = new Cartesian3(maxRadius, maxHeight, maxAngle);
+    const minHeight = -0.5;
+    const maxHeight = +0.5;
+    const minBounds = new Cartesian3(minRadius, minAngle, minHeight);
+    const maxBounds = new Cartesian3(maxRadius, maxAngle, maxHeight);
     const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
     const expectedMinX = translation.x - maxRadius * scale.x;
@@ -172,13 +172,13 @@ describe("Scene/VoxelCylinderShape", function () {
     const defaultMaxBounds = VoxelCylinderShape.DefaultMaxBounds;
     const minBounds = new Cartesian3(
       defaultMinBounds.x,
-      defaultMinBounds.y,
       minAngle,
+      defaultMinBounds.z,
     );
     const maxBounds = new Cartesian3(
       defaultMaxBounds.x,
-      defaultMaxBounds.y,
       maxAngle,
+      defaultMaxBounds.z,
     );
     const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
@@ -241,12 +241,12 @@ describe("Scene/VoxelCylinderShape", function () {
     // Half revolution
     const minRadius = 0.25;
     const maxRadius = 0.75;
-    const minHeight = -0.5;
-    const maxHeight = +0.5;
     const minAngle = -CesiumMath.PI;
     const maxAngle = 0.0;
-    const minBounds = new Cartesian3(minRadius, minHeight, minAngle);
-    const maxBounds = new Cartesian3(maxRadius, maxHeight, maxAngle);
+    const minHeight = -0.5;
+    const maxHeight = +0.5;
+    const minBounds = new Cartesian3(minRadius, minAngle, minHeight);
+    const maxBounds = new Cartesian3(maxRadius, maxAngle, maxHeight);
     shape.update(modelMatrix, minBounds, maxBounds);
     result = shape.computeOrientedBoundingBoxForTile(0, 0, 0, 0, result);
     expect(result.center.x).toEqual(1.0);

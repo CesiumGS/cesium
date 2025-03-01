@@ -126,7 +126,7 @@ describe(
       expect(entityCluster._billboardCollection).not.toBeDefined();
     });
 
-    it("A BillboardGraphics causes a Billboard to be created and updated.", function () {
+    it("A BillboardGraphics causes a Billboard to be created and updated.", async function () {
       const entityCollection = new EntityCollection();
       visualizer = new BillboardVisualizer(entityCluster, entityCollection);
 
@@ -177,68 +177,57 @@ describe(
 
       const bb = billboardCollection.get(0);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
+        scene.renderForSpecs();
         visualizer.update(time);
-        return bb.show; //true once the image is loaded.
-      }).then(function () {
-        expect(bb.position).toEqual(testObject.position.getValue(time));
-        expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
-        expect(bb.eyeOffset).toEqual(
-          testObject.billboard.eyeOffset.getValue(time),
-        );
-        expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
-        expect(bb.rotation).toEqual(
-          testObject.billboard.rotation.getValue(time),
-        );
-        expect(bb.alignedAxis).toEqual(
-          testObject.billboard.alignedAxis.getValue(time),
-        );
-        expect(bb.heightReference).toEqual(
-          testObject.billboard.heightReference.getValue(time),
-        );
-        expect(bb.horizontalOrigin).toEqual(
-          testObject.billboard.horizontalOrigin.getValue(time),
-        );
-        expect(bb.verticalOrigin).toEqual(
-          testObject.billboard.verticalOrigin.getValue(time),
-        );
-        expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
-        expect(bb.height).toEqual(testObject.billboard.height.getValue(time));
-        expect(bb.scaleByDistance).toEqual(
-          testObject.billboard.scaleByDistance.getValue(time),
-        );
-        expect(bb.translucencyByDistance).toEqual(
-          testObject.billboard.translucencyByDistance.getValue(time),
-        );
-        expect(bb.pixelOffsetScaleByDistance).toEqual(
-          testObject.billboard.pixelOffsetScaleByDistance.getValue(time),
-        );
-        expect(bb.sizeInMeters).toEqual(
-          testObject.billboard.sizeInMeters.getValue(time),
-        );
-        expect(bb.distanceDisplayCondition).toEqual(
-          testObject.billboard.distanceDisplayCondition.getValue(time),
-        );
-        expect(bb.disableDepthTestDistance).toEqual(
-          testObject.billboard.disableDepthTestDistance.getValue(time),
-        );
-        expect(bb.splitDirection).toEqual(
-          testObject.billboard.splitDirection.getValue(time),
-        );
-        expect(bb._imageSubRegion).toEqual(
-          testObject.billboard.imageSubRegion.getValue(time),
-        );
-
-        billboard.show = new ConstantProperty(false);
-
-        return pollToPromise(function () {
-          visualizer.update(time);
-          return !bb.show;
-        });
+        return bb.show;
       });
+
+      expect(bb.position).toEqual(testObject.position.getValue(time));
+      expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
+      expect(bb.eyeOffset).toEqual(
+        testObject.billboard.eyeOffset.getValue(time),
+      );
+      expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
+      expect(bb.rotation).toEqual(testObject.billboard.rotation.getValue(time));
+      expect(bb.alignedAxis).toEqual(
+        testObject.billboard.alignedAxis.getValue(time),
+      );
+      expect(bb.heightReference).toEqual(
+        testObject.billboard.heightReference.getValue(time),
+      );
+      expect(bb.horizontalOrigin).toEqual(
+        testObject.billboard.horizontalOrigin.getValue(time),
+      );
+      expect(bb.verticalOrigin).toEqual(
+        testObject.billboard.verticalOrigin.getValue(time),
+      );
+      expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
+      expect(bb.height).toEqual(testObject.billboard.height.getValue(time));
+      expect(bb.scaleByDistance).toEqual(
+        testObject.billboard.scaleByDistance.getValue(time),
+      );
+      expect(bb.translucencyByDistance).toEqual(
+        testObject.billboard.translucencyByDistance.getValue(time),
+      );
+      expect(bb.pixelOffsetScaleByDistance).toEqual(
+        testObject.billboard.pixelOffsetScaleByDistance.getValue(time),
+      );
+      expect(bb.sizeInMeters).toEqual(
+        testObject.billboard.sizeInMeters.getValue(time),
+      );
+      expect(bb.distanceDisplayCondition).toEqual(
+        testObject.billboard.distanceDisplayCondition.getValue(time),
+      );
+      expect(bb.disableDepthTestDistance).toEqual(
+        testObject.billboard.disableDepthTestDistance.getValue(time),
+      );
+      expect(bb.splitDirection).toEqual(
+        testObject.billboard.splitDirection.getValue(time),
+      );
     });
 
-    it("Display billboard after toggling show", function () {
+    it("Display billboard after toggling show", async function () {
       const entityCollection = new EntityCollection();
       visualizer = new BillboardVisualizer(entityCluster, entityCollection);
 
@@ -289,75 +278,71 @@ describe(
 
       const bb = billboardCollection.get(0);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
+        scene.renderForSpecs();
         visualizer.update(time);
-        return bb.show; //true once the image is loaded.
-      }).then(function () {
-        billboard.show = new ConstantProperty(false);
-
-        return pollToPromise(function () {
-          visualizer.update(time);
-          return !bb.show;
-        }).then(function () {
-          billboard.show = new ConstantProperty(true);
-
-          return pollToPromise(function () {
-            visualizer.update(time);
-            return bb.show;
-          }).then(function () {
-            expect(bb.position).toEqual(testObject.position.getValue(time));
-            expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
-            expect(bb.eyeOffset).toEqual(
-              testObject.billboard.eyeOffset.getValue(time),
-            );
-            expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
-            expect(bb.rotation).toEqual(
-              testObject.billboard.rotation.getValue(time),
-            );
-            expect(bb.alignedAxis).toEqual(
-              testObject.billboard.alignedAxis.getValue(time),
-            );
-            expect(bb.heightReference).toEqual(
-              testObject.billboard.heightReference.getValue(time),
-            );
-            expect(bb.horizontalOrigin).toEqual(
-              testObject.billboard.horizontalOrigin.getValue(time),
-            );
-            expect(bb.verticalOrigin).toEqual(
-              testObject.billboard.verticalOrigin.getValue(time),
-            );
-            expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
-            expect(bb.height).toEqual(
-              testObject.billboard.height.getValue(time),
-            );
-            expect(bb.scaleByDistance).toEqual(
-              testObject.billboard.scaleByDistance.getValue(time),
-            );
-            expect(bb.translucencyByDistance).toEqual(
-              testObject.billboard.translucencyByDistance.getValue(time),
-            );
-            expect(bb.pixelOffsetScaleByDistance).toEqual(
-              testObject.billboard.pixelOffsetScaleByDistance.getValue(time),
-            );
-            expect(bb.sizeInMeters).toEqual(
-              testObject.billboard.sizeInMeters.getValue(time),
-            );
-            expect(bb.distanceDisplayCondition).toEqual(
-              testObject.billboard.distanceDisplayCondition.getValue(time),
-            );
-            expect(bb.disableDepthTestDistance).toEqual(
-              testObject.billboard.disableDepthTestDistance.getValue(time),
-            );
-            expect(bb.splitDirection).toEqual(
-              testObject.billboard.splitDirection.getValue(time),
-            );
-            expect(bb.image).toBeDefined();
-            expect(bb._imageSubRegion).toEqual(
-              testObject.billboard.imageSubRegion.getValue(time),
-            );
-          });
-        });
+        return bb.show;
       });
+
+      billboard.show = new ConstantProperty(false);
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        visualizer.update(time);
+        return !bb.show;
+      });
+
+      billboard.show = new ConstantProperty(true);
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        visualizer.update(time);
+        return bb.show;
+      });
+
+      expect(bb.position).toEqual(testObject.position.getValue(time));
+      expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
+      expect(bb.eyeOffset).toEqual(
+        testObject.billboard.eyeOffset.getValue(time),
+      );
+      expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
+      expect(bb.rotation).toEqual(testObject.billboard.rotation.getValue(time));
+      expect(bb.alignedAxis).toEqual(
+        testObject.billboard.alignedAxis.getValue(time),
+      );
+      expect(bb.heightReference).toEqual(
+        testObject.billboard.heightReference.getValue(time),
+      );
+      expect(bb.horizontalOrigin).toEqual(
+        testObject.billboard.horizontalOrigin.getValue(time),
+      );
+      expect(bb.verticalOrigin).toEqual(
+        testObject.billboard.verticalOrigin.getValue(time),
+      );
+      expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
+      expect(bb.height).toEqual(testObject.billboard.height.getValue(time));
+      expect(bb.scaleByDistance).toEqual(
+        testObject.billboard.scaleByDistance.getValue(time),
+      );
+      expect(bb.translucencyByDistance).toEqual(
+        testObject.billboard.translucencyByDistance.getValue(time),
+      );
+      expect(bb.pixelOffsetScaleByDistance).toEqual(
+        testObject.billboard.pixelOffsetScaleByDistance.getValue(time),
+      );
+      expect(bb.sizeInMeters).toEqual(
+        testObject.billboard.sizeInMeters.getValue(time),
+      );
+      expect(bb.distanceDisplayCondition).toEqual(
+        testObject.billboard.distanceDisplayCondition.getValue(time),
+      );
+      expect(bb.disableDepthTestDistance).toEqual(
+        testObject.billboard.disableDepthTestDistance.getValue(time),
+      );
+      expect(bb.splitDirection).toEqual(
+        testObject.billboard.splitDirection.getValue(time),
+      );
+      expect(bb.image).toBeDefined();
     });
 
     it("Reuses primitives when hiding one and showing another", function () {

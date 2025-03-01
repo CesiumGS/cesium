@@ -26,6 +26,7 @@ Object.defineProperties(VoxelShape.prototype, {
    * @memberof VoxelShape.prototype
    * @type {OrientedBoundingBox}
    * @readonly
+   * @private
    */
   orientedBoundingBox: {
     get: DeveloperError.throwInstantiationError,
@@ -38,6 +39,7 @@ Object.defineProperties(VoxelShape.prototype, {
    * @memberof VoxelShape.prototype
    * @type {BoundingSphere}
    * @readonly
+   * @private
    */
   boundingSphere: {
     get: DeveloperError.throwInstantiationError,
@@ -50,6 +52,7 @@ Object.defineProperties(VoxelShape.prototype, {
    * @memberof VoxelShape.prototype
    * @type {Matrix4}
    * @readonly
+   * @private
    */
   boundTransform: {
     get: DeveloperError.throwInstantiationError,
@@ -62,6 +65,7 @@ Object.defineProperties(VoxelShape.prototype, {
    * @memberof VoxelShape.prototype
    * @type {Matrix4}
    * @readonly
+   * @private
    */
   shapeTransform: {
     get: DeveloperError.throwInstantiationError,
@@ -70,6 +74,7 @@ Object.defineProperties(VoxelShape.prototype, {
   /**
    * @type {Object<string, any>}
    * @readonly
+   * @private
    */
   shaderUniforms: {
     get: DeveloperError.throwInstantiationError,
@@ -78,6 +83,7 @@ Object.defineProperties(VoxelShape.prototype, {
   /**
    * @type {Object<string, any>}
    * @readonly
+   * @private
    */
   shaderDefines: {
     get: DeveloperError.throwInstantiationError,
@@ -87,6 +93,7 @@ Object.defineProperties(VoxelShape.prototype, {
    * The maximum number of intersections against the shape for any ray direction.
    * @type {number}
    * @readonly
+   * @private
    */
   shaderMaximumIntersectionsLength: {
     get: DeveloperError.throwInstantiationError,
@@ -95,7 +102,7 @@ Object.defineProperties(VoxelShape.prototype, {
 
 /**
  * Update the shape's state.
- *
+ * @private
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
@@ -106,7 +113,7 @@ VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- *
+ * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
  * @param {number} tileY The tile's y coordinate.
@@ -120,7 +127,7 @@ VoxelShape.prototype.computeOrientedBoundingBoxForTile =
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
- *
+ * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
  * @param {Cartesian3} tileUv The sample coordinate within the tile

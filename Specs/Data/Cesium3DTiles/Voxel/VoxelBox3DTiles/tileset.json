@@ -2,19 +2,7 @@
   "asset": {
     "version": "1.1"
   },
-  "schema": {
-    "id": "voxel",
-    "classes": {
-      "voxel": {
-        "properties": {
-          "a": {
-            "type": "SCALAR",
-            "componentType": "FLOAT32"
-          }
-        }
-      }
-    }
-  },
+  "schemaUri": "schema.json",
   "statistics": {
     "classes": {
       "voxel": {
@@ -49,7 +37,7 @@
     "geometricError": 0.0,
     "refine": "REPLACE",
     "content": {
-      "uri": "tiles/{level}/{x}/{y}/{z}.json",
+      "uri": "tiles/{level}/{x}/{y}/{z}.gltf",
       "extensions": {
         "3DTILES_content_voxels": {
           "dimensions": [

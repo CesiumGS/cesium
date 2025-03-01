@@ -7,8 +7,11 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta name="description" content="For debugging voxels." />
-    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
+    <meta
+      name="description"
+      content="Render voxel primitives with different shape types."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Voxels" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -58,7 +61,7 @@
 
         ProceduralSingleTileVoxelProvider.prototype.requestData = function (options) {
           if (options.tileLevel >= 1) {
-            return undefined;
+            return Promise.reject(`No tiles available beyond level 0`);
           }
 
           const dimensions = this.dimensions;
@@ -93,7 +96,8 @@
             }
           }
 
-          return Promise.resolve([dataColor]);
+          const content = Cesium.VoxelContent.fromMetadataArray([dataColor]);
+          return Promise.resolve(content);
         };
 
         function ProceduralMultiTileVoxelProvider(shape) {
@@ -143,7 +147,9 @@
           const { tileLevel, tileX, tileY, tileZ } = options;
 
           if (tileLevel >= this._levelCount) {
-            return undefined;
+            return Promise.reject(
+              `No tiles available beyond level ${this._levelCount - 1}`,
+            );
           }
 
           const type = this.types[0];
@@ -204,7 +210,8 @@
               }
             }
           }
-          return Promise.resolve([dataTile]);
+          const content = Cesium.VoxelContent.fromMetadataArray([dataTile]);
+          return Promise.resolve(content);
         };
 
         function createPrimitive(provider, customShader, modelMatrix) {
@@ -235,14 +242,6 @@
       // To mimic light scattering, use exponential decay
       float thickness = fsInput.voxel.travelDistance * 16.0;
       material.alpha = 1.0 - pow(transparency, thickness);
-  }`,
-        });
-
-        const customShaderWhite = new Cesium.CustomShader({
-          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-  {
-      material.diffuse = vec3(1.0);
-      material.alpha = 1.0;
   }`,
         });
 
@@ -294,15 +293,6 @@
             },
           },
           {
-            text: "Box - 3D Tiles",
-            onselect: async function () {
-              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
-              );
-              const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
-            },
-          },
-          {
             text: "Ellipsoid - Procedural Tileset",
             onselect: function () {
               const provider = new ProceduralMultiTileVoxelProvider(
@@ -314,34 +304,12 @@
             },
           },
           {
-            text: "Ellipsoid - 3D Tiles",
-            onselect: async function () {
-              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-              );
-              const primitive = createPrimitive(
-                provider,
-                customShaderWhite,
-                Cesium.Matrix4.IDENTITY,
-              );
-            },
-          },
-          {
             text: "Cylinder - Procedural Tileset",
             onselect: function () {
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.CYLINDER,
               );
               const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
-            },
-          },
-          {
-            text: "Cylinder - 3D Tiles",
-            onselect: async function () {
-              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
-                "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
-              );
-              const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
             },
           },
         ]);

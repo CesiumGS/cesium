@@ -170,7 +170,6 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
   result.selected = statistics.selected;
   result.visited = statistics.visited;
   result.numberOfCommands = statistics.numberOfCommands;
-  result.selected = statistics.selected;
   result.numberOfAttemptedRequests = statistics.numberOfAttemptedRequests;
   result.numberOfPendingRequests = statistics.numberOfPendingRequests;
   result.numberOfTilesProcessing = statistics.numberOfTilesProcessing;

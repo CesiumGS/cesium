@@ -10,7 +10,7 @@ describe("Scene/KeyframeNode", function () {
     expect(keyframeNode.spatialNode).toBe(dummySpatialNode);
     expect(keyframeNode.keyframe).toBe(keyframe);
     expect(keyframeNode.state).toBe(KeyframeNode.LoadState.UNLOADED);
-    expect(keyframeNode.metadata).toEqual([]);
+    expect(keyframeNode.content).toEqual(undefined);
     expect(keyframeNode.megatextureIndex).toBe(-1);
     expect(keyframeNode.priority).toBe(-Number.MAX_VALUE);
     expect(keyframeNode.highPriorityFrameNumber).toBe(-1);

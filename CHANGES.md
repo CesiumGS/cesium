@@ -4,6 +4,22 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- Updated `Cesium3DTilesVoxelProvider` to load glTF tiles using the new [`EXT_primitive_voxels` extension](https://github.com/CesiumGS/glTF/pull/69) to more closely align with the rest of the 3D Tiles ecosystem. Tilesets using the previous custom JSON format are no longer supported. [#12432](https://github.com/CesiumGS/cesium/pull/12432)
+- Updated the `requestData` method of the `VoxelProvider` interface to return a `Promise` to a `VoxelContent`. Custom providers should now use the `VoxelContent.fromMetadataArray` method to construct the returned data object. For example:
+
+```js
+CustomVoxelProvider.prototype.requestData = function (options) {
+  const metadataColumn = new Float32Array(options.dataLength);
+  // ... Fill metadataColumn with metadata values ...
+  const content = VoxelContent.fromMetadataArray([metadataColumn]);
+  return Promise.resolve(content);
+};
+```
+
+- Changed `VoxelCylinderShape` to assume coordinates in the order (radius, angle, height). See [CesiumGS/3d-tiles#780](https://github.com/CesiumGS/3d-tiles/pull/780)
+
 #### Fixes :wrench:
 
 - Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
@@ -11,6 +27,10 @@
 - Fixed ground atmosphere shaders in 3D orthographic mode [#12484](https://github.com/CesiumGS/cesium/pull/12484)
 - Fixed zoom in 3D orthographic mode [#12483](https://github.com/CesiumGS/cesium/pull/12483)
 - Fixed issue with billboards not clamping properly when nested inside a PrimitiveCollection [#12482](https://github.com/CesiumGS/cesium/pull/12482)
+- Fixed error with black flashes on label and billboard updates. [#12231](https://github.com/CesiumGS/cesium/issues/12231)
+- `TextureAtlas` has been refactored and internal APIs have been updated. If relying on the private texture atlas API, see [#12495](https://github.com/CesiumGS/cesium/pull/12495) for details.
+  - Texture atlas now resizes more conservatively. This should help with texture memory overhead with may labels and billboards. [#172](https://github.com/CesiumGS/cesium/issues/172)
+  - Texture atlas now reuses coordinates for existing subregions. [#2094](https://github.com/CesiumGS/cesium/issues/2094)
 - Fixed broken Entity Tracking [sandcastle](https://sandcastle.cesium.com/?src=Entity%20tracking.html). [#12467](https://github.com/CesiumGS/cesium/pull/12467)
 
 ## 1.126 - 2025-02-03
@@ -25,6 +45,7 @@
 #### Additions :tada:
 
 - Add `ITwinData.loadGeospatialFeatures(iTwinId, collectionId)` function to load data from the [Geospatial Features API](https://developer.bentley.com/apis/geospatial-features/operations/get-features/) [#12449](https://github.com/CesiumGS/cesium/pull/12449)
+- Implemented `texturesByteLength`, `visited`, and `numberOfTilesWithContentReady` in `VoxelPrimitive.statistics`. To use statistics, set `options.calculateStatistics` to `true` in the constructor. Note `VoxelPrimitive` is experimental.
 
 #### Fixes :wrench:
 

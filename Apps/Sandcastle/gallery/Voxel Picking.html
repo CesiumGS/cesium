@@ -7,8 +7,11 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta name="description" content="For debugging voxel picking." />
-    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
+    <meta
+      name="description"
+      content="Use the cursor to select and inspect individual voxel cells."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Voxels" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
@@ -74,7 +77,7 @@
           const { tileLevel, tileX, tileY, tileZ } = options;
 
           if (tileLevel >= this._levelCount) {
-            return undefined;
+            return Promise.reject(`No tiles available beyond level ${this._levelCount}`);
           }
 
           const dimensions = this.dimensions;
@@ -83,7 +86,8 @@
             tileZ * dimensions.y * dimensions.x + tileY * dimensions.x + tileX;
           const dataTile = constructRandomTileData(dimensions, type, randomSeed);
 
-          return Promise.resolve([dataTile]);
+          const content = Cesium.VoxelContent.fromMetadataArray([dataTile]);
+          return Promise.resolve(content);
         };
 
         function constructRandomTileData(dimensions, type, randomSeed) {

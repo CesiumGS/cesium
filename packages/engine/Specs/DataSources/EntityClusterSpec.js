@@ -141,8 +141,9 @@ describe(
 
     function updateUntilDone(cluster) {
       return pollToPromise(function () {
-        const ready = !cluster._enabledDirty && !cluster._clusterDirty;
+        const ready = cluster.ready;
         cluster.update(scene.frameState);
+        scene.renderForSpecs();
         return ready;
       });
     }

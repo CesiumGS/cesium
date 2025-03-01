@@ -17,7 +17,6 @@ describe(
 
     beforeAll(function () {
       context = createContext();
-      spyOn(Context, "_deprecationWarning");
     });
 
     afterAll(function () {
