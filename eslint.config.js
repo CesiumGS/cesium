@@ -1,6 +1,6 @@
 import globals from "globals";
 import html from "eslint-plugin-html";
-import configCesium from "eslint-config-cesium";
+import configCesium from "@cesium/eslint-config";
 
 export default [
   {
