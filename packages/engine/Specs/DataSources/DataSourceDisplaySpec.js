@@ -132,6 +132,7 @@ describe(
 
         const result = new BoundingSphere();
         const state = display.getBoundingSphere(entity, true, result);
+        const stateOnly = display.getBoundingSphereState(entity, true, result);
 
         const expected = BoundingSphere.union(
           visualizer1.getBoundingSphereResult,
@@ -139,6 +140,7 @@ describe(
         );
 
         expect(state).toBe(BoundingSphereState.DONE);
+        expect(stateOnly).toEqual(state);
         expect(result).toEqual(expected);
       });
     });
@@ -174,8 +176,10 @@ describe(
 
         const result = new BoundingSphere();
         const state = display.getBoundingSphere(entity, true, result);
+        const stateOnly = display.getBoundingSphereState(entity, true, result);
 
         expect(state).toBe(BoundingSphereState.DONE);
+        expect(stateOnly).toEqual(state);
       });
     });
 
@@ -210,8 +214,10 @@ describe(
 
         const result = new BoundingSphere();
         const state = display.getBoundingSphere(entity, true, result);
+        const stateOnly = display.getBoundingSphereState(entity, true, result);
 
         expect(state).toBe(BoundingSphereState.DONE);
+        expect(stateOnly).toEqual(state);
         expect(result).toEqual(visualizer2.getBoundingSphereResult);
       });
     });
@@ -244,8 +250,10 @@ describe(
 
       const result = new BoundingSphere();
       const state = display.getBoundingSphere(entity, false, result);
+      const stateOnly = display.getBoundingSphereState(entity, false, result);
 
       expect(state).toBe(BoundingSphereState.PENDING);
+      expect(stateOnly).toEqual(state);
     });
 
     it("Fails bounding sphere for entity without visualization.", function () {
@@ -261,7 +269,9 @@ describe(
 
         const result = new BoundingSphere();
         const state = display.getBoundingSphere(entity, false, result);
+        const stateOnly = display.getBoundingSphereState(entity, false, result);
         expect(state).toBe(BoundingSphereState.FAILED);
+        expect(stateOnly).toEqual(state);
         display.destroy();
       });
     });
@@ -276,7 +286,9 @@ describe(
       const entity = new Entity();
       const result = new BoundingSphere();
       const state = display.getBoundingSphere(entity, false, result);
+      const stateOnly = display.getBoundingSphereState(entity, false, result);
       expect(state).toBe(BoundingSphereState.FAILED);
+      expect(stateOnly).toEqual(state);
       display.destroy();
     });
 
@@ -288,6 +300,9 @@ describe(
       const result = new BoundingSphere();
       expect(function () {
         display.getBoundingSphere(undefined, false, result);
+      }).toThrowDeveloperError();
+      expect(function () {
+        display.getBoundingSphereState(undefined, false);
       }).toThrowDeveloperError();
     });
 
@@ -311,6 +326,9 @@ describe(
       const result = new BoundingSphere();
       expect(function () {
         display.getBoundingSphere(entity, undefined, result);
+      }).toThrowDeveloperError();
+      expect(function () {
+        display.getBoundingSphereState(entity, undefined);
       }).toThrowDeveloperError();
     });
 

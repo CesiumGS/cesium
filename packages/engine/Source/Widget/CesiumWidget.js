@@ -1146,15 +1146,14 @@ CesiumWidget.prototype._onTick = function (clock) {
   }
 
   const entityView = this._entityView;
-  if (defined(entityView) && defined(entityView.boundingSphere)) {
+  if (defined(entityView)) {
     const trackedEntity = this._trackedEntity;
-    const trackedState = this._dataSourceDisplay.getBoundingSphere(
+    const trackedState = this._dataSourceDisplay.getBoundingSphereState(
       trackedEntity,
       false,
-      entityView.boundingSphere,
     );
     if (trackedState === BoundingSphereState.DONE) {
-      entityView.update(time, entityView.boundingSphere);
+      entityView.update(time);
     }
   }
 };
