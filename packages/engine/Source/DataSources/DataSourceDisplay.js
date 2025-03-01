@@ -362,8 +362,80 @@ DataSourceDisplay.prototype._postRender = function () {
   }
 };
 
-const getBoundingSphereArrayScratch = [];
 const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
+
+/**
+ * Computes a bounding sphere state.
+ *
+ * @param {Entity} entity The entity whose bounding sphere to compute.
+ * @param {boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
+ *                               If false, the the function will halt and return pending if any of the bounding spheres are pending.
+ * @returns {BoundingSphereState} BoundingSphereState.DONE if the bounding sphere could be returned,
+ *                       BoundingSphereState.PENDING if the bounding sphere is still being computed, or
+ *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+ * @private
+ */
+DataSourceDisplay.prototype.getBoundingSphereState = function (
+  entity,
+  allowPartial,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("entity", entity);
+  Check.typeOf.bool("allowPartial", allowPartial);
+  //>>includeEnd('debug');
+
+  if (!this._ready) {
+    return BoundingSphereState.PENDING;
+  }
+
+  let i;
+  let length;
+  let dataSource = this._defaultDataSource;
+  if (!dataSource.entities.contains(entity)) {
+    dataSource = undefined;
+
+    const dataSources = this._dataSourceCollection;
+    length = dataSources.length;
+    for (i = 0; i < length; i++) {
+      const d = dataSources.get(i);
+      if (d.entities.contains(entity)) {
+        dataSource = d;
+        break;
+      }
+    }
+  }
+
+  if (!defined(dataSource)) {
+    return BoundingSphereState.FAILED;
+  }
+
+  const tmp = getBoundingSphereBoundingSphereScratch;
+
+  let count = 0;
+  let state = BoundingSphereState.DONE;
+  const visualizers = dataSource._visualizers;
+  const visualizersLength = visualizers.length;
+
+  for (i = 0; i < visualizersLength; i++) {
+    const visualizer = visualizers[i];
+    if (defined(visualizer.getBoundingSphere)) {
+      state = visualizers[i].getBoundingSphere(entity, tmp);
+      if (!allowPartial && state === BoundingSphereState.PENDING) {
+        return BoundingSphereState.PENDING;
+      } else if (state === BoundingSphereState.DONE) {
+        count++;
+      }
+    }
+  }
+
+  if (count === 0) {
+    return BoundingSphereState.FAILED;
+  }
+
+  return BoundingSphereState.DONE;
+};
+
+const getBoundingSphereArrayScratch = [];
 
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
@@ -372,8 +444,7 @@ const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
  * @param {Entity} entity The entity whose bounding sphere to compute.
  * @param {boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
  *                               If false, the the function will halt and return pending if any of the bounding spheres are pending.
- * @param {BoundingSphere} [result] The bounding sphere onto which to store the result.
- *                                  Result parameter may not be provided if one is only interested into the bounding sphere state.
+ * @param {BoundingSphere} result The bounding sphere onto which to store the result.
  * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
  *                       BoundingSphereState.PENDING if the result is still being computed, or
  *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
@@ -387,6 +458,7 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
   //>>includeStart('debug', pragmas.debug);
   Check.defined("entity", entity);
   Check.typeOf.bool("allowPartial", allowPartial);
+  Check.defined("result", result);
   //>>includeEnd('debug');
 
   if (!this._ready) {
@@ -443,9 +515,7 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
   }
 
   boundingSpheres.length = count;
-  if (defined(result)) {
-    BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
-  }
+  BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
   return BoundingSphereState.DONE;
 };
 
