@@ -21,11 +21,11 @@ import TextureWrap from "../Renderer/TextureWrap.js";
  * @alias Megatexture
  * @constructor
  *
- * @param {Context} context
- * @param {Cartesian3} dimensions
- * @param {number} channelCount
- * @param {MetadataComponentType} componentType
- * @param {number} [textureMemoryByteLength]
+ * @param {Context} context The context in which to create GPU resources.
+ * @param {Cartesian3} dimensions The number of voxels in each dimension of the tile.
+ * @param {number} channelCount The number of channels in the metadata.
+ * @param {MetadataComponentType} componentType The component type of the metadata.
+ * @param {number} [availableTextureMemoryBytes=134217728] An upper limit on the texture memory size in bytes.
  *
  * @private
  */
@@ -34,8 +34,14 @@ function Megatexture(
   dimensions,
   channelCount,
   componentType,
-  textureMemoryByteLength,
+  availableTextureMemoryBytes,
 ) {
+  const maximumTextureMemoryByteLength = 512 * 1024 * 1024;
+  availableTextureMemoryBytes = Math.min(
+    defaultValue(availableTextureMemoryBytes, 128 * 1024 * 1024),
+    maximumTextureMemoryByteLength,
+  );
+
   // TODO there are a lot of texture packing rules, see https://github.com/CesiumGS/cesium/issues/9572
   // Unsigned short textures not allowed in webgl 1, so treat as float
   if (componentType === MetadataComponentType.UNSIGNED_SHORT) {
@@ -51,10 +57,12 @@ function Megatexture(
 
   const pixelDataType = getPixelDataType(componentType);
   const pixelFormat = getPixelFormat(channelCount, context.webgl2);
+  const componentTypeByteLength =
+    MetadataComponentType.getSizeInBytes(componentType);
   const textureDimension = getTextureDimension(
-    textureMemoryByteLength,
+    availableTextureMemoryBytes,
     channelCount,
-    componentType,
+    componentTypeByteLength,
   );
 
   const sliceCountPerRegionX = Math.ceil(Math.sqrt(dimensions.x));
@@ -83,6 +91,13 @@ function Megatexture(
    * @readonly
    */
   this.componentType = componentType;
+
+  /**
+   * @type {number}
+   * @readonly
+   */
+  this.textureMemoryByteLength =
+    componentTypeByteLength * channelCount * textureDimension ** 2;
 
   /**
    * @type {Cartesian3}
@@ -261,30 +276,21 @@ function getPixelFormat(channelCount, webgl2) {
 /**
  * Compute the largest size of a square texture that will fit in the available memory.
  *
- * @param {number} textureMemoryByteLength An upper limit on the texture memory size.
+ * @param {number} availableTextureMemoryBytes An upper limit on the texture memory size.
  * @param {number} channelCount The number of metadata channels per texel.
- * @param {MetadataComponentType} componentType The component type of the metadata.
+ * @param {number} componentByteLength The byte length of each component of the metadata.
  * @returns {number} The dimension of the square texture to use for the megatexture.
  *
  * @private
  */
 function getTextureDimension(
-  textureMemoryByteLength,
+  availableTextureMemoryBytes,
   channelCount,
-  componentType,
+  componentByteLength,
 ) {
-  // Find how much memory is available for the texture
-  const maximumTextureMemoryByteLength = 512 * 1024 * 1024;
-  const defaultTextureMemoryByteLength = 128 * 1024 * 1024;
-  textureMemoryByteLength = Math.min(
-    defaultValue(textureMemoryByteLength, defaultTextureMemoryByteLength),
-    maximumTextureMemoryByteLength,
-  );
   // Compute how many texels will fit in the available memory
-  const componentTypeByteLength =
-    MetadataComponentType.getSizeInBytes(componentType);
   const texelCount = Math.floor(
-    textureMemoryByteLength / (channelCount * componentTypeByteLength),
+    availableTextureMemoryBytes / (channelCount * componentByteLength),
   );
   // Return the largest power of two texture size that will fit in memory
   return Math.min(
@@ -384,10 +390,10 @@ Megatexture.prototype.isFull = function () {
 };
 
 /**
- * @param {number} tileCount
- * @param {Cartesian3} dimensions
- * @param {number} channelCount number of channels in the metadata. Must be 1 to 4.
- * @param {MetadataComponentType} componentType
+ * @param {number} tileCount The total number of tiles in the tileset.
+ * @param {Cartesian3} dimensions The number of voxels in each dimension of the tile.
+ * @param {number} channelCount The number of channels in the metadata.
+ * @param {MetadataComponentType} componentType The type of one channel of the metadata.
  * @returns {number}
  */
 Megatexture.getApproximateTextureMemoryByteLength = function (

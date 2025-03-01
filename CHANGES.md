@@ -44,6 +44,7 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 #### Additions :tada:
 
 - Add `ITwinData.loadGeospatialFeatures(iTwinId, collectionId)` function to load data from the [Geospatial Features API](https://developer.bentley.com/apis/geospatial-features/operations/get-features/) [#12449](https://github.com/CesiumGS/cesium/pull/12449)
+- Implemented `texturesByteLength`, `visited`, and `numberOfTilesWithContentReady` in `VoxelPrimitive.statistics`. To use statistics, set `options.calculateStatistics` to `true` in the constructor. Note `VoxelPrimitive` is experimental.
 
 #### Fixes :wrench:
 

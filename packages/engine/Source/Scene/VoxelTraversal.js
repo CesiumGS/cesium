@@ -2,6 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import CesiumMath from "../Core/Math.js";
 import CullingVolume from "../Core/CullingVolume.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
@@ -25,13 +26,19 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @alias VoxelTraversal
  * @constructor
  *
- * @param {VoxelPrimitive} primitive
- * @param {Context} context
- * @param {number} keyframeCount
+ * @param {VoxelPrimitive} primitive The voxel primitive for which this traversal will be used.
+ * @param {Context} context The context in which to create GPU resources.
+ * @param {number} keyframeCount The number of keyframes in the tileset.
+ * @param {number} [maximumTextureMemoryByteLength] The maximum amount of memory to use for textures.
  *
  * @private
  */
-function VoxelTraversal(primitive, context, keyframeCount) {
+function VoxelTraversal(
+  primitive,
+  context,
+  keyframeCount,
+  maximumTextureMemoryByteLength,
+) {
   const { provider, dimensions, paddingBefore, paddingAfter } = primitive;
   const { types, componentTypes, metadataOrder } = provider;
 
@@ -48,22 +55,29 @@ function VoxelTraversal(primitive, context, keyframeCount) {
     inputDimensions.z = inputDimensionsY;
   }
 
-  // It's ok for memory byte length to be undefined.
-  // The system will choose a default memory size.
-  const maximumTextureMemoryByteLength = defined(provider.maximumTileCount)
-    ? getApproximateTextureMemoryByteLength(
-        provider.maximumTileCount,
-        inputDimensions,
-        types,
-        componentTypes,
-      )
-    : undefined;
+  if (
+    !defined(maximumTextureMemoryByteLength) &&
+    defined(provider.maximumTileCount)
+  ) {
+    maximumTextureMemoryByteLength = getApproximateTextureMemoryByteLength(
+      provider.maximumTileCount,
+      inputDimensions,
+      types,
+      componentTypes,
+    );
+  }
 
   /**
    * @type {VoxelPrimitive}
    * @private
    */
   this._primitive = primitive;
+
+  /**
+   * @type {number}
+   * @private
+   */
+  this.textureMemoryByteLength = 0;
 
   /**
    * @type {Megatexture[]}
@@ -84,6 +98,9 @@ function VoxelTraversal(primitive, context, keyframeCount) {
       componentType,
       maximumTextureMemoryByteLength,
     );
+
+    this.textureMemoryByteLength +=
+      this.megatextures[i].textureMemoryByteLength;
   }
 
   const maximumTileCount = this.megatextures[0].maximumTileCount;
@@ -99,6 +116,15 @@ function VoxelTraversal(primitive, context, keyframeCount) {
    * @private
    */
   this._debugPrint = false;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._calculateStatistics = defaultValue(
+    this._primitive._calculateStatistics,
+    false,
+  );
 
   /**
    * @type {number}
@@ -345,11 +371,13 @@ VoxelTraversal.prototype.update = function (
   const timestamp1 = getTimestamp();
   generateOctree(this, sampleCount, levelBlendFactor);
   const timestamp2 = getTimestamp();
+
   const checkEventListeners =
     primitive.loadProgress.numberOfListeners > 0 ||
     primitive.allTilesLoaded.numberOfListeners > 0 ||
     primitive.initialTilesLoaded.numberOfListeners > 0;
-  if (this._debugPrint || checkEventListeners) {
+
+  if (this._debugPrint || this._calculateStatistics || checkEventListeners) {
     const loadAndUnloadTimeMs = timestamp1 - timestamp0;
     const generateOctreeTimeMs = timestamp2 - timestamp1;
     const totalTimeMs = timestamp2 - timestamp0;
@@ -407,6 +435,7 @@ VoxelTraversal.prototype.destroy = function () {
   for (let i = 0; i < megatextureLength; i++) {
     megatextures[i] = megatextures[i] && megatextures[i].destroy();
   }
+  this.textureMemoryByteLength = 0;
 
   this.internalNodeTexture =
     this.internalNodeTexture && this.internalNodeTexture.destroy();
@@ -836,6 +865,10 @@ function postPassesUpdate(
   }
   traverseRecursive(rootNode);
 
+  that._primitive.statistics.numberOfTilesWithContentReady =
+    loadStateByCount[KeyframeNode.LoadState.LOADED];
+  that._primitive.statistics.visited = nodeCountTotal;
+
   const numberOfPendingRequests =
     loadStateByCount[KeyframeNode.LoadState.RECEIVING];
   const numberOfTilesProcessing =
@@ -843,9 +876,9 @@ function postPassesUpdate(
 
   const progressChanged =
     numberOfPendingRequests !==
-      that._primitive._statistics.numberOfPendingRequests ||
+      that._primitive.statistics.numberOfPendingRequests ||
     numberOfTilesProcessing !==
-      that._primitive._statistics.numberOfTilesProcessing;
+      that._primitive.statistics.numberOfTilesProcessing;
 
   if (progressChanged) {
     frameState.afterRender.push(function () {
@@ -858,8 +891,8 @@ function postPassesUpdate(
     });
   }
 
-  that._primitive._statistics.numberOfPendingRequests = numberOfPendingRequests;
-  that._primitive._statistics.numberOfTilesProcessing = numberOfTilesProcessing;
+  that._primitive.statistics.numberOfPendingRequests = numberOfPendingRequests;
+  that._primitive.statistics.numberOfTilesProcessing = numberOfTilesProcessing;
 
   const tilesLoaded =
     numberOfPendingRequests === 0 && numberOfTilesProcessing === 0;
