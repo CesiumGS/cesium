@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import DefaultValues from "./DefaultValues.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Spline from "./Spline.js";
@@ -40,7 +40,7 @@ import Spline from "./Spline.js";
  * @see QuaternionSpline
  */
 function MorphWeightSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
 
   const weights = options.weights;
   const times = options.times;

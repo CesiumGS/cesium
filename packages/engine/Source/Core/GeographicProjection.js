@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -19,7 +18,7 @@ import Ellipsoid from "./Ellipsoid.js";
  * @see WebMercatorProjection
  */
 function GeographicProjection(ellipsoid) {
-  this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  this._ellipsoid = ellipsoid ?? Ellipsoid.default;
   this._semimajorAxis = this._ellipsoid.maximumRadius;
   this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
 }

@@ -1,5 +1,5 @@
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
-import defaultValue from "./defaultValue.js";
+import DefaultValues from "./DefaultValues.js";
 
 /**
  * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-bathymetry|Cesium World Bathymetry}.
@@ -36,10 +36,10 @@ import defaultValue from "./defaultValue.js";
  *
  */
 function createWorldBathymetryAsync(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(2426648, {
-    requestVertexNormals: defaultValue(options.requestVertexNormals, false),
+    requestVertexNormals: options.requestVertexNormals ?? false,
   });
 }
 export default createWorldBathymetryAsync;

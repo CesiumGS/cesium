@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
@@ -30,14 +29,14 @@ function BoundingSphere(center, radius) {
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
    */
-  this.center = Cartesian3.clone(defaultValue(center, Cartesian3.ZERO));
+  this.center = Cartesian3.clone(center ?? Cartesian3.ZERO);
 
   /**
    * The radius of the sphere.
    * @type {number}
    * @default 0.0
    */
-  this.radius = defaultValue(radius, 0.0);
+  this.radius = radius ?? 0.0;
 }
 
 const fromPointsXMin = new Cartesian3();
@@ -276,7 +275,7 @@ BoundingSphere.fromRectangleWithHeights2D = function (
   }
 
   defaultProjection._ellipsoid = Ellipsoid.default;
-  projection = defaultValue(projection, defaultProjection);
+  projection = projection ?? defaultProjection;
 
   Rectangle.southwest(rectangle, fromRectangle2DSouthwest);
   fromRectangle2DSouthwest.height = minimumHeight;
@@ -323,8 +322,8 @@ BoundingSphere.fromRectangle3D = function (
   surfaceHeight,
   result,
 ) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
-  surfaceHeight = defaultValue(surfaceHeight, 0.0);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
+  surfaceHeight = surfaceHeight ?? 0.0;
 
   if (!defined(result)) {
     result = new BoundingSphere();
@@ -388,9 +387,9 @@ BoundingSphere.fromVertices = function (positions, center, stride, result) {
     return result;
   }
 
-  center = defaultValue(center, Cartesian3.ZERO);
+  center = center ?? Cartesian3.ZERO;
 
-  stride = defaultValue(stride, 3);
+  stride = stride ?? 3;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals("stride", stride, 3);
@@ -956,7 +955,7 @@ BoundingSphere.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const center = value.center;
   array[startingIndex++] = center.x;
@@ -980,7 +979,7 @@ BoundingSphere.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new BoundingSphere();
@@ -1279,7 +1278,7 @@ BoundingSphere.projectTo2D = function (sphere, projection, result) {
   //>>includeEnd('debug');
 
   projectTo2DProjection._ellipsoid = Ellipsoid.default;
-  projection = defaultValue(projection, projectTo2DProjection);
+  projection = projection ?? projectTo2DProjection;
 
   const ellipsoid = projection.ellipsoid;
   let center = sphere.center;

@@ -8,7 +8,6 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -1440,10 +1439,7 @@ function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
     let i;
     for (i = 0; i < length; ++i) {
       tileImagery = tileImageryCollection[i];
-      imagery = defaultValue(
-        tileImagery.readyImagery,
-        tileImagery.loadingImagery,
-      );
+      imagery = tileImagery.readyImagery ?? tileImagery.loadingImagery;
       if (imagery.imageryLayer === layer) {
         startIndex = i;
         break;
@@ -1454,7 +1450,7 @@ function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
       const endIndex = startIndex + tileImageriesToFree;
       tileImagery = tileImageryCollection[endIndex];
       imagery = defined(tileImagery)
-        ? defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery)
+        ? (tileImagery.readyImagery ?? tileImagery.loadingImagery)
         : undefined;
       if (!defined(imagery) || imagery.imageryLayer !== layer) {
         // Return false to keep the callback if we have to wait on the skeletons
@@ -1506,10 +1502,8 @@ GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
         let tileImageriesToFree = 0;
         for (i = 0; i < length; ++i) {
           const tileImagery = tileImageryCollection[i];
-          const imagery = defaultValue(
-            tileImagery.readyImagery,
-            tileImagery.loadingImagery,
-          );
+          const imagery =
+            tileImagery.readyImagery ?? tileImagery.loadingImagery;
           if (imagery.imageryLayer === layer) {
             if (startIndex === -1) {
               startIndex = i;
@@ -2166,14 +2160,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     globeTranslucencyState.backFaceAlphaByDistance;
   const translucencyRectangle = globeTranslucencyState.rectangle;
 
-  const undergroundColor = defaultValue(
-    tileProvider.undergroundColor,
-    defaultUndergroundColor,
-  );
-  const undergroundColorAlphaByDistance = defaultValue(
-    tileProvider.undergroundColorAlphaByDistance,
-    defaultUndergroundColorAlphaByDistance,
-  );
+  const undergroundColor =
+    tileProvider.undergroundColor ?? defaultUndergroundColor;
+  const undergroundColorAlphaByDistance =
+    tileProvider.undergroundColorAlphaByDistance ??
+    defaultUndergroundColorAlphaByDistance;
   const showUndergroundColor =
     isUndergroundVisible(tileProvider, frameState) &&
     frameState.mode === SceneMode.SCENE3D &&

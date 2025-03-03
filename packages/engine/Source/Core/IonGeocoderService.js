@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import DefaultValues from "./DefaultValues.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ion from "./Ion.js";
@@ -55,24 +55,20 @@ function queryParameterToProvider(parameter) {
  * @see Ion
  */
 function IonGeocoderService(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", options.scene);
   //>>includeEnd('debug');
 
-  const geocodeProviderType = defaultValue(
-    options.geocodeProviderType,
-    IonGeocodeProviderType.DEFAULT,
-  );
+  const geocodeProviderType =
+    options.geocodeProviderType ?? IonGeocodeProviderType.DEFAULT;
   //>>includeStart('debug', pragmas.debug);
   validateIonGeocodeProviderType(geocodeProviderType);
   //>>includeEnd('debug');
 
-  const accessToken = defaultValue(options.accessToken, Ion.defaultAccessToken);
-  const server = Resource.createIfNeeded(
-    defaultValue(options.server, Ion.defaultServer),
-  );
+  const accessToken = options.accessToken ?? Ion.defaultAccessToken;
+  const server = Resource.createIfNeeded(options.server ?? Ion.defaultServer);
   server.appendForwardSlash();
 
   const defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);

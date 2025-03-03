@@ -2,7 +2,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -216,7 +215,7 @@ Implicit3DTileContent.fromSubtreeJson = async function (
   }
   //>>includeEnd('debug');
 
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
   let uint8Array;
   if (defined(arrayBuffer)) {
     uint8Array = new Uint8Array(arrayBuffer, byteOffset);
@@ -449,7 +448,7 @@ function deriveChildTile(
 ) {
   const implicitTileset = implicitContent._implicitTileset;
   let implicitCoordinates;
-  if (defaultValue(parentIsPlaceholderTile, false)) {
+  if (parentIsPlaceholderTile ?? false) {
     implicitCoordinates = parentTile.implicitCoordinates;
   } else {
     implicitCoordinates =
@@ -718,7 +717,7 @@ function getTileBoundingVolume(
       implicitTileset,
       implicitCoordinates,
       childIndex,
-      defaultValue(parentIsPlaceholderTile, false),
+      parentIsPlaceholderTile ?? false,
       parentTile,
     );
   } else {

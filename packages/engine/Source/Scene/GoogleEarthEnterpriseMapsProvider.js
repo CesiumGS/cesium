@@ -1,7 +1,6 @@
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -201,7 +200,7 @@ async function requestMetadata(
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseMapsProvider(options) {
-  options = defaultValue(options, {});
+  options = options ?? {};
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -458,9 +457,9 @@ GoogleEarthEnterpriseMapsProvider.fromUrl = async function (
   Check.defined("channel", channel);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, {});
+  options = options ?? {};
 
-  const path = defaultValue(options.path, "/default_map");
+  const path = options.path ?? "/default_map";
 
   const resource = Resource.createIfNeeded(url).getDerivedResource({
     // We used to just append path to url, so now that we do proper URI resolution, removed the /

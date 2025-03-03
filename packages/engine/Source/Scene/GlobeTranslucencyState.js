@@ -1,5 +1,4 @@
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -807,18 +806,12 @@ function updateDerivedCommands(
 
     const frameNumber = frameState.frameNumber;
 
-    const uniformMapDirtyFrame = defaultValue(
-      derivedCommandsObject.uniformMapDirtyFrame,
-      0,
-    );
-    const shaderProgramDirtyFrame = defaultValue(
-      derivedCommandsObject.shaderProgramDirtyFrame,
-      0,
-    );
-    const renderStateDirtyFrame = defaultValue(
-      derivedCommandsObject.renderStateDirtyFrame,
-      0,
-    );
+    const uniformMapDirtyFrame =
+      derivedCommandsObject.uniformMapDirtyFrame ?? 0;
+    const shaderProgramDirtyFrame =
+      derivedCommandsObject.shaderProgramDirtyFrame ?? 0;
+    const renderStateDirtyFrame =
+      derivedCommandsObject.renderStateDirtyFrame ?? 0;
 
     const uniformMapDirty =
       derivedCommandsObject.uniformMap !== command.uniformMap;
@@ -866,18 +859,12 @@ function updateDerivedCommands(
       derivedCommand = DrawCommand.shallowClone(command, derivedCommand);
       derivedCommandsObject[derivedCommandName] = derivedCommand;
 
-      const derivedUniformMapDirtyFrame = defaultValue(
-        derivedCommand.derivedCommands.uniformMapDirtyFrame,
-        0,
-      );
-      const derivedShaderProgramDirtyFrame = defaultValue(
-        derivedCommand.derivedCommands.shaderProgramDirtyFrame,
-        0,
-      );
-      const derivedRenderStateDirtyFrame = defaultValue(
-        derivedCommand.derivedCommands.renderStateDirtyFrame,
-        0,
-      );
+      const derivedUniformMapDirtyFrame =
+        derivedCommand.derivedCommands.uniformMapDirtyFrame ?? 0;
+      const derivedShaderProgramDirtyFrame =
+        derivedCommand.derivedCommands.shaderProgramDirtyFrame ?? 0;
+      const derivedRenderStateDirtyFrame =
+        derivedCommand.derivedCommands.renderStateDirtyFrame ?? 0;
 
       const derivedUniformMapDirty =
         uniformMapDirty || derivedUniformMapDirtyFrame < uniformMapDirtyFrame;

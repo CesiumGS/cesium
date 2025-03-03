@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -208,7 +207,7 @@ PolylinePipeline.wrapLongitude = function (positions, modelMatrix) {
   const segments = [];
 
   if (defined(positions) && positions.length > 0) {
-    modelMatrix = defaultValue(modelMatrix, Matrix4.IDENTITY);
+    modelMatrix = modelMatrix ?? Matrix4.IDENTITY;
     const inverseModelMatrix = Matrix4.inverseTransformation(
       modelMatrix,
       wrapLongitudeInversMatrix,
@@ -337,8 +336,8 @@ PolylinePipeline.generateArc = function (options) {
   //>>includeEnd('debug');
 
   const length = positions.length;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  let height = defaultValue(options.height, 0);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  let height = options.height ?? 0;
   const hasHeightArray = Array.isArray(height);
 
   if (length < 1) {
@@ -357,10 +356,7 @@ PolylinePipeline.generateArc = function (options) {
 
   let minDistance = options.minDistance;
   if (!defined(minDistance)) {
-    const granularity = defaultValue(
-      options.granularity,
-      CesiumMath.RADIANS_PER_DEGREE,
-    );
+    const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
     minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
   }
 
@@ -444,8 +440,8 @@ PolylinePipeline.generateRhumbArc = function (options) {
   //>>includeEnd('debug');
 
   const length = positions.length;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  let height = defaultValue(options.height, 0);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  let height = options.height ?? 0;
   const hasHeightArray = Array.isArray(height);
 
   if (length < 1) {
@@ -462,10 +458,7 @@ PolylinePipeline.generateRhumbArc = function (options) {
     return [p.x, p.y, p.z];
   }
 
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
   let numPoints = 0;
   let i;

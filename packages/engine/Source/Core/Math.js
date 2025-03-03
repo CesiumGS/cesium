@@ -1,6 +1,5 @@
 import MersenneTwister from "mersenne-twister";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -205,14 +204,16 @@ CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
  * @param {number} value The value to return the sign of.
  * @returns {number} The sign of value.
  */
-CesiumMath.sign = defaultValue(Math.sign, function sign(value) {
-  value = +value; // coerce to number
-  if (value === 0 || value !== value) {
-    // zero or NaN
-    return value;
-  }
-  return value > 0 ? 1 : -1;
-});
+CesiumMath.sign =
+  Math.sign ??
+  function sign(value) {
+    value = +value; // coerce to number
+    if (value === 0 || value !== value) {
+      // zero or NaN
+      return value;
+    }
+    return value > 0 ? 1 : -1;
+  };
 
 /**
  * Returns 1.0 if the given value is positive or zero, and -1.0 if it is negative.
@@ -234,7 +235,7 @@ CesiumMath.signNotZero = function (value) {
  * @see CesiumMath.fromSNorm
  */
 CesiumMath.toSNorm = function (value, rangeMaximum) {
-  rangeMaximum = defaultValue(rangeMaximum, 255);
+  rangeMaximum = rangeMaximum ?? 255;
   return Math.round(
     (CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum,
   );
@@ -249,7 +250,7 @@ CesiumMath.toSNorm = function (value, rangeMaximum) {
  * @see CesiumMath.toSNorm
  */
 CesiumMath.fromSNorm = function (value, rangeMaximum) {
-  rangeMaximum = defaultValue(rangeMaximum, 255);
+  rangeMaximum = rangeMaximum ?? 255;
   return (
     (CesiumMath.clamp(value, 0.0, rangeMaximum) / rangeMaximum) * 2.0 - 1.0
   );
@@ -291,9 +292,11 @@ CesiumMath.normalize = function (value, rangeMinimum, rangeMaximum) {
  * @param {number} value The number whose hyperbolic sine is to be returned.
  * @returns {number} The hyperbolic sine of <code>value</code>.
  */
-CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
-  return (Math.exp(value) - Math.exp(-value)) / 2.0;
-});
+CesiumMath.sinh =
+  Math.sinh ??
+  function sinh(value) {
+    return (Math.exp(value) - Math.exp(-value)) / 2.0;
+  };
 
 /**
  * Returns the hyperbolic cosine of a number.
@@ -315,9 +318,11 @@ CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
  * @param {number} value The number whose hyperbolic cosine is to be returned.
  * @returns {number} The hyperbolic cosine of <code>value</code>.
  */
-CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
-  return (Math.exp(value) + Math.exp(-value)) / 2.0;
-});
+CesiumMath.cosh =
+  Math.cosh ??
+  function cosh(value) {
+    return (Math.exp(value) + Math.exp(-value)) / 2.0;
+  };
 
 /**
  * Computes the linear interpolation of two values.
@@ -621,8 +626,8 @@ CesiumMath.equalsEpsilon = function (
   }
   //>>includeEnd('debug');
 
-  relativeEpsilon = defaultValue(relativeEpsilon, 0.0);
-  absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
+  relativeEpsilon = relativeEpsilon ?? 0.0;
+  absoluteEpsilon = absoluteEpsilon ?? relativeEpsilon;
   const absDiff = Math.abs(left - right);
   return (
     absDiff <= absoluteEpsilon ||
@@ -785,7 +790,7 @@ CesiumMath.factorial = function (n) {
  * const m = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
  */
 CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
-  minimumValue = defaultValue(minimumValue, 0.0);
+  minimumValue = minimumValue ?? 0.0;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(n)) {
@@ -1031,10 +1036,12 @@ CesiumMath.logBase = function (number, base) {
  * @param {number} [number] The number.
  * @returns {number} The result.
  */
-CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
-  const result = Math.pow(Math.abs(number), 1.0 / 3.0);
-  return number < 0.0 ? -result : result;
-});
+CesiumMath.cbrt =
+  Math.cbrt ??
+  function cbrt(number) {
+    const result = Math.pow(Math.abs(number), 1.0 / 3.0);
+    return number < 0.0 ? -result : result;
+  };
 
 /**
  * Finds the base 2 logarithm of a number.
@@ -1043,9 +1050,11 @@ CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
  * @param {number} number The number.
  * @returns {number} The result.
  */
-CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
-  return Math.log(number) * Math.LOG2E;
-});
+CesiumMath.log2 =
+  Math.log2 ??
+  function log2(number) {
+    return Math.log(number) * Math.LOG2E;
+  };
 
 /**
  * Calculate the fog impact at a given distance. Useful for culling.

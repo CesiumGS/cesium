@@ -1,7 +1,6 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import ClassificationType from "../Scene/ClassificationType.js";
@@ -42,8 +41,8 @@ function GeometryVisualizer(
   Check.defined("entityCollection", entityCollection);
   //>>includeEnd('debug');
 
-  primitives = defaultValue(primitives, scene.primitives);
-  groundPrimitives = defaultValue(groundPrimitives, scene.groundPrimitives);
+  primitives = primitives ?? scene.primitives;
+  groundPrimitives = groundPrimitives ?? scene.groundPrimitives;
 
   this._scene = scene;
   this._primitives = primitives;

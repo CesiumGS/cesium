@@ -3,7 +3,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -597,7 +596,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    */
   contentBoundingVolume: {
     get: function () {
-      return defaultValue(this._contentBoundingVolume, this._boundingVolume);
+      return this._contentBoundingVolume ?? this._boundingVolume;
     },
   },
 
@@ -915,7 +914,7 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
   progressiveResolutionHeightFraction,
 ) {
   const tileset = this._tileset;
-  const heightFraction = defaultValue(progressiveResolutionHeightFraction, 1.0);
+  const heightFraction = progressiveResolutionHeightFraction ?? 1.0;
   const parentGeometricError = defined(this.parent)
     ? this.parent.geometricError
     : tileset._scaledGeometricError;
@@ -1975,7 +1974,7 @@ Cesium3DTile.prototype.updateTransform = function (
   parentTransform,
   frameState,
 ) {
-  parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
+  parentTransform = parentTransform ?? Matrix4.IDENTITY;
   const computedTransform = Matrix4.multiplyTransformation(
     parentTransform,
     this.transform,

@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -16,7 +15,7 @@ import Property from "./Property.js";
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  */
 function CompositePositionProperty(referenceFrame) {
-  this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+  this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
   this._definitionChanged = new Event();
   this._composite = new CompositeProperty();
   this._composite.definitionChanged.addEventListener(

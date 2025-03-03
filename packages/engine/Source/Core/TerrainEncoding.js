@@ -2,7 +2,6 @@ import AttributeCompression from "./AttributeCompression.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
@@ -157,30 +156,24 @@ function TerrainEncoding(
    * The terrain mesh contains a vertical texture coordinate following the Web Mercator projection.
    * @type {boolean}
    */
-  this.hasWebMercatorT = defaultValue(hasWebMercatorT, false);
+  this.hasWebMercatorT = hasWebMercatorT ?? false;
 
   /**
    * The terrain mesh contains geodetic surface normals, used for terrain exaggeration.
    * @type {boolean}
    */
-  this.hasGeodeticSurfaceNormals = defaultValue(
-    hasGeodeticSurfaceNormals,
-    false,
-  );
+  this.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals ?? false;
 
   /**
    * A scalar used to exaggerate terrain.
    * @type {number}
    */
-  this.exaggeration = defaultValue(exaggeration, 1.0);
+  this.exaggeration = exaggeration ?? 1.0;
 
   /**
    * The relative height from which terrain is exaggerated.
    */
-  this.exaggerationRelativeHeight = defaultValue(
-    exaggerationRelativeHeight,
-    0.0,
-  );
+  this.exaggerationRelativeHeight = exaggerationRelativeHeight ?? 0.0;
 
   /**
    * The number of components in each vertex. This value can differ with different quantizations.

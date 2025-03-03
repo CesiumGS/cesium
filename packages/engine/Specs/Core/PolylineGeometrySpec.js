@@ -2,7 +2,6 @@ import {
   ArcType,
   Cartesian3,
   Color,
-  defaultValue,
   Ellipsoid,
   Math as CesiumMath,
   PolylineGeometry,
@@ -282,7 +281,7 @@ describe("Core/PolylineGeometry", function () {
     colorArray,
     colorsPerVertex,
   ) {
-    colorsPerVertex = defaultValue(colorsPerVertex, false);
+    colorsPerVertex = colorsPerVertex ?? false;
     let i;
     let j;
     let color;

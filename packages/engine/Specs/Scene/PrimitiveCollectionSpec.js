@@ -1,6 +1,5 @@
 import {
   ColorGeometryInstanceAttribute,
-  defaultValue,
   defined,
   GeometryInstance,
   Rectangle,
@@ -54,11 +53,11 @@ describe(
     }
 
     function createLabels(position) {
-      position = defaultValue(position, {
+      position = position ?? {
         x: -1.0,
         y: 0.0,
         z: 0.0,
-      });
+      };
       const labels = new LabelCollection();
       labels.add({
         position: position,

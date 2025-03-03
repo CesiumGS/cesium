@@ -5,7 +5,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -255,8 +254,8 @@ function computePickingDrawingBufferRectangle(
   height,
   result,
 ) {
-  result.width = defaultValue(width, 3.0);
-  result.height = defaultValue(height, result.width);
+  result.width = width ?? 3.0;
+  result.height = height ?? result.width;
   result.x = position.x - (result.width - 1.0) * 0.5;
   result.y = drawingBufferHeight - position.y - (result.height - 1.0) * 0.5;
   return result;
@@ -852,7 +851,7 @@ function updateOffscreenCameraFromRay(picking, ray, width, camera) {
   camera.up = up;
   camera.right = right;
 
-  camera.frustum.width = defaultValue(width, offscreenDefaultWidth);
+  camera.frustum.width = width ?? offscreenDefaultWidth;
   return camera.frustum.computeCullingVolume(
     camera.positionWC,
     camera.directionWC,

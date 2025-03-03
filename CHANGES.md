@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.128 - 2025-04-01
+
+### @cesium/engine
+
+#### Deprecated :hourglass_flowing_sand:
+
+- `defaultValue` function and `defaultValue.EMPTY_OBJECT` have been deprecated, and will be removed in 1.134. Use respectively the nullish coalescing operator [??](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) and `DefaultValues.EMPTY_OBJECT` instead. A new `DefaultValues.EMPTY_ARRAY` frozen value has been added for the same purpose as `DefaultValues.EMPTY_OBJECT`. See [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values).
+
 ## 1.127 - 2025-03-03
 
 ### @cesium/engine

@@ -5,7 +5,6 @@ import Check from "../Core/Check.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import defaultValue from "../Core/defaultValue.js";
 
 /**
  * A box {@link VoxelShape}.
@@ -137,8 +136,8 @@ VoxelBoxShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds,
 ) {
-  clipMinBounds = defaultValue(clipMinBounds, VoxelBoxShape.DefaultMinBounds);
-  clipMaxBounds = defaultValue(clipMaxBounds, VoxelBoxShape.DefaultMaxBounds);
+  clipMinBounds = clipMinBounds ?? VoxelBoxShape.DefaultMinBounds;
+  clipMaxBounds = clipMaxBounds ?? VoxelBoxShape.DefaultMaxBounds;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);

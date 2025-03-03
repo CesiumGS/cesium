@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import I3SDataProvider from "./I3SDataProvider.js";
 import I3SLayer from "./I3SLayer.js";
@@ -19,7 +18,7 @@ function I3SSublayer(dataProvider, parent, sublayerData) {
   this._data = sublayerData;
   this._name = sublayerData.name;
   this._modelName = sublayerData.modelName;
-  this._visibility = defaultValue(sublayerData.visibility, true);
+  this._visibility = sublayerData.visibility ?? true;
   this._resource = undefined;
   this._sublayers = [];
   this._i3sLayers = [];
