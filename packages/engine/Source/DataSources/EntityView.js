@@ -2,7 +2,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRange from "../Core/HeadingPitchRange.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -44,7 +43,7 @@ function updateTransform(
   ellipsoid,
 ) {
   const mode = that.scene.mode;
-  const cartesian = positionProperty.getValue(time, that._lastCartesian);
+  let cartesian = positionProperty.getValue(time, that._lastCartesian);
   if (defined(cartesian)) {
     let hasBasis = false;
     let invertVelocity = false;
@@ -217,6 +216,10 @@ function updateTransform(
       }
     }
 
+    if (defined(that.boundingSphere)) {
+      cartesian = that.boundingSphere.center;
+    }
+
     let position;
     let direction;
     let up;
@@ -343,45 +346,23 @@ function EntityView(entity, scene, ellipsoid) {
    */
   this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
+  /**
+   * The bounding sphere of the object.
+   * @type {BoundingSphere}
+   */
+  this.boundingSphere = undefined;
+
   // Shadow copies of the objects so we can detect changes.
   this._lastEntity = undefined;
   this._mode = undefined;
 
   this._lastCartesian = new Cartesian3();
   this._defaultOffset3D = undefined;
-  this._boundingSphere = undefined;
 
   this._velocityProperty = new VelocityVectorProperty(entity.position, true);
 
   this._offset3D = new Cartesian3();
 }
-
-// Per instance properties
-Object.defineProperties(EntityView.prototype, {
-  /**
-   * The bounding sphere of the object.
-   * @memberof EntityView.prototype
-   *
-   * @type {BoundingSphere}
-   * @deprecated This property has been deprecated and will be removed in Cesium 1.130
-   */
-  boundingSphere: {
-    get: function () {
-      deprecationWarning(
-        "EntityView.boundingSphere",
-        "EntityView.boundingSphere has been deprecated and will be removed in Cesium 1.130",
-      );
-      return this._boundingSphere;
-    },
-    set: function (boundingSphere) {
-      deprecationWarning(
-        "EntityView.boundingSphere",
-        "EntityView.boundingSphere has been deprecated and will be removed in Cesium 1.130",
-      );
-      this._boundingSphere = boundingSphere;
-    },
-  },
-});
 
 // STATIC properties defined here, not per-instance.
 Object.defineProperties(EntityView, {
@@ -464,7 +445,7 @@ EntityView.prototype.update = function (time, boundingSphere) {
       }
 
       camera.viewBoundingSphere(boundingSphere, scratchHeadingPitchRange);
-      this._boundingSphere = boundingSphere;
+      this.boundingSphere = boundingSphere;
       updateLookAt = false;
       saveCamera = false;
     } else if (
