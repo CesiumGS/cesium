@@ -2,7 +2,6 @@ import AssociativeArray from "../Core/AssociativeArray.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Uri from "urijs";
@@ -23,7 +22,7 @@ const highlightColor = "#48b";
  */
 function CreditDisplayElement(credit, count) {
   this.credit = credit;
-  this.count = defaultValue(count, 1);
+  this.count = count ?? 1;
 }
 
 function contains(credits, credit) {
@@ -273,10 +272,7 @@ function appendCss(container) {
     return undefined;
   }
 
-  const shadowRootOrDocumentHead = defaultValue(
-    getShadowRoot(container),
-    document.head,
-  );
+  const shadowRootOrDocumentHead = getShadowRoot(container) ?? document.head;
   const styleElem = document.createElement("style");
   styleElem.innerHTML = style;
   shadowRootOrDocumentHead.appendChild(styleElem);
@@ -308,7 +304,7 @@ function CreditDisplay(container, delimiter, viewport) {
   //>>includeEnd('debug');
   const that = this;
 
-  viewport = defaultValue(viewport, document.body);
+  viewport = viewport ?? document.body;
 
   const lightbox = document.createElement("div");
   lightbox.className = "cesium-credit-lightbox-overlay";
@@ -359,7 +355,7 @@ function CreditDisplay(container, delimiter, viewport) {
   appendCss(container);
   const cesiumCredit = Credit.clone(CreditDisplay.cesiumCredit);
 
-  this._delimiter = defaultValue(delimiter, "•");
+  this._delimiter = delimiter ?? "•";
   this._screenContainer = screenContainer;
   this._cesiumCreditContainer = cesiumCreditContainer;
   this._lastViewportHeight = undefined;
@@ -394,7 +390,7 @@ function CreditDisplay(container, delimiter, viewport) {
 }
 
 function setCredit(creditDisplay, credits, credit, count) {
-  count = defaultValue(count, 1);
+  count = count ?? 1;
   let creditDisplayElement = credits.get(credit.id);
   if (!defined(creditDisplayElement)) {
     const pool = creditDisplay._creditDisplayElementPool;

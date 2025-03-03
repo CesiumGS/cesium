@@ -1,7 +1,7 @@
 import addToArray from "./addToArray.js";
 import ForEach from "./ForEach.js";
 import getAccessorByteStride from "./getAccessorByteStride.js";
-import defaultValue from "../../Core/defaultValue.js";
+import defaultValue from "./defaultValue.js";
 import defined from "../../Core/defined.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 

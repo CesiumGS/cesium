@@ -1,4 +1,4 @@
-import defaultValue from "./defaultValue.js";
+import DefaultValues from "./DefaultValues.js";
 
 /**
  * Attributes, which make up a geometry's vertices.  Each property in this object corresponds to a
@@ -11,7 +11,7 @@ import defaultValue from "./defaultValue.js";
  * @constructor
  */
 function GeometryAttributes(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
 
   /**
    * The 3D position attribute.

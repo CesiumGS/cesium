@@ -1,5 +1,4 @@
 import Clock from "../Core/Clock.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -137,12 +136,12 @@ DataSourceClock.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.startTime = defaultValue(this.startTime, source.startTime);
-  this.stopTime = defaultValue(this.stopTime, source.stopTime);
-  this.currentTime = defaultValue(this.currentTime, source.currentTime);
-  this.clockRange = defaultValue(this.clockRange, source.clockRange);
-  this.clockStep = defaultValue(this.clockStep, source.clockStep);
-  this.multiplier = defaultValue(this.multiplier, source.multiplier);
+  this.startTime = this.startTime ?? source.startTime;
+  this.stopTime = this.stopTime ?? source.stopTime;
+  this.currentTime = this.currentTime ?? source.currentTime;
+  this.clockRange = this.clockRange ?? source.clockRange;
+  this.clockStep = this.clockStep ?? source.clockStep;
+  this.multiplier = this.multiplier ?? source.multiplier;
 };
 
 /**
@@ -154,12 +153,12 @@ DataSourceClock.prototype.getValue = function (result) {
   if (!defined(result)) {
     result = new Clock();
   }
-  result.startTime = defaultValue(this.startTime, result.startTime);
-  result.stopTime = defaultValue(this.stopTime, result.stopTime);
-  result.currentTime = defaultValue(this.currentTime, result.currentTime);
-  result.clockRange = defaultValue(this.clockRange, result.clockRange);
-  result.multiplier = defaultValue(this.multiplier, result.multiplier);
-  result.clockStep = defaultValue(this.clockStep, result.clockStep);
+  result.startTime = this.startTime ?? result.startTime;
+  result.stopTime = this.stopTime ?? result.stopTime;
+  result.currentTime = this.currentTime ?? result.currentTime;
+  result.clockRange = this.clockRange ?? result.clockRange;
+  result.multiplier = this.multiplier ?? result.multiplier;
+  result.clockStep = this.clockStep ?? result.clockStep;
   return result;
 };
 export default DataSourceClock;

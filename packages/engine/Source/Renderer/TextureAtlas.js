@@ -2,7 +2,7 @@ import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import DefaultValues from "../Core/DefaultValues.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
@@ -37,8 +37,8 @@ const defaultInitialDimensions = 16;
  * @private
  */
 function TextureAtlas(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
+  const borderWidthInPixels = options.borderWidthInPixels ?? 1.0;
   const initialSize =
     options.initialSize ??
     new Cartesian2(defaultInitialDimensions, defaultInitialDimensions);
@@ -53,7 +53,7 @@ function TextureAtlas(options) {
   Check.typeOf.number.greaterThan("options.initialSize.y", initialSize.y, 0);
   //>>includeEnd('debug');
 
-  this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+  this._pixelFormat = options.pixelFormat ?? PixelFormat.RGBA;
   this._sampler = options.sampler;
   this._borderWidthInPixels = borderWidthInPixels;
   this._initialSize = initialSize;

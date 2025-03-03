@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 /**
@@ -12,7 +11,7 @@ import defined from "./defined.js";
  * @param {Cartesian3} [direction=Cartesian3.ZERO] The direction of the ray.
  */
 function Ray(origin, direction) {
-  direction = Cartesian3.clone(defaultValue(direction, Cartesian3.ZERO));
+  direction = Cartesian3.clone(direction ?? Cartesian3.ZERO);
   if (!Cartesian3.equals(direction, Cartesian3.ZERO)) {
     Cartesian3.normalize(direction, direction);
   }
@@ -22,7 +21,7 @@ function Ray(origin, direction) {
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
    */
-  this.origin = Cartesian3.clone(defaultValue(origin, Cartesian3.ZERO));
+  this.origin = Cartesian3.clone(origin ?? Cartesian3.ZERO);
 
   /**
    * The direction of the ray.

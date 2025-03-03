@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -21,7 +20,7 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
   //>>includeEnd('debug');
 
   const attrs = VertexArrayFacade._verifyAttributes(attributes);
-  sizeInVertices = defaultValue(sizeInVertices, 0);
+  sizeInVertices = sizeInVertices ?? 0;
   const precreatedAttributes = [];
   const attributesByUsage = {};
   let attributesForUsage;
@@ -86,7 +85,7 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
   }
 
   this._size = 0;
-  this._instanced = defaultValue(instanced, false);
+  this._instanced = instanced ?? false;
 
   this._precreated = precreatedAttributes;
   this._context = context;
@@ -103,18 +102,15 @@ VertexArrayFacade._verifyAttributes = function (attributes) {
     const attribute = attributes[i];
 
     const attr = {
-      index: defaultValue(attribute.index, i),
-      enabled: defaultValue(attribute.enabled, true),
+      index: attribute.index ?? i,
+      enabled: attribute.enabled ?? true,
       componentsPerAttribute: attribute.componentsPerAttribute,
-      componentDatatype: defaultValue(
-        attribute.componentDatatype,
-        ComponentDatatype.FLOAT,
-      ),
-      normalize: defaultValue(attribute.normalize, false),
+      componentDatatype: attribute.componentDatatype ?? ComponentDatatype.FLOAT,
+      normalize: attribute.normalize ?? false,
 
       // There will be either a vertexBuffer or an [optional] usage.
       vertexBuffer: attribute.vertexBuffer,
-      usage: defaultValue(attribute.usage, BufferUsage.STATIC_DRAW),
+      usage: attribute.usage ?? BufferUsage.STATIC_DRAW,
     };
     attrs.push(attr);
 

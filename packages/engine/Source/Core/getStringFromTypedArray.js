@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import RuntimeError from "./RuntimeError.js";
@@ -31,8 +30,8 @@ function getStringFromTypedArray(uint8Array, byteOffset, byteLength) {
   }
   //>>includeEnd('debug');
 
-  byteOffset = defaultValue(byteOffset, 0);
-  byteLength = defaultValue(byteLength, uint8Array.byteLength - byteOffset);
+  byteOffset = byteOffset ?? 0;
+  byteLength = byteLength ?? uint8Array.byteLength - byteOffset;
 
   uint8Array = uint8Array.subarray(byteOffset, byteOffset + byteLength);
 

@@ -1,5 +1,4 @@
 import {
-  defaultValue,
   Iso8601,
   JulianDate,
   TimeInterval,
@@ -28,7 +27,7 @@ describe("Core/TimeIntervalCollection", function () {
     isStopIncluded,
     dataCallback,
   ) {
-    dataCallback = defaultValue(dataCallback, defaultDataCallback);
+    dataCallback = dataCallback ?? defaultDataCallback;
     const length = intervals.length;
     expect(length).toEqual(julianDates.length - 1);
     for (let i = 0; i < length; ++i) {

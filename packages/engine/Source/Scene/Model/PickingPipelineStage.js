@@ -2,7 +2,6 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import Color from "../../Core/Color.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelType from "./ModelType.js";
@@ -152,7 +151,7 @@ function processPickTexture(renderResources, primitive, instances) {
 
   const batchTexture = featureTable.batchTexture;
   renderResources.uniformMap.model_pickTexture = function () {
-    return defaultValue(batchTexture.pickTexture, batchTexture.defaultTexture);
+    return batchTexture.pickTexture ?? batchTexture.defaultTexture;
   };
 
   // The feature ID is ignored if it is greater than the number of features.

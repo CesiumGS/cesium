@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
@@ -28,7 +27,7 @@ function Rectangle(west, south, east, north) {
    * @type {number}
    * @default 0.0
    */
-  this.west = defaultValue(west, 0.0);
+  this.west = west ?? 0.0;
 
   /**
    * The southernmost latitude in radians in the range [-Pi/2, Pi/2].
@@ -36,7 +35,7 @@ function Rectangle(west, south, east, north) {
    * @type {number}
    * @default 0.0
    */
-  this.south = defaultValue(south, 0.0);
+  this.south = south ?? 0.0;
 
   /**
    * The easternmost longitude in radians in the range [-Pi, Pi].
@@ -44,7 +43,7 @@ function Rectangle(west, south, east, north) {
    * @type {number}
    * @default 0.0
    */
-  this.east = defaultValue(east, 0.0);
+  this.east = east ?? 0.0;
 
   /**
    * The northernmost latitude in radians in the range [-Pi/2, Pi/2].
@@ -52,7 +51,7 @@ function Rectangle(west, south, east, north) {
    * @type {number}
    * @default 0.0
    */
-  this.north = defaultValue(north, 0.0);
+  this.north = north ?? 0.0;
 }
 
 Object.defineProperties(Rectangle.prototype, {
@@ -102,7 +101,7 @@ Rectangle.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.west;
   array[startingIndex++] = value.south;
@@ -125,7 +124,7 @@ Rectangle.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Rectangle();
@@ -181,10 +180,10 @@ Rectangle.computeHeight = function (rectangle) {
  * const rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
  */
 Rectangle.fromDegrees = function (west, south, east, north, result) {
-  west = CesiumMath.toRadians(defaultValue(west, 0.0));
-  south = CesiumMath.toRadians(defaultValue(south, 0.0));
-  east = CesiumMath.toRadians(defaultValue(east, 0.0));
-  north = CesiumMath.toRadians(defaultValue(north, 0.0));
+  west = CesiumMath.toRadians(west ?? 0.0);
+  south = CesiumMath.toRadians(south ?? 0.0);
+  east = CesiumMath.toRadians(east ?? 0.0);
+  north = CesiumMath.toRadians(north ?? 0.0);
 
   if (!defined(result)) {
     return new Rectangle(west, south, east, north);
@@ -216,10 +215,10 @@ Rectangle.fromRadians = function (west, south, east, north, result) {
     return new Rectangle(west, south, east, north);
   }
 
-  result.west = defaultValue(west, 0.0);
-  result.south = defaultValue(south, 0.0);
-  result.east = defaultValue(east, 0.0);
-  result.north = defaultValue(north, 0.0);
+  result.west = west ?? 0.0;
+  result.south = south ?? 0.0;
+  result.east = east ?? 0.0;
+  result.north = north ?? 0.0;
 
   return result;
 };
@@ -293,7 +292,7 @@ Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesians", cartesians);
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   let west = Number.MAX_VALUE;
   let east = -Number.MAX_VALUE;
@@ -465,7 +464,7 @@ Rectangle.clone = function (rectangle, result) {
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Rectangle.equalsEpsilon = function (left, right, absoluteEpsilon) {
-  absoluteEpsilon = defaultValue(absoluteEpsilon, 0);
+  absoluteEpsilon = absoluteEpsilon ?? 0;
 
   return (
     left === right ||
@@ -923,8 +922,8 @@ Rectangle.subsample = function (rectangle, ellipsoid, surfaceHeight, result) {
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
-  surfaceHeight = defaultValue(surfaceHeight, 0.0);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
+  surfaceHeight = surfaceHeight ?? 0.0;
 
   if (!defined(result)) {
     result = [];

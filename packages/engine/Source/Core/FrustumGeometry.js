@@ -3,7 +3,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
@@ -42,12 +41,12 @@ function FrustumGeometry(options) {
   const frustum = options.frustum;
   const orientation = options.orientation;
   const origin = options.origin;
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
   // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
   // creating multiple FrustumGeometry objects. This way the near plane of one frustum doesn't overlap
   // the far plane of another.
-  const drawNearPlane = defaultValue(options._drawNearPlane, true);
+  const drawNearPlane = options._drawNearPlane ?? true;
 
   let frustumType;
   let frustumPackedLength;
@@ -94,7 +93,7 @@ FrustumGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const frustumType = value._frustumType;
   const frustum = value._frustum;
@@ -138,7 +137,7 @@ FrustumGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const frustumType = array[startingIndex++];
 
@@ -277,9 +276,9 @@ FrustumGeometry._computeNearFarPlanes = function (
     orientation,
     scratchRotationMatrix,
   );
-  let x = defaultValue(xDirection, scratchXDirection);
-  let y = defaultValue(yDirection, scratchYDirection);
-  let z = defaultValue(zDirection, scratchZDirection);
+  let x = xDirection ?? scratchXDirection;
+  let y = yDirection ?? scratchYDirection;
+  let z = zDirection ?? scratchZDirection;
 
   x = Matrix3.getColumn(rotationMatrix, 0, x);
   y = Matrix3.getColumn(rotationMatrix, 1, y);

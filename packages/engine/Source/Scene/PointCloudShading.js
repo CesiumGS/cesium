@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 
 /**
@@ -20,24 +19,21 @@ import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
  * @constructor
  */
 function PointCloudShading(options) {
-  const pointCloudShading = defaultValue(options, {});
+  const pointCloudShading = options ?? {};
 
   /**
    * Perform point attenuation based on geometric error.
    * @type {boolean}
    * @default false
    */
-  this.attenuation = defaultValue(pointCloudShading.attenuation, false);
+  this.attenuation = pointCloudShading.attenuation ?? false;
 
   /**
    * Scale to be applied to the geometric error before computing attenuation.
    * @type {number}
    * @default 1.0
    */
-  this.geometricErrorScale = defaultValue(
-    pointCloudShading.geometricErrorScale,
-    1.0,
-  );
+  this.geometricErrorScale = pointCloudShading.geometricErrorScale ?? 1.0;
 
   /**
    * Maximum point attenuation in pixels. If undefined, the Cesium3DTileset's maximumScreenSpaceError will be used.
@@ -61,27 +57,22 @@ function PointCloudShading(options) {
    * @type {boolean}
    * @default true
    */
-  this.eyeDomeLighting = defaultValue(pointCloudShading.eyeDomeLighting, true);
+  this.eyeDomeLighting = pointCloudShading.eyeDomeLighting ?? true;
 
   /**
    * Eye dome lighting strength (apparent contrast)
    * @type {number}
    * @default 1.0
    */
-  this.eyeDomeLightingStrength = defaultValue(
-    pointCloudShading.eyeDomeLightingStrength,
-    1.0,
-  );
+  this.eyeDomeLightingStrength =
+    pointCloudShading.eyeDomeLightingStrength ?? 1.0;
 
   /**
    * Thickness of contours from eye dome lighting
    * @type {number}
    * @default 1.0
    */
-  this.eyeDomeLightingRadius = defaultValue(
-    pointCloudShading.eyeDomeLightingRadius,
-    1.0,
-  );
+  this.eyeDomeLightingRadius = pointCloudShading.eyeDomeLightingRadius ?? 1.0;
 
   /**
    * Determines whether back-facing points are hidden.
@@ -90,7 +81,7 @@ function PointCloudShading(options) {
    * @type {boolean}
    * @default false
    */
-  this.backFaceCulling = defaultValue(pointCloudShading.backFaceCulling, false);
+  this.backFaceCulling = pointCloudShading.backFaceCulling ?? false;
 
   /**
    * Determines whether a point cloud that contains normals is shaded by the scene's light source.
@@ -98,7 +89,7 @@ function PointCloudShading(options) {
    * @type {boolean}
    * @default true
    */
-  this.normalShading = defaultValue(pointCloudShading.normalShading, true);
+  this.normalShading = pointCloudShading.normalShading ?? true;
 }
 
 /**

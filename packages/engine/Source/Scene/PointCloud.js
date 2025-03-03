@@ -6,7 +6,6 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
@@ -114,8 +113,8 @@ function PointCloud(options) {
   this._uniformMapLoaded = options.uniformMapLoaded;
   this._batchTableLoaded = options.batchTableLoaded;
   this._pickIdLoaded = options.pickIdLoaded;
-  this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
-  this._cull = defaultValue(options.cull, true);
+  this._opaquePass = options.opaquePass ?? Pass.OPAQUE;
+  this._cull = options.cull ?? true;
 
   this.style = undefined;
   this._style = undefined;
@@ -150,10 +149,7 @@ function PointCloud(options) {
    * @type {SplitDirection}
    * @default {@link SplitDirection.NONE}
    */
-  this.splitDirection = defaultValue(
-    options.splitDirection,
-    SplitDirection.NONE,
-  );
+  this.splitDirection = options.splitDirection ?? SplitDirection.NONE;
   this._splittingEnabled = false;
 
   this._error = undefined;
@@ -679,10 +675,8 @@ function createUniformMap(pointCloud, frameState) {
         return Matrix4.IDENTITY;
       }
 
-      const clippingPlanesOriginMatrix = defaultValue(
-        pointCloud.clippingPlanesOriginMatrix,
-        pointCloud._modelMatrix,
-      );
+      const clippingPlanesOriginMatrix =
+        pointCloud.clippingPlanesOriginMatrix ?? pointCloud._modelMatrix;
       Matrix4.multiply(
         context.uniformState.view3D,
         clippingPlanesOriginMatrix,
@@ -1243,7 +1237,7 @@ function decodeDraco(pointCloud, context) {
             };
           }
 
-          const decodedColors = defaultValue(decodedRgba, decodedRgb);
+          const decodedColors = decodedRgba ?? decodedRgb;
           if (defined(decodedColors)) {
             parsedContent.colors = {
               typedArray: decodedColors,

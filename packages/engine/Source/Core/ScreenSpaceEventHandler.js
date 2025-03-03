@@ -1,6 +1,5 @@
 import AssociativeArray from "./AssociativeArray.js";
 import Cartesian2 from "./Cartesian2.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
@@ -1007,7 +1006,7 @@ function ScreenSpaceEventHandler(element) {
   this._clickPixelTolerance = 5;
   this._holdPixelTolerance = 25;
 
-  this._element = defaultValue(element, document);
+  this._element = element ?? document;
 
   registerListeners(this);
 }

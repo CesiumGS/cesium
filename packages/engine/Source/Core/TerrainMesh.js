@@ -1,5 +1,3 @@
-import defaultValue from "./defaultValue.js";
-
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
  * usually created from raw {@link TerrainData}.
@@ -71,7 +69,7 @@ function TerrainMesh(
    * may be higher.
    * @type {number}
    */
-  this.stride = defaultValue(vertexStride, 6);
+  this.stride = vertexStride ?? 6;
 
   /**
    * The indices describing how the vertices are connected to form triangles.

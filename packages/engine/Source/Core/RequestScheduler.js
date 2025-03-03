@@ -1,6 +1,5 @@
 import Uri from "urijs";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defer from "./defer.js";
 import defined from "./defined.js";
 import Event from "./Event.js";
@@ -164,12 +163,11 @@ function updatePriority(request) {
  * @private
  */
 RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
-  desiredRequests = defaultValue(desiredRequests, 1);
+  desiredRequests = desiredRequests ?? 1;
 
-  const maxRequests = defaultValue(
-    RequestScheduler.requestsByServer[serverKey],
-    RequestScheduler.maximumRequestsPerServer,
-  );
+  const maxRequests =
+    RequestScheduler.requestsByServer[serverKey] ??
+    RequestScheduler.maximumRequestsPerServer;
   const hasOpenSlotsServer =
     numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests;
 

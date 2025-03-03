@@ -8,7 +8,6 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
-import defaultValue from "../Core/defaultValue.js";
 
 /**
  * An ellipsoid {@link VoxelShape}.
@@ -183,8 +182,8 @@ VoxelEllipsoidShape.prototype.update = function (
   clipMaxBounds,
 ) {
   const { DefaultMinBounds, DefaultMaxBounds } = VoxelEllipsoidShape;
-  clipMinBounds = defaultValue(clipMinBounds, DefaultMinBounds);
-  clipMaxBounds = defaultValue(clipMaxBounds, DefaultMaxBounds);
+  clipMinBounds = clipMinBounds ?? DefaultMinBounds;
+  clipMaxBounds = clipMaxBounds ?? DefaultMaxBounds;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);

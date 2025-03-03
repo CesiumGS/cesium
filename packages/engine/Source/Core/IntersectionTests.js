@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Interval from "./Interval.js";
@@ -103,7 +102,7 @@ IntersectionTests.rayTriangleParametric = function (
   }
   //>>includeEnd('debug');
 
-  cullBackFaces = defaultValue(cullBackFaces, false);
+  cullBackFaces = cullBackFaces ?? false;
 
   const origin = ray.origin;
   const direction = ray.direction;

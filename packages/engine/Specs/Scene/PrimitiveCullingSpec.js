@@ -2,7 +2,6 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  defaultValue,
   GeometryInstance,
   Math as CesiumMath,
   PerspectiveFrustum,
@@ -115,7 +114,7 @@ describe(
     }
 
     function createPrimitive(height) {
-      height = defaultValue(height, 0);
+      height = height ?? 0;
       const primitive = new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({
@@ -162,7 +161,7 @@ describe(
     }
 
     function createLabels(height) {
-      height = defaultValue(height, 0);
+      height = height ?? 0;
       const labels = new LabelCollection();
       const center = Cartesian3.fromDegrees(-96.5, 33.5, height);
       labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
@@ -227,7 +226,7 @@ describe(
     });
 
     function createBillboard(height) {
-      height = defaultValue(height, 0);
+      height = height ?? 0;
       const billboards = new BillboardCollection();
       billboards.add({
         position: Cartesian3.fromDegrees(-96.5, 33.5, height),
@@ -291,7 +290,7 @@ describe(
     });
 
     function createPolylines(height) {
-      height = defaultValue(height, 0);
+      height = height ?? 0;
       const material = Material.fromType("Color");
       material.translucent = false;
 

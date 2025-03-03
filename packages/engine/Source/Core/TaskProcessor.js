@@ -1,6 +1,5 @@
 import Uri from "urijs";
 import buildModuleUrl from "./buildModuleUrl.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
@@ -13,10 +12,7 @@ import RuntimeError from "./RuntimeError.js";
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
     const worker = createWorker("transferTypedArrayTest");
-    worker.postMessage = defaultValue(
-      worker.webkitPostMessage,
-      worker.postMessage,
-    );
+    worker.postMessage = worker.webkitPostMessage ?? worker.postMessage;
 
     const value = 99;
     const array = new Int8Array([value]);
@@ -184,10 +180,7 @@ async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  */
 function TaskProcessor(workerPath, maximumActiveTasks) {
   this._workerPath = workerPath;
-  this._maximumActiveTasks = defaultValue(
-    maximumActiveTasks,
-    Number.POSITIVE_INFINITY,
-  );
+  this._maximumActiveTasks = maximumActiveTasks ?? Number.POSITIVE_INFINITY;
   this._activeTasks = 0;
   this._nextID = 0;
   this._webAssemblyPromise = undefined;
