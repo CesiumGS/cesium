@@ -3270,7 +3270,7 @@ const newOptions = {
 
 /**
  * Cancels the current camera flight and leaves the camera at its current location.
- * If no flight is in progress, this this function does nothing.
+ * If no flight is in progress, this function does nothing.
  */
 Camera.prototype.cancelFlight = function () {
   if (defined(this._currentFlight)) {
@@ -3281,7 +3281,7 @@ Camera.prototype.cancelFlight = function () {
 
 /**
  * Completes the current camera flight and moves the camera immediately to its final destination.
- * If no flight is in progress, this this function does nothing.
+ * If no flight is in progress, this function does nothing.
  */
 Camera.prototype.completeFlight = function () {
   if (defined(this._currentFlight)) {

@@ -101,9 +101,8 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    */
   texturesByteLength: {
     get: function () {
-      const billboardSize =
-        this._billboardCollection.textureAtlas.texture.sizeInBytes;
-      const labelSize = this._labelCollection._textureAtlas.texture.sizeInBytes;
+      const billboardSize = this._billboardCollection.sizeInBytes;
+      const labelSize = this._labelCollection.sizeInBytes;
       return billboardSize + labelSize;
     },
   },
@@ -496,8 +495,6 @@ Vector3DTilePoints.prototype.update = function (frameState) {
       this._error = undefined;
       throw error;
     }
-
-    return;
   }
 
   this._polylineCollection.update(frameState);
