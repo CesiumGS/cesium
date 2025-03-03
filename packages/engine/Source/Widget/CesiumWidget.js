@@ -1134,6 +1134,8 @@ CesiumWidget.prototype._updateCanAnimate = function (isUpdated) {
   this._clock.canAnimate = isUpdated;
 };
 
+const boundingSphereScratch = new BoundingSphere();
+
 /**
  * @private
  */
@@ -1148,9 +1150,10 @@ CesiumWidget.prototype._onTick = function (clock) {
   const entityView = this._entityView;
   if (defined(entityView)) {
     const trackedEntity = this._trackedEntity;
-    const trackedState = this._dataSourceDisplay.getBoundingSphereState(
+    const trackedState = this._dataSourceDisplay.getBoundingSphere(
       trackedEntity,
       false,
+      entityView.boundingSphere ?? boundingSphereScratch,
     );
     if (trackedState === BoundingSphereState.DONE) {
       entityView.update(time);
