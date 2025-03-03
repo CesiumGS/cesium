@@ -20,6 +20,10 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 
 - Changed `VoxelCylinderShape` to assume coordinates in the order (radius, angle, height). See [CesiumGS/3d-tiles#780](https://github.com/CesiumGS/3d-tiles/pull/780)
 
+#### Additions :tada:
+
+- Implemented `texturesByteLength`, `visited`, and `numberOfTilesWithContentReady` in `VoxelPrimitive.statistics`. To use statistics, set `options.calculateStatistics` to `true` in the constructor. Note `VoxelPrimitive` is experimental.
+
 #### Fixes :wrench:
 
 - Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
@@ -44,7 +48,6 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 #### Additions :tada:
 
 - Add `ITwinData.loadGeospatialFeatures(iTwinId, collectionId)` function to load data from the [Geospatial Features API](https://developer.bentley.com/apis/geospatial-features/operations/get-features/) [#12449](https://github.com/CesiumGS/cesium/pull/12449)
-- Implemented `texturesByteLength`, `visited`, and `numberOfTilesWithContentReady` in `VoxelPrimitive.statistics`. To use statistics, set `options.calculateStatistics` to `true` in the constructor. Note `VoxelPrimitive` is experimental.
 
 #### Fixes :wrench:
 
