@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import DefaultValues from "../Core/DefaultValues.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
@@ -38,7 +38,7 @@ import ModelUtility from "./Model/ModelUtility.js";
  * @private
  */
 function GltfJsonLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;

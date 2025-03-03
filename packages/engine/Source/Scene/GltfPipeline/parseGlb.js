@@ -1,6 +1,6 @@
 import addPipelineExtras from "./addPipelineExtras.js";
 import removeExtensionsUsed from "./removeExtensionsUsed.js";
-import defaultValue from "../../Core/defaultValue.js";
+import defaultValue from "./defaultValue.js";
 import defined from "../../Core/defined.js";
 import getMagic from "../../Core/getMagic.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";

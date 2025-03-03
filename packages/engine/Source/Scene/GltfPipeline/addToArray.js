@@ -1,4 +1,4 @@
-import defaultValue from "../../Core/defaultValue.js";
+import defaultValue from "./defaultValue.js";
 
 /**
  * Adds an element to an array and returns the element's index.

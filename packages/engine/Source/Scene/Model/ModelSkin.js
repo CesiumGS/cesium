@@ -1,6 +1,6 @@
 import Matrix4 from "../../Core/Matrix4.js";
 import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
+import DefaultValues from "../../Core/DefaultValues.js";
 
 /**
  * An in-memory representation of a skin that affects nodes in the {@link ModelSceneGraph}.
@@ -17,7 +17,7 @@ import defaultValue from "../../Core/defaultValue.js";
  * @private
  */
 function ModelSkin(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.skin", options.skin);
   Check.typeOf.object("options.sceneGraph", options.sceneGraph);

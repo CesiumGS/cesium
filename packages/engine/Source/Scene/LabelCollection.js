@@ -1,7 +1,7 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import DefaultValues from "../Core/DefaultValues.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -599,7 +599,7 @@ function destroyLabel(labelCollection, label) {
  * });
  */
 function LabelCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
 
   this._scene = options.scene;
   this._batchTable = options.batchTable;
@@ -635,7 +635,7 @@ function LabelCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -666,9 +666,7 @@ function LabelCollection(options) {
    *   text     : 'Up'
    * });
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -680,10 +678,7 @@ function LabelCollection(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * The label blending option. The default is used for rendering both opaque and translucent labels.
@@ -693,10 +688,7 @@ function LabelCollection(options) {
    * @type {BlendOption}
    * @default BlendOption.OPAQUE_AND_TRANSLUCENT
    */
-  this.blendOption = defaultValue(
-    options.blendOption,
-    BlendOption.OPAQUE_AND_TRANSLUCENT,
-  );
+  this.blendOption = options.blendOption ?? BlendOption.OPAQUE_AND_TRANSLUCENT;
 }
 
 Object.defineProperties(LabelCollection.prototype, {

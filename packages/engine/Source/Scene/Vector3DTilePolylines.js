@@ -1,7 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -51,7 +50,7 @@ function Vector3DTilePolylines(options) {
   this._counts = options.counts;
   this._batchIds = options.batchIds;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
   this._minimumHeight = options.minimumHeight;
   this._maximumHeight = options.maximumHeight;
   this._center = options.center;

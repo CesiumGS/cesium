@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import DefaultValues from "../Core/DefaultValues.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
@@ -10,7 +10,7 @@ import TextureWrap from "./TextureWrap.js";
  * @private
  */
 function Sampler(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
 
   const {
     wrapS = TextureWrap.CLAMP_TO_EDGE,

@@ -3,7 +3,7 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import DefaultValues from "../Core/DefaultValues.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -92,7 +92,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * stage.selected = [cesium3DTileFeature];
  */
 function PostProcessStage(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
   const {
     name = createGuid(),
     fragmentShader,

@@ -1,7 +1,6 @@
 import Uri from "urijs";
 import {
   decodeGoogleEarthEnterpriseData,
-  defaultValue,
   defined,
   DiscardMissingTileImagePolicy,
   GeographicTilingScheme,
@@ -58,7 +57,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       GoogleEarthEnterpriseMetadata.prototype,
       "getQuadTreePacket",
     ).and.callFake(function (quadKey, version) {
-      quadKey = defaultValue(quadKey, "");
+      quadKey = quadKey ?? "";
       this._tileInfo[`${quadKey}0`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,

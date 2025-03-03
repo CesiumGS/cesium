@@ -6,7 +6,7 @@ import {
   Cesium3DTileFeature,
   Clock,
   ConstantPositionProperty,
-  defaultValue,
+  DefaultValues,
   defined,
   destroyObject,
   DeveloperError,
@@ -104,7 +104,7 @@ function getCesium3DTileFeatureName(feature) {
 function pickEntity(viewer, e) {
   const picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
-    const id = defaultValue(picked.id, picked.primitive.id);
+    const id = picked.id ?? picked.primitive.id;
     if (id instanceof Entity) {
       return id;
     }
@@ -401,7 +401,7 @@ function Viewer(container, options) {
   //>>includeEnd('debug');
 
   container = getElement(container);
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? DefaultValues.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -458,7 +458,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   viewerContainer.appendChild(bottomContainer);
 
-  const scene3DOnly = defaultValue(options.scene3DOnly, false);
+  const scene3DOnly = options.scene3DOnly ?? false;
 
   let clock;
   let clockViewModel;
@@ -645,14 +645,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   let baseLayerPicker;
   let baseLayerPickerDropDown;
   if (createBaseLayerPicker) {
-    const imageryProviderViewModels = defaultValue(
-      options.imageryProviderViewModels,
-      createDefaultImageryProviderViewModels(),
-    );
-    const terrainProviderViewModels = defaultValue(
-      options.terrainProviderViewModels,
-      createDefaultTerrainProviderViewModels(),
-    );
+    const imageryProviderViewModels =
+      options.imageryProviderViewModels ??
+      createDefaultImageryProviderViewModels();
+    const terrainProviderViewModels =
+      options.terrainProviderViewModels ??
+      createDefaultTerrainProviderViewModels();
 
     baseLayerPicker = new BaseLayerPicker(toolbar, {
       globe: scene.globe,
@@ -729,10 +727,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     }
     navigationHelpButton = new NavigationHelpButton({
       container: toolbar,
-      instructionsInitiallyVisible: defaultValue(
-        options.navigationInstructionsInitiallyVisible,
-        showNavHelp,
-      ),
+      instructionsInitiallyVisible:
+        options.navigationInstructionsInitiallyVisible ?? showNavHelp,
     });
   }
 
@@ -1856,10 +1852,7 @@ Viewer.prototype._onTick = function (clock) {
       this.trackedEntity === this.selectedEntity;
 
     if (showSelection) {
-      infoBoxViewModel.titleText = defaultValue(
-        selectedEntity.name,
-        selectedEntity.id,
-      );
+      infoBoxViewModel.titleText = selectedEntity.name ?? selectedEntity.id;
       infoBoxViewModel.description = Property.getValueOrDefault(
         selectedEntity.description,
         time,
