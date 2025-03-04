@@ -35,6 +35,7 @@ CustomVoxelProvider.prototype.requestData = function (options) {
 - `TextureAtlas` has been refactored and internal APIs have been updated. If relying on the private texture atlas API, see [#12495](https://github.com/CesiumGS/cesium/pull/12495) for details.
   - Texture atlas now resizes more conservatively. This should help with texture memory overhead with may labels and billboards. [#172](https://github.com/CesiumGS/cesium/issues/172)
   - Texture atlas now reuses coordinates for existing subregions. [#2094](https://github.com/CesiumGS/cesium/issues/2094)
+- `Cesium3DTileBatchTable.jsgetClassificationFragmentShaderCallback` has been removed. [#12422](https://github.com/CesiumGS/cesium/issues/12422)
 
 ## 1.126 - 2025-02-03
 
