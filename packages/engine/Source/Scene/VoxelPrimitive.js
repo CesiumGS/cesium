@@ -40,6 +40,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix used to transform the primitive.
  * @param {CustomShader} [options.customShader] The custom shader used to style the primitive.
  * @param {Clock} [options.clock] The clock used to control time dynamic behavior.
+ * @param {Boolean} [options.calculateStatistics] Generate statistics for performance profile.
  *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
@@ -78,6 +79,12 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._statistics = new Cesium3DTilesetStatistics();
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._calculateStatistics = defaultValue(options.calculateStatistics, false);
 
   /**
    * This member is not created until the provider is ready.
@@ -1118,6 +1125,19 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._customShaderCompilationEvent;
     },
   },
+
+  /**
+   *  Loading and rendering information for requested content
+   * To use `visited` and `numberOfTilesWithContentReady` statistics, set options._calculateStatistics` to `true` in the constructor.
+   * @type {Cesium3DTilesetStatistics}
+   * @readonly
+   * @private
+   */
+  statistics: {
+    get: function () {
+      return this._statistics;
+    },
+  },
 });
 
 const scratchIntersect = new Cartesian4();
@@ -1502,6 +1522,8 @@ function initFromProvider(primitive, provider, context) {
   // Create the VoxelTraversal, and set related uniforms
   const keyframeCount = defaultValue(provider.keyframeCount, 1);
   primitive._traversal = new VoxelTraversal(primitive, context, keyframeCount);
+  primitive.statistics.texturesByteLength =
+    primitive._traversal.textureMemoryByteLength;
   setTraversalUniforms(primitive._traversal, uniforms);
 }
 
@@ -1842,6 +1864,7 @@ VoxelPrimitive.prototype.destroy = function () {
 
   this._pickId = this._pickId && this._pickId.destroy();
   this._traversal = this._traversal && this._traversal.destroy();
+  this.statistics.texturesByteLength = 0;
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
   return destroyObject(this);

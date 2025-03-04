@@ -25,6 +25,7 @@ describe(
   "Scene/VoxelTraversal",
   function () {
     const keyframeCount = 3;
+    const textureMemoryByteLength = 256;
 
     let scene;
     let provider;
@@ -47,7 +48,12 @@ describe(
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      traversal = new VoxelTraversal(primitive, scene.context, keyframeCount);
+      traversal = new VoxelTraversal(
+        primitive,
+        scene.context,
+        keyframeCount,
+        textureMemoryByteLength,
+      );
     });
 
     afterEach(function () {
@@ -138,6 +144,12 @@ describe(
       expect(traversal.isDestroyed()).toBe(true);
     });
 
+    it("shows texture memory allocation statistic", function () {
+      expect(traversal.textureMemoryByteLength).toBe(textureMemoryByteLength);
+      traversal.destroy();
+      expect(traversal.textureMemoryByteLength).toBe(0);
+    });
+
     it("loads tiles into megatexture", async function () {
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
@@ -150,14 +162,21 @@ describe(
           pauseUpdate,
         );
         scene.renderForSpecs();
-        return traversal.megatextures[0].occupiedCount > 0;
+        return (
+          traversal.megatextures[0].occupiedCount > 0 &&
+          traversal._primitive.statistics.texturesByteLength > 0
+        );
       });
 
       const megatexture = traversal.megatextures[0];
       expect(megatexture.occupiedCount).toBe(1);
+      expect(traversal.textureMemoryByteLength).toEqual(
+        textureMemoryByteLength,
+      );
     });
 
     it("tile failed event is raised", async function () {
+      traversal._calculateStatistics = true;
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
       const pauseUpdate = false;
@@ -179,6 +198,10 @@ describe(
         return counter === target;
       });
       expect(spyFailed.calls.count()).toBeGreaterThan(1);
+      expect(
+        traversal._primitive.statistics.numberOfTilesWithContentReady,
+      ).toEqual(0);
+      expect(traversal._primitive.statistics.visited).toEqual(3);
     });
 
     it("finds keyframe node with expected metadata values", async function () {
