@@ -25,6 +25,7 @@ Object.defineProperties(TilingScheme.prototype, {
   /**
    * Gets the ellipsoid that is tiled by the tiling scheme.
    * @memberof TilingScheme.prototype
+   * @readonly
    * @type {Ellipsoid}
    */
   ellipsoid: {
@@ -34,6 +35,7 @@ Object.defineProperties(TilingScheme.prototype, {
   /**
    * Gets the rectangle, in radians, covered by this tiling scheme.
    * @memberof TilingScheme.prototype
+   * @readonly
    * @type {Rectangle}
    */
   rectangle: {
@@ -43,6 +45,7 @@ Object.defineProperties(TilingScheme.prototype, {
   /**
    * Gets the map projection used by the tiling scheme.
    * @memberof TilingScheme.prototype
+   * @readonly
    * @type {MapProjection}
    */
   projection: {

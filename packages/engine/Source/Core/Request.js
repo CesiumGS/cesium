@@ -137,6 +137,7 @@ function Request(options) {
 
 /**
  * Mark the request as cancelled.
+ * This will cause it to get fully cancelled the next time {@link RequestScheduler#update} is called
  *
  * @private
  */

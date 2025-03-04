@@ -79,6 +79,7 @@ Object.defineProperties(WebMercatorTilingScheme.prototype, {
   /**
    * Gets the ellipsoid that is tiled by this tiling scheme.
    * @memberof WebMercatorTilingScheme.prototype
+   * @readonly
    * @type {Ellipsoid}
    */
   ellipsoid: {
@@ -90,6 +91,7 @@ Object.defineProperties(WebMercatorTilingScheme.prototype, {
   /**
    * Gets the rectangle, in radians, covered by this tiling scheme.
    * @memberof WebMercatorTilingScheme.prototype
+   * @readonly
    * @type {Rectangle}
    */
   rectangle: {
@@ -101,6 +103,7 @@ Object.defineProperties(WebMercatorTilingScheme.prototype, {
   /**
    * Gets the map projection used by this tiling scheme.
    * @memberof WebMercatorTilingScheme.prototype
+   * @readonly
    * @type {MapProjection}
    */
   projection: {
