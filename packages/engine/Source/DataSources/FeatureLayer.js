@@ -6,7 +6,6 @@ import Feature from "./Feature.js";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import CustomDataSource from "./CustomDataSource.js";
 import parseGeoJson from "./parseGeoJson.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 
 /**
@@ -23,6 +22,13 @@ import Cartesian3 from "../Core/Cartesian3.js";
  */
 function FeatureLayer(provider, options) {
   this.provider = provider;
+
+  this.provider.dataLoaded.addEventListener((json) => {
+    // TODO: this should probably take in Features[] instead of json and do the
+    // geojson parsing in the OGC provider
+    this.addGeoJson(json);
+    // console.log("loaded from event", json);
+  });
 
   this.id = options.id;
   // this.name = options.name;
@@ -131,6 +137,9 @@ FeatureLayer.prototype.addGeoJsonFeature = function (geoJson) {
       this._customDataSource.entities.add(entity);
     });
   }
+  // else {
+  //   console.log("skipped for duplicate?", feature.id);
+  // }
 
   // if (!this.features.get(feature.id)) {
   //   this.add(feature);
@@ -152,7 +161,7 @@ FeatureLayer.prototype.addGeoJsonFeature = function (geoJson) {
   return feature;
 };
 
-const scratchViewRectangle = new Rectangle();
+// const scratchViewRectangle = new Rectangle();
 
 /**
  * @param {FrameState} frameState
@@ -168,35 +177,31 @@ FeatureLayer.prototype.update = function (frameState) {
     ),
   );
 
-  if (distance > 400) {
+  if (distance > 2000) {
     // TODO: fine tune this? or replace with something better
-    console.log(
-      "camera moved",
-      distance,
-      // this._previousCameraPosition?.toString(),
-      // cameraPosition?.toString(),
-    );
+    // console.log(
+    //   "camera moved",
+    //   distance,
+    //   // this._previousCameraPosition?.toString(),
+    //   // cameraPosition?.toString(),
+    // );
     this.requestMade = false;
     this._previousCameraPosition = cameraPosition.clone();
   }
 
   if (!this.requestMade) {
-    console.log("requested");
+    // console.log("requested");
 
-    const cameraView = camera.computeViewRectangle(
-      Ellipsoid.default, // TODO: change this
-      scratchViewRectangle,
-    );
+    // const cameraView = camera.computeViewRectangle(
+    //   Ellipsoid.default, // TODO: change this
+    //   scratchViewRectangle,
+    // );
 
     // TODO: this should probably be debounced even more, it's still kicking off
     // way too many requests even with the request cancellation
     this.provider.requestFeatures({
-      bbox: cameraView,
+      camera: camera,
       time: time,
-      partialLoadCallback: (json) => {
-        this.addGeoJson(json);
-        console.log("loaded", json);
-      },
     });
     this.requestMade = true;
   }

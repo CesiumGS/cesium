@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Tiling Scheme example" />
+    <meta name="cesium-sandcastle-labels" content="Development" />
+    <title>Tiling Scheme</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        function drawRect(rect, outlineColor = Cesium.Color.RED) {
+          if (!rect) {
+            return;
+          }
+
+          const rectEntity = viewer.entities.add({
+            rectangle: {
+              coordinates: rect,
+              outline: true,
+              outlineColor: outlineColor,
+              height: 0,
+              //material: Cesium.Color.PINK.withAlpha(0.5),
+              //material: Cesium.Color.TRANSPARENT
+              material: outlineColor.withAlpha(0.1),
+            },
+            show: true,
+          });
+          return rectEntity;
+        }
+
+        const usRect = new Cesium.Rectangle(
+          -2.073804436865078,
+          0.527119902096775,
+          -1.4036981096114565,
+          0.783288043816687,
+        );
+
+        const tilingScheme = new Cesium.GeographicTilingScheme({
+          rectangle: usRect,
+          numberOfLevelZeroTilesX: 2,
+          numberOfLevelZeroTilesY: 2,
+        });
+
+        const scratchRect = new Cesium.Rectangle();
+
+        Cesium.Rectangle.prototype.toString = function () {
+          return `(${this.west}, ${this.south}, ${this.east}, ${this.north})`;
+        };
+
+        drawRect(usRect, Cesium.Color.LIME);
+
+        function tileRectanglesInRectangle(tilingScheme, rect, level = 0) {
+          // This is very similar to ImageryLayer._createTileImagerySkeletons
+          if (!rect) {
+            return [];
+          }
+
+          // use the intersection as the basis in case any points of rect are
+          // outside the bounds of the tiling scheme
+          const intersection = Cesium.Rectangle.intersection(
+            rect,
+            tilingScheme.rectangle,
+          );
+
+          const result = [];
+
+          const northWest = Cesium.Rectangle.northwest(intersection);
+          const southEast = Cesium.Rectangle.southeast(intersection);
+
+          const posNW = tilingScheme.positionToTileXY(northWest, level);
+          const posSE = tilingScheme.positionToTileXY(southEast, level);
+
+          console.log({ posNW, posSE });
+
+          const minX = posNW?.x ?? 0;
+          const maxX = posSE?.x ?? tilingScheme.getNumberOfXTilesAtLevel(level) - 1;
+          const minY = posNW?.y ?? 0;
+          const maxY = posSE?.y ?? tilingScheme.getNumberOfYTilesAtLevel(level) - 1;
+
+          // TODO: trim out south/east tiles if SE corner is near NW corner of SE most tile
+          // TODO: trim out the north/west tiles if NW corner is near SE corner of NW most tile
+
+          for (let x = minX; x <= maxX; x++) {
+            for (let y = minY; y <= maxY; y++) {
+              const tileRect = tilingScheme.tileXYToRectangle(x, y, level);
+              result.push(tileRect);
+              console.log(x, y, level, tileRect.toString());
+            }
+          }
+
+          return result;
+        }
+
+        Sandcastle.addToolbarButton("Show tiles in camera", (e) => {
+          viewer.entities.removeAll();
+
+          drawRect(usRect, Cesium.Color.LIME);
+
+          const cameraRect = viewer.scene.camera.computeViewRectangle(
+            viewer.scene.ellipsoid,
+            scratchRect,
+          );
+          drawRect(cameraRect, Cesium.Color.YELLOW);
+
+          const intersection = Cesium.Rectangle.intersection(cameraRect, usRect);
+          drawRect(intersection, Cesium.Color.PINK);
+
+          const height = viewer.scene.camera.positionCartographic.height;
+          let level = 0;
+
+          // TODO: this should be distance based to the target not height based
+          // or maybe percentage based between coverage of the target bounds and the camera?
+          if (height < 10000) {
+            level = 4;
+          } else if (height < 100000) {
+            level = 3;
+          } else if (height < 1000000) {
+            level = 2;
+          } else if (height < 5000000) {
+            level = 1;
+          }
+
+          console.log("camera", cameraRect.toString(), "height", height, "level", level);
+
+          tileRectanglesInRectangle(tilingScheme, cameraRect, level).forEach((rect) => {
+            drawRect(rect);
+          });
+        });
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

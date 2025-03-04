@@ -1,4 +1,5 @@
 import defined from "../Core/defined.js";
+import Event from "../Core/Event.js";
 import FeatureLayer from "./FeatureLayer.js";
 
 /**
@@ -11,6 +12,8 @@ function FeatureProvider(options) {
   this.credit = undefined;
 
   this._abortController = undefined;
+
+  this.dataLoaded = new Event();
 }
 
 Object.defineProperties(FeatureProvider.prototype, {});

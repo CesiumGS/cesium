@@ -1,4 +1,7 @@
 import defined from "../Core/defined.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import Event from "../Core/Event.js";
+import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import JulianDate from "../Core/JulianDate.js";
 import Rectangle from "../Core/Rectangle.js";
 import RequestState from "../Core/RequestState.js";
@@ -6,12 +9,16 @@ import Resource from "../Core/Resource.js";
 import FeatureLayer from "./FeatureLayer.js";
 
 /**
+ * @import Camera from "../Scene/Camera"
+ */
+/**
  * @typedef {Object} OgcFeatureProvider.ConstructorOptions
  * @property {string} baseUrl
  */
 
 /**
- * @param {[number, number, number, number]} bbox
+ * @private
+ * @param {number[]} bbox array of 4 numbers representing a rectangle
  * @returns {Rectangle}
  */
 function bboxToRect(bbox) {
@@ -19,13 +26,81 @@ function bboxToRect(bbox) {
 }
 
 /**
+ * @private
  * @param {Rectangle} rectangle
- * @returns {[number, number, number, number]}
+ * @returns {number[]} array of 4 numbers representing a rectangle
  */
 function rectToBbox(rectangle) {
   const { west, south, east, north } = rectangle.toDegrees();
   return [west, south, east, north];
 }
+
+/**
+ * @private
+ * @param {GeographicTilingScheme} tilingScheme
+ * @param {Rectangle} rectangle
+ * @param {number} level
+ * @returns {Map<string, Rectangle>} keys will equal "[x] [y] [level]"
+ */
+function tileRectanglesInRectangle(tilingScheme, rectangle, level = 0) {
+  /** @type {Map<string, Rectangle>} */
+  const result = new Map();
+
+  // TODO: should this be moved into the TilingScheme classes itself? seems very handy to have in general
+  // This is very similar to ImageryLayer._createTileImagerySkeletons
+  if (!defined(rectangle)) {
+    return result;
+  }
+
+  // use the intersection as the basis in case any points of rect are
+  // outside the bounds of the tiling scheme
+  const intersection = Rectangle.intersection(
+    rectangle,
+    tilingScheme.rectangle,
+  );
+
+  if (!defined(intersection)) {
+    return result;
+  }
+
+  const northWest = Rectangle.northwest(intersection);
+  const southEast = Rectangle.southeast(intersection);
+
+  const posNW = tilingScheme.positionToTileXY(northWest, level);
+  const posSE = tilingScheme.positionToTileXY(southEast, level);
+
+  // console.log({ posNW, posSE });
+
+  const minX = posNW?.x ?? 0;
+  const maxX = posSE?.x ?? tilingScheme.getNumberOfXTilesAtLevel(level) - 1;
+  const minY = posNW?.y ?? 0;
+  const maxY = posSE?.y ?? tilingScheme.getNumberOfYTilesAtLevel(level) - 1;
+
+  // TODO: trim out south/east tiles if SE corner is near NW corner of SE most tile
+  // TODO: trim out the north/west tiles if NW corner is near SE corner of NW most tile
+
+  for (let x = minX; x <= maxX; x++) {
+    for (let y = minY; y <= maxY; y++) {
+      const tileKey = `${x} ${y} ${level}`;
+      const tileRect = tilingScheme.tileXYToRectangle(x, y, level);
+      result.set(tileKey, tileRect);
+      // console.log(x, y, level, tileRect.toString());
+    }
+  }
+
+  return result;
+}
+
+/**
+ * An object to keep track of the state of each "tile" we're loading data for
+ * @typedef {Object} TileTracker
+ * @private
+ * @property {number} featuresLoaded defaults to 0
+ * @property {boolean} active defaults to false
+ * @property {string | undefined} nextLink defaults to undefined
+ * @property {boolean} fullyLoaded defaults to false
+ * @property {AbortController | undefined} abortController defaults to undefined
+ */
 
 /**
  * A class for things
@@ -44,18 +119,27 @@ function OgcFeatureProvider(baseUrl, collectionId, options) {
   this.maxItems = options?.maxItems ?? 10000;
   this.limitPerRequest = options?.limitPerRequest ?? 1000;
 
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+
   this._itemsLoaded = 0;
   this._nextLink = undefined;
   this._collectionLoaded = false;
+  this._metadata = undefined;
+  this._bbox = undefined;
+  this._availability = undefined;
+  this._tilingScheme = new GeographicTilingScheme({
+    numberOfLevelZeroTilesX: 2,
+    numberOfLevelZeroTilesY: 2,
+    ellipsoid: this._ellipsoid,
+  });
+  /** @type {Map<string, TileTracker>} */
+  this._loadedTiles = new Map();
+
+  this.dataLoaded = new Event();
 }
 
-Object.defineProperties(OgcFeatureProvider.prototype, {
-  canLoadMore: {
-    get: function () {
-      return defined(this._nextLink) && this._itemsLoaded < this.maxItems;
-    },
-  },
-});
+// TODO: remove if still empty
+Object.defineProperties(OgcFeatureProvider.prototype, {});
 
 OgcFeatureProvider.prototype.loadCollection = async function () {
   const resource = new Resource({
@@ -67,7 +151,14 @@ OgcFeatureProvider.prototype.loadCollection = async function () {
   this._collectionLoaded = true;
   this._metadata = json;
   if (defined(json.extent?.spatial)) {
-    this._bbox = bboxToRect(json.extent.spatial.bbox[0]);
+    const rect = bboxToRect(json.extent.spatial.bbox[0]);
+    this._bbox = rect;
+    this._tilingScheme = new GeographicTilingScheme({
+      numberOfLevelZeroTilesX: 2,
+      numberOfLevelZeroTilesY: 2,
+      ellipsoid: this._ellipsoid,
+      rectangle: rect,
+    });
   }
   if (defined(json.extent?.temporal)) {
     if (
@@ -118,44 +209,170 @@ function createCollectionResource(baseUrl, collectionId, options = {}) {
   return resource;
 }
 
+// /**
+//  * @param {Resource} resource
+//  */
+// function cancelResource(resource) {
+//   // TODO: This logic was copied from the RequestScheduler.
+//   // Not sure the best way to tie it in or if we even want to
+//   // it definitely seems to be better when actually aborting things instead of waiting
+//   // and ignoring the responses
+//   // if (resource.request.cancelFunction) {
+//   //   resource.request.cancelFunction();
+//   //   resource.request.state = RequestState.CANCELLED;
+//   //   resource.request.deferred.reject();
+//   // }
+//   resource.request.cancel();
+// }
+
 /**
- * @param {Resource} resource
+ * @param {string} tileKey
+ * @param {JulianDate} time
+ * @returns {Promise<void>}
  */
-function cancelResource(resource) {
-  // TODO: This logic was copied from the RequestScheduler.
-  // Not sure the best way to tie it in or if we even want to
-  // it definitely seems to be better when actually aborting things instead of waiting
-  // and ignoring the responses
-  if (resource.request.cancelFunction) {
-    resource.request.cancelFunction();
-    resource.request.state = RequestState.CANCELLED;
-    resource.request.deferred.reject();
+OgcFeatureProvider.prototype._requestTile = async function (tileKey, time) {
+  const [x, y, level] = tileKey.split(" ").map(Number.parseInt);
+  const tileTracker = this._loadedTiles.get(tileKey);
+
+  if (!defined(tileTracker) || tileTracker.fullyLoaded || tileTracker.active) {
+    return;
   }
-}
+
+  // This is for the entire MULTI-PAGE request, maybe need a better name
+  // TODO: this feels like it works nicer than a total "max items" for the whole provider
+  let itemsLoadedThisRequest = 0;
+
+  if (defined(tileTracker.abortController)) {
+    tileTracker.abortController.abort();
+  }
+  const localAbortController = new AbortController();
+  tileTracker.abortController = localAbortController;
+  localAbortController.signal.addEventListener("abort", () => {
+    // console.warn(tile, "aborted from controller!");
+    tileTracker.active = false;
+  });
+
+  // TODO: this should start with the previous nextLink if it exists
+  // But only if we're still in the same bbox and time of request so may be not actually
+  const resource = createCollectionResource(this.baseUrl, this.id, {
+    limit: this.limitPerRequest,
+    bbox: this._tilingScheme.tileXYToRectangle(x, y, level),
+    queryParameters: this.queryParameters,
+    headers: this.headers,
+  });
+  tileTracker.active = true;
+  const jsonRequest = resource
+    .fetchJson({ signal: localAbortController.signal })
+    ?.catch((error) => {
+      if (resource.request.state === RequestState.CANCELLED) {
+        return;
+      }
+      throw error;
+    });
+  const json = await jsonRequest;
+
+  if (localAbortController.signal.aborted) {
+    console.log(tileKey, "cancelled loading during first request");
+    tileTracker.active = false;
+    return;
+  }
+
+  if (!defined(json)) {
+    tileTracker.active = false;
+    return;
+  }
+
+  itemsLoadedThisRequest += json.numberReturned ?? json.features?.length;
+  tileTracker.featuresLoaded += json.numberReturned ?? json.features?.length;
+  tileTracker.nextLink = json.links?.find((link) => link.rel === "next")?.href;
+
+  this.dataLoaded.raiseEvent(json);
+
+  while (
+    defined(tileTracker.nextLink) &&
+    itemsLoadedThisRequest < this.maxItems
+  ) {
+    if (localAbortController.signal.aborted) {
+      console.log(tileKey, "cancelled loading at start of while loop");
+      tileTracker.active = false;
+      return;
+    }
+    // console.log("loading next page", this._nextLink);
+
+    let currentLimit = this.limitPerRequest;
+    if (itemsLoadedThisRequest + currentLimit > this.maxItems) {
+      // if a "full page" would load more than maxItems load the remaining difference instead
+      currentLimit = this.maxItems - itemsLoadedThisRequest;
+    }
+
+    const nextUrlPath = new URL(tileTracker.nextLink);
+    if (defined(this.queryParameters)) {
+      Object.entries(this.queryParameters).forEach(([key, value]) => {
+        nextUrlPath.searchParams.set(key, value);
+      });
+    }
+    nextUrlPath.searchParams.set("limit", currentLimit);
+
+    // TODO: really would like a way to tie into a way to cancel the actual request on Resource
+    const nextPageResource = new Resource({
+      url: nextUrlPath.href,
+      headers: this.headers,
+    });
+    const nextPageRequest = nextPageResource
+      .fetchJson({
+        signal: localAbortController.signal,
+      })
+      .catch((error) => {
+        if (resource.request.state === RequestState.CANCELLED) {
+          tileTracker.active = false;
+          return;
+        }
+        throw error;
+      });
+    const nextPage = await nextPageRequest;
+    if (localAbortController.signal.aborted) {
+      console.log(tileKey, "cancelled loading during page request");
+      tileTracker.active = false;
+      return;
+    }
+
+    this.dataLoaded.raiseEvent(nextPage);
+
+    itemsLoadedThisRequest +=
+      nextPage.numberReturned ?? nextPage.features?.length;
+    tileTracker.featuresLoaded +=
+      nextPage.numberReturned ?? nextPage.features?.length;
+    tileTracker.nextLink = nextPage.links?.find(
+      (link) => link.rel === "next",
+    )?.href;
+  }
+
+  tileTracker.fullyLoaded = true;
+  tileTracker.active = false;
+
+  if (itemsLoadedThisRequest >= this.maxItems) {
+    console.log(tileKey, "max items per request hit", itemsLoadedThisRequest);
+  } else {
+    console.log(tileKey, "no more next link for current request");
+    tileTracker.fullyLoaded = true;
+  }
+};
+
+const scratchViewRectangle = new Rectangle();
 
 /**
  * @param {Object} options
- * @param {Rectangle} [options.bbox]
+ * @param {Camera} options.camera
  * @param {JulianDate} [options.time]
- * @param {function} options.partialLoadCallback
  * @returns {Promise<undefined>}
  */
 OgcFeatureProvider.prototype.requestFeatures = async function ({
-  bbox,
+  camera,
   time,
-  partialLoadCallback,
 }) {
-  console.log("requestFeatures", bbox, time, time?.toString());
-
   if (!this._collectionLoaded) {
     await this.loadCollection();
   }
-
-  // TODO: compute if bbox arg is inside the extent bbox
-
-  // TODO: Might be good to try and keep track of what areas we _have_ already loaded
-  // and whether we've run out of `next` links for that area to indicate we've already
-  // loaded all the data we possibly could there
 
   if (defined(this._availability) && defined(time)) {
     const [start, end] = this._availability;
@@ -170,131 +387,61 @@ OgcFeatureProvider.prototype.requestFeatures = async function ({
     }
   }
 
-  // This is for the entire MULTI-PAGE request, maybe need a better name
-  // TODO: this feels like it works nicer than a total "max items" for the whole provider
-  let itemsLoadedThisRequest = 0;
+  const cameraRect = camera.computeViewRectangle(
+    this._ellipsoid,
+    scratchViewRectangle,
+  );
 
-  // if (this._itemsLoaded >= this.maxItems) {
-  //   // TODO: larger discussion, how should we manage `maxItems`? If we max out but then
-  //   // move the camera somewhere else maybe there's more items over there that we should load
-  //   // should we unload previous items and remove them from the max?
-  //   // should we even track the maxItems period? maybe it's not needed with improvements to rendering?
-  //   // this is mostly a memory concern I think and maybe prematurely trying to prevent it.
+  // console.log("requestFeatures", cameraRect, time, time?.toString());
 
-  //   // TODO: remove log
-  //   console.log("Over max items already");
-  //   return;
-  // }
+  const level = 0;
+  const tiles = tileRectanglesInRectangle(
+    this._tilingScheme,
+    cameraRect,
+    level,
+  );
 
-  if (defined(this._abortController)) {
-    this._abortController.abort();
-  }
-  const localAbortController = new AbortController();
-  this._abortController = localAbortController;
+  // TODO: I don't like this spread, is there a better way to track active items?
+  [...this._loadedTiles.entries()]
+    .filter(([tileKey, tileTracker]) => {
+      return tileTracker.active && !tiles.has(tileKey);
+    })
+    .forEach(([, tileTracker]) => {
+      // cancel loading of tiles that are no longer visible
+      tileTracker.abortController?.abort();
+    });
 
-  if (defined(this._activeResource)) {
-    cancelResource(this._activeResource);
-    this._activeResource = undefined;
-  }
+  const requestedTiles = tiles.keys();
+  for (const tileKey of requestedTiles) {
+    let tileTracker = this._loadedTiles.get(tileKey);
 
-  // TODO: this should start with the previous nextLink if it exists
-  // But only if we're still in the same bbox and time of request so may be not actually
-  const resource = createCollectionResource(this.baseUrl, this.id, {
-    limit: this.limitPerRequest,
-    bbox: bbox,
-    queryParameters: this.queryParameters,
-    headers: this.headers,
-  });
-  const jsonRequest = resource.fetchJson()?.catch((error) => {
-    if (resource.request.state === RequestState.CANCELLED) {
-      return;
-    }
-    throw error;
-  });
-  this._activeResource = resource;
-  const json = await jsonRequest;
-
-  if (localAbortController.signal.aborted) {
-    console.log("cancelled loading during first request");
-    return;
-  }
-
-  if (!defined(json)) {
-    return;
-  }
-
-  itemsLoadedThisRequest += json.numberReturned ?? json.features?.length;
-  this._itemsLoaded += json.numberReturned ?? json.features?.length;
-  this._nextLink = json.links?.find((link) => link.rel === "next")?.href;
-
-  partialLoadCallback(json);
-
-  while (
-    defined(this._nextLink) &&
-    // this._itemsLoaded < this.maxItems
-    itemsLoadedThisRequest < this.maxItems
-  ) {
-    if (localAbortController.signal.aborted) {
-      console.log("cancelled loading at start of while loop");
-      return;
-    }
-    // console.log("loading next page", this._nextLink);
-
-    let currentLimit = this.limitPerRequest;
-    // if (this._itemsLoaded + currentLimit > this.maxItems) {
-    if (itemsLoadedThisRequest + currentLimit > this.maxItems) {
-      // if a "full page" would load more than maxItems load the remaining difference instead
-      currentLimit = this.maxItems - this._itemsLoaded;
-    }
-
-    const nextUrlPath = new URL(this._nextLink);
-    if (defined(this.queryParameters)) {
-      Object.entries(this.queryParameters).forEach(([key, value]) => {
-        nextUrlPath.searchParams.set(key, value);
+    if (!defined(tileTracker)) {
+      this._loadedTiles.set(tileKey, {
+        featuresLoaded: 0,
+        active: false,
+        nextLink: undefined,
+        fullyLoaded: false,
+        abortController: undefined,
       });
+      tileTracker = this._loadedTiles.get(tileKey);
+      // console.log("created loaded tile record", tileKey);
     }
-    nextUrlPath.searchParams.set("limit", currentLimit);
 
-    // TODO: really would like a way to tie into a way to cancel the actual request on Resource
-    const nextPageResource = new Resource({
-      url: nextUrlPath.href,
-      headers: this.headers,
-    });
-    const nextPageRequest = nextPageResource.fetchJson().catch((error) => {
-      if (resource.request.state === RequestState.CANCELLED) {
-        return;
-      }
-      throw error;
-    });
-    this._activeResource = nextPageResource;
-    const nextPage = await nextPageRequest;
-    if (localAbortController.signal.aborted) {
-      console.log("cancelled loading during page request");
-      return;
+    if (!tileTracker.active) {
+      this._requestTile(tileKey, time);
     }
-    partialLoadCallback(nextPage);
-
-    itemsLoadedThisRequest +=
-      nextPage.numberReturned ?? nextPage.features?.length;
-    this._itemsLoaded += nextPage.numberReturned ?? nextPage.features?.length;
-    this._nextLink = nextPage.links?.find((link) => link.rel === "next")?.href;
-  }
-
-  if (itemsLoadedThisRequest >= this.maxItems) {
-    console.log("max items per request hit", itemsLoadedThisRequest);
-  } else {
-    console.log("no more next link for current request");
   }
 };
 
 OgcFeatureProvider.prototype.cancelRequests = async function () {
-  if (defined(this._abortController)) {
-    this._abortController.abort();
-  }
-  if (defined(this._activeResource)) {
-    cancelResource(this._activeResource);
-    this._activeResource = undefined;
-  }
+  [...this._loadedTiles.values()]
+    .filter((tileTracker) => {
+      return tileTracker.active;
+    })
+    .forEach((tileTracker) => {
+      // cancel any active tile requests
+      tileTracker.abortController?.abort();
+    });
 };
 
 OgcFeatureProvider.prototype.createLayer = function (options) {

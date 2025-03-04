@@ -115,6 +115,26 @@
         // const currentProvider = finlandGeoNamesProvider;
         // const collectionId = "placenames";
 
+        function drawRect(rect, outlineColor = Cesium.Color.RED) {
+          if (!rect) {
+            return;
+          }
+
+          const rectEntity = viewer.entities.add({
+            rectangle: {
+              coordinates: rect,
+              outline: true,
+              outlineColor: outlineColor,
+              height: 0,
+              //material: Cesium.Color.PINK.withAlpha(0.5),
+              material: Cesium.Color.TRANSPARENT,
+              //material: outlineColor.withAlpha(0.1),
+            },
+            show: true,
+          });
+          return rectEntity;
+        }
+
         async function load() {
           const provider = new Cesium.OgcFeatureProvider(
             currentProvider.baseUrl,
@@ -126,6 +146,11 @@
               headers: currentProvider.headers,
             },
           );
+
+          // TODO: this should be unnecessary in practice but wanted it for the debug rect
+          await provider.loadCollection();
+          drawRect(provider._bbox, Cesium.Color.LIME);
+
           const layer = provider.createLayer();
           layer.addToViewer(viewer);
           viewer.scene.primitives.add(layer);
@@ -139,21 +164,6 @@
           console.log(provider);
           // layer.addGeoJson(result);
           console.log(layer);
-
-          const bbox = provider._bbox;
-          const bboxEntity = viewer.entities.add({
-            rectangle: {
-              coordinates: bbox,
-              outline: true,
-              outlineColor: Cesium.Color.RED,
-              height: 0,
-              material: Cesium.Color.PINK.withAlpha(0.5),
-            },
-            show: true,
-          });
-          function updateBbox() {
-            bboxEntity.rectangle.coordinates = provider._bbox;
-          }
 
           // TODO: for testing
           window.provider = provider;
