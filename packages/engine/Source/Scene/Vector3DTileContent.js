@@ -440,7 +440,7 @@ function initialize(content, arrayBuffer, byteOffset) {
         "POLYGON_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      );
+      ); // Workaround for old vector tilesets using the non-plural name;
 
     if (!defined(polygonCounts)) {
       throw new RuntimeError(
@@ -458,7 +458,7 @@ function initialize(content, arrayBuffer, byteOffset) {
         "POLYGON_INDEX_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      );
+      ); // Workaround for old vector tilesets using the non-plural name;
 
     if (!defined(polygonIndexCounts)) {
       throw new RuntimeError(
@@ -538,7 +538,7 @@ function initialize(content, arrayBuffer, byteOffset) {
         "POLYLINE_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      );
+      ); // Workaround for old vector tilesets using the non-plural name;
 
     if (!defined(polylineCounts)) {
       throw new RuntimeError(

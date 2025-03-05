@@ -453,7 +453,7 @@ Cartesian3.fromRadians = function (longitude, latitude, height) {
 this._mapProjection = options.mapProjection ?? new GeographicProjection();
 ```
 
-- If an `options` parameter is optional, use `DefaultValues.EMPTY_OBJECT` or `DefaultValues.EMPTY_ARRAY`, e.g.,
+- If an `options` parameter is optional and never modified afterwards, use `DefaultValues.EMPTY_OBJECT` or `DefaultValues.EMPTY_ARRAY`, this could prevent from unnecessary memory allocations in code critical path, e.g.,
 
 ```javascript
 function BaseLayerPickerViewModel(options) {
