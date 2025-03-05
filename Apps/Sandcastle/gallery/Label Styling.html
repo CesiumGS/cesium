@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Styling options for text labels like font, size, scale, fill color, stroke color, and stroke width."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Beginner" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+
+      #toolbar > div {
+        display: flex;
+        width: 34em;
+      }
+
+      #labelToolbar {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #labelToolbar div {
+        display: flex;
+      }
+
+      #toolbar input[type="range"] {
+        flex-grow: 1;
+      }
+
+      #toolbar label {
+        margin-right: 0.5em;
+        flex-shrink: 0;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div id="labelToolbar">
+        <div class="cesium-button">
+          <label>Font size (px)</label>
+          <input
+            type="range"
+            min="8.0"
+            max="240.0"
+            step="1.0"
+            data-bind="value: fontSize, valueUpdate: 'input'"
+          />
+          <input type="number" size="5" step="1.0" data-bind="value: fontSize" />
+        </div>
+
+        <div class="cesium-button">
+          <label>Outline width</label>
+          <input
+            type="range"
+            min="0.0"
+            max="5.0"
+            step="0.5"
+            data-bind="value: outlineWidth, valueUpdate: 'input'"
+          />
+          <input type="number" size="5" step="0.5" data-bind="value: outlineWidth" />
+        </div>
+      </div>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          timeline: false,
+          animation: false,
+          sceneModePicker: false,
+          baseLayerPicker: false,
+          geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
+          // The globe does not need to be displayed,
+          // since the Photorealistic 3D Tiles include terrain
+          globe: false,
+        });
+
+        // Enable rendering the sky
+        viewer.scene.skyAtmosphere.show = true;
+
+        // Add Photorealistic 3D Tiles
+        try {
+          const tileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading Photorealistic 3D Tiles tileset.
+          ${error}`);
+        }
+
+        const response = await fetch("../../SampleData/city_labels.geojson");
+        const geojson = await response.json();
+
+        const camera = viewer.scene.camera;
+        const ellipsoidMaxRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
+        const getLabelDepthTestDistance = () => {
+          // Begin depth testing a bit below the ellipsoid surface
+          return camera.positionCartographic.height + ellipsoidMaxRadius / 2.0;
+        };
+
+        const max = 5000;
+        for (let i = 0; i < max; ++i) {
+          // Add a label for each geojson point feature
+          const feature = geojson.features[i];
+          const { properties, geometry } = feature;
+
+          // Transform place names to title case
+          const placeName = properties.NAME;
+          const tokens = placeName.split(" ");
+          const displayTokens = tokens.map(
+            (token) => token.slice(0, 1) + token.slice(1).toLowerCase(),
+          );
+
+          const { coordinates } = geometry;
+          const text = displayTokens.join(" ");
+
+          const disableDepthTestDistance = new Cesium.CallbackProperty(
+            getLabelDepthTestDistance,
+            false,
+          );
+
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(...coordinates),
+            label: {
+              text,
+              disableDepthTestDistance,
+            },
+          });
+        }
+
+        const stylingViewModel = {
+          showBackground: false,
+          fontFamily: "sans-serif",
+          fontSize: 30,
+          outlineWidth: 0,
+        };
+
+        function updateLabels() {
+          const entities = viewer.entities.values;
+          for (const entity of entities) {
+            const label = entity.label;
+            if (!Cesium.defined(label)) {
+              continue;
+            }
+
+            label.showBackground = stylingViewModel.showBackground;
+            label.font = `${stylingViewModel.fontSize}px ${stylingViewModel.fontFamily}`;
+            const outlineWidth = Number(stylingViewModel.outlineWidth);
+            label.style =
+              outlineWidth > 0.0
+                ? Cesium.LabelStyle.FILL_AND_OUTLINE
+                : Cesium.LabelStyle.FILL;
+            label.outlineWidth = outlineWidth;
+          }
+        }
+
+        Cesium.knockout.track(stylingViewModel);
+        const labelToolbar = document.getElementById("labelToolbar");
+        Cesium.knockout.applyBindings(stylingViewModel, labelToolbar);
+        Object.keys(stylingViewModel).forEach((observableName) => {
+          Cesium.knockout
+            .getObservable(stylingViewModel, observableName)
+            .subscribe(updateLabels);
+        });
+
+        Sandcastle.addToggleButton(
+          "Show background",
+          stylingViewModel.showBackground,
+          function (checked) {
+            stylingViewModel.showBackground = checked;
+          },
+        );
+
+        const fontOption = (text, fontFamily) => {
+          const onselect = () => (stylingViewModel.fontFamily = fontFamily);
+          return {
+            text,
+            onselect,
+          };
+        };
+        const fontOptions = [
+          fontOption("Arial (sans-serif)", '"Arial", sans-serif'),
+          fontOption("Verdana (sans-serif)", '"Verdana", sans-serif'),
+          fontOption("Tahoma (sans-serif)", '"Tahoma", sans-serif'),
+          fontOption("Trebuchet MS (sans-serif)", '"Trebuchet MS", sans-serif'),
+          fontOption("Times New Roman (serif)", '"Times New Roman", serif'),
+          fontOption("Georgia (serif)", '"Georgia", serif'),
+          fontOption("Garamond (serif)", '"Garamond", serif'),
+          fontOption("Courier New (monospace)", '"Courier New", monospace'),
+          fontOption("Brush Script MT (cursive)", '"Brush Script MT", cursive'),
+        ];
+        Sandcastle.addToolbarMenu(fontOptions, "labelToolbar");
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>
