@@ -115,6 +115,28 @@ describe(
       expect(scene.camera.positionWC).toEqualEpsilon(positionWC, 1e-10);
     });
 
+    it("jumps to new bounding sphere", function () {
+      const bs1 = new BoundingSphere(new Cartesian3(1, 2, 3), 4);
+      scene.camera.viewBoundingSphere(bs1);
+      const positionWC1 = scene.camera.positionWC.clone();
+
+      const bs2 = new BoundingSphere(new Cartesian3(1, 2, 3), 4);
+      scene.camera.viewBoundingSphere(bs2);
+      const positionWC2 = scene.camera.positionWC.clone();
+
+      const entity = new Entity();
+      entity.position = new ConstantPositionProperty(
+        Cartesian3.fromDegrees(0.0, 0.0),
+      );
+      const view = new EntityView(entity, scene, undefined);
+      view.update(JulianDate.now(), bs1);
+      expect(scene.camera.positionWC).toEqualEpsilon(positionWC1, 1e-10);
+
+      view.boundingSphere = bs2;
+      view.update(JulianDate.now());
+      expect(scene.camera.positionWC).toEqualEpsilon(positionWC2, 1e-10);
+    });
+
     it("uses entity viewFrom if available and boundingsphere is supplied", function () {
       const sampleOffset = new Cartesian3(1, 2, 3);
       const entity = new Entity();
