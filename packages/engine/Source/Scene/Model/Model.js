@@ -2017,7 +2017,8 @@ function processLoader(model, frameState) {
   ) {
     // Ensures frames continue to render in requestRender mode while resources are processing
     frameState.afterRender.push(() => true);
-    return model._loader.process(frameState);
+    // use modelMatrix because model.referenceMatrix is the clipping plane matrix and thus really fucky
+    return model._loader.process(frameState, model.modelMatrix);
   }
 
   return true;

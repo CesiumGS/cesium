@@ -80,6 +80,8 @@ import VoxelPrimitive from "./VoxelPrimitive.js";
 import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
+import Ray from "../Core/Ray.js";
+import Cesium3DTileset from "./Cesium3DTileset.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -4676,6 +4678,187 @@ Scene.prototype.drillPickFromRay = function (
     objectsToExclude,
     width,
   );
+};
+
+/**
+ * Converts a point from ECEF to ENU coordinates of a frame centered at a reference point.
+ * @param {Cartesian3} [reference] reference point in ECEF coordinates as the center of the resulting ENU frame
+ * @param {Cartesian3} [point] point in ECEF coordinates
+ * @returns {Cartesian3} point in ENU coordinates
+ */
+function pointEcefToEnu(reference, point) {
+  const ecefFromEnu = Transforms.eastNorthUpToFixedFrame(reference);
+  const enuFromEcef = Matrix4.inverseTransformation(ecefFromEnu, new Matrix4());
+  const transformed = Matrix4.multiplyByPointAsVector(
+    enuFromEcef,
+    Cartesian3.subtract(point, reference, new Cartesian3()),
+    new Cartesian3(),
+  );
+  return transformed;
+}
+
+/**
+ * Converts a direction vector from ECEF to ENU coordinates of a frame centered at a reference point.
+ * @param {Cartesian3} [reference] reference point in ECEF coordinates as the center of the resulting ENU frame
+ * @param {Cartesian3} [direction] direction vector in ECEF coordinates
+ * @returns {Cartesian3} direction vector in ENU coordinates
+ */
+function rayEcefToEnu(reference, direction) {
+  const ecefFromEnu = Transforms.eastNorthUpToFixedFrame(reference);
+  const enuFromEcef = Matrix4.inverseTransformation(ecefFromEnu, new Matrix4());
+  const transformed = Matrix4.multiplyByPointAsVector(
+    enuFromEcef,
+    direction,
+    new Cartesian3(),
+  );
+  return transformed;
+}
+
+/**
+ * Finds the points within a radius of a ray in the ENU coordinate system of a tile.
+ * @param {Cesium3DTile} tile
+ * @param {Ray} ray
+ * @param {number} radius
+ */
+function getRayIntersectionWithTile(tile, ray, radius) {
+  if (
+    !tile.content ||
+    !tile.content._model ||
+    !tile.content._model._loader._rtcCenterEcef
+  ) {
+    return null;
+  }
+  const origin = pointEcefToEnu(
+    tile._content._model._loader._rtcCenterEcef,
+    ray.origin,
+  );
+  const direction = rayEcefToEnu(
+    tile.content._model._loader._rtcCenterEcef,
+    ray.direction,
+  );
+  const enuRay = new Ray(origin, direction);
+  const result = tile.content._model._loader.findPointsWithinRadiusOfRay(
+    enuRay,
+    radius,
+  );
+  return result;
+}
+
+function rayIntersection(tileset, ray, radius) {
+  let minDist = Infinity;
+  let bestIntersection;
+  for (const tile of tileset) {
+    const intersectionWithTile = getRayIntersectionWithTile(tile, ray, radius);
+    if (intersectionWithTile) {
+      const dist = distanceFromRayToPoint(ray, intersectionWithTile);
+      if (dist < minDist) {
+        const content = tile._content;
+        minDist = dist;
+        bestIntersection = [intersectionWithTile, content, tile._tileset];
+      }
+    }
+  }
+  return bestIntersection;
+}
+
+function closestPointOnLineToPoint(point, line) {
+  const dir = Cartesian3.normalize(line.b, new Cartesian3());
+  const rayToCenter = Cartesian3.subtract(point, line.a, new Cartesian3());
+  const t = Cartesian3.dot(rayToCenter, dir);
+  return t;
+}
+
+function closestPointOnRayToPoint(ray, point) {
+  const dir = Cartesian3.normalize(ray.direction, new Cartesian3());
+  const t = closestPointOnLineToPoint(point, {
+    a: ray.origin,
+    b: dir,
+  });
+
+  // If negative, the point is behind the ray origin
+  if (t < 0.0) {
+    return ray.origin;
+  }
+
+  const intersection = Cartesian3.add(
+    ray.origin,
+    Cartesian3.multiplyByScalar(dir, t, new Cartesian3()),
+    new Cartesian3(),
+  );
+  return intersection;
+}
+
+/**
+ * Find the distance between a point and the closest point on a ray.
+ */
+function distanceFromRayToPoint(ray, point) {
+  return Cartesian3.distance(point, closestPointOnRayToPoint(ray, point));
+}
+
+/**
+ * Finds tiles of a tileset that are potentially intersected by a ray.
+ * @param {Cesium3DTile} root tile of the tileset, whose children are to be evaluated for intersection
+ * @param {Ray} ray
+ * @param {number} radius
+ * @returns {Cesium3DTile[]} Array of tiles that are potentially intersected by the ray.
+ */
+function getRayFittingTiles(root, ray, radius) {
+  const fittingTiles = [];
+  const queue = [root];
+  while (queue.length > 0) {
+    const curTile = queue.pop();
+    if (curTile && curTile.children) {
+      for (const child of curTile.children) {
+        if (
+          distanceFromRayToPoint(ray, child.boundingSphere.center) <
+          radius + child.boundingSphere.radius
+        ) {
+          queue.push(child);
+        }
+      }
+      fittingTiles.push(curTile);
+    }
+  }
+  return fittingTiles;
+}
+
+/**
+ * Returns the best pick location against all the cesium3D Tilesets in the scene.
+ *
+ * @param {Ray} ray
+ * @param {number} width
+ */
+Scene.prototype.drillPickFromRayFast = function (ray, width) {
+  let bestIntersection;
+  let minDist = Infinity;
+
+  // iterate through all the valid Cesium3dTilesets, and evaluate picking against them
+  for (const tile of this.primitives._primitives) {
+    if (tile instanceof Cesium3DTileset) {
+      const root_tile = tile.root;
+      // determine the tiles of the Cesium3DTileset that could be intersected by the ray
+      const tileset = getRayFittingTiles(root_tile, ray, width);
+      const intersection = rayIntersection(tileset, ray, width);
+      if (intersection) {
+        const dist = distanceFromRayToPoint(ray, intersection[0]);
+        if (dist < minDist) {
+          bestIntersection = intersection;
+          minDist = dist;
+        }
+      }
+    }
+  }
+  if (!bestIntersection) {
+    return undefined;
+  }
+  return [
+    bestIntersection[0],
+    { content: bestIntersection[1], primitive: bestIntersection[2] },
+  ];
+};
+
+Scene.prototype.getVerticalIntersection = function (point, width) {
+  return this._picking.getVerticalIntersection(this, point, width);
 };
 
 /**
