@@ -7,18 +7,32 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
+import SdfSettings from "../Renderer/SdfSettings.js";
 import Billboard from "./Billboard.js";
 import HeightReference from "./HeightReference.js";
-import HorizontalOrigin from "./HorizontalOrigin.js";
+import HorizontalOrigin from "../Core/HorizontalOrigin.js";
 import LabelStyle from "./LabelStyle.js";
-import SDFSettings from "./SDFSettings.js";
-import VerticalOrigin from "./VerticalOrigin.js";
+import VerticalOrigin from "../Core/VerticalOrigin.js";
 
-const fontInfoCache = {};
-let fontInfoCacheLength = 0;
+/**
+ * @typedef {Object} Label.FontInfo
+ * @private
+ * @property {string} fontFamily The CSS font-family.
+ * @property {number} fontSize The CSS font-size, in CSS pixels.
+ * @property {string} fontStyle The CSS font-style.
+ * @property {string} fontWeight The CSS font-weight.
+ * @property {number} lineHeight The CSS line-height.
+ */
+
+/**
+ * @type {Map<string, Label.FontInfo>}
+ * @private
+ */
+const fontInfoCache = new Map();
 const fontInfoCacheMaxSize = 256;
 const defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
 const defaultBackgroundPadding = new Cartesian2(7, 5);
+const defaultLineSpacingPercent = 1.2; // Traditionally, leading is %20 of the font size.
 
 const textTypes = Object.freeze({
   LTR: 0,
@@ -49,40 +63,38 @@ function getCSSValue(element, property) {
     .getPropertyValue(property);
 }
 
-function parseFont(label) {
-  let fontInfo = fontInfoCache[label._font];
+function parseFont(font) {
+  let fontInfo = fontInfoCache.get(font);
   if (!defined(fontInfo)) {
     const div = document.createElement("div");
     div.style.position = "absolute";
     div.style.opacity = 0;
-    div.style.font = label._font;
+    div.style.font = font;
     document.body.appendChild(div);
 
     let lineHeight = parseFloat(getCSSValue(div, "line-height"));
     if (isNaN(lineHeight)) {
       // line-height isn't a number, i.e. 'normal'; apply default line-spacing
-      lineHeight = undefined;
+      lineHeight = defaultLineSpacingPercent;
     }
 
+    const fontSize = parseFloat(
+      getCSSValue(div, "font-size").replace("px", ""),
+    );
     fontInfo = {
-      family: getCSSValue(div, "font-family"),
-      size: getCSSValue(div, "font-size").replace("px", ""),
-      style: getCSSValue(div, "font-style"),
-      weight: getCSSValue(div, "font-weight"),
+      fontFamily: getCSSValue(div, "font-family"),
+      fontSize: fontSize,
+      fontStyle: getCSSValue(div, "font-style"),
+      fontWeight: getCSSValue(div, "font-weight"),
       lineHeight: lineHeight,
     };
 
     document.body.removeChild(div);
-    if (fontInfoCacheLength < fontInfoCacheMaxSize) {
-      fontInfoCache[label._font] = fontInfo;
-      fontInfoCacheLength++;
+    if (fontInfoCache.size < fontInfoCacheMaxSize) {
+      fontInfoCache.set(font, fontInfo);
     }
   }
-  label._fontFamily = fontInfo.family;
-  label._fontSize = fontInfo.size;
-  label._fontStyle = fontInfo.style;
-  label._fontWeight = fontInfo.weight;
-  label._lineHeight = fontInfo.lineHeight;
+  return fontInfo;
 }
 
 /**
@@ -202,7 +214,7 @@ function Label(options, labelCollection) {
   this._renderedText = undefined;
   this._text = undefined;
   this._show = defaultValue(options.show, true);
-  this._font = defaultValue(options.font, "30px sans-serif");
+
   this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
   this._outlineColor = Color.clone(
     defaultValue(options.outlineColor, Color.BLACK),
@@ -261,9 +273,17 @@ function Label(options, labelCollection) {
 
   this.text = defaultValue(options.text, "");
 
-  this._relativeSize = 1.0;
+  const font = defaultValue(options.font, "30px sans-serif");
+  const { fontFamily, fontSize, fontStyle, fontWeight, lineHeight } =
+    parseFont(font);
 
-  parseFont(this);
+  this._font = font;
+  this._fontFamily = fontFamily;
+  this._fontSize = fontSize;
+  this._fontStyle = fontStyle;
+  this._fontWeight = fontWeight;
+  this._lineHeight = lineHeight;
+  this._relativeFontSize = fontSize / SdfSettings.FONT_SIZE;
 
   this._updateClamping();
 }
@@ -429,9 +449,113 @@ Object.defineProperties(Label.prototype, {
 
       if (this._font !== value) {
         this._font = value;
+        const { fontFamily, fontSize, fontStyle, fontWeight, lineHeight } =
+          parseFont(value);
+
+        this._font = value;
+        this._fontFamily = fontFamily;
+        this._fontSize = fontSize;
+        this._fontStyle = fontStyle;
+        this._fontWeight = fontWeight;
+        this._lineHeight = lineHeight;
+        this._relativeFontSize = fontSize / SdfSettings.FONT_SIZE;
+
         rebindAllGlyphs(this);
-        parseFont(this);
       }
+    },
+  },
+
+  /**
+   * The CSS font-family used to render the label.
+   * @memberof Label.prototype
+   * @type {string}
+   * @default 'sans-serif'
+   * @see {Label#font}
+   * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
+   */
+  fontFamily: {
+    get: function () {
+      return this._fontFamily;
+    },
+  },
+
+  /**
+   * The CSS font-size used to render the label, in CSS pixels.
+   * @memberof Label.prototype
+   * @type {number}
+   * @default 30
+   * @see {Label#font}
+   * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
+   */
+  fontSize: {
+    get: function () {
+      return this._fontSize;
+    },
+  },
+
+  /**
+   * The CSS font-style used to render the label.
+   * @memberof Label.prototype
+   * @type {string}
+   * @default 'normal'
+   * @see {Label#font}
+   * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
+   */
+  fontStyle: {
+    get: function () {
+      return this._fontStyle;
+    },
+  },
+
+  /**
+   * The CSS font-weight used to render the label.
+   * @memberof Label.prototype
+   * @type {string}
+   * @default '400'
+   * @see {Label#font}
+   * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
+   */
+  fontWeight: {
+    get: function () {
+      return this._fontWeight;
+    },
+  },
+
+  /**
+   * Font size scaling relative to the font size used to render the SDF glyphs.
+   * @memberof Label.prototype
+   * @private
+   * @type {number}
+   */
+  relativeFontSize: {
+    get: function () {
+      return this._relativeFontSize;
+    },
+  },
+
+  /**
+   * The CSS font string with a modified font size for rendering SDF glyphs.
+   * @memberof Label.prototype
+   * @type {string}
+   * @private
+   */
+  sdfFont: {
+    get: function () {
+      return `${this.fontStyle} ${this.fontWeight} ${SdfSettings.FONT_SIZE}px ${this.fontFamily}`;
+    },
+  },
+
+  /**
+   * The CSS line-height used to render the label, as a percentage of the font size.
+   * @memberof Label.prototype
+   * @type {number}
+   * @default 1.2
+   * @see {Label#fontSize}
+   * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
+   */
+  lineHeight: {
+    get: function () {
+      return this._lineHeight;
     },
   },
 
@@ -999,12 +1123,12 @@ Object.defineProperties(Label.prototype, {
         for (let i = 0, len = glyphs.length; i < len; i++) {
           const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
-            glyph.billboard.scale = value * this._relativeSize;
+            glyph.billboard.scale = value * this._relativeFontSize;
           }
         }
         const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-          backgroundBillboard.scale = value * this._relativeSize;
+          backgroundBillboard.scale = value * this._relativeFontSize;
         }
 
         repositionAllGlyphs(this);
@@ -1021,7 +1145,7 @@ Object.defineProperties(Label.prototype, {
    */
   totalScale: {
     get: function () {
-      return this._scale * this._relativeSize;
+      return this._scale * this._relativeFontSize;
     },
   },
 
@@ -1302,8 +1426,9 @@ Label.getScreenSpaceBoundingBox = function (
 
       const glyphX = screenSpacePosition.x + billboard._translate.x;
       let glyphY = screenSpacePosition.y - billboard._translate.y;
-      const glyphWidth = glyph.dimensions.width * scale;
-      const glyphHeight = glyph.dimensions.height * scale;
+      let { glyphWidth, glyphHeight } = glyph.dimensions;
+      glyphWidth *= scale;
+      glyphHeight *= scale;
 
       if (
         label.verticalOrigin === VerticalOrigin.BOTTOM ||
@@ -1312,15 +1437,6 @@ Label.getScreenSpaceBoundingBox = function (
         glyphY -= glyphHeight;
       } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
         glyphY -= glyphHeight * 0.5;
-      }
-
-      if (label._verticalOrigin === VerticalOrigin.TOP) {
-        glyphY += SDFSettings.PADDING * scale;
-      } else if (
-        label._verticalOrigin === VerticalOrigin.BOTTOM ||
-        label._verticalOrigin === VerticalOrigin.BASELINE
-      ) {
-        glyphY -= SDFSettings.PADDING * scale;
       }
 
       x = Math.min(x, glyphX);

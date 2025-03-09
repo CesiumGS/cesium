@@ -499,14 +499,21 @@ describe("Scene/LabelCollection", function () {
       it("can render a label", async function () {
         labels.add({
           position: Cartesian3.ZERO,
-          text: "x",
+          text: "X",
           horizontalOrigin: HorizontalOrigin.CENTER,
           verticalOrigin: VerticalOrigin.CENTER,
         });
 
         await allLabelsReady();
 
-        expect(scene).toRender([255, 255, 255, 255]);
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect(a).toBe(255);
+          expect(r).toBeGreaterThan(85);
+          expect(r).toBeGreaterThan(85);
+          expect(b).toBeGreaterThan(85);
+          expect(r).toEqual(b);
+          expect(b).toEqual(g);
+        });
       });
 
       // This Unicode square block will more reliably cover the center pixel than an 'x' or a 'w' char.
@@ -668,7 +675,7 @@ describe("Scene/LabelCollection", function () {
         expect(scene).toRender([255, 255, 255, 255]);
       });
 
-      it("can render a label background", function () {
+      it("can render a label background", async function () {
         const label = labels.add({
           position: Cartesian3.ZERO,
           text: "_",
@@ -678,12 +685,17 @@ describe("Scene/LabelCollection", function () {
           backgroundColor: Color.BLUE,
         });
 
-        return allLabelsReady().then(function () {
-          expect(scene).toRender([0, 0, 255, 255]);
-
-          labels.remove(label);
-          expect(scene).toRender([0, 0, 0, 255]);
+        await allLabelsReady();
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect(r).toBeLessThan(120);
+          expect(g).toBeLessThan(120);
+          expect(r).toEqual(g);
+          expect(b).toEqual(255);
+          expect(a).toEqual(255);
         });
+
+        labels.remove(label);
+        expect(scene).toRender([0, 0, 0, 255]);
       });
 
       it("does not render labels with show set to false", function () {
@@ -709,7 +721,7 @@ describe("Scene/LabelCollection", function () {
         });
       });
 
-      it("does not render label background with show set to false", function () {
+      it("does not render label background with show set to false", async function () {
         const label = labels.add({
           position: Cartesian3.ZERO,
           text: "_",
@@ -719,14 +731,25 @@ describe("Scene/LabelCollection", function () {
           backgroundColor: Color.BLUE,
         });
 
-        return allLabelsReady().then(function () {
-          expect(scene).toRender([0, 0, 255, 255]);
+        await allLabelsReady();
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect(r).toBeLessThan(120);
+          expect(g).toBeLessThan(120);
+          expect(r).toEqual(g);
+          expect(b).toEqual(255);
+          expect(a).toEqual(255);
+        });
 
-          label.show = false;
-          expect(scene).toRender([0, 0, 0, 255]);
+        label.show = false;
+        expect(scene).toRender([0, 0, 0, 255]);
 
-          label.show = true;
-          expect(scene).toRender([0, 0, 255, 255]);
+        label.show = true;
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect(r).toBeLessThan(120);
+          expect(g).toBeLessThan(120);
+          expect(r).toEqual(g);
+          expect(b).toEqual(255);
+          expect(a).toEqual(255);
         });
       });
 
@@ -753,7 +776,7 @@ describe("Scene/LabelCollection", function () {
         });
       });
 
-      it("does not render labels with a scale of zero", function () {
+      it("does not render labels with a scale of zero", async function () {
         const label = labels.add({
           position: Cartesian3.ZERO,
           text: "x",
@@ -762,14 +785,14 @@ describe("Scene/LabelCollection", function () {
         });
 
         label.scale = 0.0;
-        return allLabelsReady().then(function () {
-          expect(scene).toRender([0, 0, 0, 255]);
+        await allLabelsReady();
+        expect(scene).toRender([0, 0, 0, 255]);
 
-          label.scale = 2.0;
-          scene.render();
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(10);
-          });
+        label.scale = 1.0;
+        await allLabelsReady();
+
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(10);
         });
       });
 
@@ -1069,7 +1092,8 @@ describe("Scene/LabelCollection", function () {
 
         const originalFont = label.font;
         label.font = '30px "Open Sans"';
-        expect(label.font).not.toEqual(originalFont); // otherwise this test needs fixing.
+        expect(label.font).not.toEqual(originalFont);
+
         scene.renderForSpecs();
         expect(cache.size).toEqual(7);
 
@@ -1088,7 +1112,7 @@ describe("Scene/LabelCollection", function () {
         scene.renderForSpecs();
         expect(cache.size).toEqual(7);
 
-        // vertical origin only affects glyph positions, not glyphs themselves.
+        // Vertical origin only affects glyph positions, not glyphs themselves.
         label.verticalOrigin = VerticalOrigin.CENTER;
         scene.renderForSpecs();
         expect(cache.size).toEqual(7);
@@ -1096,15 +1120,15 @@ describe("Scene/LabelCollection", function () {
         scene.renderForSpecs();
         expect(cache.size).toEqual(7);
 
-        //even though we're resetting to the original font, other properties used to create the id have changed
+        // Since nothing else has changed, setting the font back to it's original shouldn't cause new glyphs to be generated.
         label.font = originalFont;
         scene.renderForSpecs();
-        expect(cache.size).toEqual(9);
+        expect(cache.size).toEqual(7);
 
         //Changing thickness doesn't requires new glyphs
         label.outlineWidth = 3;
         scene.renderForSpecs();
-        expect(cache.size).toEqual(9);
+        expect(cache.size).toEqual(7);
       });
 
       it("should reuse billboards that are not needed any more", async function () {
@@ -1250,7 +1274,7 @@ describe("Scene/LabelCollection", function () {
           });
         });
 
-        it("computes screen space bounding box with vertical origin center", function () {
+        it("computes screen space bounding box with vertical origin center", async function () {
           const scale = 1.5;
 
           const label = labels.add({
@@ -1259,17 +1283,13 @@ describe("Scene/LabelCollection", function () {
             verticalOrigin: VerticalOrigin.CENTER,
           });
 
-          return allLabelsReady().then(function () {
-            const bbox = Label.getScreenSpaceBoundingBox(
-              label,
-              Cartesian2.ZERO,
-            );
-            expect(bbox.y).toBeGreaterThan(bbox.height * -0.9);
-            expect(bbox.y).toBeLessThan(bbox.height * -0.3);
-          });
+          await allLabelsReady();
+          const bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+          expect(bbox.y).toBeGreaterThan(bbox.height * -0.9);
+          expect(bbox.y).toBeLessThan(bbox.height * -0.3);
         });
 
-        it("computes screen space bounding box with vertical origin top", function () {
+        it("computes screen space bounding box with vertical origin top", async function () {
           const scale = 1.5;
 
           const label = labels.add({
@@ -1278,17 +1298,13 @@ describe("Scene/LabelCollection", function () {
             verticalOrigin: VerticalOrigin.TOP,
           });
 
-          return allLabelsReady().then(function () {
-            const bbox = Label.getScreenSpaceBoundingBox(
-              label,
-              Cartesian2.ZERO,
-            );
-            expect(bbox.y).toBeLessThan(5);
-            expect(bbox.y).toBeGreaterThan(-5);
-          });
+          await allLabelsReady();
+          const bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+          expect(bbox.y).toBeLessThan(5);
+          expect(bbox.y).toBeGreaterThan(bbox.height * -0.25);
         });
 
-        it("computes screen space bounding box with vertical origin baseline", function () {
+        it("computes screen space bounding box with vertical origin baseline", async function () {
           const scale = 1.5;
 
           const label = labels.add({
@@ -1297,14 +1313,10 @@ describe("Scene/LabelCollection", function () {
             verticalOrigin: VerticalOrigin.BASELINE,
           });
 
-          return allLabelsReady().then(function () {
-            const bbox = Label.getScreenSpaceBoundingBox(
-              label,
-              Cartesian2.ZERO,
-            );
-            expect(bbox.y).toBeLessThan(bbox.height * -0.8);
-            expect(bbox.y).toBeGreaterThan(bbox.height * -1.2);
-          });
+          await allLabelsReady();
+          const bbox = Label.getScreenSpaceBoundingBox(label, Cartesian2.ZERO);
+          expect(bbox.y).toBeLessThan(bbox.height * -0.6);
+          expect(bbox.y).toBeGreaterThan(bbox.height * -1.2);
         });
 
         it("computes screen space bounding box with horizontal origin", function () {
@@ -1339,7 +1351,7 @@ describe("Scene/LabelCollection", function () {
             backgroundPadding: new Cartesian2(15, 10),
           });
           return allLabelsReady().then(function () {
-            const totalScale = label.scale * label._relativeSize;
+            const totalScale = label.totalScale;
 
             const backgroundBillboard = label._backgroundBillboard;
             const width = backgroundBillboard.width * totalScale;
@@ -1373,8 +1385,7 @@ describe("Scene/LabelCollection", function () {
 
           await allLabelsReady();
 
-          const dimensions = label._glyphs[0].dimensions;
-          expect(dimensions.height).toBeGreaterThan(0);
+          expect(label.fontSize).toBeGreaterThan(10);
         });
 
         it("should have a number of glyphs equal to the number of characters", async function () {
@@ -1488,7 +1499,7 @@ describe("Scene/LabelCollection", function () {
             expect(billboard.pixelOffset).toEqual(label.pixelOffset);
             expect(billboard.verticalOrigin).toEqual(label.verticalOrigin);
             // glyph horizontal origin is always LEFT
-            expect(billboard.scale).toEqual(label.scale * label._relativeSize);
+            expect(billboard.scale).toEqual(label.totalScale);
             expect(billboard.id).toEqual(label.id);
             expect(billboard.translucencyByDistance).toEqual(
               label.translucencyByDistance,

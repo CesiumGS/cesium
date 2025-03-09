@@ -152,6 +152,8 @@
           fontFamily: "sans-serif",
           fontSize: 30,
           outlineWidth: 0,
+          horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+          verticalOrigin: Cesium.VerticalOrigin.BASELINE,
         };
 
         function updateLabels() {
@@ -162,6 +164,8 @@
               continue;
             }
 
+            label.horizontalOrigin = stylingViewModel.horizontalOrigin;
+            label.verticalOrigin = stylingViewModel.verticalOrigin;
             label.showBackground = stylingViewModel.showBackground;
             label.font = `${stylingViewModel.fontSize}px ${stylingViewModel.fontFamily}`;
             const outlineWidth = Number(stylingViewModel.outlineWidth);
@@ -190,25 +194,75 @@
           },
         );
 
-        const fontOption = (text, fontFamily) => {
-          const onselect = () => (stylingViewModel.fontFamily = fontFamily);
+        const styleOption = (field, text, value) => {
+          const onselect = () => (stylingViewModel[field] = value);
           return {
             text,
             onselect,
           };
         };
-        const fontOptions = [
-          fontOption("Arial (sans-serif)", '"Arial", sans-serif'),
-          fontOption("Verdana (sans-serif)", '"Verdana", sans-serif'),
-          fontOption("Tahoma (sans-serif)", '"Tahoma", sans-serif'),
-          fontOption("Trebuchet MS (sans-serif)", '"Trebuchet MS", sans-serif'),
-          fontOption("Times New Roman (serif)", '"Times New Roman", serif'),
-          fontOption("Georgia (serif)", '"Georgia", serif'),
-          fontOption("Garamond (serif)", '"Garamond", serif'),
-          fontOption("Courier New (monospace)", '"Courier New", monospace'),
-          fontOption("Brush Script MT (cursive)", '"Brush Script MT", cursive'),
-        ];
-        Sandcastle.addToolbarMenu(fontOptions, "labelToolbar");
+
+        Sandcastle.addToolbarMenu(
+          [
+            styleOption("fontFamily", "Arial (sans-serif)", '"Arial", sans-serif'),
+            styleOption("fontFamily", "Verdana (sans-serif)", '"Verdana", sans-serif'),
+            styleOption("fontFamily", "Tahoma (sans-serif)", '"Tahoma", sans-serif'),
+            styleOption(
+              "fontFamily",
+              "Trebuchet MS (sans-serif)",
+              '"Trebuchet MS", sans-serif',
+            ),
+            styleOption(
+              "fontFamily",
+              "Times New Roman (serif)",
+              '"Times New Roman", serif',
+            ),
+            styleOption("fontFamily", "Georgia (serif)", '"Georgia", serif'),
+            styleOption("fontFamily", "Garamond (serif)", '"Garamond", serif'),
+            styleOption(
+              "fontFamily",
+              "Courier New (monospace)",
+              '"Courier New", monospace',
+            ),
+            styleOption(
+              "fontFamily",
+              "Brush Script MT (cursive)",
+              '"Brush Script MT", cursive',
+            ),
+          ],
+          "labelToolbar",
+        );
+
+        Sandcastle.addToolbarMenu(
+          [
+            styleOption(
+              "verticalOrigin",
+              "Align – Baseline",
+              Cesium.VerticalOrigin.BASELINE,
+            ),
+            styleOption("verticalOrigin", "Align – Bottom", Cesium.VerticalOrigin.BOTTOM),
+            styleOption("verticalOrigin", "Align – Center", Cesium.VerticalOrigin.CENTER),
+            styleOption("verticalOrigin", "Align – Top", Cesium.VerticalOrigin.TOP),
+          ],
+          "labelToolbar",
+        );
+
+        Sandcastle.addToolbarMenu(
+          [
+            styleOption("horizontalOrigin", "Align – Left", Cesium.HorizontalOrigin.LEFT),
+            styleOption(
+              "horizontalOrigin",
+              "Align – Center",
+              Cesium.HorizontalOrigin.CENTER,
+            ),
+            styleOption(
+              "horizontalOrigin",
+              "Align – Right",
+              Cesium.HorizontalOrigin.RIGHT,
+            ),
+          ],
+          "labelToolbar",
+        );
 
         //Sandcastle_End
       };

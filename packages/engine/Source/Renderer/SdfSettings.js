@@ -3,7 +3,7 @@
  *
  * @private
  */
-const SDFSettings = {
+const SdfSettings = {
   /**
    * The font size in pixels
    *
@@ -36,4 +36,5 @@ const SDFSettings = {
    */
   CUTOFF: 0.25,
 };
-export default Object.freeze(SDFSettings);
+
+export default Object.freeze(SdfSettings);

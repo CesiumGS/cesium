@@ -6,18 +6,17 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix4 from "../Core/Matrix4.js";
-import writeTextToCanvas from "../Core/writeTextToCanvas.js";
-import bitmapSDF from "bitmap-sdf";
+import SdfGlyphDimensions from "../Renderer/SdfGlyphDimensions.js";
+import writeGlyphSdf from "../Renderer/writeGlyphSdf.js";
+import TextureAtlas from "../Renderer/TextureAtlas.js";
 import BillboardCollection from "./BillboardCollection.js";
 import BillboardTexture from "./BillboardTexture.js";
 import BlendOption from "./BlendOption.js";
 import { isHeightReferenceClamp } from "./HeightReference.js";
-import HorizontalOrigin from "./HorizontalOrigin.js";
+import HorizontalOrigin from "../Core/HorizontalOrigin.js";
 import Label from "./Label.js";
 import LabelStyle from "./LabelStyle.js";
-import SDFSettings from "./SDFSettings.js";
-import TextureAtlas from "../Renderer/TextureAtlas.js";
-import VerticalOrigin from "./VerticalOrigin.js";
+import VerticalOrigin from "../Core/VerticalOrigin.js";
 import GraphemeSplitter from "grapheme-splitter";
 
 /**
@@ -27,8 +26,8 @@ import GraphemeSplitter from "grapheme-splitter";
 function Glyph() {
   /**
    * Object containing dimensions of the character as rendered to a canvas.
-   * @see {writeTextToCanvas}
-   * @type {object}
+   * @see {SdfGlyphDimensions#measureGlyph}
+   * @type {SdfGlyphDimensions}
    * @private
    */
   this.dimensions = undefined;
@@ -48,8 +47,7 @@ function Glyph() {
   this.billboard = undefined;
 }
 
-// Traditionally, leading is %20 of the font size.
-const defaultLineSpacingPercent = 1.2;
+const scratchCanvas = document.createElement("canvas");
 const whitePixelCanvasId = "ID_WHITE_PIXEL";
 const whitePixelSize = new Cartesian2(4, 4);
 const whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
@@ -88,32 +86,6 @@ function getWhitePixelBillboard(billboardCollection, labelCollection) {
   return billboard;
 }
 
-// reusable object for calling writeTextToCanvas
-const writeTextToCanvasParameters = {};
-function createGlyphCanvas(
-  character,
-  font,
-  fillColor,
-  outlineColor,
-  outlineWidth,
-  style,
-) {
-  writeTextToCanvasParameters.font = font;
-  writeTextToCanvasParameters.fillColor = fillColor;
-  writeTextToCanvasParameters.strokeColor = outlineColor;
-  writeTextToCanvasParameters.strokeWidth = outlineWidth;
-  // Setting the padding to something bigger is necessary to get enough space for the outlining.
-  writeTextToCanvasParameters.padding = SDFSettings.PADDING;
-
-  writeTextToCanvasParameters.fill =
-    style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
-  writeTextToCanvasParameters.stroke =
-    style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE;
-  writeTextToCanvasParameters.backgroundColor = Color.BLACK;
-
-  return writeTextToCanvas(character, writeTextToCanvasParameters);
-}
-
 function unbindGlyphBillboard(labelCollection, glyph) {
   const billboard = glyph.billboard;
   if (defined(billboard)) {
@@ -136,9 +108,6 @@ function rebindAllGlyphs(labelCollection, label) {
   const textLength = graphemes.length;
   const glyphs = label._glyphs;
   const glyphsLength = glyphs.length;
-
-  // Compute a font size scale relative to the sdf font generated size.
-  label._relativeSize = label._fontSize / SDFSettings.FONT_SIZE;
 
   // if we have more glyphs than needed, unbind the extras.
   if (textLength < glyphsLength) {
@@ -177,7 +146,7 @@ function rebindAllGlyphs(labelCollection, label) {
     backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
     backgroundBillboard.verticalOrigin = label._verticalOrigin;
     backgroundBillboard.heightReference = label._heightReference;
-    backgroundBillboard.scale = label.totalScale;
+    backgroundBillboard.scale = label.scale;
     backgroundBillboard.pickPrimitive = label;
     backgroundBillboard.id = label._id;
     backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
@@ -193,70 +162,29 @@ function rebindAllGlyphs(labelCollection, label) {
 
   const glyphBillboardCollection = labelCollection._glyphBillboardCollection;
   const glyphTextureCache = glyphBillboardCollection.billboardTextureCache;
-  const textDimensionsCache = labelCollection._textDimensionsCache;
 
   // walk the text looking for new characters (creating new glyphs for each)
   // or changed characters (rebinding existing glyphs)
   for (let textIndex = 0; textIndex < textLength; ++textIndex) {
     const character = graphemes[textIndex];
-    const verticalOrigin = label._verticalOrigin;
+    const font = label.sdfFont;
+    const id = `${character} ${font}`;
 
-    const id = JSON.stringify([
+    // Dimensions are cached
+    const dimensions = SdfGlyphDimensions.measureGlyph(
       character,
-      label._fontFamily,
-      label._fontStyle,
-      label._fontWeight,
-      +verticalOrigin,
-    ]);
+      font,
+      scratchCanvas,
+    );
 
-    let dimensions = textDimensionsCache[id];
     let glyphBillboardTexture = glyphTextureCache.get(id);
-    if (!defined(glyphBillboardTexture) || !defined(dimensions)) {
+    if (!defined(glyphBillboardTexture)) {
       glyphBillboardTexture = new BillboardTexture(glyphBillboardCollection);
       glyphTextureCache.set(id, glyphBillboardTexture);
 
-      const glyphFont = `${label._fontStyle} ${label._fontWeight} ${SDFSettings.FONT_SIZE}px ${label._fontFamily}`;
-
-      const canvas = createGlyphCanvas(
-        character,
-        glyphFont,
-        Color.WHITE,
-        Color.WHITE,
-        0.0,
-        LabelStyle.FILL,
-      );
-
-      dimensions = canvas.dimensions;
-      textDimensionsCache[id] = dimensions;
-
-      if (
-        canvas.width > 0 &&
-        canvas.height > 0 &&
-        !whitespaceRegex.test(character)
-      ) {
-        const sdfValues = bitmapSDF(canvas, {
-          cutoff: SDFSettings.CUTOFF,
-          radius: SDFSettings.RADIUS,
-        });
-
-        // Context is originally created in writeTextToCanvas()
-        const ctx = canvas.getContext("2d");
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-        for (let i = 0; i < canvasWidth; i++) {
-          for (let j = 0; j < canvasHeight; j++) {
-            const baseIndex = j * canvasWidth + i;
-            const alpha = sdfValues[baseIndex] * 255;
-            const imageIndex = baseIndex * 4;
-            imgData.data[imageIndex + 0] = alpha;
-            imgData.data[imageIndex + 1] = alpha;
-            imgData.data[imageIndex + 2] = alpha;
-            imgData.data[imageIndex + 3] = alpha;
-          }
-        }
-        ctx.putImageData(imgData, 0, 0);
-        glyphBillboardTexture.loadImage(id, canvas);
+      if (!whitespaceRegex.test(character)) {
+        const imageData = writeGlyphSdf(character, font, scratchCanvas);
+        glyphBillboardTexture.loadImage(id, imageData);
       }
     }
 
@@ -354,7 +282,7 @@ function repositionAllGlyphs(label) {
   let maxLineWidth = 0;
   const lineWidths = [];
   let maxGlyphDescent = Number.NEGATIVE_INFINITY;
-  let maxGlyphY = 0;
+  let maxGlyphAscent = 0;
   let numberOfLines = 1;
   const glyphLength = glyphs.length;
 
@@ -364,10 +292,7 @@ function repositionAllGlyphs(label) {
     scratchBackgroundPadding,
   );
 
-  // We need to scale the background padding, which is specified in pixels by the inverse of the relative size so it is scaled properly.
-  backgroundPadding.x /= label._relativeSize;
-  backgroundPadding.y /= label._relativeSize;
-
+  const fontScale = label.relativeFontSize;
   for (let glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
     if (text.charAt(glyphIndex) === "\n") {
       lineWidths.push(lastLineWidth);
@@ -379,21 +304,21 @@ function repositionAllGlyphs(label) {
     const glyph = glyphs[glyphIndex];
     const dimensions = glyph.dimensions;
     if (defined(dimensions)) {
-      maxGlyphY = Math.max(maxGlyphY, dimensions.height - dimensions.descent);
-      maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
+      const { glyphAscent, glyphDescent, glyphAdvance, glyphBearing } =
+        dimensions;
+      maxGlyphAscent = Math.max(maxGlyphAscent, glyphAscent * fontScale);
+      maxGlyphDescent = Math.max(maxGlyphDescent, glyphDescent * fontScale);
 
       // Computing the line width must also account for the kerning that occurs between letters.
-      lastLineWidth += dimensions.width - dimensions.minx;
-      if (glyphIndex < glyphLength - 1) {
-        lastLineWidth += glyphs[glyphIndex + 1].dimensions.minx;
+      lastLineWidth += (glyphAdvance + glyphBearing + 0.5) * fontScale;
+      if (glyphIndex > 0 && glyphIndex < glyphLength - 1) {
+        lastLineWidth += 1.0;
       }
       maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
     }
   }
   lineWidths.push(lastLineWidth);
-  const maxLineHeight = maxGlyphY + maxGlyphDescent;
 
-  const scale = label.totalScale;
   const horizontalOrigin = label._horizontalOrigin;
   const verticalOrigin = label._verticalOrigin;
   let lineIndex = 0;
@@ -403,13 +328,11 @@ function repositionAllGlyphs(label) {
     horizontalOrigin,
     backgroundPadding,
   );
-  const lineSpacing =
-    (defined(label._lineHeight)
-      ? label._lineHeight
-      : defaultLineSpacingPercent * label._fontSize) / label._relativeSize;
-  const otherLinesHeight = lineSpacing * (numberOfLines - 1);
+
+  const lineHeight = label.lineHeight * label.fontSize;
+  const firstLineHeight = maxGlyphAscent + maxGlyphDescent;
+  let totalLineHeight = lineHeight * (numberOfLines - 1) + firstLineHeight;
   let totalLineWidth = maxLineWidth;
-  let totalLineHeight = maxLineHeight + otherLinesHeight;
 
   if (defined(backgroundBillboard)) {
     totalLineWidth += backgroundPadding.x * 2;
@@ -417,95 +340,80 @@ function repositionAllGlyphs(label) {
     backgroundBillboard._labelHorizontalOrigin = horizontalOrigin;
   }
 
-  glyphPixelOffset.x = widthOffset * scale;
+  glyphPixelOffset.x = widthOffset;
   glyphPixelOffset.y = 0;
 
-  let firstCharOfLine = true;
+  let lineOffsetY = 0; // baseline
+  if (verticalOrigin === VerticalOrigin.TOP) {
+    lineOffsetY = backgroundPadding.y + maxGlyphDescent - totalLineHeight;
+  } else if (verticalOrigin === VerticalOrigin.CENTER) {
+    lineOffsetY = maxGlyphDescent + backgroundPadding.y - totalLineHeight / 2.0;
+  } else if (verticalOrigin === VerticalOrigin.BOTTOM) {
+    lineOffsetY = maxGlyphDescent + backgroundPadding.y;
+  }
 
-  let lineOffsetY = 0;
+  let firstCharOfLine = true;
   for (let glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
     if (text.charAt(glyphIndex) === "\n") {
       ++lineIndex;
-      lineOffsetY += lineSpacing;
+      lineOffsetY += lineHeight;
       lineWidth = lineWidths[lineIndex];
       widthOffset = calculateWidthOffset(
         lineWidth,
         horizontalOrigin,
         backgroundPadding,
       );
-      glyphPixelOffset.x = widthOffset * scale;
+      glyphPixelOffset.x = widthOffset;
       firstCharOfLine = true;
       continue;
     }
 
     const glyph = glyphs[glyphIndex];
-    const dimensions = glyph.dimensions;
-    if (defined(dimensions)) {
-      if (verticalOrigin === VerticalOrigin.TOP) {
-        glyphPixelOffset.y =
-          dimensions.height - maxGlyphY - backgroundPadding.y;
-        glyphPixelOffset.y += SDFSettings.PADDING;
-      } else if (verticalOrigin === VerticalOrigin.CENTER) {
-        glyphPixelOffset.y =
-          (otherLinesHeight + dimensions.height - maxGlyphY) / 2;
-      } else if (verticalOrigin === VerticalOrigin.BASELINE) {
-        glyphPixelOffset.y = otherLinesHeight;
-        glyphPixelOffset.y -= SDFSettings.PADDING;
-      } else {
-        // VerticalOrigin.BOTTOM
-        glyphPixelOffset.y =
-          otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
-        glyphPixelOffset.y -= SDFSettings.PADDING;
-      }
-      glyphPixelOffset.y =
-        (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale;
+    const offsetY = glyph.dimensions.getOffsetY(verticalOrigin) * fontScale; // common glyph baseline
+    glyphPixelOffset.y = offsetY + lineOffsetY + 0.5;
 
-      // Handle any offsets for the first character of the line since the bounds might not be right on the bottom left pixel.
-      if (firstCharOfLine) {
-        glyphPixelOffset.x -= SDFSettings.PADDING * scale;
-        firstCharOfLine = false;
-      }
+    // Handle any offsets for the first character of the line since the bounds might not be right on the bottom left pixel.
+    const { horizontalOffset } = glyph.dimensions;
+    if (firstCharOfLine) {
+      const { glyphBearing } = glyph.dimensions;
+      glyphPixelOffset.x += (glyphBearing + 0.5 - horizontalOffset) * fontScale;
+      firstCharOfLine = false;
+    }
 
-      if (defined(glyph.billboard)) {
-        glyph.billboard._setTranslate(glyphPixelOffset);
-        glyph.billboard._labelDimensions.x = totalLineWidth;
-        glyph.billboard._labelDimensions.y = totalLineHeight;
-        glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
-      }
+    if (defined(glyph.billboard)) {
+      glyph.billboard._setTranslate(glyphPixelOffset);
+      glyph.billboard._labelDimensions.x = totalLineWidth;
+      glyph.billboard._labelDimensions.y = totalLineHeight;
+      glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
+    }
 
-      //Compute the next x offset taking into account the kerning performed
-      //on both the current letter as well as the next letter to be drawn
-      //as well as any applied scale.
-      if (glyphIndex < glyphLength - 1) {
-        const nextGlyph = glyphs[glyphIndex + 1];
-        glyphPixelOffset.x +=
-          (dimensions.width - dimensions.minx + nextGlyph.dimensions.minx) *
-          scale;
-      }
+    // Compute the next x offset, accounting for the bearing (difference from horizontal origin) of next glyph.
+    // Add a half pixel bias, since the value will be coerced to an integer in the shader
+    // Add a small pixel offset for better visibility at small scales.
+    if (glyphIndex < glyphLength - 1) {
+      const { glyphAdvance } = glyph.dimensions;
+      const nextGlyph = glyphs[glyphIndex + 1];
+      const { glyphBearing } = nextGlyph.dimensions;
+      glyphPixelOffset.x +=
+        (glyphAdvance + glyphBearing + 0.5) * fontScale + 1.0;
     }
   }
 
-  if (defined(backgroundBillboard) && text.split("\n").join("").length > 0) {
+  const hasContent = text.split("\n").join("").length > 0;
+  if (defined(backgroundBillboard) && hasContent) {
+    widthOffset = 0.5;
     if (horizontalOrigin === HorizontalOrigin.CENTER) {
-      widthOffset = -maxLineWidth / 2 - backgroundPadding.x;
+      widthOffset += -maxLineWidth / 2.0 - backgroundPadding.x;
     } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-      widthOffset = -(maxLineWidth + backgroundPadding.x * 2);
-    } else {
-      widthOffset = 0;
+      widthOffset += -(maxLineWidth + backgroundPadding.x * 2.0);
     }
-    glyphPixelOffset.x = widthOffset * scale;
 
-    if (verticalOrigin === VerticalOrigin.TOP) {
-      glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
-    } else if (verticalOrigin === VerticalOrigin.CENTER) {
-      glyphPixelOffset.y = (maxLineHeight - maxGlyphY) / 2 - maxGlyphDescent;
-    } else if (verticalOrigin === VerticalOrigin.BASELINE) {
-      glyphPixelOffset.y = -backgroundPadding.y - maxGlyphDescent;
-    } else {
-      // VerticalOrigin.BOTTOM
-      glyphPixelOffset.y = 0;
+    glyphPixelOffset.y = 0.5;
+    if (verticalOrigin === VerticalOrigin.BASELINE) {
+      glyphPixelOffset.y += -maxGlyphDescent - backgroundPadding.y;
     }
-    glyphPixelOffset.y = glyphPixelOffset.y * scale;
+
+    glyphPixelOffset.x = widthOffset;
 
     backgroundBillboard.width = totalLineWidth;
     backgroundBillboard.height = totalLineHeight;
@@ -622,7 +530,6 @@ function LabelCollection(options) {
   this._glyphBillboardCollection._sdf = true;
 
   this._spareBillboards = [];
-  this._textDimensionsCache = {};
   this._labels = [];
   this._labelsToUpdate = [];
   this._totalGlyphCount = 0;

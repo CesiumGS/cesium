@@ -5,16 +5,16 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
+import HorizontalOrigin from "../Core/HorizontalOrigin.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import Rectangle from "../Core/Rectangle.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
+import VerticalOrigin from "../Core/VerticalOrigin.js";
 import BillboardCollection from "./BillboardCollection.js";
 import Cesium3DTilePointFeature from "./Cesium3DTilePointFeature.js";
-import HorizontalOrigin from "./HorizontalOrigin.js";
 import LabelCollection from "./LabelCollection.js";
 import LabelStyle from "./LabelStyle.js";
 import PolylineCollection from "./PolylineCollection.js";
-import VerticalOrigin from "./VerticalOrigin.js";
 
 /**
  * Creates a batch of points or billboards and labels.

@@ -18,10 +18,10 @@ import BillboardTexture from "./BillboardTexture.js";
 import HeightReference, {
   isHeightReferenceRelative,
 } from "./HeightReference.js";
-import HorizontalOrigin from "./HorizontalOrigin.js";
+import HorizontalOrigin from "../Core/HorizontalOrigin.js";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
-import VerticalOrigin from "./VerticalOrigin.js";
+import VerticalOrigin from "../Core/VerticalOrigin.js";
 import SplitDirection from "./SplitDirection.js";
 
 /**

@@ -7,11 +7,11 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
+import HorizontalOrigin from "../Core/HorizontalOrigin.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
+import VerticalOrigin from "../Core/VerticalOrigin.js";
 import HeightReference from "../Scene/HeightReference.js";
-import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
-import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
 

@@ -20,6 +20,7 @@ import ContextLimits from "../Renderer/ContextLimits.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
+import SdfSettings from "../Renderer/SdfSettings.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArrayFacade from "../Renderer/VertexArrayFacade.js";
@@ -29,11 +30,10 @@ import Billboard from "./Billboard.js";
 import BlendingState from "./BlendingState.js";
 import BlendOption from "./BlendOption.js";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
-import HorizontalOrigin from "./HorizontalOrigin.js";
+import HorizontalOrigin from "../Core/HorizontalOrigin.js";
 import SceneMode from "./SceneMode.js";
-import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "../Renderer/TextureAtlas.js";
-import VerticalOrigin from "./VerticalOrigin.js";
+import VerticalOrigin from "../Core/VerticalOrigin.js";
 
 const SHOW_INDEX = Billboard.SHOW_INDEX;
 const POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -1528,7 +1528,7 @@ function writeSDF(billboardCollection, frameState, vafWriters, billboard) {
   const compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
 
   // Compute the relative outline distance
-  const outlineDistance = outlineWidth / SDFSettings.RADIUS;
+  const outlineDistance = outlineWidth / SdfSettings.RADIUS;
   const compressed1 =
     Color.floatToByte(outlineColor.alpha) * LEFT_SHIFT16 +
     Color.floatToByte(outlineDistance) * LEFT_SHIFT8;
@@ -2154,7 +2154,7 @@ BillboardCollection.prototype.update = function (frameState) {
       }
     }
 
-    const sdfEdge = 1.0 - SDFSettings.CUTOFF;
+    const sdfEdge = 1.0 - SdfSettings.CUTOFF;
 
     if (this._sdf) {
       vs.defines.push("SDF");
