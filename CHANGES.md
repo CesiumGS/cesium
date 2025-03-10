@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixed broken Entity Tracking [sandcastle](https://sandcastle.cesium.com/?src=Entity%20tracking.html). [#12467](https://github.com/CesiumGS/cesium/pull/12467)
+- Fixed camera zooming in 3D orthographic mode when pixelRatio is not 1 [#12487](https://github.com/CesiumGS/cesium/pull/12487)
 
 ## 1.127 - 2025-03-03
 
