@@ -683,7 +683,7 @@ function getIndexBufferBatched(context) {
     return indexBuffer;
   }
 
-  // Subtract 6 because the last index is reserverd for primitive restart.
+  // Subtract 6 because the last index is reserved for primitive restart.
   // https://www.khronos.org/registry/webgl/specs/latest/2.0/#5.18
   const length = sixteenK * 6 - 6;
   const indices = new Uint16Array(length);
@@ -859,7 +859,7 @@ function createVAF(
   if (sdf) {
     attributes.push({
       index: attributeLocations.sdf,
-      componentsPerAttribute: 2,
+      componentsPerAttribute: 3,
       componentDatatype: ComponentDatatype.FLOAT,
       usage: buffersUsage[SDF_INDEX],
     });
@@ -1527,21 +1527,36 @@ function writeSDF(billboardCollection, frameState, vafWriters, billboard) {
   const blue = Color.floatToByte(outlineColor.blue);
   const compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
 
-  // Compute the relative outline distance
-  const outlineDistance = outlineWidth / SdfSettings.RADIUS;
+  // Cannot render an outline distance greater than the encoded SDF radius
+  const outlineDistance = Math.floor(
+    CesiumMath.clamp(outlineWidth, 0, SdfSettings.RADIUS) * SdfSettings.RADIUS,
+  );
+  // Value is used in the shader to convert outline width value in CSS pixels to SDF pixel values
+  const labelFontScale = Color.floatToByte(billboard._labelFontScale);
   const compressed1 =
     Color.floatToByte(outlineColor.alpha) * LEFT_SHIFT16 +
-    Color.floatToByte(outlineDistance) * LEFT_SHIFT8;
+    outlineDistance * LEFT_SHIFT8 +
+    labelFontScale;
+
+  // These values are clamped to pixels and were used to rendered SDF glyph
+  // They account for any offset needed in SDF pixel space, including padding
+  const baseline = Math.floor(
+    CesiumMath.clamp(billboard._labelGlyphBaseline, -128, 127) + 128,
+  );
+  const horizontalOffset = Math.floor(
+    CesiumMath.clamp(billboard._labelGlyphHorizontalOffset, 0, 255),
+  );
+  const compressed2 = horizontalOffset * LEFT_SHIFT16 + baseline * LEFT_SHIFT8;
 
   if (billboardCollection._instanced) {
     i = billboard._index;
-    writer(i, compressed0, compressed1);
+    writer(i, compressed0, compressed1, compressed2);
   } else {
     i = billboard._index * 4;
-    writer(i + 0, compressed0 + LOWER_LEFT, compressed1);
-    writer(i + 1, compressed0 + LOWER_RIGHT, compressed1);
-    writer(i + 2, compressed0 + UPPER_RIGHT, compressed1);
-    writer(i + 3, compressed0 + UPPER_LEFT, compressed1);
+    writer(i + 0, compressed0 + LOWER_LEFT, compressed1, compressed2);
+    writer(i + 1, compressed0 + LOWER_RIGHT, compressed1, compressed2);
+    writer(i + 2, compressed0 + UPPER_RIGHT, compressed1, compressed2);
+    writer(i + 3, compressed0 + UPPER_LEFT, compressed1, compressed2);
   }
 }
 
@@ -2155,9 +2170,11 @@ BillboardCollection.prototype.update = function (frameState) {
     }
 
     const sdfEdge = 1.0 - SdfSettings.CUTOFF;
+    const sdfRadius = SdfSettings.RADIUS.toFixed(1);
 
     if (this._sdf) {
       vs.defines.push("SDF");
+      vs.defines.push(`SDF_RADIUS ${sdfRadius}`);
     }
 
     const vectorFragDefine = defined(this._batchTable) ? "VECTOR_TILE" : "";

@@ -75,6 +75,18 @@
           />
           <input type="number" size="5" step="0.5" data-bind="value: outlineWidth" />
         </div>
+
+        <div class="cesium-button">
+          <label>Scale</label>
+          <input
+            type="range"
+            min="0.0"
+            max="5.0"
+            step="0.1"
+            data-bind="value: scale, valueUpdate: 'input'"
+          />
+          <input type="number" size="5" step="0.1" data-bind="value: scale" />
+        </div>
       </div>
     </div>
     <script id="cesium_sandcastle_script">
@@ -154,6 +166,7 @@
           outlineWidth: 0,
           horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
           verticalOrigin: Cesium.VerticalOrigin.BASELINE,
+          scale: 1.0,
         };
 
         function updateLabels() {
@@ -164,6 +177,7 @@
               continue;
             }
 
+            label.scale = Number(stylingViewModel.scale);
             label.horizontalOrigin = stylingViewModel.horizontalOrigin;
             label.verticalOrigin = stylingViewModel.verticalOrigin;
             label.showBackground = stylingViewModel.showBackground;

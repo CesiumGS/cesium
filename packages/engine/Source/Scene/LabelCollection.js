@@ -271,8 +271,8 @@ function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
   return backgroundPadding.x;
 }
 
-// reusable Cartesian2 instances
 const glyphPixelOffset = new Cartesian2();
+const scratchTranslate = new Cartesian2();
 const scratchBackgroundPadding = new Cartesian2();
 
 function repositionAllGlyphs(label) {
@@ -310,9 +310,9 @@ function repositionAllGlyphs(label) {
       maxGlyphDescent = Math.max(maxGlyphDescent, glyphDescent * fontScale);
 
       // Computing the line width must also account for the kerning that occurs between letters.
-      lastLineWidth += (glyphAdvance + glyphBearing + 0.5) * fontScale;
+      lastLineWidth += (glyphAdvance + glyphBearing) * fontScale;
       if (glyphIndex > 0 && glyphIndex < glyphLength - 1) {
-        lastLineWidth += 1.0;
+        lastLineWidth += 0.5;
       }
       maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
     }
@@ -352,7 +352,6 @@ function repositionAllGlyphs(label) {
     lineOffsetY = maxGlyphDescent + backgroundPadding.y;
   }
 
-  let firstCharOfLine = true;
   for (let glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
     if (text.charAt(glyphIndex) === "\n") {
       ++lineIndex;
@@ -364,38 +363,36 @@ function repositionAllGlyphs(label) {
         backgroundPadding,
       );
       glyphPixelOffset.x = widthOffset;
-      firstCharOfLine = true;
       continue;
     }
 
+    glyphPixelOffset.y = lineOffsetY;
+
     const glyph = glyphs[glyphIndex];
-    const offsetY = glyph.dimensions.getOffsetY(verticalOrigin) * fontScale; // common glyph baseline
-    glyphPixelOffset.y = offsetY + lineOffsetY + 0.5;
-
-    // Handle any offsets for the first character of the line since the bounds might not be right on the bottom left pixel.
-    const { horizontalOffset } = glyph.dimensions;
-    if (firstCharOfLine) {
-      const { glyphBearing } = glyph.dimensions;
-      glyphPixelOffset.x += (glyphBearing + 0.5 - horizontalOffset) * fontScale;
-      firstCharOfLine = false;
-    }
-
+    const { horizontalOffset, baseline } = glyph.dimensions;
     if (defined(glyph.billboard)) {
-      glyph.billboard._setTranslate(glyphPixelOffset);
+      const translate = Cartesian2.multiplyByScalar(
+        glyphPixelOffset,
+        label.scale,
+        scratchTranslate,
+      );
+      glyph.billboard._setTranslate(translate);
       glyph.billboard._labelDimensions.x = totalLineWidth;
       glyph.billboard._labelDimensions.y = totalLineHeight;
       glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
+      glyph.billboard._labelFontScale = label.relativeFontSize;
+      glyph.billboard._labelGlyphHorizontalOffset = horizontalOffset;
+      glyph.billboard._labelGlyphBaseline = baseline;
+      glyph.billboard.scale = label.totalScale;
     }
 
     // Compute the next x offset, accounting for the bearing (difference from horizontal origin) of next glyph.
-    // Add a half pixel bias, since the value will be coerced to an integer in the shader
-    // Add a small pixel offset for better visibility at small scales.
+    // Add a half pixel bias, since the value will be coerced to an integer in the shader, to ensure readability in small fonts
     if (glyphIndex < glyphLength - 1) {
       const { glyphAdvance } = glyph.dimensions;
-      const nextGlyph = glyphs[glyphIndex + 1];
-      const { glyphBearing } = nextGlyph.dimensions;
-      glyphPixelOffset.x +=
-        (glyphAdvance + glyphBearing + 0.5) * fontScale + 1.0;
+      const { glyphBearing } = glyphs[glyphIndex + 1].dimensions;
+      const advance = (glyphAdvance + glyphBearing) * fontScale;
+      glyphPixelOffset.x += advance + 0.5;
     }
   }
 
@@ -417,7 +414,13 @@ function repositionAllGlyphs(label) {
 
     backgroundBillboard.width = totalLineWidth;
     backgroundBillboard.height = totalLineHeight;
-    backgroundBillboard._setTranslate(glyphPixelOffset);
+
+    const translate = Cartesian2.multiplyByScalar(
+      glyphPixelOffset,
+      label.scale,
+      scratchTranslate,
+    );
+    backgroundBillboard._setTranslate(translate);
     backgroundBillboard._labelTranslate = Cartesian2.clone(
       glyphPixelOffset,
       backgroundBillboard._labelTranslate,

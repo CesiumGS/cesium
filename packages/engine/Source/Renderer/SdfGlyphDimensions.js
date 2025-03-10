@@ -278,7 +278,8 @@ SdfGlyphDimensions.measureGlyph = function (character, font, canvas) {
 
   // Some characters have a non-zero starting position, and we'll need to
   // account for this when determining the spacing between glyphs
-  const glyphBearing = Math.floor(actualBoundingBoxLeft);
+  const glyphBearing =
+    Math.floor(actualBoundingBoxLeft) - actualBoundingBoxLeft;
 
   // The baseline defines the vertical origin for fillText, and should align to a pixel boundary
   const baseline = padding + Math.ceil(actualBoundingBoxDescent);

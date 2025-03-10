@@ -1,11 +1,13 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
+import CesiumMath from "../Core/Math.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import SdfSettings from "../Renderer/SdfSettings.js";
 import Billboard from "./Billboard.js";
@@ -283,7 +285,11 @@ function Label(options, labelCollection) {
   this._fontStyle = fontStyle;
   this._fontWeight = fontWeight;
   this._lineHeight = lineHeight;
-  this._relativeFontSize = fontSize / SdfSettings.FONT_SIZE;
+  // Power of two increases the chance that similar font size will use the same glyph atlas
+  this._sdfFontSize = CesiumMath.nextPowerOfTwo(
+    fontSize * SdfSettings.FONT_SIZE_RATIO,
+  );
+  this._relativeFontSize = fontSize / this._sdfFontSize;
 
   this._updateClamping();
 }
@@ -453,14 +459,30 @@ Object.defineProperties(Label.prototype, {
           parseFont(value);
 
         this._font = value;
-        this._fontFamily = fontFamily;
         this._fontSize = fontSize;
-        this._fontStyle = fontStyle;
-        this._fontWeight = fontWeight;
         this._lineHeight = lineHeight;
-        this._relativeFontSize = fontSize / SdfSettings.FONT_SIZE;
 
-        rebindAllGlyphs(this);
+        // Power of two increases the chance that similar font size will use the same glyph atlas
+        const sdfFontSize = CesiumMath.nextPowerOfTwo(
+          fontSize * SdfSettings.FONT_SIZE_RATIO,
+        );
+        this._relativeFontSize = fontSize / sdfFontSize;
+
+        if (
+          this._fontFamily !== fontFamily ||
+          this._fontStyle !== fontStyle ||
+          this._fontWeight !== fontWeight ||
+          this._sdfFontSize !== sdfFontSize
+        ) {
+          this._fontFamily = fontFamily;
+          this._fontStyle = fontStyle;
+          this._fontWeight = fontWeight;
+          this._sdfFontSize = sdfFontSize;
+          rebindAllGlyphs(this);
+          return;
+        }
+
+        repositionAllGlyphs(this);
       }
     },
   },
@@ -541,7 +563,19 @@ Object.defineProperties(Label.prototype, {
    */
   sdfFont: {
     get: function () {
-      return `${this.fontStyle} ${this.fontWeight} ${SdfSettings.FONT_SIZE}px ${this.fontFamily}`;
+      return `${this.fontStyle} ${this.fontWeight} ${this._sdfFontSize}px ${this.fontFamily}`;
+    },
+  },
+
+  /**
+   * The CSS font-size used to render label glyphs, in CSS pixels.
+   * @memberof Label.prototype
+   * @type {number}
+   * @private
+   */
+  sdfFontSize: {
+    get: function () {
+      return this._sdfFontSize;
     },
   },
 
@@ -612,7 +646,7 @@ Object.defineProperties(Label.prototype, {
   },
 
   /**
-   * Gets or sets the outline width of this label.
+   * Gets or sets the outline width of this label, in CSS pixels.
    * @memberof Label.prototype
    * @type {number}
    * @default 1.0
@@ -1111,9 +1145,7 @@ Object.defineProperties(Label.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.number("scale", value);
       //>>includeEnd('debug');
 
       if (this._scale !== value) {
@@ -1128,7 +1160,7 @@ Object.defineProperties(Label.prototype, {
         }
         const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-          backgroundBillboard.scale = value * this._relativeFontSize;
+          backgroundBillboard.scale = value;
         }
 
         repositionAllGlyphs(this);

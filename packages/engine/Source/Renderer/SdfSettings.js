@@ -5,12 +5,12 @@
  */
 const SdfSettings = {
   /**
-   * The font size in pixels
+   * The minimum ratio of font size to SDF glyph font size
    *
    * @type {number}
    * @constant
    */
-  FONT_SIZE: 48.0,
+  FONT_SIZE_RATIO: 1.5,
 
   /**
    * Whitespace padding around glyphs.

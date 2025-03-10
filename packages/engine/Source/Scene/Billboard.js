@@ -209,9 +209,14 @@ function Billboard(options, billboardCollection) {
   this._imageWidth = undefined;
   this._imageHeight = undefined;
 
+  // Set in LabelCollection.js
   this._labelDimensions = undefined;
   this._labelHorizontalOrigin = undefined;
   this._labelTranslate = undefined;
+  this._labelFontScale = undefined;
+  this._labelSdfFontSize = undefined;
+  this._labelGlyphHorizontalOffset = undefined;
+  this._labelGlyphBaseline = undefined;
 
   const image = options.image;
   let imageId = options.imageId;
@@ -1457,7 +1462,7 @@ Billboard.prototype.computeScreenSpacePosition = function (scene, result) {
 /**
  * Gets a billboard's screen space bounding box centered around screenSpacePosition.
  * @param {Billboard} billboard The billboard to get the screen space bounding box for.
- * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+ * @param {Cartesian2} screenSpacePosition The screen space center of the billboard.
  * @param {BoundingRectangle} [result] The object onto which to store the result.
  * @returns {BoundingRectangle} The screen space bounding box.
  *
