@@ -527,7 +527,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       modelMatrix: modelMatrix,
     });
   }
-
+  const tileset = content._tileset;
   if (numberOfPolylines > 0) {
     featureTable.featuresLength = numberOfPolylines;
 
@@ -574,7 +574,6 @@ function initialize(content, arrayBuffer, byteOffset) {
     );
     byteOffset += polylinePositionByteLength;
 
-    const tileset = content._tileset;
     const examineVectorLinesFunction = tileset.examineVectorLinesFunction;
     if (defined(examineVectorLinesFunction)) {
       const decodedPositions = decodeVectorPolylinePositions(
@@ -629,6 +628,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       maximumHeight: maxHeight,
       rectangle: rectangle,
       batchTable: batchTable,
+      heightReference: tileset.heightReference,
+      scene: tileset.scene,
     });
   }
 }

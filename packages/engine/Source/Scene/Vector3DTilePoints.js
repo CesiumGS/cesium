@@ -15,6 +15,7 @@ import LabelCollection from "./LabelCollection.js";
 import LabelStyle from "./LabelStyle.js";
 import PolylineCollection from "./PolylineCollection.js";
 import VerticalOrigin from "./VerticalOrigin.js";
+import HeightReference from "./HeightReference.js";
 
 /**
  * Creates a batch of points or billboards and labels.
@@ -27,8 +28,10 @@ import VerticalOrigin from "./VerticalOrigin.js";
  * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
  * @param {number} options.maximumHeight The maximum height of the terrain covered by the tile.
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
+ * @param {HeightReference} options.heightReference Determines how billboard and label features are positioned relative to terrain or 3d tiles.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
  * @param {Uint16Array} options.batchIds The batch ids for each polygon.
+ * @param {Scene} options.scene  The Cesium Viewer {@link Scene}. This is required for clamping billboards and labels with {@link HeightReference}
  *
  * @private
  */
@@ -42,12 +45,15 @@ function Vector3DTilePoints(options) {
   this._rectangle = options.rectangle;
   this._minHeight = options.minimumHeight;
   this._maxHeight = options.maximumHeight;
+  this._heightReference = options.heightReference;
 
   this._billboardCollection = new BillboardCollection({
     batchTable: options.batchTable,
+    scene: options.scene,
   });
   this._labelCollection = new LabelCollection({
     batchTable: options.batchTable,
+    scene: options.scene,
   });
   this._polylineCollection = new PolylineCollection();
   this._polylineCollection._useHighlightColor = true;
@@ -175,6 +181,8 @@ function createPoints(points, ellipsoid) {
       const batchIds = points._batchIds;
       const numberOfPoints = positions.length / 3;
 
+      const heightReference = points._heightReference ?? HeightReference.NONE;
+
       for (let i = 0; i < numberOfPoints; ++i) {
         const id = batchIds[i];
 
@@ -183,11 +191,13 @@ function createPoints(points, ellipsoid) {
         const b = billboardCollection.add();
         b.position = position;
         b._batchIndex = id;
+        b.heightReference = heightReference;
 
         const l = labelCollection.add();
         l.text = " ";
         l.position = position;
         l._batchIndex = id;
+        l.heightReference = heightReference;
 
         const p = polylineCollection.add();
         p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
