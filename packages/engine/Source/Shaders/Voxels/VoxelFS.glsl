@@ -100,21 +100,15 @@ vec2 packFloatToVec2(float value) {
     return vec2(highBits, lowBits);
 }
 
-int getSampleIndex(in vec3 tileUv) {
-    ivec3 voxelDimensions = u_dimensions;
-    vec3 sampleCoordinate = tileUv * vec3(voxelDimensions);
-    // tileUv = 1.0 is a valid coordinate but sampleIndex = voxelDimensions is not.
-    // (tileUv = 1.0 corresponds to the last sample, at index = voxelDimensions - 1).
+int getSampleIndex(in SampleData sampleData) {
+    // tileUv = 1.0 is a valid coordinate but sampleIndex = u_inputDimensions is not.
+    // (tileUv = 1.0 corresponds to the far edge of the last sample, at index = u_inputDimensions - 1).
     // Clamp to [0, voxelDimensions - 0.5) to avoid numerical error before flooring
-    vec3 maxCoordinate = vec3(voxelDimensions) - vec3(0.5);
-    sampleCoordinate = clamp(sampleCoordinate, vec3(0.0), maxCoordinate);
-    ivec3 sampleIndex = ivec3(floor(sampleCoordinate));
-    #if defined(PADDING)
-        voxelDimensions += u_paddingBefore + u_paddingAfter;
-        sampleIndex += u_paddingBefore;
-    #endif
+    vec3 maxCoordinate = vec3(u_inputDimensions) - vec3(0.5);
+    vec3 inputCoordinate = clamp(sampleData.inputCoordinate, vec3(0.0), maxCoordinate);
+    ivec3 sampleIndex = ivec3(floor(inputCoordinate));
     // Convert to a 1D index for lookup in a 1D data array
-    return sampleIndex.x + voxelDimensions.x * (sampleIndex.y + voxelDimensions.y * sampleIndex.z);
+    return sampleIndex.x + u_inputDimensions.x * (sampleIndex.y + u_inputDimensions.y * sampleIndex.z);
 }
 
 void main()
@@ -181,7 +175,7 @@ void main()
         fragmentInput.voxel.travelDistance = step.w;
         fragmentInput.voxel.stepCount = stepCount;
         fragmentInput.voxel.tileIndex = sampleDatas[0].megatextureIndex;
-        fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0].tileUv);
+        fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0]);
 
         // Run the custom shader
         czm_modelMaterial materialOutput;
@@ -250,7 +244,7 @@ void main()
             discard;
         }
         vec2 megatextureId = packIntToVec2(sampleDatas[0].megatextureIndex);
-        vec2 sampleIndex = packIntToVec2(getSampleIndex(sampleDatas[0].tileUv));
+        vec2 sampleIndex = packIntToVec2(getSampleIndex(sampleDatas[0]));
         out_FragColor = vec4(megatextureId, sampleIndex);
     #else
         out_FragColor = colorAccum;
