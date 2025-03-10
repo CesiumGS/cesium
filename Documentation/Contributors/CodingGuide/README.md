@@ -923,7 +923,7 @@ An `@experimental` API is subject to breaking changes in future Cesium releases 
 
 A public identifier (class, function, property) should be deprecated before being removed. To do so:
 
-- Decide on which future version the deprecated API should be removed. This is on a case-by-case basis depending on how badly it impacts users and Cesium development. Most deprecated APIs will removed in 1-3 releases. This can be discussed in the pull request if needed.
+- Decide on which future version the deprecated API should be removed. This is on a case-by-case basis depending on how badly it impacts users and Cesium development. Most deprecated APIs will removed in 3-6 releases. This can be discussed in the pull request if needed.
 - Use [`deprecationWarning`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/deprecationWarning.js) to warn users that the API is deprecated and what proactive changes they can take, e.g.,
 
 ```javascript
