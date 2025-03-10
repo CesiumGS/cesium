@@ -1151,6 +1151,8 @@ Resource.fetchText = function (options) {
  * adds 'Accept: application/json,&#42;&#47;&#42;;q=0.01' to the request headers, if not
  * already specified.
  *
+ * @param {Object} [options]
+ * @param {AbortSignal} [options.signal] TODO: this should be added to a lot more
  * @returns {Promise<any>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
@@ -1164,8 +1166,9 @@ Resource.fetchText = function (options) {
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
-Resource.prototype.fetchJson = function () {
+Resource.prototype.fetchJson = function (options) {
   const promise = this.fetch({
+    signal: options?.signal,
     responseType: "text",
     headers: {
       Accept: "application/json,*/*;q=0.01",
@@ -1385,10 +1388,22 @@ Resource.prototype._makeRequest = function (options) {
     if (defined(xhr) && defined(xhr.abort)) {
       request.cancelFunction = function () {
         xhr.abort();
+        // request.state = RequestState.CANCELLED;
+        // request.cancelled = true;
+        // request.deferred?.reject("request canceled");
+        // request.deferred = undefined;
       };
     }
     return deferred.promise;
   };
+
+  options.signal?.addEventListener("abort", () => {
+    console.log("signal event abort");
+    // if (resource.request.cancelFunction) {
+    //   resource.request.cancelFunction();
+    // }
+    request.cancel();
+  });
 
   const promise = RequestScheduler.request(request);
   if (!defined(promise)) {
@@ -1505,6 +1520,7 @@ function decodeDataUri(dataUriRegexResult, responseType) {
  * @param {string} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {string} [options.overrideMimeType] Overrides the MIME type returned by the server.
+ * @param {AbortSignal} [options.signal]
  * @returns {Promise<any>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *

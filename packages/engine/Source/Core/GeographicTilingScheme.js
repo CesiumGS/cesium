@@ -44,6 +44,7 @@ Object.defineProperties(GeographicTilingScheme.prototype, {
   /**
    * Gets the ellipsoid that is tiled by this tiling scheme.
    * @memberof GeographicTilingScheme.prototype
+   * @readonly
    * @type {Ellipsoid}
    */
   ellipsoid: {
@@ -55,6 +56,7 @@ Object.defineProperties(GeographicTilingScheme.prototype, {
   /**
    * Gets the rectangle, in radians, covered by this tiling scheme.
    * @memberof GeographicTilingScheme.prototype
+   * @readonly
    * @type {Rectangle}
    */
   rectangle: {
@@ -66,6 +68,7 @@ Object.defineProperties(GeographicTilingScheme.prototype, {
   /**
    * Gets the map projection used by this tiling scheme.
    * @memberof GeographicTilingScheme.prototype
+   * @readonly
    * @type {MapProjection}
    */
   projection: {
