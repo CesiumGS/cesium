@@ -256,7 +256,6 @@ const workspaceSourceFiles = {
     "!packages/engine/Source/*.js",
     "!packages/engine/Source/Workers/**",
     "packages/engine/Source/Workers/createTaskProcessorWorker.js",
-    "!packages/engine/Source/Scene/GltfPipeline/defaultValue.js",
     "!packages/engine/Source/ThirdParty/Workers/**.js",
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     "!packages/engine/Source/ThirdParty/_*",
