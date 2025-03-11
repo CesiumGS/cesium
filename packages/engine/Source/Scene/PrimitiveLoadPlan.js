@@ -370,7 +370,7 @@ function buildSpzAttributes(loadPlan, context) {
       rgba[i * 4] = CesiumMath.clamp(rgb[i * 3] * 255.0, 0.0, 255.0);
       rgba[i * 4 + 1] = CesiumMath.clamp(rgb[i * 3 + 1] * 255.0, 0.0, 255.0);
       rgba[i * 4 + 2] = CesiumMath.clamp(rgb[i * 3 + 2] * 255.0, 0.0, 255.0);
-      rgba[i * 4 + 3] = (1.0 / (1.0 + Math.exp(-alpha[i]))) * 255.0;
+      rgba[i * 4 + 3] = alpha[i] * 255.0;
     }
 
     return rgba;
