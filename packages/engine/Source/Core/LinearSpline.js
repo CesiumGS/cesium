@@ -1,5 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Spline from "./Spline.js";
@@ -42,7 +42,7 @@ import Spline from "./Spline.js";
  * @see MorphWeightSpline
  */
 function LinearSpline(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;

@@ -1,5 +1,5 @@
 import binarySearch from "./binarySearch.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -277,7 +277,7 @@ TimeIntervalCollection.prototype.indexOf = function (date) {
  * @returns {TimeInterval|undefined} The first interval in the collection that matches the specified parameters.
  */
 TimeIntervalCollection.prototype.findInterval = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const start = options.start;
   const stop = options.stop;
   const isStartIncluded = options.isStartIncluded;

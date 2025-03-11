@@ -1,7 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -51,7 +51,7 @@ import Vector3DTileBatch from "./Vector3DTileBatch.js";
  * @private
  */
 function Vector3DTilePrimitive(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._batchTable = options.batchTable;
   this._batchIds = options.batchIds;

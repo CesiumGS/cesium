@@ -1,4 +1,4 @@
-import { DefaultValues, defined, DeveloperError } from "@cesium/engine";
+import { Frozen, defined, DeveloperError } from "@cesium/engine";
 import knockout from "./ThirdParty/knockout.js";
 
 /**
@@ -20,7 +20,7 @@ function ToggleButtonViewModel(command, options) {
 
   this._command = command;
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * Gets or sets whether the button is currently toggled.  This property is observable.

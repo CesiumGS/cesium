@@ -3,7 +3,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Color from "../../Core/Color.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -48,7 +48,7 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
  * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
 function PntsLoader(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const arrayBuffer = options.arrayBuffer;
   const byteOffset = options.byteOffset ?? 0;

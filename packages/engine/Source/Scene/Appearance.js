@@ -1,6 +1,6 @@
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import BlendingState from "./BlendingState.js";
 import CullFace from "./CullFace.js";
@@ -31,7 +31,7 @@ import CullFace from "./CullFace.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
  */
 function Appearance(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The material used to determine the fragment color.  Unlike other {@link Appearance}

@@ -3,7 +3,7 @@ import appendForwardSlash from "./appendForwardSlash.js";
 import Check from "./Check.js";
 import clone from "./clone.js";
 import combine from "./combine.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -91,7 +91,7 @@ const xhrBlobSupported = (function () {
  * });
  */
 function Resource(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   if (typeof options === "string") {
     options = {
       url: options,
@@ -897,7 +897,7 @@ Resource.fetchBlob = function (options) {
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
 Resource.prototype.fetchImage = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const preferImageBitmap = options.preferImageBitmap ?? false;
   const preferBlob = options.preferBlob ?? false;
   const flipY = options.flipY ?? false;

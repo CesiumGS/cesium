@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 import { MeshoptDecoder } from "meshoptimizer";
@@ -27,7 +27,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function GltfBufferViewLoader(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const bufferViewId = options.bufferViewId;

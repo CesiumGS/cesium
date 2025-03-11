@@ -1,6 +1,6 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -94,7 +94,7 @@ import StencilOperation from "./StencilOperation.js";
  * }));
  */
 function GroundPolylinePrimitive(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The geometry instances rendered with this primitive. This may

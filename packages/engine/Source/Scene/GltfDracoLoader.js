@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DracoLoader from "./DracoLoader.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -29,7 +29,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
  * @private
  */
 function GltfDracoLoader(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const primitive = options.primitive;

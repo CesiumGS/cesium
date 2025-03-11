@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -82,7 +82,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * @constructor
  */
 function Framebuffer(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const context = options.context;
   //>>includeStart('debug', pragmas.debug);

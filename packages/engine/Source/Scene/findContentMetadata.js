@@ -1,5 +1,5 @@
 import ContentMetadata from "./ContentMetadata.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
@@ -34,7 +34,7 @@ function findContentMetadata(tileset, contentHeader) {
     return undefined;
   }
 
-  const classes = tileset.schema.classes ?? DefaultValues.EMPTY_OBJECT;
+  const classes = tileset.schema.classes ?? Frozen.EMPTY_OBJECT;
   if (defined(metadataJson.class)) {
     const contentClass = classes[metadataJson.class];
     return new ContentMetadata({

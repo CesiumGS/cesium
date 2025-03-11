@@ -1,5 +1,5 @@
 import clone from "../Core/clone.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EasingFunction from "../Core/EasingFunction.js";
@@ -212,7 +212,7 @@ Object.defineProperties(TweenCollection.prototype, {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.add = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.startObject) || !defined(options.stopObject)) {
@@ -290,7 +290,7 @@ TweenCollection.prototype.add = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addProperty = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const object = options.object;
   const property = options.property;
@@ -356,7 +356,7 @@ TweenCollection.prototype.addProperty = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addAlpha = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const material = options.material;
 
@@ -428,7 +428,7 @@ TweenCollection.prototype.addAlpha = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addOffsetIncrement = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const material = options.material;
 

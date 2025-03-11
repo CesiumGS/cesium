@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
@@ -97,7 +97,7 @@ TerrainCache.prototype.tidy = function () {
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseTerrainProvider(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._tilingScheme = new GeographicTilingScheme({
     numberOfLevelZeroTilesX: 2,

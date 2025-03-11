@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 
 /**
  * A metadata enum value.
@@ -20,7 +20,7 @@ import DefaultValues from "../Core/DefaultValues.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataEnumValue(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const value = options.value;
   const name = options.name;
 

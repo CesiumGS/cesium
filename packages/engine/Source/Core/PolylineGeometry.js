@@ -4,7 +4,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Color from "./Color.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -98,7 +98,7 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * const geometry = Cesium.PolylineGeometry.createGeometry(polyline);
  */
 function PolylineGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const colors = options.colors;
   const width = options.width ?? 1.0;

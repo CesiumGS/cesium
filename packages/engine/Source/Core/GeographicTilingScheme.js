@@ -1,6 +1,6 @@
 import Cartesian2 from "./Cartesian2.js";
 import Check from "./Check.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
@@ -25,7 +25,7 @@ import Rectangle from "./Rectangle.js";
  * the tile tree.
  */
 function GeographicTilingScheme(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._rectangle = options.rectangle ?? Rectangle.MAX_VALUE;

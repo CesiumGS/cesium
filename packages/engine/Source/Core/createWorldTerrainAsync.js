@@ -1,5 +1,5 @@
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import Ellipsoid from "./Ellipsoid.js";
 
 /**
@@ -39,7 +39,7 @@ import Ellipsoid from "./Ellipsoid.js";
  *
  */
 function createWorldTerrainAsync(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(1, {
     requestVertexNormals: options.requestVertexNormals ?? false,

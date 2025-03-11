@@ -1,7 +1,7 @@
 import {
   Cartesian3,
   Color,
-  DefaultValues,
+  Frozen,
   defined,
   JulianDate,
   ImageBasedLighting,
@@ -164,7 +164,7 @@ Cesium3DTilesTester.tileDestroys = function (scene, url, options) {
 
 Cesium3DTilesTester.generateBatchedTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const magic = options.magic ?? [98, 51, 100, 109];
   const version = options.version ?? 1;
   const featuresLength = options.featuresLength ?? 1;
@@ -201,7 +201,7 @@ Cesium3DTilesTester.generateBatchedTileBuffer = function (options) {
 
 Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const magic = options.magic ?? [105, 51, 100, 109];
   const version = options.version ?? 1;
 
@@ -288,7 +288,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
 
 Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const magic = options.magic ?? [112, 110, 116, 115];
   const version = options.version ?? 1;
   let featureTableJson = options.featureTableJson;
@@ -342,10 +342,10 @@ Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
 
 Cesium3DTilesTester.generateCompositeTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const magic = options.magic ?? [99, 109, 112, 116];
   const version = options.version ?? 1;
-  const tiles = options.tiles ?? DefaultValues.EMPTY_ARRAY;
+  const tiles = options.tiles ?? Frozen.EMPTY_ARRAY;
   const tilesLength = tiles.length;
 
   let i;
@@ -379,7 +379,7 @@ Cesium3DTilesTester.generateCompositeTileBuffer = function (options) {
 
 Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const magic = options.magic ?? [118, 99, 116, 114];
   const version = options.version ?? 1;
 
@@ -432,7 +432,7 @@ Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
 
 Cesium3DTilesTester.generateGeometryTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const magic = options.magic ?? [103, 101, 111, 109];
   const version = options.version ?? 1;
 

@@ -4,7 +4,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import EllipseGeometryLibrary from "./EllipseGeometryLibrary.js";
@@ -918,7 +918,7 @@ function computeRectangle(
  * @see EllipseGeometry.createGeometry
  */
 function EllipseGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
@@ -1114,7 +1114,7 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Rectangle} The result rectangle
  */
 EllipseGeometry.computeRectangle = function (options, result) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;

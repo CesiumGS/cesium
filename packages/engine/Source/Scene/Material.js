@@ -3,7 +3,7 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import createGuid from "../Core/createGuid.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -582,15 +582,15 @@ Material.prototype.destroy = function () {
 };
 
 function initializeMaterial(options, result) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   result._strict = options.strict ?? false;
   result._count = options.count ?? 0;
-  result._template = clone(options.fabric ?? DefaultValues.EMPTY_OBJECT);
+  result._template = clone(options.fabric ?? Frozen.EMPTY_OBJECT);
   result._template.uniforms = clone(
-    result._template.uniforms ?? DefaultValues.EMPTY_OBJECT,
+    result._template.uniforms ?? Frozen.EMPTY_OBJECT,
   );
   result._template.materials = clone(
-    result._template.materials ?? DefaultValues.EMPTY_OBJECT,
+    result._template.materials ?? Frozen.EMPTY_OBJECT,
   );
 
   result.type = defined(result._template.type)

@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -284,7 +284,7 @@ function bind(gl, attributes, indexBuffer) {
  * @private
  */
 function VertexArray(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -568,19 +568,18 @@ function interleaveAttributes(attributes) {
  * @see ShaderProgram
  */
 VertexArray.fromGeometry = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
   const context = options.context;
-  const geometry = options.geometry ?? DefaultValues.EMPTY_OBJECT;
+  const geometry = options.geometry ?? Frozen.EMPTY_OBJECT;
 
   const bufferUsage = options.bufferUsage ?? BufferUsage.DYNAMIC_DRAW;
 
-  const attributeLocations =
-    options.attributeLocations ?? DefaultValues.EMPTY_OBJECT;
+  const attributeLocations = options.attributeLocations ?? Frozen.EMPTY_OBJECT;
   const interleave = options.interleave ?? false;
   const createdVAAttributes = options.vertexArrayAttributes;
 

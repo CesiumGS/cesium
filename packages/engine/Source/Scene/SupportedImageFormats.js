@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 
 /**
  * Image formats supported by the browser.
@@ -10,7 +10,7 @@ import DefaultValues from "../Core/DefaultValues.js";
  * @private
  */
 function SupportedImageFormats(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   this.webp = options.webp ?? false;
   this.basis = options.basis ?? false;
 }

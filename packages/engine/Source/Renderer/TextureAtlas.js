@@ -2,7 +2,7 @@ import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
@@ -37,7 +37,7 @@ const defaultInitialDimensions = 16;
  * @private
  */
 function TextureAtlas(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const borderWidthInPixels = options.borderWidthInPixels ?? 1.0;
   const initialSize =
     options.initialSize ??

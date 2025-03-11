@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import JulianDate from "./JulianDate.js";
@@ -58,7 +58,7 @@ import JulianDate from "./JulianDate.js";
  * const containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
  */
 function TimeInterval(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   /**
    * Gets or sets the start time of this interval.
    * @type {JulianDate}

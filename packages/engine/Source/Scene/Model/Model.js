@@ -5,7 +5,7 @@ import Check from "../../Core/Check.js";
 import Credit from "../../Core/Credit.js";
 import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
@@ -174,7 +174,7 @@ import pickModel from "./pickModel.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
  */
 function Model(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.loader", options.loader);
   Check.typeOf.object("options.resource", options.resource);
@@ -2990,7 +2990,7 @@ Model.prototype.destroyModelResources = function () {
  * }
  */
 Model.fromGltfAsync = async function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url) && !defined(options.gltf)) {

@@ -4,7 +4,7 @@ import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -665,7 +665,7 @@ function metadataChanged(old, current) {
 }
 
 function load(dataSource, entityCollection, data, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   let promise = data;
   if (typeof data === "string" || data instanceof Resource) {
     data = Resource.createIfNeeded(data);
@@ -944,7 +944,7 @@ GpxDataSource.prototype.load = function (data, options) {
     throw new DeveloperError("data is required.");
   }
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   DataSource.setLoading(this, true);
   const oldName = this._name;
   const that = this;

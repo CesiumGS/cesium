@@ -6,7 +6,7 @@ import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CornerType from "./CornerType.js";
 import CorridorGeometryLibrary from "./CorridorGeometryLibrary.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Geometry from "./Geometry.js";
@@ -1070,7 +1070,7 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
  * });
  */
 function CorridorGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const width = options.width;
 
@@ -1248,7 +1248,7 @@ CorridorGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Rectangle} The result rectangle.
  */
 CorridorGeometry.computeRectangle = function (options, result) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const width = options.width;
 

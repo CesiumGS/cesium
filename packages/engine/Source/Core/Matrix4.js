@@ -1,7 +1,7 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -1073,7 +1073,7 @@ Matrix4.computeViewportTransformation = function (
     result = new Matrix4();
   }
 
-  viewport = viewport ?? DefaultValues.EMPTY_OBJECT;
+  viewport = viewport ?? Frozen.EMPTY_OBJECT;
   const x = viewport.x ?? 0.0;
   const y = viewport.y ?? 0.0;
   const width = viewport.width ?? 0.0;

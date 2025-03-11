@@ -1,5 +1,5 @@
 import Color from "../Core/Color.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
@@ -60,7 +60,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 async function createOsmBuildingsAsync(options) {
   const tileset = await Cesium3DTileset.fromIonAssetId(96188, options);
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let style = options.style;
 

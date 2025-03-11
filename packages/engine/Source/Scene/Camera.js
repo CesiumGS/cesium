@@ -3,7 +3,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EasingFunction from "../Core/EasingFunction.js";
@@ -1485,8 +1485,8 @@ const scratchHpr = new HeadingPitchRoll();
  * });
  */
 Camera.prototype.setView = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
-  let orientation = options.orientation ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  let orientation = options.orientation ?? Frozen.EMPTY_OBJECT;
 
   const mode = this._mode;
   if (mode === SceneMode.MORPHING) {
@@ -3347,7 +3347,7 @@ Camera.prototype.completeFlight = function () {
  * });
  */
 Camera.prototype.flyTo = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   let destination = options.destination;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(destination)) {
@@ -3370,7 +3370,7 @@ Camera.prototype.flyTo = function (options) {
     );
   }
 
-  let orientation = options.orientation ?? DefaultValues.EMPTY_OBJECT;
+  let orientation = options.orientation ?? Frozen.EMPTY_OBJECT;
   if (defined(orientation.direction)) {
     orientation = directionUpToHeadingPitchRoll(
       this,
@@ -3588,7 +3588,7 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
   }
   //>>includeEnd('debug');
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const scene2D =
     this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW;
   this._setTransform(Matrix4.IDENTITY);

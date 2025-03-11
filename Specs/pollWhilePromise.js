@@ -1,7 +1,7 @@
-import { DefaultValues, getTimestamp } from "@cesium/engine";
+import { Frozen, getTimestamp } from "@cesium/engine";
 
 function pollWhilePromise(promise, f, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const pollInterval = options.pollInterval ?? 1;
   const timeout = options.timeout ?? 5000;

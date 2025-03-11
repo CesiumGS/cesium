@@ -2,7 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -162,8 +162,8 @@ function ImageryLayer(imageryProvider, options) {
   this._readyEvent = new Event();
   this._errorEvent = new Event();
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
-  imageryProvider = imageryProvider ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  imageryProvider = imageryProvider ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The alpha blending value of this layer, with 0.0 representing fully transparent and
@@ -575,7 +575,7 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  * @see ImageryLayer.provider
  */
 ImageryLayer.fromWorldImagery = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   return ImageryLayer.fromProviderAsync(
     createWorldImageryAsync({

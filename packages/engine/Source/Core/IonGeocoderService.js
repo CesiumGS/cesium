@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ion from "./Ion.js";
@@ -55,7 +55,7 @@ function queryParameterToProvider(parameter) {
  * @see Ion
  */
 function IonGeocoderService(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", options.scene);

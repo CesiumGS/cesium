@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import VertexFormat from "../Core/VertexFormat.js";
@@ -48,7 +48,7 @@ if (!FeatureDetection.isInternetExplorer()) {
  * });
  */
 function PolylineMaterialAppearance(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const translucent = options.translucent ?? true;
   const closed = false;

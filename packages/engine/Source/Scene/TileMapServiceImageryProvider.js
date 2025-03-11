@@ -1,7 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -139,7 +139,7 @@ TileMapServiceImageryProvider.fromUrl = async function (url, options) {
     url: "tilemapresource.xml",
   });
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const metadata = await TileMapServiceImageryProvider._requestMetadata(
     options,
     tmsResource,

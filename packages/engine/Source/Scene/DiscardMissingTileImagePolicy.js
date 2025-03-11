@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getImagePixels from "../Core/getImagePixels.js";
@@ -20,7 +20,7 @@ import Resource from "../Core/Resource.js";
  *                  discard check will proceed no matter the values of the pixelsToCheck.
  */
 function DiscardMissingTileImagePolicy(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.missingImageUrl)) {

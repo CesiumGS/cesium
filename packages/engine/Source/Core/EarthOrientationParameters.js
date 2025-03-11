@@ -1,6 +1,6 @@
 import binarySearch from "./binarySearch.js";
 import Check from "./Check.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import EarthOrientationParametersSample from "./EarthOrientationParametersSample.js";
 import JulianDate from "./JulianDate.js";
@@ -33,7 +33,7 @@ import TimeStandard from "./TimeStandard.js";
  * @private
  */
 function EarthOrientationParameters(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._dates = undefined;
   this._samples = undefined;
@@ -107,7 +107,7 @@ EarthOrientationParameters.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(url);
 

@@ -1,7 +1,7 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -91,7 +91,7 @@ const attributeLocations = {
  * @see PointPrimitive
  */
 function PointPrimitiveCollection(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._sp = undefined;
   this._spTranslucent = undefined;

@@ -4,7 +4,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
@@ -69,7 +69,7 @@ const Instances = ModelComponents.Instances;
  * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
 function I3dmLoader(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const i3dmResource = options.i3dmResource;
   const arrayBuffer = options.arrayBuffer;

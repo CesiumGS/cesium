@@ -1,6 +1,6 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
@@ -28,7 +28,7 @@ import StencilOperation from "../StencilOperation.js";
  * @private
  */
 function ClassificationModelDrawCommand(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;

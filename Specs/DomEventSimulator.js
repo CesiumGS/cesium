@@ -1,7 +1,7 @@
-import { DefaultValues, FeatureDetection } from "@cesium/engine";
+import { Frozen, FeatureDetection } from "@cesium/engine";
 
 function createMouseEvent(type, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const canBubble = options.canBubble ?? true;
   const cancelable = options.cancelable ?? true;
   const view = options.view ?? window;
@@ -57,7 +57,7 @@ function createModifiersList(ctrlKey, altKey, shiftKey, metaKey) {
 
 // MouseWheelEvent is legacy
 function createMouseWheelEvent(type, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const canBubble = options.canBubble ?? true;
   const cancelable = options.cancelable ?? true;
   const view = options.view ?? window;
@@ -95,7 +95,7 @@ function createMouseWheelEvent(type, options) {
 }
 
 function createWheelEvent(type, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const canBubble = options.canBubble ?? true;
   const cancelable = options.cancelable ?? true;
   const view = options.view ?? window;
@@ -165,7 +165,7 @@ function createWheelEvent(type, options) {
 }
 
 function createTouchEvent(type, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const canBubble = options.canBubble ?? true;
   const cancelable = options.cancelable ?? true;
   const view = options.view ?? window;
@@ -174,15 +174,15 @@ function createTouchEvent(type, options) {
   const event = document.createEvent("UIEvent");
   event.initUIEvent(type, canBubble, cancelable, view, detail);
 
-  event.touches = options.touches ?? DefaultValues.EMPTY_ARRAY;
-  event.targetTouches = options.targetTouches ?? DefaultValues.EMPTY_ARRAY;
-  event.changedTouches = options.changedTouches ?? DefaultValues.EMPTY_ARRAY;
+  event.touches = options.touches ?? Frozen.EMPTY_ARRAY;
+  event.targetTouches = options.targetTouches ?? Frozen.EMPTY_ARRAY;
+  event.changedTouches = options.changedTouches ?? Frozen.EMPTY_ARRAY;
 
   return event;
 }
 
 function createPointerEvent(type, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   let event;
 
   if (FeatureDetection.isInternetExplorer()) {
@@ -277,7 +277,7 @@ function createPointerEvent(type, options) {
 }
 
 function createDeviceOrientationEvent(type, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const canBubble = options.canBubble ?? true;
   const cancelable = options.cancelable ?? true;
   const alpha = options.alpha ?? 0.0;

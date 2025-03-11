@@ -1,5 +1,5 @@
 import Credit from "../Core/Credit.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
@@ -47,7 +47,7 @@ const defaultCredit = new Credit(
  * @see {@link https://docs.mapbox.com/api/accounts/tokens/}
  */
 function MapboxImageryProvider(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const mapId = options.mapId;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(mapId)) {

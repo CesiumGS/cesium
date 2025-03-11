@@ -1,4 +1,4 @@
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Resource from "../../Core/Resource.js";
@@ -29,7 +29,7 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function TextureUniform(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   const hasTypedArray = defined(options.typedArray);
   const hasUrl = defined(options.url);

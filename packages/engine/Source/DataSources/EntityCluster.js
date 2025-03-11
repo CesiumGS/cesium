@@ -1,7 +1,7 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
 import Event from "../Core/Event.js";
@@ -33,7 +33,7 @@ import KDBush from "kdbush";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
  */
 function EntityCluster(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._enabled = options.enabled ?? false;
   this._pixelRange = options.pixelRange ?? 80;

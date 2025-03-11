@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
@@ -269,7 +269,7 @@ Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
  * });
  */
 Color.fromRandom = function (options, result) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let red = options.red;
   if (!defined(red)) {

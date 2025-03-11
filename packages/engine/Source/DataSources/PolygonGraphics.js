@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -104,7 +104,7 @@ function PolygonGraphics(options) {
   this._textureCoordinates = undefined;
   this._textureCoordinatesSubscription = undefined;
 
-  this.merge(options ?? DefaultValues.EMPTY_OBJECT);
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PolygonGraphics.prototype, {

@@ -1,4 +1,4 @@
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Quaternion from "./Quaternion.js";
@@ -50,7 +50,7 @@ function createEvaluateFunction(spline) {
  * @see MorphWeightSpline
  */
 function QuaternionSpline(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;

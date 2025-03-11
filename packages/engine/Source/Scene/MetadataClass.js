@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import MetadataClassProperty from "./MetadataClassProperty.js";
 
@@ -24,7 +24,7 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClass(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
 
   //>>includeStart('debug', pragmas.debug);
@@ -65,7 +65,7 @@ function MetadataClass(options) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClass.fromJson = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const classDefinition = options.class;
 

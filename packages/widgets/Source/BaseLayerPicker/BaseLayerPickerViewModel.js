@@ -1,5 +1,5 @@
 import {
-  DefaultValues,
+  Frozen,
   defined,
   DeveloperError,
   EllipsoidTerrainProvider,
@@ -25,13 +25,13 @@ import createCommand from "../createCommand.js";
  * @exception {DeveloperError} terrainProviderViewModels must be an array.
  */
 function BaseLayerPickerViewModel(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const globe = options.globe;
   const imageryProviderViewModels =
-    options.imageryProviderViewModels ?? DefaultValues.EMPTY_ARRAY;
+    options.imageryProviderViewModels ?? Frozen.EMPTY_ARRAY;
   const terrainProviderViewModels =
-    options.terrainProviderViewModels ?? DefaultValues.EMPTY_ARRAY;
+    options.terrainProviderViewModels ?? Frozen.EMPTY_ARRAY;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(globe)) {

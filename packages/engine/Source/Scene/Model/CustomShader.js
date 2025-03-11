@@ -1,5 +1,5 @@
 import Check from "../../Core/Check.js";
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -120,7 +120,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * });
  */
 function CustomShader(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * A value determining how the custom shader interacts with the overall
@@ -144,7 +144,7 @@ function CustomShader(options) {
    * @type {Object<string, UniformSpecifier>}
    * @readonly
    */
-  this.uniforms = options.uniforms ?? DefaultValues.EMPTY_OBJECT;
+  this.uniforms = options.uniforms ?? Frozen.EMPTY_OBJECT;
   /**
    * Additional varyings as declared by the user.
    * This is used by {@link CustomShaderPipelineStage}
@@ -152,7 +152,7 @@ function CustomShader(options) {
    * @type {Object<string, VaryingType>}
    * @readonly
    */
-  this.varyings = options.varyings ?? DefaultValues.EMPTY_OBJECT;
+  this.varyings = options.varyings ?? Frozen.EMPTY_OBJECT;
   /**
    * The user-defined GLSL code for the vertex shader
    *

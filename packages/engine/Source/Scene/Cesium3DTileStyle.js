@@ -1,5 +1,5 @@
 import clone from "../Core/clone.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
@@ -119,7 +119,7 @@ function setup(that, styleJson) {
   const meta = {};
   if (defined(styleJson.meta)) {
     const defines = styleJson.defines;
-    const metaJson = styleJson.meta ?? DefaultValues.EMPTY_OBJECT;
+    const metaJson = styleJson.meta ?? Frozen.EMPTY_OBJECT;
     for (const property in metaJson) {
       if (metaJson.hasOwnProperty(property)) {
         meta[property] = new Expression(metaJson[property], defines);
@@ -133,7 +133,7 @@ function setup(that, styleJson) {
 }
 
 function getExpression(tileStyle, value) {
-  const defines = (tileStyle._style ?? DefaultValues.EMPTY_OBJECT).defines;
+  const defines = (tileStyle._style ?? Frozen.EMPTY_OBJECT).defines;
 
   if (!defined(value)) {
     return undefined;

@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -33,7 +33,7 @@ import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
  * @see PerspectiveOffCenterFrustum
  */
 function PerspectiveFrustum(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._offCenterFrustum = new PerspectiveOffCenterFrustum();
 

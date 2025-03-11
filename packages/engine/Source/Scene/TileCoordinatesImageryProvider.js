@@ -1,5 +1,5 @@
 import Color from "../Core/Color.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -29,7 +29,7 @@ import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
  * @param {TileCoordinatesImageryProvider.ConstructorOptions} [options] Object describing initialization options
  */
 function TileCoordinatesImageryProvider(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme

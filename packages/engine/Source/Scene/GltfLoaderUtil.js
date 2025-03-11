@@ -1,6 +1,6 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Sampler from "../Renderer/Sampler.js";
@@ -34,7 +34,7 @@ const GltfLoaderUtil = {};
  * @private
  */
 GltfLoaderUtil.getImageIdFromTexture = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, textureId, supportedImageFormats } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -70,7 +70,7 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
  * @private
  */
 GltfLoaderUtil.createSampler = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, textureInfo, compressedTextureNoMipmap = false } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -132,7 +132,7 @@ const defaultScale = new Cartesian2(1.0, 1.0);
  * @returns {ModelComponents.TextureReader} The texture reader for this model.
  */
 GltfLoaderUtil.createModelTextureReader = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { textureInfo, channels, texture } = options;
 
   //>>includeStart('debug', pragmas.debug);

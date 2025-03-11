@@ -1,7 +1,7 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -47,7 +47,7 @@ const sin = Math.sin;
  * const geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
  */
 function EllipsoidOutlineGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const radii = options.radii ?? defaultRadii;
   const innerRadii = options.innerRadii ?? radii;

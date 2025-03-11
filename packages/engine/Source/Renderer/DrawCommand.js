@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 
@@ -22,7 +22,7 @@ const Flags = {
  * @private
  */
 function DrawCommand(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._boundingVolume = options.boundingVolume;
   this._orientedBoundingBox = options.orientedBoundingBox;

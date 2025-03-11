@@ -4,7 +4,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CoplanarPolygonGeometryLibrary from "./CoplanarPolygonGeometryLibrary.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
@@ -71,7 +71,7 @@ function createGeometryFromPositions(positions) {
  * const geometry = Cesium.CoplanarPolygonOutlineGeometry.createGeometry(polygonOutline);
  */
 function CoplanarPolygonOutlineGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const polygonHierarchy = options.polygonHierarchy;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.polygonHierarchy", polygonHierarchy);
@@ -99,7 +99,7 @@ function CoplanarPolygonOutlineGeometry(options) {
  * @returns {CoplanarPolygonOutlineGeometry}
  */
 CoplanarPolygonOutlineGeometry.fromPositions = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.positions", options.positions);

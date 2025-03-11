@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import EllipsoidSurfaceAppearanceFS from "../Shaders/Appearances/EllipsoidSurfaceAppearanceFS.js";
@@ -42,7 +42,7 @@ import Material from "./Material.js";
  * });
  */
 function EllipsoidSurfaceAppearance(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const translucent = options.translucent ?? true;
   const aboveGround = options.aboveGround ?? false;

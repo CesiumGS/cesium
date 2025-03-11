@@ -1,5 +1,5 @@
 import Credit from "../Core/Credit.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
@@ -49,7 +49,7 @@ const defaultCredit = new Credit(
  * @see {@link https://docs.mapbox.com/api/#access-tokens-and-token-scopes}
  */
 function MapboxStyleImageryProvider(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const styleId = options.styleId;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(styleId)) {

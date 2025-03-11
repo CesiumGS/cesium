@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import AllMaterialAppearanceFS from "../Shaders/Appearances/AllMaterialAppearanceFS.js";
@@ -47,7 +47,7 @@ import Material from "./Material.js";
      * });
      */
 function MaterialAppearance(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const translucent = options.translucent ?? true;
   const closed = options.closed ?? false;

@@ -3,7 +3,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
@@ -475,7 +475,7 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  * @see TerrainProvider
  */
 function CesiumTerrainProvider(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._heightmapWidth = undefined;
   this._heightmapStructure = undefined;
@@ -1226,7 +1226,7 @@ CesiumTerrainProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   url = await Promise.resolve(url);
   const resource = Resource.createIfNeeded(url);

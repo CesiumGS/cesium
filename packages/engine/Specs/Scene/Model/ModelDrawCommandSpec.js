@@ -8,7 +8,7 @@ import {
   CullFace,
   DepthFunction,
   DrawCommand,
-  DefaultValues,
+  Frozen,
   defined,
   GeographicProjection,
   Math as CesiumMath,
@@ -57,7 +57,7 @@ describe(
     };
 
     function mockModel(options) {
-      options = options ?? DefaultValues.EMPTY_OBJECT;
+      options = options ?? Frozen.EMPTY_OBJECT;
 
       const modelColor = options.color ?? Color.WHITE;
       const silhouetteColor = options.silhouetteColor ?? Color.RED;
@@ -100,7 +100,7 @@ describe(
     }
 
     function mockRenderResources(options) {
-      options = options ?? DefaultValues.EMPTY_OBJECT;
+      options = options ?? Frozen.EMPTY_OBJECT;
 
       const model = mockModel(options.modelOptions);
       const resources = {
@@ -171,7 +171,7 @@ describe(
 
     // Creates a ModelDrawCommand with the specified derived commands.
     function createModelDrawCommand(options) {
-      options = options ?? DefaultValues.EMPTY_OBJECT;
+      options = options ?? Frozen.EMPTY_OBJECT;
 
       const deriveSilhouette = options.deriveSilhouette;
       const derive2D = options.derive2D;

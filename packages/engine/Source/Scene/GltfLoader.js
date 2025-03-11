@@ -5,7 +5,7 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Credit from "../Core/Credit.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import InterpolationType from "../Core/InterpolationType.js";
@@ -195,7 +195,7 @@ const GltfLoaderState = {
  * @private
  */
 function GltfLoader(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltfResource,
     typedArray,
@@ -1670,7 +1670,7 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 function loadMaterial(loader, gltfMaterial, frameState) {
   const material = new Material();
 
-  const extensions = gltfMaterial.extensions ?? DefaultValues.EMPTY_OBJECT;
+  const extensions = gltfMaterial.extensions ?? Frozen.EMPTY_OBJECT;
   const pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
   const pbrSpecular = extensions.KHR_materials_specular;
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
@@ -1933,7 +1933,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  const extensions = gltfPrimitive.extensions ?? DefaultValues.EMPTY_OBJECT;
+  const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
 
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
@@ -2235,7 +2235,7 @@ function loadInstances(loader, nodeExtensions, frameState) {
   }
 
   const instancingExtExtensions =
-    instancingExtension.extensions ?? DefaultValues.EMPTY_OBJECT;
+    instancingExtension.extensions ?? Frozen.EMPTY_OBJECT;
   const instanceFeatures = nodeExtensions.EXT_instance_features;
   const featureMetadataLegacy = instancingExtExtensions.EXT_feature_metadata;
 
@@ -2333,7 +2333,7 @@ function loadNode(loader, gltfNode, frameState) {
   node.rotation = fromArray(Quaternion, gltfNode.rotation);
   node.scale = fromArray(Cartesian3, gltfNode.scale);
 
-  const nodeExtensions = gltfNode.extensions ?? DefaultValues.EMPTY_OBJECT;
+  const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
 
@@ -2593,7 +2593,7 @@ function loadArticulation(articulationJson) {
 }
 
 function loadArticulations(gltf) {
-  const extensions = gltf.extensions ?? DefaultValues.EMPTY_OBJECT;
+  const extensions = gltf.extensions ?? Frozen.EMPTY_OBJECT;
   const articulationJsons = extensions.AGI_articulations?.articulations;
   if (!defined(articulationJsons)) {
     return [];
@@ -2639,7 +2639,7 @@ const scratchCenter = new Cartesian3();
  */
 function parse(loader, frameState) {
   const gltf = loader.gltfJson;
-  const extensions = gltf.extensions ?? DefaultValues.EMPTY_OBJECT;
+  const extensions = gltf.extensions ?? Frozen.EMPTY_OBJECT;
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
   const cesiumRtcExtension = extensions.CESIUM_RTC;

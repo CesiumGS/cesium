@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
 
@@ -12,7 +12,7 @@ import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
  * @private
  */
 function ImplicitSubtreeCache(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * @type {number}

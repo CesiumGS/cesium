@@ -3,7 +3,7 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CylinderGeometryLibrary from "./CylinderGeometryLibrary.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Geometry from "./Geometry.js";
@@ -48,7 +48,7 @@ const positionScratch = new Cartesian3();
  * const geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
  */
 function CylinderGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const length = options.length;
   const topRadius = options.topRadius;

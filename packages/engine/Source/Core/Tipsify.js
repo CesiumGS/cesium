@@ -1,4 +1,4 @@
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -39,7 +39,7 @@ const Tipsify = {};
  * const acmr = Cesium.Tipsify.calculateACMR({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
  */
 Tipsify.calculateACMR = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const indices = options.indices;
   let maximumIndex = options.maximumIndex;
   const cacheSize = options.cacheSize ?? 24;
@@ -117,7 +117,7 @@ Tipsify.calculateACMR = function (options) {
  * const reorderedIndices = Cesium.Tipsify.tipsify({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
  */
 Tipsify.tipsify = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const indices = options.indices;
   const maximumIndex = options.maximumIndex;
   const cacheSize = options.cacheSize ?? 24;

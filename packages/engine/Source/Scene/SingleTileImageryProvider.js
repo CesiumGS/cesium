@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -43,7 +43,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @see UrlTemplateImageryProvider
  */
 function SingleTileImageryProvider(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -309,7 +309,7 @@ SingleTileImageryProvider.fromUrl = async function (url, options) {
   const resource = Resource.createIfNeeded(url);
   const image = await doRequest(resource);
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const provider = new SingleTileImageryProvider({
     ...options,
     url: url,

@@ -11,7 +11,7 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -3353,7 +3353,7 @@ function loadKmz(
 }
 
 function load(dataSource, entityCollection, data, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   let sourceUri = options.sourceUri;
   const uriResolver = options.uriResolver;
   const context = options.context;
@@ -3531,7 +3531,7 @@ function load(dataSource, entityCollection, data, options) {
  * );
  */
 function KmlDataSource(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const camera = options.camera;
   const canvas = options.canvas;
 
@@ -3604,7 +3604,7 @@ function KmlDataSource(options) {
  * @returns {Promise<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
 KmlDataSource.load = function (data, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const dataSource = new KmlDataSource(options);
   return dataSource.load(data, options);
 };
@@ -3779,7 +3779,7 @@ KmlDataSource.prototype.load = function (data, options) {
   }
   //>>includeEnd('debug');
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   DataSource.setLoading(this, true);
 
   const oldName = this._name;

@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -88,7 +88,7 @@ function EllipseGraphics(options) {
   this._zIndex = undefined;
   this._zIndexSubscription = undefined;
 
-  this.merge(options ?? DefaultValues.EMPTY_OBJECT);
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(EllipseGraphics.prototype, {

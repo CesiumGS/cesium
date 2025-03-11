@@ -1,5 +1,5 @@
 import Check from "../../Core/Check.js";
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import SceneMode from "../SceneMode.js";
@@ -43,7 +43,7 @@ import WireframePipelineStage from "./WireframePipelineStage.js";
  * @private
  */
 function ModelRuntimePrimitive(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const primitive = options.primitive;
   const node = options.node;

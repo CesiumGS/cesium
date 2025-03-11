@@ -1,7 +1,7 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import GeographicProjection from "./GeographicProjection.js";
@@ -198,7 +198,7 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
  *          be retried later.
  */
 HeightmapTerrainData.prototype.createMesh = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);

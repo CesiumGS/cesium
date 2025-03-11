@@ -4,7 +4,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import GltfLoader from "../GltfLoader.js";
@@ -56,7 +56,7 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
  * */
 function B3dmLoader(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const b3dmResource = options.b3dmResource;
   let baseResource = options.baseResource;

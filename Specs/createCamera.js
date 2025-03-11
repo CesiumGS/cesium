@@ -1,6 +1,6 @@
 import {
   Cartesian3,
-  DefaultValues,
+  Frozen,
   defined,
   GeographicProjection,
   Matrix4,
@@ -20,7 +20,7 @@ function MockScene(canvas) {
 }
 
 function createCamera(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const scene = new MockScene(options.canvas);
   const camera = new Camera(scene);

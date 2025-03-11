@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -9,7 +9,7 @@ import getElement from "../DataSources/getElement.js";
  * @private
  */
 function PerformanceDisplay(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const container = getElement(options.container);
   //>>includeStart('debug', pragmas.debug);

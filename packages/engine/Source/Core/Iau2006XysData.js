@@ -1,5 +1,5 @@
 import buildModuleUrl from "./buildModuleUrl.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Iau2006XysSample from "./Iau2006XysSample.js";
 import JulianDate from "./JulianDate.js";
@@ -26,7 +26,7 @@ import TimeStandard from "./TimeStandard.js";
  * @private
  */
 function Iau2006XysData(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._xysFileUrlTemplate = Resource.createIfNeeded(
     options.xysFileUrlTemplate,

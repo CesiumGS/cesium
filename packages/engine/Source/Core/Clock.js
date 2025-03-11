@@ -1,6 +1,6 @@
 import ClockRange from "./ClockRange.js";
 import ClockStep from "./ClockStep.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -41,7 +41,7 @@ import JulianDate from "./JulianDate.js";
  * @see JulianDate
  */
 function Clock(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let currentTime = options.currentTime;
   let startTime = options.startTime;

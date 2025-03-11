@@ -1,4 +1,4 @@
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
 import Iso8601 from "./Iso8601.js";
@@ -19,7 +19,7 @@ import JulianDate from "./JulianDate.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Video.html|Video Material Demo}
  */
 function VideoSynchronizer(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._clock = undefined;
   this._element = undefined;

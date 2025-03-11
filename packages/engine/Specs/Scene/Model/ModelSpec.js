@@ -14,7 +14,7 @@ import {
   ColorBlendMode,
   Credit,
   CustomShader,
-  DefaultValues,
+  Frozen,
   defined,
   DirectionalLight,
   DistanceDisplayCondition,
@@ -182,7 +182,7 @@ describe(
 
     function verifyRender(model, shouldRender, options) {
       expect(model.ready).toBe(true);
-      options = options ?? DefaultValues.EMPTY_OBJECT;
+      options = options ?? Frozen.EMPTY_OBJECT;
 
       const zoomToModel = options.zoomToModel ?? true;
       if (zoomToModel) {
@@ -213,7 +213,7 @@ describe(
     }
 
     function verifyDebugWireframe(model, primitiveType, options) {
-      options = options ?? DefaultValues.EMPTY_OBJECT;
+      options = options ?? Frozen.EMPTY_OBJECT;
       const modelHasIndices = options.hasIndices ?? true;
       const targetScene = options.scene ?? scene;
 

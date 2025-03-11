@@ -1,5 +1,5 @@
 import Color from "../Core/Color.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 
 /**
  * A directional light source that originates from the Sun.
@@ -12,7 +12,7 @@ import DefaultValues from "../Core/DefaultValues.js";
  * @constructor
  */
 function SunLight(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   /**
    * The color of the light.
    * @type {Color}

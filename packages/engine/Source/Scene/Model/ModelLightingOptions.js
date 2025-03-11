@@ -1,4 +1,4 @@
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import LightingModel from "./LightingModel.js";
 
 /**
@@ -13,7 +13,7 @@ import LightingModel from "./LightingModel.js";
  * @private
  */
 function ModelLightingOptions(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The lighting model to use, such as UNLIT or PBR. This is determined by

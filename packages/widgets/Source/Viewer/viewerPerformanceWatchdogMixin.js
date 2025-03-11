@@ -1,4 +1,4 @@
-import { DefaultValues, defined, DeveloperError } from "@cesium/engine";
+import { Frozen, defined, DeveloperError } from "@cesium/engine";
 import PerformanceWatchdog from "../PerformanceWatchdog/PerformanceWatchdog.js";
 
 /**
@@ -28,7 +28,7 @@ function viewerPerformanceWatchdogMixin(viewer, options) {
   }
   //>>includeEnd('debug');
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const performanceWatchdog = new PerformanceWatchdog({
     scene: viewer.scene,

@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Geometry from "./Geometry.js";
@@ -40,7 +40,7 @@ const diffScratch = new Cartesian3();
  * const geometry = Cesium.BoxGeometry.createGeometry(box);
  */
 function BoxGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const min = options.minimum;
   const max = options.maximum;
@@ -88,7 +88,7 @@ function BoxGeometry(options) {
  * @see BoxGeometry.createGeometry
  */
 BoxGeometry.fromDimensions = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const dimensions = options.dimensions;
 
   //>>includeStart('debug', pragmas.debug);

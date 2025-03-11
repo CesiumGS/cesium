@@ -1,5 +1,5 @@
 import createGuid from "../Core/createGuid.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -28,7 +28,7 @@ import Event from "../Core/Event.js";
  * scene.primitives.add(labels);      // Add regular primitive
  */
 function PrimitiveCollection(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._primitives = [];
   this._guid = createGuid();

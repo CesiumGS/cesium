@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import PerInstanceColorAppearanceFS from "../Shaders/Appearances/PerInstanceColorAppearanceFS.js";
 import PerInstanceColorAppearanceVS from "../Shaders/Appearances/PerInstanceColorAppearanceVS.js";
@@ -68,7 +68,7 @@ import Appearance from "./Appearance.js";
  * });
  */
 function PerInstanceColorAppearance(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const translucent = options.translucent ?? true;
   const closed = options.closed ?? false;

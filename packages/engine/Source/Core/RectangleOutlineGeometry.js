@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -270,7 +270,7 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
  * const geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
  */
 function RectangleOutlineGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const rectangle = options.rectangle;
   const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;

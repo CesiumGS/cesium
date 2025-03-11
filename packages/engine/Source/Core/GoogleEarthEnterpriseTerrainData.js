@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import IndexDatatype from "./IndexDatatype.js";
@@ -55,7 +55,7 @@ import TerrainMesh from "./TerrainMesh.js";
  * @see QuantizedMeshTerrainData
  */
 function GoogleEarthEnterpriseTerrainData(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.buffer", options.buffer);
   Check.typeOf.number(
@@ -145,7 +145,7 @@ const rectangleScratch = new Rectangle();
  *          be retried later.
  */
 GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);

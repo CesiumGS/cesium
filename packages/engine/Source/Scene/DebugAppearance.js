@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Appearance from "./Appearance.js";
@@ -33,7 +33,7 @@ import Appearance from "./Appearance.js";
  * });
  */
 function DebugAppearance(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const attributeName = options.attributeName;
   let perInstanceAttribute = options.perInstanceAttribute;
 

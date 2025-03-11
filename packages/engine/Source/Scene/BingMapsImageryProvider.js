@@ -1,7 +1,7 @@
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import CesiumMath from "../Core/Math.js";
@@ -205,7 +205,7 @@ async function requestMetadata(
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function BingMapsImageryProvider(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -471,7 +471,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
  * @exception {RuntimeError} metadata does not specify one resource in resourceSets
  */
 BingMapsImageryProvider.fromUrl = async function (url, options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("url", url);

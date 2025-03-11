@@ -2,7 +2,7 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import mergeSort from "../Core/mergeSort.js";
@@ -462,7 +462,7 @@ function createLayeredEntries(layers) {
  * });
  */
 function createElevationBandMaterial(options) {
-  const { scene, layers } = options ?? DefaultValues.EMPTY_OBJECT;
+  const { scene, layers } = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", scene);

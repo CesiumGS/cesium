@@ -1,6 +1,6 @@
 import {
   defined,
-  DefaultValues,
+  Frozen,
   DeveloperError,
   FeatureDetection,
   PropertyTable,
@@ -143,7 +143,7 @@ function createProperties(options) {
 }
 
 MetadataTester.createMetadataTable = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const disableBigIntSupport = options.disableBigIntSupport;
   const disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
   const disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
@@ -190,7 +190,7 @@ MetadataTester.createMetadataTable = function (options) {
 };
 
 MetadataTester.createPropertyTable = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const disableBigIntSupport = options.disableBigIntSupport;
   const disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
   const disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
@@ -245,7 +245,7 @@ MetadataTester.createPropertyTable = function (options) {
 
 // for EXT_structural_metadata
 MetadataTester.createPropertyTables = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const propertyTables = [];
   const bufferViews = {};
@@ -277,7 +277,7 @@ MetadataTester.createPropertyTables = function (options) {
 
 // For EXT_feature_metadata
 MetadataTester.createFeatureTables = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const featureTables = {};
   const bufferViews = {};
@@ -309,7 +309,7 @@ MetadataTester.createFeatureTables = function (options) {
 };
 
 MetadataTester.createGltf = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const propertyTableResults = MetadataTester.createPropertyTables(options);
 

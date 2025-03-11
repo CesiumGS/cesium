@@ -1,5 +1,5 @@
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
@@ -30,7 +30,7 @@ import Primitive from "./Primitive.js";
  * }));
  */
 function createTangentSpaceDebugPrimitive(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const instances = [];
   let geometry = options.geometry;
 

@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -93,7 +93,7 @@ function LabelGraphics(options) {
   this._disableDepthTestDistance = undefined;
   this._disableDepthTestDistanceSubscription = undefined;
 
-  this.merge(options ?? DefaultValues.EMPTY_OBJECT);
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(LabelGraphics.prototype, {

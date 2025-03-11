@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Texture from "../Renderer/Texture.js";
@@ -35,7 +35,7 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  * @private
  */
 function GltfTextureLoader(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const textureInfo = options.textureInfo;

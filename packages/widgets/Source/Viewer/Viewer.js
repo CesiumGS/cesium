@@ -6,7 +6,7 @@ import {
   Cesium3DTileFeature,
   Clock,
   ConstantPositionProperty,
-  DefaultValues,
+  Frozen,
   defined,
   destroyObject,
   DeveloperError,
@@ -401,7 +401,7 @@ function Viewer(container, options) {
   //>>includeEnd('debug');
 
   container = getElement(container);
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (

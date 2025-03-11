@@ -10,7 +10,7 @@ import Color from "../Core/Color.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import clone from "../Core/clone.js";
 import CustomShader from "./Model/CustomShader.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -49,7 +49,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelPrimitive(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * @type {boolean}

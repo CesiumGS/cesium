@@ -1,6 +1,6 @@
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Check from "../Core/Check.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import IonResource from "../Core/IonResource.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
@@ -64,7 +64,7 @@ async function createGooglePhotorealistic3DTileset(apiOptions, tilesetOptions) {
     tilesetOptions.maximumCacheOverflowBytes ?? 1024 * 1024 * 1024;
   tilesetOptions.enableCollision = tilesetOptions.enableCollision ?? true;
 
-  apiOptions = apiOptions ?? DefaultValues.EMPTY_OBJECT;
+  apiOptions = apiOptions ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("apiOptions", apiOptions);
   //>>includeEnd('debug');

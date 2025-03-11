@@ -2,7 +2,7 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import createGuid from "../Core/createGuid.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -1448,7 +1448,7 @@ Context.prototype.endFrame = function () {
 Context.prototype.readPixels = function (readState) {
   const gl = this._gl;
 
-  readState = readState ?? DefaultValues.EMPTY_OBJECT;
+  readState = readState ?? Frozen.EMPTY_OBJECT;
   const x = Math.max(readState.x ?? 0, 0);
   const y = Math.max(readState.y ?? 0, 0);
   const width = readState.width ?? gl.drawingBufferWidth;
@@ -1534,7 +1534,7 @@ Context.prototype.createViewportQuadCommand = function (
   fragmentShaderSource,
   overrides,
 ) {
-  overrides = overrides ?? DefaultValues.EMPTY_OBJECT;
+  overrides = overrides ?? Frozen.EMPTY_OBJECT;
 
   return new DrawCommand({
     vertexArray: this.getViewportQuadVertexArray(),

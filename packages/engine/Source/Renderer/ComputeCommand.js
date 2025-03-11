@@ -1,4 +1,4 @@
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import Pass from "./Pass.js";
 
 /**
@@ -8,7 +8,7 @@ import Pass from "./Pass.js";
  * @constructor
  */
 function ComputeCommand(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The vertex array. If none is provided, a viewport quad will be used.

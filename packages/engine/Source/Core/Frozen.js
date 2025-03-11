@@ -1,24 +1,24 @@
 /**
  * Utilities helpful for setting a default value for a parameter.
  *
- * @namespace DefaultValues
+ * @namespace Frozen
  */
-const DefaultValues = {};
+const Frozen = {};
 
 /**
  * A frozen empty object that can be used as the default value for options passed as
  * an object literal.
  * @type {object}
- * @memberof DefaultValues
+ * @memberof Frozen
  */
-DefaultValues.EMPTY_OBJECT = Object.freeze({});
+Frozen.EMPTY_OBJECT = Object.freeze({});
 
 /**
  * A frozen empty array that can be used as the default value for options passed as
  * an array literal.
  * @type {array}
- * @memberof DefaultValues
+ * @memberof Frozen
  */
-DefaultValues.EMPTY_ARRAY = Object.freeze([]);
+Frozen.EMPTY_ARRAY = Object.freeze([]);
 
-export default DefaultValues;
+export default Frozen;

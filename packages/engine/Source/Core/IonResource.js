@@ -1,7 +1,7 @@
 import Uri from "urijs";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ion from "./Ion.js";
 import Resource from "./Resource.js";
@@ -220,7 +220,7 @@ IonResource._createEndpointResource = function (assetId, options) {
   Check.defined("assetId", assetId);
   //>>includeEnd('debug');
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   let server = options.server ?? Ion.defaultServer;
   const accessToken = options.accessToken ?? Ion.defaultAccessToken;
   server = Resource.createIfNeeded(server);

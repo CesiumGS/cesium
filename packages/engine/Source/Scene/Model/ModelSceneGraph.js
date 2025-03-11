@@ -1,7 +1,7 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
-import DefaultValues from "../../Core/DefaultValues.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
@@ -40,7 +40,7 @@ import ModelDrawCommands from "./ModelDrawCommands.js";
  * @private
  */
 function ModelSceneGraph(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const components = options.modelComponents;
 
   //>>includeStart('debug', pragmas.debug);

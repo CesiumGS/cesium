@@ -1,4 +1,4 @@
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -40,7 +40,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see DistanceDisplayConditionGeometryInstanceAttribute
  */
 function GeometryInstanceAttribute(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.componentDatatype)) {

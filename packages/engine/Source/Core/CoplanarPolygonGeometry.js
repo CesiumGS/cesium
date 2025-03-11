@@ -6,7 +6,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CoplanarPolygonGeometryLibrary from "./CoplanarPolygonGeometryLibrary.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Geometry from "./Geometry.js";
@@ -247,7 +247,7 @@ function createGeometryFromPolygon(
  *
  */
 function CoplanarPolygonGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const polygonHierarchy = options.polygonHierarchy;
   const textureCoordinates = options.textureCoordinates;
   //>>includeStart('debug', pragmas.debug);
@@ -309,7 +309,7 @@ function CoplanarPolygonGeometry(options) {
  * @see PolygonGeometry#createGeometry
  */
 CoplanarPolygonGeometry.fromPositions = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.positions", options.positions);

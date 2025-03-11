@@ -1,4 +1,4 @@
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
@@ -21,7 +21,7 @@ import RequestType from "./RequestType.js";
  * @param {string} [options.serverKey] A key used to identify the server that a request is going to.
  */
 function Request(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const throttleByServer = options.throttleByServer ?? false;
   const throttle = options.throttle ?? false;

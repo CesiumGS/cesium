@@ -1,5 +1,5 @@
 import Color from "./Color.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -126,7 +126,7 @@ function writeTextToCanvas(text, options) {
     return undefined;
   }
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const font = options.font ?? "10px sans-serif";
   const stroke = options.stroke ?? false;
   const fill = options.fill ?? true;

@@ -1,5 +1,5 @@
 import deprecationWarning from "./deprecationWarning.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 
 /**
  * Returns the first parameter if not undefined, otherwise the second parameter.
@@ -33,15 +33,15 @@ function defaultValue(a, b) {
  * @type {object}
  * @memberof defaultValue
  * @deprecated This property has been deprecated and will be removed in Cesium 1.134. See <a href="https://github.com/CesiumGS/cesium/issues/11326">Issue 11326</a>.
- * Use `DefaultValues.EMPTY_OBJECT` instead
+ * Use `Frozen.EMPTY_OBJECT` instead
  */
 Object.defineProperty(defaultValue, "EMPTY_OBJECT", {
   get: function () {
     deprecationWarning(
       "defaultValue.EMPTY_OBJECT",
-      "defaultValue.EMPTY_OBJECT has been deprecated and will be removed in Cesium 1.134. Use DefaultValues.EMPTY_OBJECT instead",
+      "defaultValue.EMPTY_OBJECT has been deprecated and will be removed in Cesium 1.134. Use Frozen.EMPTY_OBJECT instead",
     );
-    return DefaultValues.EMPTY_OBJECT;
+    return Frozen.EMPTY_OBJECT;
   },
 });
 

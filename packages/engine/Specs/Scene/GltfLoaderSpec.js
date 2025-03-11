@@ -7,7 +7,7 @@ import {
   Cartesian4,
   combine,
   ComponentDatatype,
-  DefaultValues,
+  Frozen,
   GltfStructuralMetadataLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
@@ -194,7 +194,7 @@ describe(
     }
 
     async function loadGltf(gltfPath, options) {
-      options = options ?? DefaultValues.EMPTY_OBJECT;
+      options = options ?? Frozen.EMPTY_OBJECT;
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       const targetScene = options.scene ?? scene;
       gltfLoaders.push(gltfLoader);
@@ -2187,7 +2187,7 @@ describe(
       });
 
       function verifyBoxInstancedAttributes(loader, options) {
-        options = options ?? DefaultValues.EMPTY_OBJECT;
+        options = options ?? Frozen.EMPTY_OBJECT;
         const interleaved = options.interleaved ?? false;
         const instancingDisabled = options.instancingDisabled ?? false;
 

@@ -9,7 +9,7 @@ import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import createGuid from "../Core/createGuid.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -127,7 +127,7 @@ const requestRenderAfterFrame = function (scene) {
  * });
  */
 function Scene(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const canvas = options.canvas;
   let creditContainer = options.creditContainer;
   let creditViewport = options.creditViewport;

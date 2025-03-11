@@ -1,7 +1,7 @@
 import ArcType from "../Core/ArcType.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
@@ -39,7 +39,7 @@ import Primitive from "./Primitive.js";
  * }));
  */
 function DebugModelMatrixPrimitive(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The length of the axes in meters.

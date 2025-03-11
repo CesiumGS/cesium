@@ -1,7 +1,7 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import DefaultValues from "./DefaultValues.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -53,7 +53,7 @@ const scratchCartesian3Position2 = new Cartesian3();
  * const geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
  */
 function WallOutlineGeometry(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const wallPositions = options.positions;
   const maximumHeights = options.maximumHeights;
@@ -274,7 +274,7 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @see WallOutlineGeometry#createGeometry
  */
 WallOutlineGeometry.fromConstantHeights = function (options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
 
   //>>includeStart('debug', pragmas.debug);

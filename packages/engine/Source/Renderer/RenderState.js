@@ -1,6 +1,6 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Color from "../Core/Color.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
@@ -89,23 +89,22 @@ function validateStencilOperation(stencilOperation) {
  * @private
  */
 function RenderState(renderState) {
-  const rs = renderState ?? DefaultValues.EMPTY_OBJECT;
-  const cull = rs.cull ?? DefaultValues.EMPTY_OBJECT;
-  const polygonOffset = rs.polygonOffset ?? DefaultValues.EMPTY_OBJECT;
-  const scissorTest = rs.scissorTest ?? DefaultValues.EMPTY_OBJECT;
-  const scissorTestRectangle =
-    scissorTest.rectangle ?? DefaultValues.EMPTY_OBJECT;
-  const depthRange = rs.depthRange ?? DefaultValues.EMPTY_OBJECT;
-  const depthTest = rs.depthTest ?? DefaultValues.EMPTY_OBJECT;
-  const colorMask = rs.colorMask ?? DefaultValues.EMPTY_OBJECT;
-  const blending = rs.blending ?? DefaultValues.EMPTY_OBJECT;
-  const blendingColor = blending.color ?? DefaultValues.EMPTY_OBJECT;
-  const stencilTest = rs.stencilTest ?? DefaultValues.EMPTY_OBJECT;
+  const rs = renderState ?? Frozen.EMPTY_OBJECT;
+  const cull = rs.cull ?? Frozen.EMPTY_OBJECT;
+  const polygonOffset = rs.polygonOffset ?? Frozen.EMPTY_OBJECT;
+  const scissorTest = rs.scissorTest ?? Frozen.EMPTY_OBJECT;
+  const scissorTestRectangle = scissorTest.rectangle ?? Frozen.EMPTY_OBJECT;
+  const depthRange = rs.depthRange ?? Frozen.EMPTY_OBJECT;
+  const depthTest = rs.depthTest ?? Frozen.EMPTY_OBJECT;
+  const colorMask = rs.colorMask ?? Frozen.EMPTY_OBJECT;
+  const blending = rs.blending ?? Frozen.EMPTY_OBJECT;
+  const blendingColor = blending.color ?? Frozen.EMPTY_OBJECT;
+  const stencilTest = rs.stencilTest ?? Frozen.EMPTY_OBJECT;
   const stencilTestFrontOperation =
-    stencilTest.frontOperation ?? DefaultValues.EMPTY_OBJECT;
+    stencilTest.frontOperation ?? Frozen.EMPTY_OBJECT;
   const stencilTestBackOperation =
-    stencilTest.backOperation ?? DefaultValues.EMPTY_OBJECT;
-  const sampleCoverage = rs.sampleCoverage ?? DefaultValues.EMPTY_OBJECT;
+    stencilTest.backOperation ?? Frozen.EMPTY_OBJECT;
+  const sampleCoverage = rs.sampleCoverage ?? Frozen.EMPTY_OBJECT;
   const viewport = rs.viewport;
 
   this.frontFace = rs.frontFace ?? WindingOrder.COUNTER_CLOCKWISE;

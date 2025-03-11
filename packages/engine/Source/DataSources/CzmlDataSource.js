@@ -9,7 +9,7 @@ import Color from "../Core/Color.js";
 import CornerType from "../Core/CornerType.js";
 import Credit from "../Core/Credit.js";
 import createGuid from "../Core/createGuid.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
@@ -4711,7 +4711,7 @@ function load(dataSource, czml, options, clear) {
   }
   //>>includeEnd('debug');
 
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let promise = czml;
   let sourceUri = options.sourceUri;

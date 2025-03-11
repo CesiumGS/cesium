@@ -5,7 +5,7 @@ import Renderbuffer from "./Renderbuffer.js";
 import RenderbufferFormat from "./RenderbufferFormat.js";
 import Sampler from "./Sampler.js";
 import Texture from "./Texture.js";
-import DefaultValues from "../Core/DefaultValues.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -32,7 +32,7 @@ import PixelFormat from "../Core/PixelFormat.js";
  * @constructor
  */
 function FramebufferManager(options) {
-  options = options ?? DefaultValues.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
   this._numSamples = options.numSamples ?? 1;
   this._colorAttachmentsLength = options.colorAttachmentsLength ?? 1;
 
