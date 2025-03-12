@@ -1,11 +1,11 @@
 import Cesium3DTileset from "./Cesium3DTileset.js";
+import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import IonResource from "../Core/IonResource.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import Resource from "../Core/Resource.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
  * Creates a {@link Cesium3DTileset} instance for the Google Photorealistic 3D
@@ -73,13 +73,10 @@ async function createGooglePhotorealistic3DTileset(apiOptions, tilesetOptions) {
   );
 
   apiOptions = defaultValue(apiOptions, defaultValue.EMPTY_OBJECT);
-  if (typeof apiOptions === "string") {
-    deprecationWarning(
-      "createGooglePhotorealistic3DTileset(key)",
-      "createGooglePhotorealistic3DTileset(key) has been deprecated.   It is replaced by createGooglePhotorealistic3DTileset({key}).  It will be removed in Cesium 1.126.",
-    );
-    apiOptions = { key: apiOptions };
-  }
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("apiOptions", apiOptions);
+  //>>includeEnd('debug');
+
   if (!apiOptions.onlyUsingWithGoogleGeocoder) {
     oneTimeWarning(
       "google-tiles-with-google-geocoder",

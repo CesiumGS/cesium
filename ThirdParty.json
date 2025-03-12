@@ -12,7 +12,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "2.7.54",
+    "version": "2.7.57",
     "url": "https://www.npmjs.com/package/@zip.js/zip.js"
   },
   {
@@ -44,7 +44,7 @@
     "license": [
       "Apache-2.0"
     ],
-    "version": "3.2.3",
+    "version": "3.2.4",
     "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },
@@ -109,7 +109,7 @@
     "license": [
       "MIT"
     ],
-    "version": "0.7.1",
+    "version": "1.0.0",
     "url": "https://www.npmjs.com/package/ktx-parse"
   },
   {

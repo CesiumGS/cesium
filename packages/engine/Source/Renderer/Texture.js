@@ -23,7 +23,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
  * @property {boolean} [skipColorSpaceConversion=false] If true, color space conversions will be skipped when reading the texel values.
- * @property {Sampler} [sampler] Information about how to sample the cubemap texture.
+ * @property {Sampler} [sampler] Information about how to sample the texture.
  * @property {number} [width] The pixel width of the texture. If not supplied, must be available from the source.
  * @property {number} [height] The pixel height of the texture. If not supplied, must be available from the source.
  * @property {boolean} [preMultiplyAlpha] If true, the alpha channel will be multiplied into the other channels.
@@ -705,7 +705,8 @@ Object.defineProperties(Texture.prototype, {
    * coordinates in both directions, uses linear filtering for both magnification and minification,
    * and uses a maximum anisotropy of 1.0.
    * @memberof Texture.prototype
-   * @type {object}
+   * @type {Sampler}
+   * @private
    */
   sampler: {
     get: function () {
@@ -843,7 +844,7 @@ function setupSampler(texture, sampler) {
  * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
  * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- *
+ * @private
  * @example
  * texture.copyFrom({
  *  source: {
@@ -966,7 +967,7 @@ Texture.prototype.copyFrom = function (options) {
  * @param {number} [framebufferYOffset=0] optional
  * @param {number} [width=width] optional
  * @param {number} [height=height] optional
- *
+ * @private
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
@@ -1061,7 +1062,7 @@ Texture.prototype.copyFromFramebuffer = function (
 
 /**
  * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
- *
+ * @private
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
  * @exception {DeveloperError} hint is invalid.

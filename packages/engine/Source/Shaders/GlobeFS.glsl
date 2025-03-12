@@ -285,7 +285,16 @@ vec3 computeEllipsoidPosition()
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
     xy *= czm_viewport.zw * mpp * 0.5;
 
-    vec3 direction = normalize(vec3(xy, -czm_currentFrustum.x));
+    vec3 direction;
+    if (czm_orthographicIn3D == 1.0)
+    {
+        direction = vec3(0.0, 0.0, -1.0);
+    }
+    else
+    {
+        direction = normalize(vec3(xy, -czm_currentFrustum.x));
+    }
+
     czm_ray ray = czm_ray(vec3(0.0), direction);
 
     vec3 ellipsoid_center = czm_view[3].xyz;

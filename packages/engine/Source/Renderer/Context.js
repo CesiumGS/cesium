@@ -4,7 +4,6 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
@@ -1672,8 +1671,5 @@ Context.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-
-// Used for specs.
-Context._deprecationWarning = deprecationWarning;
 
 export default Context;

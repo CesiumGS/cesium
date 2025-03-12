@@ -3837,6 +3837,38 @@ function getGlobeHeight(scene) {
   return scene.getHeight(cartographic);
 }
 
+function getMaxPrimitiveHeight(primitive, cartographic, scene) {
+  let maxHeight = Number.NEGATIVE_INFINITY;
+
+  if (primitive instanceof PrimitiveCollection) {
+    // If it's a PrimitiveCollection, iterate through its children
+    const length = primitive.length;
+    for (let i = 0; i < length; ++i) {
+      const subPrimitive = primitive.get(i);
+      const subHeight = getMaxPrimitiveHeight(
+        subPrimitive,
+        cartographic,
+        scene,
+      );
+      if (defined(subHeight) && subHeight > maxHeight) {
+        maxHeight = subHeight;
+      }
+    }
+  } else if (
+    primitive.isCesium3DTileset &&
+    primitive.show &&
+    primitive.enableCollision
+  ) {
+    // If it's an individual primitive, check its height
+    const result = primitive.getHeight(cartographic, scene);
+    if (defined(result) && result > maxHeight) {
+      return result;
+    }
+  }
+
+  return maxHeight;
+}
+
 /**
  * Gets the height of the loaded surface at the cartographic position.
  * @param {Cartographic} cartographic The cartographic position.
@@ -3863,21 +3895,13 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
   let maxHeight = Number.NEGATIVE_INFINITY;
 
   if (!ignore3dTiles) {
-    const length = this.primitives.length;
-    for (let i = 0; i < length; ++i) {
-      const primitive = this.primitives.get(i);
-      if (
-        !primitive.isCesium3DTileset ||
-        !primitive.show ||
-        !primitive.enableCollision
-      ) {
-        continue;
-      }
-
-      const result = primitive.getHeight(cartographic, this);
-      if (defined(result) && result > maxHeight) {
-        maxHeight = result;
-      }
+    const maxPrimitiveHeight = getMaxPrimitiveHeight(
+      this.primitives,
+      cartographic,
+      this,
+    );
+    if (defined(maxPrimitiveHeight) && maxPrimitiveHeight > maxHeight) {
+      maxHeight = maxPrimitiveHeight;
     }
   }
 

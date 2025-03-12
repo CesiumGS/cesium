@@ -102,7 +102,7 @@ describe("Scene/Cesium3DTilesetHeatmap", function () {
       undefined,
     );
     tile._contentState = Cesium3DTileContentState.READY;
-    tile.hasEmptyContent = false;
+    tile.hasRenderableContent = true; // Mock the tile having content
     const frameState = scene.frameState;
     tile._selectedFrame = frameState.frameNumber;
     const originalColor = tile._debugColor;

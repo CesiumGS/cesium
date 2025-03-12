@@ -1,0 +1,40 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "geometricError": 4096,
+  "root": {
+    "boundingVolume": {
+      "box": [
+        1,
+        0,
+        0.5,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0.5
+      ]
+    },
+    "refine": "ADD",
+    "geometricError": 4096,
+    "contents": [
+      {
+        "uri": "externalA.json"
+      },
+      {
+        "uri": "externalB.json"
+      },
+      {
+        "uri": "externalC.json"
+      },
+      {
+        "uri": "externalD.json"
+      }
+    ]
+  }
+}

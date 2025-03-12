@@ -346,4 +346,67 @@ describe("ITwinData", () => {
       expect(geojsonSpy).not.toHaveBeenCalled();
     });
   });
+
+  describe("loadGeospatialFeatures", () => {
+    let geojsonSpy;
+    beforeEach(() => {
+      geojsonSpy = spyOn(GeoJsonDataSource, "load");
+    });
+
+    it("rejects with no iTwinId", async () => {
+      await expectAsync(
+        // @ts-expect-error
+        ITwinData.loadGeospatialFeatures(undefined),
+      ).toBeRejectedWithDeveloperError(
+        "Expected iTwinId to be typeof string, actual typeof was undefined",
+      );
+    });
+
+    it("rejects with no collectionId", async () => {
+      await expectAsync(
+        // @ts-expect-error
+        ITwinData.loadGeospatialFeatures("itwin-id-1", undefined),
+      ).toBeRejectedWithDeveloperError(
+        "Expected collectionId to be typeof string, actual typeof was undefined",
+      );
+    });
+
+    it("rejects with limit < 1", async () => {
+      await expectAsync(
+        ITwinData.loadGeospatialFeatures("itwin-id-1", "collection-id-1", 0),
+      ).toBeRejectedWithDeveloperError(
+        "Expected limit to be greater than or equal to 1, actual value was 0",
+      );
+    });
+
+    it("rejects with limit > 10000", async () => {
+      await expectAsync(
+        ITwinData.loadGeospatialFeatures(
+          "itwin-id-1",
+          "collection-id-1",
+          20000,
+        ),
+      ).toBeRejectedWithDeveloperError(
+        "Expected limit to be less than or equal to 10000, actual value was 20000",
+      );
+    });
+
+    it("rejects with no default access token set", async () => {
+      ITwinPlatform.defaultAccessToken = undefined;
+      await expectAsync(
+        ITwinData.loadGeospatialFeatures("itwin-id-1", "collection-id-1"),
+      ).toBeRejectedWithDeveloperError(
+        "Must set ITwinPlatform.defaultAccessToken first",
+      );
+    });
+
+    it("creates a GeoJsonDataSource from the constructed blob url if the type is GeoJSON", async () => {
+      await ITwinData.loadGeospatialFeatures("itwin-id-1", "collection-id-1");
+
+      expect(geojsonSpy).toHaveBeenCalledTimes(1);
+      expect(geojsonSpy.calls.mostRecent().args[0].url).toEqual(
+        "https://api.bentley.com/geospatial-features/itwins/itwin-id-1/ogc/collections/collection-id-1/items?limit=10000&client=CesiumJS",
+      );
+    });
+  });
 });

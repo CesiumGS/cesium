@@ -2,29 +2,32 @@ import buildVoxelDrawCommands from "./buildVoxelDrawCommands.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import Cartographic from "../Core/Cartographic.js";
+import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
+import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import clone from "../Core/clone.js";
+import CustomShader from "./Model/CustomShader.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
+import Material from "./Material.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
-import Material from "./Material.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import PolylineCollection from "./PolylineCollection.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import VoxelContent from "./VoxelContent.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 import VoxelTraversal from "./VoxelTraversal.js";
-import CustomShader from "./Model/CustomShader.js";
-import Cartographic from "../Core/Cartographic.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * A primitive that renders voxel data from a {@link VoxelProvider}.
@@ -37,6 +40,7 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix used to transform the primitive.
  * @param {CustomShader} [options.customShader] The custom shader used to style the primitive.
  * @param {Clock} [options.clock] The clock used to control time dynamic behavior.
+ * @param {Boolean} [options.calculateStatistics] Generate statistics for performance profile.
  *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
@@ -71,6 +75,18 @@ function VoxelPrimitive(options) {
   this._traversal = undefined;
 
   /**
+   * @type {Cesium3DTilesetStatistics}
+   * @private
+   */
+  this._statistics = new Cesium3DTilesetStatistics();
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._calculateStatistics = defaultValue(options.calculateStatistics, false);
+
+  /**
    * This member is not created until the provider is ready.
    *
    * @type {VoxelShape}
@@ -83,6 +99,22 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._shapeVisible = false;
+
+  /**
+   * This member is not created until the provider is ready.
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._dimensions = new Cartesian3();
+
+  /**
+   * This member is not created until the provider is ready.
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._inputDimensions = new Cartesian3();
 
   /**
    * This member is not created until the provider is ready.
@@ -411,6 +443,7 @@ function VoxelPrimitive(options) {
     megatextureSliceSizeUv: new Cartesian2(),
     megatextureTileSizeUv: new Cartesian2(),
     dimensions: new Cartesian3(),
+    inputDimensions: new Cartesian3(),
     paddingBefore: new Cartesian3(),
     paddingAfter: new Cartesian3(),
     transformPositionViewToUv: new Matrix4(),
@@ -449,6 +482,123 @@ function VoxelPrimitive(options) {
       };
     }
   }
+
+  /**
+   * The event fired to indicate that a tile's content was loaded.
+   * <p>
+   * This event is fired during the tileset traversal while the frame is being rendered
+   * so that updates to the tile take effect in the same frame.  Do not create or modify
+   * Cesium entities or primitives during the event listener.
+   * </p>
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.tileLoad.addEventListener(function() {
+   *     console.log('A tile was loaded.');
+   * });
+   */
+  this.tileLoad = new Event();
+
+  /**
+   * This event fires once for each visible tile in a frame.
+   * <p>
+   * This event is fired during the traversal while the frame is being rendered.
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.tileVisible.addEventListener(function() {
+   *     console.log('A tile is visible.');
+   * });
+   *
+   */
+  this.tileVisible = new Event();
+
+  /**
+   * The event fired to indicate that a tile's content failed to load.
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.tileFailed.addEventListener(function() {
+   *     console.log('An error occurred loading tile.');
+   * });
+   */
+  this.tileFailed = new Event();
+
+  /**
+   * The event fired to indicate that a tile's content was unloaded.
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.tileUnload.addEventListener(function() {
+   *     console.log('A tile was unloaded from the cache.');
+   * });
+   *
+   */
+  this.tileUnload = new Event();
+
+  /**
+   * The event fired to indicate progress of loading new tiles. This event is fired when a new tile
+   * is requested, when a requested tile is finished downloading, and when a downloaded tile has been
+   * processed and is ready to render.
+   * <p>
+   * The number of pending tile requests, <code>numberOfPendingRequests</code>, and number of tiles
+   * processing, <code>numberOfTilesProcessing</code> are passed to the event listener.
+   * </p>
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.loadProgress.addEventListener(function(numberOfPendingRequests, numberOfTilesProcessing) {
+   *     if ((numberOfPendingRequests === 0) && (numberOfTilesProcessing === 0)) {
+   *         console.log('Finished loading');
+   *         return;
+   *     }
+   *
+   *     console.log(`Loading: requests: ${numberOfPendingRequests}, processing: ${numberOfTilesProcessing}`);
+   * });
+   */
+  this.loadProgress = new Event();
+
+  /**
+   * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. The voxel
+   * primitive is completely loaded for this view.
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.allTilesLoaded.addEventListener(function() {
+   *     console.log('All tiles are loaded');
+   * });
+   */
+  this.allTilesLoaded = new Event();
+
+  /**
+   * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
+   * is fired once when all tiles in the initial view are loaded.
+   * <p>
+   * This event is fired at the end of the frame after the scene is rendered.
+   * </p>
+   *
+   * @type {Event}
+   *
+   * @example
+   * voxelPrimitive.initialTilesLoaded.addEventListener(function() {
+   *     console.log('Initial tiles are loaded');
+   * });
+   *
+   * @see Cesium3DTileset#allTilesLoaded
+   */
+  this.initialTilesLoaded = new Event();
 
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;
@@ -581,7 +731,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets the voxel dimensions.
+   * Gets the dimensions of each voxel tile, in z-up orientation.
+   * Does not include padding.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -589,7 +740,46 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    */
   dimensions: {
     get: function () {
-      return this._provider.dimensions;
+      return this._dimensions;
+    },
+  },
+
+  /**
+   * Gets the dimensions of one tile of the input voxel data, in the input orientation.
+   * Includes padding.
+   * @memberof VoxelPrimitive.prototype
+   * @type {Cartesian3}
+   * @readonly
+   */
+  inputDimensions: {
+    get: function () {
+      return this._inputDimensions;
+    },
+  },
+
+  /**
+   * Gets the padding before the voxel data.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {Cartesian3}
+   * @readonly
+   */
+  paddingBefore: {
+    get: function () {
+      return this._paddingBefore;
+    },
+  },
+
+  /**
+   * Gets the padding after the voxel data.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {Cartesian3}
+   * @readonly
+   */
+  paddingAfter: {
+    get: function () {
+      return this._paddingAfter;
     },
   },
 
@@ -935,9 +1125,21 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._customShaderCompilationEvent;
     },
   },
+
+  /**
+   *  Loading and rendering information for requested content
+   * To use `visited` and `numberOfTilesWithContentReady` statistics, set options._calculateStatistics` to `true` in the constructor.
+   * @type {Cesium3DTilesetStatistics}
+   * @readonly
+   * @private
+   */
+  statistics: {
+    get: function () {
+      return this._statistics;
+    },
+  },
 });
 
-const scratchDimensions = new Cartesian3();
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
 const scratchScale = new Cartesian3();
@@ -1273,8 +1475,12 @@ function initFromProvider(primitive, provider, context) {
 
   // Set uniforms that come from the provider.
   // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
-  uniforms.dimensions = Cartesian3.clone(
+  primitive._dimensions = Cartesian3.clone(
     provider.dimensions,
+    primitive._dimensions,
+  );
+  uniforms.dimensions = Cartesian3.clone(
+    primitive._dimensions,
     uniforms.dimensions,
   );
   primitive._paddingBefore = Cartesian3.clone(
@@ -1287,15 +1493,37 @@ function initFromProvider(primitive, provider, context) {
   );
   primitive._paddingAfter = Cartesian3.clone(
     defaultValue(provider.paddingAfter, Cartesian3.ZERO),
-    primitive._paddingBefore,
+    primitive._paddingAfter,
   );
   uniforms.paddingAfter = Cartesian3.clone(
     primitive._paddingAfter,
     uniforms.paddingAfter,
   );
+  primitive._inputDimensions = Cartesian3.add(
+    primitive._dimensions,
+    primitive._paddingBefore,
+    primitive._inputDimensions,
+  );
+  primitive._inputDimensions = Cartesian3.add(
+    primitive._inputDimensions,
+    primitive._paddingAfter,
+    primitive._inputDimensions,
+  );
+  if (provider.metadataOrder === VoxelMetadataOrder.GLTF) {
+    const inputDimensionsY = primitive._inputDimensions.y;
+    primitive._inputDimensions.y = primitive._inputDimensions.z;
+    primitive._inputDimensions.z = inputDimensionsY;
+  }
+  uniforms.inputDimensions = Cartesian3.clone(
+    primitive._inputDimensions,
+    uniforms.inputDimensions,
+  );
 
   // Create the VoxelTraversal, and set related uniforms
-  primitive._traversal = setupTraversal(primitive, provider, context);
+  const keyframeCount = defaultValue(provider.keyframeCount, 1);
+  primitive._traversal = new VoxelTraversal(primitive, context, keyframeCount);
+  primitive.statistics.texturesByteLength =
+    primitive._traversal.textureMemoryByteLength;
   setTraversalUniforms(primitive._traversal, uniforms);
 }
 
@@ -1430,44 +1658,6 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   );
 
   return true;
-}
-
-/**
- * Set up a VoxelTraversal based on dimensions and types from the primitive and provider
- * @param {VoxelPrimitive} primitive
- * @param {VoxelProvider} provider
- * @param {Context} context
- * @returns {VoxelTraversal}
- * @private
- */
-function setupTraversal(primitive, provider, context) {
-  const dimensions = Cartesian3.clone(provider.dimensions, scratchDimensions);
-  Cartesian3.add(dimensions, primitive._paddingBefore, dimensions);
-  Cartesian3.add(dimensions, primitive._paddingAfter, dimensions);
-
-  // It's ok for memory byte length to be undefined.
-  // The system will choose a default memory size.
-  const maximumTileCount = provider.maximumTileCount;
-  const maximumTextureMemoryByteLength = defined(maximumTileCount)
-    ? VoxelTraversal.getApproximateTextureMemoryByteLength(
-        maximumTileCount,
-        dimensions,
-        provider.types,
-        provider.componentTypes,
-      )
-    : undefined;
-
-  const keyframeCount = defaultValue(provider.keyframeCount, 1);
-
-  return new VoxelTraversal(
-    primitive,
-    context,
-    dimensions,
-    provider.types,
-    provider.componentTypes,
-    keyframeCount,
-    maximumTextureMemoryByteLength,
-  );
 }
 
 /**
@@ -1674,6 +1864,7 @@ VoxelPrimitive.prototype.destroy = function () {
 
   this._pickId = this._pickId && this._pickId.destroy();
   this._traversal = this._traversal && this._traversal.destroy();
+  this.statistics.texturesByteLength = 0;
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
   return destroyObject(this);
@@ -1955,7 +2146,8 @@ DefaultVoxelProvider.prototype.requestData = function (options) {
     return undefined;
   }
 
-  return Promise.resolve([new Float32Array(1)]);
+  const content = new VoxelContent({ metadata: [new Float32Array(1)] });
+  return Promise.resolve(content);
 };
 
 VoxelPrimitive.DefaultProvider = new DefaultVoxelProvider();
