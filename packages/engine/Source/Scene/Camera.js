@@ -1208,8 +1208,8 @@ function calculateOrthographicFrustumWidth(camera) {
   const globe = scene.globe;
 
   const mousePosition = scratchAdjustOrthographicFrustumMousePosition;
-  mousePosition.x = scene.drawingBufferWidth / 2.0;
-  mousePosition.y = scene.drawingBufferHeight / 2.0;
+  mousePosition.x = scene.drawingBufferWidth / scene.pixelRatio / 2.0;
+  mousePosition.y = scene.drawingBufferHeight / scene.pixelRatio / 2.0;
 
   let rayIntersection;
   if (defined(globe)) {
@@ -3000,26 +3000,14 @@ function getPickRayOrthographic(camera, windowPosition, result) {
   y *= (frustum.top - frustum.bottom) * 0.5;
 
   const origin = result.origin;
-  Cartesian3.clone(camera.position, origin);
+  Cartesian3.clone(camera.positionWC, origin);
 
-  Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
+  Cartesian3.multiplyByScalar(camera.rightWC, x, scratchDirection);
   Cartesian3.add(scratchDirection, origin, origin);
-  Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
+  Cartesian3.multiplyByScalar(camera.upWC, y, scratchDirection);
   Cartesian3.add(scratchDirection, origin, origin);
 
   Cartesian3.clone(camera.directionWC, result.direction);
-
-  if (
-    camera._mode === SceneMode.COLUMBUS_VIEW ||
-    camera._mode === SceneMode.SCENE2D
-  ) {
-    Cartesian3.fromElements(
-      result.origin.z,
-      result.origin.x,
-      result.origin.y,
-      result.origin,
-    );
-  }
 
   return result;
 }
@@ -3270,7 +3258,7 @@ const newOptions = {
 
 /**
  * Cancels the current camera flight and leaves the camera at its current location.
- * If no flight is in progress, this this function does nothing.
+ * If no flight is in progress, this function does nothing.
  */
 Camera.prototype.cancelFlight = function () {
   if (defined(this._currentFlight)) {
@@ -3281,7 +3269,7 @@ Camera.prototype.cancelFlight = function () {
 
 /**
  * Completes the current camera flight and moves the camera immediately to its final destination.
- * If no flight is in progress, this this function does nothing.
+ * If no flight is in progress, this function does nothing.
  */
 Camera.prototype.completeFlight = function () {
   if (defined(this._currentFlight)) {

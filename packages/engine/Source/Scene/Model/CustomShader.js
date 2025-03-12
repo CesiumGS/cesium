@@ -443,7 +443,6 @@ CustomShader.prototype.update = function (frameState) {
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see CustomShader#destroy
- * @private
  */
 CustomShader.prototype.isDestroyed = function () {
   return false;
@@ -463,7 +462,6 @@ CustomShader.prototype.isDestroyed = function () {
  * customShader = customShader && customShader.destroy();
  *
  * @see CustomShader#isDestroyed
- * @private
  */
 CustomShader.prototype.destroy = function () {
   this._textureManager = this._textureManager && this._textureManager.destroy();

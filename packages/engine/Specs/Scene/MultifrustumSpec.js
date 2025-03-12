@@ -30,7 +30,6 @@ describe(
   "Scene/Multifrustum",
   function () {
     let scene;
-    let context;
     let primitives;
     let atlas;
 
@@ -60,7 +59,6 @@ describe(
 
     beforeEach(function () {
       scene = createScene();
-      context = scene.context;
       primitives = scene.primitives;
 
       scene.logarithmicDepthBuffer = false;
@@ -88,16 +86,14 @@ describe(
 
     function createBillboards() {
       atlas = new TextureAtlas({
-        context: context,
         borderWidthInPixels: 1,
         initialSize: new Cartesian2(3, 3),
+        // ANGLE workaround
+        sampler: Sampler.NEAREST,
       });
-
-      // ANGLE Workaround
-      atlas.texture.sampler = Sampler.NEAREST;
-
-      let billboards = new BillboardCollection();
-      billboards.textureAtlas = atlas;
+      let billboards = new BillboardCollection({
+        textureAtlas: atlas,
+      });
       billboards.destroyTextureAtlas = false;
       billboard0 = billboards.add({
         position: new Cartesian3(0.0, 0.0, -50.0),

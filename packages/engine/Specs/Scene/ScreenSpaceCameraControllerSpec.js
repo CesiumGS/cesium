@@ -1425,6 +1425,60 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(frustumWidth).toBeLessThan(camera.frustum.width);
   });
 
+  it("zoom in 3D with orthographic projection with wheel", function () {
+    setUp3D();
+
+    const frustum = new OrthographicFrustum();
+    frustum.aspectRatio = 1.0;
+    frustum.width = 20.0;
+    camera.frustum = frustum;
+
+    expect(frustum.projectionMatrix).toBeDefined();
+
+    camera.setView({ destination: Camera.DEFAULT_VIEW_RECTANGLE });
+
+    const position = Cartesian3.clone(camera.position);
+    const heading = camera.heading;
+    const pitch = camera.pitch;
+    const roll = camera.roll;
+
+    simulateMouseWheel(120);
+    updateController();
+    expect(Cartesian3.magnitude(position)).toBeGreaterThan(
+      Cartesian3.magnitude(camera.position),
+    );
+    expect(camera.heading).toBeCloseTo(heading, 3);
+    expect(camera.pitch).toBeCloseTo(pitch, 3);
+    expect(camera.roll).toBeCloseTo(roll, 3);
+  });
+
+  it("zoom out in 3D with orthographic projection with wheel", function () {
+    setUp3D();
+
+    const frustum = new OrthographicFrustum();
+    frustum.aspectRatio = 1.0;
+    frustum.width = 20.0;
+    camera.frustum = frustum;
+
+    expect(frustum.projectionMatrix).toBeDefined();
+
+    camera.setView({ destination: Camera.DEFAULT_VIEW_RECTANGLE });
+
+    const position = Cartesian3.clone(camera.position);
+    const heading = camera.heading;
+    const pitch = camera.pitch;
+    const roll = camera.roll;
+
+    simulateMouseWheel(-120);
+    updateController();
+    expect(Cartesian3.magnitude(position)).toBeLessThan(
+      Cartesian3.magnitude(camera.position),
+    );
+    expect(camera.heading).toBeCloseTo(heading, 3);
+    expect(camera.pitch).toBeCloseTo(pitch, 3);
+    expect(camera.roll).toBeCloseTo(roll, 3);
+  });
+
   it("zoom in 3D when camera is underground", function () {
     setUp3DUnderground();
 

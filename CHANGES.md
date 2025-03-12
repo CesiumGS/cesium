@@ -1,5 +1,55 @@
 # Change Log
 
+## 1.128 - 2025-04-01
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- `Camera.getPickRay` was erroneous returning a result in camera coordinates. It is now returned in world coordinates as stated in the documentation. The result can be transformed using `Camera.inverseViewMatrix` to achieve the previous behavior.
+
+#### Fixes :wrench:
+
+- Fixed broken Entity Tracking [sandcastle](https://sandcastle.cesium.com/?src=Entity%20tracking.html). [#12467](https://github.com/CesiumGS/cesium/pull/12467)
+- `Camera.getPickRay` now correctly returns a ray with origin in world coordinates in orthographic mode. [#12500](https://github.com/CesiumGS/cesium/pull/12500)
+- Fixed camera zooming in 3D orthographic mode when pixelRatio is not 1. [#12487](https://github.com/CesiumGS/cesium/pull/12487)
+
+## 1.127 - 2025-03-03
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- Updated `Cesium3DTilesVoxelProvider` to load glTF tiles using the new [`EXT_primitive_voxels` extension](https://github.com/CesiumGS/glTF/pull/69) to more closely align with the rest of the 3D Tiles ecosystem. Tilesets using the previous custom JSON format are no longer supported. [#12432](https://github.com/CesiumGS/cesium/pull/12432)
+- Updated the `requestData` method of the `VoxelProvider` interface to return a `Promise` to a `VoxelContent`. Custom providers should now use the `VoxelContent.fromMetadataArray` method to construct the returned data object. For example:
+
+```js
+CustomVoxelProvider.prototype.requestData = function (options) {
+  const metadataColumn = new Float32Array(options.dataLength);
+  // ... Fill metadataColumn with metadata values ...
+  const content = VoxelContent.fromMetadataArray([metadataColumn]);
+  return Promise.resolve(content);
+};
+```
+
+- Changed `VoxelCylinderShape` to assume coordinates in the order (radius, angle, height). See [CesiumGS/3d-tiles#780](https://github.com/CesiumGS/3d-tiles/pull/780)
+
+#### Additions :tada:
+
+- Implemented `texturesByteLength`, `visited`, and `numberOfTilesWithContentReady` in `VoxelPrimitive.statistics`. To use statistics, set `options.calculateStatistics` to `true` in the constructor. Note `VoxelPrimitive` is experimental.
+
+#### Fixes :wrench:
+
+- Exposed `CustomShader.prototype.destroy` as a public method. [#12444](https://github.com/CesiumGS/cesium/issues/12444)
+- Fixed error when there are duplicated points in polygon/polyline geometries with `ArcType.RHUMB` [#12460](https://github.com/CesiumGS/cesium/pull/12460)
+- Fixed ground atmosphere shaders in 3D orthographic mode [#12484](https://github.com/CesiumGS/cesium/pull/12484)
+- Fixed zoom in 3D orthographic mode [#12483](https://github.com/CesiumGS/cesium/pull/12483)
+- Fixed issue with billboards not clamping properly when nested inside a PrimitiveCollection [#12482](https://github.com/CesiumGS/cesium/pull/12482)
+- Fixed error with black flashes on label and billboard updates. [#12231](https://github.com/CesiumGS/cesium/issues/12231)
+- `TextureAtlas` has been refactored and internal APIs have been updated. If relying on the private texture atlas API, see [#12495](https://github.com/CesiumGS/cesium/pull/12495) for details.
+  - Texture atlas now resizes more conservatively. This should help with texture memory overhead with may labels and billboards. [#172](https://github.com/CesiumGS/cesium/issues/172)
+  - Texture atlas now reuses coordinates for existing subregions. [#2094](https://github.com/CesiumGS/cesium/issues/2094)
+
 ## 1.126 - 2025-02-03
 
 ### @cesium/engine
@@ -1236,6 +1286,7 @@ try {
 - Fixed an incorrect model matrix computation for `i3dm` tilesets that are loaded using `ModelExperimental`. [#10302](https://github.com/CesiumGS/cesium/pull/10302)
 - Fixed race condition during billboard clamping when the height reference changes. [#10191](https://github.com/CesiumGS/cesium/issues/10191)
 - Fixed ability to run `test` and other support tasks from within the release zip file. [#10311](https://github.com/CesiumGS/cesium/pull/10311)
+- Fixed `Expression` multi-variable substitution. [#12455](https://github.com/CesiumGS/cesium/issues/12455)
 
 ## 1.92 - 2022-04-01
 

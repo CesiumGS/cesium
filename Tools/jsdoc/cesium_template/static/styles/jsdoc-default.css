@@ -30,6 +30,17 @@ code {
   font-size: 12px;
 }
 
+kbd {
+  border: 1px solid #888888;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  color: #333;
+}
+
+kbd + kbd {
+  margin-left: 0.3em;
+}
+
 #ClassList > ul > li {
   font-family:
     Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco,
@@ -256,15 +267,26 @@ form {
   padding-right: 4px;
 }
 
+div.nav .search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-wrapper .shortcut {
+  flex-shrink: 0;
+}
+
 div.nav input.classFilter {
-  margin: 5px 10px 5px 0px; /*top, right, bottom, left*/
-  width: 90%;
+  margin: 5px 0px;
+  width: 100%;
+  flex-grow: 1;
   border: 1px solid #ccc;
   padding: 5px 8px;
 }
 
-#mainIndex div.nav input.classFilter {
-  max-width: 250px;
+#mainIndex div.nav .search-wrapper {
+  max-width: 290px;
 }
 /* End menu */
 
