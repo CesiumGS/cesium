@@ -1,5 +1,5 @@
 import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EasingFunction from "../Core/EasingFunction.js";
@@ -212,7 +212,7 @@ Object.defineProperties(TweenCollection.prototype, {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.add = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.startObject) || !defined(options.stopObject)) {
@@ -236,12 +236,9 @@ TweenCollection.prototype.add = function (options) {
   }
 
   const duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
-  const delayInSeconds = defaultValue(options.delay, 0.0);
+  const delayInSeconds = options.delay ?? 0.0;
   const delay = delayInSeconds / TimeConstants.SECONDS_PER_MILLISECOND;
-  const easingFunction = defaultValue(
-    options.easingFunction,
-    EasingFunction.LINEAR_NONE,
-  );
+  const easingFunction = options.easingFunction ?? EasingFunction.LINEAR_NONE;
 
   const value = options.startObject;
   const tweenjs = new TweenJS(value);
@@ -253,8 +250,8 @@ TweenCollection.prototype.add = function (options) {
       options.update(value);
     });
   }
-  tweenjs.onComplete(defaultValue(options.complete, null));
-  tweenjs.repeat(defaultValue(options._repeat, 0.0));
+  tweenjs.onComplete(options.complete ?? null);
+  tweenjs.repeat(options._repeat ?? 0.0);
 
   const tween = new Tween(
     this,
@@ -293,7 +290,7 @@ TweenCollection.prototype.add = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addProperty = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const object = options.object;
   const property = options.property;
@@ -329,7 +326,7 @@ TweenCollection.prototype.addProperty = function (options) {
     stopObject: {
       value: stopValue,
     },
-    duration: defaultValue(options.duration, 3.0),
+    duration: options.duration ?? 3.0,
     delay: options.delay,
     easingFunction: options.easingFunction,
     update: update,
@@ -359,7 +356,7 @@ TweenCollection.prototype.addProperty = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addAlpha = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const material = options.material;
 
@@ -398,12 +395,12 @@ TweenCollection.prototype.addAlpha = function (options) {
 
   return this.add({
     startObject: {
-      alpha: defaultValue(options.startValue, 0.0), // Default to fade in
+      alpha: options.startValue ?? 0.0, // Default to fade in
     },
     stopObject: {
-      alpha: defaultValue(options.stopValue, 1.0),
+      alpha: options.stopValue ?? 1.0,
     },
-    duration: defaultValue(options.duration, 3.0),
+    duration: options.duration ?? 3.0,
     delay: options.delay,
     easingFunction: options.easingFunction,
     update: update,
@@ -431,7 +428,7 @@ TweenCollection.prototype.addAlpha = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addOffsetIncrement = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const material = options.material;
 

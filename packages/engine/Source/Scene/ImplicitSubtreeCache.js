@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
 
@@ -12,13 +12,13 @@ import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
  * @private
  */
 function ImplicitSubtreeCache(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * @type {number}
    * @private
    */
-  this._maximumSubtreeCount = defaultValue(options.maximumSubtreeCount, 0);
+  this._maximumSubtreeCount = options.maximumSubtreeCount ?? 0;
 
   /**
    * A counter that goes up whenever a subtree is added. Used to sort subtrees by recency.

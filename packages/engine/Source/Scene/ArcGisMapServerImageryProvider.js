@@ -3,7 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -70,14 +70,13 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options An object describing initialization options
  */
 function ImageryProviderBuilder(options) {
-  this.useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+  this.useTiles = options.usePreCachedTilesIfAvailable ?? true;
 
   const ellipsoid = options.ellipsoid;
-  this.tilingScheme = defaultValue(
-    options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: ellipsoid }),
-  );
-  this.rectangle = defaultValue(options.rectangle, this.tilingScheme.rectangle);
+  this.tilingScheme =
+    options.tilingScheme ??
+    new GeographicTilingScheme({ ellipsoid: ellipsoid });
+  this.rectangle = options.rectangle ?? this.tilingScheme.rectangle;
   this.ellipsoid = ellipsoid;
 
   let credit = options.credit;
@@ -88,8 +87,8 @@ function ImageryProviderBuilder(options) {
   this.tileCredits = undefined;
   this.tileDiscardPolicy = options.tileDiscardPolicy;
 
-  this.tileWidth = defaultValue(options.tileWidth, 256);
-  this.tileHeight = defaultValue(options.tileHeight, 256);
+  this.tileWidth = options.tileWidth ?? 256;
+  this.tileHeight = options.tileHeight ?? 256;
   this.maximumLevel = options.maximumLevel;
 }
 
@@ -300,7 +299,7 @@ async function requestMetadata(resource, imageryProviderBuilder) {
 
  */
 function ArcGisMapServerImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -314,18 +313,14 @@ function ArcGisMapServerImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   this._tileDiscardPolicy = options.tileDiscardPolicy;
-  this._tileWidth = defaultValue(options.tileWidth, 256);
-  this._tileHeight = defaultValue(options.tileHeight, 256);
+  this._tileWidth = options.tileWidth ?? 256;
+  this._tileHeight = options.tileHeight ?? 256;
   this._maximumLevel = options.maximumLevel;
-  this._tilingScheme = defaultValue(
-    options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: options.ellipsoid }),
-  );
-  this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
-  this._rectangle = defaultValue(
-    options.rectangle,
-    this._tilingScheme.rectangle,
-  );
+  this._tilingScheme =
+    options.tilingScheme ??
+    new GeographicTilingScheme({ ellipsoid: options.ellipsoid });
+  this._useTiles = options.usePreCachedTilesIfAvailable ?? true;
+  this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
   this._layers = options.layers;
   this._credit = options.credit;
   this._tileCredits = undefined;
@@ -343,7 +338,7 @@ function ArcGisMapServerImageryProvider(options) {
    * @type {boolean}
    * @default true
    */
-  this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+  this.enablePickFeatures = options.enablePickFeatures ?? true;
 
   this._errorEvent = new Event();
 }
@@ -383,17 +378,14 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
   Check.defined("style", style);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   let accessToken;
   let server;
   let warningCredit;
   switch (style) {
     case ArcGisBaseMapType.SATELLITE:
       {
-        accessToken = defaultValue(
-          options.token,
-          ArcGisMapService.defaultAccessToken,
-        );
+        accessToken = options.token ?? ArcGisMapService.defaultAccessToken;
         server = Resource.createIfNeeded(
           ArcGisMapService.defaultWorldImageryServer,
         );
@@ -407,10 +399,7 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       break;
     case ArcGisBaseMapType.OCEANS:
       {
-        accessToken = defaultValue(
-          options.token,
-          ArcGisMapService.defaultAccessToken,
-        );
+        accessToken = options.token ?? ArcGisMapService.defaultAccessToken;
         server = Resource.createIfNeeded(
           ArcGisMapService.defaultWorldOceanServer,
         );
@@ -424,10 +413,7 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       break;
     case ArcGisBaseMapType.HILLSHADE:
       {
-        accessToken = defaultValue(
-          options.token,
-          ArcGisMapService.defaultAccessToken,
-        );
+        accessToken = options.token ?? ArcGisMapService.defaultAccessToken;
         server = Resource.createIfNeeded(
           ArcGisMapService.defaultWorldHillshadeServer,
         );
@@ -712,7 +698,7 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(url);
   resource.appendForwardSlash();
@@ -726,7 +712,7 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
   const provider = new ArcGisMapServerImageryProvider(options);
   provider._resource = resource;
   const imageryProviderBuilder = new ImageryProviderBuilder(options);
-  const useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+  const useTiles = options.usePreCachedTilesIfAvailable ?? true;
   if (useTiles) {
     await requestMetadata(resource, imageryProviderBuilder);
   }

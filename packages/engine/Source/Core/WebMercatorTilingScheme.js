@@ -1,5 +1,5 @@
 import Cartesian2 from "./Cartesian2.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Rectangle from "./Rectangle.js";
@@ -29,17 +29,11 @@ import WebMercatorProjection from "./WebMercatorProjection.js";
  *        direction, resulting in a square projection.
  */
 function WebMercatorTilingScheme(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  this._numberOfLevelZeroTilesX = defaultValue(
-    options.numberOfLevelZeroTilesX,
-    1,
-  );
-  this._numberOfLevelZeroTilesY = defaultValue(
-    options.numberOfLevelZeroTilesY,
-    1,
-  );
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  this._numberOfLevelZeroTilesX = options.numberOfLevelZeroTilesX ?? 1;
+  this._numberOfLevelZeroTilesY = options.numberOfLevelZeroTilesY ?? 1;
 
   this._projection = new WebMercatorProjection(this._ellipsoid);
 

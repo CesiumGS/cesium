@@ -1,6 +1,6 @@
 import {
   CzmlDataSource,
-  defaultValue,
+  Frozen,
   defined,
   DeveloperError,
   Event,
@@ -66,15 +66,15 @@ function viewerDragDropMixin(viewer, options) {
   }
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //Local variables to be closed over by defineProperties.
   let dropEnabled = true;
-  let flyToOnDrop = defaultValue(options.flyToOnDrop, true);
+  let flyToOnDrop = options.flyToOnDrop ?? true;
   const dropError = new Event();
-  let clearOnDrop = defaultValue(options.clearOnDrop, true);
-  let dropTarget = defaultValue(options.dropTarget, viewer.container);
-  let clampToGround = defaultValue(options.clampToGround, true);
+  let clearOnDrop = options.clearOnDrop ?? true;
+  let dropTarget = options.dropTarget ?? viewer.container;
+  let clampToGround = options.clampToGround ?? true;
   let proxy = options.proxy;
 
   dropTarget = getElement(dropTarget);

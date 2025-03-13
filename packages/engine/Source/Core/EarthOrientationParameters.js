@@ -1,6 +1,6 @@
 import binarySearch from "./binarySearch.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import EarthOrientationParametersSample from "./EarthOrientationParametersSample.js";
 import JulianDate from "./JulianDate.js";
@@ -33,7 +33,7 @@ import TimeStandard from "./TimeStandard.js";
  * @private
  */
 function EarthOrientationParameters(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._dates = undefined;
   this._samples = undefined;
@@ -49,7 +49,7 @@ function EarthOrientationParameters(options) {
   this._columnCount = 0;
   this._lastIndex = -1;
 
-  this._addNewLeapSeconds = defaultValue(options.addNewLeapSeconds, true);
+  this._addNewLeapSeconds = options.addNewLeapSeconds ?? true;
 
   if (defined(options.data)) {
     // Use supplied EOP data.
@@ -107,7 +107,7 @@ EarthOrientationParameters.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(url);
 

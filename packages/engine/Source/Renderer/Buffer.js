@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -12,7 +12,7 @@ import BufferUsage from "./BufferUsage.js";
  * @private
  */
 function Buffer(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -243,7 +243,7 @@ Buffer.prototype._getBuffer = function () {
 };
 
 Buffer.prototype.copyFromArrayView = function (arrayView, offsetInBytes) {
-  offsetInBytes = defaultValue(offsetInBytes, 0);
+  offsetInBytes = offsetInBytes ?? 0;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayView", arrayView);
@@ -341,8 +341,8 @@ Buffer.prototype.getBufferData = function (
   destinationOffset,
   length,
 ) {
-  sourceOffset = defaultValue(sourceOffset, 0);
-  destinationOffset = defaultValue(destinationOffset, 0);
+  sourceOffset = sourceOffset ?? 0;
+  destinationOffset = destinationOffset ?? 0;
 
   //>>includeStart('debug', pragmas.debug);
   if (!this._webgl2) {

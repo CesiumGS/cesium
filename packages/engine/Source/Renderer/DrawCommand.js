@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 
@@ -22,19 +22,16 @@ const Flags = {
  * @private
  */
 function DrawCommand(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._boundingVolume = options.boundingVolume;
   this._orientedBoundingBox = options.orientedBoundingBox;
   this._modelMatrix = options.modelMatrix;
-  this._primitiveType = defaultValue(
-    options.primitiveType,
-    PrimitiveType.TRIANGLES,
-  );
+  this._primitiveType = options.primitiveType ?? PrimitiveType.TRIANGLES;
   this._vertexArray = options.vertexArray;
   this._count = options.count;
-  this._offset = defaultValue(options.offset, 0);
-  this._instanceCount = defaultValue(options.instanceCount, 0);
+  this._offset = options.offset ?? 0;
+  this._instanceCount = options.instanceCount ?? 0;
   this._shaderProgram = options.shaderProgram;
   this._uniformMap = options.uniformMap;
   this._renderState = options.renderState;
@@ -48,23 +45,15 @@ function DrawCommand(options) {
 
   // Set initial flags.
   this._flags = 0;
-  this.cull = defaultValue(options.cull, true);
-  this.occlude = defaultValue(options.occlude, true);
-  this.executeInClosestFrustum = defaultValue(
-    options.executeInClosestFrustum,
-    false,
-  );
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
-  this.castShadows = defaultValue(options.castShadows, false);
-  this.receiveShadows = defaultValue(options.receiveShadows, false);
-  this.pickOnly = defaultValue(options.pickOnly, false);
-  this.depthForTranslucentClassification = defaultValue(
-    options.depthForTranslucentClassification,
-    false,
-  );
+  this.cull = options.cull ?? true;
+  this.occlude = options.occlude ?? true;
+  this.executeInClosestFrustum = options.executeInClosestFrustum ?? false;
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
+  this.castShadows = options.castShadows ?? false;
+  this.receiveShadows = options.receiveShadows ?? false;
+  this.pickOnly = options.pickOnly ?? false;
+  this.depthForTranslucentClassification =
+    options.depthForTranslucentClassification ?? false;
 
   this.dirty = true;
   this.lastDirtyTime = 0;

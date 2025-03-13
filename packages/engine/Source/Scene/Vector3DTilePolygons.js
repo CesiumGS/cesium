@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -58,12 +57,12 @@ function Vector3DTilePolygons(options) {
   this._transferrableBatchIds = undefined;
   this._vertexBatchIds = undefined;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
   this._minimumHeight = options.minimumHeight;
   this._maximumHeight = options.maximumHeight;
   this._polygonMinimumHeights = options.polygonMinimumHeights;
   this._polygonMaximumHeights = options.polygonMaximumHeights;
-  this._center = defaultValue(options.center, Cartesian3.ZERO);
+  this._center = options.center ?? Cartesian3.ZERO;
   this._rectangle = options.rectangle;
 
   this._center = undefined;

@@ -1,6 +1,6 @@
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import PixelFormat from "../../Core/PixelFormat.js";
 import ContextLimits from "../../Renderer/ContextLimits.js";
 import Sampler from "../../Renderer/Sampler.js";
@@ -65,7 +65,7 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * @private
  */
 function PrimitiveOutlineGenerator(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const triangleIndices = options.triangleIndices;
   const outlineIndices = options.outlineIndices;
   const originalVertexCount = options.originalVertexCount;

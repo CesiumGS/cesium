@@ -1,7 +1,6 @@
 import {
   Cartesian3,
   Color,
-  defaultValue,
   defined,
   Ellipsoid,
   GeometryInstance,
@@ -84,7 +83,7 @@ describe(
     });
 
     function renderMaterial(material, ignoreBackground, callback) {
-      ignoreBackground = defaultValue(ignoreBackground, false);
+      ignoreBackground = ignoreBackground ?? false;
       polygon.appearance.material = material;
       if (!ignoreBackground) {
         expect(scene).toRender(backgroundColor);

@@ -1,7 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -38,7 +38,7 @@ import Primitive from "./Primitive.js";
  * }));
  */
 function DebugCameraPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.camera)) {
@@ -48,8 +48,8 @@ function DebugCameraPrimitive(options) {
 
   this._camera = options.camera;
   this._frustumSplits = options.frustumSplits;
-  this._color = defaultValue(options.color, Color.CYAN);
-  this._updateOnChange = defaultValue(options.updateOnChange, true);
+  this._color = options.color ?? Color.CYAN;
+  this._updateOnChange = options.updateOnChange ?? true;
 
   /**
    * Determines if this primitive will be shown.
@@ -57,7 +57,7 @@ function DebugCameraPrimitive(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * User-defined value returned when the primitive is picked.
