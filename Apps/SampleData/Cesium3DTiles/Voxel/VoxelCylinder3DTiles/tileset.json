@@ -33,20 +33,9 @@
     "boundingVolume": {
       "extensions": {
         "3DTILES_bounding_volume_cylinder": {
-          "cylinder": [
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ]
+          "height": 2.0,
+          "minRadius": 0.0,
+          "maxRadius": 1.0
         }
       }
     },
