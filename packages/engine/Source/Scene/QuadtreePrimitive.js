@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -108,10 +107,7 @@ function QuadtreePrimitive(options) {
    * @type {number}
    * @default 2
    */
-  this.maximumScreenSpaceError = defaultValue(
-    options.maximumScreenSpaceError,
-    2,
-  );
+  this.maximumScreenSpaceError = options.maximumScreenSpaceError ?? 2;
 
   /**
    * Gets or sets the maximum number of tiles that will be retained in the tile cache.
@@ -121,7 +117,7 @@ function QuadtreePrimitive(options) {
    * @type {number}
    * @default 100
    */
-  this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
+  this.tileCacheSize = options.tileCacheSize ?? 100;
 
   /**
    * Gets or sets the number of loading descendant tiles that is considered "too many".

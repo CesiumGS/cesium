@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import DeveloperError from "./DeveloperError.js";
 
 function returnTrue() {
@@ -33,10 +32,7 @@ function returnTrue() {
  * @see DeveloperError
  */
 function destroyObject(object, message) {
-  message = defaultValue(
-    message,
-    "This object was destroyed, i.e., destroy() was called.",
-  );
+  message = message ?? "This object was destroyed, i.e., destroy() was called.";
 
   function throwOnDestroyed() {
     //>>includeStart('debug', pragmas.debug);

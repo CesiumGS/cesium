@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -82,7 +82,7 @@ function CorridorGraphics(options) {
   this._zIndex = undefined;
   this._zIndexSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(CorridorGraphics.prototype, {
@@ -291,38 +291,26 @@ CorridorGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.positions = defaultValue(this.positions, source.positions);
-  this.width = defaultValue(this.width, source.width);
-  this.height = defaultValue(this.height, source.height);
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference,
-  );
-  this.extrudedHeight = defaultValue(
-    this.extrudedHeight,
-    source.extrudedHeight,
-  );
-  this.extrudedHeightReference = defaultValue(
-    this.extrudedHeightReference,
-    source.extrudedHeightReference,
-  );
-  this.cornerType = defaultValue(this.cornerType, source.cornerType);
-  this.granularity = defaultValue(this.granularity, source.granularity);
-  this.fill = defaultValue(this.fill, source.fill);
-  this.material = defaultValue(this.material, source.material);
-  this.outline = defaultValue(this.outline, source.outline);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition,
-  );
-  this.classificationType = defaultValue(
-    this.classificationType,
-    source.classificationType,
-  );
-  this.zIndex = defaultValue(this.zIndex, source.zIndex);
+  this.show = this.show ?? source.show;
+  this.positions = this.positions ?? source.positions;
+  this.width = this.width ?? source.width;
+  this.height = this.height ?? source.height;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.extrudedHeight = this.extrudedHeight ?? source.extrudedHeight;
+  this.extrudedHeightReference =
+    this.extrudedHeightReference ?? source.extrudedHeightReference;
+  this.cornerType = this.cornerType ?? source.cornerType;
+  this.granularity = this.granularity ?? source.granularity;
+  this.fill = this.fill ?? source.fill;
+  this.material = this.material ?? source.material;
+  this.outline = this.outline ?? source.outline;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.shadows = this.shadows ?? source.shadows;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.classificationType =
+    this.classificationType ?? source.classificationType;
+  this.zIndex = this.zIndex ?? source.zIndex;
 };
 export default CorridorGraphics;

@@ -1,5 +1,4 @@
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Buffer from "../../Renderer/Buffer.js";
@@ -359,10 +358,7 @@ function processTexture(
   const uniformMap = renderResources.uniformMap;
   const textureReader = featureIdTexture.textureReader;
   uniformMap[uniformName] = function () {
-    return defaultValue(
-      textureReader.texture,
-      frameState.context.defaultTexture,
-    );
+    return textureReader.texture ?? frameState.context.defaultTexture;
   };
 
   const channels = textureReader.channels;

@@ -1,7 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import hasExtension from "./hasExtension.js";
@@ -68,7 +68,7 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DTilesVoxelProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const {
     className,
@@ -668,7 +668,7 @@ async function getSubtree(provider, subtreeCoord) {
  * @returns {Promise<VoxelContent>|undefined} A promise resolving to a VoxelContent containing the data for the tile, or undefined if the request could not be scheduled this frame.
  */
 Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     tileLevel = 0,
     tileX = 0,

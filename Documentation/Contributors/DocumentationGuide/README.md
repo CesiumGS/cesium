@@ -291,7 +291,7 @@ function Cartesian3(x, y) {
      * @type {number}
      * @default 0.0
      */
-    this.x = defaultValue(x, 0.0);
+    this.x = x ?? 0.0;
 
     // ...
 ```

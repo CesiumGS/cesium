@@ -6,7 +6,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -115,7 +115,7 @@ const attributeLocations = {
  * });
  */
 function PolylineCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * Determines if polylines in this collection will be shown.
@@ -123,7 +123,7 @@ function PolylineCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
@@ -134,9 +134,7 @@ function PolylineCollection(options) {
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   /**
@@ -149,10 +147,7 @@ function PolylineCollection(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   this._opaqueRS = undefined;
   this._translucentRS = undefined;

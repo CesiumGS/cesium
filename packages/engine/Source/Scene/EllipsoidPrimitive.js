@@ -2,7 +2,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -47,7 +47,7 @@ const attributeLocations = {
  * @private
  */
 function EllipsoidPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The center of the ellipsoid in the ellipsoid's model coordinates.
@@ -60,7 +60,7 @@ function EllipsoidPrimitive(options) {
    *
    * @see EllipsoidPrimitive#modelMatrix
    */
-  this.center = Cartesian3.clone(defaultValue(options.center, Cartesian3.ZERO));
+  this.center = Cartesian3.clone(options.center ?? Cartesian3.ZERO);
   this._center = new Cartesian3();
 
   /**
@@ -99,9 +99,7 @@ function EllipsoidPrimitive(options) {
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = new Matrix4();
   this._computedModelMatrix = new Matrix4();
 
@@ -111,7 +109,7 @@ function EllipsoidPrimitive(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
@@ -133,10 +131,7 @@ function EllipsoidPrimitive(options) {
    *
    * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
    */
-  this.material = defaultValue(
-    options.material,
-    Material.fromType(Material.ColorType),
-  );
+  this.material = options.material ?? Material.fromType(Material.ColorType);
   this._material = undefined;
   this._translucent = undefined;
 
@@ -162,21 +157,18 @@ function EllipsoidPrimitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * @private
    */
-  this.onlySunLighting = defaultValue(options.onlySunLighting, false);
+  this.onlySunLighting = options.onlySunLighting ?? false;
   this._onlySunLighting = false;
 
   /**
    * @private
    */
-  this._depthTestEnabled = defaultValue(options.depthTestEnabled, true);
+  this._depthTestEnabled = options.depthTestEnabled ?? true;
 
   this._useLogDepth = false;
 
@@ -188,10 +180,10 @@ function EllipsoidPrimitive(options) {
   this._pickId = undefined;
 
   this._colorCommand = new DrawCommand({
-    owner: defaultValue(options._owner, this),
+    owner: options._owner ?? this,
   });
   this._pickCommand = new DrawCommand({
-    owner: defaultValue(options._owner, this),
+    owner: options._owner ?? this,
     pickOnly: true,
   });
 

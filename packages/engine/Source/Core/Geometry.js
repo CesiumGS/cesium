@@ -2,7 +2,7 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import GeometryType from "./GeometryType.js";
@@ -65,7 +65,7 @@ import Transforms from "./Transforms.js";
  * });
  */
 function Geometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.attributes", options.attributes);
@@ -135,10 +135,7 @@ function Geometry(options) {
    *
    * @default PrimitiveType.TRIANGLES
    */
-  this.primitiveType = defaultValue(
-    options.primitiveType,
-    PrimitiveType.TRIANGLES,
-  );
+  this.primitiveType = options.primitiveType ?? PrimitiveType.TRIANGLES;
 
   /**
    * An optional bounding sphere that fully encloses the geometry.  This is
@@ -153,7 +150,7 @@ function Geometry(options) {
   /**
    * @private
    */
-  this.geometryType = defaultValue(options.geometryType, GeometryType.NONE);
+  this.geometryType = options.geometryType ?? GeometryType.NONE;
 
   /**
    * @private

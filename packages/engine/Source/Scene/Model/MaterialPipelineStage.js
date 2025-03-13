@@ -1,5 +1,4 @@
 import defined from "../../Core/defined.js";
-import defaultValue from "../../Core/defaultValue.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Matrix3 from "../../Core/Matrix3.js";
@@ -272,7 +271,7 @@ function processTexture(
     ShaderDestination.FRAGMENT,
   );
   uniformMap[uniformName] = function () {
-    return defaultValue(textureReader.texture, defaultTexture);
+    return textureReader.texture ?? defaultTexture;
   };
 
   // Add a #define directive to enable using the texture in the shader

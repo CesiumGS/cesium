@@ -6,7 +6,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CoplanarPolygonGeometryLibrary from "./CoplanarPolygonGeometryLibrary.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Geometry from "./Geometry.js";
@@ -247,20 +247,18 @@ function createGeometryFromPolygon(
  *
  */
 function CoplanarPolygonGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const polygonHierarchy = options.polygonHierarchy;
   const textureCoordinates = options.textureCoordinates;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.polygonHierarchy", polygonHierarchy);
   //>>includeEnd('debug');
 
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
   this._vertexFormat = VertexFormat.clone(vertexFormat);
   this._polygonHierarchy = polygonHierarchy;
-  this._stRotation = defaultValue(options.stRotation, 0.0);
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default),
-  );
+  this._stRotation = options.stRotation ?? 0.0;
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
   this._workerName = "createCoplanarPolygonGeometry";
   this._textureCoordinates = textureCoordinates;
 
@@ -311,7 +309,7 @@ function CoplanarPolygonGeometry(options) {
  * @see PolygonGeometry#createGeometry
  */
 CoplanarPolygonGeometry.fromPositions = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.positions", options.positions);
@@ -344,7 +342,7 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
@@ -393,7 +391,7 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,

@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import DeveloperError from "./DeveloperError.js";
 import isLeapYear from "./isLeapYear.js";
 
@@ -40,14 +39,14 @@ function GregorianDate(
   const minimumSecond = 0;
   const minimumMillisecond = 0;
 
-  year = defaultValue(year, minimumYear);
-  month = defaultValue(month, minimumMonth);
-  day = defaultValue(day, minimumDay);
-  hour = defaultValue(hour, minimumHour);
-  minute = defaultValue(minute, minimumMinute);
-  second = defaultValue(second, minimumSecond);
-  millisecond = defaultValue(millisecond, minimumMillisecond);
-  isLeapSecond = defaultValue(isLeapSecond, false);
+  year = year ?? minimumYear;
+  month = month ?? minimumMonth;
+  day = day ?? minimumDay;
+  hour = hour ?? minimumHour;
+  minute = minute ?? minimumMinute;
+  second = second ?? minimumSecond;
+  millisecond = millisecond ?? minimumMillisecond;
+  isLeapSecond = isLeapSecond ?? false;
   //>>includeStart('debug', pragmas.debug);
   validateRange();
   validateDate();

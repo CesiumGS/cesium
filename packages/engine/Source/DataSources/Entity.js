@@ -2,7 +2,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -112,7 +112,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @see {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-creating-entities/|Creating Entities}
  */
 function Entity(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let id = options.id;
   if (!defined(id)) {
@@ -123,11 +123,9 @@ function Entity(options) {
   this._id = id;
   this._definitionChanged = new Event();
   this._name = options.name;
-  this._show = defaultValue(options.show, true);
-  this._trackingReferenceFrame = defaultValue(
-    options.trackingReferenceFrame,
-    TrackingReferenceFrame.AUTODETECT,
-  );
+  this._show = options.show ?? true;
+  this._trackingReferenceFrame =
+    options.trackingReferenceFrame ?? TrackingReferenceFrame.AUTODETECT;
   this._parent = undefined;
   this._propertyNames = [
     "billboard",
@@ -618,8 +616,8 @@ Entity.prototype.merge = function (source) {
 
   //Name, show, and availability are not Property objects and are currently handled differently.
   //source.show is intentionally ignored because this.show always has a value.
-  this.name = defaultValue(this.name, source.name);
-  this.availability = defaultValue(this.availability, source.availability);
+  this.name = this.name ?? source.name;
+  this.availability = this.availability ?? source.availability;
 
   const propertyNames = this._propertyNames;
   const sourcePropertyNames = defined(source._propertyNames)

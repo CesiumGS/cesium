@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
@@ -32,7 +32,7 @@ import MetadataType from "./MetadataType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataTableProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const count = options.count;
   const property = options.property;
   const classProperty = options.classProperty;
@@ -61,21 +61,14 @@ function MetadataTableProperty(options) {
   if (isVariableLengthArray) {
     // EXT_structural_metadata uses arrayOffsetType.
     // EXT_feature_metadata uses offsetType for both arrays and strings
-    let arrayOffsetType = defaultValue(
-      property.arrayOffsetType,
-      property.offsetType,
-    );
-    arrayOffsetType = defaultValue(
-      MetadataComponentType[arrayOffsetType],
-      MetadataComponentType.UINT32,
-    );
+    let arrayOffsetType = property.arrayOffsetType ?? property.offsetType;
+    arrayOffsetType =
+      MetadataComponentType[arrayOffsetType] ?? MetadataComponentType.UINT32;
 
     // EXT_structural_metadata uses arrayOffsets.
     // EXT_feature_metadata uses arrayOffsetBufferView
-    const arrayOffsetBufferView = defaultValue(
-      property.arrayOffsets,
-      property.arrayOffsetBufferView,
-    );
+    const arrayOffsetBufferView =
+      property.arrayOffsets ?? property.arrayOffsetBufferView;
     arrayOffsets = new BufferView(
       bufferViews[arrayOffsetBufferView],
       arrayOffsetType,
@@ -101,21 +94,14 @@ function MetadataTableProperty(options) {
   let stringOffsets;
   if (hasStrings) {
     // EXT_structural_metadata uses stringOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
-    let stringOffsetType = defaultValue(
-      property.stringOffsetType,
-      property.offsetType,
-    );
-    stringOffsetType = defaultValue(
-      MetadataComponentType[stringOffsetType],
-      MetadataComponentType.UINT32,
-    );
+    let stringOffsetType = property.stringOffsetType ?? property.offsetType;
+    stringOffsetType =
+      MetadataComponentType[stringOffsetType] ?? MetadataComponentType.UINT32;
 
     // EXT_structural_metadata uses stringOffsets.
     // EXT_feature_metadata uses stringOffsetBufferView
-    const stringOffsetBufferView = defaultValue(
-      property.stringOffsets,
-      property.stringOffsetBufferView,
-    );
+    const stringOffsetBufferView =
+      property.stringOffsets ?? property.stringOffsetBufferView;
     stringOffsets = new BufferView(
       bufferViews[stringOffsetBufferView],
       stringOffsetType,
@@ -141,7 +127,7 @@ function MetadataTableProperty(options) {
 
   // EXT_structural_metadata uses values
   // EXT_feature_metadata uses bufferView
-  const valuesBufferView = defaultValue(property.values, property.bufferView);
+  const valuesBufferView = property.values ?? property.bufferView;
   const values = new BufferView(
     bufferViews[valuesBufferView],
     valueType,
@@ -160,8 +146,8 @@ function MetadataTableProperty(options) {
   // class property. The class property handles setting the default of identity:
   // (offset 0, scale 1) with the same array shape as the property's type
   // information.
-  offset = defaultValue(offset, classProperty.offset);
-  scale = defaultValue(scale, classProperty.scale);
+  offset = offset ?? classProperty.offset;
+  scale = scale ?? classProperty.scale;
 
   // Since metadata table properties are stored as packed typed
   // arrays, flatten the offset/scale to make it easier to apply the
@@ -446,7 +432,7 @@ function getArrayValues(property, classProperty, index) {
     offset *= componentCount;
     length *= componentCount;
   } else {
-    const arrayLength = defaultValue(classProperty.arrayLength, 1);
+    const arrayLength = classProperty.arrayLength ?? 1;
     const componentCount = arrayLength * property._vectorComponentCount;
     offset = index * componentCount;
     length = componentCount;
@@ -493,7 +479,7 @@ function set(property, index, value) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
   } else {
-    const arrayLength = defaultValue(classProperty.arrayLength, 1);
+    const arrayLength = classProperty.arrayLength ?? 1;
     const componentCount = arrayLength * property._vectorComponentCount;
     offset = index * componentCount;
     length = componentCount;

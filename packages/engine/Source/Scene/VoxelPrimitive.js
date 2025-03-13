@@ -10,7 +10,7 @@ import Color from "../Core/Color.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import clone from "../Core/clone.js";
 import CustomShader from "./Model/CustomShader.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -49,7 +49,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * @type {boolean}
@@ -61,10 +61,7 @@ function VoxelPrimitive(options) {
    * @type {VoxelProvider}
    * @private
    */
-  this._provider = defaultValue(
-    options.provider,
-    VoxelPrimitive.DefaultProvider,
-  );
+  this._provider = options.provider ?? VoxelPrimitive.DefaultProvider;
 
   /**
    * This member is not created until the provider and shape are ready.
@@ -84,7 +81,7 @@ function VoxelPrimitive(options) {
    * @type {boolean}
    * @private
    */
-  this._calculateStatistics = defaultValue(options.calculateStatistics, false);
+  this._calculateStatistics = options.calculateStatistics ?? false;
 
   /**
    * This member is not created until the provider is ready.
@@ -262,9 +259,7 @@ function VoxelPrimitive(options) {
    * @type {Matrix4}
    * @private
    */
-  this._modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * Model matrix with vertical exaggeration applied. Only used for BOX shape type.
@@ -296,10 +291,8 @@ function VoxelPrimitive(options) {
    * @type {CustomShader}
    * @private
    */
-  this._customShader = defaultValue(
-    options.customShader,
-    VoxelPrimitive.DefaultCustomShader,
-  );
+  this._customShader =
+    options.customShader ?? VoxelPrimitive.DefaultCustomShader;
 
   /**
    * @type {Event}
@@ -1484,7 +1477,7 @@ function initFromProvider(primitive, provider, context) {
     uniforms.dimensions,
   );
   primitive._paddingBefore = Cartesian3.clone(
-    defaultValue(provider.paddingBefore, Cartesian3.ZERO),
+    provider.paddingBefore ?? Cartesian3.ZERO,
     primitive._paddingBefore,
   );
   uniforms.paddingBefore = Cartesian3.clone(
@@ -1492,7 +1485,7 @@ function initFromProvider(primitive, provider, context) {
     uniforms.paddingBefore,
   );
   primitive._paddingAfter = Cartesian3.clone(
-    defaultValue(provider.paddingAfter, Cartesian3.ZERO),
+    provider.paddingAfter ?? Cartesian3.ZERO,
     primitive._paddingAfter,
   );
   uniforms.paddingAfter = Cartesian3.clone(
@@ -1520,7 +1513,7 @@ function initFromProvider(primitive, provider, context) {
   );
 
   // Create the VoxelTraversal, and set related uniforms
-  const keyframeCount = defaultValue(provider.keyframeCount, 1);
+  const keyframeCount = provider.keyframeCount ?? 1;
   primitive._traversal = new VoxelTraversal(primitive, context, keyframeCount);
   primitive.statistics.texturesByteLength =
     primitive._traversal.textureMemoryByteLength;
@@ -1535,14 +1528,8 @@ function initFromProvider(primitive, provider, context) {
  * @private
  */
 function checkTransformAndBounds(primitive, provider) {
-  const shapeTransform = defaultValue(
-    provider.shapeTransform,
-    Matrix4.IDENTITY,
-  );
-  const globalTransform = defaultValue(
-    provider.globalTransform,
-    Matrix4.IDENTITY,
-  );
+  const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
+  const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
 
   // Compound model matrix = global transform * model matrix * shape transform
   Matrix4.multiplyTransformation(
@@ -2141,7 +2128,7 @@ function DefaultVoxelProvider() {
 }
 
 DefaultVoxelProvider.prototype.requestData = function (options) {
-  const tileLevel = defined(options) ? defaultValue(options.tileLevel, 0) : 0;
+  const tileLevel = defined(options) ? (options.tileLevel ?? 0) : 0;
   if (tileLevel >= 1) {
     return undefined;
   }

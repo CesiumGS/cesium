@@ -1,7 +1,7 @@
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -69,7 +69,7 @@ import VertexArray from "./VertexArray.js";
  * @private
  */
 function CubeMap(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -267,7 +267,7 @@ CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel) {
     0,
     texture.width,
     texture.height,
-    defaultValue(mipLevel, 0),
+    mipLevel ?? 0,
   );
   framebuffer._unBind();
   framebuffer.destroy();
@@ -314,7 +314,7 @@ CubeMap.faceNames = function () {
  * @private
  */
 function loadFace(cubeMapFace, source, mipLevel) {
-  mipLevel = defaultValue(mipLevel, 0);
+  mipLevel = mipLevel ?? 0;
   const targetFace = cubeMapFace._targetFace;
   const size = Math.max(Math.floor(cubeMapFace._size / 2 ** mipLevel), 1);
   const pixelFormat = cubeMapFace._pixelFormat;
@@ -572,7 +572,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
   }
   //>>includeEnd('debug');
 
-  skipColorSpaceConversion = defaultValue(skipColorSpaceConversion, false);
+  skipColorSpaceConversion = skipColorSpaceConversion ?? false;
   const gl = this._context._gl;
   const texture = this._texture;
   const textureTarget = this._textureTarget;
@@ -622,7 +622,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
  * });
  */
 CubeMap.prototype.generateMipmap = function (hint) {
-  hint = defaultValue(hint, MipmapHint.DONT_CARE);
+  hint = hint ?? MipmapHint.DONT_CARE;
 
   //>>includeStart('debug', pragmas.debug);
   if (this._size > 1 && !CesiumMath.isPowerOfTwo(this._size)) {

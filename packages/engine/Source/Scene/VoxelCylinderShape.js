@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -164,14 +163,8 @@ VoxelCylinderShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds,
 ) {
-  clipMinBounds = defaultValue(
-    clipMinBounds,
-    VoxelCylinderShape.DefaultMinBounds,
-  );
-  clipMaxBounds = defaultValue(
-    clipMaxBounds,
-    VoxelCylinderShape.DefaultMaxBounds,
-  );
+  clipMinBounds = clipMinBounds ?? VoxelCylinderShape.DefaultMinBounds;
+  clipMaxBounds = clipMaxBounds ?? VoxelCylinderShape.DefaultMaxBounds;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);

@@ -3,7 +3,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -368,18 +368,15 @@ function PolygonOutlineGeometry(options) {
   //>>includeEnd('debug');
 
   const polygonHierarchy = options.polygonHierarchy;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  const perPositionHeight = defaultValue(options.perPositionHeight, false);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const perPositionHeight = options.perPositionHeight ?? false;
   const perPositionHeightExtrude =
     perPositionHeight && defined(options.extrudedHeight);
-  const arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+  const arcType = options.arcType ?? ArcType.GEODESIC;
 
-  let height = defaultValue(options.height, 0.0);
-  let extrudedHeight = defaultValue(options.extrudedHeight, height);
+  let height = options.height ?? 0.0;
+  let extrudedHeight = options.extrudedHeight ?? height;
 
   if (!perPositionHeightExtrude) {
     const h = Math.max(height, extrudedHeight);
@@ -426,7 +423,7 @@ PolygonOutlineGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
@@ -444,7 +441,7 @@ PolygonOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
   array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
   array[startingIndex++] = value._arcType;
-  array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex++] = value._offsetAttribute ?? -1;
   array[startingIndex] = value.packedLength;
 
   return array;
@@ -468,7 +465,7 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
@@ -539,7 +536,7 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @see PolygonOutlineGeometry#createGeometry
  */
 PolygonOutlineGeometry.fromPositions = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.positions", options.positions);

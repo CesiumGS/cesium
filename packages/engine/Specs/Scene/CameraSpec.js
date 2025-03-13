@@ -4,7 +4,6 @@ import {
   Cartesian3,
   Cartesian4,
   Cartographic,
-  defaultValue,
   Ellipsoid,
   GeographicProjection,
   HeadingPitchRange,
@@ -45,7 +44,7 @@ describe("Scene/Camera", function () {
     };
     this.drawingBufferWidth = 1024;
     this.drawingBufferHeight = 768;
-    this.mapProjection = defaultValue(projection, new GeographicProjection());
+    this.mapProjection = projection ?? new GeographicProjection();
     this.tweens = new TweenCollection();
     this.screenSpaceCameraController = {
       minimumZoomDistance: 0,

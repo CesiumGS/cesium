@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import JulianDate from "./JulianDate.js";
@@ -58,7 +58,7 @@ import JulianDate from "./JulianDate.js";
  * const containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
  */
 function TimeInterval(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   /**
    * Gets or sets the start time of this interval.
    * @type {JulianDate}
@@ -86,14 +86,14 @@ function TimeInterval(options) {
    * @type {boolean}
    * @default true
    */
-  this.isStartIncluded = defaultValue(options.isStartIncluded, true);
+  this.isStartIncluded = options.isStartIncluded ?? true;
 
   /**
    * Gets or sets whether or not the stop time is included in this interval.
    * @type {boolean}
    * @default true
    */
-  this.isStopIncluded = defaultValue(options.isStopIncluded, true);
+  this.isStopIncluded = options.isStopIncluded ?? true;
 }
 
 Object.defineProperties(TimeInterval.prototype, {
@@ -150,8 +150,8 @@ TimeInterval.fromIso8601 = function (options, result) {
   }
   const start = JulianDate.fromIso8601(dates[0]);
   const stop = JulianDate.fromIso8601(dates[1]);
-  const isStartIncluded = defaultValue(options.isStartIncluded, true);
-  const isStopIncluded = defaultValue(options.isStopIncluded, true);
+  const isStartIncluded = options.isStartIncluded ?? true;
+  const isStopIncluded = options.isStopIncluded ?? true;
   const data = options.data;
 
   if (!defined(result)) {
@@ -247,7 +247,7 @@ TimeInterval.equals = function (left, right, dataComparer) {
  * @returns {boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 TimeInterval.equalsEpsilon = function (left, right, epsilon, dataComparer) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||

@@ -1,7 +1,7 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
 import Event from "../Core/Event.js";
@@ -33,14 +33,14 @@ import KDBush from "kdbush";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
  */
 function EntityCluster(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._enabled = defaultValue(options.enabled, false);
-  this._pixelRange = defaultValue(options.pixelRange, 80);
-  this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
-  this._clusterBillboards = defaultValue(options.clusterBillboards, true);
-  this._clusterLabels = defaultValue(options.clusterLabels, true);
-  this._clusterPoints = defaultValue(options.clusterPoints, true);
+  this._enabled = options.enabled ?? false;
+  this._pixelRange = options.pixelRange ?? 80;
+  this._minimumClusterSize = options.minimumClusterSize ?? 2;
+  this._clusterBillboards = options.clusterBillboards ?? true;
+  this._clusterLabels = options.clusterLabels ?? true;
+  this._clusterPoints = options.clusterPoints ?? true;
 
   this._labelCollection = undefined;
   this._billboardCollection = undefined;
@@ -73,7 +73,7 @@ function EntityCluster(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 }
 
 function expandBoundingBox(bbox, pixelRange) {

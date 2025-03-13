@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -19,7 +19,7 @@ import RequestType from "../Core/RequestType.js";
  * @param {Function} options.reloadFunction A function that will be called when all imagery tiles need to be reloaded.
  */
 function TimeDynamicImagery(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.clock", options.clock);

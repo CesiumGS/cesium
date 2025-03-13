@@ -1,7 +1,7 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
@@ -41,7 +41,7 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  * @param {object} options.geoJson The GeoJson object.
  */
 function GeoJsonLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.geoJson", options.geoJson);
@@ -129,7 +129,7 @@ function ParseResult() {
 function parsePosition(position) {
   const x = position[0];
   const y = position[1];
-  const z = defaultValue(position[2], 0.0);
+  const z = position[2] ?? 0.0;
   return new Cartesian3(x, y, z);
 }
 
@@ -546,10 +546,7 @@ function parse(geoJson, frameState) {
   const properties = {};
   for (let i = 0; i < featureCount; i++) {
     const feature = features[i];
-    const featureProperties = defaultValue(
-      feature.properties,
-      defaultValue.EMPTY_OBJECT,
-    );
+    const featureProperties = feature.properties ?? Frozen.EMPTY_OBJECT;
     for (const propertyId in featureProperties) {
       if (featureProperties.hasOwnProperty(propertyId)) {
         if (!defined(properties[propertyId])) {
@@ -564,7 +561,7 @@ function parse(geoJson, frameState) {
     const feature = features[i];
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const value = defaultValue(feature.properties[propertyId], "");
+        const value = feature.properties[propertyId] ?? "";
         properties[propertyId][i] = value;
       }
     }

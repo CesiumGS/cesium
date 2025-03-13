@@ -7,7 +7,7 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -152,7 +152,7 @@ import ShadowMode from "./ShadowMode.js";
  * @see GroundPrimitive
  */
 function Primitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The geometry instances rendered with this primitive.  This may
@@ -224,9 +224,7 @@ function Primitive(options) {
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = new Matrix4();
 
   /**
@@ -237,17 +235,14 @@ function Primitive(options) {
    *
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
-  this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
-  this._interleave = defaultValue(options.interleave, false);
-  this._releaseGeometryInstances = defaultValue(
-    options.releaseGeometryInstances,
-    true,
-  );
-  this._allowPicking = defaultValue(options.allowPicking, true);
-  this._asynchronous = defaultValue(options.asynchronous, true);
-  this._compressVertices = defaultValue(options.compressVertices, true);
+  this._vertexCacheOptimize = options.vertexCacheOptimize ?? false;
+  this._interleave = options.interleave ?? false;
+  this._releaseGeometryInstances = options.releaseGeometryInstances ?? true;
+  this._allowPicking = options.allowPicking ?? true;
+  this._asynchronous = options.asynchronous ?? true;
+  this._compressVertices = options.compressVertices ?? true;
 
   /**
    * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
@@ -258,7 +253,7 @@ function Primitive(options) {
    *
    * @default true
    */
-  this.cull = defaultValue(options.cull, true);
+  this.cull = options.cull ?? true;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -270,10 +265,7 @@ function Primitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * @private
@@ -300,7 +292,7 @@ function Primitive(options) {
    *
    * @default ShadowMode.DISABLED
    */
-  this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
+  this.shadows = options.shadows ?? ShadowMode.DISABLED;
 
   this._translucent = undefined;
 
@@ -648,7 +640,7 @@ function createBatchTable(primitive, context) {
     }
 
     const pickObject = {
-      primitive: defaultValue(instance.pickPrimitive, primitive),
+      primitive: instance.pickPrimitive ?? primitive,
     };
 
     if (defined(instance.id)) {
@@ -1211,10 +1203,8 @@ function loadAsynchronous(primitive, frameState) {
         geometry = subTask.geometry;
         if (defined(geometry.constructor.pack)) {
           subTask.offset = packedLength;
-          packedLength += defaultValue(
-            geometry.constructor.packedLength,
-            geometry.packedLength,
-          );
+          packedLength +=
+            geometry.constructor.packedLength ?? geometry.packedLength;
         }
       }
 
@@ -2201,26 +2191,17 @@ Primitive.prototype.update = function (frameState) {
   const twoPasses = appearance.closed && translucent;
 
   if (createRS) {
-    const rsFunc = defaultValue(
-      this._createRenderStatesFunction,
-      createRenderStates,
-    );
+    const rsFunc = this._createRenderStatesFunction ?? createRenderStates;
     rsFunc(this, context, appearance, twoPasses);
   }
 
   if (createSP) {
-    const spFunc = defaultValue(
-      this._createShaderProgramFunction,
-      createShaderProgram,
-    );
+    const spFunc = this._createShaderProgramFunction ?? createShaderProgram;
     spFunc(this, frameState, appearance);
   }
 
   if (createRS || createSP) {
-    const commandFunc = defaultValue(
-      this._createCommandsFunction,
-      createCommands,
-    );
+    const commandFunc = this._createCommandsFunction ?? createCommands;
     commandFunc(
       this,
       appearance,
@@ -2233,10 +2214,8 @@ Primitive.prototype.update = function (frameState) {
     );
   }
 
-  const updateAndQueueCommandsFunc = defaultValue(
-    this._updateAndQueueCommandsFunction,
-    updateAndQueueCommands,
-  );
+  const updateAndQueueCommandsFunc =
+    this._updateAndQueueCommandsFunction ?? updateAndQueueCommands;
   updateAndQueueCommandsFunc(
     this,
     frameState,

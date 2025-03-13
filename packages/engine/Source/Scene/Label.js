@@ -2,7 +2,7 @@ import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
@@ -137,7 +137,7 @@ function parseFont(label) {
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
  */
 function Label(options, labelCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -201,47 +201,30 @@ function Label(options, labelCollection) {
 
   this._renderedText = undefined;
   this._text = undefined;
-  this._show = defaultValue(options.show, true);
-  this._font = defaultValue(options.font, "30px sans-serif");
-  this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
-  this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.BLACK),
-  );
-  this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
-  this._showBackground = defaultValue(options.showBackground, false);
+  this._show = options.show ?? true;
+  this._font = options.font ?? "30px sans-serif";
+  this._fillColor = Color.clone(options.fillColor ?? Color.WHITE);
+  this._outlineColor = Color.clone(options.outlineColor ?? Color.BLACK);
+  this._outlineWidth = options.outlineWidth ?? 1.0;
+  this._showBackground = options.showBackground ?? false;
   this._backgroundColor = Color.clone(
-    defaultValue(options.backgroundColor, defaultBackgroundColor),
+    options.backgroundColor ?? defaultBackgroundColor,
   );
   this._backgroundPadding = Cartesian2.clone(
-    defaultValue(options.backgroundPadding, defaultBackgroundPadding),
+    options.backgroundPadding ?? defaultBackgroundPadding,
   );
-  this._style = defaultValue(options.style, LabelStyle.FILL);
-  this._verticalOrigin = defaultValue(
-    options.verticalOrigin,
-    VerticalOrigin.BASELINE,
-  );
-  this._horizontalOrigin = defaultValue(
-    options.horizontalOrigin,
-    HorizontalOrigin.LEFT,
-  );
-  this._pixelOffset = Cartesian2.clone(
-    defaultValue(options.pixelOffset, Cartesian2.ZERO),
-  );
-  this._eyeOffset = Cartesian3.clone(
-    defaultValue(options.eyeOffset, Cartesian3.ZERO),
-  );
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
-  this._scale = defaultValue(options.scale, 1.0);
+  this._style = options.style ?? LabelStyle.FILL;
+  this._verticalOrigin = options.verticalOrigin ?? VerticalOrigin.BASELINE;
+  this._horizontalOrigin = options.horizontalOrigin ?? HorizontalOrigin.LEFT;
+  this._pixelOffset = Cartesian2.clone(options.pixelOffset ?? Cartesian2.ZERO);
+  this._eyeOffset = Cartesian3.clone(options.eyeOffset ?? Cartesian3.ZERO);
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
+  this._scale = options.scale ?? 1.0;
   this._id = options.id;
   this._translucencyByDistance = translucencyByDistance;
   this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
   this._scaleByDistance = scaleByDistance;
-  this._heightReference = defaultValue(
-    options.heightReference,
-    HeightReference.NONE,
-  );
+  this._heightReference = options.heightReference ?? HeightReference.NONE;
   this._distanceDisplayCondition = distanceDisplayCondition;
   this._disableDepthTestDistance = options.disableDepthTestDistance;
 
@@ -259,7 +242,7 @@ function Label(options, labelCollection) {
 
   this._clusterShow = true;
 
-  this.text = defaultValue(options.text, "");
+  this.text = options.text ?? "";
 
   this._relativeSize = 1.0;
 

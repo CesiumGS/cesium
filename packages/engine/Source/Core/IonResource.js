@@ -1,7 +1,7 @@
 import Uri from "urijs";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ion from "./Ion.js";
 import Resource from "./Resource.js";
@@ -159,7 +159,7 @@ IonResource.getCreditsFromEndpoint = function (endpoint, endpointResource) {
 /** @inheritdoc */
 IonResource.prototype.clone = function (result) {
   // We always want to use the root's information because it's the most up-to-date
-  const ionRoot = defaultValue(this._ionRoot, this);
+  const ionRoot = this._ionRoot ?? this;
 
   if (!defined(result)) {
     result = new IonResource(
@@ -220,9 +220,9 @@ IonResource._createEndpointResource = function (assetId, options) {
   Check.defined("assetId", assetId);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  let server = defaultValue(options.server, Ion.defaultServer);
-  const accessToken = defaultValue(options.accessToken, Ion.defaultAccessToken);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  let server = options.server ?? Ion.defaultServer;
+  const accessToken = options.accessToken ?? Ion.defaultAccessToken;
   server = Resource.createIfNeeded(server);
 
   const resourceOptions = {
@@ -237,7 +237,7 @@ IonResource._createEndpointResource = function (assetId, options) {
 };
 
 function retryCallback(that, error) {
-  const ionRoot = defaultValue(that._ionRoot, that);
+  const ionRoot = that._ionRoot ?? that;
   const endpointResource = ionRoot._ionEndpointResource;
 
   // Image is not available in worker threads, so this avoids

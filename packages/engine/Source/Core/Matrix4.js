@@ -1,7 +1,7 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -71,22 +71,22 @@ function Matrix4(
   column2Row3,
   column3Row3,
 ) {
-  this[0] = defaultValue(column0Row0, 0.0);
-  this[1] = defaultValue(column0Row1, 0.0);
-  this[2] = defaultValue(column0Row2, 0.0);
-  this[3] = defaultValue(column0Row3, 0.0);
-  this[4] = defaultValue(column1Row0, 0.0);
-  this[5] = defaultValue(column1Row1, 0.0);
-  this[6] = defaultValue(column1Row2, 0.0);
-  this[7] = defaultValue(column1Row3, 0.0);
-  this[8] = defaultValue(column2Row0, 0.0);
-  this[9] = defaultValue(column2Row1, 0.0);
-  this[10] = defaultValue(column2Row2, 0.0);
-  this[11] = defaultValue(column2Row3, 0.0);
-  this[12] = defaultValue(column3Row0, 0.0);
-  this[13] = defaultValue(column3Row1, 0.0);
-  this[14] = defaultValue(column3Row2, 0.0);
-  this[15] = defaultValue(column3Row3, 0.0);
+  this[0] = column0Row0 ?? 0.0;
+  this[1] = column0Row1 ?? 0.0;
+  this[2] = column0Row2 ?? 0.0;
+  this[3] = column0Row3 ?? 0.0;
+  this[4] = column1Row0 ?? 0.0;
+  this[5] = column1Row1 ?? 0.0;
+  this[6] = column1Row2 ?? 0.0;
+  this[7] = column1Row3 ?? 0.0;
+  this[8] = column2Row0 ?? 0.0;
+  this[9] = column2Row1 ?? 0.0;
+  this[10] = column2Row2 ?? 0.0;
+  this[11] = column2Row3 ?? 0.0;
+  this[12] = column3Row0 ?? 0.0;
+  this[13] = column3Row1 ?? 0.0;
+  this[14] = column3Row2 ?? 0.0;
+  this[15] = column3Row3 ?? 0.0;
 }
 
 /**
@@ -110,7 +110,7 @@ Matrix4.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value[0];
   array[startingIndex++] = value[1];
@@ -145,7 +145,7 @@ Matrix4.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Matrix4();
@@ -389,7 +389,7 @@ Matrix4.fromRotationTranslation = function (rotation, translation, result) {
   Check.typeOf.object("rotation", rotation);
   //>>includeEnd('debug');
 
-  translation = defaultValue(translation, Cartesian3.ZERO);
+  translation = translation ?? Cartesian3.ZERO;
 
   if (!defined(result)) {
     return new Matrix4(
@@ -1073,13 +1073,13 @@ Matrix4.computeViewportTransformation = function (
     result = new Matrix4();
   }
 
-  viewport = defaultValue(viewport, defaultValue.EMPTY_OBJECT);
-  const x = defaultValue(viewport.x, 0.0);
-  const y = defaultValue(viewport.y, 0.0);
-  const width = defaultValue(viewport.width, 0.0);
-  const height = defaultValue(viewport.height, 0.0);
-  nearDepthRange = defaultValue(nearDepthRange, 0.0);
-  farDepthRange = defaultValue(farDepthRange, 1.0);
+  viewport = viewport ?? Frozen.EMPTY_OBJECT;
+  const x = viewport.x ?? 0.0;
+  const y = viewport.y ?? 0.0;
+  const width = viewport.width ?? 0.0;
+  const height = viewport.height ?? 0.0;
+  nearDepthRange = nearDepthRange ?? 0.0;
+  farDepthRange = farDepthRange ?? 1.0;
 
   const halfWidth = width * 0.5;
   const halfHeight = height * 0.5;
@@ -2577,7 +2577,7 @@ Matrix4.equals = function (left, right) {
  * //Prints "Difference between both the matrices is not less than 0.1" on the console
  */
 Matrix4.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||

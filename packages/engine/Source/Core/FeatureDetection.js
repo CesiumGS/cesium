@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Fullscreen from "./Fullscreen.js";
@@ -314,7 +313,7 @@ const FeatureDetection = {
   firefoxVersion: firefoxVersion,
   isWindows: isWindows,
   isIPadOrIOS: isIPadOrIOS,
-  hardwareConcurrency: defaultValue(theNavigator.hardwareConcurrency, 3),
+  hardwareConcurrency: theNavigator.hardwareConcurrency ?? 3,
   supportsPointerEvents: supportsPointerEvents,
   supportsImageRenderingPixelated: supportsImageRenderingPixelated,
   supportsWebP: supportsWebP,

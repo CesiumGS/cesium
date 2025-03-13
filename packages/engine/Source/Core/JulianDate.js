@@ -1,5 +1,4 @@
 import binarySearch from "./binarySearch.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import GregorianDate from "./GregorianDate.js";
@@ -216,9 +215,9 @@ function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
    */
   this.secondsOfDay = undefined;
 
-  julianDayNumber = defaultValue(julianDayNumber, 0.0);
-  secondsOfDay = defaultValue(secondsOfDay, 0.0);
-  timeStandard = defaultValue(timeStandard, TimeStandard.UTC);
+  julianDayNumber = julianDayNumber ?? 0.0;
+  secondsOfDay = secondsOfDay ?? 0.0;
+  timeStandard = timeStandard ?? TimeStandard.UTC;
 
   //If julianDayNumber is fractional, make it an integer and add the number of seconds the fraction represented.
   const wholeDays = julianDayNumber | 0;
@@ -903,7 +902,7 @@ JulianDate.equals = function (left, right) {
  * @returns {boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 JulianDate.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||

@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -63,7 +63,7 @@ function WallGraphics(options) {
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(WallGraphics.prototype, {
@@ -219,26 +219,18 @@ WallGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.positions = defaultValue(this.positions, source.positions);
-  this.minimumHeights = defaultValue(
-    this.minimumHeights,
-    source.minimumHeights,
-  );
-  this.maximumHeights = defaultValue(
-    this.maximumHeights,
-    source.maximumHeights,
-  );
-  this.granularity = defaultValue(this.granularity, source.granularity);
-  this.fill = defaultValue(this.fill, source.fill);
-  this.material = defaultValue(this.material, source.material);
-  this.outline = defaultValue(this.outline, source.outline);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition,
-  );
+  this.show = this.show ?? source.show;
+  this.positions = this.positions ?? source.positions;
+  this.minimumHeights = this.minimumHeights ?? source.minimumHeights;
+  this.maximumHeights = this.maximumHeights ?? source.maximumHeights;
+  this.granularity = this.granularity ?? source.granularity;
+  this.fill = this.fill ?? source.fill;
+  this.material = this.material ?? source.material;
+  this.outline = this.outline ?? source.outline;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.shadows = this.shadows ?? source.shadows;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
 export default WallGraphics;
