@@ -352,35 +352,35 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
-    name: "boundsCylinderMaxHeight",
+    name: "boundsCylinderMaxAngle",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxBounds", "y"),
     getPrimitiveFunction: function () {
-      that.boundsCylinderMaxHeight = that._voxelPrimitive.maxBounds.y;
-    },
-  });
-  addProperty({
-    name: "boundsCylinderMinHeight",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "y"),
-    getPrimitiveFunction: function () {
-      that.boundsCylinderMinHeight = that._voxelPrimitive.minBounds.y;
-    },
-  });
-  addProperty({
-    name: "boundsCylinderMaxAngle",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "z"),
-    getPrimitiveFunction: function () {
-      that.boundsCylinderMaxAngle = that._voxelPrimitive.maxBounds.z;
+      that.boundsCylinderMaxAngle = that._voxelPrimitive.maxBounds.y;
     },
   });
   addProperty({
     name: "boundsCylinderMinAngle",
     initialValue: 0.0,
+    setPrimitiveFunction: getBoundSetter("minBounds", "y"),
+    getPrimitiveFunction: function () {
+      that.boundsCylinderMinAngle = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "boundsCylinderMaxHeight",
+    initialValue: 0.0,
+    setPrimitiveFunction: getBoundSetter("maxBounds", "z"),
+    getPrimitiveFunction: function () {
+      that.boundsCylinderMaxHeight = that._voxelPrimitive.maxBounds.z;
+    },
+  });
+  addProperty({
+    name: "boundsCylinderMinHeight",
+    initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minBounds", "z"),
     getPrimitiveFunction: function () {
-      that.boundsCylinderMinAngle = that._voxelPrimitive.minBounds.z;
+      that.boundsCylinderMinHeight = that._voxelPrimitive.minBounds.z;
     },
   });
   addProperty({
@@ -502,35 +502,35 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
-    name: "clippingCylinderMaxHeight",
+    name: "clippingCylinderMaxAngle",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "y"),
     getPrimitiveFunction: function () {
-      that.clippingCylinderMaxHeight = that._voxelPrimitive.maxClippingBounds.y;
-    },
-  });
-  addProperty({
-    name: "clippingCylinderMinHeight",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minClippingBounds", "y"),
-    getPrimitiveFunction: function () {
-      that.clippingCylinderMinHeight = that._voxelPrimitive.minClippingBounds.y;
-    },
-  });
-  addProperty({
-    name: "clippingCylinderMaxAngle",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxClippingBounds", "z"),
-    getPrimitiveFunction: function () {
-      that.clippingCylinderMaxAngle = that._voxelPrimitive.maxClippingBounds.z;
+      that.clippingCylinderMaxAngle = that._voxelPrimitive.maxClippingBounds.y;
     },
   });
   addProperty({
     name: "clippingCylinderMinAngle",
     initialValue: 0.0,
+    setPrimitiveFunction: getBoundSetter("minClippingBounds", "y"),
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinAngle = that._voxelPrimitive.minClippingBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMaxHeight",
+    initialValue: 0.0,
+    setPrimitiveFunction: getBoundSetter("maxClippingBounds", "z"),
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxHeight = that._voxelPrimitive.maxClippingBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinHeight",
+    initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "z"),
     getPrimitiveFunction: function () {
-      that.clippingCylinderMinAngle = that._voxelPrimitive.minClippingBounds.z;
+      that.clippingCylinderMinHeight = that._voxelPrimitive.minClippingBounds.z;
     },
   });
 
