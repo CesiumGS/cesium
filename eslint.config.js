@@ -15,6 +15,8 @@ export default [
       "Apps/HelloWorld.html",
       "Apps/Sandcastle/jsHintOptions.js",
       "Apps/Sandcastle/gallery/gallery-index.js",
+      "Apps/Sandcastle/fast-picking-run-puppeteer.js",
+      "Apps/Sandcastle/fast-picking-analyze-results.js",
       "packages/engine/Source/Scene/GltfPipeline/**/*",
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",

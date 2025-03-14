@@ -12,10 +12,10 @@ const methodNamesWeCareAbout = [
 ];
 
 const isLastOnlyArg = Array.from(process.argv).find((arg) =>
-  arg.toLowerCase().includes("--last")
+  arg.toLowerCase().includes("--last"),
 );
 const isIncludeLogsArg = Array.from(process.argv).find((arg) =>
-  arg.toLowerCase().includes("--logs")
+  arg.toLowerCase().includes("--logs"),
 );
 
 const isLastOnly = !!isLastOnlyArg;
@@ -45,7 +45,7 @@ fs.readdir(directoryPath, function (err, files) {
 
   if (isLastOnly) {
     sortedFileObjects = sortedFileObjects.slice(
-      sortedFileObjects.length - lastCount
+      sortedFileObjects.length - lastCount,
     );
   }
 
@@ -58,7 +58,7 @@ fs.readdir(directoryPath, function (err, files) {
     try {
       logs = fs.readFileSync(
         "Apps/Sandcastle/traces/" + file.name.replace(".json", ".txt"),
-        "utf8"
+        "utf8",
       );
     } catch (err) {}
     if (logs) {
@@ -69,8 +69,8 @@ fs.readdir(directoryPath, function (err, files) {
       relevantLines = logLines
         .filter((l) =>
           methodNamesWeCareAbout.some((rel) =>
-            l.toLowerCase().includes(rel.toLowerCase())
-          )
+            l.toLowerCase().includes(rel.toLowerCase()),
+          ),
         )
         .join("\n");
     }
@@ -132,7 +132,7 @@ fs.readdir(directoryPath, function (err, files) {
     for (const event of obj.traceEvents) {
       const isTimingEvent =
         event.cat === "blink.console" &&
-        event.scope === "blink.console" &&
+        event.scope.startsWith("blink.console") &&
         ["b", "e"].includes(event.ph);
       if (!isTimingEvent) {
         continue;
