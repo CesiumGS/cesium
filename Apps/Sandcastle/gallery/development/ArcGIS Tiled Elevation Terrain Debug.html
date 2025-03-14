@@ -123,7 +123,7 @@
             terrainProvider: arcGisTerrainProvider,
           });
           viewer.scene.globe.enableLighting = false;
-          viewer.scene.globe.terrainExaggeration = 1;
+          viewer.scene.verticalExaggeration = 1;
           // viewer.scene.globe.depthTestAgainstTerrain = false;
           viewer.scene.fog.enabled = false;
 
@@ -132,13 +132,15 @@
           const globe = viewer.scene.globe;
 
           const viewModel = {
-            exaggeration: globe.terrainExaggeration,
-            relativeHeight: globe.terrainExaggerationRelativeHeight,
+            exaggeration: viewer.scene.verticalExaggeration,
+            relativeHeight: viewer.scene.verticalExaggerationRelativeHeight,
           };
 
           function updateExaggeration() {
-            globe.terrainExaggeration = Number(viewModel.exaggeration);
-            globe.terrainExaggerationRelativeHeight = Number(viewModel.relativeHeight);
+            viewer.scene.verticalExaggeration = Number(viewModel.exaggeration);
+            viewer.scene.verticalExaggerationRelativeHeight = Number(
+              viewModel.relativeHeight,
+            );
           }
 
           Cesium.knockout.track(viewModel);
