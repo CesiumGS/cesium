@@ -52,7 +52,6 @@ function createVerticesFromQuantizedTerrainMesh(
   parameters,
   transferableObjects,
 ) {
-  console.time("setup stuff");
   const quantizedVertices = parameters.quantizedVertices;
   const quantizedVertexCount = quantizedVertices.length / 3;
   const octEncodedNormals = parameters.octEncodedNormals;
@@ -217,27 +216,25 @@ function createVerticesFromQuantizedTerrainMesh(
     rectangle,
     minimumHeight,
     maximumHeight,
-    ellipsoid
+    ellipsoid,
   );
 
   const transform = OrientedBoundingBox.computeTransformation(
     orientedBoundingBox,
-    null
+    null,
   );
   const inverseTransform = Matrix4.inverse(transform, new Matrix4());
-  console.timeEnd("setup stuff");
-  console.time("making packed triangles");
+
   const packedTriangles = createPackedTrianglesFromIndices(
     parameters.indices,
     positions,
-    inverseTransform
+    inverseTransform,
   );
-  console.timeEnd("making packed triangles");
   const octree = OctreeTrianglePicking.createOctree(
     packedTriangles,
     inverseTransform,
     transform,
-    orientedBoundingBox
+    orientedBoundingBox,
   );
 
   let hMin = minimumHeight;

@@ -37,14 +37,12 @@ const scratchV2 = new Cartesian3();
  * @param {Ray} ray
  * @param {Boolean} cullBackFaces
  * @param {Cartesian3} result
- * @param {object} trace
  * @returns {Cartesian3} result
  */
 OctreeTrianglePicking.prototype.rayIntersect = function (
   ray,
   cullBackFaces,
   result,
-  trace,
 ) {
   const invTransform = this._inverseTransform;
 
@@ -66,7 +64,6 @@ OctreeTrianglePicking.prototype.rayIntersect = function (
     transformedRay,
     this._triangleVerticesCallback,
     cullBackFaces,
-    trace,
   );
 };
 
@@ -193,7 +190,6 @@ function isNodeIntersection(
   node,
   cullBackFaces,
   triangleVerticesCallback,
-  traceDetails,
 ) {
   const result = {
     t: Number.MAX_VALUE,
@@ -204,13 +200,7 @@ function isNodeIntersection(
     const triIndex = node.intersectingTriangles[i];
     result.triangleTestCount++;
 
-    triangleVerticesCallback(
-      triIndex,
-      scratchV0,
-      scratchV1,
-      scratchV2,
-      traceDetails,
-    );
+    triangleVerticesCallback(triIndex, scratchV0, scratchV1, scratchV2);
     const triT = rayTriangleIntersect(
       ray,
       scratchV0,
@@ -234,11 +224,9 @@ function rayIntersectOctree(
   transformedRay,
   triangleVerticesCallback,
   cullBackFaces,
-  trace,
 ) {
   // from here: http://publications.lib.chalmers.se/records/fulltext/250170/250170.pdf
   // find all the nodes which intersect the ray
-  const hits = [];
 
   let queue = [node];
   const intersections = [];
@@ -255,10 +243,6 @@ function rayIntersectOctree(
       aabb.aabbMaxZ,
     );
     if (intersection.intersection) {
-      if (trace) {
-        n.isHit = true;
-        hits.push({ level: n.level, x: n.x, y: n.y, z: n.z });
-      }
       const isLeaf = !n.children;
       if (isLeaf) {
         intersections.push({
@@ -277,8 +261,6 @@ function rayIntersectOctree(
     return a.tMin - b.tMin;
   });
 
-  let triangleTestCount = 0;
-
   let minT = Number.MAX_VALUE;
   // for each intersected node - test every triangle which falls in that node
   for (let ii = 0; ii < sortedTests.length; ii++) {
@@ -288,22 +270,11 @@ function rayIntersectOctree(
       test.node,
       cullBackFaces,
       triangleVerticesCallback,
-      trace,
     );
-    triangleTestCount += intersectionResult.triangleTestCount;
     minT = Math.min(intersectionResult.t, minT);
     if (minT !== invalidIntersection) {
-      // found our first intersection - we can bail early!
-      if (trace) {
-        trace.triangleIndex = intersectionResult.triangleIndex;
-      }
       break;
     }
-  }
-
-  if (trace) {
-    trace.triangleTestCount = triangleTestCount;
-    trace.hits = hits;
   }
 
   if (minT !== invalidIntersection) {
@@ -373,15 +344,11 @@ function createOctree(triangles) {
   const rootNode = new Node(0, 0, 0, 0);
   const nodes = [rootNode];
   //>>includeStart('debug', pragmas.debug);
-  console.time("creating actual octree");
   const triangleCount = triangles.length / 6;
 
   // we can build a more spread out octree
   //  for smaller tiles because it'll be quicker
   const maxLevels = 2;
-
-  let quickMatchSuccess = 0;
-  let quickMatchFailure = 0;
 
   let lastMatch;
   for (let x = 0; x < triangleCount; x++) {
@@ -395,11 +362,9 @@ function createOctree(triangles) {
         x,
       );
       if (isTriangleContainedWithinLastMatchedNode) {
-        quickMatchSuccess += 1;
         lastMatch.node.intersectingTriangles.push(x);
         continue;
       } else {
-        quickMatchFailure += 1;
         lastMatch = null;
       }
     }
@@ -415,8 +380,6 @@ function createOctree(triangles) {
       nodes,
     );
   }
-  console.timeEnd("creating actual octree");
-  console.log(`quick match ${quickMatchSuccess}; failure ${quickMatchFailure}`);
   return nodes;
 }
 

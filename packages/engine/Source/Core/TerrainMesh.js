@@ -165,17 +165,6 @@ function TerrainMesh(
   this._octreeTrianglePicking = octreeTrianglePicking;
 }
 
-function isCartesianAlmostEqual(a, b) {
-  if (!a || !b) {
-    return !a === !b;
-  }
-  return (
-    Math.abs(a.x - b.x) < 0.1 &&
-    Math.abs(a.y - b.y) < 0.1 &&
-    Math.abs(a.z - b.z) < 0.1
-  );
-}
-
 /**
  * Gives the point on the mesh where the give ray intersects
  * @param {Ray} ray
@@ -190,15 +179,6 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection,
 ) {
-  const trace = window.showPickDetails;
-
-  let traceDetails;
-  if (trace) {
-    traceDetails = {};
-  }
-
-  let newPickValue, oldPickValue;
-
   const hasOctree = !!this._octreeTrianglePicking;
   const canUseOctree =
     hasOctree &&
@@ -209,63 +189,15 @@ TerrainMesh.prototype.pickRay = function (
     this.encoding.exaggeration === 1;
 
   if (canUseOctree) {
-    newPickValue = this._octreeTrianglePicking.rayIntersect(
-      ray,
-      cullBackFaces,
-      null,
-      traceDetails,
-    );
+    return this._octreeTrianglePicking.rayIntersect(ray, cullBackFaces, null);
   }
 
-  if (!window.disableDefaultPickStrategy || !canUseOctree) {
-    // if we've not elected to disable the default pick strategy entirely;
-    //  or we can't use the octree, so we have no other choice, then
-    //  use the default pick strategy
-    oldPickValue = this._defaultPickStrategy.rayIntersect(
-      ray,
-      cullBackFaces,
-      mode,
-      projection,
-      traceDetails,
-    );
-  }
-
-  // whoops
-  if (
-    !window.disableDefaultPickStrategy &&
-    hasOctree &&
-    canUseOctree &&
-    !isCartesianAlmostEqual(newPickValue, oldPickValue)
-  ) {
-    console.error("pick values are different", newPickValue, oldPickValue);
-    const newPickAgain = this._octreeTrianglePicking.rayIntersect(
-      ray,
-      cullBackFaces,
-      null,
-      traceDetails,
-    );
-    const oldPickAgain = this._defaultPickStrategy.rayIntersect(
-      ray,
-      cullBackFaces,
-      mode,
-      projection,
-      traceDetails,
-    );
-    console.error("after running again", newPickAgain, oldPickAgain);
-  }
-
-  // record details on the window
-  if (trace) {
-    window.lastPickDetails = {
-      ray: ray,
-      newPickValue: newPickValue,
-      oldPickValue: oldPickValue,
-      mesh: this,
-      traceDetails: traceDetails,
-    };
-  }
-
-  return newPickValue || oldPickValue;
+  return this._defaultPickStrategy.rayIntersect(
+    ray,
+    cullBackFaces,
+    mode,
+    projection,
+  );
 };
 
 export default TerrainMesh;

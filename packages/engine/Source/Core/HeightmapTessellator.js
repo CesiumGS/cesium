@@ -164,7 +164,6 @@ const maximumScratch = new Cartesian3();
  * const position = encoding.decodePosition(statistics.vertices, index);
  */
 HeightmapTessellator.computeVertices = function (options) {
-  console.time("computeVertices");
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options) || !defined(options.heightmap)) {
     throw new DeveloperError("options.heightmap is required.");
@@ -184,8 +183,6 @@ HeightmapTessellator.computeVertices = function (options) {
   // so it employs a lot of inlining and unrolling as an optimization.
   // In particular, the functionality of Ellipsoid.cartographicToCartesian
   // is inlined.
-
-  console.time("setup stuff");
 
   const cos = Math.cos;
   const sin = Math.sin;
@@ -509,12 +506,7 @@ HeightmapTessellator.computeVertices = function (options) {
     }
   }
 
-  console.timeEnd("setup stuff");
-  console.time("creating bounding sphere");
-
   const boundingSphere3D = BoundingSphere.fromPoints(positions);
-
-  console.timeEnd("creating bounding sphere");
 
   let orientedBoundingBox;
   let transform;
@@ -522,8 +514,6 @@ HeightmapTessellator.computeVertices = function (options) {
   let octree;
 
   if (defined(rectangle)) {
-    console.time("creating oriented bounding box");
-
     orientedBoundingBox = OrientedBoundingBox.fromRectangle(
       rectangle,
       minimumHeight,
@@ -536,16 +526,13 @@ HeightmapTessellator.computeVertices = function (options) {
       null,
     );
     inverseTransform = Matrix4.inverse(transform, new Matrix4());
-    console.timeEnd("creating oriented bounding box");
 
-    console.time("making packed triangles");
     const packedTriangles = createPackedTriangles(
       positions,
       inverseTransform,
       width,
       gridTriangleCount,
     );
-    console.timeEnd("making packed triangles");
 
     octree = OctreeTrianglePicking.createOctree(
       packedTriangles,
@@ -557,7 +544,6 @@ HeightmapTessellator.computeVertices = function (options) {
 
   let occludeePointInScaledSpace;
   if (hasRelativeToCenter) {
-    console.time("creating occluder");
     const occluder = new EllipsoidalOccluder(ellipsoid);
     occludeePointInScaledSpace =
       occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
@@ -565,10 +551,8 @@ HeightmapTessellator.computeVertices = function (options) {
         positions,
         minimumHeight,
       );
-    console.timeEnd("creating occluder");
   }
 
-  console.time("terrain encoding");
   const aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
   const encoding = new TerrainEncoding(
     relativeToCenter,
@@ -598,8 +582,6 @@ HeightmapTessellator.computeVertices = function (options) {
     );
   }
 
-  console.timeEnd("terrain encoding");
-  console.timeEnd("computeVertices");
   return {
     vertices: vertices,
     maximumHeight: maximumHeight,
