@@ -49,8 +49,6 @@ Ray.clone = function (ray, result) {
   return result;
 };
 
-const scratchCartesian = new Cartesian3();
-
 /**
  * Computes the point along the ray given by r(t) = o + t*d,
  * where o is the origin of the ray and d is the direction.
@@ -75,11 +73,7 @@ Ray.getPoint = function (ray, t, result) {
     result = new Cartesian3();
   }
 
-  const offset = Cartesian3.multiplyByScalar(
-    ray.direction,
-    t,
-    scratchCartesian,
-  );
-  return Cartesian3.add(ray.origin, offset, result);
+  result = Cartesian3.multiplyByScalar(ray.direction, t, result);
+  return Cartesian3.add(ray.origin, result, result);
 };
 export default Ray;

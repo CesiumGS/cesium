@@ -179,17 +179,18 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection,
 ) {
-  const hasOctree = !!this._octreeTrianglePicking;
+  // check if we can use the faster octree path of if we fallback to using an iterative search
   const canUseOctree =
-    hasOctree &&
+    // we might not have an octree that we can use
+    !!this._octreeTrianglePicking &&
     // 3d mode only
-    mode === SceneMode.SCENE3D /* 3d mode only*/ &&
-    // the octree is baked for default terrain exaggeration, so we can only trust its result when we're
+    mode === SceneMode.SCENE3D &&
+    // the octree is built for default terrain exaggeration, so we can only trust its result when we're
     //  not using terrain exaggeration
     this.encoding.exaggeration === 1;
 
   if (canUseOctree) {
-    return this._octreeTrianglePicking.rayIntersect(ray, cullBackFaces, null);
+    return this._octreeTrianglePicking.rayIntersect(ray, cullBackFaces);
   }
 
   return this._defaultPickStrategy.rayIntersect(

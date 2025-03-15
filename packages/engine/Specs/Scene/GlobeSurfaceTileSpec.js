@@ -1,15 +1,20 @@
 import {
+  ArcGISTiledElevationTerrainProvider,
   Cartesian3,
   Cartesian4,
+  Cartographic,
+  CesiumTerrainProvider,
   createWorldTerrainAsync,
   Ellipsoid,
   EllipsoidTerrainProvider,
   GeographicTilingScheme,
-  Ray,
   GlobeSurfaceTile,
   ImageryLayerCollection,
+  Math as CesiumMath,
   QuadtreeTile,
   QuadtreeTileLoadState,
+  Ray,
+  SceneMode,
   TerrainState,
   TileProviderError,
 } from "../../index.js";
@@ -18,6 +23,11 @@ import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 
 import createScene from "../../../../Specs/createScene.js";
+import {
+  patchXHRLoad,
+  patchXHRLoadForArcGISTerrainDataSet,
+  resetXHRPatch,
+} from "../../../../Specs/patchXHRLoad.js";
 
 describe("Scene/GlobeSurfaceTile", function () {
   let frameState;
@@ -364,7 +374,12 @@ describe("Scene/GlobeSurfaceTile", function () {
             0.5517155343926082,
           ),
         );
-        const pickResult = tile.data.pick(ray, SceneMode.SCENE3D, undefined, true);
+        const pickResult = tile.data.pick(
+          ray,
+          SceneMode.SCENE3D,
+          undefined,
+          true,
+        );
         const cartographic =
           Ellipsoid.WGS84.cartesianToCartographic(pickResult);
         expect(cartographic.height).toBeGreaterThan(-500.0);
@@ -560,21 +575,20 @@ describe("Scene/GlobeSurfaceTile", function () {
         resetXHRPatch();
       });
 
-      it("should pick a few points on a CWT tile", function () {
+      it("should pick a few points on a CWT tile", async function () {
         patchXHRLoad({
           "/layer.json": "Data/CesiumTerrainTileJson/9_759_335/layer.json",
           "/9/759/335.terrain?v=1.2.0":
             "Data/CesiumTerrainTileJson/9_759_335/9_759_335.terrain",
         });
 
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
-        });
+        const terrainProvider =
+          await CesiumTerrainProvider.fromUrl("made/up/url");
 
         processor = new TerrainTileProcessor(
           frameState,
           terrainProvider,
-          imageryLayerCollection
+          imageryLayerCollection,
         );
         processor.mockWebGL();
         processor.frameState = scene.frameState;
@@ -594,7 +608,7 @@ describe("Scene/GlobeSurfaceTile", function () {
           const direction = new Cartesian3(
             0.04604903643932318,
             0.8821324224085892,
-            0.46874500059047475
+            0.46874500059047475,
           );
           const origin = new Cartesian3(0, 0, -20029.056425910585);
           const ray = new Ray(origin, direction);
@@ -603,7 +617,7 @@ describe("Scene/GlobeSurfaceTile", function () {
             ray,
             SceneMode.SCENE3D,
             undefined,
-            cullBackFaces
+            cullBackFaces,
           );
           expect(pickResult).toBeDefined();
           expect(pickResult.x).toBeCloseTo(294215.31248307973, 10);
@@ -612,51 +626,48 @@ describe("Scene/GlobeSurfaceTile", function () {
         });
       });
 
-      it("should pick a few points on a ArcGIS tile", function () {
+      it("should pick a few points on an ArcGIS tile", async function () {
         patchXHRLoadForArcGISTerrainDataSet();
-        const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-          url: "made/up/url",
-        });
+        const terrainProvider =
+          await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
 
         processor = new TerrainTileProcessor(
           frameState,
           terrainProvider,
-          imageryLayerCollection
+          imageryLayerCollection,
         );
         processor.mockWebGL();
         processor.frameState = scene.frameState;
 
-        return terrainProvider.readyPromise.then(function () {
-          const tile = new QuadtreeTile({
-            tilingScheme: terrainProvider.tilingScheme,
-            level: 9,
-            x: 379,
-            y: 214,
-          });
-          return processor.process([tile]).then(function () {
-            const direction = new Cartesian3(
-              0.04604903643932318,
-              0.8821324224085892,
-              0.46874500059047475
-            );
-            const origin = new Cartesian3(0, 0, -20029.056425910585);
-            const ray = new Ray(origin, direction);
-            const cullBackFaces = false;
-            const pickResult = tile.data.pick(
-              ray,
-              SceneMode.SCENE3D,
-              undefined,
-              cullBackFaces
-            );
-            const location = pickResultToLocation(pickResult);
-            expect(location.latitude).toBeCloseTo(27.952862605533163, 10);
-            expect(location.longitude).toBeCloseTo(87.01176072534257, 10);
-            expect(location.height).toBeCloseTo(6372, 0);
-          });
+        const tile = new QuadtreeTile({
+          tilingScheme: terrainProvider.tilingScheme,
+          level: 9,
+          x: 379,
+          y: 214,
         });
+
+        await processor.process([tile]);
+        const direction = new Cartesian3(
+          0.04604903643932318,
+          0.8821324224085892,
+          0.46874500059047475,
+        );
+        const origin = new Cartesian3(0, 0, -20029.056425910585);
+        const ray = new Ray(origin, direction);
+        const cullBackFaces = false;
+        const pickResult = tile.data.pick(
+          ray,
+          SceneMode.SCENE3D,
+          undefined,
+          cullBackFaces,
+        );
+        const location = pickResultToLocation(pickResult);
+        expect(location.latitude).toBeCloseTo(27.952862605533163, 10);
+        expect(location.longitude).toBeCloseTo(87.01176072534257, 10);
+        expect(location.height).toBeCloseTo(6372, 0);
       });
 
-      it("should do a lot more points", function () {
+      it("should do a lot more points", async function () {
         // pick a point 10km above sea level (~4k above the terrain at this location)
         const position = {
           longitude: 87.01176072534257,
@@ -669,7 +680,7 @@ describe("Scene/GlobeSurfaceTile", function () {
           position.latitude,
           // calculating the normal requires ground level
           0.0,
-          Ellipsoid.WGS84
+          Ellipsoid.WGS84,
         );
         Ellipsoid.WGS84.geodeticSurfaceNormal(cartesian, ray.direction);
         // Try to find the intersection point between the surface normal and z-axis.
@@ -677,46 +688,43 @@ describe("Scene/GlobeSurfaceTile", function () {
         Ellipsoid.WGS84.getSurfaceNormalIntersectionWithZAxis(
           cartesian,
           11500.0,
-          ray.origin
+          ray.origin,
         );
 
         patchXHRLoadForArcGISTerrainDataSet();
-        const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-          url: "made/up/url",
-        });
+        const terrainProvider =
+          await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
 
         processor = new TerrainTileProcessor(
           frameState,
           terrainProvider,
-          imageryLayerCollection
+          imageryLayerCollection,
         );
         processor.mockWebGL();
         processor.frameState = scene.frameState;
 
-        return terrainProvider.readyPromise.then(function () {
-          const tile = new QuadtreeTile({
-            tilingScheme: terrainProvider.tilingScheme,
-            level: 9,
-            x: 379,
-            y: 214,
-          });
-          return processor.process([tile]).then(function () {
-            const cullBackFaces = false;
-            const pickResult = tile.data.pick(
-              ray,
-              SceneMode.SCENE3D,
-              undefined,
-              cullBackFaces
-            );
-            const location = pickResultToLocation(pickResult);
-            expect(location.latitude).toBeCloseTo(27.952862605533163, 10);
-            expect(location.longitude).toBeCloseTo(87.01176072534257, 10);
-            expect(location.height).toBeCloseTo(6372, 0);
-          });
+        const tile = new QuadtreeTile({
+          tilingScheme: terrainProvider.tilingScheme,
+          level: 9,
+          x: 379,
+          y: 214,
         });
+
+        await processor.process([tile]);
+        const cullBackFaces = false;
+        const pickResult = tile.data.pick(
+          ray,
+          SceneMode.SCENE3D,
+          undefined,
+          cullBackFaces,
+        );
+        const location = pickResultToLocation(pickResult);
+        expect(location.latitude).toBeCloseTo(27.952862605533163, 10);
+        expect(location.longitude).toBeCloseTo(87.01176072534257, 10);
+        expect(location.height).toBeCloseTo(6372, 0);
       });
 
-      it("special point that returned null", function () {
+      it("special point that returned null", async function () {
         patchXHRLoadForArcGISTerrainDataSet();
 
         const ray = new Ray(
@@ -724,44 +732,40 @@ describe("Scene/GlobeSurfaceTile", function () {
           new Cartesian3(
             0.046566275697934596,
             0.8817741083711048,
-            0.4693676637498234
-          )
+            0.4693676637498234,
+          ),
         );
-        const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-          url: "made/up/url",
-        });
+        const terrainProvider =
+          await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
 
         processor = new TerrainTileProcessor(
           frameState,
           terrainProvider,
-          imageryLayerCollection
+          imageryLayerCollection,
         );
         processor.mockWebGL();
         processor.frameState = scene.frameState;
 
-        return terrainProvider.readyPromise.then(function () {
-          const tile = new QuadtreeTile({
-            tilingScheme: terrainProvider.tilingScheme,
-            level: 9,
-            x: 379,
-            y: 214,
-          });
-          return processor.process([tile]).then(function () {
-            const cullBackFaces = false;
-            const pickResult = tile.data.pick(
-              ray,
-              SceneMode.SCENE3D,
-              undefined,
-              cullBackFaces
-            );
-            const location = pickResultToLocation(pickResult);
-            expect(location.latitude).toBeCloseTo(27.993258048265453, 10);
-            expect(location.longitude).toBeCloseTo(86.97703198692928, 10);
-            expect(location.height).toBeCloseTo(5587.6, 0);
-          });
+        const tile = new QuadtreeTile({
+          tilingScheme: terrainProvider.tilingScheme,
+          level: 9,
+          x: 379,
+          y: 214,
         });
+        await processor.process([tile]);
+        const cullBackFaces = false;
+        const pickResult = tile.data.pick(
+          ray,
+          SceneMode.SCENE3D,
+          undefined,
+          cullBackFaces,
+        );
+        const location = pickResultToLocation(pickResult);
+        expect(location.latitude).toBeCloseTo(27.993258048265453, 10);
+        expect(location.longitude).toBeCloseTo(86.97703198692928, 10);
+        expect(location.height).toBeCloseTo(5587.6, 0);
       });
     },
-    "WebGL"
+    "WebGL",
   );
 });

@@ -284,7 +284,7 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
 
     let octreeTrianglePicker = null;
     if (encoding.exaggeration === 1 && result.octree) {
-      // ahhh, sorry, the octree data structure is built off non-exaggerated triangles
+      // the octree data structure is only built off non-exaggerated triangles
       octreeTrianglePicker = new OctreeTrianglePicking(
         result.octree,
         createTriangleVerticesCallback(

@@ -65,13 +65,13 @@ function createPackedTriangles(
     // isEven: TL, BL, TR
     // isOdd: TR, BL, BR
 
-    Matrix4.multiplyByPointFast(
+    Matrix4.multiplyByPoint(
       invTransform,
       positions[base + (isEven ? 0 : 1)],
       v0,
     );
-    Matrix4.multiplyByPointFast(invTransform, positions[base + width], v1);
-    Matrix4.multiplyByPointFast(
+    Matrix4.multiplyByPoint(invTransform, positions[base + width], v1);
+    Matrix4.multiplyByPoint(
       invTransform,
       positions[base + 1 + (isEven ? 0 : width)],
       v2,

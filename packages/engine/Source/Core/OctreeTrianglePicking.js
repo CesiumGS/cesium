@@ -36,14 +36,9 @@ const scratchV2 = new Cartesian3();
  * Ray intersection test
  * @param {Ray} ray
  * @param {Boolean} cullBackFaces
- * @param {Cartesian3} result
  * @returns {Cartesian3} result
  */
-OctreeTrianglePicking.prototype.rayIntersect = function (
-  ray,
-  cullBackFaces,
-  result,
-) {
+OctreeTrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces) {
   const invTransform = this._inverseTransform;
 
   const transformedRay = scratchTransformedRay;

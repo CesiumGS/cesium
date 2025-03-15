@@ -1,6 +1,4 @@
-import RequestScheduler from "../Source/Core/RequestScheduler.js";
-import Resource from "../Source/Core/Resource.js";
-import { defined } from "../Source/Cesium.js";
+import { RequestScheduler, Resource, defined } from "@cesium/engine";
 
 export function resetXHRPatch() {
   RequestScheduler.clearForSpecs();
@@ -23,7 +21,7 @@ export function patchXHRLoad(proxySpec) {
     data,
     headers,
     deferred,
-    overrideMimeType
+    overrideMimeType,
   ) {
     // find a key (source path) path in the spec which matches (ends with) the requested url
     const availablePaths = Object.keys(proxySpec);
@@ -41,8 +39,8 @@ export function patchXHRLoad(proxySpec) {
     if (!defined(proxiedUrl)) {
       throw new Error(
         `Unexpected XHR load to url: ${url}; spec includes: ${availablePaths.join(
-          ", "
-        )}`
+          ", ",
+        )}`,
       );
     }
 
@@ -54,7 +52,7 @@ export function patchXHRLoad(proxySpec) {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     );
   };
 }
