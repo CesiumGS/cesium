@@ -469,7 +469,7 @@ Ellipsoid.prototype.cartographicArrayToCartesianArray = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartographics", cartographics);
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const length = cartographics.length;
   if (!defined(result)) {

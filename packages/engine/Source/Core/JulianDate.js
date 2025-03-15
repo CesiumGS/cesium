@@ -382,7 +382,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
           ) {
             throw new DeveloperError(iso8601ErrorMessage);
           }
-          //>>includeEnd('debug')
+          //>>includeEnd('debug');
         } else {
           tokens = date.match(matchWeekDate);
           if (tokens !== null) {
@@ -401,7 +401,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             ) {
               throw new DeveloperError(iso8601ErrorMessage);
             }
-            //>>includeEnd('debug')
+            //>>includeEnd('debug');
 
             const january4 = new Date(Date.UTC(year, 0, 4));
             dayOfYear = weekNumber * 7 + dayOfWeek - january4.getUTCDay() - 3;
@@ -409,7 +409,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             //None of our regular expressions succeeded in parsing the date properly.
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(iso8601ErrorMessage);
-            //>>includeEnd('debug')
+            //>>includeEnd('debug');
           }
         }
         //Split an ordinal date into month/day.
@@ -433,7 +433,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
   ) {
     throw new DeveloperError(iso8601ErrorMessage);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   //Now move onto the time string, which is much simpler.
   //If no time is specified, it is considered the beginning of the day, UTC to match Javascript's implementation.
@@ -446,7 +446,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
       if (dashCount > 0 && dashCount !== 2 && dashCount !== 3) {
         throw new DeveloperError(iso8601ErrorMessage);
       }
-      //>>includeEnd('debug')
+      //>>includeEnd('debug');
 
       hour = +tokens[1];
       minute = +tokens[2];
@@ -461,7 +461,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
         if (dashCount > 2) {
           throw new DeveloperError(iso8601ErrorMessage);
         }
-        //>>includeEnd('debug')
+        //>>includeEnd('debug');
 
         hour = +tokens[1];
         minute = +tokens[2];
@@ -476,7 +476,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
         } else {
           //>>includeStart('debug', pragmas.debug);
           throw new DeveloperError(iso8601ErrorMessage);
-          //>>includeEnd('debug')
+          //>>includeEnd('debug');
         }
       }
     }
