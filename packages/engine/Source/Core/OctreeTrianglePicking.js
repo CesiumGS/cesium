@@ -62,8 +62,9 @@ OctreeTrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces) {
 };
 
 /**
- * Create an in-memory octree from a list of packed triangles
- * @param {Float32Array} triangles
+ * Create an in-memory octree from a list of packed triangles. Designed to be sent across a web worker thread
+ * without a huge amount of serialization.
+ * @param {Float32Array} triangles The packed array of triangles to add to the octree
  * @param {Matrix4} inverseTransform
  * @param {Matrix4} transform
  * @param {OrientedBoundingBox} obb
@@ -74,6 +75,9 @@ OctreeTrianglePicking.createOctree = function (
   transform,
   obb,
 ) {
+  // the nodes tree is not packed into a buffer, but it could be
+  // it doesn't seem to be too bad transferring it using post message, but surely there a serialization cost
+  // would need to test whether it's faster to pack and unpack the nodes into a flat buffer or just serialize and deserialize as JSON
   const nodes = createOctree(triangles);
   return {
     triangles: triangles,
@@ -202,15 +206,9 @@ function isNodeIntersection(
   cullBackFaces,
   triangleVerticesCallback,
 ) {
-  const result = {
-    t: Number.MAX_VALUE,
-    triangleIndex: -1,
-    triangleTestCount: 0,
-  };
+  let result = Number.MAX_VALUE;
   for (let i = 0; i < (node.intersectingTriangles || []).length; i++) {
     const triIndex = node.intersectingTriangles[i];
-    result.triangleTestCount++;
-
     triangleVerticesCallback(triIndex, scratchV0, scratchV1, scratchV2);
     const triT = rayTriangleIntersect(
       ray,
@@ -220,10 +218,8 @@ function isNodeIntersection(
       cullBackFaces,
     );
 
-    if (triT !== invalidIntersection && triT < result.t) {
-      result.t = triT;
-      // don't need this?
-      result.triangleIndex = triIndex;
+    if (triT !== invalidIntersection && triT < result) {
+      result = triT;
     }
   }
   return result;
@@ -282,7 +278,7 @@ function rayIntersectOctree(
       cullBackFaces,
       triangleVerticesCallback,
     );
-    minT = Math.min(intersectionResult.t, minT);
+    minT = Math.min(intersectionResult, minT);
     if (minT !== invalidIntersection) {
       break;
     }
@@ -473,20 +469,25 @@ function nodeAddTriangle(
   );
 
   const isMaxLevel = level === maxLevels;
-  if (isIntersection) {
-    if (isMaxLevel) {
-      node.intersectingTriangles = node.intersectingTriangles || [];
-      node.intersectingTriangles.push(triangleIdx);
-      return { level: level, x: x, y: y, z: z, node: node };
-    }
-  } else {
+
+  if (isIntersection && isMaxLevel) {
+    // we've fond a match and the deepest layer of the octree, insert our triangle and return information about the match
+    node.intersectingTriangles = node.intersectingTriangles || [];
+    node.intersectingTriangles.push(triangleIdx);
+    return { level: level, x: x, y: y, z: z, node: node };
+  }
+
+  if (!isIntersection) {
+    // no match, no need to search any deeper
     return null;
   }
 
   if (isMaxLevel) {
+    // deepest layer with no match
     return null;
   }
 
+  // lazily allocate the next layer of child nodes
   if (!node.children) {
     node.children = [
       // 000
@@ -508,6 +509,7 @@ function nodeAddTriangle(
     ];
   }
 
+  // recurse into each child trying to insert the triangle
   let childMatchCount = 0;
   let lastChildMatch = null;
   for (let childIdx = 0; childIdx < node.children.length; childIdx++) {
@@ -587,12 +589,14 @@ function nodeAddTriangle(
       childMatchCount += 1;
       // of all 8 children nodes, take the one (or last one) that intersects
       //  with the triangle. That's our best bet for full containment of the next triangle to add
-      //  providing they're in order
+      //  assuming the triangles are in some kind of order
       lastChildMatch = match;
     }
   }
-  // if we have 2 matches, then we know there was an intersection, meaning our upcoming aabb containment check
-  //  is going to fail (it's a triangle on a border of a aabb); so we can just return null and skip the check
+  // if we have 2 matches, then we know there was an intersection, meaning our upcoming containment check
+  //  is more likely going to fail (if this triangle was on a boarder of 2 nodes, then it's more likely the next triangle will also be on the same border),
+  //  so we can just return null and skip the optimization for the next triangle
+  // todo(dan) I'm not sure about the above statement, would need testing - I reckon it'll still be better to test the optimization anyway, even if we're on a border this time
   return childMatchCount === 1 ? lastChildMatch : null;
 }
 
