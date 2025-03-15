@@ -22,7 +22,6 @@ function OctreeTrianglePicking(octree, triangleVerticesCallback) {
   this._inverseTransform = Matrix4.unpack(octree.inverseTransform);
   this._nodes = octree.nodes;
   this._transform = Matrix4.unpack(octree.transform);
-
   this._triangleVerticesCallback = triangleVerticesCallback;
 }
 
@@ -108,7 +107,15 @@ function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
   return valid ? t : invalidIntersection;
 }
 
-function onTheFlyNodeAABB(level, x, y, z) {
+/**
+ *
+ * @param level the layer of the octree we want (0=root node, 1=first layer, etc.)
+ * @param x coordinate within the layer
+ * @param y coordinate within the layer
+ * @param z coordinate within the layer
+ * @returns {{aabbMinX: number, aabbMaxX: number, aabbCenterX: number, aabbMinY: number, aabbMaxY: number, aabbCenterY: number, aabbMinZ: number, aabbMaxZ: number, aabbCenterZ: number}}
+ */
+function createAABBFromOctreeLocation(level, x, y, z) {
   const sizeAtLevel = 1.0 / Math.pow(2, level);
   return {
     aabbMinX: x * sizeAtLevel - 0.5,
@@ -123,13 +130,22 @@ function onTheFlyNodeAABB(level, x, y, z) {
   };
 }
 
-function Node(x, y, z, level) {
-  this.level = level;
-  this.x = x;
-  this.y = y;
-  this.z = z;
-  this.firstChildNodeIdx = -1;
-  this.triangles = [];
+/**
+ * Represents a node in the octree
+ * @param x
+ * @param y
+ * @param z
+ * @param level
+ * @returns {{level, x, y, z, triangles: *[]}}
+ */
+function createNode(x, y, z, level) {
+  return {
+    level: level,
+    x: x,
+    y: y,
+    z: z,
+    triangles: [],
+  };
 }
 
 function isRayIntersectAABB(ray, minX, minY, minZ, maxX, maxY, maxZ) {
@@ -227,7 +243,7 @@ function rayIntersectOctree(
   const intersections = [];
   while (queue.length) {
     const n = queue.pop();
-    const aabb = onTheFlyNodeAABB(n.level, n.x, n.y, n.z);
+    const aabb = createAABBFromOctreeLocation(n.level, n.x, n.y, n.z);
     const intersection = isRayIntersectAABB(
       transformedRay,
       aabb.aabbMinX,
@@ -279,7 +295,23 @@ function rayIntersectOctree(
   return undefined;
 }
 
-function isAABBIntersectsAABB(
+/**
+ * Checks if A and B intersect
+ * @param aMinX
+ * @param aMaxX
+ * @param aMinY
+ * @param aMaxY
+ * @param aMinZ
+ * @param aMaxZ
+ * @param bMinX
+ * @param bMaxX
+ * @param bMinY
+ * @param bMaxY
+ * @param bMinZ
+ * @param bMaxZ
+ * @returns {boolean}
+ */
+function isAABBIntersects(
   aMinX,
   aMaxX,
   aMinY,
@@ -303,7 +335,23 @@ function isAABBIntersectsAABB(
   );
 }
 
-function isAABBContainsAABB(
+/**
+ * Checks if A is contained with B
+ * @param aMinX
+ * @param aMaxX
+ * @param aMinY
+ * @param aMaxY
+ * @param aMinZ
+ * @param aMaxZ
+ * @param bMinX
+ * @param bMaxX
+ * @param bMinY
+ * @param bMaxY
+ * @param bMinZ
+ * @param bMaxZ
+ * @returns {boolean}
+ */
+function isAABBContained(
   aMinX,
   aMaxX,
   aMinY,
@@ -317,14 +365,6 @@ function isAABBContainsAABB(
   bMinZ,
   bMaxZ,
 ) {
-  // TODO make this actually work
-  //  the optimize the adding of triangles by first checking if the last used aabb
-  //  contains the next triangle... if it does then we know that's the only octree node we need to check
-  //  since it's a fully contained check... very good optimization for heightmap terrain where most triangles
-  //  should hopefully be in the same node next to eachother.
-
-  // todo(dan) --- urhg I just guessed this implementatipn, is it even correct??
-  //  we need to check for full containment or just intersection here
   return (
     aMinX >= bMinX &&
     aMaxX <= bMaxX &&
@@ -336,15 +376,24 @@ function isAABBContainsAABB(
 }
 
 function createOctree(triangles) {
-  const rootNode = new Node(0, 0, 0, 0);
+  const rootNode = createNode(0, 0, 0, 0);
   const nodes = [rootNode];
-  //>>includeStart('debug', pragmas.debug);
   const triangleCount = triangles.length / 6;
 
   // we can build a more spread out octree
   //  for smaller tiles because it'll be quicker
   const maxLevels = 2;
 
+  // we can optimize adding triangles into the octree by first checking if the previously used AABB fully
+  // contains the next triangle, rather than searching from the root node again. This will be a good optimization for heightmap
+  // terrain where each triangle is usually very small (relative to octree size) and the triangles are in-order.
+  // for example:
+  //   * we insert triangle A into the octree.
+  //     it may be inserted into 1 or more nodes if it crosses a boundary,
+  //     but we'll keep track of the last node we inserted it into
+  //   * when we insert triangle B
+  //     we first check if it's fully contained within the last node that triangle A was also added to,
+  //     if it is, we insert it straight there and bail from searching the whole octree again
   let lastMatch;
   for (let x = 0; x < triangleCount; x++) {
     if (lastMatch) {
@@ -379,9 +428,8 @@ function createOctree(triangles) {
 }
 
 function isNodeContainsTriangle(level, x, y, z, triangles, triangleIdx) {
-  // todo(dan) inline all this
-  const aabb = onTheFlyNodeAABB(level, x, y, z);
-  return isAABBContainsAABB(
+  const aabb = createAABBFromOctreeLocation(level, x, y, z);
+  return isAABBContained(
     triangles[triangleIdx * 6], // triangle aabb min x
     triangles[triangleIdx * 6 + 1], // triangle aabb max x
     triangles[triangleIdx * 6 + 2], // triangle aabb min y
@@ -408,8 +456,8 @@ function nodeAddTriangle(
   triangles,
   nodes,
 ) {
-  const aabb = onTheFlyNodeAABB(level, x, y, z);
-  const isIntersection = isAABBIntersectsAABB(
+  const aabb = createAABBFromOctreeLocation(level, x, y, z);
+  const isIntersection = isAABBIntersects(
     triangles[triangleIdx * 6], // triangle aabb min x
     triangles[triangleIdx * 6 + 1], // triangle aabb max x
     triangles[triangleIdx * 6 + 2], // triangle aabb min y
@@ -442,21 +490,21 @@ function nodeAddTriangle(
   if (!node.children) {
     node.children = [
       // 000
-      new Node(x * 2, y * 2, z * 2, level + 1),
+      createNode(x * 2, y * 2, z * 2, level + 1),
       // 001
-      new Node(x * 2 + 1, y * 2, z * 2, level + 1),
+      createNode(x * 2 + 1, y * 2, z * 2, level + 1),
       // 010
-      new Node(x * 2, y * 2 + 1, z * 2, level + 1),
+      createNode(x * 2, y * 2 + 1, z * 2, level + 1),
       // 011
-      new Node(x * 2 + 1, y * 2 + 1, z * 2, level + 1),
+      createNode(x * 2 + 1, y * 2 + 1, z * 2, level + 1),
       // 100
-      new Node(x * 2, y * 2, z * 2 + 1, level + 1),
+      createNode(x * 2, y * 2, z * 2 + 1, level + 1),
       // 101
-      new Node(x * 2 + 1, y * 2, z * 2 + 1, level + 1),
+      createNode(x * 2 + 1, y * 2, z * 2 + 1, level + 1),
       // 011
-      new Node(x * 2, y * 2 + 1, z * 2 + 1, level + 1),
+      createNode(x * 2, y * 2 + 1, z * 2 + 1, level + 1),
       // 111
-      new Node(x * 2 + 1, y * 2 + 1, z * 2 + 1, level + 1),
+      createNode(x * 2 + 1, y * 2 + 1, z * 2 + 1, level + 1),
     ];
   }
 

@@ -524,7 +524,7 @@ describe("Scene/GlobeSurfaceTile", function () {
   });
 
   describe(
-    "new picking",
+    "octree picking",
     function () {
       /**
        * @param {Cartesian3} pickResult
@@ -574,6 +574,30 @@ describe("Scene/GlobeSurfaceTile", function () {
       afterEach(function () {
         resetXHRPatch();
       });
+
+      async function getArcGISTerrainProviderTile() {
+        patchXHRLoadForArcGISTerrainDataSet();
+
+        const terrainProvider =
+          await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
+        const processor = new TerrainTileProcessor(
+          frameState,
+          terrainProvider,
+          imageryLayerCollection,
+        );
+        processor.mockWebGL();
+        processor.frameState = scene.frameState;
+
+        // a specific tile for which we know the API requests are mocked
+        const tile = new QuadtreeTile({
+          tilingScheme: terrainProvider.tilingScheme,
+          level: 9,
+          x: 379,
+          y: 214,
+        });
+        await processor.process([tile]);
+        return tile;
+      }
 
       it("should pick a few points on a CWT tile", async function () {
         patchXHRLoad({
@@ -627,26 +651,7 @@ describe("Scene/GlobeSurfaceTile", function () {
       });
 
       it("should pick a few points on an ArcGIS tile", async function () {
-        patchXHRLoadForArcGISTerrainDataSet();
-        const terrainProvider =
-          await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
-
-        processor = new TerrainTileProcessor(
-          frameState,
-          terrainProvider,
-          imageryLayerCollection,
-        );
-        processor.mockWebGL();
-        processor.frameState = scene.frameState;
-
-        const tile = new QuadtreeTile({
-          tilingScheme: terrainProvider.tilingScheme,
-          level: 9,
-          x: 379,
-          y: 214,
-        });
-
-        await processor.process([tile]);
+        const tile = await getArcGISTerrainProviderTile();
         const direction = new Cartesian3(
           0.04604903643932318,
           0.8821324224085892,
@@ -691,26 +696,7 @@ describe("Scene/GlobeSurfaceTile", function () {
           ray.origin,
         );
 
-        patchXHRLoadForArcGISTerrainDataSet();
-        const terrainProvider =
-          await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
-
-        processor = new TerrainTileProcessor(
-          frameState,
-          terrainProvider,
-          imageryLayerCollection,
-        );
-        processor.mockWebGL();
-        processor.frameState = scene.frameState;
-
-        const tile = new QuadtreeTile({
-          tilingScheme: terrainProvider.tilingScheme,
-          level: 9,
-          x: 379,
-          y: 214,
-        });
-
-        await processor.process([tile]);
+        const tile = await getArcGISTerrainProviderTile();
         const cullBackFaces = false;
         const pickResult = tile.data.pick(
           ray,
@@ -725,8 +711,6 @@ describe("Scene/GlobeSurfaceTile", function () {
       });
 
       it("special point that returned null", async function () {
-        patchXHRLoadForArcGISTerrainDataSet();
-
         const ray = new Ray(
           new Cartesian3(0, 0, -20055.701538655045),
           new Cartesian3(
@@ -735,24 +719,7 @@ describe("Scene/GlobeSurfaceTile", function () {
             0.4693676637498234,
           ),
         );
-        const terrainProvider =
-          await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
-
-        processor = new TerrainTileProcessor(
-          frameState,
-          terrainProvider,
-          imageryLayerCollection,
-        );
-        processor.mockWebGL();
-        processor.frameState = scene.frameState;
-
-        const tile = new QuadtreeTile({
-          tilingScheme: terrainProvider.tilingScheme,
-          level: 9,
-          x: 379,
-          y: 214,
-        });
-        await processor.process([tile]);
+        const tile = await getArcGISTerrainProviderTile();
         const cullBackFaces = false;
         const pickResult = tile.data.pick(
           ray,
