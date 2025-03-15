@@ -51,8 +51,8 @@ To some extent, this guide can be summarized as _make new code similar to existi
 
 - Directory names are `PascalCase`, e.g., `Source/Scene`.
 - Constructor functions are `PascalCase`, e.g., `Cartesian3`.
-- Functions are `camelCase`, e.g., `defaultValue()`, `Cartesian3.equalsEpsilon()`.
-- Files end in `.js` and have the same name as the JavaScript identifier, e.g., `Cartesian3.js` and `defaultValue.js`.
+- Functions are `camelCase`, e.g., `binarySearch()`, `Cartesian3.equalsEpsilon()`.
+- Files end in `.js` and have the same name as the JavaScript identifier, e.g., `Cartesian3.js` and `binarySearch.js`.
 - Variables, including class properties, are `camelCase`, e.g.,
 
 ```javascript
@@ -438,39 +438,30 @@ const p = new Cartesian3(1.0, 2.0, 3.0);
 
 ### Default Parameter Values
 
-If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it. Use Cesium's `defaultValue` to assign a default value. For example, `height` defaults to zero in `Cartesian3.fromRadians`:
+If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it. Use the nullish coalescing operator [`??`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) to assign a default value. For example, `height` defaults to zero in `Cartesian3.fromRadians`:
 
 ```javascript
 Cartesian3.fromRadians = function (longitude, latitude, height) {
-  height = defaultValue(height, 0.0);
+  height = height ?? 0.0;
   // ...
 };
 ```
 
-- :speedboat: Don't use `defaultValue` if it could cause an unnecessary function call or memory allocation, e.g.,
+- :speedboat: `??` operator can also be used with a memory allocations in the right hand side, as it will be allocated only if the left hand side is either `null` or `undefined`, and therefore has no negative impact on performances, e.g.,
 
 ```javascript
-this._mapProjection = defaultValue(
-  options.mapProjection,
-  new GeographicProjection(),
-);
+this._mapProjection = options.mapProjection ?? new GeographicProjection();
 ```
 
-is better written as
+- If an `options` parameter is optional and never modified afterwards, use `Frozen.EMPTY_OBJECT` or `Frozen.EMPTY_ARRAY`, this could prevent from unnecessary memory allocations in code critical path, e.g.,
 
 ```javascript
-this._mapProjection = defined(options.mapProjection)
-  ? options.mapProjection
-  : new GeographicProjection();
-```
+function BaseLayerPickerViewModel(options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-- If an `options` parameter is optional, use `defaultValue.EMPTY_OBJECT`, e.g.,
-
-```javascript
-function DebugModelMatrixPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  this.length = defaultValue(options.length, 10000000.0);
-  this.width = defaultValue(options.width, 2.0);
+  const globe = options.globe;
+  const imageryProviderViewModels =
+    options.imageryProviderViewModels ?? Frozen.EMPTY_ARRAY;
   // ...
 }
 ```
@@ -594,9 +585,9 @@ result = Cartesian3.add(result, v2, result);
 
 ```javascript
 function Cartesian3(x, y, z) {
-  this.x = defaultValue(x, 0.0);
-  this.y = defaultValue(y, 0.0);
-  this.z = defaultValue(z, 0.0);
+  this.x = x ?? 0.0;
+  this.y = y ?? 0.0;
+  this.z = z ?? 0.0;
 }
 ```
 
@@ -771,7 +762,7 @@ Public properties that can be read or written without extra processing can simpl
 
 ```javascript
 function Model(options) {
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 }
 ```
 
@@ -827,9 +818,7 @@ When the overhead of getter/setter functions is prohibitive or reference-type se
 
 ```javascript
 function Model(options) {
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
 }
 
@@ -923,7 +912,7 @@ An `@experimental` API is subject to breaking changes in future Cesium releases 
 
 A public identifier (class, function, property) should be deprecated before being removed. To do so:
 
-- Decide on which future version the deprecated API should be removed. This is on a case-by-case basis depending on how badly it impacts users and Cesium development. Most deprecated APIs will removed in 1-3 releases. This can be discussed in the pull request if needed.
+- Decide on which future version the deprecated API should be removed. This is on a case-by-case basis depending on how badly it impacts users and Cesium development. Most deprecated APIs will removed in 3-6 releases. This can be discussed in the pull request if needed.
 - Use [`deprecationWarning`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/deprecationWarning.js) to warn users that the API is deprecated and what proactive changes they can take, e.g.,
 
 ```javascript

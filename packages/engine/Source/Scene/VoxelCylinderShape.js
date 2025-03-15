@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -26,6 +25,7 @@ function VoxelCylinderShape() {
   /**
    * An oriented bounding box containing the bounded shape.
    * The update function must be called before accessing this value.
+   * @private
    * @type {OrientedBoundingBox}
    * @readonly
    */
@@ -34,6 +34,7 @@ function VoxelCylinderShape() {
   /**
    * A bounding sphere containing the bounded shape.
    * The update function must be called before accessing this value.
+   * @private
    * @type {BoundingSphere}
    * @readonly
    */
@@ -42,6 +43,7 @@ function VoxelCylinderShape() {
   /**
    * A transformation matrix containing the bounded shape.
    * The update function must be called before accessing this value.
+   * @private
    * @type {Matrix4}
    * @readonly
    */
@@ -50,6 +52,7 @@ function VoxelCylinderShape() {
   /**
    * A transformation matrix containing the shape, ignoring the bounds.
    * The update function must be called before accessing this value.
+   * @private
    * @type {Matrix4}
    * @readonly
    */
@@ -71,42 +74,44 @@ function VoxelCylinderShape() {
    * @type {number}
    * @private
    */
-  this._minimumHeight = VoxelCylinderShape.DefaultMinBounds.y;
+  this._minimumAngle = VoxelCylinderShape.DefaultMinBounds.y;
 
   /**
    * @type {number}
    * @private
    */
-  this._maximumHeight = VoxelCylinderShape.DefaultMaxBounds.y;
+  this._maximumAngle = VoxelCylinderShape.DefaultMaxBounds.y;
 
   /**
    * @type {number}
    * @private
    */
-  this._minimumAngle = VoxelCylinderShape.DefaultMinBounds.z;
+  this._minimumHeight = VoxelCylinderShape.DefaultMinBounds.z;
 
   /**
    * @type {number}
    * @private
    */
-  this._maximumAngle = VoxelCylinderShape.DefaultMaxBounds.z;
+  this._maximumHeight = VoxelCylinderShape.DefaultMaxBounds.z;
 
   /**
+   * @private
    * @type {Object<string, any>}
    * @readonly
    */
   this.shaderUniforms = {
-    cylinderRenderHeightMinMax: new Cartesian2(),
     cylinderRenderRadiusMinMax: new Cartesian2(),
     cylinderRenderAngleMinMax: new Cartesian2(),
+    cylinderRenderHeightMinMax: new Cartesian2(),
     cylinderUvToShapeUvRadius: new Cartesian2(),
-    cylinderUvToShapeUvHeight: new Cartesian2(),
     cylinderUvToShapeUvAngle: new Cartesian2(),
+    cylinderUvToShapeUvHeight: new Cartesian2(),
     cylinderShapeUvAngleMinMax: new Cartesian2(),
     cylinderShapeUvAngleRangeZeroMid: 0.0,
   };
 
   /**
+   * @private
    * @type {Object<string, any>}
    * @readonly
    */
@@ -132,6 +137,7 @@ function VoxelCylinderShape() {
 
   /**
    * The maximum number of intersections against the shape for any ray direction.
+   * @private
    * @type {number}
    * @readonly
    */
@@ -142,7 +148,7 @@ const scratchScale = new Cartesian3();
 
 /**
  * Update the shape's state.
- *
+ * @private
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
@@ -157,14 +163,8 @@ VoxelCylinderShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds,
 ) {
-  clipMinBounds = defaultValue(
-    clipMinBounds,
-    VoxelCylinderShape.DefaultMinBounds,
-  );
-  clipMaxBounds = defaultValue(
-    clipMaxBounds,
-    VoxelCylinderShape.DefaultMaxBounds,
-  );
+  clipMinBounds = clipMinBounds ?? VoxelCylinderShape.DefaultMinBounds;
+  clipMaxBounds = clipMaxBounds ?? VoxelCylinderShape.DefaultMaxBounds;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);
@@ -173,10 +173,10 @@ VoxelCylinderShape.prototype.update = function (
 
   const defaultMinRadius = VoxelCylinderShape.DefaultMinBounds.x;
   const defaultMaxRadius = VoxelCylinderShape.DefaultMaxBounds.x;
-  const defaultMinHeight = VoxelCylinderShape.DefaultMinBounds.y;
-  const defaultMaxHeight = VoxelCylinderShape.DefaultMaxBounds.y;
-  const defaultMinAngle = VoxelCylinderShape.DefaultMinBounds.z;
-  const defaultMaxAngle = VoxelCylinderShape.DefaultMaxBounds.z;
+  const defaultMinAngle = VoxelCylinderShape.DefaultMinBounds.y;
+  const defaultMaxAngle = VoxelCylinderShape.DefaultMaxBounds.y;
+  const defaultMinHeight = VoxelCylinderShape.DefaultMinBounds.z;
+  const defaultMaxHeight = VoxelCylinderShape.DefaultMaxBounds.z;
   const defaultAngleRange = defaultMaxAngle - defaultMinAngle;
   const defaultAngleRangeHalf = 0.5 * defaultAngleRange;
 
@@ -208,37 +208,37 @@ VoxelCylinderShape.prototype.update = function (
   const renderMinRadius = Math.max(shapeMinRadius, clipMinRadius);
   const renderMaxRadius = Math.min(shapeMaxRadius, clipMaxRadius);
 
+  // Clamp the angles to the valid range
+  const shapeMinAngle = CesiumMath.negativePiToPi(minBounds.y);
+  const shapeMaxAngle = CesiumMath.negativePiToPi(maxBounds.y);
+  const clipMinAngle = CesiumMath.negativePiToPi(clipMinBounds.y);
+  const clipMaxAngle = CesiumMath.negativePiToPi(clipMaxBounds.y);
+  const renderMinAngle = Math.max(shapeMinAngle, clipMinAngle);
+  const renderMaxAngle = Math.min(shapeMaxAngle, clipMaxAngle);
+
   // Clamp the heights to the valid range
   const shapeMinHeight = CesiumMath.clamp(
-    minBounds.y,
+    minBounds.z,
     defaultMinHeight,
     defaultMaxHeight,
   );
   const shapeMaxHeight = CesiumMath.clamp(
-    maxBounds.y,
+    maxBounds.z,
     defaultMinHeight,
     defaultMaxHeight,
   );
   const clipMinHeight = CesiumMath.clamp(
-    clipMinBounds.y,
+    clipMinBounds.z,
     defaultMinHeight,
     defaultMaxHeight,
   );
   const clipMaxHeight = CesiumMath.clamp(
-    clipMaxBounds.y,
+    clipMaxBounds.z,
     defaultMinHeight,
     defaultMaxHeight,
   );
   const renderMinHeight = Math.max(shapeMinHeight, clipMinHeight);
   const renderMaxHeight = Math.min(shapeMaxHeight, clipMaxHeight);
-
-  // Clamp the angles to the valid range
-  const shapeMinAngle = CesiumMath.negativePiToPi(minBounds.z);
-  const shapeMaxAngle = CesiumMath.negativePiToPi(maxBounds.z);
-  const clipMinAngle = CesiumMath.negativePiToPi(clipMinBounds.z);
-  const clipMaxAngle = CesiumMath.negativePiToPi(clipMaxBounds.z);
-  const renderMinAngle = Math.max(shapeMinAngle, clipMinAngle);
-  const renderMaxAngle = Math.min(shapeMaxAngle, clipMaxAngle);
 
   const scale = Matrix4.getScale(modelMatrix, scratchScale);
 
@@ -263,20 +263,20 @@ VoxelCylinderShape.prototype.update = function (
 
   this._minimumRadius = shapeMinRadius; // [0,1]
   this._maximumRadius = shapeMaxRadius; // [0,1]
-  this._minimumHeight = shapeMinHeight; // [-1,+1]
-  this._maximumHeight = shapeMaxHeight; // [-1,+1]
   this._minimumAngle = shapeMinAngle; // [-pi,+pi]
   this._maximumAngle = shapeMaxAngle; // [-pi,+pi]
+  this._minimumHeight = shapeMinHeight; // [-1,+1]
+  this._maximumHeight = shapeMaxHeight; // [-1,+1]
 
   this.shapeTransform = Matrix4.clone(modelMatrix, this.shapeTransform);
 
   this.orientedBoundingBox = getCylinderChunkObb(
     renderMinRadius,
     renderMaxRadius,
-    renderMinHeight,
-    renderMaxHeight,
     renderMinAngle,
     renderMaxAngle,
+    renderMinHeight,
+    renderMaxHeight,
     this.shapeTransform,
     this.orientedBoundingBox,
   );
@@ -296,8 +296,6 @@ VoxelCylinderShape.prototype.update = function (
   const shapeIsDefaultMinRadius = shapeMinRadius === defaultMinRadius;
   const shapeIsDefaultRadius =
     shapeIsDefaultMinRadius && shapeIsDefaultMaxRadius;
-  const shapeIsDefaultHeight =
-    shapeMinHeight === defaultMinHeight && shapeMaxHeight === defaultMaxHeight;
   const shapeIsAngleReversed = shapeMaxAngle < shapeMinAngle;
   const shapeAngleRange =
     shapeMaxAngle - shapeMinAngle + shapeIsAngleReversed * defaultAngleRange;
@@ -323,6 +321,8 @@ VoxelCylinderShape.prototype.update = function (
     undefined,
     epsilonAngleDiscontinuity,
   );
+  const shapeIsDefaultHeight =
+    shapeMinHeight === defaultMinHeight && shapeMaxHeight === defaultMaxHeight;
 
   const renderIsDefaultMinRadius = renderMinRadius === defaultMinRadius;
   const renderIsAngleReversed = renderMaxAngle < renderMinAngle;
@@ -504,7 +504,7 @@ VoxelCylinderShape.prototype.update = function (
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- *
+ * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
  * @param {number} tileY The tile's y coordinate.
@@ -529,10 +529,10 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForTile = function (
 
   const minimumRadius = this._minimumRadius;
   const maximumRadius = this._maximumRadius;
-  const minimumHeight = this._minimumHeight;
-  const maximumHeight = this._maximumHeight;
   const minimumAngle = this._minimumAngle;
   const maximumAngle = this._maximumAngle;
+  const minimumHeight = this._minimumHeight;
+  const maximumHeight = this._maximumHeight;
 
   const sizeAtLevel = 1.0 / Math.pow(2.0, tileLevel);
 
@@ -546,34 +546,34 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForTile = function (
     maximumRadius,
     (tileX + 1) * sizeAtLevel,
   );
-  const heightStart = CesiumMath.lerp(
-    minimumHeight,
-    maximumHeight,
-    tileY * sizeAtLevel,
-  );
-  const heightEnd = CesiumMath.lerp(
-    minimumHeight,
-    maximumHeight,
-    (tileY + 1) * sizeAtLevel,
-  );
   const angleStart = CesiumMath.lerp(
     minimumAngle,
     maximumAngle,
-    tileZ * sizeAtLevel,
+    tileY * sizeAtLevel,
   );
   const angleEnd = CesiumMath.lerp(
     minimumAngle,
     maximumAngle,
+    (tileY + 1) * sizeAtLevel,
+  );
+  const heightStart = CesiumMath.lerp(
+    minimumHeight,
+    maximumHeight,
+    tileZ * sizeAtLevel,
+  );
+  const heightEnd = CesiumMath.lerp(
+    minimumHeight,
+    maximumHeight,
     (tileZ + 1) * sizeAtLevel,
   );
 
   return getCylinderChunkObb(
     radiusStart,
     radiusEnd,
-    heightStart,
-    heightEnd,
     angleStart,
     angleEnd,
+    heightStart,
+    heightEnd,
     this.shapeTransform,
     result,
   );
@@ -586,7 +586,7 @@ const scratchTileMaxBounds = new Cartesian3();
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
- *
+ * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
  * @param {Cartesian3} tileUv The sample coordinate within the tile
@@ -651,10 +651,10 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
   return getCylinderChunkObb(
     radiusStart,
     radiusEnd,
-    heightStart,
-    heightEnd,
     angleStart,
     angleEnd,
+    heightStart,
+    heightEnd,
     this.shapeTransform,
     result,
   );
@@ -670,7 +670,7 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
  * @private
  */
 VoxelCylinderShape.DefaultMinBounds = Object.freeze(
-  new Cartesian3(0.0, -1.0, -CesiumMath.PI),
+  new Cartesian3(0.0, -CesiumMath.PI, -1.0),
 );
 
 /**
@@ -683,7 +683,7 @@ VoxelCylinderShape.DefaultMinBounds = Object.freeze(
  * @private
  */
 VoxelCylinderShape.DefaultMaxBounds = Object.freeze(
-  new Cartesian3(1.0, +1.0, +CesiumMath.PI),
+  new Cartesian3(1.0, +CesiumMath.PI, +1.0),
 );
 
 const maxTestAngles = 5;
@@ -744,10 +744,10 @@ function computeLooseOrientedBoundingBox(matrix, result) {
  *
  * @param {number} radiusStart The radiusStart.
  * @param {number} radiusEnd The radiusEnd.
- * @param {number} heightStart The heightStart.
- * @param {number} heightEnd The heightEnd.
  * @param {number} angleStart The angleStart.
  * @param {number} angleEnd The angleEnd.
+ * @param {number} heightStart The heightStart.
+ * @param {number} heightEnd The heightEnd.
  * @param {Matrix4} matrix The matrix to transform the points.
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.
@@ -757,10 +757,10 @@ function computeLooseOrientedBoundingBox(matrix, result) {
 function getCylinderChunkObb(
   radiusStart,
   radiusEnd,
-  heightStart,
-  heightEnd,
   angleStart,
   angleEnd,
+  heightStart,
+  heightEnd,
   matrix,
   result,
 ) {
@@ -768,10 +768,10 @@ function getCylinderChunkObb(
   const defaultMaxBounds = VoxelCylinderShape.DefaultMaxBounds;
   const defaultMinRadius = defaultMinBounds.x; // 0
   const defaultMaxRadius = defaultMaxBounds.x; // 1
-  const defaultMinHeight = defaultMinBounds.y; // -1
-  const defaultMaxHeight = defaultMaxBounds.y; // +1
-  const defaultMinAngle = defaultMinBounds.z; // -pi
-  const defaultMaxAngle = defaultMaxBounds.z; // +pi
+  const defaultMinAngle = defaultMinBounds.y; // -pi
+  const defaultMaxAngle = defaultMaxBounds.y; // +pi
+  const defaultMinHeight = defaultMinBounds.z; // -1
+  const defaultMaxHeight = defaultMaxBounds.z; // +1
 
   // Return early if using the default bounds
   if (

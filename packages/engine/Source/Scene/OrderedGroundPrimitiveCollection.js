@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import PrimitiveCollection from "./PrimitiveCollection.js";
@@ -48,7 +47,7 @@ OrderedGroundPrimitiveCollection.prototype.add = function (primitive, zIndex) {
   }
   //>>includeEnd('debug');
 
-  zIndex = defaultValue(zIndex, 0);
+  zIndex = zIndex ?? 0;
   let collection = this._collections[zIndex];
   if (!defined(collection)) {
     collection = new PrimitiveCollection({ destroyPrimitives: false });

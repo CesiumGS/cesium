@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import IndexDatatype from "./IndexDatatype.js";
@@ -201,9 +201,9 @@ function QuantizedMeshTerrainData(options) {
   this._eastSkirtHeight = options.eastSkirtHeight;
   this._northSkirtHeight = options.northSkirtHeight;
 
-  this._childTileMask = defaultValue(options.childTileMask, 15);
+  this._childTileMask = options.childTileMask ?? 15;
 
-  this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
+  this._createdByUpsampling = options.createdByUpsampling ?? false;
   this._waterMask = options.waterMask;
 
   this._mesh = undefined;
@@ -290,7 +290,7 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
  *          be retried later.
  */
 QuantizedMeshTerrainData.prototype.createMesh = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);
@@ -303,12 +303,9 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
   const x = options.x;
   const y = options.y;
   const level = options.level;
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0,
-  );
-  const throttle = defaultValue(options.throttle, true);
+  const exaggeration = options.exaggeration ?? 1.0;
+  const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
+  const throttle = options.throttle ?? true;
 
   const ellipsoid = tilingScheme.ellipsoid;
   const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
@@ -364,10 +361,9 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     const maximumHeight = result.maximumHeight;
     const boundingSphere = that._boundingSphere;
     const obb = that._orientedBoundingBox;
-    const occludeePointInScaledSpace = defaultValue(
-      Cartesian3.clone(result.occludeePointInScaledSpace),
-      that._horizonOcclusionPoint,
-    );
+    const occludeePointInScaledSpace =
+      Cartesian3.clone(result.occludeePointInScaledSpace) ??
+      that._horizonOcclusionPoint;
     const stride = result.vertexStride;
     const terrainEncoding = TerrainEncoding.clone(result.encoding);
 
@@ -376,8 +372,8 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
       createTriangleVerticesCallback(
         vertices,
         indicesTypedArray,
-        terrainEncoding
-      )
+        terrainEncoding,
+      ),
     );
 
     // Clone complex result objects because the transfer from the web worker
@@ -399,7 +395,7 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
       result.southIndicesEastToWest,
       result.eastIndicesNorthToSouth,
       result.northIndicesWestToEast,
-      trianglePicking
+      trianglePicking,
     );
 
     // Free memory received from server after mesh is created.

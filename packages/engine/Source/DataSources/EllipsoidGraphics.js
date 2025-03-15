@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -79,7 +79,7 @@ function EllipsoidGraphics(options) {
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(EllipsoidGraphics.prototype, {
@@ -289,35 +289,24 @@ EllipsoidGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.radii = defaultValue(this.radii, source.radii);
-  this.innerRadii = defaultValue(this.innerRadii, source.innerRadii);
-  this.minimumClock = defaultValue(this.minimumClock, source.minimumClock);
-  this.maximumClock = defaultValue(this.maximumClock, source.maximumClock);
-  this.minimumCone = defaultValue(this.minimumCone, source.minimumCone);
-  this.maximumCone = defaultValue(this.maximumCone, source.maximumCone);
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference,
-  );
-  this.fill = defaultValue(this.fill, source.fill);
-  this.material = defaultValue(this.material, source.material);
-  this.outline = defaultValue(this.outline, source.outline);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.stackPartitions = defaultValue(
-    this.stackPartitions,
-    source.stackPartitions,
-  );
-  this.slicePartitions = defaultValue(
-    this.slicePartitions,
-    source.slicePartitions,
-  );
-  this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition,
-  );
+  this.show = this.show ?? source.show;
+  this.radii = this.radii ?? source.radii;
+  this.innerRadii = this.innerRadii ?? source.innerRadii;
+  this.minimumClock = this.minimumClock ?? source.minimumClock;
+  this.maximumClock = this.maximumClock ?? source.maximumClock;
+  this.minimumCone = this.minimumCone ?? source.minimumCone;
+  this.maximumCone = this.maximumCone ?? source.maximumCone;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.fill = this.fill ?? source.fill;
+  this.material = this.material ?? source.material;
+  this.outline = this.outline ?? source.outline;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.stackPartitions = this.stackPartitions ?? source.stackPartitions;
+  this.slicePartitions = this.slicePartitions ?? source.slicePartitions;
+  this.subdivisions = this.subdivisions ?? source.subdivisions;
+  this.shadows = this.shadows ?? source.shadows;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
 export default EllipsoidGraphics;

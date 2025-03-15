@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
@@ -42,25 +42,25 @@ function Color(red, green, blue, alpha) {
    * @type {number}
    * @default 1.0
    */
-  this.red = defaultValue(red, 1.0);
+  this.red = red ?? 1.0;
   /**
    * The green component.
    * @type {number}
    * @default 1.0
    */
-  this.green = defaultValue(green, 1.0);
+  this.green = green ?? 1.0;
   /**
    * The blue component.
    * @type {number}
    * @default 1.0
    */
-  this.blue = defaultValue(blue, 1.0);
+  this.blue = blue ?? 1.0;
   /**
    * The alpha component.
    * @type {number}
    * @default 1.0
    */
-  this.alpha = defaultValue(alpha, 1.0);
+  this.alpha = alpha ?? 1.0;
 }
 
 /**
@@ -99,10 +99,10 @@ Color.fromCartesian4 = function (cartesian, result) {
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  */
 Color.fromBytes = function (red, green, blue, alpha, result) {
-  red = Color.byteToFloat(defaultValue(red, 255.0));
-  green = Color.byteToFloat(defaultValue(green, 255.0));
-  blue = Color.byteToFloat(defaultValue(blue, 255.0));
-  alpha = Color.byteToFloat(defaultValue(alpha, 255.0));
+  red = Color.byteToFloat(red ?? 255.0);
+  green = Color.byteToFloat(green ?? 255.0);
+  blue = Color.byteToFloat(blue ?? 255.0);
+  alpha = Color.byteToFloat(alpha ?? 255.0);
 
   if (!defined(result)) {
     return new Color(red, green, blue, alpha);
@@ -190,10 +190,10 @@ Color.fromRgba = function (rgba, result) {
  * @see {@link http://www.w3.org/TR/css3-color/#hsl-color|CSS color values}
  */
 Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
-  hue = defaultValue(hue, 0.0) % 1.0;
-  saturation = defaultValue(saturation, 0.0);
-  lightness = defaultValue(lightness, 0.0);
-  alpha = defaultValue(alpha, 1.0);
+  hue = (hue ?? 0.0) % 1.0;
+  saturation = saturation ?? 0.0;
+  lightness = lightness ?? 0.0;
+  alpha = alpha ?? 1.0;
 
   let red = lightness;
   let green = lightness;
@@ -269,12 +269,12 @@ Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
  * });
  */
 Color.fromRandom = function (options, result) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let red = options.red;
   if (!defined(red)) {
-    const minimumRed = defaultValue(options.minimumRed, 0);
-    const maximumRed = defaultValue(options.maximumRed, 1.0);
+    const minimumRed = options.minimumRed ?? 0;
+    const maximumRed = options.maximumRed ?? 1.0;
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals("minimumRed", minimumRed, maximumRed);
@@ -286,8 +286,8 @@ Color.fromRandom = function (options, result) {
 
   let green = options.green;
   if (!defined(green)) {
-    const minimumGreen = defaultValue(options.minimumGreen, 0);
-    const maximumGreen = defaultValue(options.maximumGreen, 1.0);
+    const minimumGreen = options.minimumGreen ?? 0;
+    const maximumGreen = options.maximumGreen ?? 1.0;
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals(
@@ -303,8 +303,8 @@ Color.fromRandom = function (options, result) {
 
   let blue = options.blue;
   if (!defined(blue)) {
-    const minimumBlue = defaultValue(options.minimumBlue, 0);
-    const maximumBlue = defaultValue(options.maximumBlue, 1.0);
+    const minimumBlue = options.minimumBlue ?? 0;
+    const maximumBlue = options.maximumBlue ?? 1.0;
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals(
@@ -320,8 +320,8 @@ Color.fromRandom = function (options, result) {
 
   let alpha = options.alpha;
   if (!defined(alpha)) {
-    const minimumAlpha = defaultValue(options.minimumAlpha, 0);
-    const maximumAlpha = defaultValue(options.maximumAlpha, 1.0);
+    const minimumAlpha = options.minimumAlpha ?? 0;
+    const maximumAlpha = options.maximumAlpha ?? 1.0;
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals(
@@ -396,7 +396,7 @@ Color.fromCssColorString = function (color, result) {
     result.red = parseInt(matches[1], 16) / 15;
     result.green = parseInt(matches[2], 16) / 15.0;
     result.blue = parseInt(matches[3], 16) / 15.0;
-    result.alpha = parseInt(defaultValue(matches[4], "f"), 16) / 15.0;
+    result.alpha = parseInt(matches[4] ?? "f", 16) / 15.0;
     return result;
   }
 
@@ -405,7 +405,7 @@ Color.fromCssColorString = function (color, result) {
     result.red = parseInt(matches[1], 16) / 255.0;
     result.green = parseInt(matches[2], 16) / 255.0;
     result.blue = parseInt(matches[3], 16) / 255.0;
-    result.alpha = parseInt(defaultValue(matches[4], "ff"), 16) / 255.0;
+    result.alpha = parseInt(matches[4] ?? "ff", 16) / 255.0;
     return result;
   }
 
@@ -417,7 +417,7 @@ Color.fromCssColorString = function (color, result) {
       parseFloat(matches[2]) / ("%" === matches[2].substr(-1) ? 100.0 : 255.0);
     result.blue =
       parseFloat(matches[3]) / ("%" === matches[3].substr(-1) ? 100.0 : 255.0);
-    result.alpha = parseFloat(defaultValue(matches[4], "1.0"));
+    result.alpha = parseFloat(matches[4] ?? "1.0");
     return result;
   }
 
@@ -427,7 +427,7 @@ Color.fromCssColorString = function (color, result) {
       parseFloat(matches[1]) / 360.0,
       parseFloat(matches[2]) / 100.0,
       parseFloat(matches[3]) / 100.0,
-      parseFloat(defaultValue(matches[4], "1.0")),
+      parseFloat(matches[4] ?? "1.0"),
       result,
     );
   }
@@ -457,7 +457,7 @@ Color.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
   array[startingIndex++] = value.red;
   array[startingIndex++] = value.green;
   array[startingIndex++] = value.blue;
@@ -479,7 +479,7 @@ Color.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
   if (!defined(result)) {
     result = new Color();
   }

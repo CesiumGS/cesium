@@ -10,7 +10,7 @@ import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -79,7 +79,7 @@ import ShadowMapShader from "./ShadowMapShader.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
  */
 function ShadowMap(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const context = options.context;
 
   //>>includeStart('debug', pragmas.debug);
@@ -98,9 +98,9 @@ function ShadowMap(options) {
   }
   //>>includeEnd('debug');
 
-  this._enabled = defaultValue(options.enabled, true);
-  this._softShadows = defaultValue(options.softShadows, false);
-  this._normalOffset = defaultValue(options.normalOffset, true);
+  this._enabled = options.enabled ?? true;
+  this._softShadows = options.softShadows ?? false;
+  this._normalOffset = options.normalOffset ?? true;
   this.dirty = true;
 
   /**
@@ -109,7 +109,7 @@ function ShadowMap(options) {
    *
    * @private
    */
-  this.fromLightSource = defaultValue(options.fromLightSource, true);
+  this.fromLightSource = options.fromLightSource ?? true;
 
   /**
    * Determines the darkness of the shadows.
@@ -117,7 +117,7 @@ function ShadowMap(options) {
    * @type {number}
    * @default 0.3
    */
-  this.darkness = defaultValue(options.darkness, 0.3);
+  this.darkness = options.darkness ?? 0.3;
   this._darkness = this.darkness;
 
   /**
@@ -126,7 +126,7 @@ function ShadowMap(options) {
    * @type {boolean}
    * @default true
    */
-  this.fadingEnabled = defaultValue(options.fadingEnabled, true);
+  this.fadingEnabled = options.fadingEnabled ?? true;
 
   /**
    * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
@@ -134,7 +134,7 @@ function ShadowMap(options) {
    * @type {number}
    * @default 5000.0
    */
-  this.maximumDistance = defaultValue(options.maximumDistance, 5000.0);
+  this.maximumDistance = options.maximumDistance ?? 5000.0;
 
   this._outOfView = false;
   this._outOfViewPrevious = false;
@@ -205,15 +205,15 @@ function ShadowMap(options) {
   this._sceneCamera = undefined;
   this._boundingSphere = new BoundingSphere();
 
-  this._isPointLight = defaultValue(options.isPointLight, false);
-  this._pointLightRadius = defaultValue(options.pointLightRadius, 100.0);
+  this._isPointLight = options.isPointLight ?? false;
+  this._pointLightRadius = options.pointLightRadius ?? 100.0;
 
   this._cascadesEnabled = this._isPointLight
     ? false
-    : defaultValue(options.cascadesEnabled, true);
+    : (options.cascadesEnabled ?? true);
   this._numberOfCascades = !this._cascadesEnabled
     ? 0
-    : defaultValue(options.numberOfCascades, 4);
+    : (options.numberOfCascades ?? 4);
   this._fitNearFar = true;
   this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
 
@@ -281,7 +281,7 @@ function ShadowMap(options) {
 
   this._clearPassState = new PassState(context);
 
-  this._size = defaultValue(options.size, 2048);
+  this._size = options.size ?? 2048;
   this.size = this._size;
 }
 
@@ -657,7 +657,7 @@ function updateFramebuffer(shadowMap, context) {
 }
 
 function clearFramebuffer(shadowMap, context, shadowPass) {
-  shadowPass = defaultValue(shadowPass, 0);
+  shadowPass = shadowPass ?? 0;
   if (shadowMap._isPointLight || shadowPass === 0) {
     shadowMap._clearCommand.framebuffer =
       shadowMap._passes[shadowPass].framebuffer;

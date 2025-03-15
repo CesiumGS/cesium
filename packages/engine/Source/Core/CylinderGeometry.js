@@ -3,7 +3,7 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CylinderGeometryLibrary from "./CylinderGeometryLibrary.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Geometry from "./Geometry.js";
@@ -48,13 +48,13 @@ const positionScratch = new Cartesian3();
  * const geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
  */
 function CylinderGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const length = options.length;
   const topRadius = options.topRadius;
   const bottomRadius = options.bottomRadius;
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-  const slices = defaultValue(options.slices, 128);
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
+  const slices = options.slices ?? 128;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(length)) {
@@ -115,7 +115,7 @@ CylinderGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   VertexFormat.pack(value._vertexFormat, array, startingIndex);
   startingIndex += VertexFormat.packedLength;
@@ -124,7 +124,7 @@ CylinderGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._topRadius;
   array[startingIndex++] = value._bottomRadius;
   array[startingIndex++] = value._slices;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -154,7 +154,7 @@ CylinderGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const vertexFormat = VertexFormat.unpack(
     array,

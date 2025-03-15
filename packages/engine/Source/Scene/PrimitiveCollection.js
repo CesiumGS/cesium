@@ -1,5 +1,5 @@
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -28,7 +28,7 @@ import Event from "../Core/Event.js";
  * scene.primitives.add(labels);      // Add regular primitive
  */
 function PrimitiveCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._primitives = [];
   this._guid = createGuid();
@@ -44,7 +44,7 @@ function PrimitiveCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * Determines if primitives in the collection are destroyed when they are removed by
@@ -70,7 +70,7 @@ function PrimitiveCollection(options) {
    * const b = labels.isDestroyed(); // false
    * labels = labels.destroy();    // explicitly destroy
    */
-  this.destroyPrimitives = defaultValue(options.destroyPrimitives, true);
+  this.destroyPrimitives = options.destroyPrimitives ?? true;
 }
 
 Object.defineProperties(PrimitiveCollection.prototype, {

@@ -5,7 +5,7 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CornerType from "./CornerType.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -207,7 +207,7 @@ function computeAttributes(
  * });
  */
 function PolylineVolumeGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.polylinePositions;
   const shape = options.shapePositions;
 
@@ -222,17 +222,12 @@ function PolylineVolumeGeometry(options) {
 
   this._positions = positions;
   this._shape = shape;
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default),
-  );
-  this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
+  this._cornerType = options.cornerType ?? CornerType.ROUNDED;
   this._vertexFormat = VertexFormat.clone(
-    defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
+    options.vertexFormat ?? VertexFormat.DEFAULT,
   );
-  this._granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
+  this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
   this._workerName = "createPolylineVolumeGeometry";
 
   let numComponents = 1 + positions.length * Cartesian3.packedLength;
@@ -265,7 +260,7 @@ PolylineVolumeGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -323,7 +318,7 @@ PolylineVolumeGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 

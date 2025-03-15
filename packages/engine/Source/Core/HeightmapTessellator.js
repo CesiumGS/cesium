@@ -2,7 +2,6 @@ import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -52,7 +51,7 @@ function createPackedTriangles(
   positions,
   invTransform,
   width,
-  triangleIndexEnd
+  triangleIndexEnd,
 ) {
   const triangles = new Float32Array(triangleIndexEnd * 6);
 
@@ -69,13 +68,13 @@ function createPackedTriangles(
     Matrix4.multiplyByPointFast(
       invTransform,
       positions[base + (isEven ? 0 : 1)],
-      v0
+      v0,
     );
     Matrix4.multiplyByPointFast(invTransform, positions[base + width], v1);
     Matrix4.multiplyByPointFast(
       invTransform,
       positions[base + 1 + (isEven ? 0 : width)],
-      v2
+      v2,
     );
 
     // Get local space AABBs for triangle
@@ -202,8 +201,8 @@ HeightmapTessellator.computeVertices = function (options) {
   const skirtHeight = options.skirtHeight;
   const hasSkirts = skirtHeight > 0.0;
 
-  const isGeographic = defaultValue(options.isGeographic, true);
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  const isGeographic = options.isGeographic ?? true;
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   const oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 
@@ -241,44 +240,29 @@ HeightmapTessellator.computeVertices = function (options) {
   let relativeToCenter = options.relativeToCenter;
   const hasRelativeToCenter = defined(relativeToCenter);
   relativeToCenter = hasRelativeToCenter ? relativeToCenter : Cartesian3.ZERO;
-  const includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
+  const includeWebMercatorT = options.includeWebMercatorT ?? false;
 
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0,
-  );
+  const exaggeration = options.exaggeration ?? 1.0;
+  const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
   const hasExaggeration = exaggeration !== 1.0;
   const includeGeodeticSurfaceNormals = hasExaggeration;
 
-  const structure = defaultValue(
-    options.structure,
-    HeightmapTessellator.DEFAULT_STRUCTURE,
-  );
-  const heightScale = defaultValue(
-    structure.heightScale,
-    HeightmapTessellator.DEFAULT_STRUCTURE.heightScale,
-  );
-  const heightOffset = defaultValue(
-    structure.heightOffset,
-    HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset,
-  );
-  const elementsPerHeight = defaultValue(
-    structure.elementsPerHeight,
-    HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight,
-  );
-  const stride = defaultValue(
-    structure.stride,
-    HeightmapTessellator.DEFAULT_STRUCTURE.stride,
-  );
-  const elementMultiplier = defaultValue(
-    structure.elementMultiplier,
-    HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier,
-  );
-  const isBigEndian = defaultValue(
-    structure.isBigEndian,
-    HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian,
-  );
+  const structure = options.structure ?? HeightmapTessellator.DEFAULT_STRUCTURE;
+  const heightScale =
+    structure.heightScale ?? HeightmapTessellator.DEFAULT_STRUCTURE.heightScale;
+  const heightOffset =
+    structure.heightOffset ??
+    HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset;
+  const elementsPerHeight =
+    structure.elementsPerHeight ??
+    HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight;
+  const stride =
+    structure.stride ?? HeightmapTessellator.DEFAULT_STRUCTURE.stride;
+  const elementMultiplier =
+    structure.elementMultiplier ??
+    HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier;
+  const isBigEndian =
+    structure.isBigEndian ?? HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian;
 
   let rectangleWidth = Rectangle.computeWidth(nativeRectangle);
   let rectangleHeight = Rectangle.computeHeight(nativeRectangle);
@@ -549,7 +533,7 @@ HeightmapTessellator.computeVertices = function (options) {
 
     transform = OrientedBoundingBox.computeTransformation(
       orientedBoundingBox,
-      null
+      null,
     );
     inverseTransform = Matrix4.inverse(transform, new Matrix4());
     console.timeEnd("creating oriented bounding box");
@@ -559,7 +543,7 @@ HeightmapTessellator.computeVertices = function (options) {
       positions,
       inverseTransform,
       width,
-      gridTriangleCount
+      gridTriangleCount,
     );
     console.timeEnd("making packed triangles");
 
@@ -567,7 +551,7 @@ HeightmapTessellator.computeVertices = function (options) {
       packedTriangles,
       inverseTransform,
       transform,
-      orientedBoundingBox
+      orientedBoundingBox,
     );
   }
 

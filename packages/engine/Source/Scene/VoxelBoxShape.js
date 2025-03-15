@@ -5,7 +5,6 @@ import Check from "../Core/Check.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import defaultValue from "../Core/defaultValue.js";
 
 /**
  * A box {@link VoxelShape}.
@@ -24,6 +23,7 @@ function VoxelBoxShape() {
   /**
    * An oriented bounding box containing the bounded shape.
    * The update function must be called before accessing this value.
+   * @private
    * @type {OrientedBoundingBox}
    * @readonly
    */
@@ -32,6 +32,7 @@ function VoxelBoxShape() {
   /**
    * A bounding sphere containing the bounded shape.
    * The update function must be called before accessing this value.
+   * @private
    * @type {BoundingSphere}
    * @readonly
    */
@@ -40,6 +41,7 @@ function VoxelBoxShape() {
   /**
    * A transformation matrix containing the bounded shape.
    * The update function must be called before accessing this value.
+   * @private
    * @type {Matrix4}
    * @readonly
    */
@@ -48,6 +50,7 @@ function VoxelBoxShape() {
   /**
    * A transformation matrix containing the shape, ignoring the bounds.
    * The update function must be called before accessing this value.
+   * @private
    * @type {Matrix4}
    * @readonly
    */
@@ -72,6 +75,7 @@ function VoxelBoxShape() {
   );
 
   /**
+   * @private
    * @type {Object<string, any>}
    * @readonly
    */
@@ -83,6 +87,7 @@ function VoxelBoxShape() {
   };
 
   /**
+   * @private
    * @type {Object<string, any>}
    * @readonly
    */
@@ -93,6 +98,7 @@ function VoxelBoxShape() {
 
   /**
    * The maximum number of intersections against the shape for any ray direction.
+   * @private
    * @type {number}
    * @readonly
    */
@@ -115,7 +121,7 @@ const transformLocalToUv = Matrix4.fromRotationTranslation(
 
 /**
  * Update the shape's state.
- *
+ * @private
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
@@ -130,8 +136,8 @@ VoxelBoxShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds,
 ) {
-  clipMinBounds = defaultValue(clipMinBounds, VoxelBoxShape.DefaultMinBounds);
-  clipMaxBounds = defaultValue(clipMaxBounds, VoxelBoxShape.DefaultMaxBounds);
+  clipMinBounds = clipMinBounds ?? VoxelBoxShape.DefaultMinBounds;
+  clipMaxBounds = clipMaxBounds ?? VoxelBoxShape.DefaultMaxBounds;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);
@@ -302,7 +308,7 @@ const scratchTileMaxBounds = new Cartesian3();
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- *
+ * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
  * @param {number} tileY The tile's y coordinate.
@@ -356,7 +362,7 @@ const sampleSizeScratch = new Cartesian3();
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
- *
+ * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
  * @param {Cartesian3} tileUv The sample coordinate within the tile
@@ -429,7 +435,7 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForSample = function (
 
 /**
  * Defines the minimum bounds of the shape. Corresponds to minimum X, Y, Z.
- *
+ * @private
  * @type {Cartesian3}
  * @constant
  * @readonly
@@ -440,7 +446,7 @@ VoxelBoxShape.DefaultMinBounds = Object.freeze(
 
 /**
  * Defines the maximum bounds of the shape. Corresponds to maximum X, Y, Z.
- *
+ * @private
  * @type {Cartesian3}
  * @constant
  * @readonly

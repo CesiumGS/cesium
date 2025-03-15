@@ -4,7 +4,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CoplanarPolygonGeometryLibrary from "./CoplanarPolygonGeometryLibrary.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
@@ -71,7 +71,7 @@ function createGeometryFromPositions(positions) {
  * const geometry = Cesium.CoplanarPolygonOutlineGeometry.createGeometry(polygonOutline);
  */
 function CoplanarPolygonOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const polygonHierarchy = options.polygonHierarchy;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.polygonHierarchy", polygonHierarchy);
@@ -99,7 +99,7 @@ function CoplanarPolygonOutlineGeometry(options) {
  * @returns {CoplanarPolygonOutlineGeometry}
  */
 CoplanarPolygonOutlineGeometry.fromPositions = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.positions", options.positions);
@@ -128,7 +128,7 @@ CoplanarPolygonOutlineGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
@@ -162,7 +162,7 @@ CoplanarPolygonOutlineGeometry.unpack = function (
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,

@@ -1,5 +1,5 @@
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
@@ -47,7 +47,7 @@ const defaultCredit = new Credit(
  * @see {@link https://docs.mapbox.com/api/accounts/tokens/}
  */
 function MapboxImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const mapId = options.mapId;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(mapId)) {
@@ -74,13 +74,13 @@ function MapboxImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/"),
+    options.url ?? "https://{s}.tiles.mapbox.com/v4/",
   );
 
   this._mapId = mapId;
   this._accessToken = accessToken;
 
-  let format = defaultValue(options.format, "png");
+  let format = options.format ?? "png";
   if (!/\./.test(format)) {
     format = `.${format}`;
   }

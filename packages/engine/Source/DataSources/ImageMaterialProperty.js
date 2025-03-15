@@ -1,6 +1,6 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -23,7 +23,7 @@ const defaultColor = Color.WHITE;
  * @param {Property|boolean} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
  */
 function ImageMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._image = undefined;

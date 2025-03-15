@@ -269,8 +269,8 @@
           try {
             const imageryProvider = await Promise.resolve(imageryProviderPromise);
             const layer = new Cesium.ImageryLayer(imageryProvider);
-            layer.alpha = Cesium.defaultValue(alpha, 0.5);
-            layer.show = Cesium.defaultValue(show, true);
+            layer.alpha = alpha ?? 0.5;
+            layer.show = show ?? true;
             layer.name = name;
             imageryLayers.add(layer);
             Cesium.knockout.track(layer, ["alpha", "show", "name"]);

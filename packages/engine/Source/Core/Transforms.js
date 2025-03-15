@@ -3,7 +3,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import EarthOrientationParameters from "./EarthOrientationParameters.js";
@@ -199,7 +198,7 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
           );
         }
       } else {
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+        ellipsoid = ellipsoid ?? Ellipsoid.default;
         ellipsoid.geodeticSurfaceNormal(origin, scratchCalculateCartesian.up);
 
         const up = scratchCalculateCartesian.up;
@@ -393,10 +392,8 @@ Transforms.headingPitchRollToFixedFrame = function (
   Check.typeOf.object("HeadingPitchRoll", headingPitchRoll);
   //>>includeEnd('debug');
 
-  fixedFrameTransform = defaultValue(
-    fixedFrameTransform,
-    Transforms.eastNorthUpToFixedFrame,
-  );
+  fixedFrameTransform =
+    fixedFrameTransform ?? Transforms.eastNorthUpToFixedFrame;
   const hprQuaternion = Quaternion.fromHeadingPitchRoll(
     headingPitchRoll,
     scratchHPRQuaternion,
@@ -487,11 +484,9 @@ Transforms.fixedFrameToHeadingPitchRoll = function (
   Check.defined("transform", transform);
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
-  fixedFrameTransform = defaultValue(
-    fixedFrameTransform,
-    Transforms.eastNorthUpToFixedFrame,
-  );
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
+  fixedFrameTransform =
+    fixedFrameTransform ?? Transforms.eastNorthUpToFixedFrame;
   if (!defined(result)) {
     result = new HeadingPitchRoll();
   }
@@ -1103,10 +1098,10 @@ Transforms.rotationMatrixFromPositionVelocity = function (
   }
   //>>includeEnd('debug');
 
-  const normal = defaultValue(
-    ellipsoid,
-    Ellipsoid.default,
-  ).geodeticSurfaceNormal(position, normalScratch);
+  const normal = (ellipsoid ?? Ellipsoid.default).geodeticSurfaceNormal(
+    position,
+    normalScratch,
+  );
   let right = Cartesian3.cross(velocity, normal, rightScratch);
 
   if (Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {

@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import SceneMode from "../Scene/SceneMode.js";
 import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester.js";
 
@@ -75,7 +74,7 @@ function TerrainMesh(
    * may be higher.
    * @type {number}
    */
-  this.stride = defaultValue(vertexStride, 6);
+  this.stride = vertexStride ?? 6;
 
   /**
    * The indices describing how the vertices are connected to form triangles.
@@ -160,7 +159,7 @@ function TerrainMesh(
   this._defaultPickStrategy = new TriangleSearchIntersectionTester(
     encoding,
     indices,
-    vertices
+    vertices,
   );
 
   this._octreeTrianglePicking = octreeTrianglePicking;
@@ -189,7 +188,7 @@ TerrainMesh.prototype.pickRay = function (
   ray,
   cullBackFaces,
   mode,
-  projection
+  projection,
 ) {
   const trace = window.showPickDetails;
 
@@ -214,7 +213,7 @@ TerrainMesh.prototype.pickRay = function (
       ray,
       cullBackFaces,
       null,
-      traceDetails
+      traceDetails,
     );
   }
 
@@ -227,7 +226,7 @@ TerrainMesh.prototype.pickRay = function (
       cullBackFaces,
       mode,
       projection,
-      traceDetails
+      traceDetails,
     );
   }
 
@@ -243,14 +242,14 @@ TerrainMesh.prototype.pickRay = function (
       ray,
       cullBackFaces,
       null,
-      traceDetails
+      traceDetails,
     );
     const oldPickAgain = this._defaultPickStrategy.rayIntersect(
       ray,
       cullBackFaces,
       mode,
       projection,
-      traceDetails
+      traceDetails,
     );
     console.error("after running again", newPickAgain, oldPickAgain);
   }
