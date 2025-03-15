@@ -388,7 +388,7 @@ function CesiumWidget(container, options) {
           "Specify either options.terrainProvider or options.terrain.",
         );
       }
-      //>>includeEnd('debug')
+      //>>includeEnd('debug');
 
       scene.setTerrain(options.terrain);
     }

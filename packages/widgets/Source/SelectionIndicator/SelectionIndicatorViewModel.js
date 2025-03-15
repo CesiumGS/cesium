@@ -36,7 +36,7 @@ function SelectionIndicatorViewModel(
   if (!defined(container)) {
     throw new DeveloperError("container is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._screenPositionX = offScreen;

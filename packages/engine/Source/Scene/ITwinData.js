@@ -107,7 +107,7 @@ ITwinData.createTilesetForRealityDataId = async function (
   if (defined(rootDocument)) {
     Check.typeOf.string("rootDocument", rootDocument);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   if (!defined(type) || !defined(rootDocument)) {
     const metadata = await ITwinPlatform.getRealityDataMetadata(
@@ -170,7 +170,7 @@ ITwinData.createDataSourceForRealityDataId = async function (
   if (defined(rootDocument)) {
     Check.typeOf.string("rootDocument", rootDocument);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   if (!defined(type) || !defined(rootDocument)) {
     const metadata = await ITwinPlatform.getRealityDataMetadata(
@@ -230,7 +230,7 @@ ITwinData.loadGeospatialFeatures = async function (
   if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const pageLimit = limit ?? 10000;
 

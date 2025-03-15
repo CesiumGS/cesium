@@ -23,7 +23,7 @@ VerticalExaggeration.getHeight = function (height, scale, relativeHeight) {
   if (!Number.isFinite(relativeHeight)) {
     throw new DeveloperError("relativeHeight must be a finite number.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
   return (height - relativeHeight) * scale + relativeHeight;
 };
 

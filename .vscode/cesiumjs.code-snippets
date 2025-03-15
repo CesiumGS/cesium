@@ -22,7 +22,7 @@
 		"body": [
 			"//>>includeStart('debug', pragmas.debug);",
 			"${TM_SELECTED_TEXT}$0",
-			"//>>includeEnd('debug')"
+			"//>>includeEnd('debug');"
 		]
 	},
 	"Check type": {

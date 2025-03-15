@@ -245,7 +245,7 @@ RectangleGeometryLibrary.computeOptions = function (
         "Rotated rectangle is invalid.  It crosses over either the north or south pole.",
       );
     }
-    //>>includeEnd('debug')
+    //>>includeEnd('debug');
 
     computedOptions.granYCos = rotationOptions.granYCos;
     computedOptions.granYSin = rotationOptions.granYSin;

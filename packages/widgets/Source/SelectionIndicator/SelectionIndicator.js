@@ -23,7 +23,7 @@ function SelectionIndicator(container, scene) {
   if (!defined(container)) {
     throw new DeveloperError("container is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   container = getElement(container);
 

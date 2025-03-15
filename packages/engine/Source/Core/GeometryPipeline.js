@@ -242,7 +242,7 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
   if (!defined(geometry)) {
     throw new DeveloperError("geometry is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   // There can be a WebGL performance hit when attribute 0 is disabled, so
   // assign attribute locations to well-known attributes.

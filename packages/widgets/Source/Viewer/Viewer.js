@@ -411,7 +411,7 @@ function Viewer(container, options) {
   ) {
     throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
@@ -439,7 +439,7 @@ Either specify options.baseLayer instead or set options.baseLayerPicker to true.
 Either specify options.terrainProvider instead or set options.baseLayerPicker to true.",
     );
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const that = this;
 
@@ -692,7 +692,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         "Specify either options.terrainProvider or options.terrain.",
       );
     }
-    //>>includeEnd('debug')
+    //>>includeEnd('debug');
 
     if (createBaseLayerPicker) {
       // Required as this is otherwise set by the baseLayerPicker
@@ -1529,7 +1529,7 @@ Viewer.prototype.extend = function (mixin, options) {
   if (!defined(mixin)) {
     throw new DeveloperError("mixin is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   mixin(this, options);
 };

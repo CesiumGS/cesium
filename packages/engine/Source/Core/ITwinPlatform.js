@@ -124,7 +124,7 @@ ITwinPlatform.getExports = async function (iModelId) {
   if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}mesh-export`,
@@ -216,7 +216,7 @@ ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
   if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}`,
@@ -278,7 +278,7 @@ ITwinPlatform.getRealityDataURL = async function (
   if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}/readaccess`,
