@@ -136,11 +136,6 @@ function createAABBFromOctreeLocation(level, x, y, z) {
 
 /**
  * Represents a node in the octree
- * @param x
- * @param y
- * @param z
- * @param level
- * @returns {{level, x, y, z, triangles: *[]}}
  */
 function createNode(x, y, z, level) {
   return {
