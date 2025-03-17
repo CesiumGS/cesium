@@ -81,7 +81,7 @@ function elementsToCartesian(
       "The inclination is out of range. Inclination must be greater than or equal to zero and less than or equal to Pi radians.",
     );
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
   const argumentOfPeriapsis = longitudeOfPerigee - longitudeOfNode;
@@ -102,7 +102,7 @@ function elementsToCartesian(
       "The true anomaly of the hyperbolic orbit lies outside of the bounds of the hyperbola.",
     );
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   perifocalToCartesianMatrix(
     argumentOfPeriapsis,
@@ -120,7 +120,7 @@ function elementsToCartesian(
   if (denom <= CesiumMath.Epsilon10) {
     throw new DeveloperError("elements cannot be converted to cartesian");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const radius = semilatus / denom;
   if (!defined(result)) {
@@ -139,7 +139,7 @@ function chooseOrbit(eccentricity, tolerance) {
   if (eccentricity < 0) {
     throw new DeveloperError("eccentricity cannot be negative.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   if (eccentricity <= tolerance) {
     return "Circular";
@@ -157,7 +157,7 @@ function meanAnomalyToTrueAnomaly(meanAnomaly, eccentricity) {
   if (eccentricity < 0.0 || eccentricity >= 1.0) {
     throw new DeveloperError("eccentricity out of range.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const eccentricAnomaly = meanAnomalyToEccentricAnomaly(
     meanAnomaly,
@@ -174,7 +174,7 @@ function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
   if (eccentricity < 0.0 || eccentricity >= 1.0) {
     throw new DeveloperError("eccentricity out of range.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const revs = Math.floor(meanAnomaly / CesiumMath.TWO_PI);
 
@@ -212,7 +212,7 @@ function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
     // STK Components uses a numerical method to find the eccentric anomaly in the case that Kepler's
     // equation does not converge. We don't expect that to ever be necessary for the reasonable orbits used here.
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   eccentricAnomaly = iterationValue + revs * CesiumMath.TWO_PI;
   return eccentricAnomaly;
@@ -224,7 +224,7 @@ function eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity) {
   if (eccentricity < 0.0 || eccentricity >= 1.0) {
     throw new DeveloperError("eccentricity out of range.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   // Calculate the number of previous revolutions
   const revs = Math.floor(eccentricAnomaly / CesiumMath.TWO_PI);
@@ -263,7 +263,7 @@ function perifocalToCartesianMatrix(
   if (inclination < 0 || inclination > CesiumMath.PI) {
     throw new DeveloperError("inclination out of range");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const cosap = Math.cos(argumentOfPeriapsis);
   const sinap = Math.sin(argumentOfPeriapsis);
