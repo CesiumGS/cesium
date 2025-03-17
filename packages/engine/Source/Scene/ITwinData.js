@@ -160,6 +160,7 @@ ITwinData.createDataSourceForRealityDataId = async function (
   realityDataId,
   type,
   rootDocument,
+  // TODO: is there a nice-ish way to thread through custom access tokens per asset?
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
