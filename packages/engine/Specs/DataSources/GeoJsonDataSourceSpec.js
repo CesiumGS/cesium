@@ -21,6 +21,7 @@ describe("DataSources/GeoJsonDataSource", function () {
   let defaultStrokeWidth;
   let defaultFill;
   let defaultClampToGround;
+  let originalDefaultCrsFunction;
 
   beforeAll(function () {
     defaultMarkerSize = GeoJsonDataSource.markerSize;
@@ -30,6 +31,7 @@ describe("DataSources/GeoJsonDataSource", function () {
     defaultStrokeWidth = GeoJsonDataSource.strokeWidth;
     defaultFill = GeoJsonDataSource.fill;
     defaultClampToGround = GeoJsonDataSource.clampToGround;
+    originalDefaultCrsFunction = GeoJsonDataSource.defaultCrsFunction;
   });
 
   beforeEach(function () {
@@ -40,6 +42,7 @@ describe("DataSources/GeoJsonDataSource", function () {
     GeoJsonDataSource.strokeWidth = defaultStrokeWidth;
     GeoJsonDataSource.fill = defaultFill;
     GeoJsonDataSource.clampToGround = defaultClampToGround;
+    GeoJsonDataSource.defaultCrsFunction = originalDefaultCrsFunction;
   });
 
   const time = new JulianDate();
@@ -1659,6 +1662,61 @@ describe("DataSources/GeoJsonDataSource", function () {
     return promise.then(function () {
       expect(spy).toHaveBeenCalledWith(dataSource, false);
       expect(dataSource.isLoading).toBe(false);
+    });
+  });
+
+  describe("defaultCrsFunction", function () {
+    it("standard WGS84 CRS mappings remain unchanged when defaultCrsFunction is modified", function () {
+      const customFunc = function (coordinates) {
+        return new Cartesian3(
+          coordinates[0] * 2,
+          coordinates[1] * 2,
+          coordinates[2] || 0,
+        );
+      };
+
+      // Store original position calculation for comparison
+      const point = [100.0, 0.0];
+      const originalPosition = GeoJsonDataSource.crsNames["EPSG:4326"](point);
+
+      // Change default CRS function
+      GeoJsonDataSource.defaultCrsFunction = customFunc;
+
+      // Verify WGS84 mappings still produce same result
+      const newPosition = GeoJsonDataSource.crsNames["EPSG:4326"](point);
+      expect(newPosition).toEqual(originalPosition);
+
+      // Test other standard mappings
+      expect(
+        GeoJsonDataSource.crsNames["urn:ogc:def:crs:OGC:1.3:CRS84"](point),
+      ).toEqual(originalPosition);
+      expect(
+        GeoJsonDataSource.crsNames["urn:ogc:def:crs:EPSG::4326"](point),
+      ).toEqual(originalPosition);
+    });
+
+    it("uses custom defaultCrsFunction when no CRS is set on a geojson", function () {
+      const customFunc = function (coordinates) {
+        return new Cartesian3(
+          coordinates[0] * 2,
+          coordinates[1] * 2,
+          coordinates[2] || 0,
+        );
+      };
+
+      GeoJsonDataSource.defaultCrsFunction = customFunc;
+
+      const dataSource = new GeoJsonDataSource();
+      const pointNoCrs = {
+        type: "Point",
+        coordinates: [100.0, 0.0],
+      };
+
+      return dataSource.load(pointNoCrs).then(function () {
+        const expectedPosition = customFunc(pointNoCrs.coordinates);
+        const entity = dataSource.entities.values[0];
+        expect(entity.position.getValue(time)).toEqual(expectedPosition);
+      });
     });
   });
 });

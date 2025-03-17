@@ -26,14 +26,19 @@ import EntityCollection from "./EntityCollection.js";
 import PolygonGraphics from "./PolygonGraphics.js";
 import PolylineGraphics from "./PolylineGraphics.js";
 
-function defaultCrsFunction(coordinates) {
+// Keep the original defaultCrsFunction for WGS84
+function wgs84CrsFunction(coordinates) {
   return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
 }
 
+// Create a new modifiable default for other CRS types
+let defaultCrsFunction = wgs84CrsFunction;
+
 const crsNames = {
-  "urn:ogc:def:crs:OGC:1.3:CRS84": defaultCrsFunction,
-  "EPSG:4326": defaultCrsFunction,
-  "urn:ogc:def:crs:EPSG::4326": defaultCrsFunction,
+  // Standard WGS84 mappings should always use wgs84CrsFunction, unless explicitly overridden
+  "urn:ogc:def:crs:OGC:1.3:CRS84": wgs84CrsFunction,
+  "EPSG:4326": wgs84CrsFunction,
+  "urn:ogc:def:crs:EPSG::4326": wgs84CrsFunction,
 };
 
 const crsLinkHrefs = {};
@@ -757,6 +762,27 @@ Object.defineProperties(GeoJsonDataSource, {
   crsLinkTypes: {
     get: function () {
       return crsLinkTypes;
+    },
+  },
+
+  /**
+   * Gets or sets the default CRS function used to convert GeoJSON coordinates with no CRS-specified to Cartesian3 positions.
+   * The function takes an array of coordinates [longitude, latitude, height] and returns a Cartesian3.
+   * Note: This does not affect the standard WGS84 CRS mappings.
+   * @memberof GeoJsonDataSource
+   * @type {Function}
+   */
+  defaultCrsFunction: {
+    get: function () {
+      return defaultCrsFunction;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (typeof value !== "function") {
+        throw new DeveloperError("value must be a function");
+      }
+      //>>includeEnd('debug');
+      defaultCrsFunction = value;
     },
   },
 });

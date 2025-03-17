@@ -12,6 +12,10 @@
 
 - `defaultValue` function and `defaultValue.EMPTY_OBJECT` have been deprecated, and will be removed in 1.134. Use respectively the nullish coalescing operator [??](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) and `Frozen.EMPTY_OBJECT` instead. A new `Frozen.EMPTY_ARRAY` frozen value has been added for the same purpose as `Frozen.EMPTY_OBJECT`. See [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values).
 
+#### Additions :tada:
+
+- Implemented ablity to set custom `GeoJsonDataSource.defaultCrsFunction` [#12525](https://github.com/CesiumGS/cesium/pull/12525)
+
 #### Fixes :wrench:
 
 - Fixed broken Entity Tracking [sandcastle](https://sandcastle.cesium.com/?src=Entity%20tracking.html). [#12467](https://github.com/CesiumGS/cesium/pull/12467)
