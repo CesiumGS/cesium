@@ -271,7 +271,7 @@ function Attribute() {
   /**
    * The byte stride of elements in the buffer. When undefined the elements are tightly packed.
    *
-   * @type {number}
+   * @type {number|undefined}
    * @private
    */
   this.byteStride = undefined;

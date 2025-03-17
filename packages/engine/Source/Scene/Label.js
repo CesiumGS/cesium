@@ -5,6 +5,7 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import CesiumMath from "../Core/Math.js";
@@ -15,6 +16,7 @@ import HeightReference from "./HeightReference.js";
 import HorizontalOrigin from "../Core/HorizontalOrigin.js";
 import LabelStyle from "./LabelStyle.js";
 import VerticalOrigin from "../Core/VerticalOrigin.js";
+import LabelGlyph from "./LabelGlyph.js";
 
 /**
  * @typedef {Object} Label.FontInfo
@@ -296,6 +298,18 @@ function Label(options, labelCollection) {
 
 Object.defineProperties(Label.prototype, {
   /**
+   * Total number of glyphs associated with this label
+   * @memberof Label.prototype
+   * @type {number}
+   * @private
+   * @readonly
+   */
+  totalGlyphs: {
+    get: function () {
+      return this._glyphs.length;
+    }
+  },
+  /**
    * Determines if this label will be shown.  Use this to hide or show a label, instead
    * of removing it and re-adding it to the collection.
    * @memberof Label.prototype
@@ -432,6 +446,19 @@ Object.defineProperties(Label.prototype, {
           : renderedValue;
         rebindAllGlyphs(this);
       }
+    },
+  },
+
+  /**
+   * Gets the renderable text for this label.
+   * @memberof Label.prototype
+   * @type {string}
+   * @readonly
+   * @private
+   */
+  renderedText: {
+    get: function () {
+      return this._renderedText;
     },
   },
 
@@ -1364,6 +1391,24 @@ Label.prototype._updateClamping = function () {
 };
 
 /**
+ * TODO
+ * @private
+ * @param {number} index
+ * @return {LabelGlyph}
+ */
+Label.prototype.getGlyph = function (index) {
+  const glyphs = this._glyphs;
+  let glyph = glyphs[index];
+
+  if (!defined(glyph)) {
+    glyph = new LabelGlyph(this);
+    glyphs[index] = glyph;
+  }
+
+  return glyph;
+}
+
+/**
  * Computes the screen-space position of the label's origin, taking into account eye and pixel offsets.
  * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
  * left to right, and <code>y</code> increases from top to bottom.
@@ -1559,11 +1604,36 @@ Label.prototype.equals = function (other) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
+ * @private
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 Label.prototype.isDestroyed = function () {
   return false;
+};
+
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ * @private
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ */
+Label.prototype.destroy = function () {
+  for (let i = 0; i < this.totalGlyphs; ++i) {
+    this.getGlyph(i).unbindBillboard();
+  }
+
+  if (defined(this._removeCallbackFunc)) {
+    this._removeCallbackFunc();
+  }
+
+  this._backgroundBillboard = undefined;
+  this._labelCollection = undefined;
+
+  return destroyObject(this);
 };
 
 /**

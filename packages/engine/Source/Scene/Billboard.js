@@ -164,6 +164,8 @@ function Billboard(options, billboardCollection) {
   this._pixelOffset = Cartesian2.clone(
     defaultValue(options.pixelOffset, Cartesian2.ZERO),
   );
+  // TODO: Unify translate and label translate
+  // TODO: Can the background billboards just use the existing properties??
   this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
   this._eyeOffset = Cartesian3.clone(
     defaultValue(options.eyeOffset, Cartesian3.ZERO),
@@ -208,15 +210,6 @@ function Billboard(options, billboardCollection) {
   this._imageTexture = new BillboardTexture(billboardCollection);
   this._imageWidth = undefined;
   this._imageHeight = undefined;
-
-  // Set in LabelCollection.js
-  this._labelDimensions = undefined;
-  this._labelHorizontalOrigin = undefined;
-  this._labelTranslate = undefined;
-  this._labelFontScale = undefined;
-  this._labelSdfFontSize = undefined;
-  this._labelGlyphHorizontalOffset = undefined;
-  this._labelGlyphBaseline = undefined;
 
   const image = options.image;
   let imageId = options.imageId;
@@ -275,7 +268,6 @@ const PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX =
 const DISTANCE_DISPLAY_CONDITION = (Billboard.DISTANCE_DISPLAY_CONDITION = 14);
 const DISABLE_DEPTH_DISTANCE = (Billboard.DISABLE_DEPTH_DISTANCE = 15);
 Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
-const SDF_INDEX = (Billboard.SDF_INDEX = 17);
 const SPLIT_DIRECTION_INDEX = (Billboard.SPLIT_DIRECTION_INDEX = 18);
 Billboard.NUMBER_OF_PROPERTIES = 19;
 
@@ -288,6 +280,18 @@ function makeDirty(billboard, propertyChanged) {
 }
 
 Object.defineProperties(Billboard.prototype, {
+  /**
+   * Index of this billboard in the billboard collection.
+   * @memberof Billboard.prototype
+   * @type {number}
+   * @private
+   */
+    index: {
+      get: function () {
+        return this._index;
+      },
+    },
+
   /**
    * Determines if this billboard will be shown.  Use this to hide or show a billboard, instead
    * of removing it and re-adding it to the collection.
@@ -1067,49 +1071,6 @@ Object.defineProperties(Billboard.prototype, {
   },
 
   /**
-   * The outline color of this Billboard.  Effective only for SDF billboards like Label glyphs.
-   * @memberof Billboard.prototype
-   * @type {Color}
-   * @private
-   */
-  outlineColor: {
-    get: function () {
-      return this._outlineColor;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
-      //>>includeEnd('debug');
-
-      const outlineColor = this._outlineColor;
-      if (!Color.equals(outlineColor, value)) {
-        Color.clone(value, outlineColor);
-        makeDirty(this, SDF_INDEX);
-      }
-    },
-  },
-
-  /**
-   * The outline width of this Billboard in pixels.  Effective only for SDF billboards like Label glyphs.
-   * @memberof Billboard.prototype
-   * @type {number}
-   * @private
-   */
-  outlineWidth: {
-    get: function () {
-      return this._outlineWidth;
-    },
-    set: function (value) {
-      if (this._outlineWidth !== value) {
-        this._outlineWidth = value;
-        makeDirty(this, SDF_INDEX);
-      }
-    },
-  },
-
-  /**
    * Gets or sets the {@link SplitDirection} of this billboard.
    * @memberof Billboard.prototype
    * @type {SplitDirection}
@@ -1309,6 +1270,7 @@ Billboard.prototype.setImageSubRegion = function (id, subRegion) {
   this._imageTexture.addImageSubRegion(id, subRegion);
 };
 
+// TODO: Can we move this?
 Billboard.prototype._setTranslate = function (value) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(value)) {

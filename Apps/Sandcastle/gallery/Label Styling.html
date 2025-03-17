@@ -159,6 +159,14 @@
           });
         }
 
+        Sandcastle.addToggleButton(
+          "Browser resolution",
+          viewer.useBrowserRecommendedResolution,
+          function (checked) {
+            viewer.useBrowserRecommendedResolution = checked;
+          },
+        );
+
         const stylingViewModel = {
           showBackground: false,
           fontFamily: "sans-serif",

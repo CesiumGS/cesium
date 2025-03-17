@@ -314,47 +314,13 @@ void main()
 #endif
 
 #ifdef SDF
-    // Decode compressed attriubtes needed for SDF glyph rendering
-    vec4 outlineColor;
-    float outlineWidth;
-    float glyphFontScale;
+    SdfGlyphProperties glpyhProperties;
+    decodeBillboardSdf(sdf, glpyhProperties);
 
-    temp = sdf.x;
-    temp = temp * SHIFT_RIGHT8;
-    outlineColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    outlineColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    outlineColor.r = floor(temp);
-
-    temp = sdf.y;
-    temp = temp * SHIFT_RIGHT8;
-    glyphFontScale = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    outlineWidth = (temp - floor(temp)) * SHIFT_LEFT8;
-    outlineColor.a = floor(temp);
-    
-    glyphFontScale /= 255.0;
-    v_outlineWidth = outlineWidth * scale / glyphFontScale / SDF_RADIUS / SDF_RADIUS;
-
-    outlineColor /= 255.0;
-    v_outlineColor = outlineColor;
+    v_outlineColor = glpyhProperties.outlineColor;
     v_outlineColor.a *= translucency;
 
-    float glyphSdfBaseline;
-    float glyphHorizontalOffset;
-
-    temp = sdf.z;
-    temp = temp * SHIFT_RIGHT8;
-    float tmp1 = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    glyphSdfBaseline = (temp - floor(temp)) * SHIFT_LEFT8;
-    glyphHorizontalOffset = floor(temp);
-
-    glyphHorizontalOffset *= scale;
-    glyphSdfBaseline -= 127.0; 
-
-    vec2 glyphOffset = vec2(-glyphHorizontalOffset - 0.5, 0.0);
-    float verticalOrigin = (1.0 - clamp(-1.0, 1.0, origin.y)) / 2.0;
+    v_outlineWidth = getGlyphOutlineWidth(glpyhProperties.outlineWidth, glpyhProperties.fontScale, scale);
 #endif
 
 #ifdef VERTEX_DEPTH_CHECK
@@ -364,10 +330,7 @@ if (lengthSq < disableDepthTestDistance) {
     vec2 labelTranslate = textureCoordinateBoundsOrLabelTranslate.xy;
 
 #ifdef SDF
-    // Computed here for best sub-pixel alignment
-    glyphOffset.y = dimensions.y * verticalOrigin - glyphSdfBaseline;
-    glyphOffset.y *= scale;
-    labelTranslate += glyphOffset;
+    labelTranslate += getGlyphOffset(glpyhProperties.horizontalOffset, glpyhProperties.baselineOffset, scale, origin, dimensions);
 #endif
 
     vec4 pEC1 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
@@ -392,10 +355,7 @@ if (lengthSq < disableDepthTestDistance) {
 #endif
 
 #ifdef SDF
-    // Computed here for best sub-pixel alignment
-    glyphOffset.y = imageSize.y * verticalOrigin - glyphSdfBaseline;
-    glyphOffset.y *= scale;
-    translate += glyphOffset;
+    translate += labelTranslate += getGlyphOffset(glpyhProperties.horizontalOffset, glpyhProperties.baselineOffset, scale, origin, imageSize);
 #endif
 
     positionEC = addScreenSpaceOffset(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);

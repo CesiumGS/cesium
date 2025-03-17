@@ -7,6 +7,8 @@ import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 
+// TODO: Move to renderer
+
 /**
  * An enum describing the attribute type for glTF and 3D Tiles.
  *

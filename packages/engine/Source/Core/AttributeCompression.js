@@ -20,6 +20,17 @@ const LEFT_SHIFT = 256.0;
 const AttributeCompression = {};
 
 /**
+ * Converts a float in the range of 0 to 1.0 into
+ * a byte in the range of 0 to 255.
+ *
+ * @param {number} number The number to be converted.
+ * @returns {number} The converted number.
+ */
+AttributeCompression.encodeFloatAsByte = function (number) {
+  return number === 1.0 ? 255.0 : (number * 256.0) | 0;
+}
+
+/**
  * Encodes a normalized vector into 2 SNORM values in the range of [0-rangeMax] following the 'oct' encoding.
  *
  * Oct encoding is a compact representation of unit length vectors.
