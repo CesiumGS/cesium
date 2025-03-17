@@ -61,7 +61,25 @@
       "subtrees": {
         "uri": "subtrees/{level}/{x}/{y}/{z}.json"
       }
-    }
+    },
+    "transform": [
+      6378137.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      6378137.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      6378137.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
   },
   "extensionsUsed": [
     "3DTILES_bounding_volume_cylinder",
