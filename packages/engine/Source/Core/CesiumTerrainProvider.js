@@ -1129,7 +1129,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * exists deeper in the tree rather than it all being discoverable at the root. However, a tile that
    * is available now will not become unavailable in the future.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {

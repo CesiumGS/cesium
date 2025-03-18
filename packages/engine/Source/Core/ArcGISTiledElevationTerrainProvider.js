@@ -325,7 +325,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
