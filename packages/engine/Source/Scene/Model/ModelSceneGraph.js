@@ -504,8 +504,6 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
     for (j = 0; j < nodePipelineStages.length; j++) {
       const nodePipelineStage = nodePipelineStages[j];
 
-      console.log("MSG buildDrawCommands  runtimeNode  --> ", runtimeNode);
-
       nodePipelineStage.process(
         nodeRenderResources,
         runtimeNode.node,

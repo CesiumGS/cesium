@@ -63,11 +63,7 @@ InstancingPipelineStage.process = function (
   apiInstances,
   frameState,
 ) {
-  console.log("InstancingPipelineStage process ");
   const instances = node.instances;
-
-  console.log("InstancingPipelineStage process ", apiInstances);
-  //debugger;
 
   const count = defined(apiInstances)
     ? apiInstances.length
@@ -86,17 +82,10 @@ InstancingPipelineStage.process = function (
     !frameState.scene3DOnly &&
     model._projectTo2D;
   const keepTypedArray = model._enablePick && !frameState.context.webgl2;
-  console.log(
-    "InstancingPipelineStage process keepTypedArray ",
-    keepTypedArray,
-  );
-  console.log("renderResources before --> ", renderResources);
 
   const instancingVertexAttributes = [];
 
   if (defined(apiInstances)) {
-    console.log("getInstanceTransformsAsMatrices --> ", apiInstances);
-
     const shaderBuilder = renderResources.shaderBuilder;
     shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
     let buffer = runtimeNode.instancingTransformsBuffer;
@@ -794,7 +783,6 @@ function processTransformMatrixAttributes(
 
   let transforms;
   let buffer = runtimeNode.instancingTransformsBuffer;
-  console.log("runtimeNode.instancingTransformsBuffer ", buffer);
   if (!defined(buffer)) {
     // This function computes the transforms, sets the translation min / max,
     // and unloads the typed arrays associated with the attributes.
@@ -803,8 +791,6 @@ function processTransformMatrixAttributes(
       count,
       renderResources,
     );
-
-    console.log("getInstanceTransformsAsMatrices --> ", transforms);
 
     const transformsTypedArray = transformsToTypedArray(transforms);
     buffer = createVertexBuffer(transformsTypedArray, frameState);
@@ -994,8 +980,6 @@ function processMatrixAttributes(
   instancingVertexAttributes,
   attributeString,
 ) {
-  console.log("processMatrixAttributes ");
-  //debugger;
   const vertexSizeInFloats = 12;
   const componentByteSize = ComponentDatatype.getSizeInBytes(
     ComponentDatatype.FLOAT,
