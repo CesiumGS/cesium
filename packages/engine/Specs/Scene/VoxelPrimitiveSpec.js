@@ -254,6 +254,29 @@ describe(
       expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
     });
 
+    it("applies vertical exaggeration to cylinder-shaped voxels by scaling the model matrix", async function () {
+      const boxProvider = await Cesium3DTilesVoxelProvider.fromUrl(
+        "./Data/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
+      );
+      const primitive = new VoxelPrimitive({ provider: boxProvider });
+      scene.primitives.add(primitive);
+      scene.renderForSpecs();
+
+      const modelMatrix = primitive.modelMatrix.clone();
+      expect(primitive._exaggeratedModelMatrix).toEqual(modelMatrix);
+
+      const exaggerationFactor = 2.0;
+      scene.verticalExaggeration = exaggerationFactor;
+      scene.renderForSpecs();
+      const scalar = Cartesian3.fromElements(1.0, 1.0, exaggerationFactor);
+      const expectedModelMatrix = Matrix4.multiplyByScale(
+        modelMatrix,
+        scalar,
+        new Matrix4(),
+      );
+      expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
+    });
+
     it("uses default style", function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);

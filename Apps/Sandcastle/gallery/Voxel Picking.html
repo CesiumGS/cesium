@@ -64,6 +64,14 @@
 
         const scratchColor = new Cesium.Color();
 
+        const globalTransform = Cesium.Matrix4.fromScale(
+          Cesium.Cartesian3.fromElements(
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+          ),
+        );
+
         function ProceduralMultiTileVoxelProvider(shape) {
           this.shape = shape;
           this.dimensions = new Cesium.Cartesian3(4, 4, 4);
@@ -71,6 +79,7 @@
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
           this._levelCount = 3;
+          this.globalTransform = globalTransform;
         }
 
         ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
@@ -157,19 +166,10 @@
           },
         });
 
-        const modelMatrix = Cesium.Matrix4.fromScale(
-          Cesium.Cartesian3.fromElements(
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-          ),
-        );
-
         const voxelPrimitive = scene.primitives.add(
           new Cesium.VoxelPrimitive({
             provider: provider,
             customShader: customShader,
-            modelMatrix: modelMatrix,
           }),
         );
 
