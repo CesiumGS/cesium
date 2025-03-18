@@ -44,6 +44,7 @@ import WireframePipelineStage from "./WireframePipelineStage.js";
  */
 function ModelRuntimePrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  console.log("ModelRuntimePrimitive --> ", options);
 
   const primitive = options.primitive;
   const node = options.node;

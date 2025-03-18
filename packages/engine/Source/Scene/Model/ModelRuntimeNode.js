@@ -28,6 +28,8 @@ import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 function ModelRuntimeNode(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  console.log("ModelRuntimeNode --> ", options);
+
   const node = options.node;
   const transform = options.transform;
   const transformToRoot = options.transformToRoot;
@@ -575,6 +577,9 @@ ModelRuntimeNode.prototype.getChild = function (index) {
  * @private
  */
 ModelRuntimeNode.prototype.configurePipeline = function () {
+  console.log("ModelRuntimeNode configurePipeline this ", this);
+  //debugger;
+
   const node = this.node;
   const pipelineStages = this.pipelineStages;
   pipelineStages.length = 0;
@@ -582,6 +587,12 @@ ModelRuntimeNode.prototype.configurePipeline = function () {
   updateStages.length = 0;
 
   if (defined(node.instances)) {
+    pipelineStages.push(InstancingPipelineStage);
+  }
+
+  console.log("this.sceneGraph --> ", this.sceneGraph._model);
+
+  if (defined(this.sceneGraph._model.apiInstances)) {
     pipelineStages.push(InstancingPipelineStage);
   }
 

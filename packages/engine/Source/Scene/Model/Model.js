@@ -2213,6 +2213,7 @@ function updateVerticalExaggeration(model, frameState) {
 
 function buildDrawCommands(model, frameState) {
   if (!model._drawCommandsBuilt) {
+    console.log("! model drawCommandsBuilt model ", model);
     model.destroyPipelineResources();
     model._sceneGraph.buildDrawCommands(frameState);
     model._drawCommandsBuilt = true;
@@ -3085,6 +3086,11 @@ Model.fromGltfAsync = async function (options) {
 
   const model = new Model(modelOptions);
 
+  if (defined(options.apiInstances)) {
+    console.log("apiOptions --> ", options.apiInstances);
+    model.apiInstances = options.apiInstances;
+  }
+
   const resourceCredits = model._resource.credits;
   if (defined(resourceCredits)) {
     const length = resourceCredits.length;
@@ -3258,6 +3264,19 @@ Model.prototype.applyStyle = function (style) {
     this.applyColorAndShow(style);
     this._styleCommandsNeeded = undefined;
   }
+};
+
+Model.prototype.applyInstancing = function (instances) {
+  console.log("Apply Instancing ", this);
+  console.log("Scene Graph ", this._sceneGraph._runtimeNodes);
+  let i;
+  for (i = 0; i < this._sceneGraph._runtimeNodes.length; i++) {
+    console.log(this._sceneGraph._runtimeNodes[i]);
+  }
+  this.apiInstances = true;
+  this.update();
+
+  return;
 };
 
 function makeModelOptions(loader, modelType, options) {
