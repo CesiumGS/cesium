@@ -3885,6 +3885,7 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
 };
 
 const updateHeightScratchCartographic = new Cartographic();
+const updateClampedScratchCartographic = new Cartographic();
 /**
  * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
  * is the cartesian position on the tile.
@@ -3905,10 +3906,23 @@ Scene.prototype.updateHeight = function (
   Check.typeOf.func("callback", callback);
   //>>includeEnd('debug');
 
-  const callbackWrapper = () => {
+  const ellipsoid = this._ellipsoid;
+  const callbackWrapper = (clampedPosition) => {
     Cartographic.clone(cartographic, updateHeightScratchCartographic);
 
-    const height = this.getHeight(cartographic, heightReference);
+    let height;
+    if (defined(clampedPosition)) {
+      const updatedClampedPosition = ellipsoid.cartesianToCartographic(
+        clampedPosition,
+        updateClampedScratchCartographic,
+      );
+      if (defined(updatedClampedPosition)) {
+        height = updatedClampedPosition.height;
+      }
+    }
+    if (!defined(height)) {
+      height = this.getHeight(cartographic, heightReference);
+    }
     if (defined(height)) {
       updateHeightScratchCartographic.height = height;
       callback(updateHeightScratchCartographic);
@@ -3932,7 +3946,6 @@ Scene.prototype.updateHeight = function (
   }
 
   let tilesetRemoveCallbacks = {};
-  const ellipsoid = this._ellipsoid;
   const createPrimitiveEventListener = (primitive) => {
     if (
       ignore3dTiles ||
