@@ -585,6 +585,10 @@ ModelRuntimeNode.prototype.configurePipeline = function () {
     pipelineStages.push(InstancingPipelineStage);
   }
 
+  if (defined(this.sceneGraph._model.apiInstances)) {
+    pipelineStages.push(InstancingPipelineStage);
+  }
+
   pipelineStages.push(NodeStatisticsPipelineStage);
 
   updateStages.push(ModelMatrixUpdateStage);

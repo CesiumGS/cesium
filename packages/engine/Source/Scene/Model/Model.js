@@ -3063,6 +3063,10 @@ Model.fromGltfAsync = async function (options) {
 
   const model = new Model(modelOptions);
 
+  if (defined(options.apiInstances)) {
+    model.apiInstances = options.apiInstances;
+  }
+
   const resourceCredits = model._resource.credits;
   if (defined(resourceCredits)) {
     const length = resourceCredits.length;

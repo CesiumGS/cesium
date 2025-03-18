@@ -507,6 +507,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
       nodePipelineStage.process(
         nodeRenderResources,
         runtimeNode.node,
+        runtimeNode.sceneGraph._model.apiInstances,
         frameState,
       );
     }
