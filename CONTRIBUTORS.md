@@ -426,4 +426,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yutao Liu](https://github.com/liuyutao)
 - [Andrew Dassonville](https://github.com/andrewda)
 - [Cody Butler](https://github.com/CodyBu)
-- [Hiwen](https://github.com/CodyBu)
+- [Hiwen](https://github.com/Hiwen)
