@@ -10,9 +10,9 @@ import Cartographic from "./Cartographic.js";
 import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidalOccluder from "./EllipsoidalOccluder.js";
+import Frozen from "./Frozen.js";
 import Matrix4 from "./Matrix4.js";
 import mergeSort from "./mergeSort.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
@@ -97,8 +97,8 @@ function decodePositions(gltf) {
     const compressedBuffer = new Uint8Array(
       buffer.buffer,
       buffer.byteOffset + // offset from the start of the glb
-        defaultValue(bufferViewMeshOpt.byteOffset, 0) +
-        defaultValue(accessor.byteOffset, 0),
+        (bufferViewMeshOpt.byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0),
       bufferViewMeshOpt.byteLength,
     );
 
@@ -132,8 +132,8 @@ function decodePositions(gltf) {
     positions = new Float32Array(
       buffer.buffer,
       buffer.byteOffset + // offset from the start of the glb
-        defaultValue(bufferView.byteOffset, 0) +
-        defaultValue(accessor.byteOffset, 0),
+        (bufferView.byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0),
       positionCount * 3,
     );
   }
@@ -165,8 +165,8 @@ function decodeNormals(gltf) {
     const compressedBuffer = new Uint8Array(
       buffer.buffer,
       buffer.byteOffset + // offset from the start of the glb
-        defaultValue(bufferViewMeshOpt.byteOffset, 0) +
-        defaultValue(accessor.byteOffset, 0),
+        (bufferViewMeshOpt.byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0),
       bufferViewMeshOpt.byteLength,
     );
 
@@ -214,8 +214,8 @@ function decodeNormals(gltf) {
     normals = new Float32Array(
       buffer.buffer,
       buffer.byteOffset + // offset from the start of the glb
-        defaultValue(bufferView.byteOffset, 0) +
-        defaultValue(accessor.byteOffset, 0),
+        (bufferView.byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0),
       normalCount * 3,
     );
   }
@@ -252,8 +252,8 @@ function decodeIndices(gltf) {
     const compressedBuffer = new Uint8Array(
       buffer.buffer,
       buffer.byteOffset + // offset from the start of the glb
-        defaultValue(bufferViewMeshOpt.byteOffset, 0) +
-        defaultValue(accessor.byteOffset, 0),
+        (bufferViewMeshOpt.byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0),
       bufferViewMeshOpt.byteLength,
     );
     indices = new SizedIndexType(indexCount);
@@ -271,8 +271,8 @@ function decodeIndices(gltf) {
     indices = new SizedIndexType(
       buffer.buffer,
       buffer.byteOffset + // offset from the glb
-        defaultValue(bufferView.byteOffset, 0) +
-        defaultValue(accessor.byteOffset, 0),
+        (bufferView.byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0),
       indexCount,
     );
   }
@@ -310,8 +310,8 @@ function decodeEdgeIndices(gltf, name) {
     const compressedBuffer = new Uint8Array(
       buffer.buffer,
       buffer.byteOffset + // offset from the start of the glb
-        defaultValue(bufferViewMeshOpt.byteOffset, 0) +
-        defaultValue(accessor.byteOffset, 0),
+        (bufferViewMeshOpt.byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0),
       bufferViewMeshOpt.byteLength,
     );
     indices = new SizedIndexType(indexCount);
@@ -330,8 +330,8 @@ function decodeEdgeIndices(gltf, name) {
     indices = new SizedIndexType(
       buffer.buffer,
       buffer.byteOffset + // offset from the glb
-        defaultValue(bufferView.byteOffset, 0) +
-        defaultValue(accessor.byteOffset, 0),
+        (bufferView.byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0),
       indexCount,
     );
   }
@@ -422,16 +422,26 @@ const Cesium3DTilesTerrainGeometryProcessor = {};
  * @returns {Promise.<TerrainMesh>} A promise to a terrain mesh.
  */
 Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const {
+    exaggeration = 1.0,
+    exaggerationRelativeHeight = 0.0,
+    hasVertexNormals,
+    hasWebMercatorT,
+    gltf,
+    minimumHeight,
+    maximumHeight,
+    skirtHeight,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.ellipsoid", options.ellipsoid);
   Check.typeOf.object("options.rectangle", options.rectangle);
-  Check.typeOf.bool("options.hasVertexNormals", options.hasVertexNormals);
-  Check.typeOf.bool("options.hasWebMercatorT", options.hasWebMercatorT);
-  Check.typeOf.object("options.gltf", options.gltf);
-  Check.typeOf.number("options.minimumHeight", options.minimumHeight);
-  Check.typeOf.number("options.maximumHeight", options.maximumHeight);
+  Check.typeOf.bool("options.hasVertexNormals", hasVertexNormals);
+  Check.typeOf.bool("options.hasWebMercatorT", hasWebMercatorT);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.minimumHeight", minimumHeight);
+  Check.typeOf.number("options.maximumHeight", maximumHeight);
   Check.typeOf.object("options.boundingSphere", options.boundingSphere);
   Check.typeOf.object(
     "options.orientedBoundingBox",
@@ -441,22 +451,12 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
     "options.horizonOcclusionPoint",
     options.horizonOcclusionPoint,
   );
-  Check.typeOf.number("options.skirtHeight", options.skirtHeight);
+  Check.typeOf.number("options.skirtHeight", skirtHeight);
   //>>includeEnd('debug');
 
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0,
-  );
-  const hasVertexNormals = options.hasVertexNormals;
-  const hasWebMercatorT = options.hasWebMercatorT;
   const hasExaggeration = exaggeration !== 1.0;
   const hasGeodeticSurfaceNormals = hasExaggeration;
-  const gltf = options.gltf;
 
-  const minimumHeight = options.minimumHeight;
-  const maximumHeight = options.maximumHeight;
   const boundingSphere = BoundingSphere.clone(
     options.boundingSphere,
     new BoundingSphere(),
@@ -469,7 +469,6 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
     options.horizonOcclusionPoint,
     new Cartesian3(),
   );
-  const skirtHeight = options.skirtHeight;
   const ellipsoid = Ellipsoid.clone(options.ellipsoid, new Ellipsoid());
   const rectangle = Rectangle.clone(options.rectangle, new Rectangle());
 
@@ -784,11 +783,19 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
  * @returns {TerrainMesh}
  */
 Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
+
+  const {
+    isEastChild,
+    isNorthChild,
+    parentMinimumHeight,
+    parentMaximumHeight,
+    skirtHeight,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug)
-  Check.typeOf.bool("options.isEastChild", options.isEastChild);
-  Check.typeOf.bool("options.isNorthChild", options.isNorthChild);
+  Check.typeOf.bool("options.isEastChild", isEastChild);
+  Check.typeOf.bool("options.isNorthChild", isNorthChild);
   Check.typeOf.object("options.parentVertices", options.parentVertices);
   Check.typeOf.object("options.parentIndices", options.parentIndices);
   Check.typeOf.number(
@@ -799,17 +806,11 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     "options.parentIndexCountWithoutSkirts",
     options.parentIndexCountWithoutSkirts,
   );
-  Check.typeOf.number(
-    "options.parentMinimumHeight",
-    options.parentMinimumHeight,
-  );
-  Check.typeOf.number(
-    "options.parentMaximumHeight",
-    options.parentMaximumHeight,
-  );
+  Check.typeOf.number("options.parentMinimumHeight", parentMinimumHeight);
+  Check.typeOf.number("options.parentMaximumHeight", parentMaximumHeight);
   Check.typeOf.object("options.parentEncoding", options.parentEncoding);
   Check.typeOf.object("options.rectangle", options.rectangle);
-  Check.typeOf.number("options.skirtHeight", options.skirtHeight);
+  Check.typeOf.number("options.skirtHeight", skirtHeight);
   Check.typeOf.object("options.ellipsoid", options.ellipsoid);
   //>>includeEnd('debug');
 
@@ -829,13 +830,8 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   const exaggerationRelativeHeight = encoding.exaggerationRelativeHeight;
   const hasExaggeration = exaggeration !== 1.0;
   const hasGeodeticSurfaceNormals = hasExaggeration;
-  const isEastChild = options.isEastChild;
-  const isNorthChild = options.isNorthChild;
   const upsampleRectangle = Rectangle.clone(options.rectangle, new Rectangle());
-  const parentMinimumHeight = options.parentMinimumHeight;
-  const parentMaximumHeight = options.parentMaximumHeight;
   const ellipsoid = Ellipsoid.clone(options.ellipsoid);
-  const skirtHeight = options.skirtHeight;
 
   /** @type Number[] */
   const upsampledTriIDs = [];

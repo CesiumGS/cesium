@@ -4,9 +4,9 @@ import Cartesian3 from "./Cartesian3.js";
 import Cesium3DTilesTerrainGeometryProcessor from "./Cesium3DTilesTerrainGeometryProcessor.js";
 import CesiumMath from "./Math.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
+import Frozen from "./Frozen.js";
 import Intersections2D from "./Intersections2D.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Rectangle from "./Rectangle.js";
@@ -54,7 +54,7 @@ import TerrainMesh from "./TerrainMesh.js";
  */
 
 function Cesium3DTilesTerrainData(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug)
   Check.defined("options.gltf", options.gltf);
@@ -100,10 +100,10 @@ function Cesium3DTilesTerrainData(options) {
   );
 
   /** @type {Boolean} */
-  this._hasVertexNormals = defaultValue(options.requestVertexNormals, false);
+  this._hasVertexNormals = options.requestVertexNormals ?? false;
 
   /** @type {Boolean} */
-  this._hasWaterMask = defaultValue(options.requestWaterMask, false);
+  this._hasWaterMask = options.requestWaterMask ?? false;
 
   /** @type {Boolean} */
   this._hasWebMercatorT = true;
@@ -112,7 +112,7 @@ function Cesium3DTilesTerrainData(options) {
   this._credits = options.credits;
 
   /** @type {Number} */
-  this._childTileMask = defaultValue(options.childTileMask, 15);
+  this._childTileMask = options.childTileMask ?? 15;
 
   /** @type {Object.<string,*>} */
   this._gltf = options.gltf;
@@ -244,7 +244,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
   // Uncomment to force synchronous
   // return this._createMeshSync(options);
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug)
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);
@@ -253,7 +253,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
   Check.typeOf.number("options.level", options.level);
   //>>includeEnd('debug');
 
-  const throttle = defaultValue(options.throttle, true);
+  const throttle = options.throttle ?? true;
   const createMeshTaskProcessor = throttle
     ? createMeshTaskProcessorThrottle
     : createMeshTaskProcessorNoThrottle;
@@ -372,7 +372,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
  * @returns {Promise.<TerrainMesh>} A promise for the terrain mesh.
  */
 Cesium3DTilesTerrainData.prototype._createMeshSync = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug)
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);
@@ -535,7 +535,7 @@ Cesium3DTilesTerrainData.prototype.wasCreatedByUpsampling = function () {
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  */
 function Cesium3DTilesUpsampleTerrainData(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug)
   Check.defined("options.terrainMesh", options.terrainMesh);
@@ -564,7 +564,7 @@ function Cesium3DTilesUpsampleTerrainData(options) {
  * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many asynchronous mesh creations are already in progress and the operation should be retried later.
  */
 Cesium3DTilesUpsampleTerrainData.prototype.createMesh = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);

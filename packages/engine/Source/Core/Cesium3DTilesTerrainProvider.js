@@ -3,28 +3,28 @@ import Cesium3DTilesTerrainData from "./Cesium3DTilesTerrainData.js";
 import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import DoubleEndedPriorityQueue from "./DoubleEndedPriorityQueue.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
+import Frozen from "./Frozen.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import ImplicitSubtree from "../Scene/ImplicitSubtree.js";
 import ImplicitTileCoordinates from "../Scene/ImplicitTileCoordinates.js";
 import IonResource from "./IonResource.js";
 import ImplicitTileset from "../Scene/ImplicitTileset.js";
+import loadImageFromTypedArray from "./loadImageFromTypedArray.js";
 import MetadataSchema from "../Scene/MetadataSchema.js";
+import MetadataSchemaLoader from "../Scene/MetadataSchemaLoader.js";
 import MetadataSemantic from "../Scene/MetadataSemantic.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
+import parseGlb from "../Scene/GltfPipeline/parseGlb.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
+import ResourceCache from "../Scene/ResourceCache.js";
 import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
-import MetadataSchemaLoader from "../Scene/MetadataSchemaLoader.js";
-import parseGlb from "../Scene/GltfPipeline/parseGlb.js";
-import ResourceCache from "../Scene/ResourceCache.js";
-import loadImageFromTypedArray from "./loadImageFromTypedArray.js";
 
 /**
  * @private
@@ -222,7 +222,7 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  * }
  */
 function Cesium3DTilesTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let credit = options.credit;
   if (typeof credit === "string") {
@@ -235,7 +235,7 @@ function Cesium3DTilesTerrainProvider(options) {
 
   this._errorEvent = new Event();
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
 
   this._tilingScheme = new GeographicTilingScheme({
     ellipsoid: this._ellipsoid,
@@ -266,10 +266,7 @@ function Cesium3DTilesTerrainProvider(options) {
    * @default false
    * @private
    */
-  this._requestVertexNormals = defaultValue(
-    options.requestVertexNormals,
-    false,
-  );
+  this._requestVertexNormals = options.requestVertexNormals ?? false;
 
   /**
    * Boolean flag that indicates if the client should request tile watermasks from the server.
@@ -277,7 +274,7 @@ function Cesium3DTilesTerrainProvider(options) {
    * @default false
    * @private
    */
-  this._requestWaterMask = defaultValue(options.requestWaterMask, false);
+  this._requestWaterMask = options.requestWaterMask ?? false;
 }
 
 /**
@@ -305,7 +302,7 @@ Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   url = await Promise.resolve(url);
   const resource = Resource.createIfNeeded(url);
@@ -870,7 +867,7 @@ function ImplicitSubtreeCacheNode(rootId, subtree, stamp) {
  * @param {Number} [options.maximumSubtreeCount=0] The total number of subtrees this cache can store. If adding a new subtree would exceed this limit, the lowest priority subtrees will be removed until there is room, unless the subtree that is going to be removed is the parent of the new subtree, in which case it will not be removed and the new subtree will still be added, exceeding the memory limit.
  */
 function ImplicitSubtreeCache(options) {
-  this._maximumSubtreeCount = defaultValue(options.maximumSubtreeCount, 0);
+  this._maximumSubtreeCount = options.maximumSubtreeCount ?? 0;
   this._subtreeRequestCounter = 0;
 
   this._queue = new DoubleEndedPriorityQueue({
