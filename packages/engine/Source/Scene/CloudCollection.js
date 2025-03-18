@@ -12,7 +12,7 @@ import CloudNoiseFS from "../Shaders/CloudNoiseFS.js";
 import CloudNoiseVS from "../Shaders/CloudNoiseVS.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import CumulusCloud from "./CumulusCloud.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -104,7 +104,7 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  *
  */
 function CloudCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._clouds = [];
   this._cloudsToUpdate = [];
@@ -143,7 +143,7 @@ function CloudCollection(options) {
    *
    * @default 16.0
    */
-  this.noiseDetail = defaultValue(options.noiseDetail, 16.0);
+  this.noiseDetail = options.noiseDetail ?? 16.0;
 
   /**
    * <p>
@@ -167,9 +167,7 @@ function CloudCollection(options) {
    *
    * @default Cartesian3.ZERO
    */
-  this.noiseOffset = Cartesian3.clone(
-    defaultValue(options.noiseOffset, Cartesian3.ZERO),
-  );
+  this.noiseOffset = Cartesian3.clone(options.noiseOffset ?? Cartesian3.ZERO);
 
   this._loading = false;
   this._ready = false;
@@ -198,7 +196,7 @@ function CloudCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   this._colorCommands = [];
 
@@ -212,7 +210,7 @@ function CloudCollection(options) {
    *
    * @default false
    */
-  this.debugBillboards = defaultValue(options.debugBillboards, false);
+  this.debugBillboards = options.debugBillboards ?? false;
   this._compiledDebugBillboards = false;
 
   /**
@@ -226,7 +224,7 @@ function CloudCollection(options) {
    *
    * @default false
    */
-  this.debugEllipsoids = defaultValue(options.debugEllipsoids, false);
+  this.debugEllipsoids = options.debugEllipsoids ?? false;
   this._compiledDebugEllipsoids = false;
 }
 
@@ -298,8 +296,8 @@ function destroyClouds(clouds) {
  * @see CloudCollection#removeAll
  */
 CloudCollection.prototype.add = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const cloudType = defaultValue(options.cloudType, CloudType.CUMULUS);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const cloudType = options.cloudType ?? CloudType.CUMULUS;
   //>>includeStart('debug', pragmas.debug);
   if (!CloudType.validate(cloudType)) {
     throw new DeveloperError("invalid cloud type");

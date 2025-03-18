@@ -2,7 +2,6 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import CesiumMath from "../Core/Math.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
@@ -121,10 +120,7 @@ function VoxelTraversal(
    * @type {boolean}
    * @private
    */
-  this._calculateStatistics = defaultValue(
-    this._primitive._calculateStatistics,
-    false,
-  );
+  this._calculateStatistics = this._primitive._calculateStatistics ?? false;
 
   /**
    * @type {number}

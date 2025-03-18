@@ -4,7 +4,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
@@ -69,30 +69,22 @@ const Instances = ModelComponents.Instances;
  * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
 function I3dmLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const i3dmResource = options.i3dmResource;
   const arrayBuffer = options.arrayBuffer;
   let baseResource = options.baseResource;
-  const byteOffset = defaultValue(options.byteOffset, 0);
-  const releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const incrementallyLoadTextures = defaultValue(
-    options.incrementallyLoadTextures,
-    true,
-  );
-  const upAxis = defaultValue(options.upAxis, Axis.Y);
-  const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
-  const loadAttributesAsTypedArray = defaultValue(
-    options.loadAttributesAsTypedArray,
-    false,
-  );
-  const loadIndicesForWireframe = defaultValue(
-    options.loadIndicesForWireframe,
-    false,
-  );
-  const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
-  const enablePick = defaultValue(options.enablePick, false);
+  const byteOffset = options.byteOffset ?? 0;
+  const releaseGltfJson = options.releaseGltfJson ?? false;
+  const asynchronous = options.asynchronous ?? true;
+  const incrementallyLoadTextures = options.incrementallyLoadTextures ?? true;
+  const upAxis = options.upAxis ?? Axis.Y;
+  const forwardAxis = options.forwardAxis ?? Axis.X;
+  const loadAttributesAsTypedArray =
+    options.loadAttributesAsTypedArray ?? false;
+  const loadIndicesForWireframe = options.loadIndicesForWireframe ?? false;
+  const loadPrimitiveOutline = options.loadPrimitiveOutline ?? true;
+  const enablePick = options.enablePick ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.i3dmResource", i3dmResource);

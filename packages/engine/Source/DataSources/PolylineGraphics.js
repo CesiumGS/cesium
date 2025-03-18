@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -64,7 +64,7 @@ function PolylineGraphics(options) {
   this._zIndex = undefined;
   this._zIndexSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PolylineGraphics.prototype, {
@@ -223,26 +223,19 @@ PolylineGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.positions = defaultValue(this.positions, source.positions);
-  this.width = defaultValue(this.width, source.width);
-  this.granularity = defaultValue(this.granularity, source.granularity);
-  this.material = defaultValue(this.material, source.material);
-  this.depthFailMaterial = defaultValue(
-    this.depthFailMaterial,
-    source.depthFailMaterial,
-  );
-  this.arcType = defaultValue(this.arcType, source.arcType);
-  this.clampToGround = defaultValue(this.clampToGround, source.clampToGround);
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition,
-  );
-  this.classificationType = defaultValue(
-    this.classificationType,
-    source.classificationType,
-  );
-  this.zIndex = defaultValue(this.zIndex, source.zIndex);
+  this.show = this.show ?? source.show;
+  this.positions = this.positions ?? source.positions;
+  this.width = this.width ?? source.width;
+  this.granularity = this.granularity ?? source.granularity;
+  this.material = this.material ?? source.material;
+  this.depthFailMaterial = this.depthFailMaterial ?? source.depthFailMaterial;
+  this.arcType = this.arcType ?? source.arcType;
+  this.clampToGround = this.clampToGround ?? source.clampToGround;
+  this.shadows = this.shadows ?? source.shadows;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.classificationType =
+    this.classificationType ?? source.classificationType;
+  this.zIndex = this.zIndex ?? source.zIndex;
 };
 export default PolylineGraphics;

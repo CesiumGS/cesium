@@ -1,7 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import hasExtension from "./hasExtension.js";
@@ -19,9 +19,10 @@ import ResourceCache from "./ResourceCache.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import VoxelBoxShape from "./VoxelBoxShape.js";
 import VoxelContent from "./VoxelContent.js";
-import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 import VoxelShapeType from "./VoxelShapeType.js";
+import CesiumMath from "../Core/Math.js";
+import Quaternion from "../Core/Quaternion.js";
 
 /**
  * @typedef {Object} Cesium3DTilesVoxelProvider.ConstructorOptions
@@ -68,7 +69,7 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DTilesVoxelProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const {
     className,
@@ -485,7 +486,7 @@ function getShape(tile) {
     return getEllipsoidShape(boundingVolume.region);
   } else if (hasExtension(boundingVolume, "3DTILES_bounding_volume_cylinder")) {
     return getCylinderShape(
-      boundingVolume.extensions["3DTILES_bounding_volume_cylinder"].cylinder,
+      boundingVolume.extensions["3DTILES_bounding_volume_cylinder"],
       tileTransform,
     );
   }
@@ -534,16 +535,39 @@ function getBoxShape(box, tileTransform) {
 }
 
 function getCylinderShape(cylinder, tileTransform) {
-  const obb = OrientedBoundingBox.unpack(cylinder);
-  const shapeTransform = Matrix4.fromRotationTranslation(
-    obb.halfAxes,
-    obb.center,
+  const {
+    minRadius,
+    maxRadius,
+    height,
+    minAngle = -CesiumMath.PI,
+    maxAngle = CesiumMath.PI,
+    translation = [0, 0, 0],
+    rotation = [0, 0, 0, 1],
+  } = cylinder;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("minRadius", minRadius);
+  Check.typeOf.number("maxRadius", maxRadius);
+  Check.typeOf.number("height", height);
+  Check.typeOf.number("minAngle", minAngle);
+  Check.typeOf.number("maxAngle", maxAngle);
+  Check.typeOf.object("translation", translation);
+  Check.typeOf.object("rotation", rotation);
+  //>>includeEnd('debug');
+
+  const minHeight = -0.5 * height + translation[2];
+  const maxHeight = 0.5 * height + translation[2];
+
+  const shapeTransform = Matrix4.fromTranslationQuaternionRotationScale(
+    Cartesian3.unpack(translation),
+    Quaternion.unpack(rotation),
+    new Cartesian3(maxRadius, maxRadius, 0.5 * height),
   );
 
   return {
     shape: VoxelShapeType.CYLINDER,
-    minBounds: Cartesian3.clone(VoxelCylinderShape.DefaultMinBounds),
-    maxBounds: Cartesian3.clone(VoxelCylinderShape.DefaultMaxBounds),
+    minBounds: Cartesian3.fromElements(minRadius, minAngle, minHeight),
+    maxBounds: Cartesian3.fromElements(maxRadius, maxAngle, maxHeight),
     shapeTransform: shapeTransform,
     globalTransform: tileTransform,
   };
@@ -668,7 +692,7 @@ async function getSubtree(provider, subtreeCoord) {
  * @returns {Promise<VoxelContent>|undefined} A promise resolving to a VoxelContent containing the data for the tile, or undefined if the request could not be scheduled this frame.
  */
 Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     tileLevel = 0,
     tileX = 0,

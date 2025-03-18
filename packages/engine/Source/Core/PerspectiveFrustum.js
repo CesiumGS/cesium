@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -33,7 +33,7 @@ import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
  * @see PerspectiveOffCenterFrustum
  */
 function PerspectiveFrustum(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._offCenterFrustum = new PerspectiveOffCenterFrustum();
 
@@ -63,7 +63,7 @@ function PerspectiveFrustum(options) {
    * @type {number}
    * @default 1.0
    */
-  this.near = defaultValue(options.near, 1.0);
+  this.near = options.near ?? 1.0;
   this._near = this.near;
 
   /**
@@ -71,7 +71,7 @@ function PerspectiveFrustum(options) {
    * @type {number}
    * @default 500000000.0
    */
-  this.far = defaultValue(options.far, 500000000.0);
+  this.far = options.far ?? 500000000.0;
   this._far = this.far;
 
   /**
@@ -79,7 +79,7 @@ function PerspectiveFrustum(options) {
    * @type {number}
    * @default 0.0
    */
-  this.xOffset = defaultValue(options.xOffset, 0.0);
+  this.xOffset = options.xOffset ?? 0.0;
   this._xOffset = this.xOffset;
 
   /**
@@ -87,7 +87,7 @@ function PerspectiveFrustum(options) {
    * @type {number}
    * @default 0.0
    */
-  this.yOffset = defaultValue(options.yOffset, 0.0);
+  this.yOffset = options.yOffset ?? 0.0;
   this._yOffset = this.yOffset;
 }
 
@@ -112,7 +112,7 @@ PerspectiveFrustum.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.fov;
   array[startingIndex++] = value.aspectRatio;
@@ -137,7 +137,7 @@ PerspectiveFrustum.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new PerspectiveFrustum();

@@ -3,7 +3,6 @@ import {
   Cartesian3,
   Clock,
   ClockStep,
-  defaultValue,
   defined,
   HeadingPitchRange,
   HeadingPitchRoll,
@@ -114,9 +113,9 @@ describe(
     }
 
     function createTimeDynamicPointCloud(options) {
-      options = defaultValue(options, {});
-      const useTransforms = defaultValue(options.useTransforms, false);
-      const useDraco = defaultValue(options.useDraco, false);
+      options = options ?? {};
+      const useTransforms = options.useTransforms ?? false;
+      const useDraco = options.useDraco ?? false;
       options.intervals = createIntervals(useTransforms, useDraco);
       options.clock = clock;
       if (!defined(options.style)) {
@@ -133,7 +132,7 @@ describe(
     }
 
     function loadFrame(pointCloud, index) {
-      index = defaultValue(index, 0);
+      index = index ?? 0;
       goToFrame(index);
       return pollToPromise(function () {
         scene.renderForSpecs();

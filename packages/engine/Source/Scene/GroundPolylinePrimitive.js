@@ -1,6 +1,6 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -94,7 +94,7 @@ import StencilOperation from "./StencilOperation.js";
  * }));
  */
 function GroundPolylinePrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The geometry instances rendered with this primitive. This may
@@ -136,7 +136,7 @@ function GroundPolylinePrimitive(options) {
    *
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * Determines whether terrain, 3D Tiles or both will be classified.
@@ -145,10 +145,8 @@ function GroundPolylinePrimitive(options) {
    *
    * @default ClassificationType.BOTH
    */
-  this.classificationType = defaultValue(
-    options.classificationType,
-    ClassificationType.BOTH,
-  );
+  this.classificationType =
+    options.classificationType ?? ClassificationType.BOTH;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -160,28 +158,19 @@ function GroundPolylinePrimitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   // Shadow volume is shown by removing a discard in the shader, so this isn't toggleable.
-  this._debugShowShadowVolume = defaultValue(
-    options.debugShowShadowVolume,
-    false,
-  );
+  this._debugShowShadowVolume = options.debugShowShadowVolume ?? false;
 
   this._primitiveOptions = {
     geometryInstances: undefined,
     appearance: undefined,
     vertexCacheOptimize: false,
-    interleave: defaultValue(options.interleave, false),
-    releaseGeometryInstances: defaultValue(
-      options.releaseGeometryInstances,
-      true,
-    ),
-    allowPicking: defaultValue(options.allowPicking, true),
-    asynchronous: defaultValue(options.asynchronous, true),
+    interleave: options.interleave ?? false,
+    releaseGeometryInstances: options.releaseGeometryInstances ?? true,
+    allowPicking: options.allowPicking ?? true,
+    asynchronous: options.asynchronous ?? true,
     compressVertices: false,
     _createShaderProgramFunction: undefined,
     _createCommandsFunction: undefined,

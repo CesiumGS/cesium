@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 
 /**
  * A wrapper around arrays so that the internal length of the array can be manually managed.
@@ -11,7 +10,7 @@ import defaultValue from "./defaultValue.js";
  * @param {number} [length=0] The initial length of the array.
  */
 function ManagedArray(length) {
-  length = defaultValue(length, 0);
+  length = length ?? 0;
   this._array = new Array(length);
   this._length = length;
 }
@@ -157,7 +156,7 @@ ManagedArray.prototype.resize = function (length) {
  * @param {number} [length] The length.
  */
 ManagedArray.prototype.trim = function (length) {
-  length = defaultValue(length, this._length);
+  length = length ?? this._length;
   this._array.length = length;
 };
 export default ManagedArray;

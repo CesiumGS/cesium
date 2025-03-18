@@ -1,5 +1,5 @@
 import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
@@ -86,7 +86,7 @@ function Cesium3DTileStyle(style) {
 }
 
 function setup(that, styleJson) {
-  styleJson = defaultValue(clone(styleJson, true), that._style);
+  styleJson = clone(styleJson, true) ?? that._style;
   that._style = styleJson;
 
   that.show = styleJson.show;
@@ -119,7 +119,7 @@ function setup(that, styleJson) {
   const meta = {};
   if (defined(styleJson.meta)) {
     const defines = styleJson.defines;
-    const metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
+    const metaJson = styleJson.meta ?? Frozen.EMPTY_OBJECT;
     for (const property in metaJson) {
       if (metaJson.hasOwnProperty(property)) {
         meta[property] = new Expression(metaJson[property], defines);
@@ -133,10 +133,7 @@ function setup(that, styleJson) {
 }
 
 function getExpression(tileStyle, value) {
-  const defines = defaultValue(
-    tileStyle._style,
-    defaultValue.EMPTY_OBJECT,
-  ).defines;
+  const defines = (tileStyle._style ?? Frozen.EMPTY_OBJECT).defines;
 
   if (!defined(value)) {
     return undefined;

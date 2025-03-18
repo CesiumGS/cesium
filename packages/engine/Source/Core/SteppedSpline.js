@@ -1,4 +1,4 @@
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Spline from "./Spline.js";
@@ -39,7 +39,7 @@ import Spline from "./Spline.js";
  * @see MorphWeightSpline
  */
 function SteppedSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;

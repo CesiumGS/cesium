@@ -14,7 +14,7 @@ import {
   ColorBlendMode,
   Credit,
   CustomShader,
-  defaultValue,
+  Frozen,
   defined,
   DirectionalLight,
   DistanceDisplayCondition,
@@ -166,7 +166,7 @@ describe(
     });
 
     function zoomTo(model, zoom) {
-      zoom = defaultValue(zoom, 4.0);
+      zoom = zoom ?? 4.0;
 
       const camera = scene.camera;
       const center = model.boundingSphere.center;
@@ -182,24 +182,21 @@ describe(
 
     function verifyRender(model, shouldRender, options) {
       expect(model.ready).toBe(true);
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
-      const zoomToModel = defaultValue(options.zoomToModel, true);
+      const zoomToModel = options.zoomToModel ?? true;
       if (zoomToModel) {
         zoomTo(model);
       }
 
-      const backgroundColor = defaultValue(
-        options.backgroundColor,
-        Color.BLACK,
-      );
+      const backgroundColor = options.backgroundColor ?? Color.BLACK;
 
-      const targetScene = defaultValue(options.scene, scene);
+      const targetScene = options.scene ?? scene;
 
       targetScene.backgroundColor = backgroundColor;
       const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
 
-      const time = defaultValue(options.time, defaultDate);
+      const time = options.time ?? defaultDate;
 
       expect({
         scene: targetScene,
@@ -216,9 +213,9 @@ describe(
     }
 
     function verifyDebugWireframe(model, primitiveType, options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-      const modelHasIndices = defaultValue(options.hasIndices, true);
-      const targetScene = defaultValue(options.scene, scene);
+      options = options ?? Frozen.EMPTY_OBJECT;
+      const modelHasIndices = options.hasIndices ?? true;
+      const targetScene = options.scene ?? scene;
 
       const commandList = targetScene.frameState.commandList;
       const commandCounts = [];

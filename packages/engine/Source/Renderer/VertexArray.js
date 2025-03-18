@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -88,19 +88,16 @@ function addAttribute(attributes, attribute, index, context) {
 
   // Shallow copy the attribute; we do not want to copy the vertex buffer.
   const attr = {
-    index: defaultValue(attribute.index, index),
-    enabled: defaultValue(attribute.enabled, true),
+    index: attribute.index ?? index,
+    enabled: attribute.enabled ?? true,
     vertexBuffer: attribute.vertexBuffer,
     value: hasValue ? attribute.value.slice(0) : undefined,
     componentsPerAttribute: componentsPerAttribute,
-    componentDatatype: defaultValue(
-      attribute.componentDatatype,
-      ComponentDatatype.FLOAT,
-    ),
-    normalize: defaultValue(attribute.normalize, false),
-    offsetInBytes: defaultValue(attribute.offsetInBytes, 0),
-    strideInBytes: defaultValue(attribute.strideInBytes, 0),
-    instanceDivisor: defaultValue(attribute.instanceDivisor, 0),
+    componentDatatype: attribute.componentDatatype ?? ComponentDatatype.FLOAT,
+    normalize: attribute.normalize ?? false,
+    offsetInBytes: attribute.offsetInBytes ?? 0,
+    strideInBytes: attribute.strideInBytes ?? 0,
+    instanceDivisor: attribute.instanceDivisor ?? 0,
   };
 
   if (hasVertexBuffer) {
@@ -287,7 +284,7 @@ function bind(gl, attributes, indexBuffer) {
  * @private
  */
 function VertexArray(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -571,25 +568,19 @@ function interleaveAttributes(attributes) {
  * @see ShaderProgram
  */
 VertexArray.fromGeometry = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
   const context = options.context;
-  const geometry = defaultValue(options.geometry, defaultValue.EMPTY_OBJECT);
+  const geometry = options.geometry ?? Frozen.EMPTY_OBJECT;
 
-  const bufferUsage = defaultValue(
-    options.bufferUsage,
-    BufferUsage.DYNAMIC_DRAW,
-  );
+  const bufferUsage = options.bufferUsage ?? BufferUsage.DYNAMIC_DRAW;
 
-  const attributeLocations = defaultValue(
-    options.attributeLocations,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const interleave = defaultValue(options.interleave, false);
+  const attributeLocations = options.attributeLocations ?? Frozen.EMPTY_OBJECT;
+  const interleave = options.interleave ?? false;
   const createdVAAttributes = options.vertexArrayAttributes;
 
   let name;

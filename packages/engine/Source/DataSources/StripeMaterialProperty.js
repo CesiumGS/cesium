@@ -1,5 +1,5 @@
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -26,7 +26,7 @@ const defaultRepeat = 1;
  * @param {Property|number} [options.repeat=1] A numeric Property specifying how many times the stripes repeat.
  */
 function StripeMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._orientation = undefined;
