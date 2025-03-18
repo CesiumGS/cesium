@@ -19,9 +19,10 @@ import ResourceCache from "./ResourceCache.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import VoxelBoxShape from "./VoxelBoxShape.js";
 import VoxelContent from "./VoxelContent.js";
-import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 import VoxelShapeType from "./VoxelShapeType.js";
+import CesiumMath from "../Core/Math.js";
+import Quaternion from "../Core/Quaternion.js";
 
 /**
  * @typedef {Object} Cesium3DTilesVoxelProvider.ConstructorOptions
@@ -485,7 +486,7 @@ function getShape(tile) {
     return getEllipsoidShape(boundingVolume.region);
   } else if (hasExtension(boundingVolume, "3DTILES_bounding_volume_cylinder")) {
     return getCylinderShape(
-      boundingVolume.extensions["3DTILES_bounding_volume_cylinder"].cylinder,
+      boundingVolume.extensions["3DTILES_bounding_volume_cylinder"],
       tileTransform,
     );
   }
@@ -534,16 +535,39 @@ function getBoxShape(box, tileTransform) {
 }
 
 function getCylinderShape(cylinder, tileTransform) {
-  const obb = OrientedBoundingBox.unpack(cylinder);
-  const shapeTransform = Matrix4.fromRotationTranslation(
-    obb.halfAxes,
-    obb.center,
+  const {
+    minRadius,
+    maxRadius,
+    height,
+    minAngle = -CesiumMath.PI,
+    maxAngle = CesiumMath.PI,
+    translation = [0, 0, 0],
+    rotation = [0, 0, 0, 1],
+  } = cylinder;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("minRadius", minRadius);
+  Check.typeOf.number("maxRadius", maxRadius);
+  Check.typeOf.number("height", height);
+  Check.typeOf.number("minAngle", minAngle);
+  Check.typeOf.number("maxAngle", maxAngle);
+  Check.typeOf.object("translation", translation);
+  Check.typeOf.object("rotation", rotation);
+  //>>includeEnd('debug');
+
+  const minHeight = -0.5 * height + translation[2];
+  const maxHeight = 0.5 * height + translation[2];
+
+  const shapeTransform = Matrix4.fromTranslationQuaternionRotationScale(
+    Cartesian3.unpack(translation),
+    Quaternion.unpack(rotation),
+    new Cartesian3(maxRadius, maxRadius, 0.5 * height),
   );
 
   return {
     shape: VoxelShapeType.CYLINDER,
-    minBounds: Cartesian3.clone(VoxelCylinderShape.DefaultMinBounds),
-    maxBounds: Cartesian3.clone(VoxelCylinderShape.DefaultMaxBounds),
+    minBounds: Cartesian3.fromElements(minRadius, minAngle, minHeight),
+    maxBounds: Cartesian3.fromElements(maxRadius, maxAngle, maxHeight),
     shapeTransform: shapeTransform,
     globalTransform: tileTransform,
   };
