@@ -48,9 +48,9 @@ const VaryingType = {
    * @type {string}
    * @constant
    */
-  MAT3: "mat2",
+  MAT3: "mat3",
   /**
-   * A 3x3 matrix of floating point values.
+   * A 4x4 matrix of floating point values.
    *
    * @type {string}
    * @constant
