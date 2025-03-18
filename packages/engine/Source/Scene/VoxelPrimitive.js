@@ -1358,7 +1358,7 @@ function updateVerticalExaggeration(primitive, frameState) {
       (primitive._minBounds.z - relativeHeight) * exaggeration + relativeHeight;
     primitive._exaggeratedMaxBounds.z =
       (primitive._maxBounds.z - relativeHeight) * exaggeration + relativeHeight;
-  } else if (primitive.shape === VoxelShapeType.BOX) {
+  } else {
     // Apply the exaggeration via the model matrix
     const exaggerationScale = Cartesian3.fromElements(
       1.0,
