@@ -81,8 +81,18 @@ ITwinPlatform.defaultShareKey = undefined;
  * @returns {string} full auth header with basic/bearer method
  */
 ITwinPlatform._getAuthorizationHeader = function () {
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
+
   if (defined(ITwinPlatform.defaultShareKey)) {
-    // TODO: determine if this should be btoa(':shareKey') instead
     return `Basic ${ITwinPlatform.defaultShareKey}`;
   }
   return `Bearer ${ITwinPlatform.defaultAccessToken}`;
