@@ -1376,6 +1376,28 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * If this model is part of a <code>Model3DTileContent</code> of a tileset that
+   * has imagery layers, then this will return the <code>ImageryLayerCollection</code>
+   * of that tileset. Otherwise, <code>undefined</code> is returned.
+   *
+   * @memberof Model.prototype
+   * @type {ImageryLayerCollection|undefined}
+   * @readonly
+   * @private
+   */
+  imageryLayers: {
+    get: function () {
+      if (defined(this._content)) {
+        const tileset = this._content.tileset;
+        if (defined(tileset)) {
+          return tileset.imageryLayers;
+        }
+      }
+      return undefined;
+    },
+  },
+
+  /**
    * The directional light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting

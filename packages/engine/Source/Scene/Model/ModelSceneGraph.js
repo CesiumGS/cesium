@@ -26,6 +26,7 @@ import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
+import ImageryPipelineStageProcessing from "./ImageryPipelineStageProcessing.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -526,11 +527,23 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
       for (k = 0; k < primitivePipelineStages.length; k++) {
         const primitivePipelineStage = primitivePipelineStages[k];
 
-        primitivePipelineStage.process(
-          primitiveRenderResources,
-          runtimePrimitive.primitive,
-          frameState,
-        );
+        // XXX_DRAPING The ImageryPipelineStage has no use for the
+        // primitive!
+        if (primitivePipelineStage.name === "ImageryPipelineStage") {
+          ImageryPipelineStageProcessing.processImageryPipelineStage(
+            this,
+            model,
+            primitiveRenderResources,
+            primitivePipelineStage,
+            frameState,
+          );
+        } else {
+          primitivePipelineStage.process(
+            primitiveRenderResources,
+            runtimePrimitive.primitive,
+            frameState,
+          );
+        }
       }
 
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
