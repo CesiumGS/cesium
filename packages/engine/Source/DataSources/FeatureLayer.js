@@ -91,6 +91,7 @@ const geometryByType = {
   // TODO: swap for feature versions?
   Polygon: PolygonGeometry,
   MultiPolygon: PolygonGeometry,
+  Point: 1, // just here to "add" support...
 };
 
 FeatureLayer.prototype.addGeoJsonFeature = function (geoJson) {
@@ -167,7 +168,7 @@ FeatureLayer.prototype.addGeoJsonFeature = function (geoJson) {
  * @param {FrameState} frameState
  */
 FeatureLayer.prototype.update = function (frameState) {
-  const { camera, time } = frameState;
+  const { camera, time, context, pixelRatio } = frameState;
   const { positionWC: cameraPosition } = camera;
 
   const distance = Math.sqrt(
@@ -202,6 +203,8 @@ FeatureLayer.prototype.update = function (frameState) {
     this.provider.requestFeatures({
       camera: camera,
       time: time,
+      context: context,
+      pixelRatio: pixelRatio,
     });
     this.requestMade = true;
   }

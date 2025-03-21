@@ -3,10 +3,15 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import defined from "../Core/defined";
+import PinBuilder from "../Core/PinBuilder.js";
 import PolygonHierarchy from "../Core/PolygonHierarchy.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import HeightReference from "../Scene/HeightReference.js";
+import VerticalOrigin from "../Scene/VerticalOrigin.js";
+import BillboardGraphics from "./BillboardGraphics.js";
 import CallbackProperty from "./CallbackProperty.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
+import ConstantPositionProperty from "./ConstantPositionProperty.js";
 import ConstantProperty from "./ConstantProperty.js";
 import Entity from "./Entity.js";
 import PolygonGraphics from "./PolygonGraphics.js";
@@ -53,6 +58,12 @@ const defaultStroke = Color.YELLOW;
 const defaultStrokeWidth = 2;
 const defaultFill = Color.fromBytes(255, 255, 0, 100);
 const defaultClampToGround = false;
+
+const sizes = {
+  small: 24,
+  medium: 48,
+  large: 64,
+};
 
 const simpleStyleIdentifiers = [
   "title",
@@ -331,6 +342,71 @@ function processMultiPolygon(geoJson, geometry, crsFunction, options) {
     .filter((entity) => defined(entity));
 }
 
+// TODO: this should be customizable probably
+const pinBuilder = new PinBuilder();
+
+function createPoint(geoJson, crsFunction, coordinates, options) {
+  let symbol = options.markerSymbol;
+  let color = options.markerColor;
+  let size = options.markerSize;
+
+  const properties = geoJson.properties;
+  if (defined(properties)) {
+    const cssColor = properties["marker-color"];
+    if (defined(cssColor)) {
+      color = Color.fromCssColorString(cssColor);
+    }
+
+    size = sizes[properties["marker-size"]] ?? size;
+    const markerSymbol = properties["marker-symbol"];
+    if (defined(markerSymbol)) {
+      symbol = markerSymbol;
+    }
+  }
+
+  let canvasOrPromise;
+  if (defined(symbol)) {
+    if (symbol.length === 1) {
+      canvasOrPromise = pinBuilder.fromText(symbol.toUpperCase(), color, size);
+    } else {
+      canvasOrPromise = pinBuilder.fromMakiIconId(symbol, color, size);
+    }
+  } else {
+    canvasOrPromise = pinBuilder.fromColor(color, size);
+  }
+
+  const billboard = new BillboardGraphics();
+  billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+
+  // Clamp to ground if there isn't a height specified
+  if (coordinates.length === 2 && options.clampToGround) {
+    billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
+  }
+
+  const entity = createObject(geoJson, options.describe);
+  if (!defined(entity)) {
+    return;
+  }
+  entity.billboard = billboard;
+  entity.position = new ConstantPositionProperty(crsFunction(coordinates));
+
+  // TODO: await this promise somehow/somewhere??
+  // eslint-disable-next-line no-unused-vars
+  const promise = Promise.resolve(canvasOrPromise)
+    .then(function (image) {
+      billboard.image = new ConstantProperty(image);
+    })
+    .catch(function () {
+      billboard.image = new ConstantProperty(pinBuilder.fromColor(color, size));
+    });
+
+  return entity;
+}
+
+function processPoint(geoJson, geometry, crsFunction, options) {
+  return createPoint(geoJson, crsFunction, geometry.coordinates, options);
+}
+
 const geoJsonObjectTypes = {
   Feature: processFeature,
   FeatureCollection: processFeatureCollection,
@@ -339,7 +415,7 @@ const geoJsonObjectTypes = {
   // MultiLineString: processMultiLineString,
   // MultiPoint: processMultiPoint,
   // MultiPolygon: processMultiPolygon,
-  // Point: processPoint,
+  Point: processPoint,
   // Polygon: processPolygon,
   // Topology: processTopology,
 };
@@ -350,7 +426,7 @@ const geometryTypes = {
   // MultiLineString: processMultiLineString,
   // MultiPoint: processMultiPoint,
   MultiPolygon: processMultiPolygon,
-  // Point: processPoint,
+  Point: processPoint,
   Polygon: processPolygon,
   // Topology: processTopology,
 };

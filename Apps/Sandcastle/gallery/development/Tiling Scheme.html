@@ -58,11 +58,28 @@
           0.783288043816687,
         );
 
+        const vineyardRect = new Cesium.Rectangle(
+          0.10999300294631664,
+          0.8553632074259329,
+          0.14692013030297874,
+          0.8833790886205592,
+        );
+
+        const targetRect = usRect;
+        //const targetRect = vineyardRect;
+        // const targetRect = Cesium.Rectangle.MAX_VALUE;
+        const rectRatio =
+          Cesium.Rectangle.computeWidth(targetRect) /
+          Cesium.Rectangle.computeHeight(targetRect);
+
         const tilingScheme = new Cesium.GeographicTilingScheme({
-          rectangle: usRect,
-          numberOfLevelZeroTilesX: 2,
-          numberOfLevelZeroTilesY: 2,
+          rectangle: targetRect,
+          numberOfLevelZeroTilesX: Math.round(rectRatio),
+          numberOfLevelZeroTilesY: 1,
         });
+        console.log(tilingScheme);
+        // For debugging/exploration in the console
+        window.tilingScheme = tilingScheme;
 
         const scratchRect = new Cesium.Rectangle();
 
@@ -70,7 +87,37 @@
           return `(${this.west}, ${this.south}, ${this.east}, ${this.north})`;
         };
 
-        drawRect(usRect, Cesium.Color.LIME);
+        drawRect(tilingScheme.rectangle, Cesium.Color.LIME);
+
+        const scratchPixelSize = new Cesium.Cartesian2();
+        function getPixelSize() {
+          // const canvas = viewer.scene.canvas;
+          // const centerPixel = new Cesium.Cartesian2(
+          //   canvas.clientWidth / 2.0,
+          //   canvas.clientHeight / 2.0,
+          // );
+          // const ellipsoid = viewer.scene.ellipsoid;
+          // const center = viewer.camera.pickEllipsoid(centerPixel, ellipsoid);
+
+          // const pixelSize = viewer.camera.getPixelSize(
+          //   new Cesium.BoundingSphere(center, 1),
+          //   viewer.canvas.clientWidth,
+          //   viewer.canvas.clientHeight,
+          // );
+
+          // alternative from only camera height
+          const cameraHeight = viewer.camera.positionCartographic.height;
+          const pixelDimensions = viewer.camera.frustum.getPixelDimensions(
+            viewer.canvas.clientWidth,
+            viewer.canvas.clientHeight,
+            cameraHeight,
+            viewer.scene.pixelRatio,
+            scratchPixelSize,
+          );
+          const pixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
+
+          return pixelSize;
+        }
 
         function tileRectanglesInRectangle(tilingScheme, rect, level = 0) {
           // This is very similar to ImageryLayer._createTileImagerySkeletons
@@ -114,10 +161,53 @@
           return result;
         }
 
+        function rectangleWidth(rect) {
+          // Check top and bottom due to curvature of the earth potentially causing
+          // the width at the poles to be super small and not really representative
+          const topWidth = Cesium.Cartesian3.distance(
+            Cesium.Cartographic.toCartesian(Cesium.Rectangle.northwest(rect)),
+            Cesium.Cartographic.toCartesian(Cesium.Rectangle.northeast(rect)),
+          );
+          const bottomWidth = Cesium.Cartesian3.distance(
+            Cesium.Cartographic.toCartesian(Cesium.Rectangle.southwest(rect)),
+            Cesium.Cartographic.toCartesian(Cesium.Rectangle.southeast(rect)),
+          );
+          return Math.max(topWidth, bottomWidth);
+        }
+
+        function rectangleHeight(rect) {
+          return Cesium.Cartesian3.distance(
+            Cesium.Cartographic.toCartesian(Cesium.Rectangle.northwest(rect)),
+            Cesium.Cartographic.toCartesian(Cesium.Rectangle.southwest(rect)),
+          );
+        }
+
+        function findTileLevel(tilingScheme, pixelSize) {
+          for (let level = 0; level < 15; level++) {
+            const levelTileRect = tilingScheme.tileXYToRectangle(
+              level * 2,
+              level * 2,
+              level,
+            );
+            const width = rectangleWidth(levelTileRect);
+            const pixelWidth = width / pixelSize;
+            const height = rectangleHeight(levelTileRect);
+            const pixelHeight = height / pixelSize;
+
+            console.log({ pixelSize, width, pixelWidth, pixelHeight, level });
+            if (Math.max(pixelWidth, pixelHeight) < 100) {
+              // TODO: tune this number or pick a different method of deciding
+              // If the rectangle would be smaller than X pixels return the level above it
+              return Math.max(level - 1, 0);
+            }
+          }
+          return 0;
+        }
+
         Sandcastle.addToolbarButton("Show tiles in camera", (e) => {
           viewer.entities.removeAll();
 
-          drawRect(usRect, Cesium.Color.LIME);
+          drawRect(tilingScheme.rectangle, Cesium.Color.LIME);
 
           const cameraRect = viewer.scene.camera.computeViewRectangle(
             viewer.scene.ellipsoid,
@@ -125,11 +215,17 @@
           );
           drawRect(cameraRect, Cesium.Color.YELLOW);
 
-          const intersection = Cesium.Rectangle.intersection(cameraRect, usRect);
+          const intersection = Cesium.Rectangle.intersection(
+            cameraRect,
+            tilingScheme.rectangle,
+          );
           drawRect(intersection, Cesium.Color.PINK);
 
           const height = viewer.scene.camera.positionCartographic.height;
           let level = 0;
+
+          const pickedLevel = findTileLevel(tilingScheme, getPixelSize());
+          console.log("picked", pickedLevel);
 
           // TODO: this should be distance based to the target not height based
           // or maybe percentage based between coverage of the target bounds and the camera?
@@ -142,6 +238,8 @@
           } else if (height < 5000000) {
             level = 1;
           }
+
+          level = pickedLevel;
 
           console.log("camera", cameraRect.toString(), "height", height, "level", level);
 

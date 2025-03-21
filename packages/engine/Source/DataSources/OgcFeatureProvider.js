@@ -1,3 +1,6 @@
+import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
@@ -35,6 +38,83 @@ function rectToBbox(rectangle) {
   return [west, south, east, north];
 }
 
+const scratchPixelSize = new Cartesian2();
+/**
+ *
+ * @param {Camera} camera
+ * @returns
+ */
+function getPixelSize(camera, context, pixelRatio) {
+  // const canvas = viewer.scene.canvas;
+  // const centerPixel = new Cartesian2(
+  //   canvas.clientWidth / 2.0,
+  //   canvas.clientHeight / 2.0,
+  // );
+  // const ellipsoid = viewer.scene.ellipsoid;
+  // const center = viewer.camera.pickEllipsoid(centerPixel, ellipsoid);
+
+  // const pixelSize = viewer.camera.getPixelSize(
+  //   new BoundingSphere(center, 1),
+  //   viewer.canvas.clientWidth,
+  //   viewer.canvas.clientHeight,
+  // );
+
+  // alternative from only camera height
+  const cameraHeight = camera.positionCartographic.height;
+  const pixelDimensions = camera.frustum.getPixelDimensions(
+    context.drawingBufferWidth,
+    context.drawingBufferHeight,
+    cameraHeight,
+    pixelRatio,
+    scratchPixelSize,
+  );
+  const pixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
+
+  return pixelSize;
+}
+
+function rectangleWidth(rect) {
+  // Check top and bottom due to curvature of the earth potentially causing
+  // the width at the poles to be super small and not really representative
+  const topWidth = Cartesian3.distance(
+    Cartographic.toCartesian(Rectangle.northwest(rect)),
+    Cartographic.toCartesian(Rectangle.northeast(rect)),
+  );
+  const bottomWidth = Cartesian3.distance(
+    Cartographic.toCartesian(Rectangle.southwest(rect)),
+    Cartographic.toCartesian(Rectangle.southeast(rect)),
+  );
+  return Math.max(topWidth, bottomWidth);
+}
+
+function rectangleHeight(rect) {
+  return Cartesian3.distance(
+    Cartographic.toCartesian(Rectangle.northwest(rect)),
+    Cartographic.toCartesian(Rectangle.southwest(rect)),
+  );
+}
+
+function findTileLevel(tilingScheme, pixelSize) {
+  for (let level = 0; level < 15; level++) {
+    const levelTileRect = tilingScheme.tileXYToRectangle(
+      level * 2,
+      level * 2,
+      level,
+    );
+    const width = rectangleWidth(levelTileRect);
+    const pixelWidth = width / pixelSize;
+    const height = rectangleHeight(levelTileRect);
+    const pixelHeight = height / pixelSize;
+
+    if (Math.max(pixelWidth, pixelHeight) < 100) {
+      // TODO: tune this number or pick a different method of deciding
+      // If the rectangle would be smaller than X pixels return the level above it
+      return Math.max(level - 1, 0);
+    }
+  }
+  return 0;
+}
+
 /**
  * @private
  * @param {GeographicTilingScheme} tilingScheme
@@ -69,8 +149,6 @@ function tileRectanglesInRectangle(tilingScheme, rectangle, level = 0) {
   const posNW = tilingScheme.positionToTileXY(northWest, level);
   const posSE = tilingScheme.positionToTileXY(southEast, level);
 
-  // console.log({ posNW, posSE });
-
   const minX = posNW?.x ?? 0;
   const maxX = posSE?.x ?? tilingScheme.getNumberOfXTilesAtLevel(level) - 1;
   const minY = posNW?.y ?? 0;
@@ -84,7 +162,6 @@ function tileRectanglesInRectangle(tilingScheme, rectangle, level = 0) {
       const tileKey = `${x} ${y} ${level}`;
       const tileRect = tilingScheme.tileXYToRectangle(x, y, level);
       result.set(tileKey, tileRect);
-      // console.log(x, y, level, tileRect.toString());
     }
   }
 
@@ -97,8 +174,8 @@ function tileRectanglesInRectangle(tilingScheme, rectangle, level = 0) {
  * @private
  * @property {number} featuresLoaded defaults to 0
  * @property {boolean} active defaults to false
+ * @property {boolean} isEmpty defaults to false
  * @property {string | undefined} nextLink defaults to undefined
- * @property {boolean} fullyLoaded defaults to false
  * @property {AbortController | undefined} abortController defaults to undefined
  */
 
@@ -129,7 +206,7 @@ function OgcFeatureProvider(baseUrl, collectionId, options) {
   this._availability = undefined;
   this._tilingScheme = new GeographicTilingScheme({
     numberOfLevelZeroTilesX: 2,
-    numberOfLevelZeroTilesY: 2,
+    numberOfLevelZeroTilesY: 1,
     ellipsoid: this._ellipsoid,
   });
   /** @type {Map<string, TileTracker>} */
@@ -148,14 +225,21 @@ OgcFeatureProvider.prototype.loadCollection = async function () {
     headers: this.headers,
   });
   const json = await resource.fetchJson();
+
+  if (!defined(json)) {
+    return;
+  }
+
   this._collectionLoaded = true;
   this._metadata = json;
   if (defined(json.extent?.spatial)) {
     const rect = bboxToRect(json.extent.spatial.bbox[0]);
     this._bbox = rect;
+    const rectAspectRatio =
+      Rectangle.computeWidth(rect) / Rectangle.computeHeight(rect);
     this._tilingScheme = new GeographicTilingScheme({
-      numberOfLevelZeroTilesX: 2,
-      numberOfLevelZeroTilesY: 2,
+      numberOfLevelZeroTilesX: Math.max(Math.round(rectAspectRatio), 1),
+      numberOfLevelZeroTilesY: 1,
       ellipsoid: this._ellipsoid,
       rectangle: rect,
     });
@@ -227,14 +311,15 @@ function createCollectionResource(baseUrl, collectionId, options = {}) {
 
 /**
  * @param {string} tileKey
- * @param {JulianDate} time
+ * @param {JulianDate | undefined} time
  * @returns {Promise<void>}
  */
 OgcFeatureProvider.prototype._requestTile = async function (tileKey, time) {
-  const [x, y, level] = tileKey.split(" ").map(Number.parseInt);
+  const [x, y, level] = tileKey.split(" ").map((n) => Number.parseInt(n));
   const tileTracker = this._loadedTiles.get(tileKey);
+  console.log("_requestTile", { x, y, level });
 
-  if (!defined(tileTracker) || tileTracker.fullyLoaded || tileTracker.active) {
+  if (!defined(tileTracker) || tileTracker.active || tileTracker.isEmpty) {
     return;
   }
 
@@ -248,7 +333,6 @@ OgcFeatureProvider.prototype._requestTile = async function (tileKey, time) {
   const localAbortController = new AbortController();
   tileTracker.abortController = localAbortController;
   localAbortController.signal.addEventListener("abort", () => {
-    // console.warn(tile, "aborted from controller!");
     tileTracker.active = false;
   });
 
@@ -272,7 +356,7 @@ OgcFeatureProvider.prototype._requestTile = async function (tileKey, time) {
   const json = await jsonRequest;
 
   if (localAbortController.signal.aborted) {
-    console.log(tileKey, "cancelled loading during first request");
+    // console.log(tileKey, "cancelled loading during first request");
     tileTracker.active = false;
     return;
   }
@@ -282,8 +366,12 @@ OgcFeatureProvider.prototype._requestTile = async function (tileKey, time) {
     return;
   }
 
-  itemsLoadedThisRequest += json.numberReturned ?? json.features?.length;
-  tileTracker.featuresLoaded += json.numberReturned ?? json.features?.length;
+  const featuresReturned = json.numberReturned ?? json.features?.length;
+  itemsLoadedThisRequest += featuresReturned;
+  tileTracker.featuresLoaded += featuresReturned;
+  if (featuresReturned === 0) {
+    tileTracker.isEmpty = true;
+  }
   tileTracker.nextLink = json.links?.find((link) => link.rel === "next")?.href;
 
   this.dataLoaded.raiseEvent(json);
@@ -293,11 +381,10 @@ OgcFeatureProvider.prototype._requestTile = async function (tileKey, time) {
     itemsLoadedThisRequest < this.maxItems
   ) {
     if (localAbortController.signal.aborted) {
-      console.log(tileKey, "cancelled loading at start of while loop");
+      // console.log(tileKey, "cancelled loading at start of while loop");
       tileTracker.active = false;
       return;
     }
-    // console.log("loading next page", this._nextLink);
 
     let currentLimit = this.limitPerRequest;
     if (itemsLoadedThisRequest + currentLimit > this.maxItems) {
@@ -322,39 +409,51 @@ OgcFeatureProvider.prototype._requestTile = async function (tileKey, time) {
       .fetchJson({
         signal: localAbortController.signal,
       })
-      .catch((error) => {
+      ?.catch((error) => {
         if (resource.request.state === RequestState.CANCELLED) {
-          tileTracker.active = false;
           return;
         }
         throw error;
       });
+    if (!defined(nextPageRequest)) {
+      // TODO: this can happen if the request scheduler doesn't create the request
+      // figure out a nice way to handle this?
+      tileTracker.active = false;
+      return;
+    }
+
     const nextPage = await nextPageRequest;
     if (localAbortController.signal.aborted) {
-      console.log(tileKey, "cancelled loading during page request");
+      // console.log(tileKey, "cancelled loading during page request");
+      tileTracker.active = false;
+      return;
+    }
+
+    if (!defined(nextPage)) {
+      // TODO: check if this can even happen?
+      // It can if the request is cancelled but the abort check should catch that?
+      // maybe if the reqest fully fails?
+      // but then it should throw an error which wouldn't get here anyway
       tileTracker.active = false;
       return;
     }
 
     this.dataLoaded.raiseEvent(nextPage);
 
-    itemsLoadedThisRequest +=
-      nextPage.numberReturned ?? nextPage.features?.length;
-    tileTracker.featuresLoaded +=
-      nextPage.numberReturned ?? nextPage.features?.length;
+    const featuresReturned = json.numberReturned ?? json.features?.length;
+    itemsLoadedThisRequest += featuresReturned;
+    tileTracker.featuresLoaded += featuresReturned;
     tileTracker.nextLink = nextPage.links?.find(
       (link) => link.rel === "next",
     )?.href;
   }
 
-  tileTracker.fullyLoaded = true;
   tileTracker.active = false;
 
   if (itemsLoadedThisRequest >= this.maxItems) {
     console.log(tileKey, "max items per request hit", itemsLoadedThisRequest);
   } else {
-    console.log(tileKey, "no more next link for current request");
-    tileTracker.fullyLoaded = true;
+    // console.log(tileKey, "no more next link for current request");
   }
 };
 
@@ -363,12 +462,16 @@ const scratchViewRectangle = new Rectangle();
 /**
  * @param {Object} options
  * @param {Camera} options.camera
+ * @param {Object} options.context
+ * @param {number} options.pixelRatio
  * @param {JulianDate} [options.time]
  * @returns {Promise<undefined>}
  */
 OgcFeatureProvider.prototype.requestFeatures = async function ({
   camera,
   time,
+  context,
+  pixelRatio,
 }) {
   if (!this._collectionLoaded) {
     await this.loadCollection();
@@ -392,9 +495,10 @@ OgcFeatureProvider.prototype.requestFeatures = async function ({
     scratchViewRectangle,
   );
 
-  // console.log("requestFeatures", cameraRect, time, time?.toString());
+  const pixelSize = getPixelSize(camera, context, pixelRatio);
 
-  const level = 0;
+  const level = findTileLevel(this._tilingScheme, pixelSize);
+  console.log("request level", level);
   const tiles = tileRectanglesInRectangle(
     this._tilingScheme,
     cameraRect,
@@ -419,15 +523,14 @@ OgcFeatureProvider.prototype.requestFeatures = async function ({
       this._loadedTiles.set(tileKey, {
         featuresLoaded: 0,
         active: false,
+        isEmpty: false,
         nextLink: undefined,
-        fullyLoaded: false,
         abortController: undefined,
       });
       tileTracker = this._loadedTiles.get(tileKey);
-      // console.log("created loaded tile record", tileKey);
     }
 
-    if (!tileTracker.active) {
+    if (!tileTracker.active && !tileTracker.isEmpty) {
       this._requestTile(tileKey, time);
     }
   }

@@ -110,10 +110,10 @@
           daraaProvider,
           iTwinProvider,
         ];
-        const currentProvider = vineyardProvider;
-        const collectionId = "vineyards";
-        // const currentProvider = finlandGeoNamesProvider;
-        // const collectionId = "placenames";
+        // const currentProvider = vineyardProvider;
+        // const collectionId = "vineyards";
+        const currentProvider = finlandGeoNamesProvider;
+        const collectionId = "placenames";
 
         function drawRect(rect, outlineColor = Cesium.Color.RED) {
           if (!rect) {
@@ -140,8 +140,8 @@
             currentProvider.baseUrl,
             collectionId,
             {
-              limitPerRequest: 2,
-              maxItems: 6,
+              limitPerRequest: 100,
+              maxItems: 500,
               queryParameters: currentProvider.queryParameters,
               headers: currentProvider.headers,
             },

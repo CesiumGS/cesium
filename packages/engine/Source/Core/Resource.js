@@ -1395,10 +1395,7 @@ Resource.prototype._makeRequest = function (options) {
   };
 
   options.signal?.addEventListener("abort", () => {
-    console.log("signal event abort");
-    // if (resource.request.cancelFunction) {
-    //   resource.request.cancelFunction();
-    // }
+    // once this is called the RequestScheduler will take care of aborting the actual request
     request.cancel();
   });
 
