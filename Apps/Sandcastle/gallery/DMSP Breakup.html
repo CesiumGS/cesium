@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use Viewer to start building new applications or easily embed Cesium into existing applications."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // "app" state
+        const viewModel = {
+          minP: -19.0,
+          maxP: -7.0,
+          transparencyCutoff: 0.35,
+          tOffset: 0.0,
+        };
+
+        const customShader = new Cesium.CustomShader({
+          uniforms: {
+            u_minimumP: {
+              type: Cesium.UniformType.FLOAT,
+              value: viewModel.minP,
+            },
+            u_maximumP: {
+              type: Cesium.UniformType.FLOAT,
+              value: viewModel.maxP,
+            },
+            u_transparencyCutoff: {
+              type: Cesium.UniformType.FLOAT,
+              value: viewModel.transparencyCutoff,
+            },
+            u_tOffset: {
+              type: Cesium.UniformType.FLOAT,
+              value: viewModel.tOffset,
+            },
+          },
+          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+  {
+      // Interpolate based on the current time using polynomial coefficients
+      float t = u_tOffset * 10.0;
+      vec4 coefficients = fsInput.metadata.p;
+      float p = coefficients[0] + coefficients[1] * t + coefficients[2] * t * t + coefficients[3] * t * t * t;
+      
+      float minP = u_minimumP;
+      float maxP = u_maximumP;
+      float rangeP = maxP - minP;
+      
+      // Use the normalized p value to map to a color gradient
+      float normP = smoothstep(minP, maxP, p);
+      material.diffuse = vec3(normP, 1.0 - normP, 0.0);
+        
+      // Adjust transparency based on provided cutoff
+
+      float transparency = normP >= (1.0 - u_transparencyCutoff) ? 1.0 : 1.0 - smoothstep(u_transparencyCutoff, 1.0, normP);
+
+      // To mimic light scattering, use exponential decay
+      float thickness = fsInput.voxel.travelDistance * 512.0;
+      material.alpha = 1.0 - pow(transparency, thickness);
+  }`,
+        });
+
+        async function addUi() {
+          await import("https://jspm.dev/@spectrum-web-components/bundle/elements.js");
+          const toolbar = document.querySelector("#toolbar");
+          const theme = document.createElement("sp-theme");
+          theme.setAttribute("scale", "large");
+          theme.setAttribute("color", "dark");
+          toolbar.appendChild(theme);
+
+          const pRangerSlider = document.createElement("sp-slider");
+          pRangerSlider.setAttribute("variant", "range");
+          pRangerSlider.setAttribute("step", "0.5");
+          pRangerSlider.setAttribute("min", "-20");
+          pRangerSlider.setAttribute("max", "0.0");
+          pRangerSlider.innerHTML = "Likelihood range (log<sub>10</sub>)";
+          theme.appendChild(pRangerSlider);
+
+          const pRangerSliderMin = document.createElement("sp-slider-handle");
+          pRangerSliderMin.setAttribute("slot", "handle");
+          pRangerSliderMin.setAttribute("name", "min");
+          pRangerSliderMin.setAttribute("label", "Minimum");
+          pRangerSliderMin.setAttribute("value", "-19.0");
+          pRangerSliderMin.setAttribute("data-bind", "value: minP, valueUpdate: 'input'");
+          pRangerSlider.appendChild(pRangerSliderMin);
+
+          const pRangerSliderMax = document.createElement("sp-slider-handle");
+          pRangerSliderMax.setAttribute("slot", "handle");
+          pRangerSliderMax.setAttribute("name", "max");
+          pRangerSliderMax.setAttribute("label", "Maximum");
+          pRangerSliderMax.setAttribute("value", "-7.0");
+          pRangerSliderMax.setAttribute("data-bind", "value: maxP, valueUpdate: 'input'");
+          pRangerSlider.appendChild(pRangerSliderMax);
+
+          const pAlphaSlider = document.createElement("sp-slider");
+
+          pAlphaSlider.setAttribute("min", "0");
+          pAlphaSlider.setAttribute("max", "1");
+          pAlphaSlider.setAttribute("step", "0.025");
+          pAlphaSlider.setAttribute("value", "0.3");
+          pAlphaSlider.setAttribute("variant", "filled");
+          pAlphaSlider.setAttribute(
+            "data-bind",
+            "value: transparencyCutoff, valueUpdate: 'input'",
+          );
+          pAlphaSlider.innerHTML = "Translucency (%)";
+
+          const alphaGradient = `linear-gradient(to right, lime 0%, red 100%)`;
+          pAlphaSlider.setAttribute(
+            "style",
+            `--mod-slider-track-color: ${alphaGradient}`,
+          );
+
+          theme.appendChild(pAlphaSlider);
+
+          Cesium.knockout.track(viewModel);
+          Cesium.knockout.applyBindings(viewModel, toolbar);
+
+          const updateGradient = () => {
+            const rangePercent = Math.floor(
+              ((viewModel.maxP - viewModel.minP) / 20) * 100,
+            );
+            const gradient = `linear-gradient(to right, lime 0%, red ${rangePercent}%)`;
+            pRangerSlider.setAttribute(
+              "style",
+              `--mod-slider-track-fill-color: ${gradient}`,
+            );
+          };
+
+          updateGradient();
+
+          Cesium.knockout
+            .getObservable(viewModel, "transparencyCutoff")
+            .subscribe(function (newValue) {
+              customShader.setUniform(
+                "u_transparencyCutoff",
+                Number.parseFloat(newValue),
+              );
+            });
+
+          Cesium.knockout.getObservable(viewModel, "minP").subscribe(function (newValue) {
+            customShader.setUniform("u_minimumP", Number.parseFloat(newValue));
+            updateGradient();
+          });
+
+          Cesium.knockout.getObservable(viewModel, "maxP").subscribe(function (newValue) {
+            customShader.setUniform("u_maximumP", Number.parseFloat(newValue));
+            updateGradient();
+          });
+        }
+
+        addUi();
+
+        Cesium.Ion.defaultAccessToken =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyYTlmMWY2Zi1lODA4LTRjNTUtYjY3Zi01YzgzMzdiNWJiMjQiLCJpZCI6MzQzMSwiaWF0IjoxNzQyODI2OTc3fQ.lbO1ODQ8q7R8HSJL375jVMHagJHYGriVqiZ897TDW08";
+
+        const imageryProvider = new Cesium.OpenStreetMapImageryProvider({
+          url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/",
+          credit: `&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
+    &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
+    &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
+        });
+        const baseLayer = new Cesium.ImageryLayer(imageryProvider);
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          geocoder: false,
+          baseLayer,
+          baseLayerPicker: false,
+          sceneModePicker: false,
+        });
+
+        // Setup clock and timeline for the simulation time
+        const simulationTimeModifier = 60663.090277777;
+        const simulationTimeIso = "2024-12-19T07:10:21.4";
+        const t0 = Cesium.JulianDate.fromIso8601(
+          simulationTimeIso,
+          new Cesium.JulianDate(),
+        );
+        const t1 = Cesium.JulianDate.addSeconds(t0, 10000, new Cesium.JulianDate());
+        const totalTimeInSeconds = Cesium.JulianDate.secondsDifference(t1, t0);
+
+        viewer.clock.currentTime = t0.clone();
+        viewer.clock.startTime = t0.clone();
+        viewer.clock.stopTime = t1.clone();
+        viewer.clock.multiplier = 100.0;
+        viewer.clock.shouldAnimate = true;
+        viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+        viewer.timeline.zoomTo(t0, t1);
+
+        viewer.scene.debugShowFramesPerSecond = true;
+        viewer.scene.globe.showGroundAtmosphere = false;
+
+        const camera = viewer.camera;
+        function createPrimitive(provider, customShader) {
+          viewer.scene.primitives.removeAll();
+
+          const voxelPrimitive = viewer.scene.primitives.add(
+            new Cesium.VoxelPrimitive({
+              provider: provider,
+              customShader: customShader,
+            }),
+          );
+
+          voxelPrimitive.nearestSampling = true;
+          voxelPrimitive.maxClippingBounds.z = 2500000;
+
+          camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
+            duration: 0.0,
+          });
+
+          Sandcastle.addToggleButton("Show tileset", voxelPrimitive.show, (checked) => {
+            voxelPrimitive.show = checked;
+          });
+
+          return voxelPrimitive;
+        }
+
+        const resource = await Cesium.IonResource.fromAssetId(3252501);
+        const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(resource);
+        provider._metadataOrder = 0;
+        const primitive = createPrimitive(provider, customShader);
+
+        const pointPrimitives = viewer.scene.primitives.add(
+          new Cesium.PointPrimitiveCollection(),
+        );
+        pointPrimitives.show = false;
+
+        Sandcastle.addToggleButton("Show samples", pointPrimitives.show, (checked) => {
+          pointPrimitives.show = checked;
+        });
+
+        async function loadSamples(ionAssetId) {
+          const resource = await Cesium.IonResource.fromAssetId(ionAssetId);
+          const geojson = await resource.fetchJson();
+          const pointsByTimestamp = new Map();
+
+          for (const { geometry, properties } of geojson.features) {
+            if (geometry.type !== "Point") {
+              continue;
+            }
+
+            const position = Cesium.Cartesian3.fromDegrees(
+              ...geometry.coordinates,
+              properties.height,
+            );
+            const t = properties.secondsOfDay;
+            let points = pointsByTimestamp.get(t);
+            if (!Cesium.defined(points)) {
+              points = [];
+              pointsByTimestamp.set(t, points);
+            }
+
+            const normP =
+              (Math.log10(properties.p) - viewModel.minP) /
+              (viewModel.maxP - viewModel.minP);
+            const alpha = Cesium.Math.clamp(
+              Cesium.Math.lerp(-1.0, 1.0, normP / viewModel.transparencyCutoff),
+              0.0,
+              1.0,
+            );
+
+            const point = pointPrimitives.add({
+              color: new Cesium.Color(normP, 1.0 - normP, 0.0, alpha * 0.5),
+              position,
+              outlineWidth: 0,
+              pixelSize: 3,
+            });
+
+            points.push(point);
+          }
+        }
+
+        loadSamples(3252485);
+
+        const scratchMatrix = new Cesium.Matrix3();
+
+        let viewInIcrf = false;
+        let lastCameraPositionInertial = new Cesium.Cartesian3();
+        Sandcastle.addToggleButton("View in ICRF", viewInIcrf, (checked) => {
+          viewInIcrf = checked;
+
+          if (checked) {
+            const time = viewer.clock.currentTime;
+            const fixedToIcrf = Cesium.Transforms.computeFixedToIcrfMatrix(
+              time,
+              scratchMatrix,
+            );
+            if (Cesium.defined(fixedToIcrf)) {
+              lastCameraPositionInertial = Cesium.Matrix3.multiplyByVector(
+                fixedToIcrf,
+                camera.position,
+                lastCameraPositionInertial,
+              );
+              Cesium.Cartesian3.clone(lastCameraPositionInertial, camera.position);
+            }
+          }
+        });
+
+        viewer.clock.onTick.addEventListener(() => {
+          // Update the shader time
+          const time = viewer.clock.currentTime;
+          viewModel.tOffset =
+            Cesium.JulianDate.secondsDifference(time, t0) / totalTimeInSeconds;
+          customShader.setUniform("u_tOffset", viewModel.tOffset);
+
+          let offset;
+          let transform = Cesium.Matrix4.IDENTITY;
+          if (viewInIcrf) {
+            const icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(
+              time,
+              scratchMatrix,
+            );
+            if (Cesium.defined(icrfToFixed)) {
+              offset = Cesium.Cartesian3.clone(
+                camera.position,
+                lastCameraPositionInertial,
+              );
+              transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+            }
+          }
+
+          camera.lookAtTransform(transform, offset);
+        });
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>
