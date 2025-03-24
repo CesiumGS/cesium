@@ -60,22 +60,13 @@
   }`,
         });
 
-        const modelMatrix = Cesium.Matrix4.fromScale(
-          Cesium.Cartesian3.fromElements(
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-          ),
-        );
-
-        function createPrimitive(provider, customShader, modelMatrix) {
+        function createPrimitive(provider, customShader) {
           viewer.scene.primitives.removeAll();
 
           const voxelPrimitive = viewer.scene.primitives.add(
             new Cesium.VoxelPrimitive({
               provider: provider,
               customShader: customShader,
-              modelMatrix: modelMatrix,
             }),
           );
 
@@ -96,7 +87,7 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
               );
-              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -105,7 +96,7 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
               );
-              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -114,11 +105,7 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
               );
-              const primitive = createPrimitive(
-                provider,
-                customShaderWhite,
-                Cesium.Matrix4.IDENTITY,
-              );
+              const primitive = createPrimitive(provider, customShaderWhite);
             },
           },
         ]);

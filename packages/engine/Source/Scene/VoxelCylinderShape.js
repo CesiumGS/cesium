@@ -661,7 +661,7 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
 };
 
 /**
- * Defines the minimum bounds of the shape. Corresponds to minimum radius, height, angle.
+ * Defines the minimum bounds of the shape. Corresponds to minimum radius, angle, and height.
  *
  * @type {Cartesian3}
  * @constant
@@ -674,7 +674,7 @@ VoxelCylinderShape.DefaultMinBounds = Object.freeze(
 );
 
 /**
- * Defines the maximum bounds of the shape. Corresponds to maximum radius, height, angle.
+ * Defines the maximum bounds of the shape. Corresponds to maximum radius, angle, height.
  *
  * @type {Cartesian3}
  * @constant
