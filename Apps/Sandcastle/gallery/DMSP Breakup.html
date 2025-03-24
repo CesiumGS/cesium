@@ -173,13 +173,11 @@
         Cesium.Ion.defaultAccessToken =
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyYTlmMWY2Zi1lODA4LTRjNTUtYjY3Zi01YzgzMzdiNWJiMjQiLCJpZCI6MzQzMSwiaWF0IjoxNzQyODI2OTc3fQ.lbO1ODQ8q7R8HSJL375jVMHagJHYGriVqiZ897TDW08";
 
-        const imageryProvider = new Cesium.OpenStreetMapImageryProvider({
-          url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/",
-          credit: `&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
-    &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
-    &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
-        });
+        const imageryProvider = await Cesium.IonImageryProvider.fromAssetId(3954);
         const baseLayer = new Cesium.ImageryLayer(imageryProvider);
+        baseLayer.saturation = 0.2;
+        baseLayer.brightness = 0.5;
+        baseLayer.contrast = 0.8;
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
           geocoder: false,
@@ -187,6 +185,12 @@
           baseLayerPicker: false,
           sceneModePicker: false,
         });
+
+        const labels = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.IonImageryProvider.fromAssetId(2411391),
+        );
+        viewer.imageryLayers.add(labels);
+        labels.alpha = 0.5;
 
         // Setup clock and timeline for the simulation time
         const simulationTimeModifier = 60663.090277777;
