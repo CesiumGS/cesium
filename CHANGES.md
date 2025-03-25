@@ -20,7 +20,6 @@
 - Fixed VaryingType.MAT3: "mat2" significant typo. [#12524](https://github.com/CesiumGS/cesium/issues/12524)
 - Fixed shape bounds and transforms for cylinder-shaped voxels. [#12522](https://github.com/CesiumGS/cesium/pull/12522)
 
-
 ## 1.127 - 2025-03-03
 
 ### @cesium/engine
