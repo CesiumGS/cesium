@@ -67,6 +67,9 @@ ITwinPlatform.defaultAccessToken = undefined;
 /**
  * Gets or sets the default iTwin share key. If this value is provided it will override {@link ITwinPlatform.defaultAccessToken} in all requests.
  *
+ * Share keys can be generated using the iTwin Shares api
+ * https://developer.bentley.com/apis/access-control-v2/operations/create-itwin-share/
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @type {string|undefined}
