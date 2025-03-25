@@ -115,7 +115,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof EllipsoidTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
