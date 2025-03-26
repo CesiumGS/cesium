@@ -1,5 +1,6 @@
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import TileSelectionResult from "./TileSelectionResult.js";
@@ -185,20 +186,47 @@ QuadtreeTile.createLevelZeroTiles = function (tilingScheme) {
   return result;
 };
 
-// Base precision in radians. Adjust as needed.
-const BASE_PRECISION = 0.0001;
+// Maximum desired error in pixel at each level.
+const MAX_ERROR_PX = 0.5;
 /**
  * Creates a spatial hash key for the given longitude, latitude, and tile level.
  * The precision is adjusted based on the tile level to achieve finer precision at higher levels.
+ *
+ * This function calculates the spatial hash key by first determining the precision at the given level,
+ * and then rounding the longitude and latitude to that precision for consistency.
+ *
+ * The steps for computing the level precision are as follows:
+ *
+ * 1. Compute the resolution (meters per pixel) at the given level:
+ *      level_resolution_m = (2 * PI * RADIUS) / (2^level * TILE_SIZE)
+ *
+ * 2. Compute the target precision in meters:
+ *      level_precision_m = level_resolution_m * MAX_ERROR_PX
+ *
+ * 3. Compute the target precision to radians:
+ *      level_precision_rad = level_precision_m / BODY_RADIUS
+ *
+ * This simplifies to:
+ *      level_precision_rad = (2 * PI * MAX_ERROR_PX) / (2^level * TILE_SIZE)
+ * which can also be written as:
+ *      level_precision_rad = (PI * MAX_ERROR_PX) / (2^(level-1) * TILE_SIZE)
+ *
+ * The computed level_precision_rad is then used to round the input longitude and latitude,
+ * ensuring that positions that fall within the same spatial bin produce the same hash key.
+ *
+ * The constants below are computed once since they are fixed for the given configuration.
  *
  * @param {number} longitude - The longitude in radians.
  * @param {number} latitude - The latitude in radians.
  * @param {number} level - The quadtree tile level.
  * @returns {string} A string representing the spatial hash key.
  */
+const TILE_SIZE = 256;
+const BASE_LEVEL_PRECISION = (CesiumMath.PI * MAX_ERROR_PX) / TILE_SIZE;
+
 function createSpatialHashKey(longitude, latitude, level) {
   // Adjust precision based on quadtree level - higher levels get finer precision
-  const levelPrecision = BASE_PRECISION / Math.pow(2, Math.min(level, 15));
+  const levelPrecision = BASE_LEVEL_PRECISION / 2 ** (level - 1);
   // Round to the grid precision
   const lonGrid = Math.floor(longitude / levelPrecision) * levelPrecision;
   const latGrid = Math.floor(latitude / levelPrecision) * levelPrecision;
