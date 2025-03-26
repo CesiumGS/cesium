@@ -754,6 +754,32 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * Sets model matrices for instancing
+   *
+   * @memberof Model.prototype
+   * @type {boolean}
+   *
+   * @default []
+   */
+  apiInstances: {
+    get: function () {
+      return this._apiInstances;
+    },
+    set: function (value) {
+      this._apiInstances = value;
+      for (const runtimeNode in this._sceneGraph._runtimeNodes) {
+        if (
+          defined(
+            this._sceneGraph._runtimeNodes[runtimeNode]._apiInstancesDirty,
+          )
+        ) {
+          this._sceneGraph._runtimeNodes[runtimeNode]._apiInstancesDirty = true;
+        }
+      }
+    },
+  },
+
+  /**
    * Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property
    * will always be false, since the 3D Tiles culling system is used.
    *
@@ -3086,7 +3112,7 @@ Model.fromGltfAsync = async function (options) {
   const model = new Model(modelOptions);
 
   if (defined(options.apiInstances)) {
-    model.apiInstances = options.apiInstances;
+    model._apiInstances = options.apiInstances;
   }
 
   const resourceCredits = model._resource.credits;

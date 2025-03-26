@@ -8,6 +8,7 @@ import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
+import ModelInstancesUpdateStage from "./ModelInstancesUpdateStage.js";
 import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 
 /**
@@ -54,6 +55,8 @@ function ModelRuntimeNode(options) {
 
   this._computedTransform = new Matrix4(); // Computed in initialize()
   this._transformDirty = false;
+
+  this._apiInstancesDirty = false;
 
   // Used for animation
   this._transformParameters = undefined;
@@ -585,8 +588,10 @@ ModelRuntimeNode.prototype.configurePipeline = function () {
     pipelineStages.push(InstancingPipelineStage);
   }
 
-  if (defined(this.sceneGraph._model.apiInstances)) {
+  if (defined(this.sceneGraph._model._apiInstances)) {
     pipelineStages.push(InstancingPipelineStage);
+    updateStages.push(ModelInstancesUpdateStage);
+    this.apiInstances = this.sceneGraph._model._apiInstances;
   }
 
   pipelineStages.push(NodeStatisticsPipelineStage);
