@@ -29,10 +29,13 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const serviceResponse = await fetch("https://api.cesium.com/itwin/token");
-        const { access_token: token } = await serviceResponse.json();
+        // Generate a share key for access to an iTwin without OAuth
+        // https://developer.bentley.com/apis/access-control-v2/operations/create-itwin-share/
+        Cesium.ITwinPlatform.defaultShareKey =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiMDRiYTcyNWYtZjNjMC00ZjMwLTgwMTQtYTQ0ODhjYmQ2MTJkIiwiaWQiOiI3ZDI2MTQ2YS1mMWE4LTRmYzYtODI5Ny05ODA4ZGRlZDdkOTciLCJleHAiOjE3NDQ5OTAzNzl9.w8B077BL6TJ8Ohit9Pzyw8DlqicKDVBMwgcE0ujLOBQ";
 
-        Cesium.ITwinPlatform.defaultAccessToken = token;
+        // For alternative forms of authentication you can use, visit https://developer.bentley.com/apis/overview/authorization/. Then set your access token like this:
+        // Cesium.ITwinPlatform.defaultAccessToken = 'your token'
 
         const iTwinId = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
 

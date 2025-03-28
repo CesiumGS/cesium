@@ -391,12 +391,13 @@ describe("ITwinData", () => {
       );
     });
 
-    it("rejects with no default access token set", async () => {
+    it("rejects with no default access token or default share key set", async () => {
       ITwinPlatform.defaultAccessToken = undefined;
+      ITwinPlatform.defaultShareKey = undefined;
       await expectAsync(
         ITwinData.loadGeospatialFeatures("itwin-id-1", "collection-id-1"),
       ).toBeRejectedWithDeveloperError(
-        "Must set ITwinPlatform.defaultAccessToken first",
+        /Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey/,
       );
     });
 
