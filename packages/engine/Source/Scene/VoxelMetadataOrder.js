@@ -6,7 +6,7 @@
  * @enum {number}
  */
 const VoxelMetadataOrder = {
-  XYZ: 0, // Default ordering following the 3D Tiles convention. Z-axis points upward.
-  GLTF: 1, // Ordering following the glTF convention. Y-axis points upward.
+  Z_UP: 0, // Default ordering following the 3D Tiles convention. Z-axis points upward.
+  Y_UP: 1, // Ordering following the glTF convention. Y-axis points upward.
 };
 export default Object.freeze(VoxelMetadataOrder);

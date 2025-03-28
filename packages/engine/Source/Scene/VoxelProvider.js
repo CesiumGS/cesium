@@ -150,7 +150,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    *
    * @memberof VoxelProvider.prototype
    * @type {VoxelMetadataOrder}
-   * @default VoxelMetadataOrder.XYZ
+   * @default VoxelMetadataOrder.Z_UP
    * @readonly
    */
   metadataOrder: {
