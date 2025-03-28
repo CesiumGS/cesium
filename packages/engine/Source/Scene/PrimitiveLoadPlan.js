@@ -339,19 +339,6 @@ function buildSpzAttributes(loadPlan, context) {
   scaleAttr.constant = 0;
   scaleAttr.instanceDivisor = 1;
 
-  //we have to change handedness and invert
-  for (let q = 0; q < gs.rotations.length; q += 4) {
-    const x = gs.rotations[q];
-    const y = gs.rotations[q + 1];
-    const z = gs.rotations[q + 2];
-    const w = gs.rotations[q + 3];
-
-    gs.rotations[q] = -x;
-    gs.rotations[q + 1] = -y;
-    gs.rotations[q + 2] = -z;
-    gs.rotations[q + 3] = -w;
-  }
-
   rotationAttr.name = "_ROTATION";
   rotationAttr.semantic = VertexAttributeSemantic.ROTATION;
   rotationAttr.typedArray = new Float32Array(gs.rotations);
