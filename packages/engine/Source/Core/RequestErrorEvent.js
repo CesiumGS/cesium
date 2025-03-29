@@ -53,6 +53,24 @@ RequestErrorEvent.prototype.toString = function () {
   if (defined(this.statusCode)) {
     str += ` Status Code: ${this.statusCode}`;
   }
+  if (defined(this.response)) {
+    let rspMsg;
+    try {
+      rspMsg = JSON.stringify(this.response);
+    } catch (e) {
+      rspMsg = "failed to serializer response";
+    }
+    str += `\nResponse was: ${rspMsg}`;
+  }
+  if (defined(this.responseHeaders)) {
+    let rspHeadersMsg;
+    try {
+      rspHeadersMsg = JSON.stringify(this.responseHeaders);
+    } catch (e) {
+      rspHeadersMsg = "failed to serializer response headers";
+    }
+    str += `\nResponse headers were: ${rspHeadersMsg}`;
+  }
   return str;
 };
 export default RequestErrorEvent;
