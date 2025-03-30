@@ -6,11 +6,11 @@
 
 #### Breaking Changes :mega:
 
-- `Camera.getPickRay` was erroneous returning a result in camera coordinates. It is now returned in world coordinates as stated in the documentation. The result can be transformed using `Camera.inverseViewMatrix` to achieve the previous behavior.
+- `Camera.getPickRay` was erroneously returning a result in camera coordinates. It is now returned in world coordinates as stated in the documentation. The result can be transformed using `Camera.inverseViewMatrix` to achieve the previous behavior.
 
 #### Additions :tada:
 
-- Add support for loading iTwin data using keys from the the iTwin Shares API. Set `ITwinPlatform.defaultShareKey` instead of `ITwinPlatform.defaultAccessToken` [#12530](https://github.com/CesiumGS/cesium/pull/12530)
+- Add support for loading iTwin data using share keys as an alternative to user-based OAuth. When using a share key, set `ITwinPlatform.defaultShareKey`. [#12530](https://github.com/CesiumGS/cesium/pull/12530)
 
 #### Deprecated :hourglass_flowing_sand:
 
