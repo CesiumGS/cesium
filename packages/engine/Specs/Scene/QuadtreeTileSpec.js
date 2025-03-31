@@ -387,6 +387,7 @@ describe("Scene/QuadtreeTile", function () {
       const longitude = CesiumMath.toRadians(45);
       const latitude = CesiumMath.toRadians(30);
       const cartographic = new Cartographic(longitude, latitude, 0);
+      const maximumScreenSpaceError = 2;
 
       // Create a dummy Cartesian3 position (the computed clamped position)
       const dummyPosition = new Cartesian3(1000, 2000, 3000);
@@ -404,10 +405,17 @@ describe("Scene/QuadtreeTile", function () {
       tile.clearPositionCache();
 
       // Set a cache entry for the given cartographic position.
-      tile.setPositionCacheEntry(cartographic, dummyPosition);
+      tile.setPositionCacheEntry(
+        cartographic,
+        maximumScreenSpaceError,
+        dummyPosition,
+      );
 
       // Retrieve the cache entry.
-      const cachedData = tile.getPositionCacheEntry(cartographic);
+      const cachedData = tile.getPositionCacheEntry(
+        cartographic,
+        maximumScreenSpaceError,
+      );
       expect(cachedData).toBeDefined();
       expect(cachedData).toEqual(dummyPosition);
 
@@ -421,6 +429,7 @@ describe("Scene/QuadtreeTile", function () {
       const lat = CesiumMath.toRadians(30);
       const carto1 = new Cartographic(lon, lat, 0);
       const carto2 = new Cartographic(lon, lat, 0);
+      const maximumScreenSpaceError = 2;
 
       // Create a dummy tile at level 3.
       const tile = new QuadtreeTile({
@@ -434,10 +443,17 @@ describe("Scene/QuadtreeTile", function () {
 
       // Set a cache entry using the first cartographic object.
       const dummyPosition = new Cartesian3(1000, 2000, 3000);
-      tile.setPositionCacheEntry(carto1, dummyPosition);
+      tile.setPositionCacheEntry(
+        carto1,
+        maximumScreenSpaceError,
+        dummyPosition,
+      );
 
       // Retrieve the cache entry using the second (equal) cartographic instance.
-      const cachedData = tile.getPositionCacheEntry(carto2);
+      const cachedData = tile.getPositionCacheEntry(
+        carto2,
+        maximumScreenSpaceError,
+      );
       expect(cachedData).toBeDefined();
       expect(cachedData).toEqual(dummyPosition);
     });

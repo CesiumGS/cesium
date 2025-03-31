@@ -1,6 +1,5 @@
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import TileSelectionResult from "./TileSelectionResult.js";
@@ -186,13 +185,11 @@ QuadtreeTile.createLevelZeroTiles = function (tilingScheme) {
   return result;
 };
 
-// Maximum desired error in pixel at each level.
-const MAX_ERROR_PX = 0.5;
 /**
  * Creates a spatial hash key for the given longitude, latitude, and tile level.
- * The precision is adjusted based on the tile level to achieve finer precision at higher levels.
+ * The precision is adjusted based on the tile level and extent to achieve finer precision at higher levels.
  *
- * This function calculates the spatial hash key by first determining the precision at the given level,
+ * This function calculates the spatial hash key by first determining the precision at the given tile for the current maximum screenspace error (MAX_ERROR_PX),
  * and then rounding the longitude and latitude to that precision for consistency.
  *
  * The steps for computing the level precision are as follows:
@@ -218,18 +215,22 @@ const MAX_ERROR_PX = 0.5;
  *
  * @param {number} longitude - The longitude in radians.
  * @param {number} latitude - The latitude in radians.
- * @param {number} level - The quadtree tile level.
+ * @param {Rectangle} rectangle - The quadtree tile extents.
  * @returns {string} A string representing the spatial hash key.
  */
 const TILE_SIZE = 256;
-const BASE_LEVEL_PRECISION = (CesiumMath.PI * MAX_ERROR_PX) / TILE_SIZE;
 
-function createSpatialHashKey(longitude, latitude, level) {
+function createSpatialHashKey(
+  longitude,
+  latitude,
+  rectangle,
+  maximumScreenSpaceError,
+) {
   // Adjust precision based on quadtree level - higher levels get finer precision
-  const levelPrecision = BASE_LEVEL_PRECISION / 2 ** (level - 1);
+  const maxError = (rectangle.width / TILE_SIZE) * maximumScreenSpaceError;
   // Round to the grid precision
-  const lonGrid = Math.floor(longitude / levelPrecision) * levelPrecision;
-  const latGrid = Math.floor(latitude / levelPrecision) * levelPrecision;
+  const lonGrid = Math.floor(longitude / maxError) * maxError;
+  const latGrid = Math.floor(latitude / maxError) * maxError;
   return `${lonGrid.toFixed(10)},${latGrid.toFixed(10)}`;
 }
 
@@ -238,13 +239,20 @@ function createSpatialHashKey(longitude, latitude, level) {
  * @memberof QuadtreeTile
  *
  * @param {Cartographic} cartographic The cartographic coordinates.
+ * @param {number} maximumScreenSpaceError The maximum screen-space error, in pixels, that is allowed.
+ *        A higher maximum error will render fewer tiles and improve performance, while a lower
+ *        value will improve visual quality.
  * @returns {string} A string representing the spatial hash key.
  */
-QuadtreeTile.prototype._getCacheKey = function (cartographic) {
+QuadtreeTile.prototype._getCacheKey = function (
+  cartographic,
+  maximumScreenSpaceError,
+) {
   return createSpatialHashKey(
     cartographic.longitude,
     cartographic.latitude,
-    this.level,
+    this._rectangle,
+    maximumScreenSpaceError,
   );
 };
 
@@ -254,10 +262,18 @@ QuadtreeTile.prototype._getCacheKey = function (cartographic) {
  * @memberof QuadtreeTile
  *
  * @param {Cartographic} cartographic - The cartographic coordinates.
+ * @param {number} maximumScreenSpaceError The maximum screen-space error, in pixels, that is allowed.
+ *        A higher maximum error will render fewer tiles and improve performance, while a lower
+ *        value will improve visual quality.
  * @returns {Object|undefined} The cached position data or undefined if not found.
  */
-QuadtreeTile.prototype.getPositionCacheEntry = function (cartographic) {
-  return this._positionCache.get(this._getCacheKey(cartographic));
+QuadtreeTile.prototype.getPositionCacheEntry = function (
+  cartographic,
+  maximumScreenSpaceError,
+) {
+  return this._positionCache.get(
+    this._getCacheKey(cartographic, maximumScreenSpaceError),
+  );
 };
 
 /**
@@ -266,10 +282,20 @@ QuadtreeTile.prototype.getPositionCacheEntry = function (cartographic) {
  * @memberof QuadtreeTile
  *
  * @param {Cartographic} cartographic - The cartographic coordinates.
+ * @param {number} maximumScreenSpaceError The maximum screen-space error, in pixels, that is allowed.
+ *        A higher maximum error will render fewer tiles and improve performance, while a lower
+ *        value will improve visual quality.
  * @param {Object} value - The object to be cached.
  */
-QuadtreeTile.prototype.setPositionCacheEntry = function (cartographic, value) {
-  this._positionCache.set(this._getCacheKey(cartographic), value);
+QuadtreeTile.prototype.setPositionCacheEntry = function (
+  cartographic,
+  maximumScreenSpaceError,
+  value,
+) {
+  this._positionCache.set(
+    this._getCacheKey(cartographic, maximumScreenSpaceError),
+    value,
+  );
 };
 
 /**

@@ -1437,6 +1437,7 @@ function updateHeights(primitive, frameState) {
         // find cached entry
         const cachedData = tile.getPositionCacheEntry(
           data.positionCartographic,
+          primitive.maximumScreenSpaceError,
         );
         if (defined(cachedData)) {
           // cache hit
@@ -1516,7 +1517,11 @@ function updateHeights(primitive, frameState) {
 
           if (defined(position)) {
             // Store the computed position in the cache for future reuse
-            tile.setPositionCacheEntry(data.positionCartographic, position);
+            tile.setPositionCacheEntry(
+              data.positionCartographic,
+              primitive.maximumScreenSpaceError,
+              position,
+            );
           }
         }
         if (defined(position)) {
