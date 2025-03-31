@@ -23,6 +23,7 @@
 - Fixed camera zooming in 3D orthographic mode when pixelRatio is not 1. [#12487](https://github.com/CesiumGS/cesium/pull/12487)
 - Fixed VaryingType.MAT3: "mat2" significant typo. [#12524](https://github.com/CesiumGS/cesium/issues/12524)
 - Fixed shape bounds and transforms for cylinder-shaped voxels. [#12522](https://github.com/CesiumGS/cesium/pull/12522)
+- Fixed an issue where clamped entities' height updates could stall when using high-resolution terrain due to a growing queue of tiles in `updateHeights` in `QuadtreePrimitive`. [#12476](https://github.com/CesiumGS/cesium/issues/12476)
 
 ## 1.127 - 2025-03-03
 
