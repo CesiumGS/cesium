@@ -6,7 +6,11 @@
 
 #### Breaking Changes :mega:
 
-- `Camera.getPickRay` was erroneous returning a result in camera coordinates. It is now returned in world coordinates as stated in the documentation. The result can be transformed using `Camera.inverseViewMatrix` to achieve the previous behavior.
+- `Camera.getPickRay` was erroneously returning a result in camera coordinates. It is now returned in world coordinates as stated in the documentation. The result can be transformed using `Camera.inverseViewMatrix` to achieve the previous behavior.
+
+#### Additions :tada:
+
+- Add support for loading iTwin data using share keys as an alternative to user-based OAuth. When using a share key, set `ITwinPlatform.defaultShareKey`. [#12530](https://github.com/CesiumGS/cesium/pull/12530)
 
 #### Deprecated :hourglass_flowing_sand:
 
@@ -17,8 +21,10 @@
 - Fixed broken Entity Tracking [sandcastle](https://sandcastle.cesium.com/?src=Entity%20tracking.html). [#12467](https://github.com/CesiumGS/cesium/pull/12467)
 - `Camera.getPickRay` now correctly returns a ray with origin in world coordinates in orthographic mode. [#12500](https://github.com/CesiumGS/cesium/pull/12500)
 - Fixed camera zooming in 3D orthographic mode when pixelRatio is not 1. [#12487](https://github.com/CesiumGS/cesium/pull/12487)
+- Fixed VaryingType.MAT3: "mat2" significant typo. [#12524](https://github.com/CesiumGS/cesium/issues/12524)
 - Fixed shape bounds and transforms for cylinder-shaped voxels. [#12522](https://github.com/CesiumGS/cesium/pull/12522)
 - Fixed metadata ordering for ellipsoid voxel tilesets. [#12544](https://github.com/CesiumGS/cesium/pull/12544)
+- Fixed an issue where clamped entities' height updates could stall when using high-resolution terrain due to a growing queue of tiles in `updateHeights` in `QuadtreePrimitive`. [#12476](https://github.com/CesiumGS/cesium/issues/12476)
 
 ## 1.127 - 2025-03-03
 
