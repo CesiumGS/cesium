@@ -146,18 +146,6 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * Gets the ordering of the metadata in the buffers.
-   *
-   * @memberof VoxelProvider.prototype
-   * @type {VoxelMetadataOrder}
-   * @default VoxelMetadataOrder.Z_UP
-   * @readonly
-   */
-  metadataOrder: {
-    get: DeveloperError.throwInstantiationError,
-  },
-
-  /**
    * Gets the metadata minimum values.
    *
    * @memberof VoxelProvider.prototype

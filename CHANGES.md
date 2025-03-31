@@ -7,6 +7,7 @@
 #### Breaking Changes :mega:
 
 - `Camera.getPickRay` was erroneously returning a result in camera coordinates. It is now returned in world coordinates as stated in the documentation. The result can be transformed using `Camera.inverseViewMatrix` to achieve the previous behavior.
+- `VoxelMetadataOrder` has been made private, and the `metadataOrder` property has been removed from the `VoxelProvider` interface.
 
 #### Additions :tada:
 

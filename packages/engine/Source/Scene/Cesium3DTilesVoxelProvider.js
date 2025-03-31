@@ -291,6 +291,7 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
    * @memberof Cesium3DTilesVoxelProvider.prototype
    * @type {VoxelMetadataOrder}
    * @readonly
+   * @private
    */
   metadataOrder: {
     get: function () {

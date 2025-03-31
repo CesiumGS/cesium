@@ -5,7 +5,7 @@
  * However, the orientation of the axes follows different conventions.
  *
  * @enum {number}
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @private
  */
 const VoxelMetadataOrder = {
   /**
