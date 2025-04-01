@@ -1,7 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -58,7 +58,7 @@ import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
  * });
  */
 function ClippingPolygonCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._polygons = [];
   this._totalPositions = 0;
@@ -70,7 +70,7 @@ function ClippingPolygonCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.enabled = defaultValue(options.enabled, true);
+  this.enabled = options.enabled ?? true;
 
   /**
    * If true, a region will be clipped if it is outside of every polygon in the
@@ -81,7 +81,7 @@ function ClippingPolygonCollection(options) {
    * @type {boolean}
    * @default false
    */
-  this.inverse = defaultValue(options.inverse, false);
+  this.inverse = options.inverse ?? false;
 
   /**
    * An event triggered when a new clipping polygon is added to the collection.  Event handlers

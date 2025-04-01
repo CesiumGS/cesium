@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
@@ -24,7 +24,7 @@ function getBufferViewCacheKey(bufferView) {
 
   if (hasExtension(bufferView, "EXT_meshopt_compression")) {
     const meshopt = bufferView.extensions.EXT_meshopt_compression;
-    byteOffset = defaultValue(meshopt.byteOffset, 0);
+    byteOffset = meshopt.byteOffset ?? 0;
     byteLength = meshopt.byteLength;
   }
 
@@ -148,7 +148,7 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getExternalBufferCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -169,7 +169,7 @@ ResourceCacheKey.getExternalBufferCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { parentResource, bufferId } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -193,7 +193,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getGltfCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltfResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -216,7 +216,7 @@ ResourceCacheKey.getGltfCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getBufferViewCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, bufferViewId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -259,7 +259,7 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getDracoCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, draco, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -293,7 +293,7 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getVertexBufferCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     gltfResource,
@@ -406,7 +406,7 @@ function hasDracoCompression(draco, semantic) {
  * @private
  */
 ResourceCacheKey.getIndexBufferCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     accessorId,
@@ -483,7 +483,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getImageCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, imageId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -518,7 +518,7 @@ ResourceCacheKey.getImageCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getTextureCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     textureInfo,

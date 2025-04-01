@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
@@ -39,7 +39,7 @@ import ShadowMode from "./ShadowMode.js";
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
  */
 function TimeDynamicPointCloud(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.clock", options.clock);
@@ -52,7 +52,7 @@ function TimeDynamicPointCloud(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * A 4x4 transformation matrix that transforms the point cloud.
@@ -60,9 +60,7 @@ function TimeDynamicPointCloud(options) {
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * Determines whether the point cloud casts or receives shadows from light sources.
@@ -76,7 +74,7 @@ function TimeDynamicPointCloud(options) {
    * @type {ShadowMode}
    * @default ShadowMode.ENABLED
    */
-  this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+  this.shadows = options.shadows ?? ShadowMode.ENABLED;
 
   /**
    * The maximum amount of GPU memory (in MB) that may be used to cache point cloud frames.
@@ -92,7 +90,7 @@ function TimeDynamicPointCloud(options) {
    *
    * @see TimeDynamicPointCloud#totalMemoryUsageInBytes
    */
-  this.maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 256);
+  this.maximumMemoryUsage = options.maximumMemoryUsage ?? 256;
 
   /**
    * Options for controlling point size based on geometric error and eye dome lighting.
@@ -468,9 +466,9 @@ function getMaximumAttenuation(that) {
 const defaultShading = new PointCloudShading();
 
 function renderFrame(that, frame, updateState, frameState) {
-  const shading = defaultValue(that.shading, defaultShading);
+  const shading = that.shading ?? defaultShading;
   const pointCloud = frame.pointCloud;
-  const transform = defaultValue(frame.transform, Matrix4.IDENTITY);
+  const transform = frame.transform ?? Matrix4.IDENTITY;
   pointCloud.modelMatrix = Matrix4.multiplyTransformation(
     that.modelMatrix,
     transform,

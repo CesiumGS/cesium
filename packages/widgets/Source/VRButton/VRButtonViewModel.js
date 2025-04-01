@@ -1,5 +1,4 @@
 import {
-  defaultValue,
   defined,
   destroyObject,
   DeveloperError,
@@ -156,7 +155,7 @@ function VRButtonViewModel(scene, vrElement) {
     knockout.getObservable(this, "isVREnabled"),
   );
 
-  this._vrElement = defaultValue(getElement(vrElement), document.body);
+  this._vrElement = getElement(vrElement) ?? document.body;
 
   this._callback = function () {
     if (!Fullscreen.fullscreen && isVRMode()) {

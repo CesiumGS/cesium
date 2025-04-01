@@ -1,6 +1,6 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -22,7 +22,7 @@ const defaultRepeat = new Cartesian2(2.0, 2.0);
  * @param {Property|Cartesian2} [options.repeat=new Cartesian2(2.0, 2.0)] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
  */
 function CheckerboardMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._evenColor = undefined;

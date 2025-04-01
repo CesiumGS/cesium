@@ -3,7 +3,7 @@ import Cartesian2 from "../../Core/Cartesian2.js";
 import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
@@ -34,7 +34,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @private
  */
 function ModelDrawCommand(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;
@@ -124,7 +124,7 @@ function ModelDerivedCommand(options) {
   this.updateDebugShowBoundingVolume = options.updateDebugShowBoundingVolume;
 
   // Whether this ModelDerivedCommand is in 2D.
-  this.is2D = defaultValue(options.is2D, false);
+  this.is2D = options.is2D ?? false;
 
   // A ModelDerivedCommand that is the 2D version of this one.
   this.derivedCommand2D = undefined;

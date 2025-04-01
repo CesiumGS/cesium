@@ -4,7 +4,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CylinderGeometryLibrary from "./CylinderGeometryLibrary.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Geometry from "./Geometry.js";
@@ -47,14 +47,14 @@ const radiusScratch = new Cartesian2();
  * const geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
  */
 function CylinderOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const length = options.length;
   const topRadius = options.topRadius;
   const bottomRadius = options.bottomRadius;
-  const slices = defaultValue(options.slices, 128);
+  const slices = options.slices ?? 128;
   const numberOfVerticalLines = Math.max(
-    defaultValue(options.numberOfVerticalLines, 16),
+    options.numberOfVerticalLines ?? 16,
     0,
   );
 
@@ -103,14 +103,14 @@ CylinderOutlineGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value._length;
   array[startingIndex++] = value._topRadius;
   array[startingIndex++] = value._bottomRadius;
   array[startingIndex++] = value._slices;
   array[startingIndex++] = value._numberOfVerticalLines;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -137,7 +137,7 @@ CylinderOutlineGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const length = array[startingIndex++];
   const topRadius = array[startingIndex++];

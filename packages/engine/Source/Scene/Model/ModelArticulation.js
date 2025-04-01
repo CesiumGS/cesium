@@ -1,5 +1,5 @@
 import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelArticulationStage from "./ModelArticulationStage.js";
@@ -19,7 +19,7 @@ import ModelArticulationStage from "./ModelArticulationStage.js";
  * @private
  */
 function ModelArticulation(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const articulation = options.articulation;
   const sceneGraph = options.sceneGraph;

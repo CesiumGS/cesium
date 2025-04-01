@@ -1,5 +1,5 @@
 import Color from "./Color.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -126,16 +126,13 @@ function writeTextToCanvas(text, options) {
     return undefined;
   }
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const font = defaultValue(options.font, "10px sans-serif");
-  const stroke = defaultValue(options.stroke, false);
-  const fill = defaultValue(options.fill, true);
-  const strokeWidth = defaultValue(options.strokeWidth, 1);
-  const backgroundColor = defaultValue(
-    options.backgroundColor,
-    Color.TRANSPARENT,
-  );
-  const padding = defaultValue(options.padding, 0);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const font = options.font ?? "10px sans-serif";
+  const stroke = options.stroke ?? false;
+  const fill = options.fill ?? true;
+  const strokeWidth = options.strokeWidth ?? 1;
+  const backgroundColor = options.backgroundColor ?? Color.TRANSPARENT;
+  const padding = options.padding ?? 0;
   const doublePadding = padding * 2.0;
 
   const canvas = document.createElement("canvas");
@@ -206,13 +203,13 @@ function writeTextToCanvas(text, options) {
   }
 
   if (stroke) {
-    const strokeColor = defaultValue(options.strokeColor, Color.BLACK);
+    const strokeColor = options.strokeColor ?? Color.BLACK;
     context2D.strokeStyle = strokeColor.toCssColorString();
     context2D.strokeText(text, x + padding, y);
   }
 
   if (fill) {
-    const fillColor = defaultValue(options.fillColor, Color.WHITE);
+    const fillColor = options.fillColor ?? Color.WHITE;
     context2D.fillStyle = fillColor.toCssColorString();
     context2D.fillText(text, x + padding, y);
   }

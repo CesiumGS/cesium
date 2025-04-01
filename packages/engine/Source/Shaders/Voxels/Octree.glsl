@@ -101,7 +101,7 @@ void addSampleCoordinates(in vec3 shapePosition, inout SampleData sampleData) {
 #if defined(PADDING)
     inputCoordinate += vec3(u_paddingBefore);
 #endif
-#if defined(GLTF_METADATA_ORDER)
+#if defined(Y_UP_METADATA_ORDER)
 #if defined(SHAPE_BOX)
     float inputY = inputCoordinate.y;
     inputCoordinate.y = float(u_inputDimensions.y) - inputCoordinate.z;

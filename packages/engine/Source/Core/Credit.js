@@ -1,6 +1,5 @@
 import DOMPurify from "dompurify";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 let nextCreditId = 0;
@@ -34,7 +33,7 @@ function Credit(html, showOnScreen) {
     creditToId[key] = id;
   }
 
-  showOnScreen = defaultValue(showOnScreen, false);
+  showOnScreen = showOnScreen ?? false;
 
   // Credits are immutable so generate an id to use to optimize equal()
   this._id = id;
