@@ -44,14 +44,6 @@
         viewer.extend(Cesium.viewerVoxelInspectorMixin);
         viewer.scene.debugShowFramesPerSecond = true;
 
-        const customShaderWhite = new Cesium.CustomShader({
-          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-  {
-      material.diffuse = vec3(1.0);
-      material.alpha = 1.0;
-  }`,
-        });
-
         const customShaderColor = new Cesium.CustomShader({
           fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
   {
@@ -60,13 +52,13 @@
   }`,
         });
 
-        function createPrimitive(provider, customShader) {
+        function createPrimitive(provider) {
           viewer.scene.primitives.removeAll();
 
           const voxelPrimitive = viewer.scene.primitives.add(
             new Cesium.VoxelPrimitive({
               provider: provider,
-              customShader: customShader,
+              customShader: customShaderColor,
             }),
           );
 
@@ -87,7 +79,7 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
               );
-              const primitive = createPrimitive(provider, customShaderColor);
+              const primitive = createPrimitive(provider);
             },
           },
           {
@@ -96,7 +88,7 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
               );
-              const primitive = createPrimitive(provider, customShaderColor);
+              const primitive = createPrimitive(provider);
             },
           },
           {
@@ -105,7 +97,7 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
               );
-              const primitive = createPrimitive(provider, customShaderWhite);
+              const primitive = createPrimitive(provider);
             },
           },
         ]);

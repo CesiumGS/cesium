@@ -87,32 +87,28 @@ function VoxelRenderResources(primitive) {
   // Build shader
   shaderBuilder.addVertexLines([VoxelVS]);
 
-  const shapeType = primitive._provider.shape;
-  if (primitive.provider.metadataOrder === VoxelMetadataOrder.GLTF) {
+  if (primitive.provider.metadataOrder === VoxelMetadataOrder.Y_UP) {
     shaderBuilder.addDefine(
-      "GLTF_METADATA_ORDER",
+      "Y_UP_METADATA_ORDER",
       undefined,
       ShaderDestination.FRAGMENT,
     );
-    if (shapeType === "BOX") {
-      shaderBuilder.addDefine(
-        "SHAPE_BOX",
-        undefined,
-        ShaderDestination.FRAGMENT,
-      );
-    } else if (shapeType === "CYLINDER") {
-      shaderBuilder.addDefine(
-        "SHAPE_CYLINDER",
-        undefined,
-        ShaderDestination.FRAGMENT,
-      );
-    } else if (shapeType === "ELLIPSOID") {
-      shaderBuilder.addDefine(
-        "SHAPE_ELLIPSOID",
-        undefined,
-        ShaderDestination.FRAGMENT,
-      );
-    }
+  }
+  const shapeType = primitive._provider.shape;
+  if (shapeType === "BOX") {
+    shaderBuilder.addDefine("SHAPE_BOX", undefined, ShaderDestination.FRAGMENT);
+  } else if (shapeType === "CYLINDER") {
+    shaderBuilder.addDefine(
+      "SHAPE_CYLINDER",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  } else if (shapeType === "ELLIPSOID") {
+    shaderBuilder.addDefine(
+      "SHAPE_ELLIPSOID",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
   }
 
   shaderBuilder.addFragmentLines([

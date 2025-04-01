@@ -48,7 +48,7 @@ function VoxelTraversal(
   );
   Cartesian3.add(inputDimensions, paddingAfter, inputDimensions);
 
-  if (metadataOrder === VoxelMetadataOrder.GLTF) {
+  if (metadataOrder === VoxelMetadataOrder.Y_UP) {
     const inputDimensionsY = inputDimensions.y;
     inputDimensions.y = inputDimensions.z;
     inputDimensions.z = inputDimensionsY;
