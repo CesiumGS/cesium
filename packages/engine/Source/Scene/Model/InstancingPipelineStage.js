@@ -57,9 +57,17 @@ const InstancingPipelineStage = {
  * @param {ModelComponents.Node} node The node.
  * @param {FrameState} frameState The frame state.
  */
-InstancingPipelineStage.process = function (renderResources, node, frameState) {
+InstancingPipelineStage.process = function (
+  renderResources,
+  node,
+  apiInstances,
+  frameState,
+) {
   const instances = node.instances;
-  const count = instances.attributes[0].count;
+
+  const count = defined(apiInstances)
+    ? apiInstances.length
+    : instances.attributes[0].count;
 
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
@@ -77,25 +85,51 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
   const instancingVertexAttributes = [];
 
-  processTransformAttributes(
-    renderResources,
-    frameState,
-    instances,
-    instancingVertexAttributes,
-    use2D,
-    keepTypedArray,
-  );
+  if (defined(apiInstances)) {
+    const shaderBuilder = renderResources.shaderBuilder;
+    shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
+    let buffer = runtimeNode.instancingTransformsBuffer;
+    setInstancingTranslationMinMax(apiInstances, count, renderResources);
+    const transformsTypedArray = transformsToTypedArray(apiInstances);
+    buffer = createVertexBuffer(transformsTypedArray, frameState);
+    model._modelResources.push(buffer);
 
-  processFeatureIdAttributes(
-    renderResources,
-    frameState,
-    instances,
-    instancingVertexAttributes,
-  );
+    if (keepTypedArray) {
+      runtimeNode.transformsTypedArray = transformsTypedArray;
+    }
+
+    runtimeNode.instancingTransformsBuffer = buffer;
+    const attributeString = "Transform";
+
+    processMatrixAttributes(
+      renderResources,
+      buffer,
+      instancingVertexAttributes,
+      attributeString,
+    );
+  } else {
+    processTransformAttributes(
+      renderResources,
+      frameState,
+      instances,
+      instancingVertexAttributes,
+      use2D,
+      keepTypedArray,
+    );
+  }
+
+  if (!defined(apiInstances)) {
+    processFeatureIdAttributes(
+      renderResources,
+      frameState,
+      instances,
+      instancingVertexAttributes,
+    );
+  }
 
   const uniformMap = {};
 
-  if (instances.transformInWorldSpace) {
+  if (defined(instances) && instances.transformInWorldSpace) {
     shaderBuilder.addDefine(
       "USE_LEGACY_INSTANCING",
       undefined,
@@ -208,8 +242,10 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   }
 
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
-
   renderResources.instanceCount = count;
+  if (!defined(renderResources.attributes)) {
+    renderResources.attributes = [];
+  }
   renderResources.attributes.push.apply(
     renderResources.attributes,
     instancingVertexAttributes,
@@ -627,6 +663,43 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   }
 
   return transforms;
+}
+
+function setInstancingTranslationMinMax(instances, count, renderResources) {
+  const instancingTranslationMax = new Cartesian3(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+  );
+  const instancingTranslationMin = new Cartesian3(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+  );
+
+  for (let i = 0; i < count; i++) {
+    const translation = new Cartesian3(
+      instances[i][12],
+      instances[i][13],
+      instances[i][14],
+      translationScratch,
+    );
+
+    Cartesian3.maximumByComponent(
+      instancingTranslationMax,
+      translation,
+      instancingTranslationMax,
+    );
+    Cartesian3.minimumByComponent(
+      instancingTranslationMin,
+      translation,
+      instancingTranslationMin,
+    );
+  }
+
+  const runtimeNode = renderResources.runtimeNode;
+  runtimeNode.instancingTranslationMin = instancingTranslationMin;
+  runtimeNode.instancingTranslationMax = instancingTranslationMax;
 }
 
 function getInstanceTranslationsAsCartesian3s(
