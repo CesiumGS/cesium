@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Explore various collections of an OGC Features endpoint"
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
+    <title>OGC Features Explorer</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+
+      .input-wrapper {
+        display: block;
+        margin: 2px 3px;
+
+        label + input {
+          margin-left: 3px;
+        }
+
+        input[type="number"] {
+          max-width: calc(7ch + 1rem);
+        }
+      }
+
+      select {
+        width: 100%;
+      }
+
+      #bbox-inputs {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        align-items: center;
+        padding-left: 0.5em;
+      }
+
+      #status {
+        position: absolute;
+        display: inline-block;
+        background: rgba(42, 42, 42, 0.8);
+        padding: 0.5em;
+        border-radius: 5px;
+        top: 0;
+        left: 100%;
+        margin-left: 0.5em;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div id="list"></div>
+      <table>
+        <tbody>
+          <tr>
+            <td>Provider</td>
+            <td>
+              <select
+                class="cesium-button"
+                data-bind="options: providers,
+                          optionsText: 'name',
+                          value: selectedProvider"
+              ></select>
+            </td>
+          </tr>
+          <tr>
+            <td>Collection</td>
+            <td>
+              <select
+                class="cesium-button"
+                data-bind="options: collections,
+                          optionsText: 'title',
+                          value: selectedCollection,
+                          enable: (collections.length > 0)"
+              ></select>
+            </td>
+          </tr>
+          <tr>
+            <td>Limit</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="10000"
+                step="10"
+                data-bind="value: limit, valueUpdate: 'input'"
+              />
+              <input
+                type="number"
+                min="0"
+                max="10000"
+                step="10"
+                data-bind="value: limit"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Offset</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="10000"
+                step="10"
+                data-bind="value: offset, valueUpdate: 'input', attr: { step: offsetStep }"
+              />
+              <input
+                type="number"
+                min="0"
+                max="10000"
+                step="10"
+                data-bind="value: offset, attr: { step: offsetStep }"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Max items</td>
+            <td>
+              <input
+                type="number"
+                name="maxItems"
+                id="maxItems"
+                data-bind="value: maxItems"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <input type="checkbox" name="bbox" id="bbox" data-bind="checked: useBbox" />
+              <label for="bbox">bbox</label>
+            </td>
+            <td id="bbox-inputs">
+              <label>Lower left (W/S)</label>
+              <input
+                type="text"
+                id="bbox"
+                size="6"
+                data-bind="value: bboxLowerLeftLat, enable: useBbox"
+              />
+              <input
+                type="text"
+                id="bbox"
+                size="6"
+                data-bind="value: bboxLowerLeftLong, enable: useBbox"
+              />
+              <label>Upper right (E/N)</label>
+              <input
+                type="text"
+                id="bbox"
+                size="6"
+                data-bind="value: bboxUpperRightLat, enable: useBbox"
+              />
+              <input
+                type="text"
+                id="bbox"
+                size="6"
+                data-bind="value: bboxUpperRightLong, enable: useBbox"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <output id="status">Initializing</output>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        // cspell:words ldproxy strassen daraa
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        viewer.scene.debugShowFramesPerSecond = true;
+
+        const statusLabel = document.querySelector("#status");
+
+        // Finland API:
+        // Check out https://www.maanmittauslaitos.fi/en/rajapinnat/api-avaimen-ohje
+        // TODO: The total items seems to be in the `Content-Length` header instead of `numMatched` neither are in the spec
+        // TODO: The pagination is _only_ done using the `next` link, it does _not_ support `offset`
+        // TODO: The `f` query param is not supported, not standard either but will break this APi
+        const finlandApiKey = "51cc1662-dc71-458e-9df3-c3d421bf18ed";
+        const finlandGeoNamesProvider = {
+          id: "finland-places",
+          name: "Finland Geo Names (Points)",
+          baseUrl:
+            "https://avoin-paikkatieto.maanmittauslaitos.fi/geographic-names/features/v1",
+          queryParameters: {
+            "api-key": finlandApiKey,
+          },
+        };
+        const finlandTopographyProvider = {
+          id: "finland-topo",
+          name: "Finland Topography (Points, Lines, Areas)",
+          baseUrl:
+            "https://avoin-paikkatieto.maanmittauslaitos.fi/maastotiedot/features/v1",
+          queryParameters: {
+            "api-key": finlandApiKey,
+          },
+          // TODO: this _should_ work but it was failing for CORS issues so maybe not
+          // headers: {
+          //   Authorization: `Basic ${btoa(`${finlandApiKey}:`)}`,
+          // },
+        };
+
+        // ldproxy API:
+        const strassenProvider = {
+          id: "strassen",
+          name: "Strassen - German Roads (Points, Lines)",
+          baseUrl: "https://demo.ldproxy.net/strassen",
+          queryParameters: {
+            f: "json",
+          },
+        };
+        const vinyardProvider = {
+          id: "vinyard",
+          name: "Vinyards - Germany (Areas)",
+          baseUrl: "https://demo.ldproxy.net/vineyards",
+          queryParameters: {
+            f: "json",
+          },
+        };
+        const daraaProvider = {
+          id: "daraa",
+          name: "Daraa, Syria (Points, Lines, Areas)",
+          baseUrl: "https://demo.ldproxy.net/daraa",
+          queryParameters: {
+            f: "json",
+          },
+        };
+
+        // iTwin
+        const serviceResponse = await fetch("https://api.cesium.com/itwin/token");
+        const { access_token: token } = await serviceResponse.json();
+        Cesium.ITwinPlatform.defaultAccessToken = token;
+
+        const iTwinId = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
+        const iTwinProvider = {
+          id: "iTwin",
+          name: "iTwin",
+          baseUrl: `https://api.bentley.com/geospatial-features/itwins/${iTwinId}/ogc`,
+          headers: {
+            Authorization: `Bearer ${Cesium.ITwinPlatform.defaultAccessToken}`,
+          },
+        };
+
+        const providers = [
+          strassenProvider,
+          vinyardProvider,
+          finlandGeoNamesProvider,
+          finlandTopographyProvider,
+          daraaProvider,
+          iTwinProvider,
+        ];
+        let currentProvider = strassenProvider;
+
+        async function fetchCollections(baseUrl, options) {
+          const { queryParameters, headers } = options;
+          const queryString = new URLSearchParams(queryParameters);
+          const response = await fetch(
+            `${baseUrl}/collections${queryString && queryString !== "" && `?${queryString}`}`,
+            { headers },
+          );
+          const json = await response.json();
+          json.collections = json.collections.map((collection) => {
+            collection.title = translateName(collection.title);
+            return collection;
+          });
+          return json;
+        }
+
+        let loadedGeoJson;
+        async function unload() {
+          if (loadedGeoJson) {
+            const removed = viewer.dataSources.remove(loadedGeoJson);
+            if (removed) {
+              loadedGeoJson = undefined;
+            }
+            console.log("geojson removed:", removed);
+            return removed;
+          }
+          return true;
+        }
+
+        function createCollectionResource(baseUrl, collectionId, options = {}) {
+          const resource = new Cesium.Resource({
+            url: `${baseUrl}/collections/${collectionId}/items`,
+          });
+          const { queryParameters, headers, limit, offset, bbox } = options;
+          if (queryParameters) {
+            resource.setQueryParameters(queryParameters);
+          }
+          if (headers) {
+            resource.headers = headers;
+          }
+          if (Cesium.defined(limit) && limit > 0) {
+            resource.appendQueryParameters({ limit });
+          }
+          if (Cesium.defined(offset) && offset > 0) {
+            resource.appendQueryParameters({ offset });
+          }
+          if (bbox) {
+            resource.appendQueryParameters({ bbox });
+          }
+          console.log("loading collection resource with", { limit, offset, bbox });
+
+          // TODO: We _may_ want to do something like this to additionally request the data size
+          // currently when the GeoJsonDataSource loads data it ignores/drops the extra properties
+          // const collectionResource = resource.getDerivedResource({
+          //   queryParameters: { limit: 1 },
+          // });
+          // const collectionJson = collectionResource.fetchJson().then((resp) => {
+          //   console.log("response", resp);
+          //   console.log("totalItems", resp.numberMatched);
+          //   // This value is technically optional so some servers may not return it
+          // });
+
+          return resource;
+        }
+
+        let extendCollection = false;
+        async function loadCollection(baseUrl, collectionId, options = {}) {
+          if (!extendCollection) {
+            const unloadedSuccessfully = unload();
+            if (!unloadedSuccessfully) {
+              statusLabel.innerText = "Error";
+              console.log("Failed to unload previous dataSource");
+              return;
+            }
+          }
+
+          statusLabel.innerText = "Loading...";
+          try {
+            let createdNewDataSource = false;
+            if (!extendCollection) {
+              console.log("new geojson created");
+              loadedGeoJson = new Cesium.GeoJsonDataSource();
+              createdNewDataSource = true;
+            } else if (!Cesium.defined(loadedGeoJson)) {
+              console.log("new geojson created");
+              loadedGeoJson = new Cesium.GeoJsonDataSource();
+              createdNewDataSource = true;
+            }
+            const resource = createCollectionResource(baseUrl, collectionId, options);
+            loadedGeoJson = await loadedGeoJson.process(resource, {
+              preventDuplicates: true,
+            });
+
+            if (createdNewDataSource) {
+              viewer.dataSources.add(loadedGeoJson);
+            }
+            viewer.zoomTo(loadedGeoJson);
+
+            console.log("geojson", extendCollection ? "extended" : "updated");
+            statusLabel.innerText = "Loaded";
+          } catch (error) {
+            statusLabel.innerText = "Failed to load";
+            throw error;
+          }
+        }
+
+        async function loadEntireCollection(baseUrl, collectionId, options = {}) {
+          const unloadedSuccessfully = unload();
+          if (!unloadedSuccessfully) {
+            statusLabel.innerText = "Error";
+            console.log("Failed to unload previous dataSource");
+            return;
+          }
+
+          const oneItemResource = createCollectionResource(baseUrl, collectionId, {
+            ...options,
+            limit: 1,
+            offset: 0,
+          });
+          const oneItem = await oneItemResource.fetchJson();
+
+          const totalItems = oneItem.numberMatched ?? Number.POSITIVE_INFINITY;
+
+          if (!Cesium.defined(totalItems)) {
+            console.error("Unable to determine the total items");
+
+            statusLabel.innerText = "Error";
+            return;
+          }
+
+          const pageSize = options.pageSize ?? 10;
+          const maxItems = Math.min(options.maxItems ?? 10000, totalItems);
+
+          let itemsLoaded = 1;
+          let currentOffset = 1;
+          const geoJson = await Cesium.GeoJsonDataSource.load(oneItem, {
+            preventDuplicates: true,
+          });
+          loadedGeoJson = geoJson;
+
+          // TODO: I'm not sure how we want to manage this yet? it'd be nice to add it as early as possible
+          // then keep loading data into it but I'm not sure the "right" workflow for that
+          viewer.dataSources.add(geoJson);
+
+          console.log(totalItems, oneItem);
+          // TODO: We probably really need a way to cancel this process after it starts
+          while (itemsLoaded < maxItems) {
+            statusLabel.innerText = `Loading collection (${itemsLoaded}/${maxItems})...`;
+            let currentPageSize = pageSize;
+            if (currentOffset + currentPageSize > maxItems) {
+              currentPageSize = maxItems - currentOffset;
+            }
+            console.log("loading", {
+              pageSize,
+              currentPageSize,
+              currentOffset,
+              maxItems,
+            });
+            const pageResource = createCollectionResource(baseUrl, collectionId, {
+              ...options,
+              limit: currentPageSize,
+              offset: currentOffset,
+            });
+            try {
+              await geoJson.process(pageResource, { preventDuplicates: true });
+            } catch (error) {
+              console.error("failed to load page");
+              console.error(error);
+            }
+            currentOffset += currentPageSize;
+            // TODO: this may be wrong for the last page, can we see the return value from process?
+            itemsLoaded += currentPageSize;
+          }
+
+          statusLabel.innerText = `Done (${itemsLoaded}/${maxItems}/${totalItems})`;
+        }
+
+        let abortController;
+        async function loadEntireCollection2(baseUrl, collectionId, options = {}) {
+          const unloadedSuccessfully = unload();
+          if (!unloadedSuccessfully) {
+            statusLabel.innerText = "Error";
+            console.log("Failed to unload previous dataSource");
+            return;
+          }
+
+          if (Cesium.defined(abortController)) {
+            abortController.abort();
+          }
+          const thisAbortController = new AbortController();
+          abortController = thisAbortController;
+
+          const firstPageResource = createCollectionResource(
+            baseUrl,
+            collectionId,
+            options,
+          );
+          const firstPage = await firstPageResource.fetchJson();
+
+          let totalItems = firstPage.numberMatched ?? Number.POSITIVE_INFINITY;
+
+          // if (!Cesium.defined(totalItems)) {
+          //   console.warn("Unable to determine the total items");
+
+          //   // statusLabel.innerText = "Error";
+          //   // return;
+          // }
+
+          const maxItems = Math.min(options.maxItems ?? 10000, totalItems);
+
+          let nextUrl = firstPage.links?.find((link) => link.rel === "next")?.href;
+
+          let itemsLoaded = firstPage.numberReturned ?? firstPage.features?.length;
+          const geoJson = await Cesium.GeoJsonDataSource.load(firstPage, {
+            preventDuplicates: true,
+          });
+          loadedGeoJson = geoJson;
+
+          // TODO: I'm not sure how we want to manage this yet? it'd be nice to add it as early as possible
+          // then keep loading data into it but I'm not sure the "right" workflow for that
+          viewer.dataSources.add(geoJson);
+
+          // TODO: We probably really need a way to cancel this process after it starts
+          while (Cesium.defined(nextUrl) && itemsLoaded + options.limit <= maxItems) {
+            if (thisAbortController.signal.aborted) {
+              console.log("canceled loading");
+              return;
+            }
+            statusLabel.innerText = `Loading collection (${itemsLoaded}/${maxItems})...`;
+            console.log("loading next page", nextUrl);
+
+            let currentLimit = options.limit;
+            if (itemsLoaded + currentLimit > maxItems) {
+              currentLimit = maxItems - itemsLoaded;
+            }
+
+            const nextUrlPath = new URL(nextUrl);
+            if (Cesium.defined(options.queryParameters)) {
+              Object.entries(options.queryParameters).forEach(([key, value]) => {
+                nextUrlPath.searchParams.set(key, value);
+              });
+            }
+            nextUrlPath.searchParams.set("limit", currentLimit);
+
+            const nextPageResource = new Cesium.Resource({
+              url: nextUrlPath.href,
+              // queryParameters: {
+              //   ...options.queryParameters,
+              //   // limit: currentLimit,
+              // },
+              headers: options.headers,
+            });
+            const nextPage = await nextPageResource.fetchJson();
+            if (thisAbortController.signal.aborted) {
+              console.log("canceled loading");
+              return;
+            }
+            geoJson.process(nextPage, { preventDuplicates: true });
+
+            itemsLoaded += nextPage.numberReturned ?? nextPage.features?.length;
+            nextUrl = nextPage.links?.find((link) => link.rel === "next")?.href;
+          }
+          if (totalItems === Number.POSITIVE_INFINITY && !Cesium.defined(nextUrl)) {
+            totalItems = itemsLoaded;
+          }
+
+          statusLabel.innerText = `Done (${itemsLoaded}/${maxItems}/${totalItems})`;
+        }
+
+        const collections = await fetchCollections(currentProvider.baseUrl, {
+          queryParameters: currentProvider.queryParameters,
+          headers: currentProvider.headers,
+        });
+        console.log(collections);
+
+        let featureGeoJson;
+        const defaultLimit = 100;
+        let limit = defaultLimit;
+        let offset = 0;
+        let useBbox = false;
+        let bbox = "7.3978,51.5197,7.4190,51.5358";
+
+        const viewModel = {
+          providers: providers,
+          selectedProvider: currentProvider,
+          collections: collections.collections,
+          selectedCollection: undefined,
+          limit: limit,
+          offset: offset,
+          offsetStep: 10,
+          maxItems: 100,
+          useBbox: useBbox,
+          bboxLowerLeftLat: "7.3978",
+          bboxLowerLeftLong: "51.5197",
+          bboxUpperRightLat: "7.4190",
+          bboxUpperRightLong: "51.5358",
+        };
+
+        const bboxEntity = viewer.entities.add({
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(...bbox.split(",")),
+            outline: true,
+            outlineColor: Cesium.Color.RED,
+            height: 0,
+            material: Cesium.Color.PINK.withAlpha(0.5),
+          },
+          show: useBbox,
+        });
+        function updateBbox() {
+          bbox = [
+            viewModel.bboxLowerLeftLat,
+            viewModel.bboxLowerLeftLong,
+            viewModel.bboxUpperRightLat,
+            viewModel.bboxUpperRightLong,
+          ].join(",");
+          const newCoords = bbox.split(",").map(Number.parseFloat);
+          console.log("updating bbox to", bbox, newCoords);
+          bboxEntity.rectangle.coordinates = Cesium.Rectangle.fromDegrees(...newCoords);
+        }
+
+        Sandcastle.addToolbarButton("Reload", async () => {
+          // loadCollection(currentProvider.baseUrl, viewModel.selectedCollection.id, {
+          //   queryParameters: { ...currentProvider.queryParameters },
+          //   headers: currentProvider.headers,
+          //   limit: limit,
+          //   offset: offset,
+          //   bbox: useBbox ? bbox : undefined,
+          // });
+
+          const cameraRect = viewer.camera.computeViewRectangle();
+          const { west, south, east, north } = cameraRect.toDegrees();
+          const camBbox = [west, south, east, north];
+
+          console.log("using camera bbox", camBbox);
+
+          await loadEntireCollection2(
+            currentProvider.baseUrl,
+            viewModel.selectedCollection.id,
+            {
+              queryParameters: currentProvider.queryParameters,
+              headers: currentProvider.headers,
+              pageSize: limit,
+              limit: limit,
+              // bbox: useBbox ? bbox : undefined,
+              // bbox: camBbox.join(","),
+              maxItems: viewModel.maxItems,
+            },
+          );
+        });
+
+        Cesium.knockout.track(viewModel);
+        const toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        Cesium.knockout
+          .getObservable(viewModel, "selectedProvider")
+          .subscribe(async (newValue) => {
+            console.log("selected provider", newValue);
+            currentProvider = newValue;
+            viewModel.collections = [];
+            const collections = await fetchCollections(currentProvider.baseUrl, {
+              queryParameters: currentProvider.queryParameters,
+              headers: currentProvider.headers,
+            });
+            viewModel.collections = collections.collections;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "selectedCollection")
+          .subscribe(async (newValue) => {
+            if (!newValue) {
+              // This will happen when we clear the list when switching providers
+              return;
+            }
+            console.log("selected collection", newValue);
+            try {
+              // Reset page values
+              limit = defaultLimit;
+              offset = 0;
+              viewModel.limit = defaultLimit;
+              viewModel.offset = 0;
+              viewModel.offsetStep = defaultLimit;
+
+              // Load the collection
+              // loadCollection(currentProvider.baseUrl, newValue.id, {
+              //   queryParameters: currentProvider.queryParameters,
+              //   headers: currentProvider.headers,
+              //   limit: limit,
+              //   offset: offset,
+              //   bbox: useBbox ? bbox : undefined,
+              // });
+
+              await loadEntireCollection2(currentProvider.baseUrl, newValue.id, {
+                queryParameters: currentProvider.queryParameters,
+                headers: currentProvider.headers,
+                pageSize: limit,
+                limit: limit,
+                bbox: useBbox ? bbox : undefined,
+                maxItems: viewModel.maxItems,
+              });
+            } catch (error) {
+              console.error("failed to get feature service", error);
+            }
+          });
+        // Set this after setting up the subscriptions so it loads the initial value
+        viewModel.selectedCollection = collections.collections[0];
+        Cesium.knockout.getObservable(viewModel, "limit").subscribe((newValue) => {
+          limit = Number.parseInt(newValue);
+          viewModel.offsetStep = Number.parseInt(newValue);
+        });
+        Cesium.knockout.getObservable(viewModel, "offset").subscribe((newValue) => {
+          offset = Number.parseInt(newValue);
+        });
+        Cesium.knockout.getObservable(viewModel, "useBbox").subscribe((newValue) => {
+          useBbox = newValue;
+          bboxEntity.show = newValue;
+        });
+        Cesium.knockout
+          .getObservable(viewModel, "bboxLowerLeftLat")
+          .subscribe(updateBbox);
+        Cesium.knockout
+          .getObservable(viewModel, "bboxLowerLeftLong")
+          .subscribe(updateBbox);
+        Cesium.knockout
+          .getObservable(viewModel, "bboxUpperRightLat")
+          .subscribe(updateBbox);
+        Cesium.knockout
+          .getObservable(viewModel, "bboxUpperRightLong")
+          .subscribe(updateBbox);
+
+        Sandcastle.addToggleButton(
+          "Extend current data",
+          extendCollection,
+          (newValue) => (extendCollection = newValue),
+        );
+
+        const cameraLocation1 = {
+          destination: new Cesium.Cartesian3(
+            4707530.494549263,
+            569403.0894252402,
+            5576100.984555612,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            6.254810079554895,
+            -1.3627892645769126,
+            6.283137168892078,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        viewer.scene.camera.flyTo(cameraLocation1);
+
+        function translateName(name) {
+          // Many of the ldproxy examples are in German so it's hard to know what they are
+          // or what they represent or just talk about them. Translate some of the terms to eng
+          // Also did this for the Finland topography using ChatGPT, may be inacurate but better than nothing
+          // cspell:disable
+          const translations = {
+            "Abschnitte und Äste": "Sections and Branches",
+            Netzknoten: "Network nodes",
+            Nullpunkte: "Zero points",
+            Unfälle: "Accidents",
+            "Unfälle (alternative Darstellung)": "Accidents (alternative representation)",
+            syvyyskayransyvyysarvo: "Depth crossing depth value",
+            tiesymboli: "Road symbol",
+            kalliosymboli: "Rock symbol",
+            muuntoasema: "Transformer station",
+            retkeilyalue: "Recreation area",
+            osoitepiste: "Address point",
+            jarvi: "Lake",
+            pelastuskoodipiste: "Rescue code point",
+            urheilujavirkistysalue: "Sports and recreation area",
+            puu: "Tree",
+            virtavesikapea: "Stream narrow",
+            pato: "Dam",
+            rauhoitettukohde: "Protected area",
+            sulkuportti: "Lock gate",
+            allas: "Basin",
+            korkeuskayra: "Elevation contour",
+            tulvaalue: "Flood area",
+            muuntaja: "Transformer",
+            syvyyskayra: "Lake Depth contour",
+            autoliikennealue: "Vehicle traffic area",
+            louhos: "Quarry",
+            rautatie: "Railway",
+            suurjannitelinjanpylvas: "High voltage line pole",
+            vesikuoppa: "Water pit",
+            suojanne: "Shelter",
+            korkeuskayrankorkeusarvo: "Elevation contour height value",
+            tieviiva: "Road line",
+            valtakunnanrajapyykki: "National boundary marker",
+            koski: "Rapids",
+            maatalousmaa: "Agricultural land",
+            karttasymboli: "Map symbol",
+            kunnanhallintoraja: "Municipal boundary",
+            masto: "Mast",
+            ampumaalue: "Shooting range",
+            viettoviiva: "Slope line",
+            puurivi: "Tree line",
+            merkittavaluontokohde: "Notable natural site",
+            syvyyspiste: "Depth point",
+            "Satama-alue": "Port area",
+            taytemaa: "Fill land",
+            lahde: "Spring (water source)",
+            suo: "Swamp",
+            metsamaanmuokkaus: "Forest land cultivation",
+            tienroteksti: "Road text",
+            mastonkorkeus: "Mast height",
+            rakennusreunaviiva: "Building edge line",
+            savupiipunkorkeus: "Chimney height",
+            ulkojasisasaaristonraja: "Outer archipelago boundary",
+            ilmarata: "Aerial railway",
+            muistomerkki: "Monument",
+            vesikulkuvaylanteksti: "Waterway text",
+            matalikko: "Shoal",
+            muuavoinalue: "Other open area",
+            suojelualueenreunaviiva: "Protected area boundary",
+            kunnanhallintokeskus: "Municipal administration center",
+            luonnonpuisto: "Nature reserve",
+            puisto: "Park",
+            vesikivikko: "Water gravel",
+            vesikulkuvayla: "Waterway",
+            vesiasteikko: "Water scale",
+            lahestymisvalo: "Approach light",
+            maastokuvionreuna: "Terrain pattern edge",
+            tulentekopaikka: "Campfire site",
+            kellotapuli: "Bell tower",
+            tuulivoimala: "Wind turbine",
+            rakennus: "Building",
+            varastoalue: "Storage area",
+            vesikivi: "Water stone",
+            niitty: "Meadow",
+            uittolaite: "Rafting device",
+            vedenpinnankorkeusluku: "Water surface elevation value",
+            turvalaite: "Safety device",
+            suojametsa: "Protective forest",
+            rajavyohykkeentakaraja: "Border zone back boundary",
+            lentokenttaalue: "Airport area",
+            luonnonsuojelualue: "Nature conservation area",
+            kansallispuisto: "National park",
+            hietikko: "Sand",
+            kivi: "Stone",
+            hylynsyvyys: "Wreck depth",
+            sahkolinja: "Power line",
+            virtausnuoli: "Flow arrow",
+            metsanraja: "Forest boundary",
+            hautausmaa: "Cemetery",
+            kunta: "Municipality",
+            virtavesialue: "Stream area",
+            nakotorni: "Watchtower",
+            sahkolinjansymboli: "Power line symbol",
+            kaatopaikka: "Landfill",
+            savupiippu: "Chimney",
+            maasto2kuvionreuna: "Terrain pattern 2 edge",
+            rautatieliikennepaikka: "Railway traffic area",
+            aita: "Fence",
+            paikannimi: "Place name",
+            sisaistenaluevesienulkoraja: "Internal water boundary",
+            vesitorni: "Water tower",
+            kallioalue: "Rock area",
+            kalliohalkeama: "Rock fracture",
+            maatuvavesialue: "Groundwater area",
+            jyrkanne: "Cliff",
+            uittoranni: "Rafting shore",
+            portti: "Gate",
+            pistolaituriviiva: "Dockline",
+            kaislikko: "Reed bed",
+            kivikko: "Gravel",
+            aallonmurtaja: "Breakwater",
+            rakennelma: "Structure",
+            ankkuripaikka: "Anchorage",
+            taajaanrakennetunalueenreuna: "Edge of the densely built area",
+            ilmaradankannatinpylvas: "Aerial railway support pole",
+            maaaineksenottoalue: "Soil extraction area",
+            aidansymboli: "Fence symbol",
+            hylky: "Wreck",
+            metsamaankasvillisuus: "Forest land vegetation",
+            suojaalue: "Protection area",
+            luiska: "Ramp",
+            tervahauta: "Tar pit",
+            suojaalueenreunaviiva: "Protection area boundary",
+            soistuma: "Swamp",
+            harvalouhikko: "Sparse quarry",
+            vesikulkuvaylankulkusuunta: "Waterway direction",
+            aluemerenulkoraja: "Area sea boundary",
+            rautatiensymboli: "Railway symbol",
+            taajaanrakennettualue: "Densely built area",
+            suojametsanreunaviiva: "Protective forest boundary",
+            meri: "Sea",
+            tunnelinaukko: "Tunnel entrance",
+            selite: "Explanation",
+          };
+          // cspell:enable
+          return translations[name] ?? name;
+        }
+
+        // TODO: remove
+        window.cesiumViewer = viewer;
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>
