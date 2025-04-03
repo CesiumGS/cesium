@@ -12,6 +12,7 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import AttributeType from "../AttributeType.js";
 
 /**
  * A class for computing the texture coordinates of imagery that is
@@ -20,7 +21,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 class ModelImageryMapping {
   /**
    * Creates the `ModelComponents.Attribute` for the texture coordinates
-   * for a primitive with the given positions.
+   * for a primitive
    *
    * This will create an attribute with
    * - semantic: VertexAttributeSemantic.TEXCOORD
@@ -34,55 +35,35 @@ class ModelImageryMapping {
    * The receiver/caller is responsible for knowing which index this
    * attribute will have.
    *
-   * @param {ModelComponents.Attribute} primitivePositionsAttribute
-   * The "POSITION" attribute of the primitive.
-   * @param {Matrix4} primitivePositionsTransform The full transform of the
-   * primitive, including the local (scene graph) transform as well as the
-   * `modelMatrix` of the model, and ... the axis correction matrix and all that...
+   * @param {Iterable<Cartographic>} cartographicPositions The
+   * cartographic positions
+   * @param {number} numPositions The number of positions (vertices)
+   * @param {Rectangle} cartographicBoundingRectangle The bounding
+   * rectangle of the cartographic positions
    * @param {MapProjection} projection The projection that should be used
    * @param {Context} context The context for allocating GL resources
    * @returns {ModelComponents.Attribute} The new attribute
    */
   static createTextureCoordinatesAttribute(
-    primitivePositionsAttribute,
-    primitivePositionsTransform,
+    cartographicPositions,
+    numPositions,
+    cartographicBoundingRectangle,
     projection,
     context,
   ) {
-    // Extract the positions as a typed array
-    const typedArray = ModelImageryMapping.createTypedArray(
-      primitivePositionsAttribute,
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("cartographicPositions", cartographicPositions);
+    Check.typeOf.number.greaterThanOrEquals("numPositions", numPositions, 0);
+    Check.defined(
+      "cartographicBoundingRectangle",
+      cartographicBoundingRectangle,
     );
+    Check.defined("projection", projection);
+    Check.defined("context", context);
+    //>>includeEnd('debug');
 
-    // Create an iterable over the positions
-    const numComponents = primitivePositionsAttribute.componentsPerAttribute;
-    const positions =
-      ModelImageryMapping.createIterableCartesian3FromTypedArray(
-        typedArray,
-        numComponents,
-      );
-
-    // Compute the positions after they are transformed with the given matrix
-    const transformedPositions = ModelImageryMapping.transformCartesians3(
-      positions,
-      primitivePositionsTransform,
-    );
-
-    // Compute the cartographic positions for the given ellipsoid
-    const ellipsoid = projection.ellipsoid;
-    const cartographicPositions =
-      ModelImageryMapping.createCartographicPositions(
-        transformedPositions,
-        ellipsoid,
-      );
-
-    // Compute the bounding `Rectangle`(!) of the cartographic positions
-    // and convert it into a `BoundingRectangle`(!) using the given
-    // projection
-    const cartographicBoundingRectangle =
-      ModelImageryMapping.computeCartographicBoundingRectangle(
-        cartographicPositions,
-      );
+    // Convert the bounding `Rectangle`(!) of the cartographic positions
+    // into a `BoundingRectangle`(!) using the given projection
     const boundingRectangle = new BoundingRectangle();
     BoundingRectangle.fromRectangle(
       cartographicBoundingRectangle,
@@ -104,10 +85,9 @@ class ModelImageryMapping {
     );
 
     // Convert the texture coordinates into a typed array
-    const numVertices = primitivePositionsAttribute.count;
     const texCoordsTypedArray =
       ModelImageryMapping.createTypedArrayFromCartesians2(
-        numVertices,
+        numPositions,
         texCoords,
       );
 
@@ -121,6 +101,55 @@ class ModelImageryMapping {
   }
 
   /**
+   * Create an iterable that provides the cartographic positions
+   * of the given POSITION attribute, based on the given ellipsoid
+   *
+   * @param {ModelComponents.Attribute} primitivePositionsAttribute
+   * The "POSITION" attribute of the primitive.
+   * @param {Matrix4} primitivePositionsTransform The full transform of the primitive
+   * @param {Elliposid} ellipsoid The ellipsoid that should be used
+   * @returns {Iterable<Cartographic>} The iterable over `Cartographic` objects
+   */
+  static createCartographicPositions(
+    primitivePositionsAttribute,
+    primitivePositionsTransform,
+    ellipsoid,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("primitivePositionsAttribute", primitivePositionsAttribute);
+    Check.defined("primitivePositionsTransform", primitivePositionsTransform);
+    Check.defined("ellipsoid", ellipsoid);
+    //>>includeEnd('debug');
+
+    // Extract the positions as a typed array
+    const typedArray = ModelImageryMapping.createTypedArray(
+      primitivePositionsAttribute,
+    );
+
+    // Create an iterable over the positions
+    const type = primitivePositionsAttribute.type;
+    const numComponents = AttributeType.getNumberOfComponents(type);
+    const positions =
+      ModelImageryMapping.createIterableCartesian3FromTypedArray(
+        typedArray,
+        numComponents,
+      );
+
+    // Compute the positions after they are transformed with the given matrix
+    const transformedPositions = ModelImageryMapping.transformCartesians3(
+      positions,
+      primitivePositionsTransform,
+    );
+
+    // Compute the cartographic positions for the given ellipsoid
+    const cartographicPositions = ModelImageryMapping.transformToCartographic(
+      transformedPositions,
+      ellipsoid,
+    );
+    return cartographicPositions;
+  }
+
+  /**
    * Creates a typed array from the data of the given attribute, by
    * reading it back from the vertex buffer.
    *
@@ -128,11 +157,17 @@ class ModelImageryMapping {
    * @returns {TypedArray} The typed array
    */
   static createTypedArray(attribute) {
-    const buffer = attribute.vertexBuffer;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("attribute", attribute);
+    //>>includeEnd('debug');
+
+    const buffer = attribute.buffer;
+    const type = attribute.type;
     // TODO Quantization etc...? A generic "reader" would be nice...
+    const componentsPerAttribute = AttributeType.getNumberOfComponents(type);
     const typedArray = ComponentDatatype.createTypedArray(
       attribute.componentDatatype,
-      attribute.count * attribute.componentsPerAttribute,
+      attribute.count * componentsPerAttribute,
     );
     buffer.getBufferData(typedArray);
     return typedArray;
@@ -154,6 +189,7 @@ class ModelImageryMapping {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.greaterThanOrEquals("stride", stride, 3);
     //>>includeEnd('debug');
+
     const cartesian = new Cartesian3();
     const numElements = typedArray.length / stride;
     const result = {
@@ -177,6 +213,11 @@ class ModelImageryMapping {
    * @returns {Iterable} The mapped iterable
    */
   static map(iterable, mapper) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("iterable", iterable);
+    Check.defined("mapper", mapper);
+    //>>includeEnd('debug');
+
     const result = {
       [Symbol.iterator]: function* () {
         for (const element of iterable) {
@@ -199,20 +240,24 @@ class ModelImageryMapping {
    * @returns {Rectangle} The result
    */
   static computeCartographicBoundingRectangle(cartographicPositions, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("cartographicPositions", cartographicPositions);
+    //>>includeEnd('debug');
+
     if (!defined(result)) {
       result = new Rectangle();
     }
     // One could store these directly in the result, but that would
     // violate the constraint of the PI-related ranges..
-    let north = Number.POSITIVE_INFINITY;
-    let south = Number.NEGATIVE_INFINITY;
-    let east = Number.POSITIVE_INFINITY;
-    let west = Number.NEGATIVE_INFINITY;
+    let north = Number.NEGATIVE_INFINITY;
+    let south = Number.POSITIVE_INFINITY;
+    let east = Number.NEGATIVE_INFINITY;
+    let west = Number.POSITIVE_INFINITY;
     for (const cartographicPosition of cartographicPositions) {
-      north = Math.min(north, cartographicPosition.latitude);
-      south = Math.max(south, cartographicPosition.latitude);
-      east = Math.min(east, cartographicPosition.longitude);
-      west = Math.max(west, cartographicPosition.longitude);
+      north = Math.max(north, cartographicPosition.latitude);
+      south = Math.min(south, cartographicPosition.latitude);
+      east = Math.max(east, cartographicPosition.longitude);
+      west = Math.min(west, cartographicPosition.longitude);
     }
     result.north = north;
     result.south = south;
@@ -234,6 +279,11 @@ class ModelImageryMapping {
    * @returns {Iterable<Cartesian3>} The transformed cartesians
    */
   static transformCartesians3(positions, matrix) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("positions", positions);
+    Check.defined("matrix", matrix);
+    //>>includeEnd('debug');
+
     const transformedPosition = new Cartesian3();
     const transformedPositions = ModelImageryMapping.map(positions, (p) => {
       Matrix4.multiplyByPoint(matrix, p, transformedPosition);
@@ -254,7 +304,12 @@ class ModelImageryMapping {
    * @param {Ellipsoid} ellipsoid The ellipsoid
    * @returns {Iterable<Cartographic>} The cartographic positions
    */
-  static createCartographicPositions(positions, ellipsoid) {
+  static transformToCartographic(positions, ellipsoid) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("positions", positions);
+    Check.defined("ellipsoid", ellipsoid);
+    //>>includeEnd('debug');
+
     const cartographicPosition = new Cartographic();
     const cartographicPositions = ModelImageryMapping.map(positions, (p) => {
       // TODO_DRAPING Handle (0,0,0)...
@@ -272,6 +327,11 @@ class ModelImageryMapping {
    * @returns {Iterable<Cartesian3>} The projected positions
    */
   static createProjectedPositions(cartographicPositions, projection) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("cartographicPositions", cartographicPositions);
+    Check.defined("projection", projection);
+    //>>includeEnd('debug');
+
     const projectedPosition = new Cartesian3();
     const projectedPositions = ModelImageryMapping.map(
       cartographicPositions,
@@ -300,6 +360,11 @@ class ModelImageryMapping {
    * @returns {Iterable<Cartesian2>} The texture coordinates
    */
   static computeTexCoords(positions, boundingRectangle) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("positions", positions);
+    Check.defined("boundingRectangle", boundingRectangle);
+    //>>includeEnd('debug');
+
     const texCoord = new Cartesian2();
     const invSizeX = 1.0 / boundingRectangle.width;
     const invSizeY = 1.0 / boundingRectangle.height;
@@ -323,6 +388,11 @@ class ModelImageryMapping {
    * @returns {TypedArray} The typed array
    */
   static createTypedArrayFromCartesians2(numElements, elements) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("numElements", numElements, 0);
+    Check.defined("elements", elements);
+    //>>includeEnd('debug');
+
     const typedArray = new Float32Array(numElements * 2);
     let index = 0;
     for (const element of elements) {
@@ -347,6 +417,11 @@ class ModelImageryMapping {
    * @returns {ModelComponents.Attribute} The attribute
    */
   static createTexCoordAttribute(texCoordsTypedArray, context) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("texCoordsTypedArray", texCoordsTypedArray);
+    Check.defined("context", context);
+    //>>includeEnd('debug');
+
     const texCoordsBuffer = Buffer.createVertexBuffer({
       context: context,
       typedArray: texCoordsTypedArray,

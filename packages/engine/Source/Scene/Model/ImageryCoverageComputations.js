@@ -1,6 +1,8 @@
 import defined from "../../Core/defined";
 import Rectangle from "../../Core/Rectangle";
 import Cartesian4 from "../../Core/Cartesian4";
+import Model from "./Model";
+import ImageryCoverage from "./ImageryCoverage";
 
 // TODO_DRAPING: Some of this was extracted from ImageryLayer.prototype._createTileImagerySkeletons
 // See https://github.com/CesiumGS/cesium/blob/5eaa2280f495d8f300d9e1f0497118c97aec54c8/packages/engine/Source/Scene/ImageryLayer.js#L700
@@ -15,6 +17,7 @@ const overlappedRectangleScratch = new Rectangle();
 const clippedRectangleScratch = new Rectangle();
 const nativeInputRectangleScratch = new Rectangle();
 const nativeImageryBoundsScratch = new Rectangle();
+const nativeClippedImageryBoundsScratch = new Rectangle();
 
 // TODO_DRAPING Preliminary, internal class for texture
 // coordinate and index range computations. This could
@@ -26,20 +29,6 @@ class CartesianRectangle {
     this.maxX = 0;
     this.maxY = 0;
     this.minX = 0;
-  }
-}
-
-// TODO_DRAPING Preliminary structure containing information
-// about a piece of imagery that is covered by a given
-// `Rectangle`
-class ImageryCoverage {
-  constructor() {
-    // All {number}
-    this.x = undefined;
-    this.y = undefined;
-    this.level = undefined;
-    // {Cartesian4}, minU, minV, maxU, maxV
-    this.texCoordsRectangle = undefined;
   }
 }
 
@@ -110,10 +99,18 @@ class ImageryCoverageComputations {
       );
       const localClippedImageryRectangle = Rectangle.intersection(
         localImageryRectangle,
-        nativeImageryBounds,
+        imageryBounds,
         clippedRectangleScratch,
       );
-      return localClippedImageryRectangle;
+      if (!defined(localClippedImageryRectangle)) {
+        return undefined;
+      }
+      const nativeClippedImageryBounds = nativeClippedImageryBoundsScratch;
+      imageryTilingScheme.rectangleToNativeRectangle(
+        localClippedImageryRectangle,
+        nativeClippedImageryBounds,
+      );
+      return nativeClippedImageryBounds;
     };
 
     const imageryCoverages = ImageryCoverageComputations._processImageryRange(
@@ -165,7 +162,10 @@ class ImageryCoverageComputations {
       }
     }
     */
-    return 0;
+    if (defined(Model.XXX_DRAPING_LEVEL)) {
+      return Model.XXX_DRAPING_LEVEL;
+    }
+    return 18;
   }
 
   /**
@@ -209,6 +209,10 @@ class ImageryCoverageComputations {
     result.minY = northwestTileCoordinates.y;
     result.maxX = southeastTileCoordinates.x;
     result.maxY = southeastTileCoordinates.y;
+
+    console.log("  northwestTileCoordinates ", northwestTileCoordinates);
+    console.log("  southeastTileCoordinates ", southeastTileCoordinates);
+    console.log("  result before veryClose  ", result);
 
     // TODO_DRAPING Extracted from _createTileImagerySkeletons:
     // If the southeast corner of the rectangle lies very close to the north or west side
@@ -255,6 +259,9 @@ class ImageryCoverageComputations {
     if (deltaEast < veryCloseX && result.maxX > result.minX) {
       --result.maxX;
     }
+
+    console.log("  result after  veryClose  ", result);
+
     return result;
   }
 
@@ -346,6 +353,8 @@ class ImageryCoverageComputations {
     nativeInputRectangle,
     computeClippedImageryRectangle,
   ) {
+    console.log("imageryRange ", imageryRange);
+
     const imageryCoverages = [];
 
     let minU;
@@ -356,7 +365,7 @@ class ImageryCoverageComputations {
 
     const clippedImageryRectangle = computeClippedImageryRectangle(
       imageryRange.minX,
-      imageryRange.minY,
+      imageryRange.maxY,
       imageryLevel,
     );
 
@@ -389,7 +398,7 @@ class ImageryCoverageComputations {
 
       const clippedImageryRectangleU = computeClippedImageryRectangle(
         i,
-        imageryRange.minY,
+        imageryRange.maxY,
         imageryLevel,
       );
 

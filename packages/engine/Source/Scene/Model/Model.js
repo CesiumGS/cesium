@@ -43,6 +43,7 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
+import ModelImagery from "./ModelImagery.js";
 
 /**
  * <div class="notice">
@@ -381,6 +382,8 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+
+  this._modelImagery = new ModelImagery(this);
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
@@ -1947,6 +1950,13 @@ Model.prototype.update = function (frameState) {
   // Short-circuit if the model resources aren't ready or the scene
   // is currently morphing.
   if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
+    return;
+  }
+
+  // XXX_DRAPING Check whether this is the right place, time, and state...
+  const modelImagery = this._modelImagery;
+  modelImagery.update(frameState);
+  if (!modelImagery.ready) {
     return;
   }
 

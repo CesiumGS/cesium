@@ -26,9 +26,9 @@ const ImageryPipelineStage = {
  * A class containing a set of flags indicating which parts of imagery
  * information have to be processed by the pipeline.
  *
- * Each flag indicates that at least one of the ´ImageryLayer` objects
+ * Each flag indicates that at least one of the <code>ImageryLayer</code> objects
  * that are part of the input did *not* have the default value that
- * was defined via the corresponding `ImageryLayer.DEFAULT_...`.
+ * was defined via the corresponding <code>ImageryLayer.DEFAULT_...</code>>.
  */
 class ImageryFlags {
   constructor() {
@@ -48,11 +48,11 @@ class ImageryFlags {
  * The imageryInputs are
  * {
  *   imageryLayer: ImageryLayer,
- *   texture: Texture, // DUMMY TEXTURE
- *   useWebMercator: boolean, corresponding to tileImagery.useWebMercatorT
+ *   texture: Texture,
  *   textureTranslationAndScale: Cartesian4, corresponding to tileImagery.textureTranslationAndScale
  *   textureCoordinateRectangle: Rectangle, corresponding to tileImagery.textureCoordinateRectangle
- *   texCoordIndex:number
+ *   texCoordIndex: number
+ *   numTexCoords: number
  * }
  *
  * Originally, this received a ModelComponents.Primitive at this point,
@@ -72,6 +72,17 @@ ImageryPipelineStage.process = function (
 
   const imageryLayers = imageryInputs.map((e) => e.imageryLayer);
   const imageryFlags = ImageryPipelineStage._computeImageryFlags(imageryLayers);
+  const numTextures = imageryInputs.length;
+
+  // Set the global defines indicating the presence and number of
+  // imagery textures.
+  // TODO_DRAPING Check maxTextures to not be exceeded
+  shaderBuilder.addDefine(`HAS_IMAGERY`);
+  shaderBuilder.addDefine(`IMAGERY_TEXTURE_UNITS ${numTextures}`);
+
+  // TODO_DRAPING Transport that differently...
+  const numTexCoords = imageryInputs[0].numTexCoords;
+  ImageryPipelineStage._addAttributes(shaderBuilder, numTexCoords);
 
   ImageryPipelineStage._defineUniforms(shaderBuilder, imageryFlags);
   ImageryPipelineStage._buildSampleAndBlendFunction(
@@ -81,13 +92,40 @@ ImageryPipelineStage.process = function (
 
   ImageryPipelineStage._createMainImageryShader(
     shaderBuilder,
-    imageryLayers,
+    imageryInputs,
     imageryFlags,
   );
 
   const uniformMap = renderResources.uniformMap;
   const uniforms = ImageryPipelineStage._createImageryUniforms(imageryInputs);
   ImageryPipelineStage._setImageryUniforms(uniformMap, uniforms);
+};
+
+/**
+ * Add the attribute- and varying definitions for the imagery texture
+ * coordinates to the given shader.
+ *
+ * This includes the definition of the <code>initializeImageryAttributes</code>
+ * function that assigns the attribute values to varyings in the vertex shader.
+ *
+ * @param {ShaderBuilder} shaderBuilder The shader builder
+ * @param {number} numTexCoords The number of imagery texture coordinate sets
+ */
+ImageryPipelineStage._addAttributes = function (shaderBuilder, numTexCoords) {
+  for (let i = 0; i < numTexCoords; i++) {
+    shaderBuilder.addAttribute("vec2", `a_imagery_texCoord_${i}`);
+    shaderBuilder.addVarying("vec2", `v_imagery_texCoord_${i}`);
+  }
+
+  const functionId = "initializeImageryAttributes";
+  const signature = `void ${functionId}()`;
+  shaderBuilder.addFunction(functionId, signature, ShaderDestination.VERTEX);
+
+  for (let i = 0; i < numTexCoords; i++) {
+    shaderBuilder.addFunctionLines(functionId, [
+      `v_imagery_texCoord_${i} = a_imagery_texCoord_${i};`,
+    ]);
+  }
 };
 
 /**
@@ -106,6 +144,9 @@ ImageryPipelineStage._computeImageryFlags = function (imageryLayers) {
   for (let i = 0; i < imageryLayers.length; i++) {
     const imageryLayer = imageryLayers[i];
 
+    // TODO_DRAPING These are short-circuiting to `number` instead
+    // of `boolean` here. Ignore that or do that clumsy `x = x && y`
+    // or some `!!x` trickery...?
     imageryFlags.alpha |= imageryLayer.alpha !== 1.0;
     imageryFlags.brightness |=
       imageryLayer.brightness !== ImageryLayer.DEFAULT_BRIGHTNESS;
@@ -157,11 +198,6 @@ ImageryPipelineStage._defineUniforms = function (shaderBuilder, imageryFlags) {
   shaderBuilder.addUniform(
     "vec4",
     "u_imageryTextureTranslationAndScale[IMAGERY_TEXTURE_UNITS]",
-    ShaderDestination.FRAGMENT,
-  );
-  shaderBuilder.addUniform(
-    "bool",
-    "u_imageryTextureUseWebMercatorT[IMAGERY_TEXTURE_UNITS]",
     ShaderDestination.FRAGMENT,
   );
 
@@ -296,14 +332,24 @@ ImageryPipelineStage._buildSampleAndBlendFunction = function (
     ]);
   }
   shaderBuilder.addFunctionLines(functionId, [
-    `vec2 alphaMultiplier = step(textureCoordinateRectangle.st, textureCoordinates);`,
-    `effectiveAlpha = effectiveAlpha * alphaMultiplier.x * alphaMultiplier.y;`,
-    `alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - textureCoordinates);`,
-    `effectiveAlpha = effectiveAlpha * alphaMultiplier.x * alphaMultiplier.y;`,
+    // XXX_DRAPING This is the part that is documented as "This crazy step stuff"
+    // in GlobeFS.glsl. It's talking about performance. Show me a benchmark!!!
+    //`vec2 alphaMultiplier = step(textureCoordinateRectangle.st, textureCoordinates);`,
+    //`effectiveAlpha = effectiveAlpha * alphaMultiplier.x * alphaMultiplier.y;`,
+    //`alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - textureCoordinates);`,
+    //`effectiveAlpha = effectiveAlpha * alphaMultiplier.x * alphaMultiplier.y;`,
+
+    // Trying the if-approach here...
+    `if (textureCoordinates.x < textureCoordinateRectangle.x) effectiveAlpha = 0.0;`,
+    `if (textureCoordinates.x > textureCoordinateRectangle.z) effectiveAlpha = 0.0;`,
+    `if (textureCoordinates.y < textureCoordinateRectangle.y) effectiveAlpha = 0.0;`,
+    `if (textureCoordinates.y > textureCoordinateRectangle.w) effectiveAlpha = 0.0;`,
+
     `vec2 translation = textureCoordinateTranslationAndScale.xy;`,
     `vec2 scale = textureCoordinateTranslationAndScale.zw;`,
     `vec2 effectiveTextureCoordinates = textureCoordinates * scale + translation;`,
     `vec4 value = texture(textureToSample, effectiveTextureCoordinates);`,
+
     `vec3 color = value.rgb;`,
     `float alpha = value.a;`,
   ]);
@@ -369,16 +415,16 @@ ImageryPipelineStage._buildSampleAndBlendFunction = function (
  * For details, see `buildSampleAndBlendFunction`
  *
  * @param {ImageryFlags} imageryFlags The imagery flags
+ * @param {number} imageryTexCoordIndex The index for the texture coordinate attribute
  * @param {number} i The imagery index
  * @returns {string} The string
  */
 ImageryPipelineStage._createSampleAndBlendCallArguments = function (
   imageryFlags,
+  imageryTexCoordIndex,
   i,
 ) {
-  // XXX_DRAPING using v_texCoord_0 here!
-  // Was u_dayTextureUseWebMercatorT[${i}] ? textureCoordinates.xz : textureCoordinates.xy,\n\
-  const textureCoordinates = `v_texCoord_0`;
+  const textureCoordinates = `v_imagery_texCoord_${imageryTexCoordIndex}`;
 
   const args = [];
   args.push(`blendedBaseColor`);
@@ -418,9 +464,9 @@ ImageryPipelineStage._createSampleAndBlendCallArguments = function (
 /**
  * Creates the main part of the imagery shader.
  *
- * It adds the `HAS_IMAGERY` definition to the shader, which will cause
- * the `blendBaseColorWithImagery` function (also inserted by this function)
- * to be called in the `MaterialStageFS.glsl`.
+ * It adds the `blendBaseColorWithImagery` function, which is to be
+ * called in the `MaterialStageFS.glsl` when the `HAS_IMAGERY`
+ * flag was set in the shader.
  *
  * The `blendBaseColorWithImagery` function will go through all imagery
  * layers in the input, and call the `sampleAndBlend` function, to
@@ -435,10 +481,6 @@ ImageryPipelineStage._createMainImageryShader = function (
   imageryInputs,
   imageryFlags,
 ) {
-  // TODO_DRAPING Check maxTextures to not be exceeded
-  shaderBuilder.addDefine(`HAS_IMAGERY`);
-  shaderBuilder.addDefine(`IMAGERY_TEXTURE_UNITS ${imageryInputs.length}`);
-
   const functionId = "blendBaseColorWithImagery";
   shaderBuilder.addFunction(
     functionId,
@@ -451,8 +493,11 @@ ImageryPipelineStage._createMainImageryShader = function (
 
   // Roughly what was done in https://github.com/CesiumGS/cesium/blob/6cc004aaff586bb59f07f199216ae511014cf5a9/packages/engine/Source/Scene/GlobeSurfaceShaderSet.js#L394
   for (let i = 0; i < imageryInputs.length; i++) {
+    const imageryInput = imageryInputs[i];
+    const imageryTexCoordIndex = imageryInput.texCoordIndex;
     const argsString = ImageryPipelineStage._createSampleAndBlendCallArguments(
       imageryFlags,
+      imageryTexCoordIndex,
       i,
     );
     shaderBuilder.addFunctionLines(functionId, [
@@ -475,11 +520,11 @@ ImageryPipelineStage._createMainImageryShader = function (
  * @returns {object} The uniforms
  */
 ImageryPipelineStage._createImageryUniforms = function (imageryInputs) {
+  // TODO_DRAPING Consider some scratch here, if people think that it matters
   const uniforms = {};
   uniforms.imageryTextures = Array(imageryInputs.length);
   uniforms.imageryTextureCoordinateRectangle = Array(imageryInputs.length);
   uniforms.imageryTextureTranslationAndScale = Array(imageryInputs.length);
-  uniforms.imageryTextureUseWebMercatorT = Array(imageryInputs.length);
   uniforms.imageryTextureAlpha = Array(imageryInputs.length);
   uniforms.imageryTextureBrightness = Array(imageryInputs.length);
   uniforms.imageryTextureContrast = Array(imageryInputs.length);
@@ -493,15 +538,12 @@ ImageryPipelineStage._createImageryUniforms = function (imageryInputs) {
 
     const imageryLayer = imageryInput.imageryLayer;
     const texture = imageryInput.texture;
-    const useWebMercator = imageryInput.useWebMercator;
     const textureCoordinateRectangle = imageryInput.textureCoordinateRectangle;
     const textureTranslationAndScale = imageryInput.textureTranslationAndScale;
 
     uniforms.imageryTextures[i] = texture;
     uniforms.imageryTextureTranslationAndScale[i] = textureTranslationAndScale;
     uniforms.imageryTextureCoordinateRectangle[i] = textureCoordinateRectangle;
-
-    uniforms.imageryTextureUseWebMercatorT[i] = useWebMercator;
 
     uniforms.imageryTextureAlpha[i] = imageryLayer.alpha;
     uniforms.imageryTextureBrightness[i] = imageryLayer.brightness;
