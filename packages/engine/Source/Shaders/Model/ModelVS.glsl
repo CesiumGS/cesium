@@ -70,7 +70,7 @@ void main()
         // encode instances transforms in world space, as opposed to glTF models
         // that use EXT_mesh_gpu_instancing, where instance transforms are encoded
         // in object space.
-        #ifdef USE_LEGACY_INSTANCING
+        #ifdef USE_WORLD_SPACE_INSTANCING
         mat4 instanceModelView;
         mat3 instanceModelViewInverseTranspose;
 

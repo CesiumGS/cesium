@@ -80,7 +80,7 @@ export default function pickModel(
     const instances = node.instances;
     if (defined(instances)) {
       if (instances.transformInWorldSpace) {
-        // Replicate the multiplication order in LegacyInstancingStageVS.
+        // Replicate the multiplication order in WorldSpaceInstancingStageVS.
         modelMatrix = Matrix4.multiplyTransformation(
           model.modelMatrix,
           sceneGraph.components.transform,

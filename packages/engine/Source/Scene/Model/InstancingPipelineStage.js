@@ -12,7 +12,7 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import InstancingStageCommon from "../../Shaders/Model/InstancingStageCommon.js";
 import InstancingStageVS from "../../Shaders/Model/InstancingStageVS.js";
-import LegacyInstancingStageVS from "../../Shaders/Model/LegacyInstancingStageVS.js";
+import WorldSpaceInstancingStageVS from "../../Shaders/Model/WorldSpaceInstancingStageVS.js";
 import AttributeType from "../AttributeType.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import SceneMode from "../SceneMode.js";
@@ -129,9 +129,12 @@ InstancingPipelineStage.process = function (
 
   const uniformMap = {};
 
-  if (defined(instances) && instances.transformInWorldSpace) {
+  if (
+    (defined(instances) && instances.transformInWorldSpace) ||
+    defined(apiInstances)
+  ) {
     shaderBuilder.addDefine(
-      "USE_LEGACY_INSTANCING",
+      "USE_WORLD_SPACE_INSTANCING",
       undefined,
       ShaderDestination.VERTEX,
     );
@@ -145,13 +148,20 @@ InstancingPipelineStage.process = function (
       "u_instance_nodeTransform",
       ShaderDestination.VERTEX,
     );
+    if (defined(apiInstances)) {
+      shaderBuilder.addDefine(
+        "USE_API_INSTANCES",
+        undefined,
+        ShaderDestination.VERTEX,
+      );
+    }
 
     // The i3dm format applies the instancing transforms in world space.
     // Instancing matrices come from a vertex attribute rather than a
     // uniform, and they are multiplied in the middle of the modelView matrix
     // product. This means czm_modelView can't be used. Instead, we split the
     // matrix into two parts, modifiedModelView and nodeTransform, and handle
-    // this in LegacyInstancingStageVS.glsl. Conceptually the product looks like
+    // this in WorldSpaceInstancingStageVS.glsl. Conceptually the product looks like
     // this:
     //
     // modelView = u_modifiedModelView * a_instanceTransform * u_nodeTransform
@@ -212,7 +222,7 @@ InstancingPipelineStage.process = function (
       );
     };
 
-    shaderBuilder.addVertexLines(LegacyInstancingStageVS);
+    shaderBuilder.addVertexLines(WorldSpaceInstancingStageVS);
   } else {
     shaderBuilder.addVertexLines(InstancingStageVS);
   }
@@ -331,7 +341,7 @@ function getModelMatrixAndNodeTransform(
 
   const instances = renderResources.runtimeNode.node.instances;
   if (instances.transformInWorldSpace) {
-    // Replicate the multiplication order in LegacyInstancingStageVS.
+    // Replicate the multiplication order in WorldSpaceInstancingStageVS.
     modelMatrix = Matrix4.multiplyTransformation(
       model.modelMatrix,
       sceneGraph.components.transform,
@@ -540,6 +550,8 @@ function translationsToTypedArray(translations) {
 const translationScratch = new Cartesian3();
 const rotationScratch = new Quaternion();
 const scaleScratch = new Cartesian3();
+const translationMatrixScratch = new Matrix4();
+const computedTranslationScratch = new Cartesian3();
 
 function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   const transforms = new Array(count);
@@ -666,6 +678,8 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
 }
 
 function setInstancingTranslationMinMax(instances, count, renderResources) {
+  const runtimeNode = renderResources.runtimeNode;
+
   const instancingTranslationMax = new Cartesian3(
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
@@ -685,19 +699,34 @@ function setInstancingTranslationMinMax(instances, count, renderResources) {
       translationScratch,
     );
 
+    const translationMatrix = Matrix4.fromTranslation(
+      translation,
+      translationMatrixScratch,
+    );
+    const computedTranslationMatrix = Matrix4.multiplyTransformation(
+      translationMatrix,
+      runtimeNode.computedTransform,
+      translationMatrixScratch,
+    );
+    const computedTranslation = new Cartesian3(
+      computedTranslationMatrix[12],
+      computedTranslationMatrix[13],
+      computedTranslationMatrix[14],
+      computedTranslationScratch,
+    );
+
     Cartesian3.maximumByComponent(
       instancingTranslationMax,
-      translation,
+      computedTranslation,
       instancingTranslationMax,
     );
     Cartesian3.minimumByComponent(
       instancingTranslationMin,
-      translation,
+      computedTranslation,
       instancingTranslationMin,
     );
   }
 
-  const runtimeNode = renderResources.runtimeNode;
   runtimeNode.instancingTranslationMin = instancingTranslationMin;
   runtimeNode.instancingTranslationMax = instancingTranslationMax;
 }
