@@ -1502,7 +1502,7 @@ function initFromProvider(primitive, provider, context) {
     primitive._paddingAfter,
     primitive._inputDimensions,
   );
-  if (provider.metadataOrder === VoxelMetadataOrder.GLTF) {
+  if (provider.metadataOrder === VoxelMetadataOrder.Y_UP) {
     const inputDimensionsY = primitive._inputDimensions.y;
     primitive._inputDimensions.y = primitive._inputDimensions.z;
     primitive._inputDimensions.z = inputDimensionsY;

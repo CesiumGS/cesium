@@ -110,7 +110,10 @@ function Cesium3DTilesVoxelProvider(options) {
   this._names = names;
   this._types = types;
   this._componentTypes = componentTypes;
-  this._metadataOrder = VoxelMetadataOrder.GLTF;
+  this._metadataOrder =
+    shape === VoxelShapeType.ELLIPSOID
+      ? VoxelMetadataOrder.Z_UP
+      : VoxelMetadataOrder.Y_UP;
   this._minimumValues = minimumValues;
   this._maximumValues = maximumValues;
   this._maximumTileCount = maximumTileCount;
@@ -288,6 +291,7 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
    * @memberof Cesium3DTilesVoxelProvider.prototype
    * @type {VoxelMetadataOrder}
    * @readonly
+   * @private
    */
   metadataOrder: {
     get: function () {
