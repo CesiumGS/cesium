@@ -129,6 +129,8 @@ const requestRenderAfterFrame = function (scene) {
  * });
  */
 function Scene(options) {
+  console.log("AAA Now we're coooking with custom Cesium!");
+
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const canvas = options.canvas;
   let creditContainer = options.creditContainer;
@@ -4359,10 +4361,16 @@ Scene.prototype.clampLineWidth = function (width) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
+ * @param {function} [callback=null] Optional callback function to grab the framebuffer contents
  * @returns {object} Object containing the picked primitive.
  */
-Scene.prototype.pick = function (windowPosition, width, height) {
-  return this._picking.pick(this, windowPosition, width, height);
+Scene.prototype.pick = function (
+  windowPosition,
+  width,
+  height,
+  callback = null,
+) {
+  return this._picking.pick(this, windowPosition, width, height, callback);
 };
 
 /**
@@ -4636,12 +4644,24 @@ function updateRequestRenderModeDeferCheckPass(scene) {
  * @param {Ray} ray The ray.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
+ * @param {function} [callback=null] Optional callback function to grab the framebuffer contents
  * @returns {object} An object containing the object and position of the first intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
-Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
-  return this._picking.pickFromRay(this, ray, objectsToExclude, width);
+Scene.prototype.pickFromRay = function (
+  ray,
+  objectsToExclude,
+  width,
+  callback = null,
+) {
+  return this._picking.pickFromRay(
+    this,
+    ray,
+    objectsToExclude,
+    width,
+    callback,
+  );
 };
 
 /**
