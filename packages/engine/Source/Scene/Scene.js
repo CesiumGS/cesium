@@ -82,6 +82,7 @@ import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
 import Ray from "../Core/Ray.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
+import ArbitraryRenders from "./ArbitraryRenders.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -734,6 +735,7 @@ function Scene(options) {
   this.preloadFlightCullingVolume = undefined;
 
   this._picking = new Picking(this);
+  this._arbitraryRenders = new ArbitraryRenders(this);
   this._defaultView = new View(this, camera, viewport);
   this._view = this._defaultView;
 
@@ -4665,6 +4667,18 @@ Scene.prototype.pickFromRay = function (
 };
 
 /**
+ *
+ * @param {Ray} ray The ray.
+ * @param {number} [width=0.1] Width of the intersection volume in meters.
+ * @returns {object} An object containing the resulting pixel data as well as metadata
+ *
+ * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+ */
+Scene.prototype.arbitraryRender = function (ray, width) {
+  return this._arbitraryRenders.snapshot(this, ray, width);
+};
+
+/**
  * Returns a list of objects, each containing the object intersected by the ray and the position of intersection.
  * The intersected object has a <code>primitive</code> property that contains the intersected primitive. Other
  * properties may also be set depending on the type of primitive and may be used to further identify the picked object.
@@ -5257,6 +5271,8 @@ Scene.prototype.destroy = function () {
   this._brdfLutGenerator =
     this._brdfLutGenerator && this._brdfLutGenerator.destroy();
   this._picking = this._picking && this._picking.destroy();
+  this._arbitraryRenders =
+    this._arbitraryRenders && this._arbitraryRenders.destroy();
 
   this._defaultView = this._defaultView && this._defaultView.destroy();
   this._view = undefined;

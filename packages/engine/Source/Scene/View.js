@@ -9,6 +9,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PassState from "../Renderer/PassState.js";
+import ArbitraryRenderFrameBuffer from "./ArbitraryRenderFramebuffer.js";
 import Camera from "./Camera.js";
 import FrustumCommands from "./FrustumCommands.js";
 import GlobeDepth from "./GlobeDepth.js";
@@ -61,6 +62,7 @@ function View(scene, camera, viewport) {
   this.viewport = viewport;
   this.passState = passState;
   this.pickFramebuffer = new PickFramebuffer(context);
+  this.arbitraryRenderFrameBuffer = new ArbitraryRenderFrameBuffer(context);
   this.pickDepthFramebuffer = new PickDepthFramebuffer();
   this.sceneFramebuffer = new SceneFramebuffer();
   this.globeDepth = globeDepth;
@@ -441,6 +443,9 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
 
 View.prototype.destroy = function () {
   this.pickFramebuffer = this.pickFramebuffer && this.pickFramebuffer.destroy();
+  this.arbitraryRenderFrameBuffer =
+    this.arbitraryRenderFrameBuffer &&
+    this.arbitraryRenderFrameBuffer.destroy();
   this.pickDepthFramebuffer =
     this.pickDepthFramebuffer && this.pickDepthFramebuffer.destroy();
   this.sceneFramebuffer =
