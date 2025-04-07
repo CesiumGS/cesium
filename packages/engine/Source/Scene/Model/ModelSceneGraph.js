@@ -158,6 +158,7 @@ function ModelSceneGraph(options) {
   this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
     components.forwardAxis,
+    defined(this._model.apiInstances),
     new Matrix4(),
   );
 
@@ -323,6 +324,7 @@ function computeModelMatrix(sceneGraph, modelMatrix) {
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     sceneGraph._computedModelMatrix,
+    //Matrix4.IDENTITY,
     sceneGraph._axisCorrectionMatrix,
     sceneGraph._computedModelMatrix,
   );

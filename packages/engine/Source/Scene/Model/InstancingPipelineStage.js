@@ -679,6 +679,7 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
 
 function setInstancingTranslationMinMax(instances, count, renderResources) {
   const runtimeNode = renderResources.runtimeNode;
+  const sceneGraph = renderResources.model.sceneGraph;
 
   const instancingTranslationMax = new Cartesian3(
     -Number.MAX_VALUE,
@@ -692,20 +693,27 @@ function setInstancingTranslationMinMax(instances, count, renderResources) {
   );
 
   for (let i = 0; i < count; i++) {
-    const translation = new Cartesian3(
-      instances[i][12],
-      instances[i][13],
-      instances[i][14],
-      translationScratch,
-    );
+    // const translation = new Cartesian3(
+    //   instances[i][12],
+    //   instances[i][13],
+    //   instances[i][14],
+    //   translationScratch,
+    // );
 
-    const translationMatrix = Matrix4.fromTranslation(
-      translation,
+    const translationMatrix = instances[i];
+
+    const axisCorrectedMatrix = Matrix4.multiplyTransformation(
+      // glTF y-up to 3D Tiles z-up
+      sceneGraph.axisCorrectionMatrix,
+      //Matrix4.IDENTITY,
+      runtimeNode.computedTransform,
+
       translationMatrixScratch,
     );
+
     const computedTranslationMatrix = Matrix4.multiplyTransformation(
       translationMatrix,
-      runtimeNode.computedTransform,
+      axisCorrectedMatrix,
       translationMatrixScratch,
     );
     const computedTranslation = new Cartesian3(
