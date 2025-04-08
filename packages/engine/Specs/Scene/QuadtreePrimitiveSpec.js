@@ -7,6 +7,7 @@ import {
   GeographicProjection,
   GeographicTilingScheme,
   Intersect,
+  Math as CesiumMath,
   Rectangle,
   Visibility,
   Camera,
@@ -22,6 +23,18 @@ import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+
+function expectCartographicToEqualEpsilon(actual, expected, epsilon) {
+  expect(
+    CesiumMath.equalsEpsilon(actual.longitude, expected.longitude, epsilon),
+  ).toBe(true);
+  expect(
+    CesiumMath.equalsEpsilon(actual.latitude, expected.latitude, epsilon),
+  ).toBe(true);
+  expect(
+    CesiumMath.equalsEpsilon(actual.height, expected.height, epsilon),
+  ).toBe(true);
+}
 
 describe("Scene/QuadtreePrimitive", function () {
   describe("selectTilesForRendering", function () {
@@ -920,9 +933,14 @@ describe("Scene/QuadtreePrimitive", function () {
           },
         };
 
-        const position = Cartesian3.clone(Cartesian3.ZERO);
-        const updatedPosition = Cartesian3.clone(Cartesian3.UNIT_X);
+        const positionCarto = Cartographic.fromDegrees(-72.0, 40.0, 0);
+        const updatedPositionCarto = Cartographic.fromDegrees(-72.0, 40.0, 100);
+        const position = Cartographic.toCartesian(positionCarto);
+        const updatedPosition = Cartographic.toCartesian(updatedPositionCarto);
+        const positionRes = new Cartographic();
+        const updatedPositionRes = new Cartographic();
         let currentPosition = position;
+        let currentPositionRes = positionRes;
 
         // Load the root tiles.
         tileProvider.loadTile.and.callFake(function (frameState, tile) {
@@ -943,7 +961,8 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree.updateHeight(
           Cartographic.fromDegrees(-72.0, 40.0),
           function (p) {
-            Cartesian3.clone(p, position);
+            // p is a Cartographic position
+            Cartographic.clone(p, currentPositionRes);
           },
         );
 
@@ -959,16 +978,25 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        expect(position).toEqual(Cartesian3.ZERO);
+        expectCartographicToEqualEpsilon(
+          positionRes,
+          positionCarto,
+          CesiumMath.EPSILON10,
+        );
 
         currentPosition = updatedPosition;
+        currentPositionRes = updatedPositionRes;
 
         quadtree.update(scene.frameState);
         quadtree.beginFrame(scene.frameState);
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        expect(position).toEqual(updatedPosition);
+        expectCartographicToEqualEpsilon(
+          updatedPositionRes,
+          updatedPositionCarto,
+          CesiumMath.EPSILON10,
+        );
       });
 
       it("uses tiles position caching in update heights", function () {
@@ -1029,10 +1057,10 @@ describe("Scene/QuadtreePrimitive", function () {
 
         // Install two height update callbacks with near-identical positions.
         quadtree.updateHeight(carto1, function (p) {
-          Cartesian3.clone(p, position1);
+          Cartographic.toCartesian(p, undefined, position1);
         });
         quadtree.updateHeight(carto2, function (p) {
-          Cartesian3.clone(p, position2);
+          Cartographic.toCartesian(p, undefined, position2);
         });
 
         // Process a few render cycles to trigger height updates and cache usage.
