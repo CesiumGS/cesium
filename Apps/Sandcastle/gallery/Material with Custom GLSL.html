@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Browse Cesium's built in materials and define new ones using the Fabric schema."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Material with Custom GLSL</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+      <h1>Loading...</h1>
+    </div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        // Create a Material Appearance using custom shader code.
+        function createMaterialAppearance() {
+          // Create custom materials.
+          const customMaterial = new Cesium.Material({
+            translucent: false,
+            fabric: {
+              type: "CustomBoxShader",
+              // KEY:Add uniform variables in the Material layer and they can only be used in the fs fragment of source.
+              // Because in the final fs code, the variable name will change.
+              uniforms: {
+                time: 0.0,
+              },
+              source: `
+                    // KEY:The uniform variable added by fabric needs to be explicitly declared.
+                    uniform float time;
+
+                    // KEY: A function can be added here and called in fs to return the value of the uniform variable of Material.
+                    // So as to avoid the problem that the uniform variable name will be changed in the final fs code.
+                    float getUniformTimeOfMaterial(){
+                        return time;
+                    }
+
+                    czm_material czm_getMaterial(czm_materialInput materialInput) {
+                        czm_material material = czm_getDefaultMaterial(materialInput);
+                        
+                        // Use uniform time from Material to Change Alpha.
+                        // Here, you can directly use the names specified in uniforms.
+                        material.alpha = 0.33 + (sin(time * 0.03) + 1.0)  / 3.0;
+                        
+                        return material;
+                    }
+                    `,
+            },
+          });
+
+          const appearance = new Cesium.MaterialAppearance({
+            material: customMaterial,
+            flat: false,
+            faceForward: true,
+            translucent: true,
+            closed: true,
+            vertexShaderSource: `
+                in vec3 position3DHigh;
+                in vec3 position3DLow;
+                in vec3 normal;
+                in vec2 st;
+                in float batchId;
+
+                out vec3 v_positionEC;
+                out vec3 v_normalEC;
+                out vec2 v_st;
+
+                // KEY: The variables passed by appearance.uniforms need to be displayed and received.
+                uniform float frameNo;
+
+                mat3 rotateZ(float angle) {
+                    float c = cos(angle);
+                    float s = sin(angle);
+                    return mat3(
+                        c, -s, 0.0,   
+                        s,  c, 0.0,  
+                        0.0, 0.0, 1.0
+                    );
+                }
+
+                void main()
+                {
+
+                    vec4 p = czm_computePosition();
+                    // Get the origin Model Coordinates (MC) from the position. This will lose some precision.
+                    vec3 cameraPositionMC = czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
+                    vec3 originMC = p.xyz + cameraPositionMC;
+
+                    // Use uniform frameNo from Appearance to Rotate the Box.
+                    mat3 rotation = rotateZ(frameNo * 0.01);
+                    originMC = rotation * originMC;
+
+                    // Restore to coordinates relative to the camera.
+                    originMC = originMC - cameraPositionMC;
+                    p.xyz = originMC;
+                    
+                    v_positionEC = (czm_modelViewRelativeToEye * p).xyz;      // position in eye coordinates
+                    v_normalEC = czm_normal * normal;                         // normal in eye coordinates
+                    v_st = st;
+
+                    gl_Position = czm_modelViewProjectionRelativeToEye * p;
+                }`,
+            fragmentShaderSource: `
+                in vec3 v_positionEC;
+                in vec3 v_normalEC;
+                in vec2 v_st;
+                
+                // KEY: The variables passed by appearance.uniforms need to be displayed and received.
+                uniform vec3 customColor; 
+
+                void main()
+                {
+                    vec3 positionToEyeEC = -v_positionEC;
+
+                    vec3 normalEC = normalize(v_normalEC);
+                #ifdef FACE_FORWARD
+                    normalEC = faceforward(normalEC, vec3(0.0, 0.0, 1.0), -normalEC);
+                #endif
+
+                    czm_materialInput materialInput;
+                    materialInput.normalEC = normalEC;
+                    materialInput.positionToEyeEC = positionToEyeEC;
+                    materialInput.st = v_st;
+                    czm_material material = czm_getMaterial(materialInput);
+
+                    
+                    // KEY: If necessary, the value of the uniform variable in Material.uniforms can be obtained through the helper function in Material here.
+                    // float time = getUniformTimeOfMaterial();
+
+                    // Use uniform customColor from Appearance to Change Color
+                    material.diffuse  = customColor; 
+
+                #ifdef FLAT
+                    out_FragColor = vec4(material.diffuse + material.emission, material.alpha);
+                #else
+                    out_FragColor = czm_phong(normalize(positionToEyeEC), material, czm_lightDirectionEC);
+                #endif              
+                }
+                `,
+            materialCacheKey: "my-box-material-appearance",
+          });
+
+          // KEY:Add uniform variables in the MaterialAppearance layer and they can be used in both vs and fs.
+          // The name of the variable will not change in the final shader.
+          const color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+          appearance.uniforms = {
+            frameNo: 1.0, // Pass to vs.
+            customColor: color, // Pass to fs.
+          };
+
+          return appearance;
+        }
+
+        // Create a Box primitive with custom material appearance.
+        function createBoxPrimitive(destination, appearance) {
+          const boxGeometry = Cesium.BoxGeometry.fromDimensions({
+            dimensions: new Cesium.Cartesian3(25.0, 25.0, 25.0),
+            // vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+          });
+
+          // debugger;
+          // boxGeometry = boxGeometry.constructor.createGeometry(boxGeometry);
+
+          const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(destination);
+          // const zoomMat = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(25, 25, 25), new Cesium.Matrix4());
+
+          // Cesium.Matrix4.multiply(modelMatrix, zoomMat, modelMatrix);
+
+          // Wrap the geometry as GeometryInstance.
+          const boxInstance = new Cesium.GeometryInstance({
+            geometry: boxGeometry,
+          });
+
+          // Create a Primitive and add it to the scene.
+          const primitive = new Cesium.Primitive({
+            geometryInstances: boxInstance,
+            appearance: appearance,
+            asynchronous: false,
+            modelMatrix: modelMatrix,
+          });
+
+          return primitive;
+        }
+
+        // Update uniforms every frame.
+        function animate(appearance) {
+          const t = appearance.material.uniforms.time++;
+
+          // KEY:Updating complex uniforms requires overall updating instead of updating a certain attribute alone.
+          appearance.uniforms.frameNo++;
+
+          let color = new Cesium.Cartesian3(
+            (t * 0.001) % 1.0,
+            (t * 0.002 + 0.5) % 1.0,
+            (t * 0.003 + 0.85) % 1.0,
+          );
+          color = Cesium.Cartesian3.normalize(color, color);
+          appearance.uniforms.customColor = color;
+
+          // // NOTE:The following update method is invalid.
+          // appearance.uniforms.customColor.g = customMaterial.uniforms.time * 0.02 % 1.0;
+          // appearance.uniforms.customColor.a = customMaterial.uniforms.time * 0.01 % 1.0;
+
+          requestAnimationFrame(() => animate(appearance));
+        }
+
+        // Init Viewer.
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
+
+        viewer.clock.currentTime.secondsOfDay = 65398;
+        scene.globe.enableLighting = true;
+        scene.fog.enabled = true;
+
+        const destination = {
+          x: -2280236.925141378,
+          y: 5006991.049189922,
+          z: 3215839.258024074,
+        };
+        window.destination = destination;
+        const appearance = createMaterialAppearance();
+        const primitive = createBoxPrimitive(destination, appearance);
+        animate(appearance);
+
+        viewer.scene.primitives.add(primitive);
+        viewer.camera.lookAt(
+          destination,
+          new Cesium.HeadingPitchRange(6.283185307179577, -0.4706003213405664, 100),
+        );
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>
