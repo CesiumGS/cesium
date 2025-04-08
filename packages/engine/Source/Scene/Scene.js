@@ -4669,13 +4669,46 @@ Scene.prototype.pickFromRay = function (
 /**
  *
  * @param {Ray} ray The ray.
- * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {object} An object containing the resulting pixel data as well as metadata
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
-Scene.prototype.arbitraryRender = function (ray, width) {
-  return this._arbitraryRenders.snapshot(this, ray, width);
+Scene.prototype.arbitraryRender = function (ray) {
+  return this._arbitraryRenders.snapshot(this, ray);
+};
+
+Scene.prototype.setupArbitraryRenderOrthoFrustum = function (
+  viewportWidth,
+  viewportHeight,
+  frustumWidth,
+  near,
+  far,
+) {
+  this._arbitraryRenders.setupOrthoFrustum(
+    this,
+    viewportWidth,
+    viewportHeight,
+    frustumWidth,
+    near,
+    far,
+  );
+};
+
+Scene.prototype.setupArbitraryRenderPerspectiveFrustum = function (
+  viewportWidth,
+  viewportHeight,
+  fov,
+  near,
+  far,
+) {
+  this._arbitraryRenders.setupPerspectiveFrustum(
+    this,
+    viewportWidth,
+    viewportHeight,
+    fov,
+    near,
+    far,
+  );
 };
 
 /**

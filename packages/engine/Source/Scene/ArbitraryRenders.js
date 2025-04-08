@@ -1,3 +1,4 @@
+import { Math, PerspectiveFrustum } from "@cesium/engine";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
@@ -11,7 +12,7 @@ import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
 import SceneMode from "./SceneMode.js";
 import View from "./View.js";
 
-const offscreenDefaultWidth = 0.1;
+const defaultOrthoFrustumWidth = 10; //0.1;
 
 const mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
   pass: Cesium3DTilePass.MOST_DETAILED_PICK,
@@ -27,22 +28,114 @@ const scratchRight = new Cartesian3();
 const scratchUp = new Cartesian3();
 
 function ArbitraryRenders(scene) {
-  const pickOffscreenViewport = new BoundingRectangle(0, 0, 100, 100);
-  const pickOffscreenCamera = new Camera(scene);
-  pickOffscreenCamera.frustum = new OrthographicFrustum({
-    width: offscreenDefaultWidth,
-    aspectRatio: 1.0,
-    near: 0.1,
-  });
-
-  this._pickOffscreenView = new View(
-    scene,
-    pickOffscreenCamera,
-    pickOffscreenViewport,
-  );
+  this.setupOrthoFrustum(scene, 100, 100);
 }
 
-ArbitraryRenders.prototype.snapshot = function (scene, ray, width) {
+ArbitraryRenders.prototype.setupOrthoFrustum = function (
+  scene,
+  viewportWidth,
+  viewportHeight,
+  frustumWidth = undefined,
+  near = undefined,
+  far = undefined,
+) {
+  frustumWidth = defaultValue(frustumWidth, defaultOrthoFrustumWidth);
+  near = defaultValue(near, 0.1);
+  far = defaultValue(far, 500000000.0);
+
+  if (
+    this._arView &&
+    this._arView.camera.frustum instanceof OrthographicFrustum
+  ) {
+    // Change existing
+    const view = this._arView;
+
+    updateFrustumCommon(view, viewportWidth, viewportHeight, near, far);
+
+    if (view.camera.frustum.width !== frustumWidth) {
+      view.camera.frustum.width = frustumWidth;
+    }
+  } else {
+    const orthoCamera = new Camera(scene);
+    orthoCamera.frustum = new OrthographicFrustum({
+      width: frustumWidth,
+      aspectRatio: viewportWidth / viewportHeight,
+      near: near,
+      far: far,
+    });
+    this._arView = new View(
+      scene,
+      orthoCamera,
+      new BoundingRectangle(0, 0, viewportWidth, viewportHeight),
+    );
+  }
+};
+
+ArbitraryRenders.prototype.setupPerspectiveFrustum = function (
+  scene,
+  viewportWidth,
+  viewportHeight,
+  fov = undefined,
+  near = undefined,
+  far = undefined,
+) {
+  fov = defaultValue(fov, Math.PI_OVER_THREE);
+  near = defaultValue(near, 0.1);
+  far = defaultValue(far, 500000000.0);
+
+  if (
+    this._arView &&
+    this._arView.camera.frustum instanceof PerspectiveFrustum
+  ) {
+    const view = this._arView;
+
+    updateFrustumCommon(view, viewportWidth, viewportHeight, near, far);
+
+    if (view.camera.frustum.fov !== fov) {
+      view.camera.frustum.fov = fov;
+    }
+  } else {
+    // Create new
+    const perspectiveCamera = new Camera(scene);
+    perspectiveCamera.frustum = new PerspectiveFrustum({
+      fov: fov,
+      aspectRatio: viewportWidth / viewportHeight,
+      near: near,
+      far: far,
+    });
+    this._arView = new View(
+      scene,
+      perspectiveCamera,
+      new BoundingRectangle(0, 0, viewportWidth, viewportHeight),
+    );
+  }
+};
+
+function updateFrustumCommon(view, viewportWidth, viewportHeight, near, far) {
+  // Change existing
+  if (
+    view.viewport.width !== viewportWidth ||
+    view.viewport.height !== viewportHeight
+  ) {
+    view.viewport.width = viewportWidth;
+    view.viewport.height = viewportHeight;
+    view.camera.frustum.aspectRatio = viewportWidth / viewportHeight;
+  }
+
+  if (view.camera.frustum.near !== near) {
+    view.camera.frustum.near = near;
+  }
+
+  if (view.camera.frustum.near !== near) {
+    view.camera.frustum.near = near;
+  }
+
+  if (view.camera.frustum.far !== far) {
+    view.camera.frustum.far = far;
+  }
+}
+
+ArbitraryRenders.prototype.snapshot = function (scene, ray) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("ray", ray);
   if (scene.mode !== SceneMode.SCENE3D) {
@@ -50,19 +143,18 @@ ArbitraryRenders.prototype.snapshot = function (scene, ray, width) {
   }
   //>>includeEnd('debug');
 
-  return getSnapshot(this, scene, ray, width, false);
+  return getSnapshot(this, scene, ray, false);
 };
 
-function getSnapshot(picking, scene, ray, width, mostDetailed) {
+function getSnapshot(picking, scene, ray, mostDetailed) {
   const { context, frameState } = scene;
   const uniformState = context.uniformState;
 
-  const view = picking._pickOffscreenView;
+  const view = picking._arView;
+
   scene.view = view;
 
-  // You can adjust view.viewport width and height here if you want to change the size of the render
-
-  updateOffscreenCameraFromRay(ray, width, view.camera);
+  updateOffscreenCameraFromRay(ray, view.camera);
 
   const drawingBufferRectangle = BoundingRectangle.clone(
     view.viewport,
@@ -86,6 +178,7 @@ function getSnapshot(picking, scene, ray, width, mostDetailed) {
   frameState.passes.pick = true;
   frameState.passes.offscreen = true;
 
+  // Leaving this in for now since I'm not sure if we'll need it
   if (mostDetailed) {
     frameState.tilesetPassState = mostDetailedPickTilesetPassState;
   } else {
@@ -106,7 +199,7 @@ function getSnapshot(picking, scene, ray, width, mostDetailed) {
   return output;
 }
 
-function updateOffscreenCameraFromRay(ray, width, camera) {
+function updateOffscreenCameraFromRay(ray, camera) {
   const direction = ray.direction;
   const orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
   const right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
@@ -117,7 +210,6 @@ function updateOffscreenCameraFromRay(ray, width, camera) {
   camera.up = up;
   camera.right = right;
 
-  camera.frustum.width = defaultValue(width, offscreenDefaultWidth);
   return camera.frustum.computeCullingVolume(
     camera.positionWC,
     camera.directionWC,
