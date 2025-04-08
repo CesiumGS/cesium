@@ -937,6 +937,7 @@ describe("Scene/QuadtreePrimitive", function () {
         const updatedPositionCarto = Cartographic.fromDegrees(-72.0, 40.0, 100);
         const position = Cartographic.toCartesian(positionCarto);
         const updatedPosition = Cartographic.toCartesian(updatedPositionCarto);
+        // variables for results
         const positionRes = new Cartographic();
         const updatedPositionRes = new Cartographic();
         let currentPosition = position;
@@ -1052,15 +1053,15 @@ describe("Scene/QuadtreePrimitive", function () {
         );
 
         // Variables to store results from the callbacks
-        const position1 = new Cartesian3();
-        const position2 = new Cartesian3();
+        const position1 = new Cartographic();
+        const position2 = new Cartographic();
 
         // Install two height update callbacks with near-identical positions.
         quadtree.updateHeight(carto1, function (p) {
-          Cartographic.toCartesian(p, undefined, position1);
+          Cartographic.clone(p, position1);
         });
         quadtree.updateHeight(carto2, function (p) {
-          Cartographic.toCartesian(p, undefined, position2);
+          Cartographic.clone(p, position2);
         });
 
         // Process a few render cycles to trigger height updates and cache usage.
