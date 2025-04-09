@@ -7,7 +7,7 @@ void legacyInstancingStage(
 
     mat4 instancingTransform = getInstancingTransform();
  
-    mat4 instanceModel = instancingTransform * u_instance_nodeTransform;
+    mat4 instanceModel = instancingTransform * u_instance_nodeTransform * u_axisCorrectionMatrix;
 
     #ifdef USE_API_INSTANCES
     instanceModelView = czm_modelView * instanceModel;

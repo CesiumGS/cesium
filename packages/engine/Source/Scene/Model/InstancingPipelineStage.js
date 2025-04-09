@@ -148,6 +148,11 @@ InstancingPipelineStage.process = function (
       "u_instance_nodeTransform",
       ShaderDestination.VERTEX,
     );
+    shaderBuilder.addUniform(
+      "mat4",
+      "u_axisCorrectionMatrix",
+      ShaderDestination.VERTEX,
+    );
     if (defined(apiInstances)) {
       shaderBuilder.addDefine(
         "USE_API_INSTANCES",
@@ -212,14 +217,22 @@ InstancingPipelineStage.process = function (
 
     uniformMap.u_instance_nodeTransform = function () {
       // nodeTransform = axisCorrection * nodeHierarchyTransform
-      return Matrix4.multiplyTransformation(
+      const multiplyTransform = Matrix4.multiplyTransformation(
         // glTF y-up to 3D Tiles z-up
-        sceneGraph.axisCorrectionMatrix,
+        //sceneGraph.axisCorrectionMatrix,
+        Matrix4.IDENTITY,
+        //Matrix4.inverse(runtimeNode.transformToRoot, )
         // This transforms from the node's coordinate system to the root
         // of the node hierarchy
-        runtimeNode.computedTransform,
+        runtimeNode.transform,
         nodeTransformScratch,
       );
+      return multiplyTransform;
+    };
+
+    uniformMap.u_axisCorrectionMatrix = function () {
+      return sceneGraph.axisCorrectionMatrix;
+      //return Matrix4.inverse(sceneGraph.axisCorrectionMatrix, nodeTransformScratch);
     };
 
     shaderBuilder.addVertexLines(WorldSpaceInstancingStageVS);
