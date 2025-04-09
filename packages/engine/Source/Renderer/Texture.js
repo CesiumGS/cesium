@@ -483,7 +483,7 @@ function loadFramebufferSource(texture, source) {
  * Load texel data from an Image into a texture.
  *
  * @param {Texture} texture The texture to which texel values will be loaded.
- * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} source The source for texel values to be loaded into the texture.
+ * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|OffscreenCanvas|ImageBitmap} source The source for texel values to be loaded into the texture.
  *
  * @private
  */
