@@ -11,16 +11,21 @@ import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
 import SceneMode from "./SceneMode.js";
 import View from "./View.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 const defaultOrthoFrustumWidth = 10; //0.1;
 
-const mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
-  pass: Cesium3DTilePass.MOST_DETAILED_PICK,
-});
+// const mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
+//   pass: Cesium3DTilePass.MOST_DETAILED_PICK,
+// });
 
 const pickTilesetPassState = new Cesium3DTilePassState({
   pass: Cesium3DTilePass.PICK,
 });
+
+// const renderTilesetPassState = new Cesium3DTilePassState({
+//   pass: Cesium3DTilePass.RENDER,
+// });
 
 const scratchRectangle = new BoundingRectangle(0.0, 0.0, 3.0, 3.0);
 const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
@@ -48,10 +53,9 @@ ArbitraryRenders.prototype.setupOrthoFrustum = function (
     this._arView.camera.frustum instanceof OrthographicFrustum
   ) {
     // Change existing
+    this._updateFrustumViewCommon(viewportWidth, viewportHeight, near, far);
+
     const view = this._arView;
-
-    updateFrustumCommon(view, viewportWidth, viewportHeight, near, far);
-
     if (view.camera.frustum.width !== frustumWidth) {
       view.camera.frustum.width = frustumWidth;
     }
@@ -63,11 +67,8 @@ ArbitraryRenders.prototype.setupOrthoFrustum = function (
       near: near,
       far: far,
     });
-    this._arView = new View(
-      scene,
-      orthoCamera,
-      new BoundingRectangle(0, 0, viewportWidth, viewportHeight),
-    );
+
+    this._setupView(scene, orthoCamera, viewportWidth, viewportHeight);
   }
 };
 
@@ -87,10 +88,9 @@ ArbitraryRenders.prototype.setupPerspectiveFrustum = function (
     this._arView &&
     this._arView.camera.frustum instanceof PerspectiveFrustum
   ) {
+    this._updateFrustumViewCommon(viewportWidth, viewportHeight, near, far);
+
     const view = this._arView;
-
-    updateFrustumCommon(view, viewportWidth, viewportHeight, near, far);
-
     if (view.camera.frustum.fov !== fov) {
       view.camera.frustum.fov = fov;
     }
@@ -103,15 +103,31 @@ ArbitraryRenders.prototype.setupPerspectiveFrustum = function (
       near: near,
       far: far,
     });
-    this._arView = new View(
-      scene,
-      perspectiveCamera,
-      new BoundingRectangle(0, 0, viewportWidth, viewportHeight),
-    );
+    this._setupView(scene, perspectiveCamera, viewportWidth, viewportHeight);
   }
 };
 
-function updateFrustumCommon(view, viewportWidth, viewportHeight, near, far) {
+ArbitraryRenders.prototype._setupView = function (
+  scene,
+  camera,
+  viewportWidth,
+  viewportHeight,
+) {
+  this._arView = new View(
+    scene,
+    camera,
+    new BoundingRectangle(0, 0, viewportWidth, viewportHeight),
+  );
+};
+
+ArbitraryRenders.prototype._updateFrustumViewCommon = function (
+  viewportWidth,
+  viewportHeight,
+  near,
+  far,
+) {
+  const view = this._arView;
+
   // Change existing
   if (
     view.viewport.width !== viewportWidth ||
@@ -133,7 +149,7 @@ function updateFrustumCommon(view, viewportWidth, viewportHeight, near, far) {
   if (view.camera.frustum.far !== far) {
     view.camera.frustum.far = far;
   }
-}
+};
 
 ArbitraryRenders.prototype.snapshot = function (scene, ray) {
   //>>includeStart('debug', pragmas.debug);
@@ -143,57 +159,94 @@ ArbitraryRenders.prototype.snapshot = function (scene, ray) {
   }
   //>>includeEnd('debug');
 
-  return getSnapshot(this, scene, ray, false);
+  return getSnapshot(this, scene, ray);
 };
 
-function getSnapshot(picking, scene, ray, mostDetailed) {
-  const { context, frameState } = scene;
+function getSnapshot(arbitraryRenderer, scene, ray) {
+  // This is identical to scene render
+  const frameState = scene.frameState;
+  const context = scene.context;
   const uniformState = context.uniformState;
 
-  const view = picking._arView;
-
+  // Similar but we're using the arbRen view
+  const view = arbitraryRenderer._arView;
   scene.view = view;
 
+  // This is unique to arbRen (and picker)
+  // This returns culling volume.  See updateMostDetailedRayPick in Picking to see how it's used
   updateOffscreenCameraFromRay(ray, view.camera);
 
+  // Following lines are unique to arbRen (and picker)
   const drawingBufferRectangle = BoundingRectangle.clone(
     view.viewport,
     scratchRectangle,
   );
-
-  console.log(
-    "AAA getRayIntersection drawingBufferRectangle",
-    drawingBufferRectangle,
-  );
-
   const passState = view.arbitraryRenderFrameBuffer.begin(
     drawingBufferRectangle,
     view.viewport,
+    PixelDatatype.UNSIGNED_BYTE, // Change this later for point cloud picker renders that need high precision floats
   );
-
   scene.jobScheduler.disableThisFrame();
 
+  // This is also called in scene render
+  // This calculates culling volume for the scene camera.  It looks like it's working on some different
+  // scene camera but that's a misnomer.  Scene.camera is actually just a getter function for
+  // this._view.camera.  So we're actually setting the scene camera when we set scene.view = view above
   scene.updateFrameState();
+
+  // Not sure why this is being set to false explicitly, it's not in the main render loop
+  // It's probably fine though unless we're classifying geometries (associating them with
+  // other geometries such as the terrain)
   frameState.invertClassification = false;
-  frameState.passes.pick = true;
+
+  // Don't render this as a picker render (we might need to add a special flag for arbitrary renders)
+  frameState.passes.pick = false;
+  // Use normal rendering (this is waht makes)
+  frameState.passes.render = true;
   frameState.passes.offscreen = true;
 
-  // Leaving this in for now since I'm not sure if we'll need it
-  if (mostDetailed) {
-    frameState.tilesetPassState = mostDetailedPickTilesetPassState;
-  } else {
-    frameState.tilesetPassState = pickTilesetPassState;
-  }
+  // We're missing this from the scene render function:
+  // frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
+  // Weirdly, using renderTilesetPassState doesn't render everything properly. Pointclouds and objects
+  // might partially render but they're not consistent. My suspicion is that renderTilesetPassState
+  // performs culling based on the main scene camera or something related to it.  pickTilesetPassState
+  // likely is more permissive when it comes to culling since pick renders can be from arbitrary angles.
+  // In the scene render function this would be set to renderTilesetPassState
+  frameState.tilesetPassState = pickTilesetPassState;
+
+  // There's a lot of stuff missing here from the scene render function.
+  //   - Background color is set (some special conditions apply if HDR is enabled)
+  //   - frameState.atmosphere is assigned
+  //   - scene.fog.update(frameState)
+
+  // This is in scene render
   uniformState.update(frameState);
 
+  // Something about shadow map and such are set here
+
+  // _computeCommandList and _overlayCommandList arrays are both set to empty here
+
+  // viewport dimesnsions are setup here based on context drawingBufferWidth and drawingBufferHeight
+  // Not sure what to make of this but we're already using a different view.viewport
+
+  // passState is setup here in scene render, but we've already setup passState earlier in this function
+  // For arbRen passState is returned by arbitraryRenderFrameBuffer.begin
+
+  // Missing scene.globe.beginFrame
+
+  // This is really similar to scene render
   scene.updateEnvironment();
-  scene.updateAndExecuteCommands(passState, scratchColorZero);
+  scene.updateAndExecuteCommands(passState, scratchColorZero); // backgroundColor is used instead of scratchColorZero
   scene.resolveFramebuffers(passState);
 
-  const output = view.arbitraryRenderFrameBuffer.end(drawingBufferRectangle);
+  // passState.framebuffer is set to undefined and overlayCommands are exectuted here
+  // globe.endFrame is also called, as well as a flag to load new globe tiles
 
+  const output = view.arbitraryRenderFrameBuffer.end(drawingBufferRectangle);
   scene.view = scene.defaultView;
+
+  // This is the last function called in scene render
   context.endFrame();
 
   return output;

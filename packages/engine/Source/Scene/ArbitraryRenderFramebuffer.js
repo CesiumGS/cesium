@@ -11,10 +11,15 @@ function ArbitraryRenderFrameBuffer(context) {
   // Override per-command states
   const passState = new PassState(context);
   passState.blendingEnabled = false;
+
+  // Warning: If you try to create a render bigger than the underlying context drawingBuffer then
+  // it will be clipped. Aka. you can only create arbitrary renders as big as the underlying context's
+  // drawing buffer
   passState.scissorTest = {
     enabled: true,
     rectangle: new BoundingRectangle(),
   };
+
   passState.viewport = new BoundingRectangle();
 
   this._context = context;
@@ -29,6 +34,7 @@ function ArbitraryRenderFrameBuffer(context) {
 ArbitraryRenderFrameBuffer.prototype.begin = function (
   screenSpaceRectangle,
   viewport,
+  pixelDatatype = undefined, // Default is PixelDatatype.UNSIGNED_BYTE
 ) {
   const context = this._context;
   const { width, height } = viewport;
@@ -41,7 +47,7 @@ ArbitraryRenderFrameBuffer.prototype.begin = function (
   // Create or recreate renderbuffers and framebuffer used for picking
   this._width = width;
   this._height = height;
-  this._fb.update(context, width, height);
+  this._fb.update(context, width, height, undefined, pixelDatatype);
   this._passState.framebuffer = this._fb.framebuffer;
 
   this._passState.viewport.width = width;
