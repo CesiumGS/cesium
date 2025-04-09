@@ -31,6 +31,7 @@
 
 - Added support for loading iTwin data using share keys as an alternative to user-based OAuth. When using a share key, set `ITwinPlatform.defaultShareKey`. [#12530](https://github.com/CesiumGS/cesium/pull/12530)
 - Added `Frozen.EMPTY_OBJECT` and `Frozen.EMPTY_ARRAY` for use as default parameter values that avoid unnecessary memory allocations. [#12507](https://github.com/CesiumGS/cesium/pull/12507)
+- Added the ability to pass `OffscreenCanvas` & `ImageBitmap` directly to `Material` uniforms. [#12558](https://github.com/CesiumGS/cesium/pull/12558)
 
 #### Fixes :wrench:
 
