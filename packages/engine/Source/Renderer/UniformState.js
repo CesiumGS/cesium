@@ -172,6 +172,8 @@ function UniformState() {
   this._atmosphereDynamicLighting = undefined;
 
   this._invertClassificationColor = undefined;
+  this._tsaaOffsetTranslation = new Cartesian3();
+  this._modifiedProjection = Matrix4.clone(Matrix4.IDENTITY);
 
   this._splitPosition = 0.0;
   this._pixelSizePerMeter = undefined;
@@ -403,7 +405,7 @@ Object.defineProperties(UniformState.prototype, {
    */
   projection: {
     get: function () {
-      return this._projection;
+      return this._modifiedProjection;
     },
   },
 
@@ -1206,6 +1208,11 @@ function setInverseView(uniformState, matrix) {
 
 function setProjection(uniformState, matrix) {
   Matrix4.clone(matrix, uniformState._projection);
+  Matrix4.multiplyByTranslation(
+    matrix,
+    uniformState._tsaaOffsetTranslation,
+    uniformState._modifiedProjection,
+  );
 
   uniformState._inverseProjectionDirty = true;
   uniformState._viewProjectionDirty = true;
@@ -1424,6 +1431,43 @@ UniformState.prototype.update = function (frameState) {
   this._ellipsoid = frameState.mapProjection.ellipsoid;
   this._pixelRatio = frameState.pixelRatio;
 
+  function halton(n, base) {
+    let result = 0;
+    let f = 1.0;
+    let i = n;
+    while (i > 0) {
+      f = f / base;
+      result += f * (i % base);
+      i = Math.floor(i / base);
+    }
+    return result;
+  }
+
+  const jitterScale = 25.0;
+  const { context, frameNumber, pixelRatio } = frameState;
+  const f = 4; // Number of TSAA samples
+  const n = frameNumber % f;
+  const offset = this._tsaaOffsetTranslation;
+  offset.x =
+    ((halton(n, 2) * 2 - 1) / context.drawingBufferWidth / 2.0) *
+    pixelRatio *
+    jitterScale;
+  offset.y =
+    ((halton(n, 3) * 2 - 1) / context.drawingBufferHeight / 2.0) *
+    pixelRatio *
+    jitterScale;
+
+  Matrix4.multiplyByTranslation(
+    this._projection,
+    offset,
+    this._modifiedProjection,
+  );
+  this._inverseProjectionDirty = true;
+  this._viewProjectionDirty = true;
+  this._inverseViewProjectionDirty = true;
+  this._modelViewProjectionDirty = true;
+  this._modelViewProjectionRelativeToEyeDirty = true;
+
   const camera = frameState.camera;
   this.updateCamera(camera);
 
@@ -1597,7 +1641,7 @@ function cleanInverseProjection(uniformState) {
       !uniformState._orthographicIn3D
     ) {
       Matrix4.inverse(
-        uniformState._projection,
+        uniformState._modifiedProjection,
         uniformState._inverseProjection,
       );
     } else {
@@ -1652,7 +1696,7 @@ function cleanViewProjection(uniformState) {
     uniformState._viewProjectionDirty = false;
 
     Matrix4.multiply(
-      uniformState._projection,
+      uniformState._modifiedProjection,
       uniformState._view,
       uniformState._viewProjection,
     );
@@ -1675,7 +1719,7 @@ function cleanModelViewProjection(uniformState) {
     uniformState._modelViewProjectionDirty = false;
 
     Matrix4.multiply(
-      uniformState._projection,
+      uniformState._modifiedProjection,
       uniformState.modelView,
       uniformState._modelViewProjection,
     );
@@ -1723,7 +1767,7 @@ function cleanModelViewProjectionRelativeToEye(uniformState) {
     uniformState._modelViewProjectionRelativeToEyeDirty = false;
 
     Matrix4.multiply(
-      uniformState._projection,
+      uniformState._modifiedProjection,
       uniformState.modelViewRelativeToEye,
       uniformState._modelViewProjectionRelativeToEye,
     );

@@ -354,6 +354,15 @@ Object.defineProperties(PostProcessStage.prototype, {
       return undefined;
     },
   },
+
+  framebuffer: {
+    get: function () {
+      if (defined(this._textureCache)) {
+        return this._textureCache.getFramebuffer(this._name);
+      }
+      return undefined;
+    },
+  },
   /**
    * The features selected for applying the post-process.
    * <p>

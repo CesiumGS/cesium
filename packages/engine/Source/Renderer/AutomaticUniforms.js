@@ -430,6 +430,14 @@ const AutomaticUniforms = {
     },
   }),
 
+  czm_tsaaOffsetTransform: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_MAT4,
+    getValue: function (uniformState) {
+      return uniformState._tsaaOffsetTransform;
+    },
+  }),
+
   /**
    * An automatic GLSL uniform representing a 4x4 inverse projection transformation matrix that
    * transforms from clip coordinates to eye coordinates. Clip coordinates is the

@@ -55,6 +55,158 @@
           orientation: initialOrientation,
           endTransform: Cesium.Matrix4.IDENTITY,
         });
+
+        const fragmentShaderSource = `
+  uniform sampler2D colorTexture;
+  uniform sampler2D accumulationTexture;
+  uniform sampler2D depthTexture;
+  uniform sampler2D previousDepthTexture;
+  uniform mat4 previousInverseProjection;
+  in vec2 v_textureCoordinates;
+
+  float getDepth(sampler2D depthTextureToRead) {
+     vec2 uv = gl_FragCoord.xy / czm_viewport.zw;
+     return czm_readDepth(depthTextureToRead, uv);
+  }
+
+  vec4 getEyeCoordinates(mat4 inverseProjection, sampler2D depthTextureToRead)
+  {
+      float depth = getDepth(depthTextureToRead);
+      vec2 uv = gl_FragCoord.xy / czm_viewport.zw;
+      vec2 xy = 2.0 * uv - vec2(1.0);
+      vec4 posEC = inverseProjection * vec4(xy, depth, 1.0);
+      posEC = posEC / posEC.w;
+      // Avoid numerical error at far plane
+      if (depth >= 1.0) {
+          posEC.z = czm_currentFrustum.y;
+      }
+      return posEC;
+  }
+
+  void main(void)
+  {
+      vec4 eyeCoordinates = getEyeCoordinates(czm_inverseProjection, depthTexture);
+      vec4 previousEyeCoordinates = getEyeCoordinates(previousInverseProjection, previousDepthTexture);
+      float depth = getDepth(depthTexture);
+      float previousDepth = getDepth(previousDepthTexture);
+
+      vec4 clipCoordinates = czm_projection * previousEyeCoordinates;
+      vec3 ndc = clipCoordinates.xyz / clipCoordinates.w;
+      ndc = (czm_viewportTransformation * vec4(ndc.xyz, 1.0)).xyz;
+      vec2 previousTextureCoordinates = ndc.xy / czm_viewport.zw;
+
+      mat4 lastProj = inverse(previousInverseProjection);
+      vec2 jitter;
+      jitter.x = czm_projection[3][0] - previousInverseProjection[3][0];
+      jitter.y = czm_projection[3][1] - previousInverseProjection[3][1];
+
+      vec4 currentColor = texture(colorTexture, v_textureCoordinates);
+      vec4 previousColor = texture(accumulationTexture, previousTextureCoordinates);
+      
+      float smoothing = 0.25;
+      float magntidude = 0.1;//smoothstep(-smoothing, 1.0 - smoothing, length((v_textureCoordinates - previousTextureCoordinates) * czm_pixelRatio));
+
+      vec4 finalColor = currentColor * magntidude + previousColor * (1.0 - magntidude);
+
+      out_FragColor = vec4(finalColor.xyz, 1.0);
+  }
+  `;
+
+        const scene = viewer.scene;
+        const context = scene._context;
+        let accumulationTexture, previousDepthTexture, depthColorAttachment;
+        let previousInverseProjection = new Cesium.Matrix4();
+        const tsaaStage = new Cesium.PostProcessStage({
+          fragmentShader: fragmentShaderSource,
+          uniforms: {
+            accumulationTexture: () => accumulationTexture ?? context.defaultTexture,
+            previousDepthTexture: () =>
+              depthColorAttachment?.[0] ?? context.defaultTexture,
+            previousInverseProjection: () => previousInverseProjection,
+          },
+        });
+        tsaaStage.enabled = false;
+
+        Sandcastle.addToggleButton("TSAA enabled", tsaaStage.enabled, function (checked) {
+          tsaaStage.enabled = checked;
+        });
+
+        scene.postProcessStages.add(tsaaStage);
+
+        scene.postRender.addEventListener(() => {
+          const previous = tsaaStage.outputTexture;
+          if (!previous) {
+            return;
+          }
+
+          if (!accumulationTexture) {
+            accumulationTexture = new Cesium.Texture({
+              context: context,
+              width: previous.width,
+              height: previous.height,
+              pixelFormat: previous.pixelFormat,
+              pixelDatatype: previous.pixelDatatype,
+            });
+          }
+
+          // Clear the existing texture when we toggle
+          const frameBuffer = tsaaStage.framebuffer;
+          frameBuffer._bind();
+          if (!tsaaStage.enabled) {
+            const gl = context._gl;
+            gl.clear(gl.COLOR_BUFFER_BIT);
+          }
+          accumulationTexture.copyFromFramebuffer();
+          frameBuffer._unBind();
+
+          const globeDepth = scene._view.globeDepth;
+          const depthTexture =
+            globeDepth.colorFramebufferManager.getDepthStencilTexture();
+
+          if (!previousDepthTexture) {
+            previousDepthTexture = new Cesium.Texture({
+              context: context,
+              width: depthTexture.width,
+              height: depthTexture.height,
+              pixelFormat: depthTexture.pixelFormat,
+              pixelDatatype: depthTexture.pixelDatatype,
+            });
+
+            depthColorAttachment = [
+              new Cesium.Texture({
+                context: context,
+                width: depthTexture.width,
+                height: depthTexture.height,
+                pixelFormat: Cesium.PixelFormat.RGBA,
+              }),
+            ];
+          }
+
+          const depthFramebuffer = new Cesium.Framebuffer({
+            context: context,
+            colorTextures: depthColorAttachment,
+            depthStencilTexture: previousDepthTexture,
+            destroyAttachments: false,
+          });
+
+          const copyCommand = context.createViewportQuadCommand(
+            Cesium._shadersPassThrough,
+            {
+              uniformMap: {
+                colorTexture: function () {
+                  return globeDepth.colorFramebufferManager.getDepthStencilTexture();
+                },
+              },
+              framebuffer: depthFramebuffer,
+            },
+          );
+          copyCommand.renderState = globeDepth._rs;
+          copyCommand.execute(context, context._currentPassState);
+          previousInverseProjection = Cesium.Matrix4.clone(
+            context.uniformState.inverseProjection,
+            previousInverseProjection,
+          );
+        });
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
