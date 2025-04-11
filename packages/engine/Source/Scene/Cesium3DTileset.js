@@ -2203,8 +2203,6 @@ Cesium3DTileset.prototype.loadTileset = function (
   return rootTile;
 };
 
-const EMPTY_ARRAY = [];
-
 /**
  * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit
  * tiling (3D Tiles 1.1) or uses the <code>3DTILES_implicit_tiling</code> extension,
@@ -2242,7 +2240,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     tileJson.children.push.apply(tileJson.children, children);
     tileJson.children.push.apply(
       tileJson.children,
-      defaultValue(tileHeader.children, EMPTY_ARRAY),
+      tileHeader.children ?? Frozen.EMPTY_ARRAY,
     );
     tileJson.refine = "ADD";
     tileJson.geometricError = parentTile._geometricError;
