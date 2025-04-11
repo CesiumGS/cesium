@@ -3905,10 +3905,17 @@ Scene.prototype.updateHeight = function (
   Check.typeOf.func("callback", callback);
   //>>includeEnd('debug');
 
-  const callbackWrapper = () => {
+  const ellipsoid = this._ellipsoid;
+  const callbackWrapper = (clampedCartographic) => {
     Cartographic.clone(cartographic, updateHeightScratchCartographic);
 
-    const height = this.getHeight(cartographic, heightReference);
+    let height;
+    if (defined(clampedCartographic)) {
+      height = clampedCartographic.height;
+    }
+    if (!defined(height)) {
+      height = this.getHeight(cartographic, heightReference);
+    }
     if (defined(height)) {
       updateHeightScratchCartographic.height = height;
       callback(updateHeightScratchCartographic);
@@ -3932,7 +3939,6 @@ Scene.prototype.updateHeight = function (
   }
 
   let tilesetRemoveCallbacks = {};
-  const ellipsoid = this._ellipsoid;
   const createPrimitiveEventListener = (primitive) => {
     if (
       ignore3dTiles ||
