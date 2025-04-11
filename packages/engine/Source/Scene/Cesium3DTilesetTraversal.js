@@ -1,10 +1,10 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
+import Frozen from "./Frozen.js";
 
 /**
  * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
@@ -72,18 +72,9 @@ Cesium3DTilesetTraversal.canTraverse = function (tile) {
 const startTime = JulianDate.fromIso8601("2024-11-01");
 
 function timestampInRange(tile, frameState) {
-  const tileContentHeader = defaultValue(
-    tile._contentHeader,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const tileMetadata = defaultValue(
-    tileContentHeader.metadata,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const tileProperties = defaultValue(
-    tileMetadata.properties,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const tileContentHeader = tile._contentHeader ?? Frozen.EMPTY_OBJECT;
+  const tileMetadata = tileContentHeader.metadata ?? Frozen.EMPTY_OBJECT;
+  const tileProperties = tileMetadata.properties ?? Frozen.EMPTY_OBJECT;
   const timestampStart = tileProperties.timestampStart;
   const timestampStop = tileProperties.timestampStop;
 
