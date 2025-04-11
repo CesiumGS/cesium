@@ -1390,6 +1390,11 @@ Object.defineProperties(Model.prototype, {
    */
   imageryLayers: {
     get: function () {
+      // TODO_DRAPING: Currently, this implies that a Model only can have
+      // imagery when it is part of a tileset. One could make that case
+      // that it should be possible to assign imagery to a standalone
+      // model. This could probably be implemented here, with reasonable
+      // effort.
       if (defined(this._content)) {
         const tileset = this._content.tileset;
         if (defined(tileset)) {

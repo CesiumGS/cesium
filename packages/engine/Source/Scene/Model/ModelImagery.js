@@ -2,6 +2,7 @@ import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 
+import ImageryConfiguration from "./ImageryConfiguration.js";
 import ModelPrimitiveImagery from "./ModelPrimitiveImagery.js";
 
 /**
@@ -60,6 +61,20 @@ class ModelImagery {
      * @private
      */
     this._modelPrimitiveImageries = undefined;
+
+    /**
+     * One <code>ImageryConfiguration</code> object for each <code>ImageryLayer</code>
+     * that is associated with the model.
+     *
+     * This is used for determining whether the configuration (relevant property
+     * values) of an imagery layer has been changed since the previous
+     * <code>update</code> call, which should cause the draw commands of the
+     * model to be reset.
+     *
+     * @type {ImageryConfiguration[]}
+     * @private
+     */
+    this._imageryConfigurations = [];
   }
 
   /**
@@ -89,10 +104,14 @@ class ModelImagery {
       return;
     }
     if (!defined(this._modelPrimitiveImageries)) {
-      console.log("Creating modelPrimitiveImageries");
+      // XXX_DRAPING Debug log
+      //console.log("Creating modelPrimitiveImageries");
+
       this._modelPrimitiveImageries = this._createModelPrimitiveImageries();
     }
     this._updateModelPrimitiveImageries(frameState);
+
+    this._checkForModifiedImageryConfigurations();
   }
 
   /**
@@ -115,7 +134,7 @@ class ModelImagery {
         runtimePrimitive,
       );
       // XXX_DRAPING Is this the right way of passing this on...?
-      runtimePrimitive.modelPrimitiveImagery = modelPrimitiveImagery;
+      runtimePrimitive.primitive.modelPrimitiveImagery = modelPrimitiveImagery;
       modelPrimitiveImageries.push(modelPrimitiveImagery);
     }
     return modelPrimitiveImageries;
@@ -256,6 +275,79 @@ class ModelImagery {
       }
     }
     return true;
+  }
+
+  /**
+   * Check whether any of the settings of any imagery layer (like alpha
+   * or hue) has been changed since the last call to the <code>update</code>
+   * function.
+   *
+   * If this is the case, the draw commands of the model will be reset.
+   */
+  _checkForModifiedImageryConfigurations() {
+    if (this._imageryConfigurationsModified()) {
+      this._updateImageryConfigurations();
+      const model = this._model;
+      model.resetDrawCommands();
+    }
+  }
+
+  /**
+   * Returns whether any setting of an imagery layer (like alpha or hue) has
+   * been changed since the last time the <code>ImageryConfiguration</code>
+   * objects have been updated.
+   *
+   * @returns {boolean} Whether there was a modification
+   */
+  _imageryConfigurationsModified() {
+    const model = this._model;
+    const imageryLayers = model.imageryLayers;
+    const imageryConfigurations = this._imageryConfigurations;
+    if (imageryLayers.length !== imageryConfigurations.length) {
+      return true;
+    }
+    for (let i = 0; i < imageryLayers.length; i++) {
+      const imageryLayer = imageryLayers.get(i);
+      const imageryConfiguration = imageryConfigurations[i];
+
+      if (imageryLayer.alpha !== imageryConfiguration.alpha) {
+        return true;
+      }
+      if (imageryLayer.brightness !== imageryConfiguration.brightness) {
+        return true;
+      }
+      if (imageryLayer.contrast !== imageryConfiguration.contrast) {
+        return true;
+      }
+      if (imageryLayer.hue !== imageryConfiguration.hue) {
+        return true;
+      }
+      if (imageryLayer.saturation !== imageryConfiguration.saturation) {
+        return true;
+      }
+      if (imageryLayer.gamma !== imageryConfiguration.gamma) {
+        return true;
+      }
+      if (imageryLayer.colorToAlpha !== imageryConfiguration.colorToAlpha) {
+        return true;
+      }
+    }
+  }
+
+  /**
+   * Create one <code>ImageryConfiguration</code> object for each imagery
+   * layer that appears in the model, and store them as the
+   * <code>_imageryConfigurations</code>.
+   */
+  _updateImageryConfigurations() {
+    const model = this._model;
+    const imageryLayers = model.imageryLayers;
+    const imageryConfigurations = this._imageryConfigurations;
+    imageryConfigurations.length = imageryLayers.length;
+    for (let i = 0; i < imageryLayers.length; i++) {
+      const imageryLayer = imageryLayers.get(i);
+      imageryConfigurations[i] = new ImageryConfiguration(imageryLayer);
+    }
   }
 }
 

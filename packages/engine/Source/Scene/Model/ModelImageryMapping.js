@@ -163,7 +163,7 @@ class ModelImageryMapping {
 
     const buffer = attribute.buffer;
     const type = attribute.type;
-    // TODO Quantization etc...? A generic "reader" would be nice...
+    // TODO_DRAPING Quantization etc...? A generic "reader" would be nice...
     const componentsPerAttribute = AttributeType.getNumberOfComponents(type);
     const typedArray = ComponentDatatype.createTypedArray(
       attribute.componentDatatype,

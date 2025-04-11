@@ -1,7 +1,6 @@
 import defined from "../../Core/defined";
 import Rectangle from "../../Core/Rectangle";
 import Cartesian4 from "../../Core/Cartesian4";
-import Model from "./Model";
 import ImageryCoverage from "./ImageryCoverage";
 
 // TODO_DRAPING: Some of this was extracted from ImageryLayer.prototype._createTileImagerySkeletons
@@ -42,22 +41,30 @@ class CartesianRectangle {
  */
 class ImageryCoverageComputations {
   /**
-   * Computes the `ImageryCoverage` objects that describe the imagery tiles
-   * and the respective texture coordinates that are covered by the given
+   * Computes the <code>ImageryCoverage</code> objects that describe the imagery
+   * tiles and the respective texture coordinates that are covered by the given
    * input rectangle in the given imagery data.
    *
-   * TODO_DRAPING Extracted from _createTileImagerySkeletons.
+   * The given imagery level will be clamped if necessary, to be in the valid
+   * range for the imagery provider of the given imagery layer.
    *
    * @param {Rectangle} inputRectangle The input rectangle (e.g. tile bounds)
    * @param {ImageryLayer} imageryLayer The imagery layer
-   * @param {ImageryProvider} imageryProvider The imagery provider
+   * @param {number} inputImageryLevel The level for which the imagery coverage
+   * should be computed.
    * @returns {ImageryCoverage[]} The objects describing the covered imagery
    * and the respective texture coordinates
    */
-  static createImageryCoverages(inputRectangle, imageryLayer, imageryProvider) {
-    // Compute the required level in the imagery tiling scheme.
-    // TODO_DRAPING This will need additional inputs
-    const imageryLevel = ImageryCoverageComputations._computeImageryLevel();
+  static createImageryCoverages(
+    inputRectangle,
+    imageryLayer,
+    inputImageryLevel,
+  ) {
+    const imageryProvider = imageryLayer.imageryProvider;
+    const imageryLevel = ImageryCoverageComputations._validateImageryLevel(
+      imageryProvider,
+      inputImageryLevel,
+    );
 
     // Compute the range, in integer coordinates, of imagery
     // tiles that are covered by the input rectangle
@@ -113,59 +120,39 @@ class ImageryCoverageComputations {
       return nativeClippedImageryBounds;
     };
 
-    const imageryCoverages = ImageryCoverageComputations._processImageryRange(
-      imageryRange,
-      imageryLevel,
-      nativeInputRectangle,
-      computeClippedImageryRectangle,
-    );
+    const imageryCoverages =
+      ImageryCoverageComputations._computeImageryCoverages(
+        imageryRange,
+        imageryLevel,
+        nativeInputRectangle,
+        computeClippedImageryRectangle,
+      );
     return imageryCoverages;
   }
 
   /**
-   * Computes the imagery level that should be used.
+   * Validate the given imagery level against the constraints of the
+   * given imagery provider.
    *
-   * TODO_DRAPING Extracted from _createTileImagerySkeletons.
-   * This will need some input, maybe related to the geometric error,
-   * but in the worst case, even something screen-spaced...
+   * This will clamp the given level to be in the range
+   * <code>[minimumLevel, maximumLevel)</code> that is
+   * defined by the given imagery provider (and cut off
+   * any fractional part that the input may have)
    *
-   * @returns {number} The imagery level
+   * @param {ImageryProvider} imageryProvider The imagery provider
+   * @param {number} imageryLevel The imagery level
+   * @returns {number} The validated level
    */
-  static _computeImageryLevel() {
-    // This is what this part originally did:
-    /*
-    let latitudeClosestToEquator = 0.0;
-    if (rectangle.south > 0.0) {
-      latitudeClosestToEquator = rectangle.south;
-    } else if (rectangle.north < 0.0) {
-      latitudeClosestToEquator = rectangle.north;
-    }
-    // Compute the required level in the imagery tiling scheme.
-    const errorRatio = 1.0;
-    const targetGeometricError =
-      errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
-    let imageryLevel = getLevelWithMaximumTexelSpacing(
-      this,
-      targetGeometricError,
-      latitudeClosestToEquator,
+  static _validateImageryLevel(imageryProvider, imageryLevel) {
+    const minimumLevel = imageryProvider.minimumLevel ?? 0;
+    const maximumLevel =
+      imageryProvider.maximumLevel ?? Number.POSITIVE_INFINITY;
+    const clampedImageryLevel = Math.min(
+      maximumLevel,
+      Math.max(minimumLevel, imageryLevel),
     );
-    imageryLevel = Math.max(0, imageryLevel);
-    const maximumLevel = imageryProvider.maximumLevel;
-    if (imageryLevel > maximumLevel) {
-      imageryLevel = maximumLevel;
-    }
-
-    if (defined(imageryProvider.minimumLevel)) {
-      const minimumLevel = imageryProvider.minimumLevel;
-      if (imageryLevel < minimumLevel) {
-        imageryLevel = minimumLevel;
-      }
-    }
-    */
-    if (defined(Model.XXX_DRAPING_LEVEL)) {
-      return Model.XXX_DRAPING_LEVEL;
-    }
-    return 18;
+    const validImageryLevel = Math.floor(clampedImageryLevel);
+    return validImageryLevel;
   }
 
   /**
@@ -210,9 +197,10 @@ class ImageryCoverageComputations {
     result.maxX = southeastTileCoordinates.x;
     result.maxY = southeastTileCoordinates.y;
 
-    console.log("  northwestTileCoordinates ", northwestTileCoordinates);
-    console.log("  southeastTileCoordinates ", southeastTileCoordinates);
-    console.log("  result before veryClose  ", result);
+    // XXX_DRAPING Debug log
+    //console.log("  northwestTileCoordinates ", northwestTileCoordinates);
+    //console.log("  southeastTileCoordinates ", southeastTileCoordinates);
+    //console.log("  result before veryClose  ", result);
 
     // TODO_DRAPING Extracted from _createTileImagerySkeletons:
     // If the southeast corner of the rectangle lies very close to the north or west side
@@ -260,7 +248,8 @@ class ImageryCoverageComputations {
       --result.maxX;
     }
 
-    console.log("  result after  veryClose  ", result);
+    // XXX_DRAPING Debug log
+    //console.log("  result after  veryClose  ", result);
 
     return result;
   }
@@ -347,13 +336,14 @@ class ImageryCoverageComputations {
    * @returns {ImageryCoverage[]} The objects describing the covered imagery
    * and the respective texture coordinates
    */
-  static _processImageryRange(
+  static _computeImageryCoverages(
     imageryRange,
     imageryLevel,
     nativeInputRectangle,
     computeClippedImageryRectangle,
   ) {
-    console.log("imageryRange ", imageryRange);
+    // XXX_DRAPING Still return the fixed value. Lol.
+    //console.log("imageryRange ", imageryRange);
 
     const imageryCoverages = [];
 
@@ -452,11 +442,12 @@ class ImageryCoverageComputations {
         }
 
         const texCoordsRectangle = new Cartesian4(minU, minV, maxU, maxV);
-        const imageryCoverage = new ImageryCoverage();
-        imageryCoverage.x = i;
-        imageryCoverage.y = j;
-        imageryCoverage.level = imageryLevel;
-        imageryCoverage.texCoordsRectangle = texCoordsRectangle;
+        const imageryCoverage = new ImageryCoverage(
+          i,
+          j,
+          imageryLevel,
+          texCoordsRectangle,
+        );
         imageryCoverages.push(imageryCoverage);
       }
     }

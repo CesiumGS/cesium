@@ -8,6 +8,7 @@ import ImageryCoverageComputations from "./ImageryCoverageComputations.js";
 import ModelImageryMapping from "./ModelImageryMapping.js";
 import ModelUtility from "./ModelUtility.js";
 import MappedPositions from "./MappedPositions.js";
+import Model from "./Model.js";
 
 // A scratch variable that is used in _computeMappedPositionsPerEllipsoid
 const primitivePositionsTransformScratch = new Matrix4();
@@ -223,6 +224,8 @@ class ModelPrimitiveImagery {
     const model = this._model;
     const lastModelMatrix = this._mappedPositionsModelMatrix;
     if (!Matrix4.equals(model.modelMatrix, lastModelMatrix)) {
+      // XXX_DRAPING Check whether this should be done here...
+      model.resetDrawCommands();
       return true;
     }
     return false;
@@ -361,20 +364,76 @@ class ModelPrimitiveImagery {
     const mappedPositions = this.mappedPositionsForImageryLayer(imageryLayer);
     const cartographicBoundingRectangle =
       mappedPositions.cartographicBoundingRectangle;
-    const imageryProvider = imageryLayer.imageryProvider;
+
+    const imageryLevel = this._computeImageryLevel(
+      imageryLayer,
+      cartographicBoundingRectangle,
+    );
+
     const coverages = ImageryCoverageComputations.createImageryCoverages(
       cartographicBoundingRectangle,
       imageryLayer,
-      imageryProvider,
+      imageryLevel,
     );
 
     // XXX_DRAPING Debug log
-    console.log("Computed coverages for imageryLayer ", imageryLayer);
-    console.log("Coverages: ", coverages.length);
-    for (const coverage of coverages) {
-      console.log(coverage);
-    }
+    //{
+    //  console.log("Computed coverages for imageryLayer ", imageryLayer);
+    //  console.log("Coverages: ", coverages.length);
+    //  for (const coverage of coverages) {
+    //    console.log(coverage);
+    //  }
+    //}
     return coverages;
+  }
+
+  // XXX_DRAPING Comments!
+  _computeImageryLevel(imageryLayer, boundingRectangle) {
+    const imageryProvider = imageryLayer.imageryProvider;
+    const tilingScheme = imageryProvider.tilingScheme;
+    const rectangle = tilingScheme.rectangle;
+
+    // The number of tiles covered by the boundingRectangle (b)
+    // for a certain level, based on the tiling scheme rectangle (r) is
+    // numberOfTilesCovered = b / (r / 2^level)
+    // Solving for "level" yields
+    // level = log2( numberOfTilesCovered * r / b)
+
+    // TODO_DRAPING This should be configurable, eventually...
+    const desiredNumberOfTilesCovered = 2;
+
+    // Perform the computation of the desired level, based on the
+    // number of tiles that should be covered (by whatever is
+    // larger, the width or the height)
+    let boundingRectangleSize = boundingRectangle.width;
+    let rectangleSize = rectangle.width;
+    if (boundingRectangle.height > boundingRectangle.width) {
+      boundingRectangleSize = boundingRectangle.height;
+      rectangleSize = rectangle.height;
+    }
+    const desiredLevel = Math.log2(
+      (desiredNumberOfTilesCovered * rectangleSize) / boundingRectangleSize,
+    );
+
+    // Clamp the level to a valid range, and an integer value
+    const minimumLevel = imageryProvider.minimumLevel ?? 0;
+    const maximumLevel =
+      imageryProvider.maximumLevel ?? Number.POSITIVE_INFINITY;
+    const validImageryLevel = Math.min(
+      maximumLevel,
+      Math.max(minimumLevel, desiredLevel),
+    );
+    const imageryLevel = Math.floor(validImageryLevel);
+
+    if (defined(Model.XXX_DRAPING_LEVEL)) {
+      return Model.XXX_DRAPING_LEVEL;
+    }
+
+    // XXX_DRAPING Still return the fixed value. Lol.
+    console.log(
+      `To cover ${desiredNumberOfTilesCovered} tiles need level ${desiredLevel}, clamped to ${validImageryLevel}, as int ${imageryLevel}`,
+    );
+    return 18;
   }
 
   /**
@@ -421,10 +480,12 @@ class ModelPrimitiveImagery {
         }
       }
     }
+
     if (allImageriesReady) {
       // XXX_DRAPING Debug log
-      console.log("All imageries are ready now in ModelPrimitiveImagery");
+      //console.log("All imageries are ready now in ModelPrimitiveImagery");
     }
+
     this._allImageriesReady = allImageriesReady;
   }
 
