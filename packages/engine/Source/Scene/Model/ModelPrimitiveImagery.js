@@ -28,13 +28,15 @@ class ModelPrimitiveImagery {
    * Creates a new instance
    *
    * @param {Model} model The model
-   * @param {ModelComponents.Primitive} runtimePrimitive The primitive
+   * @param {ModelRuntimeNode} runtimeNode The node that the primitive is attached to
+   * @param {ModelRuntimePrimitive} runtimePrimitive The primitive
    * @throws {DeveloperError} If any argument is not defined, or the
    * given primitive does not have a <code>"POSITION"</code> attribute.
    */
-  constructor(model, runtimePrimitive) {
+  constructor(model, runtimeNode, runtimePrimitive) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("model", model);
+    Check.defined("runtimeNode", runtimeNode);
     Check.defined("runtimePrimitive", runtimePrimitive);
     //>>includeEnd('debug');
 
@@ -48,9 +50,18 @@ class ModelPrimitiveImagery {
     this._model = model;
 
     /**
+     * The node that the primitive is attached to
+     *
+     * @type {ModelRuntimeNode}
+     * @readonly
+     * @private
+     */
+    this._runtimeNode = runtimeNode;
+
+    /**
      * The primitive that this instance was created for.
      *
-     * @type {ModelComponents.Primitive}
+     * @type {ModelRuntimePrimitive}
      * @readonly
      * @private
      */
@@ -59,7 +70,7 @@ class ModelPrimitiveImagery {
     /**
      * The <code>"POSITION"</code> attribute of the primitive.
      *
-     * @type {ModelComponents.Primitive}
+     * @type {ModelComponents.Attribute}
      * @readonly
      * @private
      */
@@ -252,6 +263,7 @@ class ModelPrimitiveImagery {
    */
   _computeMappedPositionsPerEllipsoid() {
     const model = this._model;
+    const runtimeNode = this._runtimeNode;
 
     // The _primitivePositionAttribute is ensured to be defined in the constructor
     const primitivePositionAttribute = this._primitivePositionAttribute;
@@ -260,6 +272,7 @@ class ModelPrimitiveImagery {
     const primitivePositionsTransform =
       ModelPrimitiveImagery._computePrimitivePositionsTransform(
         model,
+        runtimeNode,
         primitivePositionsTransformScratch,
       );
 
@@ -384,6 +397,19 @@ class ModelPrimitiveImagery {
     //    console.log(coverage);
     //  }
     //}
+
+    // XXX_DRAPING Adding references here?
+    /*
+    for (const coverage of coverages) {
+      const imagery = imageryLayer.getImageryFromCache(
+        coverage.x,
+        coverage.y,
+        coverage.level,
+      );
+      imagery.addReference();
+    }
+    */
+
     return coverages;
   }
 
@@ -433,7 +459,7 @@ class ModelPrimitiveImagery {
     console.log(
       `To cover ${desiredNumberOfTilesCovered} tiles need level ${desiredLevel}, clamped to ${validImageryLevel}, as int ${imageryLevel}`,
     );
-    return 18;
+    return 14;
   }
 
   /**
@@ -561,20 +587,23 @@ class ModelPrimitiveImagery {
 
   /**
    * Compute the transform that apparently has to be applied to
-   * the positions attribute of a model, to compute their actual,
-   * final positions in ECEF coordinates.
+   * the positions attribute of a primitive, to compute the
+   * actual, final positions in ECEF coordinates.
    *
    * This is based on the computation of the bounding
    * sphere that is done at the end of buildDrawCommands
    *
    * @param {Model} model The model
+   * @param {ModelComponents.Node} runtimeNode The runtime node
+   * that the primitive is attached to
    * @param {Matrix4} [result] The result
    * @returns {Matrix4} The result
    * @private
    */
-  static _computePrimitivePositionsTransform(model, result) {
+  static _computePrimitivePositionsTransform(model, runtimeNode, result) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("model", model);
+    Check.defined("runtimeNode", runtimeNode);
     //>>includeEnd('debug');
 
     const modelSceneGraph = model.sceneGraph;
@@ -585,6 +614,7 @@ class ModelPrimitiveImagery {
     Matrix4.multiply(result, model.modelMatrix, result);
     Matrix4.multiply(result, modelSceneGraph._components.transform, result);
     Matrix4.multiply(result, modelSceneGraph._axisCorrectionMatrix, result);
+    Matrix4.multiply(result, runtimeNode.computedTransform, result);
     return result;
   }
 

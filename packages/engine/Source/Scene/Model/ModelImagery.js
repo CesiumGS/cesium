@@ -124,13 +124,16 @@ class ModelImagery {
    */
   _createModelPrimitiveImageries() {
     const model = this._model;
-    const runtimePrimitives = this._collectRuntimePrimitives();
+    const runtimeNodesAndPrimitives = this._collectRuntimeNodesAndPrimitives();
     const modelPrimitiveImageries = [];
-    const length = runtimePrimitives.length;
+    const length = runtimeNodesAndPrimitives.length;
     for (let i = 0; i < length; i++) {
-      const runtimePrimitive = runtimePrimitives[i];
+      const runtimeNodeAndPrimitive = runtimeNodesAndPrimitives[i];
+      const runtimeNode = runtimeNodeAndPrimitive.runtimeNode;
+      const runtimePrimitive = runtimeNodeAndPrimitive.runtimePrimitive;
       const modelPrimitiveImagery = new ModelPrimitiveImagery(
         model,
+        runtimeNode,
         runtimePrimitive,
       );
       // XXX_DRAPING Is this the right way of passing this on...?
@@ -141,19 +144,21 @@ class ModelImagery {
   }
 
   /**
-   * Computes all runtime primitives of the model.
+   * Computes all runtime nodes and primitives of the model.
    *
-   * This is just the array that contains each
+   * This is just the array that contains a
+   * <code>{ runtimeNode, runtimePrimitive }</code>
+   * for each
    * <code>model.sceneGraph._runtimeNodes[n]._runtimePrimitives[p]</code>.
    *
-   * @returns {ModelComponents.Primitive[]} The runtime primitives
+   * @returns {object[]} The runtime nodes and primitives
    * @private
    */
-  _collectRuntimePrimitives() {
+  _collectRuntimeNodesAndPrimitives() {
     const model = this._model;
     const sceneGraph = model.sceneGraph;
     const runtimeNodes = sceneGraph._runtimeNodes;
-    const runtimePrimitives = [];
+    const runtimeNodesAndPrimitives = [];
     for (let i = 0; i < runtimeNodes.length; i++) {
       const runtimeNode = runtimeNodes[i];
       if (!defined(runtimeNode)) {
@@ -161,10 +166,13 @@ class ModelImagery {
       }
       for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
         const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-        runtimePrimitives.push(runtimePrimitive);
+        runtimeNodesAndPrimitives.push({
+          runtimeNode: runtimeNode,
+          runtimePrimitive: runtimePrimitive,
+        });
       }
     }
-    return runtimePrimitives;
+    return runtimeNodesAndPrimitives;
   }
 
   /**
