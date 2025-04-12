@@ -24,11 +24,11 @@ class ImageryCoverage {
    * @param {number} x x-coordinate of the imagery tile
    * @param {number} y y-coordinate of the imagery tile
    * @param {number} level level of the imagery tile
-   * @param {Cartesian4} texCoordsRectangle The texture coordinate
+   * @param {Cartesian4} textureCoordinateRectangle The texture coordinate
    * rectangle from the imagery tile that is covered, i.e. the
    * (minU, minV, maxU, maxV) coordinate range.
    */
-  constructor(x, y, level, texCoordsRectangle) {
+  constructor(x, y, level, textureCoordinateRectangle) {
     /**
      * The x-coordinate of the imagery tile
      *
@@ -63,7 +63,7 @@ class ImageryCoverage {
      * @type {Cartesian4}
      * @readonly
      */
-    this.texCoordsRectangle = texCoordsRectangle;
+    this.textureCoordinateRectangle = textureCoordinateRectangle;
   }
 }
 

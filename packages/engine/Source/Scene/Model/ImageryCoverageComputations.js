@@ -342,9 +342,6 @@ class ImageryCoverageComputations {
     nativeInputRectangle,
     computeClippedImageryRectangle,
   ) {
-    // XXX_DRAPING Still return the fixed value. Lol.
-    //console.log("imageryRange ", imageryRange);
-
     const imageryCoverages = [];
 
     let minU;
@@ -441,12 +438,17 @@ class ImageryCoverageComputations {
           minV = 0.0;
         }
 
-        const texCoordsRectangle = new Cartesian4(minU, minV, maxU, maxV);
+        const textureCoordinateRectangle = new Cartesian4(
+          minU,
+          minV,
+          maxU,
+          maxV,
+        );
         const imageryCoverage = new ImageryCoverage(
           i,
           j,
           imageryLevel,
-          texCoordsRectangle,
+          textureCoordinateRectangle,
         );
         imageryCoverages.push(imageryCoverage);
       }

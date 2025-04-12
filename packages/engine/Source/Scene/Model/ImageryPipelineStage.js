@@ -89,6 +89,15 @@ class ImageryPipelineStage {
       imageryTexCoordAttributeSetIndices,
     );
 
+    // XXX_DRAPING Limit to single input for debugging
+    /*/
+    if (imageryInputs.length > 1) {
+      console.log("XXX_DRAPING Using only a single input!");
+      const temp = imageryInputs[1];
+      imageryInputs.length = 1;
+      imageryInputs[0] = temp;
+    }
+    //*/
     // XXX_DRAPING See how to handle that limit..
     if (imageryInputs.length > 10) {
       console.error(
@@ -555,7 +564,7 @@ class ImageryPipelineStage {
    * incorporate the imagery input in the resulting pixel.
    *
    * @param {ShaderBuilder} shaderBuilder The shader builder
-   * @param {object[]} imageryInputs The imagery inputs
+   * @param {ImageryInput[]} imageryInputs The imagery inputs
    * @param {ImageryFlags} imageryFlags The imagery flags
    */
   static _createMainImageryShader(shaderBuilder, imageryInputs, imageryFlags) {
@@ -596,7 +605,7 @@ class ImageryPipelineStage {
    * (It will include the ones that still have their default values
    * and may not be needed eventually)
    *
-   * @param {object[]} imageryInputs The imagery inputs
+   * @param {ImageryInput[]} imageryInputs The imagery inputs
    * @returns {object} The uniforms
    */
   static _createImageryUniforms(imageryInputs) {

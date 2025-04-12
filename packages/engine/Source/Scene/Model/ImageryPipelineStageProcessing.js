@@ -7,6 +7,7 @@ import Texture from "../../Renderer/Texture.js";
 
 import ModelImageryMapping from "./ModelImageryMapping.js";
 import Check from "../../Core/Check.js";
+import ImageryInput from "./ImageryInput.js";
 
 const nativeBoundingRectangleScratch = new Rectangle();
 const nativeImageryRectangleScratch = new Rectangle();
@@ -92,14 +93,6 @@ class ImageryPipelineStageProcessing {
         imageryInputs.push(imageryInput);
       }
     }
-
-    // XXX_DRAPING Limit to single input for debugging
-    /*/
-    if (imageryInputs.length > 1) {
-      console.log("XXX_DRAPING Using only a single input!");
-      return [imageryInputs[1]];
-    }
-    //*/
     return imageryInputs;
   }
 
@@ -164,19 +157,19 @@ class ImageryPipelineStageProcessing {
         imagery.rectangle,
       );
 
-    const textureCoordinateRectangle = coverage.texCoordsRectangle;
+    const textureCoordinateRectangle = coverage.textureCoordinateRectangle;
 
     // XXX_DRAPING Debug log
     //console.log(`textureTranslationAndScale `, textureTranslationAndScale);
     //console.log(`textureCoordinateRectangle `, textureCoordinateRectangle);
 
-    const imageryInput = {
-      imageryLayer: imageryLayer,
-      texture: texture,
-      textureTranslationAndScale: textureTranslationAndScale,
-      textureCoordinateRectangle: textureCoordinateRectangle,
-      imageryTexCoordAttributeSetIndex: imageryTexCoordAttributeSetIndex,
-    };
+    const imageryInput = new ImageryInput(
+      imageryLayer,
+      texture,
+      textureTranslationAndScale,
+      textureCoordinateRectangle,
+      imageryTexCoordAttributeSetIndex,
+    );
     return imageryInput;
   }
 
