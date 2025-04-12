@@ -11,13 +11,6 @@ import ImageryCoverage from "./ImageryCoverage";
 // be abstracted away using a `MapProjection` and/or computing only the
 // right texture coordinates for the respective projection to begin with.
 
-const imageryBoundsScratch = new Rectangle();
-const overlappedRectangleScratch = new Rectangle();
-const clippedRectangleScratch = new Rectangle();
-const nativeInputRectangleScratch = new Rectangle();
-const nativeImageryBoundsScratch = new Rectangle();
-const nativeClippedImageryBoundsScratch = new Rectangle();
-
 // TODO_DRAPING Preliminary, internal class for texture
 // coordinate and index range computations. This could
 // be emulated with a "BoundingRectangle", but min/max
@@ -30,6 +23,14 @@ class CartesianRectangle {
     this.minX = 0;
   }
 }
+
+const imageryBoundsScratch = new Rectangle();
+const overlappedRectangleScratch = new Rectangle();
+const clippedRectangleScratch = new Rectangle();
+const nativeInputRectangleScratch = new Rectangle();
+const nativeImageryBoundsScratch = new Rectangle();
+const nativeClippedImageryBoundsScratch = new Rectangle();
+const textureCoordinateCartesianRectangleScratch = new CartesianRectangle();
 
 /**
  * A class that can compute the parts of imagery that are covered
@@ -344,45 +345,7 @@ class ImageryCoverageComputations {
   ) {
     const imageryCoverages = [];
 
-    let minU;
-    let maxU = 0.0;
-
-    let minV = 1.0;
-    let maxV;
-
-    const clippedImageryRectangle = computeClippedImageryRectangle(
-      imageryRange.minX,
-      imageryRange.maxY,
-      imageryLevel,
-    );
-
-    // TODO_DRAPING Extracted from _createTileImagerySkeletons:
-    // TODO_DRAPING I'm pretty sure that this "veryClose"-handling could somehow be
-    // pulled out and made more readable....
-    // If this is the northern-most or western-most tile in the imagery tiling scheme,
-    // it may not start at the northern or western edge of the terrain tile.
-    // Calculate where it does start.
-    const veryCloseX = nativeInputRectangle.width / 512.0;
-    const veryCloseY = nativeInputRectangle.height / 512.0;
-    const differenceWest =
-      clippedImageryRectangle.west - nativeInputRectangle.west;
-    if (Math.abs(differenceWest) >= veryCloseX) {
-      maxU = Math.min(1.0, differenceWest / nativeInputRectangle.width);
-    }
-
-    const differenceNorth =
-      clippedImageryRectangle.north - nativeInputRectangle.north;
-    if (Math.abs(differenceNorth) >= veryCloseY) {
-      const differenceV =
-        clippedImageryRectangle.north - nativeInputRectangle.south;
-      minV = Math.max(0.0, differenceV / nativeInputRectangle.height);
-    }
-
-    const initialMinV = minV;
-
     for (let i = imageryRange.minX; i <= imageryRange.maxX; i++) {
-      minU = maxU;
-
       const clippedImageryRectangleU = computeClippedImageryRectangle(
         i,
         imageryRange.maxY,
@@ -393,57 +356,31 @@ class ImageryCoverageComputations {
         continue;
       }
 
-      const differenceU =
-        clippedImageryRectangleU.east - nativeInputRectangle.west;
-      maxU = Math.min(1.0, differenceU / nativeInputRectangle.width);
-
-      // TODO_DRAPING Extracted from _createTileImagerySkeletons:
-      // If this is the eastern-most imagery tile mapped to this terrain tile,
-      // and there are more imagery tiles to the east of this one, the maxU
-      // should be 1.0 to make sure rounding errors don't make the last
-      // image fall shy of the edge of the terrain tile.
-      if (i === imageryRange.maxX) {
-        const differenceEast =
-          clippedImageryRectangleU.east - nativeInputRectangle.east;
-        if (Math.abs(differenceEast) < veryCloseX) {
-          maxU = 1.0;
-        }
-      }
-
-      minV = initialMinV;
-
       for (let j = imageryRange.minY; j <= imageryRange.maxY; j++) {
-        maxV = minV;
-
-        const clippedimageryRectangleV = computeClippedImageryRectangle(
+        const clippedImageryRectangleV = computeClippedImageryRectangle(
           i,
           j,
           imageryLevel,
         );
 
-        if (!defined(clippedimageryRectangleV)) {
+        if (!defined(clippedImageryRectangleV)) {
           continue;
         }
 
-        const differenceSouth =
-          clippedimageryRectangleV.south - nativeInputRectangle.south;
-        minV = Math.max(0.0, differenceSouth / nativeInputRectangle.height);
-
-        // TODO_DRAPING Extracted from _createTileImagerySkeletons:
-        // If this is the southern-most imagery tile mapped to this terrain tile,
-        // and there are more imagery tiles to the south of this one, the minV
-        // should be 0.0 to make sure rounding errors don't make the last
-        // image fall shy of the edge of the terrain tile.
-        if (j === imageryRange.maxY && Math.abs(differenceSouth) < veryCloseY) {
-          minV = 0.0;
-        }
+        const textureCoordinateCartesianRectangle =
+          ImageryCoverageComputations._localizeToCartesianRectangle(
+            clippedImageryRectangleV,
+            nativeInputRectangle,
+            textureCoordinateCartesianRectangleScratch,
+          );
 
         const textureCoordinateRectangle = new Cartesian4(
-          minU,
-          minV,
-          maxU,
-          maxV,
+          textureCoordinateCartesianRectangle.minX,
+          textureCoordinateCartesianRectangle.minY,
+          textureCoordinateCartesianRectangle.maxX,
+          textureCoordinateCartesianRectangle.maxY,
         );
+
         const imageryCoverage = new ImageryCoverage(
           i,
           j,
@@ -456,19 +393,34 @@ class ImageryCoverageComputations {
     return imageryCoverages;
   }
 
-  // TODO_DRAPING I'm pretty sure that this is what many operations here
-  // boil down to, maybe including some "flip" or "clamp", but
-  // carving that out and implementing it properly takes TIME...
-  static _localizeCartesianRectangle(rectangleA, rectangleB, result) {
+  /**
+   * Compute the coordinates of the first rectangle relative to the
+   * second rectangle.
+   *
+   * The result will describe the bounds of the first rectangle
+   * in coordinates that are relative to the (south,west) and
+   * (width, height) of the second rectangle. This is suitable
+   * for describing the texture coordinates of the first
+   * rectangle within the second one.
+   *
+   * The result will be stored in the given result parameter, or
+   * in a new rectangle if the result was undefined.
+   *
+   * @param {Rectangle} rectangleA The first rectangle
+   * @param {Rectangle} rectangleB The second rectangle
+   * @param {CartesianRectangle} [result] The result
+   * @returns {CartesianRectangle} The result
+   */
+  static _localizeToCartesianRectangle(rectangleA, rectangleB, result) {
     if (result === undefined) {
       result = new CartesianRectangle();
     }
-    const invX = rectangleA.maxX - rectangleA.minX;
-    const invY = rectangleA.maxY - rectangleA.minY;
-    result.minX = (rectangleB.minX - rectangleA.minX) * invX;
-    result.minY = (rectangleB.minY - rectangleA.minY) * invY;
-    result.maxY = (rectangleB.maxY - rectangleA.maxY) * invY;
-    result.maxX = (rectangleB.maxX - rectangleA.maxX) * invX;
+    const invX = 1.0 / rectangleB.width;
+    const invY = 1.0 / rectangleB.height;
+    result.minX = (rectangleA.west - rectangleB.west) * invX;
+    result.minY = (rectangleA.south - rectangleB.south) * invY;
+    result.maxX = (rectangleA.east - rectangleB.west) * invX;
+    result.maxY = (rectangleA.north - rectangleB.south) * invY;
     return result;
   }
 }

@@ -100,7 +100,7 @@ class ImageryPipelineStage {
     //*/
     // XXX_DRAPING See how to handle that limit..
     if (imageryInputs.length > 10) {
-      console.error(
+      console.log(
         `XXX_DRAPING Found ${imageryInputs.length} texture units, truncating`,
       );
       imageryInputs.length = 10;
