@@ -390,13 +390,15 @@ class ModelPrimitiveImagery {
     );
 
     // XXX_DRAPING Debug log
-    //{
-    //  console.log("Computed coverages for imageryLayer ", imageryLayer);
-    //  console.log("Coverages: ", coverages.length);
-    //  for (const coverage of coverages) {
-    //    console.log(coverage);
-    //  }
-    //}
+    /*/
+    {
+      console.log("Computed coverages for imageryLayer ", imageryLayer);
+      console.log("Coverages: ", coverages.length);
+      for (const coverage of coverages) {
+        console.log(coverage);
+      }
+    }
+    //*/
 
     // XXX_DRAPING Adding references here?
     /*
@@ -459,7 +461,7 @@ class ModelPrimitiveImagery {
     console.log(
       `To cover ${desiredNumberOfTilesCovered} tiles need level ${desiredLevel}, clamped to ${validImageryLevel}, as int ${imageryLevel}`,
     );
-    return 14;
+    return 18;
   }
 
   /**
@@ -606,14 +608,16 @@ class ModelPrimitiveImagery {
     Check.defined("runtimeNode", runtimeNode);
     //>>includeEnd('debug');
 
-    const modelSceneGraph = model.sceneGraph;
     if (!defined(result)) {
       result = new Matrix4();
     }
+
+    const modelSceneGraph = model.sceneGraph;
+
     Matrix4.clone(Matrix4.IDENTITY, result);
     Matrix4.multiply(result, model.modelMatrix, result);
-    Matrix4.multiply(result, modelSceneGraph._components.transform, result);
-    Matrix4.multiply(result, modelSceneGraph._axisCorrectionMatrix, result);
+    Matrix4.multiply(result, modelSceneGraph.components.transform, result);
+    Matrix4.multiply(result, modelSceneGraph.axisCorrectionMatrix, result);
     Matrix4.multiply(result, runtimeNode.computedTransform, result);
     return result;
   }
