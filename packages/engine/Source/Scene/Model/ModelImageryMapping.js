@@ -13,6 +13,7 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
+import AttributeCompression from "../../Core/AttributeCompression.js";
 
 /**
  * A class for computing the texture coordinates of imagery that is
@@ -162,15 +163,56 @@ class ModelImageryMapping {
     //>>includeEnd('debug');
 
     const buffer = attribute.buffer;
+    const count = attribute.count;
     const type = attribute.type;
-    // TODO_DRAPING Quantization etc...? A generic "reader" would be nice...
     const componentsPerAttribute = AttributeType.getNumberOfComponents(type);
-    const typedArray = ComponentDatatype.createTypedArray(
-      attribute.componentDatatype,
-      attribute.count * componentsPerAttribute,
+
+    // Without quantization, the data can directly be read
+    // from the buffer into a typed array
+    const quantization = attribute.quantization;
+    if (!defined(quantization)) {
+      const typedArray = ComponentDatatype.createTypedArray(
+        attribute.componentDatatype,
+        count * componentsPerAttribute,
+      );
+      buffer.getBufferData(typedArray);
+      return typedArray;
+    }
+
+    // When the data is quantized, then read the quantized data
+    // into a typed array, and dequantize it using the
+    // AttributeCompression utility function,
+    const quantizedTypedArray = ComponentDatatype.createTypedArray(
+      quantization.componentDatatype,
+      count * componentsPerAttribute,
     );
-    buffer.getBufferData(typedArray);
-    return typedArray;
+    buffer.getBufferData(quantizedTypedArray);
+    const dequantizedTypedArray = AttributeCompression.dequantize(
+      quantizedTypedArray,
+      quantization.componentDatatype,
+      type,
+      count,
+    );
+
+    // Now apply the offset/scale of the quantizaation to the
+    // dequantized data
+    const p = new Cartesian3();
+
+    // XXX_DRAPING: There's also some quantizedVolumeScale floating around in
+    // some places. I hope that this is the right thing to do here...:
+    const scale = quantization.quantizedVolumeDimensions;
+    const offset = quantization.quantizedVolumeOffset;
+    for (let i = 0; i < count; i++) {
+      p.x = dequantizedTypedArray[i * 3 + 0];
+      p.y = dequantizedTypedArray[i * 3 + 1];
+      p.z = dequantizedTypedArray[i * 3 + 2];
+      Cartesian3.multiplyComponents(p, scale, p);
+      Cartesian3.add(p, offset, p);
+      dequantizedTypedArray[i * 3 + 0] = p.x;
+      dequantizedTypedArray[i * 3 + 1] = p.y;
+      dequantizedTypedArray[i * 3 + 2] = p.z;
+    }
+    return dequantizedTypedArray;
   }
 
   /**
