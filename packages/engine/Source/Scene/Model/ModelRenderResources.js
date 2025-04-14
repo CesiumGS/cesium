@@ -1,8 +1,8 @@
-import Check from "../../Core/Check.js";
-import ModelAlphaOptions from "./ModelAlphaOptions.js";
+import { Check } from "@cesium/utils";
 import RenderState from "../../Renderer/RenderState.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
 import DepthFunction from "../DepthFunction.js";
+import ModelAlphaOptions from "./ModelAlphaOptions.js";
 
 /**
  * Model render resources are for setting details that are consistent across

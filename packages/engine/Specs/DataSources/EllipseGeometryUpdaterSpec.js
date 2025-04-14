@@ -1,16 +1,16 @@
 import {
   ApproximateTerrainHeights,
   Cartesian3,
-  JulianDate,
-  TimeIntervalCollection,
   ConstantPositionProperty,
   ConstantProperty,
   EllipseGeometryUpdater,
   EllipseGraphics,
   Entity,
+  JulianDate,
+  PrimitiveCollection,
   SampledPositionProperty,
   SampledProperty,
-  PrimitiveCollection,
+  TimeIntervalCollection,
 } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";

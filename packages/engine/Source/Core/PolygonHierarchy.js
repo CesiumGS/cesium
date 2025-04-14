@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/utils";
 
 /**
  * An hierarchy of linear rings which define a polygon and its holes.

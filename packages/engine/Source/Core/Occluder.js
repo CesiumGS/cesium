@@ -1,7 +1,6 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";

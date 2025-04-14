@@ -1,9 +1,9 @@
-import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
-import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import SpecularEnvironmentCubeMap from "../SpecularEnvironmentCubeMap.js";
+import { defined } from "@cesium/utils";
 import Cartesian2 from "../../Core/Cartesian2.js";
+import combine from "../../Core/combine.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
+import SpecularEnvironmentCubeMap from "../SpecularEnvironmentCubeMap.js";
 
 const ImageBasedLightingPipelineStage = {
   name: "ImageBasedLightingPipelineStage", // Helps with debugging

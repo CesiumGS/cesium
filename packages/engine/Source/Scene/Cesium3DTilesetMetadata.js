@@ -1,6 +1,5 @@
-import Check from "../Core/Check.js";
+import { Check, defined } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import GroupMetadata from "./GroupMetadata.js";
 import TilesetMetadata from "./TilesetMetadata.js";
 

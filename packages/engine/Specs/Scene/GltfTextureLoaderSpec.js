@@ -1,19 +1,19 @@
+import { RuntimeError } from "@cesium/utils";
+import createScene from "../../../../Specs/createScene.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 import {
   clone,
   GltfImageLoader,
-  GltfTextureLoader,
   GltfLoaderUtil,
+  GltfTextureLoader,
   JobScheduler,
   Resource,
   ResourceCache,
-  RuntimeError,
   SupportedImageFormats,
   Texture,
   TextureMinificationFilter,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
-import loaderProcess from "../../../../Specs/loaderProcess.js";
-import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfTextureLoader",

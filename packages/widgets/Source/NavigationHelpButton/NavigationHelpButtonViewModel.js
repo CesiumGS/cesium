@@ -1,5 +1,5 @@
-import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
+import knockout from "../ThirdParty/knockout.js";
 
 /**
  * The view model for {@link NavigationHelpButton}.

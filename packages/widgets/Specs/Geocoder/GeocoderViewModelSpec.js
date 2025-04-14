@@ -1,7 +1,7 @@
 import { Cartesian3, Credit, Rectangle } from "@cesium/engine";
-import { GeocoderViewModel } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import { GeocoderViewModel } from "../../index.js";
 
 describe(
   "Widgets/Geocoder/GeocoderViewModel",

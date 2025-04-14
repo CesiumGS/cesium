@@ -1,14 +1,14 @@
-import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import defined from "../Core/defined.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Cartographic from "../Core/Cartographic.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import Matrix3 from "../Core/Matrix3.js";
-import CesiumMath from "../Core/Math.js";
+import { defined } from "@cesium/utils";
 import dracoModule from "draco3d/draco_decoder_nodejs.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
+import Color from "../Core/Color.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import CesiumMath from "../Core/Math.js";
+import Matrix3 from "../Core/Matrix3.js";
 import srgbToLinear from "../Core/srgbToLinear.js";
+import WebMercatorProjection from "../Core/WebMercatorProjection.js";
+import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 let draco;
 

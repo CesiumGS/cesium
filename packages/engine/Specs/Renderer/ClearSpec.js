@@ -1,7 +1,7 @@
 import {
   BoundingRectangle,
-  Color,
   ClearCommand,
+  Color,
   Framebuffer,
   RenderState,
   Texture,

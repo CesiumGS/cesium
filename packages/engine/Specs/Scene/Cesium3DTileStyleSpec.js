@@ -1,11 +1,11 @@
 import {
   Cartesian2,
   Cartesian4,
-  Color,
-  Resource,
   Cesium3DTileStyle,
+  Color,
   ConditionsExpression,
   Expression,
+  Resource,
 } from "../../index.js";
 
 describe("Scene/Cesium3DTileStyle", function () {

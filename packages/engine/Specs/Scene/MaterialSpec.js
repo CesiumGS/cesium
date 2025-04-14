@@ -1,17 +1,16 @@
+import { defined, FeatureDetection } from "@cesium/utils";
 import {
   Cartesian3,
   Color,
-  defined,
   Ellipsoid,
   GeometryInstance,
-  Rectangle,
-  RectangleGeometry,
-  Resource,
   Material,
   MaterialAppearance,
   PolylineCollection,
-  FeatureDetection,
   Primitive,
+  Rectangle,
+  RectangleGeometry,
+  Resource,
   TextureMagnificationFilter,
   TextureMinificationFilter,
 } from "../../index.js";

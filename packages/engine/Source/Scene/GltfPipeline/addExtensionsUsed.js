@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import addToArray from "./addToArray.js";
-import defined from "../../Core/defined.js";
 
 /**
  * Adds an extension to gltf.extensionsUsed if it does not already exist.

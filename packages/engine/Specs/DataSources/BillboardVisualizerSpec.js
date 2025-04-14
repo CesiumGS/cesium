@@ -1,23 +1,23 @@
+import { defined } from "@cesium/utils";
 import {
+  BillboardGraphics,
+  BillboardVisualizer,
   BoundingRectangle,
   BoundingSphere,
+  BoundingSphereState,
   Cartesian2,
   Cartesian3,
   Color,
-  defined,
-  DistanceDisplayCondition,
-  JulianDate,
-  NearFarScalar,
-  BillboardGraphics,
-  BillboardVisualizer,
-  BoundingSphereState,
   ConstantProperty,
+  DistanceDisplayCondition,
   EntityCluster,
   EntityCollection,
   HeightReference,
   HorizontalOrigin,
-  VerticalOrigin,
+  JulianDate,
+  NearFarScalar,
   SplitDirection,
+  VerticalOrigin,
 } from "../../index.js";
 
 import createGlobe from "../../../../Specs/createGlobe.js";

@@ -1,14 +1,14 @@
+import { defined } from "@cesium/utils";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import Matrix3 from "../../Core/Matrix3.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import FeatureIdStageFS from "../../Shaders/Model/FeatureIdStageFS.js";
 import FeatureIdStageVS from "../../Shaders/Model/FeatureIdStageVS.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
-import Matrix3 from "../../Core/Matrix3.js";
 
 /**
  * The feature ID pipeline stage is responsible for processing feature IDs

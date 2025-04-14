@@ -1,5 +1,5 @@
-import ContextCache from "./ContextCache.js";
 import path from "path";
+import ContextCache from "./ContextCache.js";
 
 function formatTimeSinceInSeconds(start) {
   return Math.ceil((performance.now() - start) / 100) / 10;

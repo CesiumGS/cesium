@@ -9,7 +9,6 @@ import {
   DepthFunction,
   DrawCommand,
   Frozen,
-  defined,
   GeographicProjection,
   Math as CesiumMath,
   Matrix4,
@@ -24,7 +23,8 @@ import {
   StyleCommandsNeeded,
   Transforms,
   WebGLConstants,
-} from "../../../index.js";
+} from "@cesium/engine";
+import { defined } from "@cesium/utils";
 
 describe(
   "Scene/Model/ModelDrawCommand",

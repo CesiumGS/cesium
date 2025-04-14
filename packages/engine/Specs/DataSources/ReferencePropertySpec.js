@@ -1,14 +1,14 @@
 import {
+  BillboardGraphics,
   Cartesian3,
   Color,
-  JulianDate,
-  ReferenceFrame,
-  BillboardGraphics,
   ColorMaterialProperty,
   ConstantPositionProperty,
   ConstantProperty,
   Entity,
   EntityCollection,
+  JulianDate,
+  ReferenceFrame,
   ReferenceProperty,
 } from "../../index.js";
 

@@ -1,10 +1,10 @@
 import {
   Color,
-  DistanceDisplayCondition,
-  NearFarScalar,
   ConstantProperty,
-  PointGraphics,
+  DistanceDisplayCondition,
   HeightReference,
+  NearFarScalar,
+  PointGraphics,
   SplitDirection,
 } from "../../index.js";
 

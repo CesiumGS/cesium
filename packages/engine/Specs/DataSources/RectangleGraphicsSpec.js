@@ -1,11 +1,11 @@
 import {
+  ClassificationType,
   Color,
-  DistanceDisplayCondition,
-  Rectangle,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
+  Rectangle,
   RectangleGraphics,
-  ClassificationType,
   ShadowMode,
 } from "../../index.js";
 

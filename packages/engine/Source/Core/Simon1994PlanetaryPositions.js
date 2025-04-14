@@ -1,6 +1,5 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import JulianDate from "./JulianDate.js";
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";

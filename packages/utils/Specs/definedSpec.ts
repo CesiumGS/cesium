@@ -1,6 +1,6 @@
-import { defined } from "../../index.js";
+import { defined } from "../Source/index";
 
-describe("Core/defined", function () {
+describe("defined", function () {
   it("works for defined value", function () {
     expect(defined(0)).toEqual(true);
   });

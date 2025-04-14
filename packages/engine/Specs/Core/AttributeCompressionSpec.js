@@ -1,11 +1,11 @@
+import { defined } from "@cesium/utils";
 import {
   AttributeCompression,
   AttributeType,
-  ComponentDatatype,
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  defined,
+  ComponentDatatype,
   Math as CesiumMath,
 } from "../../index.js";
 

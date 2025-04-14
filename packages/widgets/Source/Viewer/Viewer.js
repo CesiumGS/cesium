@@ -2,24 +2,23 @@ import {
   BoundingSphere,
   BoundingSphereState,
   Cartesian3,
-  CesiumWidget,
   Cesium3DTileFeature,
+  CesiumWidget,
   Clock,
   ConstantPositionProperty,
-  Frozen,
-  defined,
   destroyObject,
-  DeveloperError,
   Entity,
   Event,
   EventHelper,
+  Frozen,
   getElement,
+  IonGeocoderService,
   JulianDate,
   Math as CesiumMath,
   Property,
   ScreenSpaceEventType,
-  IonGeocoderService,
 } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/utils";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
 import BaseLayerPicker from "../BaseLayerPicker/BaseLayerPicker.js";

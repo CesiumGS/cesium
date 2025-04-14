@@ -1,21 +1,20 @@
-import Axis from "../Axis.js";
-import B3dmParser from "../B3dmParser.js";
+import { Check, defined } from "@cesium/utils";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
-import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import StructuralMetadata from "../StructuralMetadata.js";
-import GltfLoader from "../GltfLoader.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Axis from "../Axis.js";
+import B3dmParser from "../B3dmParser.js";
+import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
+import GltfLoader from "../GltfLoader.js";
 import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
-import ModelUtility from "./ModelUtility.js";
 import parseBatchTable from "../parseBatchTable.js";
 import PropertyTable from "../PropertyTable.js";
 import ResourceLoader from "../ResourceLoader.js";
+import StructuralMetadata from "../StructuralMetadata.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelUtility from "./ModelUtility.js";
 
 const B3dmLoaderState = {
   UNLOADED: 0,

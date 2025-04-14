@@ -1,9 +1,5 @@
-import {
-  Cartesian3,
-  FeatureDetection,
-  Math as CesiumMath,
-  S2Cell,
-} from "../../index.js";
+import { FeatureDetection } from "@cesium/utils";
+import { Cartesian3, Math as CesiumMath, S2Cell } from "../../index.js";
 
 describe("Core/S2Cell", function () {
   if (!FeatureDetection.supportsBigInt()) {

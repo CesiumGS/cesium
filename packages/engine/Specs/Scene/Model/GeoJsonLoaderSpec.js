@@ -1,3 +1,5 @@
+import createScene from "../../../../../Specs/createScene.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   GeoJsonLoader,
   IndexDatatype,
@@ -7,8 +9,6 @@ import {
   ResourceCache,
   VertexAttributeSemantic,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/Model/GeoJsonLoader",

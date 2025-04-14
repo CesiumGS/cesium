@@ -1,12 +1,10 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CorridorGeometry from "../Core/CorridorGeometry.js";
 import CorridorOutlineGeometry from "../Core/CorridorOutlineGeometry.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Iso8601 from "../Core/Iso8601.js";

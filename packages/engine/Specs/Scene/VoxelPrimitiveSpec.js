@@ -1,3 +1,5 @@
+import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 import {
   Cartesian3,
   Cesium3DTilesVoxelProvider,
@@ -5,8 +7,6 @@ import {
   Matrix4,
   VoxelPrimitive,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/VoxelPrimitive",

@@ -1,6 +1,5 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Clock from "../Core/Clock.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import createRawPropertyDescriptor from "./createRawPropertyDescriptor.js";

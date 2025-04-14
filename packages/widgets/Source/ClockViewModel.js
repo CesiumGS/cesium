@@ -1,10 +1,5 @@
-import {
-  Clock,
-  defined,
-  destroyObject,
-  EventHelper,
-  JulianDate,
-} from "@cesium/engine";
+import { Clock, destroyObject, EventHelper, JulianDate } from "@cesium/engine";
+import { defined } from "@cesium/utils";
 import knockout from "./ThirdParty/knockout.js";
 
 /**

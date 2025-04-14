@@ -1,6 +1,5 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.

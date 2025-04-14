@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import {
-  defined,
   GeographicTilingScheme,
   HeightmapEncoding,
   HeightmapTerrainData,

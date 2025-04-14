@@ -1,19 +1,19 @@
+import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   Cartesian2,
+  Cartesian3,
   GltfLoader,
+  HeadingPitchRange,
   MetadataPipelineStage,
   ModelStatistics,
   Resource,
   ResourceCache,
   ShaderBuilder,
-  HeadingPitchRange,
-  Cartesian3,
   Transforms,
 } from "../../../index.js";
-import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../../Specs/createScene.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/Model/MetadataPipelineStage",

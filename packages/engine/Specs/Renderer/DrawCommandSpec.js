@@ -1,4 +1,4 @@
-import { PrimitiveType, DrawCommand, Pass } from "../../index.js";
+import { DrawCommand, Pass, PrimitiveType } from "../../index.js";
 
 describe("Renderer/DrawCommand", function () {
   it("constructs", function () {

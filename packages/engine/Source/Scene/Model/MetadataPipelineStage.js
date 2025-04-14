@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import Matrix3 from "../../Core/Matrix3.js";
-import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/Model/MetadataStageFS.js";
 import MetadataStageVS from "../../Shaders/Model/MetadataStageVS.js";

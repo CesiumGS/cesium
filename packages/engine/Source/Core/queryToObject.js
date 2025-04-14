@@ -1,5 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { defined, DeveloperError } from "@cesium/utils";
 
 /**
  * Parses a query string into an object, where the keys and values of the object are the

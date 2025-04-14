@@ -1,8 +1,5 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
+import { Check, defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * A cache resource.

@@ -1,8 +1,8 @@
 import {
   Cartesian3,
   Ellipsoid,
-  VerticalExaggeration,
   Math as CesiumMath,
+  VerticalExaggeration,
 } from "../../index.js";
 
 describe("Core/VerticalExaggeration", function () {

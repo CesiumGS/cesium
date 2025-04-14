@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
 import Expression from "./Expression.js";
 
 /**

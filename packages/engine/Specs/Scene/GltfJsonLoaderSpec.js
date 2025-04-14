@@ -1,12 +1,12 @@
+import { RuntimeError } from "@cesium/utils";
+import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import {
   BufferLoader,
   clone,
   GltfJsonLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
-import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 
 describe("Scene/GltfJsonLoader", function () {
   const gltfUri = "https://example.com/model.glb";

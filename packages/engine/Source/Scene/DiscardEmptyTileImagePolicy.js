@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 
 /**
  * A policy for discarding tile images that contain no data (and so aren't actually images).

@@ -1,31 +1,30 @@
+import { Check, defined } from "@cesium/utils";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
 import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
-import TilesetPipelineStage from "./TilesetPipelineStage.js";
 import AtmospherePipelineStage from "./AtmospherePipelineStage.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import ModelArticulation from "./ModelArticulation.js";
-import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 import ModelClippingPolygonsPipelineStage from "./ModelClippingPolygonsPipelineStage.js";
+import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
+import ModelDrawCommands from "./ModelDrawCommands.js";
 import ModelNode from "./ModelNode.js";
+import ModelRenderResources from "./ModelRenderResources.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
-import ModelSkin from "./ModelSkin.js";
-import ModelUtility from "./ModelUtility.js";
-import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
+import ModelSkin from "./ModelSkin.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import ModelType from "./ModelType.js";
+import ModelUtility from "./ModelUtility.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
-import ModelDrawCommands from "./ModelDrawCommands.js";
+import TilesetPipelineStage from "./TilesetPipelineStage.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}

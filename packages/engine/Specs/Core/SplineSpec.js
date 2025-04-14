@@ -1,4 +1,4 @@
-import { Cartesian3, HermiteSpline, Spline, Quaternion } from "../../index.js";
+import { Cartesian3, HermiteSpline, Quaternion, Spline } from "../../index.js";
 
 describe("Core/Spline", function () {
   it("contructor throws", function () {

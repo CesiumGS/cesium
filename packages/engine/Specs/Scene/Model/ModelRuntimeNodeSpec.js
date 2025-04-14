@@ -4,8 +4,8 @@ import {
   InstancingPipelineStage,
   Matrix3,
   Matrix4,
-  ModelRuntimeNode,
   ModelMatrixUpdateStage,
+  ModelRuntimeNode,
   NodeStatisticsPipelineStage,
   Quaternion,
 } from "../../../index.js";

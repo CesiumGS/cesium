@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import loadKTX2 from "../Core/loadKTX2.js";
 import Resource from "../Core/Resource.js";
 

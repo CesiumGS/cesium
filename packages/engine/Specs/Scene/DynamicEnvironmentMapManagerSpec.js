@@ -1,3 +1,4 @@
+import createScene from "../../../../Specs/createScene.js";
 import {
   Cartesian3,
   Cartographic,
@@ -11,7 +12,6 @@ import {
   Math as CesiumMath,
   TextureMinificationFilter,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
 import Atmosphere from "../../Source/Scene/Atmosphere.js";
 
 describe("Scene/DynamicEnvironmentMapManager", function () {

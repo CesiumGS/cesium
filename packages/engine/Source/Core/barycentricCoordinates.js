@@ -1,7 +1,6 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 
 const scratchCartesian1 = new Cartesian3();

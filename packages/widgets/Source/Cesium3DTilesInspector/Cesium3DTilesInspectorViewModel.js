@@ -1,18 +1,17 @@
 import {
-  Check,
-  Color,
-  defined,
-  destroyObject,
   Cesium3DTileColorBlendMode,
   Cesium3DTileFeature,
   Cesium3DTilePass,
   Cesium3DTileset,
   Cesium3DTileStyle,
+  Color,
+  destroyObject,
   PerformanceDisplay,
   ResourceCache,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
 } from "@cesium/engine";
+import { Check, defined } from "@cesium/utils";
 import knockout from "../ThirdParty/knockout.js";
 
 function getPickTileset(viewModel) {

@@ -1,6 +1,6 @@
-import Check from "./Check.js";
-import Resource from "./Resource.js";
+import { Check } from "@cesium/utils";
 import KTX2Transcoder from "./KTX2Transcoder.js";
+import Resource from "./Resource.js";
 
 /**
  * Stores the supported formats that KTX2 can transcode to. Called during context creation.

@@ -1,10 +1,10 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   ModelSplitterPipelineStage,
-  SplitDirection,
   ShaderBuilder,
+  SplitDirection,
   _shadersModelSplitterStageFS,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/ModelSplitterPipelineStage", function () {
   const mockFrameState = {};

@@ -1,4 +1,4 @@
-import { defined, DeveloperError } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/utils";
 import CesiumInspector from "../CesiumInspector/CesiumInspector.js";
 
 /**

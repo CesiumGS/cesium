@@ -1,21 +1,19 @@
+import { defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
+import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
+import Vector3DTileClampedPolylines from "./Vector3DTileClampedPolylines.js";
 import Vector3DTilePoints from "./Vector3DTilePoints.js";
 import Vector3DTilePolygons from "./Vector3DTilePolygons.js";
 import Vector3DTilePolylines from "./Vector3DTilePolylines.js";
-import Vector3DTileClampedPolylines from "./Vector3DTileClampedPolylines.js";
-import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions.js";
 
 /**
  * Represents the contents of a

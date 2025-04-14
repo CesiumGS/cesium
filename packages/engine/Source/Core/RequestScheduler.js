@@ -1,7 +1,5 @@
+import { Check, defer, defined } from "@cesium/utils";
 import Uri from "urijs";
-import Check from "./Check.js";
-import defer from "./defer.js";
-import defined from "./defined.js";
 import Event from "./Event.js";
 import Heap from "./Heap.js";
 import isBlobUri from "./isBlobUri.js";

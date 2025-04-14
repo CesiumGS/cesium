@@ -2,10 +2,10 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  DistanceDisplayCondition,
-  Plane,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
+  Plane,
   PlaneGraphics,
   ShadowMode,
 } from "../../index.js";

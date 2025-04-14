@@ -1,3 +1,4 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -6,7 +7,6 @@ import {
   Expression,
   ExpressionNodeType,
   Math as CesiumMath,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/Expression", function () {

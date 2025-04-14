@@ -1,11 +1,9 @@
-import Check from "../Core/Check.js";
+import { Check, defined, RuntimeError } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import isDataUri from "../Core/isDataUri.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import addDefaults from "./GltfPipeline/addDefaults.js";
 import addPipelineExtras from "./GltfPipeline/addPipelineExtras.js";
 import ForEach from "./GltfPipeline/ForEach.js";
@@ -13,9 +11,9 @@ import parseGlb from "./GltfPipeline/parseGlb.js";
 import removePipelineExtras from "./GltfPipeline/removePipelineExtras.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
 import usesExtension from "./GltfPipeline/usesExtension.js";
+import ModelUtility from "./Model/ModelUtility.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
-import ModelUtility from "./Model/ModelUtility.js";
 
 /**
  * Loads a glTF JSON from a glTF or glb.

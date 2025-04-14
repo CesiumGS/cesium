@@ -1,15 +1,13 @@
 import {
-  defined,
   destroyObject,
-  DeveloperError,
   EventHelper,
-  Fullscreen,
   getElement,
   OrthographicFrustum,
 } from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
+import { defined, DeveloperError, Fullscreen } from "@cesium/utils";
 import NoSleep from "nosleep.js";
 import createCommand from "../createCommand.js";
+import knockout from "../ThirdParty/knockout.js";
 
 function lockScreen(orientation) {
   let locked = false;

@@ -1,18 +1,17 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import clone from "../../Core/clone.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import RenderState from "../../Renderer/RenderState.js";
+import VertexArray from "../../Renderer/VertexArray.js";
+import ModelFS from "../../Shaders/Model/ModelFS.js";
+import ModelVS from "../../Shaders/Model/ModelVS.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js";
 import ModelDrawCommand from "./ModelDrawCommand.js";
-import VertexArray from "../../Renderer/VertexArray.js";
-import ModelVS from "../../Shaders/Model/ModelVS.js";
-import ModelFS from "../../Shaders/Model/ModelFS.js";
 import ModelUtility from "./ModelUtility.js";
-import DeveloperError from "../../Core/DeveloperError.js";
 
 /**
  * Internal functions to build draw commands for models.

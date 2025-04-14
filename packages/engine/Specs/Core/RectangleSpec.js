@@ -1,3 +1,4 @@
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import {
   BoundingSphere,
   Cartesian3,
@@ -6,7 +7,6 @@ import {
   Math as CesiumMath,
   Rectangle,
 } from "../../index.js";
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/Rectangle", function () {
   const west = -0.9;

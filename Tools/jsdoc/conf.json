@@ -5,19 +5,25 @@
     "source": {
         "include": [
             "packages/engine/Source",
-            "packages/widgets/Source"
+            "packages/widgets/Source",
+            "packages/utils/Source"
         ],
         "exclude": [
             "packages/engine/Source/ThirdParty",
             "packages/engine/Source/Workers",
             "packages/widgets/Source/ThirdParty"
         ],
-        "includePattern": ".+\\.js(doc)?$",
+        "includePattern": ".+\\.(js(doc)?|ts)$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
     "plugins": [
-        "./Tools/jsdoc/cesiumTags"
+      "./node_modules/jsdoc-babel",
+      "./Tools/jsdoc/cesiumTags"
     ],
+    "babel": {
+      "extensions": ["ts"],
+      "presets": ["@babel/preset-typescript"]
+    },
     "templates": {
         "cleverLinks": true,
         "default": {

@@ -7,9 +7,9 @@ import {
   Math as CesiumMath,
   Matrix4,
   TerrainEncoding,
-  VerticalExaggeration,
   TerrainQuantization,
   Transforms,
+  VerticalExaggeration,
 } from "../../index.js";
 
 describe("Core/TerrainEncoding", function () {

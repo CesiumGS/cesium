@@ -1,10 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  FeatureDetection,
-  getElement,
-} from "@cesium/engine";
+import { destroyObject, getElement } from "@cesium/engine";
+import { defined, DeveloperError, FeatureDetection } from "@cesium/utils";
 import knockout from "../ThirdParty/knockout.js";
 import GeocoderViewModel from "./GeocoderViewModel.js";
 

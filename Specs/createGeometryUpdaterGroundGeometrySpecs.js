@@ -1,14 +1,14 @@
 import {
+  ClassificationType,
   Color,
-  GeometryOffsetAttribute,
-  JulianDate,
   ColorMaterialProperty,
   ConstantProperty,
-  SampledProperty,
-  ClassificationType,
+  GeometryOffsetAttribute,
   GroundPrimitive,
   HeightReference,
+  JulianDate,
   PrimitiveCollection,
+  SampledProperty,
 } from "@cesium/engine";
 
 function createGeometryUpdaterGroundGeometrySpecs(

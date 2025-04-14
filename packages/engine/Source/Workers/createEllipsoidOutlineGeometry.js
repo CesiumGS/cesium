@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import EllipsoidOutlineGeometry from "../Core/EllipsoidOutlineGeometry.js";
 
 function createEllipsoidOutlineGeometry(ellipsoidGeometry, offset) {

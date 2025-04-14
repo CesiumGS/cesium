@@ -13,12 +13,12 @@ import ContextCache from "./scripts/ContextCache.js";
 import createRoute from "./scripts/createRoute.js";
 
 import {
-  createCesiumJs,
-  createJsHintOptions,
-  createCombinedSpecList,
-  glslToJavaScript,
-  createIndexJs,
   buildCesium,
+  createCesiumJs,
+  createCombinedSpecList,
+  createIndexJs,
+  createJsHintOptions,
+  glslToJavaScript,
 } from "./scripts/build.js";
 
 const argv = yargs(process.argv)

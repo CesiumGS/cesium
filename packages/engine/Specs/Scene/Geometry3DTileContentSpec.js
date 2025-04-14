@@ -1,3 +1,6 @@
+import { RuntimeError } from "@cesium/utils";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
 import {
   Cartesian3,
   Cesium3DContentGroup,
@@ -9,19 +12,16 @@ import {
   destroyObject,
   Ellipsoid,
   GeometryInstance,
-  MetadataClass,
   GroupMetadata,
+  MetadataClass,
   Pass,
   PerInstanceColorAppearance,
   Primitive,
   Rectangle,
   RectangleGeometry,
   RenderState,
-  RuntimeError,
   StencilConstants,
 } from "../../index.js";
-import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/Geometry3DTileContent",

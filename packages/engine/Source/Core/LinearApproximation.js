@@ -1,5 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { defined, DeveloperError } from "@cesium/utils";
 
 /**
  * An {@link InterpolationAlgorithm} for performing linear interpolation.

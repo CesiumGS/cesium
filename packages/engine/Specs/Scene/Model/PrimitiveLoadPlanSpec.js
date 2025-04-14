@@ -1,9 +1,9 @@
+import createContext from "../../../../../Specs/createContext.js";
 import {
   AttributeType,
-  PrimitiveLoadPlan,
   ModelComponents,
+  PrimitiveLoadPlan,
 } from "../../../index.js";
-import createContext from "../../../../../Specs/createContext.js";
 
 describe(
   "Scene/Model/PrimitiveLoadPlan",

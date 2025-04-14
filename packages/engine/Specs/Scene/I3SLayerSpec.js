@@ -1,3 +1,4 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   Cesium3DTileset,
   Color,
@@ -6,7 +7,6 @@ import {
   I3SNode,
   Math as CesiumMath,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/I3SLayer", function () {

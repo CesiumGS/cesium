@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import Event from "../Core/Event.js";
 /**
  * Describes a KmlTour, which uses KmlTourFlyTo, and KmlTourWait to

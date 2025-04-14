@@ -1,10 +1,10 @@
 import {
   Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
+  JulianDate,
   StripeMaterialProperty,
   StripeOrientation,
+  TimeInterval,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
 

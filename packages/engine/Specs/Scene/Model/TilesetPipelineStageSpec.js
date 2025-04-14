@@ -1,10 +1,10 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   Cartesian2,
   ShaderBuilder,
   StencilConstants,
   TilesetPipelineStage,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/TilesetPipelineStage", function () {
   const mockFrameState = {};

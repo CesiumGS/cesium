@@ -1,10 +1,10 @@
 import {
+  BatchTable,
   Cartesian4,
   ComponentDatatype,
   Math as CesiumMath,
   PixelDatatype,
   Texture,
-  BatchTable,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

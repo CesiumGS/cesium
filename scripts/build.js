@@ -1,9 +1,9 @@
 import child_process from "child_process";
 import { existsSync, readFileSync, statSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
+import { createRequire } from "module";
 import { EOL } from "os";
 import path from "path";
-import { createRequire } from "module";
 import { finished } from "stream/promises";
 
 import esbuild from "esbuild";
@@ -11,6 +11,8 @@ import { globby } from "globby";
 import glslStripComments from "glsl-strip-comments";
 import gulp from "gulp";
 import { rimraf } from "rimraf";
+import ts from "typescript";
+import { build } from "vite";
 
 import { mkdirp } from "mkdirp";
 
@@ -261,6 +263,10 @@ const workspaceSourceFiles = {
     "!packages/engine/Source/ThirdParty/_*",
   ],
   widgets: ["packages/widgets/Source/**/*.js"],
+  utils: [
+    "packages/utils/Build/Source/**/*.js",
+    "!packages/utils/Build/Source/index.js",
+  ]
 };
 
 /**
@@ -307,6 +313,7 @@ export async function createCesiumJs() {
 const workspaceSpecFiles = {
   engine: ["packages/engine/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
+  utils: ["packages/utils/Build/Specs/**/*Spec.js"],
 };
 
 /**
@@ -980,6 +987,26 @@ async function bundleSpecs(options) {
     entryPoints: [options.specListFile],
     outbase: options.outbase,
   });
+}
+
+export const buildUtils = async () => {
+  await build({
+    root: "./packages/utils",
+    configFile: "./packages/utils/vite.config.ts"
+  });
+
+  const parsed = ts.getParsedCommandLineOfConfigFile(
+    "./packages/utils/tsconfig.json",
+    {},
+    ts.sys
+  );
+
+  const program = ts.createProgram({
+    rootNames: parsed.fileNames,
+    options: parsed.options,
+  });
+
+  program.emit();
 }
 
 /**

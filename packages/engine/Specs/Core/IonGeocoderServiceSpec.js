@@ -1,5 +1,5 @@
+import { DeveloperError } from "@cesium/utils";
 import {
-  DeveloperError,
   GeocoderService,
   GeocodeType,
   Ion,

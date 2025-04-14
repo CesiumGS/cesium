@@ -1,3 +1,5 @@
+import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
+import createScene from "../../../../Specs/createScene.js";
 import {
   BufferLoader,
   GltfBufferViewLoader,
@@ -13,8 +15,6 @@ import {
   ResourceCacheKey,
   SupportedImageFormats,
 } from "../../index.js";
-import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
-import createScene from "../../../../Specs/createScene.js";
 
 describe("ResourceCache", function () {
   const schemaResource = new Resource({

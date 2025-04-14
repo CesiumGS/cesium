@@ -1,3 +1,9 @@
+import {
+  defined,
+  DeveloperError,
+  FeatureDetection,
+  RuntimeError,
+} from "@cesium/utils";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -7,12 +13,9 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
+import Frozen from "../Core/Frozen.js";
 import Geometry from "../Core/Geometry.js";
 import GeometryAttribute from "../Core/GeometryAttribute.js";
 import GeometryAttributes from "../Core/GeometryAttributes.js";
@@ -20,7 +23,6 @@ import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
 import Intersect from "../Core/Intersect.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Plane from "../Core/Plane.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import subdivideArray from "../Core/subdivideArray.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import BufferUsage from "../Renderer/BufferUsage.js";

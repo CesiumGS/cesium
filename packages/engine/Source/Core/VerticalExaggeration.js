@@ -1,7 +1,6 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import DeveloperError from "./DeveloperError.js";
-import defined from "./defined.js";
 
 /**
  * @private

@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { defined, DeveloperError } from "@cesium/utils";
 import Event from "../Core/Event.js";
 import DataSource from "./DataSource.js";
 import EntityCluster from "./EntityCluster.js";

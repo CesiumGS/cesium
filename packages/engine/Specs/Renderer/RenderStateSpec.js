@@ -1,8 +1,8 @@
 import {
-  WebGLConstants,
-  WindingOrder,
   ContextLimits,
   RenderState,
+  WebGLConstants,
+  WindingOrder,
 } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";

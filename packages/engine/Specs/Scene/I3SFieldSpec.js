@@ -1,10 +1,10 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   Cesium3DTileset,
   I3SDataProvider,
   I3SField,
   I3SNode,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/I3SField", function () {

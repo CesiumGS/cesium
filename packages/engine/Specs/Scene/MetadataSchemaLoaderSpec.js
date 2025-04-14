@@ -1,9 +1,9 @@
+import { RuntimeError } from "@cesium/utils";
 import {
+  MetadataSchemaLoader,
   Resource,
   ResourceCache,
   ResourceLoaderState,
-  MetadataSchemaLoader,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/MetadataSchemaLoader", function () {

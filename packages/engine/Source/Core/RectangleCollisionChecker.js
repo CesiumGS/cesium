@@ -1,5 +1,5 @@
+import { Check } from "@cesium/utils";
 import RBush from "rbush";
-import Check from "./Check.js";
 
 /**
  * Wrapper around rbush for use with Rectangle types.

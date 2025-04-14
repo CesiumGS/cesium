@@ -1,8 +1,7 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import hasExtension from "./hasExtension.js";
+import { Check, defined } from "@cesium/utils";
 import { MeshoptDecoder } from "meshoptimizer";
+import Frozen from "../Core/Frozen.js";
+import hasExtension from "./hasExtension.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 

@@ -1,4 +1,5 @@
-import { defined, DeveloperError, Event } from "@cesium/engine";
+import { Event } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/utils";
 import knockout from "./ThirdParty/knockout.js";
 
 /**

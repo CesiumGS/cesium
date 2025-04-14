@@ -1,9 +1,9 @@
 import {
   Color,
-  JulianDate,
-  TimeInterval,
   ColorMaterialProperty,
   ConstantProperty,
+  JulianDate,
+  TimeInterval,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
 

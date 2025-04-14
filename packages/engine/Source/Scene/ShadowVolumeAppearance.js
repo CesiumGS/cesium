@@ -1,9 +1,8 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import GeometryInstanceAttribute from "../Core/GeometryInstanceAttribute.js";
 import CesiumMath from "../Core/Math.js";

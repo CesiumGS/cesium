@@ -1,11 +1,9 @@
+import { Check, defined, RuntimeError } from "@cesium/utils";
 import Uri from "urijs";
-import Check from "./Check.js";
 import Credit from "./Credit.js";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Ion from "./Ion.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 
 /**
  * A {@link Resource} instance that encapsulates Cesium ion asset access.

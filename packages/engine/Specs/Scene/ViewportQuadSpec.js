@@ -1,9 +1,9 @@
 import {
   BoundingRectangle,
   Color,
+  Material,
   Resource,
   Texture,
-  Material,
   ViewportQuad,
 } from "../../index.js";
 

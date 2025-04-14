@@ -1,9 +1,9 @@
+import { RuntimeError } from "@cesium/utils";
 import {
-  loadKTX2,
   KTX2Transcoder,
+  loadKTX2,
   PixelFormat,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Core/loadKTX2", function () {

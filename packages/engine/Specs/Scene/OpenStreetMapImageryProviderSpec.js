@@ -1,15 +1,15 @@
 import {
+  Imagery,
+  ImageryLayer,
+  ImageryState,
   Math as CesiumMath,
+  OpenStreetMapImageryProvider,
   Rectangle,
   Request,
   RequestScheduler,
   Resource,
-  WebMercatorTilingScheme,
-  OpenStreetMapImageryProvider,
-  Imagery,
-  ImageryLayer,
-  ImageryState,
   UrlTemplateImageryProvider,
+  WebMercatorTilingScheme,
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";

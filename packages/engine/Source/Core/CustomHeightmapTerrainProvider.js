@@ -1,9 +1,8 @@
-import Check from "./Check.js";
+import { Check, defined } from "@cesium/utils";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
+import Frozen from "./Frozen.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import TerrainProvider from "./TerrainProvider.js";

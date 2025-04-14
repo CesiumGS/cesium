@@ -1,9 +1,6 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Check, defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import Frozen from "../Core/Frozen.js";
 import AutomaticUniforms from "./AutomaticUniforms.js";
 import ContextLimits from "./ContextLimits.js";
 import createUniform from "./createUniform.js";

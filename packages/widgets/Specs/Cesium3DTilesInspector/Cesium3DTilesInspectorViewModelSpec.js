@@ -4,8 +4,8 @@ import {
   Globe,
   Math as CesiumMath,
 } from "@cesium/engine";
-import { Cesium3DTilesInspectorViewModel } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
+import { Cesium3DTilesInspectorViewModel } from "../../index.js";
 
 describe(
   "Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel",

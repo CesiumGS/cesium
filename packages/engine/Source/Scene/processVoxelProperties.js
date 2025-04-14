@@ -1,6 +1,6 @@
-import defined from "../Core/defined.js";
-import MetadataType from "./MetadataType.js";
+import { defined } from "@cesium/utils";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
+import MetadataType from "./MetadataType.js";
 
 /**
  * Update the shader with defines, structs, and functions to handle

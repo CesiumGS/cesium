@@ -1,8 +1,8 @@
+import { Check } from "@cesium/utils";
 import ArticulationStageType from "../../Core/ArticulationStageType.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import CesiumMath from "../../Core/Math.js";
-import Check from "../../Core/Check.js";
 import Frozen from "../../Core/Frozen.js";
+import CesiumMath from "../../Core/Math.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 

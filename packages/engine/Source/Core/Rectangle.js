@@ -1,11 +1,10 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
-import Transforms from "./Transforms.js";
 import Matrix4 from "./Matrix4.js";
+import Transforms from "./Transforms.js";
 
 /**
  * A two dimensional region specified as longitude and latitude coordinates.
