@@ -36,6 +36,9 @@
         "use strict";
         //Sandcastle_Begin
 
+        const boxSize = 25;
+
+        //
         // Create a Material Appearance using custom shader code.
         function createMaterialAppearance() {
           // Create custom materials.
@@ -63,7 +66,7 @@
                         
                         // Use uniform time from Material to Change Alpha.
                         // Here, you can directly use the names specified in uniforms.
-                        material.alpha = 0.33 + (sin(time * 0.03) + 1.0)  / 3.0;
+                        // material.alpha = 0.33 + (sin(time * 0.03) + 1.0)  / 3.0;
                         
                         return material;
                     }
@@ -87,6 +90,7 @@
                 out vec3 v_positionEC;
                 out vec3 v_normalEC;
                 out vec2 v_st;
+                out vec3 v_position;
 
                 // KEY: The variables passed by appearance.uniforms need to be displayed and received.
                 uniform float frameNo;
@@ -113,6 +117,8 @@
                     mat3 rotation = rotateZ(frameNo * 0.01);
                     originMC = rotation * originMC;
 
+                    v_position = originMC;
+
                     // Restore to coordinates relative to the camera.
                     originMC = originMC - cameraPositionMC;
                     p.xyz = originMC;
@@ -127,9 +133,11 @@
                 in vec3 v_positionEC;
                 in vec3 v_normalEC;
                 in vec2 v_st;
+                in vec3 v_position;
                 
                 // KEY: The variables passed by appearance.uniforms need to be displayed and received.
                 uniform vec3 customColor; 
+                uniform float boxSize;
 
                 void main()
                 {
@@ -153,6 +161,17 @@
                     // Use uniform customColor from Appearance to Change Color
                     material.diffuse  = customColor; 
 
+                    // Two randomly conceived transparent bright lines that are far apart from each other.
+                    int uniformOfMaterial = int(getUniformTimeOfMaterial() * 4.0);
+                    float s1 =  boxSize / 10.0; 
+                    float delta = abs(abs(v_position.z) - float(uniformOfMaterial % int((boxSize / 2.0 - s1) * 100.0)) / 100.0);
+                    if(delta < s1)
+                    {
+                        float scale = 1.0 - delta / s1;
+                        material.diffuse  = vec3(1.0) * scale; 
+                        material.alpha = scale;
+                    }
+
                 #ifdef FLAT
                     out_FragColor = vec4(material.diffuse + material.emission, material.alpha);
                 #else
@@ -169,6 +188,7 @@
           appearance.uniforms = {
             frameNo: 1.0, // Pass to vs.
             customColor: color, // Pass to fs.
+            boxSize: boxSize,
           };
 
           return appearance;
@@ -177,7 +197,7 @@
         // Create a Box primitive with custom material appearance.
         function createBoxPrimitive(destination, appearance) {
           const boxGeometry = Cesium.BoxGeometry.fromDimensions({
-            dimensions: new Cesium.Cartesian3(25.0, 25.0, 25.0),
+            dimensions: new Cesium.Cartesian3(boxSize, boxSize, boxSize),
             // vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
           });
 
