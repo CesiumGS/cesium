@@ -151,7 +151,14 @@ ArbitraryRenders.prototype._updateFrustumViewCommon = function (
   }
 };
 
-ArbitraryRenders.prototype.snapshot = function (scene, ray) {
+// snapshotTransforms:SnapshotTransform
+// type SnapshotTransform = function():(function():void)  // Returns a function to undo the transformation
+
+ArbitraryRenders.prototype._snapshot = function (
+  scene,
+  ray,
+  snapshotTransforms,
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("ray", ray);
   if (scene.mode !== SceneMode.SCENE3D) {
@@ -159,7 +166,30 @@ ArbitraryRenders.prototype.snapshot = function (scene, ray) {
   }
   //>>includeEnd('debug');
 
-  return getSnapshot(this, scene, ray);
+  // Apply any object transformation functions to cesium objects and save the restoration functions
+  const transformRestoreFunctions = [];
+  if (snapshotTransforms) {
+    for (const transformFunc of snapshotTransforms) {
+      transformRestoreFunctions.push(transformFunc());
+    }
+  }
+
+  // Generate render output
+  const renderFunction = (scn) => getSnapshot(this, scn, ray);
+  const renderOutput = scene.triggerArbitraryRender(
+    renderFunction,
+    scene._preUpdate,
+    scene._postUpdate,
+    scene._preRender,
+    scene._postRender,
+  );
+
+  // Restore any transformed cesium objects
+  for (const restoreFunc of transformRestoreFunctions) {
+    restoreFunc();
+  }
+
+  return renderOutput;
 };
 
 function getSnapshot(arbitraryRenderer, scene, ray) {

@@ -4311,6 +4311,62 @@ Scene.prototype.render = function (time) {
   }
 };
 
+Scene.prototype.triggerArbitraryRender = function (
+  renderFunction, // function(scene) -> renderOutput
+  preUpdateEvents,
+  postUpdateEvents,
+  preRenderEvents,
+  postRenderEvents,
+) {
+  const time = JulianDate.now();
+
+  console.log("AAA triggerArbitraryRender");
+  if (preUpdateEvents) {
+    preUpdateEvents.raiseEvent(this, time);
+  }
+
+  // Maybe set various flags to false
+  // Maybe increment frame number here
+  // Maybe frameState.newFrame = true?
+  // See lines 4261-4272
+
+  tryAndCatchError(this, prePassesUpdate);
+
+  /**
+   * Passes update. Add any passes here
+   * Not sure if this is needed for arbitrary renders
+   */
+  // if (this.primitives.show) {
+  //   tryAndCatchError(this, updateMostDetailedRayPicks);
+  //   tryAndCatchError(this, updatePreloadPass);
+  //   tryAndCatchError(this, updatePreloadFlightPass);
+  // }
+
+  if (postUpdateEvents) {
+    postUpdateEvents.raiseEvent(this, time);
+  }
+  if (preRenderEvents) {
+    preRenderEvents.raiseEvent(this, time);
+  }
+
+  // Render fuction
+  let output;
+  tryAndCatchError(this, (scene) => {
+    output = renderFunction(scene);
+  });
+
+  tryAndCatchError(this, postPassesUpdate);
+
+  // Do we need this?
+  callAfterRenderFunctions(this);
+
+  if (postRenderEvents) {
+    postRenderEvents.raiseEvent(this, time);
+  }
+
+  return output;
+};
+
 /**
  * Update and render the scene. Always forces a new render frame regardless of whether a render was
  * previously requested.
@@ -4673,8 +4729,8 @@ Scene.prototype.pickFromRay = function (
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
-Scene.prototype.arbitraryRender = function (ray) {
-  return this._arbitraryRenders.snapshot(this, ray);
+Scene.prototype.arbitraryRender = function (ray, snapshotTransforms) {
+  return this._arbitraryRenders._snapshot(this, ray, snapshotTransforms);
 };
 
 Scene.prototype.setupArbitraryRenderOrthoFrustum = function (
