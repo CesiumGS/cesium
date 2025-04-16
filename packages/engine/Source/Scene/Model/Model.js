@@ -43,6 +43,7 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
+import ModelImagery from "./ModelImagery.js";
 
 /**
  * <div class="notice">
@@ -381,6 +382,8 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+
+  this._modelImagery = new ModelImagery(this);
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
@@ -1376,6 +1379,33 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * If this model is part of a <code>Model3DTileContent</code> of a tileset that
+   * has imagery layers, then this will return the <code>ImageryLayerCollection</code>
+   * of that tileset. Otherwise, <code>undefined</code> is returned.
+   *
+   * @memberof Model.prototype
+   * @type {ImageryLayerCollection|undefined}
+   * @readonly
+   * @private
+   */
+  imageryLayers: {
+    get: function () {
+      // TODO_DRAPING: Currently, this implies that a Model only can have
+      // imagery when it is part of a tileset. One could make that case
+      // that it should be possible to assign imagery to a standalone
+      // model. This could probably be implemented here, with reasonable
+      // effort.
+      if (defined(this._content)) {
+        const tileset = this._content.tileset;
+        if (defined(tileset)) {
+          return tileset.imageryLayers;
+        }
+      }
+      return undefined;
+    },
+  },
+
+  /**
    * The directional light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
@@ -1925,6 +1955,13 @@ Model.prototype.update = function (frameState) {
   // Short-circuit if the model resources aren't ready or the scene
   // is currently morphing.
   if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
+    return;
+  }
+
+  // XXX_DRAPING Check whether this is the right place, time, and state...
+  const modelImagery = this._modelImagery;
+  modelImagery.update(frameState);
+  if (!modelImagery.ready) {
     return;
   }
 

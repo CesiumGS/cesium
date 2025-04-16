@@ -620,6 +620,18 @@ function Primitive() {
    * @private
    */
   this.outlineCoordinates = undefined;
+
+  /**
+   * If the model is part of a Model3DTileContent of a Cesium3DTileset that
+   * has 'imageryLayers', then this will represent the information that is
+   * required for draping the imagery over this primitive.
+   *
+   * XXX_DRAPING Is this the right place and way to transport this?
+   *
+   * @type {ModelPrimitiveImagery|undefined}
+   * @private
+   */
+  this.modelPrimitiveImagery = undefined;
 }
 
 /**

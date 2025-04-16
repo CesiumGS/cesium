@@ -101,6 +101,19 @@ function ModelRenderResources(model) {
    * @private
    */
   this.hasSkipLevelOfDetail = false;
+
+  /**
+   * The NodeRenderResources for the nodes of the scene graph.
+   *
+   * Note that elements of this array may be <code>undefined</code> when
+   * there was no runtime node for a certain node.
+   *
+   * @type {NodeRenderResources[]}
+   * @default []
+   *
+   * @private
+   */
+  this.nodeRenderResources = [];
 }
 
 export default ModelRenderResources;
