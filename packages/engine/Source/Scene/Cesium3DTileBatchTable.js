@@ -23,6 +23,7 @@ import getBinaryAccessor from "./getBinaryAccessor.js";
 import StencilConstants from "./StencilConstants.js";
 import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
+import addAllToArray from "../Core/addAllToArray.js";
 
 const DEFAULT_COLOR_VALUE = BatchTexture.DEFAULT_COLOR_VALUE;
 const DEFAULT_SHOW_VALUE = BatchTexture.DEFAULT_SHOW_VALUE;
@@ -369,13 +370,14 @@ Cesium3DTileBatchTable.prototype.getPropertyIds = function (batchId, results) {
   results.length = 0;
 
   const scratchPropertyIds = Object.keys(this._properties);
-  results.push.apply(results, scratchPropertyIds);
+  addAllToArray(results, scratchPropertyIds);
 
   if (defined(this._batchTableHierarchy)) {
-    results.push.apply(
-      results,
-      this._batchTableHierarchy.getPropertyIds(batchId, scratchPropertyIds),
+    const propertyIds = this._batchTableHierarchy.getPropertyIds(
+      batchId,
+      scratchPropertyIds,
     );
+    addAllToArray(results, propertyIds);
   }
 
   return results;
