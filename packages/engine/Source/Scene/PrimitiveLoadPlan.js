@@ -11,6 +11,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import ModelUtility from "./Model/ModelUtility.js";
+import CesiumMath from "../Core/Math.js";
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -284,7 +285,7 @@ function prepareSpzData(loadPlan, context) {
     rgba[i * 4] = rgbVals[i * 3];
     rgba[i * 4 + 1] = rgbVals[i * 3 + 1];
     rgba[i * 4 + 2] = rgbVals[i * 3 + 2];
-    rgba[i * 4 + 3] = alpha.typedArray[i];
+    rgba[i * 4 + 3] = CesiumMath.clamp(alpha.typedArray[i] * 255.0, 0.0, 255.0);
   }
 
   rgb.type = AttributeType.VEC4;
@@ -305,6 +306,26 @@ function prepareSpzData(loadPlan, context) {
     position.typedArray[i + 1] = -position.typedArray[i + 1];
     position.typedArray[i + 2] = -position.typedArray[i + 2];
   }
+
+  const rotations = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.ROTATION,
+  );
+
+  //180* rotation around Y. move this
+  const rots = rotations.typedArray;
+  for (let q = 0; q < rots.length; q += 4) {
+    const w = rots[q];
+    const x = -rots[q + 3];
+    const y = rots[q + 2];
+    const z = -rots[q + 1];
+
+    rots[q] = y;
+    rots[q + 1] = -x;
+    rots[q + 2] = w;
+    rots[q + 3] = -z;
+  }
+  rotations.typedArray = rots;
 }
 
 /**

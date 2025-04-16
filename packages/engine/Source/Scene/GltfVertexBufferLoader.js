@@ -322,16 +322,12 @@ function processSpz(vertexBufferLoader) {
   } else if (vertexBufferLoader._attributeSemantic === "_ROTATION") {
     vertexBufferLoader._typedArray = gcloudData.rotations;
   } else if (vertexBufferLoader._attributeSemantic === "_OPACITY") {
-    vertexBufferLoader._typedArray = Uint8Array.from(
-      gcloudData.alphas.map((alpha) => {
-        return CesiumMath.clamp(alpha * 255.0, 0.0, 255.0);
-      }),
-    );
+    vertexBufferLoader._typedArray = gcloudData.alphas;
   } else if (vertexBufferLoader._attributeSemantic === "COLOR_0") {
     vertexBufferLoader._typedArray = Uint8Array.from(
-      gcloudData.colors.map((color) => {
-        return CesiumMath.clamp(color * 255.0, 0.0, 255.0);
-      }),
+      gcloudData.colors.map((color) =>
+        CesiumMath.clamp(color * 255.0, 0.0, 255.0),
+      ),
     );
   }
 }
