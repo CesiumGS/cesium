@@ -735,7 +735,7 @@ function Scene(options) {
   this.preloadFlightCullingVolume = undefined;
 
   this._picking = new Picking(this);
-  this._arbitraryRenders = new ArbitraryRenders(this);
+  this._arbitraryRenders = {};
   this._defaultView = new View(this, camera, viewport);
   this._view = this._defaultView;
 
@@ -4313,41 +4313,15 @@ Scene.prototype.render = function (time) {
 
 Scene.prototype.triggerArbitraryRender = function (
   renderFunction, // function(scene) -> renderOutput
-  preUpdateEvents,
-  postUpdateEvents,
-  preRenderEvents,
-  postRenderEvents,
 ) {
   const time = JulianDate.now();
 
-  console.log("AAA triggerArbitraryRender");
-  if (preUpdateEvents) {
-    preUpdateEvents.raiseEvent(this, time);
-  }
-
-  // Maybe set various flags to false
-  // Maybe increment frame number here
-  // Maybe frameState.newFrame = true?
-  // See lines 4261-4272
+  this._preUpdate.raiseEvent(this, time);
 
   tryAndCatchError(this, prePassesUpdate);
 
-  /**
-   * Passes update. Add any passes here
-   * Not sure if this is needed for arbitrary renders
-   */
-  // if (this.primitives.show) {
-  //   tryAndCatchError(this, updateMostDetailedRayPicks);
-  //   tryAndCatchError(this, updatePreloadPass);
-  //   tryAndCatchError(this, updatePreloadFlightPass);
-  // }
-
-  if (postUpdateEvents) {
-    postUpdateEvents.raiseEvent(this, time);
-  }
-  if (preRenderEvents) {
-    preRenderEvents.raiseEvent(this, time);
-  }
+  this._postUpdate.raiseEvent(this, time);
+  this._preRender.raiseEvent(this, time);
 
   // Render fuction
   let output;
@@ -4360,9 +4334,7 @@ Scene.prototype.triggerArbitraryRender = function (
   // Do we need this?
   callAfterRenderFunctions(this);
 
-  if (postRenderEvents) {
-    postRenderEvents.raiseEvent(this, time);
-  }
+  this._postRender.raiseEvent(this, time);
 
   return output;
 };
@@ -4722,49 +4694,56 @@ Scene.prototype.pickFromRay = function (
   );
 };
 
+Scene.prototype.setupArbitraryRenderInstance = function (key) {
+  if (this._arbitraryRenders[key]) {
+    this._arbitraryRenders[key].destroy();
+  }
+  return (this._arbitraryRenders[key] = new ArbitraryRenders(this));
+};
+
 /**
  *
- * @param {Ray} ray The ray.
+ * @param {string} key Key for the arbitrary render instance to use.
+ * @param {Ray} ray Ray projection symbolizing camera location and angle.
+ * @param {Function[]} snapshotTransforms Array of functions that modify cesium state and return functions that undo their changes.
  * @returns {object} An object containing the resulting pixel data as well as metadata
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+ * @exception {DeveloperError} Arbitrary render instance doesn't exist or isn't setup properly
  */
-Scene.prototype.arbitraryRender = function (ray, snapshotTransforms) {
-  return this._arbitraryRenders._snapshot(this, ray, snapshotTransforms);
-};
-
-Scene.prototype.setupArbitraryRenderOrthoFrustum = function (
-  viewportWidth,
-  viewportHeight,
-  frustumWidth,
-  near,
-  far,
+Scene.prototype.generateArbitraryRender = function (
+  key,
+  ray,
+  snapshotTransforms,
 ) {
-  this._arbitraryRenders.setupOrthoFrustum(
-    this,
-    viewportWidth,
-    viewportHeight,
-    frustumWidth,
-    near,
-    far,
-  );
-};
+  Check.defined("ray", ray);
 
-Scene.prototype.setupArbitraryRenderPerspectiveFrustum = function (
-  viewportWidth,
-  viewportHeight,
-  fov,
-  near,
-  far,
-) {
-  this._arbitraryRenders.setupPerspectiveFrustum(
-    this,
-    viewportWidth,
-    viewportHeight,
-    fov,
-    near,
-    far,
-  );
+  const arbRen = this._arbitraryRenders[key];
+  Check.defined("arbRen", arbRen);
+
+  if (this.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError("Snapshots are only supported in 3D mode.");
+  }
+
+  // Apply any object transformation functions to cesium objects and save the restoration functions
+  const transformRestoreFunctions = [];
+  if (snapshotTransforms) {
+    for (const transformFunc of snapshotTransforms) {
+      transformRestoreFunctions.push(transformFunc());
+    }
+  }
+
+  // Generate render output
+  const renderFunction = (scn) =>
+    ArbitraryRenders.getSnapshot(arbRen, scn, ray);
+  const renderOutput = this.triggerArbitraryRender(renderFunction);
+
+  // Restore any transformed cesium objects
+  for (const restoreFunc of transformRestoreFunctions) {
+    restoreFunc();
+  }
+
+  return renderOutput;
 };
 
 /**
@@ -5360,8 +5339,11 @@ Scene.prototype.destroy = function () {
   this._brdfLutGenerator =
     this._brdfLutGenerator && this._brdfLutGenerator.destroy();
   this._picking = this._picking && this._picking.destroy();
-  this._arbitraryRenders =
-    this._arbitraryRenders && this._arbitraryRenders.destroy();
+
+  Object.values(this._arbitraryRenders).forEach((ar) => {
+    ar.destroy();
+  });
+  this._arbitraryRenders = {};
 
   this._defaultView = this._defaultView && this._defaultView.destroy();
   this._view = undefined;

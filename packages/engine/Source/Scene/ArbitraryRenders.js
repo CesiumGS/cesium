@@ -1,31 +1,20 @@
-import { Math, PerspectiveFrustum } from "@cesium/engine";
+import { DeveloperError, Math, PerspectiveFrustum } from "@cesium/engine";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
-import SceneMode from "./SceneMode.js";
 import View from "./View.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 
-const defaultOrthoFrustumWidth = 10; //0.1;
-
-// const mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
-//   pass: Cesium3DTilePass.MOST_DETAILED_PICK,
-// });
+const defaultOrthoFrustumWidth = 10;
 
 const pickTilesetPassState = new Cesium3DTilePassState({
   pass: Cesium3DTilePass.PICK,
 });
-
-// const renderTilesetPassState = new Cesium3DTilePassState({
-//   pass: Cesium3DTilePass.RENDER,
-// });
 
 const scratchRectangle = new BoundingRectangle(0.0, 0.0, 3.0, 3.0);
 const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
@@ -33,11 +22,16 @@ const scratchRight = new Cartesian3();
 const scratchUp = new Cartesian3();
 
 function ArbitraryRenders(scene) {
-  this.setupOrthoFrustum(scene, 100, 100);
+  this._scene = scene;
+  this._arView = undefined;
 }
 
+ArbitraryRenders.prototype.destroy = function () {
+  this._arView = this._arView && this._arView.destroy();
+  this._scene = undefined;
+};
+
 ArbitraryRenders.prototype.setupOrthoFrustum = function (
-  scene,
   viewportWidth,
   viewportHeight,
   frustumWidth = undefined,
@@ -60,7 +54,7 @@ ArbitraryRenders.prototype.setupOrthoFrustum = function (
       view.camera.frustum.width = frustumWidth;
     }
   } else {
-    const orthoCamera = new Camera(scene);
+    const orthoCamera = new Camera(this._scene);
     orthoCamera.frustum = new OrthographicFrustum({
       width: frustumWidth,
       aspectRatio: viewportWidth / viewportHeight,
@@ -68,12 +62,11 @@ ArbitraryRenders.prototype.setupOrthoFrustum = function (
       far: far,
     });
 
-    this._setupView(scene, orthoCamera, viewportWidth, viewportHeight);
+    this._setupView(orthoCamera, viewportWidth, viewportHeight);
   }
 };
 
 ArbitraryRenders.prototype.setupPerspectiveFrustum = function (
-  scene,
   viewportWidth,
   viewportHeight,
   fov = undefined,
@@ -96,25 +89,24 @@ ArbitraryRenders.prototype.setupPerspectiveFrustum = function (
     }
   } else {
     // Create new
-    const perspectiveCamera = new Camera(scene);
+    const perspectiveCamera = new Camera(this._scene);
     perspectiveCamera.frustum = new PerspectiveFrustum({
       fov: fov,
       aspectRatio: viewportWidth / viewportHeight,
       near: near,
       far: far,
     });
-    this._setupView(scene, perspectiveCamera, viewportWidth, viewportHeight);
+    this._setupView(perspectiveCamera, viewportWidth, viewportHeight);
   }
 };
 
 ArbitraryRenders.prototype._setupView = function (
-  scene,
   camera,
   viewportWidth,
   viewportHeight,
 ) {
   this._arView = new View(
-    scene,
+    this._scene,
     camera,
     new BoundingRectangle(0, 0, viewportWidth, viewportHeight),
   );
@@ -151,48 +143,8 @@ ArbitraryRenders.prototype._updateFrustumViewCommon = function (
   }
 };
 
-// snapshotTransforms:SnapshotTransform
-// type SnapshotTransform = function():(function():void)  // Returns a function to undo the transformation
-
-ArbitraryRenders.prototype._snapshot = function (
-  scene,
-  ray,
-  snapshotTransforms,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("ray", ray);
-  if (scene.mode !== SceneMode.SCENE3D) {
-    throw new DeveloperError("Snapshots are only supported in 3D mode.");
-  }
-  //>>includeEnd('debug');
-
-  // Apply any object transformation functions to cesium objects and save the restoration functions
-  const transformRestoreFunctions = [];
-  if (snapshotTransforms) {
-    for (const transformFunc of snapshotTransforms) {
-      transformRestoreFunctions.push(transformFunc());
-    }
-  }
-
-  // Generate render output
-  const renderFunction = (scn) => getSnapshot(this, scn, ray);
-  const renderOutput = scene.triggerArbitraryRender(
-    renderFunction,
-    scene._preUpdate,
-    scene._postUpdate,
-    scene._preRender,
-    scene._postRender,
-  );
-
-  // Restore any transformed cesium objects
-  for (const restoreFunc of transformRestoreFunctions) {
-    restoreFunc();
-  }
-
-  return renderOutput;
-};
-
-function getSnapshot(arbitraryRenderer, scene, ray) {
+// Static function
+ArbitraryRenders.getSnapshot = function (arbitraryRenderer, scene, ray) {
   // This is identical to scene render
   const frameState = scene.frameState;
   const context = scene.context;
@@ -200,6 +152,13 @@ function getSnapshot(arbitraryRenderer, scene, ray) {
 
   // Similar but we're using the arbRen view
   const view = arbitraryRenderer._arView;
+  if (!view) {
+    throw new DeveloperError(
+      "Arbitrary render frustrum was never setup. " +
+        "Must call either setupOrthoFrustum or setupPerspectiveFrustum " +
+        "before generating renders.",
+    );
+  }
   scene.view = view;
 
   // This is unique to arbRen (and picker)
@@ -280,7 +239,7 @@ function getSnapshot(arbitraryRenderer, scene, ray) {
   context.endFrame();
 
   return output;
-}
+};
 
 function updateOffscreenCameraFromRay(ray, camera) {
   const direction = ray.direction;
