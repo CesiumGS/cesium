@@ -718,20 +718,6 @@ function getVertexBufferLoader(
   return vertexBufferLoader;
 }
 
-function getSpzBufferLoader(loader, primitive) {
-  const gltf = loader.gltfJson;
-
-  const spzBufferLoader = ResourceCache.getSpzLoader({
-    gltf: gltf,
-    primitive: primitive,
-    spz: true,
-    gltfResource: loader._gltfResource,
-    baseResource: loader._baseResource,
-  });
-
-  return spzBufferLoader;
-}
-
 function getIndexBufferLoader(
   loader,
   accessorId,
@@ -1146,6 +1132,58 @@ function finalizeDracoAttribute(
   }
 }
 
+function finalizeSpzAttribute(
+  attribute,
+  vertexBufferLoader,
+  loadBuffer,
+  loadTypedArray,
+) {
+  attribute.byteOffset = 0;
+  attribute.byteStride = undefined;
+
+  if (loadBuffer) {
+    attribute.buffer = vertexBufferLoader.buffer;
+  }
+
+  if (loadTypedArray) {
+    attribute.typedArray = ComponentDatatype.createArrayBufferView(
+      attribute.componentDatatype,
+      vertexBufferLoader.typedArray.buffer,
+    );
+  }
+
+  if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+    const findMinMaxXY = (flatArray) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+
+      for (let i = 0; i < flatArray.length; i += 3) {
+        const x = flatArray[i];
+        const y = flatArray[i + 1];
+        const z = flatArray[i + 2];
+
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+      }
+
+      return [
+        new Cartesian3(minX, minY, minZ),
+        new Cartesian3(maxX, maxY, maxZ),
+      ];
+    };
+    const buffer = attribute.typedArray;
+    [attribute.min, attribute.max] = findMinMaxXY(buffer);
+  }
+}
+
 function finalizeAttribute(
   gltf,
   accessor,
@@ -1244,6 +1282,13 @@ function loadAttribute(
         loadBuffer,
         loadTypedArray,
       );
+    } else if (defined(spz)) {
+      finalizeSpzAttribute(
+        attribute,
+        vertexBufferLoader,
+        loadBuffer,
+        loadTypedArray,
+      );
     } else {
       finalizeAttribute(
         gltf,
@@ -1255,20 +1300,6 @@ function loadAttribute(
       );
     }
   };
-
-  if (spz) {
-    const spzLoader = getSpzBufferLoader(loader, primitive);
-    const nIndex = loader._geometryLoaders.length;
-    loader._geometryLoaders.push(spzLoader);
-    const spzPromise = spzLoader.load();
-    loader._loaderPromises.push(spzPromise);
-
-    loader._geometryCallbacks[nIndex] = () => {
-      if (defined(spz) && defined(spzLoader.decodedData)) {
-        attribute.gaussianCloudData = spzLoader.decodedData.gcloud;
-      }
-    };
-  }
 
   return attribute;
 }

@@ -9,6 +9,7 @@ import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
+import CesiumMath from "../Core/Math.js";
 
 /**
  * Loads a vertex buffer from a glTF buffer view.
@@ -53,6 +54,7 @@ function GltfVertexBufferLoader(options) {
   const attributeSemantic = options.attributeSemantic;
   const accessorId = options.accessorId;
   const cacheKey = options.cacheKey;
+  const spz = options.spz;
   const asynchronous = defaultValue(options.asynchronous, true);
   const loadBuffer = defaultValue(options.loadBuffer, false);
   const loadTypedArray = defaultValue(options.loadTypedArray, false);
@@ -73,37 +75,41 @@ function GltfVertexBufferLoader(options) {
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
+  const hasSpz = spz;
 
-  if (hasBufferViewId === hasDraco) {
-    throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined.",
-    );
+  if (!hasSpz) {
+    if (hasBufferViewId === hasDraco) {
+      throw new DeveloperError(
+        "One of options.bufferViewId and options.draco must be defined.",
+      );
+    }
+
+    if (hasDraco && !hasAttributeSemantic) {
+      throw new DeveloperError(
+        "When options.draco is defined options.attributeSemantic must also be defined.",
+      );
+    }
+
+    if (hasDraco && !hasAccessorId) {
+      throw new DeveloperError(
+        "When options.draco is defined options.accessorId must also be defined.",
+      );
+    }
+
+    if (hasDraco && !hasPrimitive) {
+      throw new DeveloperError(
+        "When options.draco is defined options.primitive must also be defined.",
+      );
+    }
+
+    if (hasDraco) {
+      Check.typeOf.object("options.primitive", primitive);
+      Check.typeOf.object("options.draco", draco);
+      Check.typeOf.string("options.attributeSemantic", attributeSemantic);
+      Check.typeOf.number("options.accessorId", accessorId);
+    }
   }
 
-  if (hasDraco && !hasAttributeSemantic) {
-    throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined.",
-    );
-  }
-
-  if (hasDraco && !hasAccessorId) {
-    throw new DeveloperError(
-      "When options.draco is defined options.accessorId must also be defined.",
-    );
-  }
-
-  if (hasDraco && !hasPrimitive) {
-    throw new DeveloperError(
-      "When options.draco is defined options.primitive must also be defined.",
-    );
-  }
-
-  if (hasDraco) {
-    Check.typeOf.object("options.primitive", primitive);
-    Check.typeOf.object("options.draco", draco);
-    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
-    Check.typeOf.number("options.accessorId", accessorId);
-  }
   //>>includeEnd('debug');
 
   this._resourceCache = resourceCache;
@@ -113,7 +119,7 @@ function GltfVertexBufferLoader(options) {
   this._bufferViewId = bufferViewId;
   this._primitive = primitive;
   this._draco = draco;
-  this._spz = undefined;
+  this._spz = spz;
   this._attributeSemantic = attributeSemantic;
   this._accessorId = accessorId;
   this._cacheKey = cacheKey;
@@ -303,14 +309,31 @@ async function loadFromSpz(vertexBufferLoader) {
   }
 }
 
-//maybe not needed
 function processSpz(vertexBufferLoader) {
   vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
   const spzLoader = vertexBufferLoader._spzLoader;
 
-  const glcoudData = spzLoader.decodedData.gcloud;
+  const gcloudData = spzLoader.decodedData.gcloud;
 
-  vertexBufferLoader._typedArray = new Uint8Array(glcoudData.buffer);
+  if (vertexBufferLoader._attributeSemantic === "POSITION") {
+    vertexBufferLoader._typedArray = gcloudData.positions;
+  } else if (vertexBufferLoader._attributeSemantic === "_SCALE") {
+    vertexBufferLoader._typedArray = gcloudData.scales;
+  } else if (vertexBufferLoader._attributeSemantic === "_ROTATION") {
+    vertexBufferLoader._typedArray = gcloudData.rotations;
+  } else if (vertexBufferLoader._attributeSemantic === "_OPACITY") {
+    vertexBufferLoader._typedArray = Uint8Array.from(
+      gcloudData.alphas.map((alpha) => {
+        return CesiumMath.clamp(alpha * 255.0, 0.0, 255.0);
+      }),
+    );
+  } else if (vertexBufferLoader._attributeSemantic === "COLOR_0") {
+    vertexBufferLoader._typedArray = Uint8Array.from(
+      gcloudData.colors.map((color) => {
+        return CesiumMath.clamp(color * 255.0, 0.0, 255.0);
+      }),
+    );
+  }
 }
 
 async function loadFromDraco(vertexBufferLoader) {

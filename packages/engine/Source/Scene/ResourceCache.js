@@ -487,36 +487,40 @@ ResourceCache.getVertexBufferLoader = function (options) {
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
+  const hasSpz = spz;
 
-  if (hasBufferViewId === hasDraco) {
-    throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined.",
-    );
+  if (!hasSpz) {
+    if (hasBufferViewId === hasDraco) {
+      throw new DeveloperError(
+        "One of options.bufferViewId and options.draco must be defined.",
+      );
+    }
+
+    if (hasDraco && !hasAttributeSemantic) {
+      throw new DeveloperError(
+        "When options.draco is defined options.attributeSemantic must also be defined.",
+      );
+    }
+
+    if (hasDraco && !hasAccessorId) {
+      throw new DeveloperError(
+        "When options.draco is defined options.hasAccessorId must also be defined.",
+      );
+    }
+
+    if (hasDraco && !hasPrimitive) {
+      throw new DeveloperError(
+        "When options.draco is defined options.primitive must also be defined.",
+      );
+    }
+
+    if (hasDraco) {
+      Check.typeOf.object("options.draco", draco);
+      Check.typeOf.string("options.attributeSemantic", attributeSemantic);
+      Check.typeOf.number("options.accessorId", accessorId);
+    }
   }
 
-  if (hasDraco && !hasAttributeSemantic) {
-    throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined.",
-    );
-  }
-
-  if (hasDraco && !hasAccessorId) {
-    throw new DeveloperError(
-      "When options.draco is defined options.haAccessorId must also be defined.",
-    );
-  }
-
-  if (hasDraco && !hasPrimitive) {
-    throw new DeveloperError(
-      "When options.draco is defined options.primitive must also be defined.",
-    );
-  }
-
-  if (hasDraco) {
-    Check.typeOf.object("options.draco", draco);
-    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
-    Check.typeOf.number("options.accessorId", accessorId);
-  }
   //>>includeEnd('debug');
 
   const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({

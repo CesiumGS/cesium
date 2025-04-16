@@ -10,8 +10,7 @@ import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-import CesiumMath from "../Core/Math.js";
-
+import ModelUtility from "./Model/ModelUtility.js";
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -198,7 +197,7 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
 
   if (this.needsSpzAttributes) {
     this.primitive.isGaussianSplatPrimitive = true;
-    buildSpzAttributes(this, context);
+    prepareSpzData(this, context);
     setupGaussianSplatBuffers(this, context);
     if (this.generateGaussianSplatTexture) {
       this.attributePlans.forEach((attr) => {
@@ -270,117 +269,42 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   return attribute;
 }
 
-function buildSpzAttributes(loadPlan, context) {
-  let _spz;
-  //there should be only one
-  for (let i = 0; i < loadPlan.attributePlans.length; i++) {
-    const attr = loadPlan.attributePlans[i].attribute;
-    if (attr.name === "_SPZ") {
-      _spz = attr;
-    }
+function prepareSpzData(loadPlan, context) {
+  const rgb = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.COLOR,
+  );
+  const alpha = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.OPACITY,
+  );
+  const rgbVals = rgb.typedArray;
+  const rgba = new Uint8Array((rgbVals.length / 3) * 4);
+  for (let i = 0; i < rgbVals.length / 3; i++) {
+    rgba[i * 4] = rgbVals[i * 3];
+    rgba[i * 4 + 1] = rgbVals[i * 3 + 1];
+    rgba[i * 4 + 2] = rgbVals[i * 3 + 2];
+    rgba[i * 4 + 3] = alpha.typedArray[i];
   }
 
-  const primitive = loadPlan.primitive;
-  const gs = _spz.gaussianCloudData;
+  rgb.type = AttributeType.VEC4;
+  rgb.typedArray = rgba;
+  rgb.componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
+  rgb.normalized = false;
 
-  const count = gs.numPoints;
-  const positionAttr = new ModelComponents.Attribute();
-  const scaleAttr = new ModelComponents.Attribute();
-  const rotationAttr = new ModelComponents.Attribute();
-  const colorAttr = new ModelComponents.Attribute();
+  loadPlan.primitive.attributes = loadPlan.primitive.attributes.filter(
+    (attr) => attr.name !== "_OPACITY",
+  );
 
-  const findMinMaxXY = (flatArray) => {
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
-    let minZ = Infinity;
-    let maxZ = -Infinity;
+  const position = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.POSITION,
+  );
 
-    for (let i = 0; i < flatArray.length; i += 3) {
-      const x = flatArray[i];
-      const y = flatArray[i + 1];
-      const z = flatArray[i + 2];
-
-      minX = Math.min(minX, x);
-      maxX = Math.max(maxX, x);
-      minY = Math.min(minY, y);
-      maxY = Math.max(maxY, y);
-      minZ = Math.min(minZ, z);
-      maxZ = Math.max(maxZ, z);
-    }
-
-    return [new Cartesian3(minX, minY, minZ), new Cartesian3(maxX, maxY, maxZ)];
-  };
-
-  [positionAttr.min, positionAttr.max] = findMinMaxXY(gs.positions);
-
-  for (let i = 0; i < gs.positions.length; i += 3) {
-    gs.positions[i + 1] = -gs.positions[i + 1];
-    gs.positions[i + 2] = -gs.positions[i + 2];
+  for (let i = 0; i < position.typedArray.length; i += 3) {
+    position.typedArray[i + 1] = -position.typedArray[i + 1];
+    position.typedArray[i + 2] = -position.typedArray[i + 2];
   }
-  positionAttr.name = "POSITION";
-  positionAttr.semantic = VertexAttributeSemantic.POSITION;
-  positionAttr.typedArray = new Float32Array(gs.positions);
-  positionAttr.componentDatatype = ComponentDatatype.FLOAT;
-  positionAttr.type = AttributeType.VEC3;
-  positionAttr.normalized = false;
-  positionAttr.count = count;
-  positionAttr.constant = 0;
-  positionAttr.instanceDivisor = 1;
-
-  scaleAttr.name = "_SCALE";
-  scaleAttr.semantic = VertexAttributeSemantic.SCALE;
-  scaleAttr.typedArray = new Float32Array(gs.scales);
-  scaleAttr.componentDatatype = ComponentDatatype.FLOAT;
-  scaleAttr.type = AttributeType.VEC3;
-  scaleAttr.normalized = false;
-  scaleAttr.count = count;
-  scaleAttr.constant = 0;
-  scaleAttr.instanceDivisor = 1;
-
-  rotationAttr.name = "_ROTATION";
-  rotationAttr.semantic = VertexAttributeSemantic.ROTATION;
-  rotationAttr.typedArray = new Float32Array(gs.rotations);
-  rotationAttr.componentDatatype = ComponentDatatype.FLOAT;
-  rotationAttr.type = AttributeType.VEC4;
-  rotationAttr.normalized = false;
-  rotationAttr.count = count;
-  rotationAttr.constant = 0;
-  rotationAttr.instanceDivisor = 1;
-
-  //convert to integer components and interleave into rgba
-  //spz-loader handles the initial colorspace conversion for us
-  const interleaveRGBA = (rgb, alpha) => {
-    const rgba = new Uint8Array((rgb.length / 3) * 4);
-    for (let i = 0; i < rgb.length / 3; i++) {
-      rgba[i * 4] = CesiumMath.clamp(rgb[i * 3] * 255.0, 0.0, 255.0);
-      rgba[i * 4 + 1] = CesiumMath.clamp(rgb[i * 3 + 1] * 255.0, 0.0, 255.0);
-      rgba[i * 4 + 2] = CesiumMath.clamp(rgb[i * 3 + 2] * 255.0, 0.0, 255.0);
-      rgba[i * 4 + 3] = alpha[i] * 255.0;
-    }
-
-    return rgba;
-  };
-
-  colorAttr.name = "COLOR_0";
-  colorAttr.semantic = VertexAttributeSemantic.COLOR;
-  colorAttr.typedArray = interleaveRGBA(gs.colors, gs.alphas);
-  colorAttr.componentDatatype = ComponentDatatype.FLOAT;
-  colorAttr.type = AttributeType.VEC4;
-  colorAttr.normalized = false;
-  colorAttr.count = count;
-  colorAttr.constant = 0;
-  colorAttr.instanceDivisor = 1;
-
-  primitive.attributes.shift();
-
-  primitive.attributes.push(positionAttr);
-  primitive.attributes.push(scaleAttr);
-  primitive.attributes.push(rotationAttr);
-  primitive.attributes.push(colorAttr);
-
-  _spz.gaussianCloudData = undefined;
 }
 
 /**

@@ -333,6 +333,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     frameState,
     bufferViewId,
     draco,
+    spz,
     attributeSemantic,
     dequantize = false,
     loadBuffer = false,
@@ -348,29 +349,33 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   const hasBufferViewId = defined(bufferViewId);
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
+  const hasSpz = spz;
 
-  if (hasBufferViewId === hasDraco) {
-    throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined.",
-    );
+  if (!hasSpz) {
+    if (hasBufferViewId === hasDraco) {
+      throw new DeveloperError(
+        "One of options.bufferViewId and options.draco must be defined.",
+      );
+    }
+
+    if (hasDraco && !hasAttributeSemantic) {
+      throw new DeveloperError(
+        "When options.draco is defined options.attributeSemantic must also be defined.",
+      );
+    }
+
+    if (hasDraco) {
+      Check.typeOf.object("options.draco", draco);
+      Check.typeOf.string("options.attributeSemantic", attributeSemantic);
+    }
+
+    if (!loadBuffer && !loadTypedArray) {
+      throw new DeveloperError(
+        "At least one of loadBuffer and loadTypedArray must be true.",
+      );
+    }
   }
 
-  if (hasDraco && !hasAttributeSemantic) {
-    throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined.",
-    );
-  }
-
-  if (hasDraco) {
-    Check.typeOf.object("options.draco", draco);
-    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
-  }
-
-  if (!loadBuffer && !loadTypedArray) {
-    throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true.",
-    );
-  }
   //>>includeEnd('debug');
 
   let cacheKeySuffix = "";
@@ -395,6 +400,11 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
       baseResource,
     );
     return `vertex-buffer:${dracoCacheKey}-draco-${attributeSemantic}${cacheKeySuffix}`;
+  }
+
+  if (spz) {
+    const spzCacheKey = getSpzCacheKey(gltf, spz, gltfResource, baseResource);
+    return `vertex-buffer:${spzCacheKey}-spz-${attributeSemantic}${cacheKeySuffix}`;
   }
 
   const bufferView = gltf.bufferViews[bufferViewId];

@@ -110,7 +110,7 @@ async function processDecode(loader, decodePromise) {
       return;
     }
 
-    loader.unload();
+    // loader.unload();
 
     loader._decodedData = {
       gcloud: gcloud,
@@ -135,10 +135,7 @@ GltfSpzLoader.prototype.process = function (frameState) {
     return true;
   }
 
-  if (
-    this._state !== ResourceLoaderState.LOADED &&
-    this._state !== ResourceLoaderState.PROCESSING
-  ) {
+  if (this._state !== ResourceLoaderState.PROCESSING) {
     return false;
   }
 
