@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.129 - 2025-05-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- `QuadtreePrimitive.updateHeights` now converts position to Cartographic before invoking the callback, ensuring compatibility with change introduced by [commit 53889cb](https://github.com/CesiumGS/cesium/commit/53889cb) and preventing unnecessary computation. [#12555](https://github.com/CesiumGS/cesium/pull/12555)
+
 ## 1.128 - 2025-04-01
 
 ### @cesium/engine
