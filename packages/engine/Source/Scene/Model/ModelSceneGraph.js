@@ -158,6 +158,7 @@ function ModelSceneGraph(options) {
   this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
     components.forwardAxis,
+    defined(this._model.apiInstances),
     new Matrix4(),
   );
 
@@ -323,7 +324,8 @@ function computeModelMatrix(sceneGraph, modelMatrix) {
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     sceneGraph._computedModelMatrix,
-    sceneGraph._axisCorrectionMatrix,
+    Matrix4.IDENTITY,
+    //sceneGraph._axisCorrectionMatrix,
     sceneGraph._computedModelMatrix,
   );
 
@@ -507,6 +509,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
       nodePipelineStage.process(
         nodeRenderResources,
         runtimeNode.node,
+        runtimeNode.sceneGraph._model._apiInstances,
         frameState,
       );
     }
@@ -576,7 +579,8 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
 
   this._boundingSphere = BoundingSphere.transformWithoutScale(
     this._boundingSphere,
-    this._axisCorrectionMatrix,
+    //this._axisCorrectionMatrix,
+    Matrix4.IDENTITY,
     this._boundingSphere,
   );
 

@@ -14,7 +14,7 @@ import {
   ResourceCache,
   ShaderBuilder,
   _shadersInstancingStageCommon,
-  _shadersLegacyInstancingStageVS,
+  _shadersWorldSpaceInstancingStageVS,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
@@ -647,7 +647,7 @@ describe(
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_INSTANCING",
           "HAS_INSTANCE_MATRICES",
-          "USE_LEGACY_INSTANCING",
+          "USE_WORLD_SPACE_INSTANCING",
         ]);
 
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
@@ -657,7 +657,7 @@ describe(
 
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersInstancingStageCommon,
-          _shadersLegacyInstancingStageVS,
+          _shadersWorldSpaceInstancingStageVS,
         ]);
 
         const model = renderResources.model;

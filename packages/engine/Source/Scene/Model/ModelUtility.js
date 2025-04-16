@@ -262,8 +262,17 @@ ModelUtility.getPositionMinMax = function (
  *
  * @private
  */
-ModelUtility.getAxisCorrectionMatrix = function (upAxis, forwardAxis, result) {
+ModelUtility.getAxisCorrectionMatrix = function (
+  upAxis,
+  forwardAxis,
+  isApiInstancedModel,
+  result,
+) {
   result = Matrix4.clone(Matrix4.IDENTITY, result);
+
+  // if (isApiInstancedModel) {
+  //   return result;
+  // }
 
   if (upAxis === Axis.Y) {
     result = Matrix4.clone(Axis.Y_UP_TO_Z_UP, result);

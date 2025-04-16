@@ -1,0 +1,11 @@
+Model Information:
+* title:	Storm Trooper
+* source:	https://sketchfab.com/3d-models/storm-trooper-55e0194bf96546cba173f655904aac39
+* author:	CODAME (https://sketchfab.com/codame)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Storm Trooper" (https://sketchfab.com/3d-models/storm-trooper-55e0194bf96546cba173f655904aac39) by CODAME (https://sketchfab.com/codame) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
