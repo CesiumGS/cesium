@@ -82,7 +82,8 @@ class ImageryCoverageComputations {
       imageryLevel,
     );
 
-    console.log("imageryRange ", imageryRange);
+    // TODO_DRAPING debug log
+    //console.log("imageryRange ", imageryRange);
 
     // TODO_DRAPING Extracted from _createTileImagerySkeletons:
     // Convert the input rectangle and the imagery bounds into

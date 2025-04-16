@@ -10,6 +10,12 @@ import ImageryPipelineStageProcessing from "./ImageryPipelineStageProcessing.js"
 import ImageryFlags from "./ImageryFlags.js";
 
 /**
+ * TODO_DRAPING: A debugging flag to draw the boundaries of imagery tiles
+ * (Similar to "SHOW_TILE_BOUNDARIES" in GlobeFS.glsl)
+ */
+const debugDrawImageryBoundaries = true;
+
+/**
  * A pipeline stage that modifies the model shader to take into account
  * imagery textures that are draped over a primitive of the model, when it
  * is part a <code>Model3DTileContent</code> of a <code>Cesium3DTileset</code>
@@ -484,7 +490,7 @@ class ImageryPipelineStage {
     ]);
 
     // Debug mode: Draw boundaries of imagery in red
-    if (ImageryPipelineStage._debugDrawImageryBoundaries) {
+    if (debugDrawImageryBoundaries) {
       shaderBuilder.addFunctionLines(functionId, [
         `if (abs(textureCoordinates.x - textureCoordinateRectangle.x) < (1.0/256.0) || `,
         `    abs(textureCoordinates.x - textureCoordinateRectangle.z) < (1.0/256.0) || `,
@@ -696,11 +702,5 @@ class ImageryPipelineStage {
 
 // Static properties (direct initialization disallowed by eslint)
 //ImageryPipelineStage.name = "ImageryPipelineStage"; // Helps with debugging, if you know where to look
-
-/**
- * TODO_DRAPING: A debugging flag to draw the boundaries of imagery tiles
- * (Similar to "SHOW_TILE_BOUNDARIES" in GlobeFS.glsl)
- */
-ImageryPipelineStage._debugDrawImageryBoundaries = true;
 
 export default ImageryPipelineStage;

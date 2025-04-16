@@ -13,7 +13,6 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
-import AttributeCompression from "../../Core/AttributeCompression.js";
 
 /**
  * A class for computing the texture coordinates of imagery that is
@@ -180,37 +179,34 @@ class ModelImageryMapping {
     }
 
     // When the data is quantized, then read the quantized data
-    // into a typed array, and dequantize it using the
-    // AttributeCompression utility function,
+    // into a typed array
     const quantizedTypedArray = ComponentDatatype.createTypedArray(
       quantization.componentDatatype,
       count * componentsPerAttribute,
     );
     buffer.getBufferData(quantizedTypedArray);
-    const dequantizedTypedArray = AttributeCompression.dequantize(
-      quantizedTypedArray,
-      quantization.componentDatatype,
-      type,
-      count,
+    const dequantizedTypedArray = new Float32Array(
+      count * componentsPerAttribute,
     );
 
-    // Now apply the offset/scale of the quantizaation to the
+    // Now apply the offset and scale (via step size) of the
+    // quantizaation to the quantized data, to obtain the
     // dequantized data
     const p = new Cartesian3();
 
     // XXX_DRAPING: There's also some quantizedVolumeScale floating around in
     // some places. I hope that this is the right thing to do here...:
-    const scale = quantization.quantizedVolumeDimensions;
+    const stepSize = quantization.quantizedVolumeStepSize;
     const offset = quantization.quantizedVolumeOffset;
     for (let i = 0; i < count; i++) {
-      p.x = dequantizedTypedArray[i * 3 + 0];
-      p.y = dequantizedTypedArray[i * 3 + 1];
-      p.z = dequantizedTypedArray[i * 3 + 2];
-      Cartesian3.multiplyComponents(p, scale, p);
+      p.x = quantizedTypedArray[i * componentsPerAttribute + 0];
+      p.y = quantizedTypedArray[i * componentsPerAttribute + 1];
+      p.z = quantizedTypedArray[i * componentsPerAttribute + 2];
+      Cartesian3.multiplyComponents(p, stepSize, p);
       Cartesian3.add(p, offset, p);
-      dequantizedTypedArray[i * 3 + 0] = p.x;
-      dequantizedTypedArray[i * 3 + 1] = p.y;
-      dequantizedTypedArray[i * 3 + 2] = p.z;
+      dequantizedTypedArray[i * componentsPerAttribute + 0] = p.x;
+      dequantizedTypedArray[i * componentsPerAttribute + 1] = p.y;
+      dequantizedTypedArray[i * componentsPerAttribute + 2] = p.z;
     }
     return dequantizedTypedArray;
   }

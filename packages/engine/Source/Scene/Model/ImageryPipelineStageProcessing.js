@@ -150,6 +150,14 @@ class ImageryPipelineStageProcessing {
       console.log("XXX_DRAPING: Imagery does not have textureWebMercator");
     }
 
+    // XXX_DRAPING Debug log
+    /*/
+    function rectangleToString(r) {
+      return `new Cesium.Rectangle(${r.west}, ${r.south}, ${r.east}, ${r.north}); // WSEN`;
+    }
+    console.log("cartographicBoundingRectangle ", rectangleToString(cartographicBoundingRectangle));
+    console.log("imagery.rectangle ", rectangleToString(imagery.rectangle));
+    //*/
     const textureTranslationAndScale =
       ImageryPipelineStageProcessing._computeTextureTranslationAndScale(
         imageryLayer,
