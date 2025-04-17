@@ -19,7 +19,7 @@ function GltfSpzLoader(options) {
   Check.typeOf.func("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.object("options.primitive", primitive);
-  Check.typeOf.bool("options.spz", spz);
+  Check.typeOf.object("options.spz", spz);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
@@ -110,6 +110,7 @@ async function processDecode(loader, decodePromise) {
       return;
     }
 
+    //we will unload later once all our accessors have been created
     // loader.unload();
 
     loader._decodedData = {

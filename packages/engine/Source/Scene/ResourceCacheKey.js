@@ -349,7 +349,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   const hasBufferViewId = defined(bufferViewId);
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
-  const hasSpz = spz;
+  const hasSpz = defined(spz);
 
   if (!hasSpz) {
     if (hasBufferViewId === hasDraco) {

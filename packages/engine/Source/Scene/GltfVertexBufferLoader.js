@@ -75,7 +75,7 @@ function GltfVertexBufferLoader(options) {
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
-  const hasSpz = spz;
+  const hasSpz = defined(spz);
 
   if (!hasSpz) {
     if (hasBufferViewId === hasDraco) {

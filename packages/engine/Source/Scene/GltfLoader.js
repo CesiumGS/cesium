@@ -2028,6 +2028,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   }
 
   const gaussianSplattingExtension = extensions.KHR_gaussian_splatting;
+  const spzExtension = extensions.KHR_spz_compression;
 
   if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
     needsPostProcessing = true;
@@ -2036,10 +2037,6 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       loader._generateGaussianSplatTexture;
   }
 
-  //gltfLoader will decompress the SPZ stream. load plan will extract the attributes.
-  const spzExtension = loader.gltfJson.extensionsUsed.includes(
-    "KHR_spz_compression",
-  );
   if (spzExtension) {
     needsPostProcessing = true;
     primitivePlan.needsSpzAttributes = true;

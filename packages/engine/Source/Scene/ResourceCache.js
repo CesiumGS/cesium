@@ -398,7 +398,7 @@ ResourceCache.getSpzLoader = function (options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.object("options.primitive", primitive);
-  Check.typeOf.bool("options.spz", spz);
+  Check.typeOf.object("options.spz", spz);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
@@ -487,7 +487,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
-  const hasSpz = spz;
+  const hasSpz = defined(spz);
 
   if (!hasSpz) {
     if (hasBufferViewId === hasDraco) {
