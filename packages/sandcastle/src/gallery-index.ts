@@ -43,26 +43,26 @@ const options = [
   {
     text: "Aircraft",
     onselect: function () {
-      createModel("/SampleData/models/CesiumAir/Cesium_Air.glb", 5000.0);
+      createModel("/Apps/SampleData/models/CesiumAir/Cesium_Air.glb", 5000.0);
     },
   },
   {
     text: "Drone",
     onselect: function () {
-      createModel("/SampleData/models/CesiumDrone/CesiumDrone.glb", 150.0);
+      createModel("/Apps/SampleData/models/CesiumDrone/CesiumDrone.glb", 150.0);
     },
   },
   {
     text: "Ground Vehicle",
     onselect: function () {
-      createModel("/SampleData/models/GroundVehicle/GroundVehicle.glb", 0);
+      createModel("/Apps/SampleData/models/GroundVehicle/GroundVehicle.glb", 0);
     },
   },
   {
     text: "Hot Air Balloon",
     onselect: function () {
       createModel(
-        "/SampleData/models/CesiumBalloon/CesiumBalloon.glb",
+        "/Apps/SampleData/models/CesiumBalloon/CesiumBalloon.glb",
         1000.0,
       );
     },
@@ -71,7 +71,7 @@ const options = [
     text: "Milk Truck",
     onselect: function () {
       createModel(
-        "/SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+        "/Apps/SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
         0,
       );
     },
@@ -79,20 +79,20 @@ const options = [
   {
     text: "Skinned Character",
     onselect: function () {
-      createModel("/SampleData/models/CesiumMan/Cesium_Man.glb", 0);
+      createModel("/Apps/SampleData/models/CesiumMan/Cesium_Man.glb", 0);
     },
   },
   {
     text: "Unlit Box",
     onselect: function () {
-      createModel("/SampleData/models/BoxUnlit/BoxUnlit.gltf", 10.0);
+      createModel("/Apps/SampleData/models/BoxUnlit/BoxUnlit.gltf", 10.0);
     },
   },
   {
     text: "Draco Compressed Model",
     onselect: function () {
       createModel(
-        "/SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
+        "/Apps/SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
         0,
       );
     },
@@ -106,7 +106,7 @@ const options = [
         );
       }
       createModel(
-        "/SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
+        "/Apps/SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
         1000.0,
       );
     },
@@ -114,7 +114,7 @@ const options = [
   {
     text: "Instanced Box",
     onselect: function () {
-      createModel("/SampleData/models/BoxInstanced/BoxInstanced.gltf", 15);
+      createModel("/Apps/SampleData/models/BoxInstanced/BoxInstanced.gltf", 15);
     },
   },
 ];
