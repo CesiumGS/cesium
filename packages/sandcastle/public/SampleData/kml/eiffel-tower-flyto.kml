@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+    <Document id="Document_65">
+        <name>Eiffel Tower Flyto</name>
+        <visibility>1</visibility>
+        <open>0</open>
+        <Folder id="Folder_66">
+            <name>AutoPlay</name>
+            <visibility>1</visibility>
+            <open>0</open>
+        </Folder>
+        <gx:Tour id="Tour_69">
+            <name>eiffel-tower-flyto</name>
+            <gx:Playlist>
+                <gx:Wait id="Wait_70">
+                    <gx:duration>0.2</gx:duration>
+                </gx:Wait>
+                <gx:FlyTo id="FlyTo_74">
+                    <gx:duration>6</gx:duration>
+                    <LookAt id="LookAt_72">
+                        <longitude>2.29448129999356</longitude>
+                        <latitude>48.8583700998311</latitude>
+                        <altitude>196.5753973788714</altitude>
+                        <heading>0.0</heading>
+                        <tilt>67.0</tilt>
+                        <range>1500.0</range>
+                        <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+                    </LookAt>
+                </gx:FlyTo>
+                <gx:Wait id="Wait_75">
+                    <gx:duration>4</gx:duration>
+                </gx:Wait>
+                <gx:FlyTo id="FlyTo_74">
+                    <gx:duration>6</gx:duration>
+                    <Camera>
+                        <longitude>170.157</longitude>
+                        <latitude>-43.671</latitude>
+                        <altitude>9700</altitude>
+                        <heading>-6.333</heading>
+                        <tilt>33.5</tilt>
+                    </Camera>
+                </gx:FlyTo>
+            </gx:Playlist>
+        </gx:Tour>
+    </Document>
+</kml>

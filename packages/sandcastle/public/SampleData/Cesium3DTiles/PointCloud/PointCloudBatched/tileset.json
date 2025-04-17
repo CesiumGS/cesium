@@ -1,0 +1,21 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "geometricError": 17.32,
+  "root": {
+    "refine": "ADD",
+    "boundingVolume": {
+      "sphere": [
+        1215012.8828876738,
+        -4736313.051199594,
+        4081605.22126042,
+        5
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "uri": "pointCloudBatched.pnts"
+    }
+  }
+}

@@ -19,6 +19,7 @@ export default [
       "Apps/Sandcastle/jsHintOptions.js",
       "Apps/Sandcastle/gallery/gallery-index.js",
       "Apps/Sandcastle2/",
+      "packages/sandcastle/public/",
       "packages/engine/Source/Scene/GltfPipeline/**/*",
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",

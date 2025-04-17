@@ -1,42 +1,63 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template:
+    "toolbar toolbar"
+    "code viewer"
+    "gallery gallery";
+  grid-template-columns: 50% 50%;
+  grid-template-rows: max-content auto 150px;
+  /* TODO: this shouldn't be needed but it works for hacky code */
+  overflow: hidden;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+.toolbar {
+  grid-area: toolbar;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+  .spacer {
+    flex-grow: 10;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+.editor-container {
+  grid-area: code;
+
+  section {
+    border-top: 1px solid grey;
   }
 }
 
-.card {
-  padding: 2em;
+.viewer-bucket {
+  grid-area: viewer;
+  width: 50vw;
+  background-color: white;
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 20px 20px;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0px;
+
+  .fullFrame {
+    width: 100%;
+    height: 100%;
+  }
 }
 
-.read-the-docs {
-  color: #888;
+.gallery {
+  grid-area: gallery;
+  border-top: 1px solid grey;
+}
+
+.dark {
+  background: #333;
 }

@@ -1,0 +1,53 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "geometricError": 70,
+  "root": {
+    "transform": [
+      0.9686356343768792,
+      0.24848542777253735,
+      0,
+      0,
+      -0.15986460744966327,
+      0.623177611820219,
+      0.765567091384559,
+      0,
+      0.19023226619126932,
+      -0.7415555652213445,
+      0.6433560667227647,
+      0,
+      1215011.9317263428,
+      -4736309.3434217675,
+      4081602.0044800863,
+      1
+    ],
+    "refine": "ADD",
+    "boundingVolume": {
+      "box": [
+        0,
+        0,
+        10,
+        50,
+        0,
+        0,
+        0,
+        50,
+        0,
+        0,
+        0,
+        10
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "uri": "tile.b3dm"
+    }
+  },
+  "extensionsUsed": [
+    "3DTILES_batch_table_hierarchy"
+  ],
+  "extensionsRequired": [
+    "3DTILES_batch_table_hierarchy"
+  ]
+}

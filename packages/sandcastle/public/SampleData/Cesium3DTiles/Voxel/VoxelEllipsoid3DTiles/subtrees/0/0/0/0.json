@@ -1,0 +1,14 @@
+{
+  "tileAvailability": {
+    "availableCount": 1,
+    "constant": 1
+  },
+  "contentAvailability": {
+    "availableCount": 1,
+    "constant": 1
+  },
+  "childSubtreeAvailability": {
+    "availableCount": 0,
+    "constant": 0
+  }
+}
