@@ -38,7 +38,6 @@
 
         const boxSize = 25;
 
-        //
         // Create a Material Appearance using custom shader code.
         function createMaterialAppearance() {
           // Create custom materials.
@@ -93,7 +92,7 @@
                 out vec3 v_position;
 
                 // KEY: The variables passed by appearance.uniforms need to be displayed and received.
-                uniform float frameNo;
+                uniform float frameNumber;
 
                 mat3 rotateZ(float angle) {
                     float c = cos(angle);
@@ -107,14 +106,13 @@
 
                 void main()
                 {
-
                     vec4 p = czm_computePosition();
                     // Get the origin Model Coordinates (MC) from the position. This will lose some precision.
                     vec3 cameraPositionMC = czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
                     vec3 originMC = p.xyz + cameraPositionMC;
 
-                    // Use uniform frameNo from Appearance to Rotate the Box.
-                    mat3 rotation = rotateZ(frameNo * 0.01);
+                    // Use uniform frameNumber from Appearance to Rotate the Box.
+                    mat3 rotation = rotateZ(frameNumber * 0.01);
                     originMC = rotation * originMC;
 
                     v_position = originMC;
@@ -123,8 +121,8 @@
                     originMC = originMC - cameraPositionMC;
                     p.xyz = originMC;
                     
-                    v_positionEC = (czm_modelViewRelativeToEye * p).xyz;      // position in eye coordinates
-                    v_normalEC = czm_normal * normal;                         // normal in eye coordinates
+                    v_positionEC = (czm_modelViewRelativeToEye * p).xyz;
+                    v_normalEC = czm_normal * normal;
                     v_st = st;
 
                     gl_Position = czm_modelViewProjectionRelativeToEye * p;
@@ -142,8 +140,8 @@
                 void main()
                 {
                     vec3 positionToEyeEC = -v_positionEC;
-
                     vec3 normalEC = normalize(v_normalEC);
+
                 #ifdef FACE_FORWARD
                     normalEC = faceforward(normalEC, vec3(0.0, 0.0, 1.0), -normalEC);
                 #endif
@@ -153,15 +151,12 @@
                     materialInput.positionToEyeEC = positionToEyeEC;
                     materialInput.st = v_st;
                     czm_material material = czm_getMaterial(materialInput);
-
                     
-                    // KEY: If necessary, the value of the uniform variable in Material.uniforms can be obtained through the helper function in Material here.
-                    // float time = getUniformTimeOfMaterial();
-
                     // Use uniform customColor from Appearance to Change Color
                     material.diffuse  = customColor; 
 
                     // Two randomly conceived transparent bright lines that are far apart from each other.
+                    // KEY: If necessary, the value of the uniform variable in Material.uniforms can be obtained through the helper function in Material here.
                     int uniformOfMaterial = int(getUniformTimeOfMaterial() * 4.0);
                     float s1 =  boxSize / 10.0; 
                     float delta = abs(abs(v_position.z) - float(uniformOfMaterial % int((boxSize / 2.0 - s1) * 100.0)) / 100.0);
@@ -186,7 +181,7 @@
           // The name of the variable will not change in the final shader.
           const color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
           appearance.uniforms = {
-            frameNo: 1.0, // Pass to vs.
+            frameNumber: 1.0, // Pass to vs.
             customColor: color, // Pass to fs.
             boxSize: boxSize,
           };
@@ -198,16 +193,9 @@
         function createBoxPrimitive(destination, appearance) {
           const boxGeometry = Cesium.BoxGeometry.fromDimensions({
             dimensions: new Cesium.Cartesian3(boxSize, boxSize, boxSize),
-            // vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
           });
 
-          // debugger;
-          // boxGeometry = boxGeometry.constructor.createGeometry(boxGeometry);
-
           const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(destination);
-          // const zoomMat = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(25, 25, 25), new Cesium.Matrix4());
-
-          // Cesium.Matrix4.multiply(modelMatrix, zoomMat, modelMatrix);
 
           // Wrap the geometry as GeometryInstance.
           const boxInstance = new Cesium.GeometryInstance({
@@ -228,9 +216,7 @@
         // Update uniforms every frame.
         function animate(appearance) {
           const t = appearance.material.uniforms.time++;
-
-          // KEY:Updating complex uniforms requires overall updating instead of updating a certain attribute alone.
-          appearance.uniforms.frameNo++;
+          appearance.uniforms.frameNumber++;
 
           let color = new Cesium.Cartesian3(
             (t * 0.001) % 1.0,
@@ -238,6 +224,8 @@
             (t * 0.003 + 0.85) % 1.0,
           );
           color = Cesium.Cartesian3.normalize(color, color);
+
+          // KEY:Updating complex uniforms requires overall updating instead of updating a certain attribute alone.
           appearance.uniforms.customColor = color;
 
           // // NOTE:The following update method is invalid.
@@ -260,7 +248,7 @@
           y: 5006991.049189922,
           z: 3215839.258024074,
         };
-        window.destination = destination;
+
         const appearance = createMaterialAppearance();
         const primitive = createBoxPrimitive(destination, appearance);
         animate(appearance);
