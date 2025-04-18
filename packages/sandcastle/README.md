@@ -1,13 +1,18 @@
-# React + TypeScript + Vite
+# CesiumJS Sandcastle
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This package is the application for Sandcastle.
 
-Currently, two official plugins are available:
+## Running/Building
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `npm run dev` from inside this directory to run the development server
+- `npm run build` will build this to static files in `/Apps/Sandcastle2` for hosting/access from the normal dev server
+- `npm run preview` will run the production build locally. <!--TODO: I'm not sure if we actually need this for our purposes -->
+
+Linting and style is managed under the project root's scripts.
 
 ## Expanding the ESLint configuration
+
+<!-- TODO: this section was auto-generated, should figure out if we want these suggestions then remove this -->
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
