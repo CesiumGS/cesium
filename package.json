@@ -115,7 +115,7 @@
     "build-watch": "gulp buildWatch",
     "build-ts": "gulp buildTs",
     "build-third-party": "gulp buildThirdParty",
-    "build-apps": "gulp buildApps",
+    "build-apps": "gulp buildApps && npm run build -w packages/sandcastle -- -l warn",
     "build-sandcastle": "npm run build --workspace packages/sandcastle",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
