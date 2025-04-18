@@ -7,7 +7,7 @@
   .card {
     display: flex;
     flex-direction: column;
-    background: #add8e6;
+    background: var(--ids-color-bg-info-muted);
     padding: 0.5rem;
     border-radius: 5px;
     cursor: pointer;

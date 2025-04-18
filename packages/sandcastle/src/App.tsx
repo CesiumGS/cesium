@@ -6,6 +6,7 @@ import { editor, KeyCode } from "monaco-editor";
 import pako from "pako";
 import Gallery, { GalleryDemo } from "./Gallery.js";
 import gallery_demos from "./gallery-index.ts";
+import { Button, Root } from "@itwin/itwinui-react/bricks";
 
 const local = {
   docTypes: [],
@@ -298,7 +299,7 @@ function applyBucket(
 //   true,
 // );
 
-const TYPES_URL = "http://localhost:5173/Cesium.d.ts";
+const TYPES_URL = "/Source/Cesium.d.ts";
 
 // function appendCode(code, run = true) {
 //   const codeMirror = getJsCodeMirror();
@@ -689,17 +690,17 @@ Sandcastle.addToolbarMenu(${variableName});`,
   const [darkTheme, setDarkTheme] = useState(false);
 
   return (
-    <>
-      <div className={`toolbar${darkTheme ? " dark" : ""}`}>
-        <button onClick={resetCode}>New</button>
-        <button onClick={runCode}>Run (F8)</button>
-        <button onClick={formatJs}>Format</button>
-        <button onClick={addButton}>Add button</button>
-        <button onClick={addToggle}>Add toggle</button>
-        <button onClick={addMenu}>Add menu</button>
-        <button onClick={share}>Share</button>
+    <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
+      <div className="toolbar">
+        <Button onClick={resetCode}>New</Button>
+        <Button onClick={runCode}>Run (F8)</Button>
+        <Button onClick={formatJs}>Format</Button>
+        <Button onClick={addButton}>Add button</Button>
+        <Button onClick={addToggle}>Add toggle</Button>
+        <Button onClick={addMenu}>Add menu</Button>
+        <Button onClick={share}>Share</Button>
         <div className="spacer"></div>
-        <button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</button>
+        <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
       </div>
       <div className="editor-container">
         <Editor
@@ -730,10 +731,10 @@ Sandcastle.addToolbarMenu(${variableName});`,
           allowFullScreen
         ></iframe>
       </div>
-      <div className={`gallery${darkTheme ? " dark" : ""}`}>
+      <div className="gallery">
         <Gallery demos={gallery_demos} loadDemo={(demo) => loadDemo(demo)} />
       </div>
-    </>
+    </Root>
   );
 }
 

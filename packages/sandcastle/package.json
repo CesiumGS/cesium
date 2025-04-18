@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@itwin/itwinui-react": "^5.0.0-alpha.14",
     "@monaco-editor/react": "^4.7.0",
     "monaco-editor": "^0.52.2",
     "pako": "^2.1.0",

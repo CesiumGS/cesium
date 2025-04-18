@@ -17,6 +17,7 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
+  background: var(--ids-color-bg-page-base);
 
   .spacer {
     flex-grow: 10;
@@ -35,17 +36,19 @@
   grid-area: viewer;
   width: 50vw;
   background-color: white;
-  background-image:
-    linear-gradient(45deg, #ccc 25%, transparent 25%),
-    linear-gradient(-45deg, #ccc 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #ccc 75%),
-    linear-gradient(-45deg, transparent 75%, #ccc 75%);
-  background-size: 20px 20px;
-  background-position:
-    0 0,
-    0 10px,
-    10px -10px,
-    -10px 0px;
+  background-image: var(--_rings), var(--_gradient);
+  --_rings: repeating-radial-gradient(
+    circle at center,
+    var(--ids-color-border-neutral-muted) 1px,
+    var(--ids-color-border-neutral-muted) 3px,
+    transparent 3px,
+    transparent 10px
+  );
+  --_gradient: linear-gradient(
+    180deg,
+    var(--ids-color-bg-page-base) 0%,
+    var(--ids-color-bg-page-depth) 100%
+  );
 
   .fullFrame {
     width: 100%;
@@ -56,8 +59,5 @@
 .gallery {
   grid-area: gallery;
   border-top: 1px solid grey;
-}
-
-.dark {
-  background: #333;
+  background: var(--ids-color-bg-page-depth);
 }

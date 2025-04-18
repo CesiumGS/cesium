@@ -1,10 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import "./reset.css";
+import "./reset.css"; // TODO: this may not be needed with itwin-ui
 import App from "./App.tsx";
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.getElementById("app-container")!).render(
   <StrictMode>
     <App />
   </StrictMode>,
