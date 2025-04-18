@@ -250,6 +250,11 @@ export async function buildTs() {
     workspaces = packageJson.workspaces;
   }
 
+  // TODO: we probably need to manage workspaces better now
+  workspaces = workspaces.filter(
+    (workspace) => !workspace.includes("sandcastle"),
+  );
+
   // Generate types for passed packages in order.
   const importModules = {};
   for (const workspace of workspaces) {

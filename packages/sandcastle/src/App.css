@@ -1,0 +1,63 @@
+#root {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template:
+    "toolbar toolbar"
+    "code viewer"
+    "gallery gallery";
+  grid-template-columns: 50% 50%;
+  grid-template-rows: max-content auto 150px;
+  /* TODO: this shouldn't be needed but it works for hacky code */
+  overflow: hidden;
+}
+
+.toolbar {
+  grid-area: toolbar;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--ids-color-bg-page-base);
+
+  .spacer {
+    flex-grow: 10;
+  }
+}
+
+.editor-container {
+  grid-area: code;
+
+  section {
+    border-top: 1px solid grey;
+  }
+}
+
+.viewer-bucket {
+  grid-area: viewer;
+  width: 50vw;
+  background-color: white;
+  background-image: var(--_rings), var(--_gradient);
+  --_rings: repeating-radial-gradient(
+    circle at center,
+    var(--ids-color-border-neutral-muted) 1px,
+    var(--ids-color-border-neutral-muted) 3px,
+    transparent 3px,
+    transparent 10px
+  );
+  --_gradient: linear-gradient(
+    180deg,
+    var(--ids-color-bg-page-base) 0%,
+    var(--ids-color-bg-page-depth) 100%
+  );
+
+  .fullFrame {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.gallery {
+  grid-area: gallery;
+  border-top: 1px solid grey;
+  background: var(--ids-color-bg-page-depth);
+}

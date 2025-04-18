@@ -1,0 +1,19 @@
+.gallery {
+  grid-area: gallery;
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem;
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--ids-color-bg-info-muted);
+    padding: 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+
+    img {
+      height: 80%;
+    }
+  }
+}
