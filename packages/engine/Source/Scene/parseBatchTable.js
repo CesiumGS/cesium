@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -45,10 +44,7 @@ function parseBatchTable(options) {
   const featureCount = options.count;
   const batchTable = options.batchTable;
   const binaryBody = options.binaryBody;
-  const parseAsPropertyAttributes = defaultValue(
-    options.parseAsPropertyAttributes,
-    false,
-  );
+  const parseAsPropertyAttributes = options.parseAsPropertyAttributes ?? false;
   const customAttributeOutput = options.customAttributeOutput;
 
   //>>includeStart('debug', pragmas.debug);

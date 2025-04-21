@@ -1,6 +1,5 @@
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
@@ -348,11 +347,7 @@ I3SNode.prototype._loadChildren = function () {
       childIndex++
     ) {
       const child = that._data.children[childIndex];
-      const newChild = new I3SNode(
-        that,
-        defaultValue(child.href, child),
-        false,
-      );
+      const newChild = new I3SNode(that, child.href ?? child, false);
       that._children.push(newChild);
       childPromises.push(newChild.load());
     }

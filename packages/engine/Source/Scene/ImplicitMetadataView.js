@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 
 /**
  * This class represents a single entity in the <code>MetadataTable</code> owned by an implicit subtree. The entity is specified by the entityId.
@@ -19,7 +19,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function ImplicitMetadataView(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const metadataTable = options.metadataTable;
   const metadataClass = options.class;
   const entityId = options.entityId;

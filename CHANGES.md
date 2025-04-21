@@ -1,18 +1,41 @@
 # Change Log
 
+## 1.129 - 2025-05-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- `QuadtreePrimitive.updateHeights` now converts position to Cartographic before invoking the callback, ensuring compatibility with change introduced by [commit 53889cb](https://github.com/CesiumGS/cesium/commit/53889cb) and preventing unnecessary computation. [#12555](https://github.com/CesiumGS/cesium/pull/12555)
+
 ## 1.128 - 2025-04-01
 
 ### @cesium/engine
 
 #### Breaking Changes :mega:
 
-- `Camera.getPickRay` was erroneous returning a result in camera coordinates. It is now returned in world coordinates as stated in the documentation. The result can be transformed using `Camera.inverseViewMatrix` to achieve the previous behavior.
+- `Camera.getPickRay` was erroneously returning a result in camera coordinates. It is now returned in world coordinates as stated in the documentation. The result can be transformed using `Camera.inverseViewMatrix` to achieve the previous behavior.
+- `VoxelMetadataOrder` has been made private, and the `metadataOrder` property has been removed from the `VoxelProvider` interface.
+
+#### Additions :tada:
+
+- Added support for loading iTwin data using share keys as an alternative to user-based OAuth. When using a share key, set `ITwinPlatform.defaultShareKey`. [#12530](https://github.com/CesiumGS/cesium/pull/12530)
+- Added `Frozen.EMPTY_OBJECT` and `Frozen.EMPTY_ARRAY` for use as default parameter values that avoid unnecessary memory allocations. [#12507](https://github.com/CesiumGS/cesium/pull/12507)
 
 #### Fixes :wrench:
 
-- Fixed broken Entity Tracking [sandcastle](https://sandcastle.cesium.com/?src=Entity%20tracking.html). [#12467](https://github.com/CesiumGS/cesium/pull/12467)
+- Fixed entity tracking for delayed datasource bounding spheres. [#12465](https://github.com/CesiumGS/cesium/issues/12465)
 - `Camera.getPickRay` now correctly returns a ray with origin in world coordinates in orthographic mode. [#12500](https://github.com/CesiumGS/cesium/pull/12500)
 - Fixed camera zooming in 3D orthographic mode when pixelRatio is not 1. [#12487](https://github.com/CesiumGS/cesium/pull/12487)
+- Fixed shape bounds and transforms for cylinder-shaped voxels. [#12522](https://github.com/CesiumGS/cesium/pull/12522)
+- Fixed metadata ordering for ellipsoid voxel tilesets. [#12544](https://github.com/CesiumGS/cesium/pull/12544)
+- Fixed an issue where clamped entities' height updates could stall when using high-resolution terrain due to a growing queue of tiles in `updateHeights` in `QuadtreePrimitive`. [#12476](https://github.com/CesiumGS/cesium/issues/12476)
+- Fixed `VaryingType.MAT3` definition. [#12524](https://github.com/CesiumGS/cesium/issues/12524)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- The `defaultValue` function has been deprecated, and will be removed in 1.134. Instead, use the logical OR (`||`) the [nullish coalescing (`??`)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) operator. See the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values) for usage information and examples.
+- `defaultValue.EMPTY_OBJECT` has been deprecated, and will be removed in 1.134. Instead, use `Frozen.EMPTY_OBJECT`. See the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values) for usage information and examples.
 
 ## 1.127 - 2025-03-03
 

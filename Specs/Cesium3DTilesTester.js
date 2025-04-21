@@ -1,7 +1,7 @@
 import {
   Cartesian3,
   Color,
-  defaultValue,
+  Frozen,
   defined,
   JulianDate,
   ImageBasedLighting,
@@ -120,15 +120,9 @@ const defaultIbl = new ImageBasedLighting({
 });
 
 Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
-  options = defaultValue(options, {});
-  options.cullRequestsWhileMoving = defaultValue(
-    options.cullRequestsWhileMoving,
-    false,
-  );
-  options.imageBasedLighting = defaultValue(
-    options.imageBasedLighting,
-    defaultIbl,
-  );
+  options = options ?? {};
+  options.cullRequestsWhileMoving = options.cullRequestsWhileMoving ?? false;
+  options.imageBasedLighting = options.imageBasedLighting ?? defaultIbl;
   options.environmentMapOptions = {
     enabled: false, // disable other diffuse lighting by default
     ...options.environmentMapOptions,
@@ -170,10 +164,10 @@ Cesium3DTilesTester.tileDestroys = function (scene, url, options) {
 
 Cesium3DTilesTester.generateBatchedTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const magic = defaultValue(options.magic, [98, 51, 100, 109]);
-  const version = defaultValue(options.version, 1);
-  const featuresLength = defaultValue(options.featuresLength, 1);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const magic = options.magic ?? [98, 51, 100, 109];
+  const version = options.version ?? 1;
+  const featuresLength = options.featuresLength ?? 1;
   const featureTableJson = {
     BATCH_LENGTH: featuresLength,
   };
@@ -207,12 +201,12 @@ Cesium3DTilesTester.generateBatchedTileBuffer = function (options) {
 
 Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const magic = defaultValue(options.magic, [105, 51, 100, 109]);
-  const version = defaultValue(options.version, 1);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const magic = options.magic ?? [105, 51, 100, 109];
+  const version = options.version ?? 1;
 
-  const gltfFormat = defaultValue(options.gltfFormat, 1);
-  const gltfUri = defaultValue(options.gltfUri, "model.gltf");
+  const gltfFormat = options.gltfFormat ?? 1;
+  const gltfUri = options.gltfUri ?? "model.gltf";
   const gltfUriByteLength = gltfUri.length;
 
   const featureTableJson = options.featureTableJson;
@@ -222,7 +216,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
       featureTableJsonString = JSON.stringify(featureTableJson);
     }
   } else {
-    const featuresLength = defaultValue(options.featuresLength, 1);
+    const featuresLength = options.featuresLength ?? 1;
     featureTableJsonString = JSON.stringify({
       INSTANCES_LENGTH: featuresLength,
       POSITION: new Array(featuresLength * 3).fill(0),
@@ -231,10 +225,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
   featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 8);
   const featureTableJsonByteLength = featureTableJsonString.length;
 
-  const featureTableBinary = defaultValue(
-    options.featureTableBinary,
-    new Uint8Array(0),
-  );
+  const featureTableBinary = options.featureTableBinary ?? new Uint8Array(0);
   const featureTableBinaryByteLength = featureTableBinary.length;
 
   const batchTableJson = options.batchTableJson;
@@ -245,10 +236,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
   batchTableJsonString = padStringToByteAlignment(batchTableJsonString, 8);
   const batchTableJsonByteLength = batchTableJsonString.length;
 
-  const batchTableBinary = defaultValue(
-    options.batchTableBinary,
-    new Uint8Array(0),
-  );
+  const batchTableBinary = options.batchTableBinary ?? new Uint8Array(0);
   const batchTableBinaryByteLength = batchTableBinary.length;
 
   const headerByteLength = 32;
@@ -300,9 +288,9 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
 
 Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const magic = defaultValue(options.magic, [112, 110, 116, 115]);
-  const version = defaultValue(options.version, 1);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const magic = options.magic ?? [112, 110, 116, 115];
+  const version = options.version ?? 1;
   let featureTableJson = options.featureTableJson;
   if (!defined(featureTableJson)) {
     featureTableJson = {
@@ -315,10 +303,8 @@ Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
 
   let featureTableJsonString = JSON.stringify(featureTableJson);
   featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 4);
-  const featureTableJsonByteLength = defaultValue(
-    options.featureTableJsonByteLength,
-    featureTableJsonString.length,
-  );
+  const featureTableJsonByteLength =
+    options.featureTableJsonByteLength ?? featureTableJsonString.length;
 
   const featureTableBinary = new ArrayBuffer(12); // Enough space to hold 3 floats
   const featureTableBinaryByteLength = featureTableBinary.byteLength;
@@ -356,10 +342,10 @@ Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
 
 Cesium3DTilesTester.generateCompositeTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const magic = defaultValue(options.magic, [99, 109, 112, 116]);
-  const version = defaultValue(options.version, 1);
-  const tiles = defaultValue(options.tiles, []);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const magic = options.magic ?? [99, 109, 112, 116];
+  const version = options.version ?? 1;
+  const tiles = options.tiles ?? Frozen.EMPTY_ARRAY;
   const tilesLength = tiles.length;
 
   let i;
@@ -393,20 +379,20 @@ Cesium3DTilesTester.generateCompositeTileBuffer = function (options) {
 
 Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const magic = defaultValue(options.magic, [118, 99, 116, 114]);
-  const version = defaultValue(options.version, 1);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const magic = options.magic ?? [118, 99, 116, 114];
+  const version = options.version ?? 1;
 
   let featureTableJsonString;
   let featureTableJsonByteLength = 0;
-  const defineFeatureTable = defaultValue(options.defineFeatureTable, true);
+  const defineFeatureTable = options.defineFeatureTable ?? true;
   if (defineFeatureTable) {
-    const defineRegion = defaultValue(options.defineRegion, true);
+    const defineRegion = options.defineRegion ?? true;
     const featureTableJson = {
       REGION: defineRegion ? [-1.0, -1.0, 1.0, 1.0, -1.0, 1.0] : undefined,
-      POLYGONS_LENGTH: defaultValue(options.polygonsLength, 0),
-      POLYLINES_LENGTH: defaultValue(options.polylinesLength, 0),
-      POINTS_LENGTH: defaultValue(options.pointsLength, 0),
+      POLYGONS_LENGTH: options.polygonsLength ?? 0,
+      POLYLINES_LENGTH: options.polylinesLength ?? 0,
+      POINTS_LENGTH: options.pointsLength ?? 0,
       POLYGON_BATCH_IDS: options.polygonBatchIds,
       POLYLINE_BATCH_IDS: options.polylineBatchIds,
       POINT_BATCH_IDS: options.pointBatchIds,
@@ -446,19 +432,19 @@ Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
 
 Cesium3DTilesTester.generateGeometryTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const magic = defaultValue(options.magic, [103, 101, 111, 109]);
-  const version = defaultValue(options.version, 1);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const magic = options.magic ?? [103, 101, 111, 109];
+  const version = options.version ?? 1;
 
   let featureTableJsonString;
   let featureTableJsonByteLength = 0;
-  const defineFeatureTable = defaultValue(options.defineFeatureTable, true);
+  const defineFeatureTable = options.defineFeatureTable ?? true;
   if (defineFeatureTable) {
     const featureTableJson = {
-      BOXES_LENGTH: defaultValue(options.boxesLength, 0),
-      CYLINDERS_LENGTH: defaultValue(options.cylindersLength, 0),
-      ELLIPSOIDS_LENGTH: defaultValue(options.ellipsoidsLength, 0),
-      SPHERES_LENGTH: defaultValue(options.spheresLength, 0),
+      BOXES_LENGTH: options.boxesLength ?? 0,
+      CYLINDERS_LENGTH: options.cylindersLength ?? 0,
+      ELLIPSOIDS_LENGTH: options.ellipsoidsLength ?? 0,
+      SPHERES_LENGTH: options.spheresLength ?? 0,
       BOX_BATCH_IDS: options.boxBatchIds,
       CYLINDER_BATCH_IDS: options.cylinderBatchIds,
       ELLIPSOID_BATCH_IDS: options.ellipsoidBatchIds,

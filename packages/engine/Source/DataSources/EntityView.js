@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRange from "../Core/HeadingPitchRange.js";
@@ -344,7 +343,7 @@ function EntityView(entity, scene, ellipsoid) {
    * The ellipsoid to use for orienting the camera.
    * @type {Ellipsoid}
    */
-  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  this.ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   /**
    * The bounding sphere of the object.

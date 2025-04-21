@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
@@ -21,7 +21,7 @@ import MetadataTable from "./MetadataTable.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function parseFeatureMetadataLegacy(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const extension = options.extension;
 
   // The calling code is responsible for loading the schema.

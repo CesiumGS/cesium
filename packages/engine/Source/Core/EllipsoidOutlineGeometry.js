@@ -1,7 +1,7 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -47,17 +47,17 @@ const sin = Math.sin;
  * const geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
  */
 function EllipsoidOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const radii = defaultValue(options.radii, defaultRadii);
-  const innerRadii = defaultValue(options.innerRadii, radii);
-  const minimumClock = defaultValue(options.minimumClock, 0.0);
-  const maximumClock = defaultValue(options.maximumClock, CesiumMath.TWO_PI);
-  const minimumCone = defaultValue(options.minimumCone, 0.0);
-  const maximumCone = defaultValue(options.maximumCone, CesiumMath.PI);
-  const stackPartitions = Math.round(defaultValue(options.stackPartitions, 10));
-  const slicePartitions = Math.round(defaultValue(options.slicePartitions, 8));
-  const subdivisions = Math.round(defaultValue(options.subdivisions, 128));
+  const radii = options.radii ?? defaultRadii;
+  const innerRadii = options.innerRadii ?? radii;
+  const minimumClock = options.minimumClock ?? 0.0;
+  const maximumClock = options.maximumClock ?? CesiumMath.TWO_PI;
+  const minimumCone = options.minimumCone ?? 0.0;
+  const maximumCone = options.maximumCone ?? CesiumMath.PI;
+  const stackPartitions = Math.round(options.stackPartitions ?? 10);
+  const slicePartitions = Math.round(options.slicePartitions ?? 8);
+  const subdivisions = Math.round(options.subdivisions ?? 128);
 
   //>>includeStart('debug', pragmas.debug);
   if (stackPartitions < 1) {
@@ -119,7 +119,7 @@ EllipsoidOutlineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value._radii, array, startingIndex);
   startingIndex += Cartesian3.packedLength;
@@ -134,7 +134,7 @@ EllipsoidOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._stackPartitions;
   array[startingIndex++] = value._slicePartitions;
   array[startingIndex++] = value._subdivisions;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -169,7 +169,7 @@ EllipsoidOutlineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const radii = Cartesian3.unpack(array, startingIndex, scratchRadii);
   startingIndex += Cartesian3.packedLength;

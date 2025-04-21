@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 /**
@@ -33,7 +32,7 @@ import defined from "./defined.js";
  * @function
  */
 function combine(object1, object2, deep) {
-  deep = defaultValue(deep, false);
+  deep = deep ?? false;
 
   const result = {};
 

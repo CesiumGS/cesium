@@ -3,7 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -275,7 +275,7 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
       color = Color.fromCssColorString(cssColor);
     }
 
-    size = defaultValue(sizes[properties["marker-size"]], size);
+    size = sizes[properties["marker-size"]] ?? size;
     const markerSymbol = properties["marker-symbol"];
     if (defined(markerSymbol)) {
       symbol = markerSymbol;
@@ -914,7 +914,7 @@ function preload(that, data, options, clear) {
   //>>includeEnd('debug');
 
   DataSource.setLoading(that, true);
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   // User specified credit
   let credit = options.credit;
@@ -928,7 +928,7 @@ function preload(that, data, options, clear) {
   if (typeof data === "string" || data instanceof Resource) {
     data = Resource.createIfNeeded(data);
     promise = data.fetchJson();
-    sourceUri = defaultValue(sourceUri, data.getUrlComponent());
+    sourceUri = sourceUri ?? data.getUrlComponent();
 
     // Add resource credits to our list of credits to display
     const resourceCredits = that._resourceCredits;
@@ -942,20 +942,20 @@ function preload(that, data, options, clear) {
   }
 
   options = {
-    describe: defaultValue(options.describe, defaultDescribeProperty),
-    markerSize: defaultValue(options.markerSize, defaultMarkerSize),
-    markerSymbol: defaultValue(options.markerSymbol, defaultMarkerSymbol),
-    markerColor: defaultValue(options.markerColor, defaultMarkerColor),
+    describe: options.describe ?? defaultDescribeProperty,
+    markerSize: options.markerSize ?? defaultMarkerSize,
+    markerSymbol: options.markerSymbol ?? defaultMarkerSymbol,
+    markerColor: options.markerColor ?? defaultMarkerColor,
     strokeWidthProperty: new ConstantProperty(
-      defaultValue(options.strokeWidth, defaultStrokeWidth),
+      options.strokeWidth ?? defaultStrokeWidth,
     ),
     strokeMaterialProperty: new ColorMaterialProperty(
-      defaultValue(options.stroke, defaultStroke),
+      options.stroke ?? defaultStroke,
     ),
     fillMaterialProperty: new ColorMaterialProperty(
-      defaultValue(options.fill, defaultFill),
+      options.fill ?? defaultFill,
     ),
-    clampToGround: defaultValue(options.clampToGround, defaultClampToGround),
+    clampToGround: options.clampToGround ?? defaultClampToGround,
   };
 
   return Promise.resolve(promise)

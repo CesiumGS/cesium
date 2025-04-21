@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CzmBuiltins from "../Shaders/Builtin/CzmBuiltins.js";
@@ -329,7 +329,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
  * @private
  */
 function ShaderSource(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const pickColorQualifier = options.pickColorQualifier;
 
   //>>includeStart('debug', pragmas.debug);
@@ -347,7 +347,7 @@ function ShaderSource(options) {
   this.defines = defined(options.defines) ? options.defines.slice(0) : [];
   this.sources = defined(options.sources) ? options.sources.slice(0) : [];
   this.pickColorQualifier = pickColorQualifier;
-  this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
+  this.includeBuiltIns = options.includeBuiltIns ?? true;
 }
 
 ShaderSource.prototype.clone = function () {

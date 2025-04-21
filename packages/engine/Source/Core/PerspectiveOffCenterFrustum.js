@@ -1,7 +1,7 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import CullingVolume from "./CullingVolume.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -37,7 +37,7 @@ import Matrix4 from "./Matrix4.js";
  * @see PerspectiveFrustum
  */
 function PerspectiveOffCenterFrustum(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * Defines the left clipping plane.
@@ -76,7 +76,7 @@ function PerspectiveOffCenterFrustum(options) {
    * @type {number}
    * @default 1.0
    */
-  this.near = defaultValue(options.near, 1.0);
+  this.near = options.near ?? 1.0;
   this._near = this.near;
 
   /**
@@ -84,7 +84,7 @@ function PerspectiveOffCenterFrustum(options) {
    * @type {number}
    * @default 500000000.0
    */
-  this.far = defaultValue(options.far, 500000000.0);
+  this.far = options.far ?? 500000000.0;
   this._far = this.far;
 
   this._cullingVolume = new CullingVolume();

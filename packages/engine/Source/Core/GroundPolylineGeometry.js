@@ -6,7 +6,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -72,7 +72,7 @@ const WALL_INITIAL_MAX_HEIGHT = 1000.0;
  * });
  */
 function GroundPolylineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
 
   //>>includeStart('debug', pragmas.debug);
@@ -94,7 +94,7 @@ function GroundPolylineGeometry(options) {
    * The screen space width in pixels.
    * @type {number}
    */
-  this.width = defaultValue(options.width, 1.0); // Doesn't get packed, not necessary for computing geometry.
+  this.width = options.width ?? 1.0; // Doesn't get packed, not necessary for computing geometry.
 
   this._positions = positions;
 
@@ -104,7 +104,7 @@ function GroundPolylineGeometry(options) {
    * @type {boolean}
    * @default 9999.0
    */
-  this.granularity = defaultValue(options.granularity, 9999.0);
+  this.granularity = options.granularity ?? 9999.0;
 
   /**
    * Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
@@ -112,14 +112,14 @@ function GroundPolylineGeometry(options) {
    * @type {boolean}
    * @default false
    */
-  this.loop = defaultValue(options.loop, false);
+  this.loop = options.loop ?? false;
 
   /**
    * The type of path the polyline must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
    * @type {ArcType}
    * @default ArcType.GEODESIC
    */
-  this.arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+  this.arcType = options.arcType ?? ArcType.GEODESIC;
 
   this._ellipsoid = Ellipsoid.default;
 
@@ -297,7 +297,7 @@ GroundPolylineGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  let index = defaultValue(startingIndex, 0);
+  let index = startingIndex ?? 0;
 
   const positions = value._positions;
   const positionsLength = positions.length;
@@ -335,7 +335,7 @@ GroundPolylineGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  let index = defaultValue(startingIndex, 0);
+  let index = startingIndex ?? 0;
   const positionsLength = array[index++];
   const positions = new Array(positionsLength);
 

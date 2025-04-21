@@ -23,7 +23,7 @@ import InfoBoxViewModel from "./InfoBoxViewModel.js";
 function InfoBox(container) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("container", container);
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   container = getElement(container);
 

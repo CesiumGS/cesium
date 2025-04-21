@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
@@ -22,21 +21,21 @@ function Cartographic(longitude, latitude, height) {
    * @type {number}
    * @default 0.0
    */
-  this.longitude = defaultValue(longitude, 0.0);
+  this.longitude = longitude ?? 0.0;
 
   /**
    * The latitude, in radians.
    * @type {number}
    * @default 0.0
    */
-  this.latitude = defaultValue(latitude, 0.0);
+  this.latitude = latitude ?? 0.0;
 
   /**
    * The height, in meters, above the ellipsoid.
    * @type {number}
    * @default 0.0
    */
-  this.height = defaultValue(height, 0.0);
+  this.height = height ?? 0.0;
 }
 
 /**
@@ -55,7 +54,7 @@ Cartographic.fromRadians = function (longitude, latitude, height, result) {
   Check.typeOf.number("latitude", latitude);
   //>>includeEnd('debug');
 
-  height = defaultValue(height, 0.0);
+  height = height ?? 0.0;
 
   if (!defined(result)) {
     return new Cartographic(longitude, latitude, height);
@@ -240,7 +239,7 @@ Cartographic.equals = function (left, right) {
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Cartographic.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||

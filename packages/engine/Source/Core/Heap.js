@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 /**
@@ -108,7 +107,7 @@ function swap(array, a, b) {
  * @param {number} [length] The length to resize internal array to. Defaults to the current length of the heap.
  */
 Heap.prototype.reserve = function (length) {
-  length = defaultValue(length, this._length);
+  length = length ?? this._length;
   this._array.length = length;
 };
 
@@ -118,7 +117,7 @@ Heap.prototype.reserve = function (length) {
  * @param {number} [index=0] The starting index to heapify from.
  */
 Heap.prototype.heapify = function (index) {
-  index = defaultValue(index, 0);
+  index = index ?? 0;
   const length = this._length;
   const comparator = this._comparator;
   const array = this._array;
@@ -208,7 +207,7 @@ Heap.prototype.insert = function (element) {
  * @returns {*} The specified element of the heap.
  */
 Heap.prototype.pop = function (index) {
-  index = defaultValue(index, 0);
+  index = index ?? 0;
   if (this._length === 0) {
     return undefined;
   }

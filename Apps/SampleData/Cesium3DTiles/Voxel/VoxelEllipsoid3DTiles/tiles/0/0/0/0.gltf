@@ -2,6 +2,40 @@
   "asset": {
     "version": "2.0"
   },
+  "extensionsUsed": [
+    "EXT_primitive_voxels",
+    "EXT_structural_metadata"
+  ],
+  "extensionsRequired": [
+    "EXT_primitive_voxels",
+    "EXT_structural_metadata"
+  ],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schema": {
+        "classes": {
+          "voxel": {
+            "properties": {
+              "a": {
+                "type": "VEC4",
+                "componentType": "FLOAT32"
+              }
+            }
+          }
+        }
+      },
+      "propertyAttributes": [
+        {
+          "class": "voxel",
+          "properties": {
+            "a": {
+              "attribute": "_DATA"
+            }
+          }
+        }
+      ]
+    }
+  },
   "scene": 0,
   "scenes": [
     {
@@ -19,82 +53,53 @@
     {
       "primitives": [
         {
-          "mode": 2147483649,
           "attributes": {
-            "_a": 0
+            "_DATA": 0
           },
+          "mode": 2147483647,
           "extensions": {
             "EXT_primitive_voxels": {
+              "shape": 0,
               "dimensions": [
                 2,
                 2,
                 2
-              ],
-              "bounds": {
-                "min": [
-                  0.0,
-                  0.0,
-                  -1.0
-                ],
-                "max": [
-                  1.0,
-                  1.0,
-                  0.0
-                ]
-              }
+              ]
+            },
+            "EXT_structural_metadata": {
+              "propertyAttributes": [0]
             }
           }
         }
       ]
     }
   ],
-  "extensionsUsed": [
-    "EXT_primitive_voxels",
-    "EXT_structural_metadata"
-  ],
-  "extensionsRequired": [
-    "EXT_primitive_voxels",
-    "EXT_structural_metadata"
-  ],
-  "extensions": {
-    "EXT_structural_metadata": {
-      "schemaUri": "../../../../schema.json",
-      "propertyAttributes": [
-        {
-          "class": "voxel",
-          "properties": {
-            "a": {
-              "attribute": "_a"
-            }
-          }
-        }
-      ]
-    }
-  },
   "accessors": [
     {
       "bufferView": 0,
-      "type": "SCALAR",
+      "byteOffset": 0,
       "componentType": 5126,
-      "min": [
-        0.0
-      ],
+      "count": 8,
       "max": [
-        1.0
+        1.0, 1.0, 1.0, 1.0
       ],
-      "count": 8
+      "min": [
+        0.0, 0.0, 0.0, 0.0
+      ],
+      "type": "VEC4"
     }
   ],
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 32
+      "byteOffset": 0,
+      "byteLength": 128
     }
   ],
   "buffers": [
     {
       "uri": "a.bin",
-      "byteLength": 32
+      "byteLength": 128
     }
   ]
 }

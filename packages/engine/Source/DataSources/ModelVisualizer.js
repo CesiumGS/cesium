@@ -4,7 +4,6 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -471,7 +470,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
 
   const scene = this._scene;
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
   if (hasHeightReference) {

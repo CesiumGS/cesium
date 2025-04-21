@@ -1,5 +1,5 @@
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -57,15 +57,15 @@ const defaultCredit = new Credit(
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function OpenStreetMapImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://tile.openstreetmap.org/"),
+    options.url ?? "https://tile.openstreetmap.org/",
   );
   resource.appendForwardSlash();
   resource.url += `{z}/{x}/{y}${
     options.retinaTiles ? "@2x" : ""
-  }.${defaultValue(options.fileExtension, "png")}`;
+  }.${options.fileExtension ?? "png"}`;
 
   const tilingScheme = new WebMercatorTilingScheme({
     ellipsoid: options.ellipsoid,
@@ -74,10 +74,10 @@ function OpenStreetMapImageryProvider(options) {
   const tileWidth = 256;
   const tileHeight = 256;
 
-  const minimumLevel = defaultValue(options.minimumLevel, 0);
+  const minimumLevel = options.minimumLevel ?? 0;
   const maximumLevel = options.maximumLevel;
 
-  const rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+  const rectangle = options.rectangle ?? tilingScheme.rectangle;
 
   // Check the number of tiles at the minimum level.  If it's more than four,
   // throw an exception, because starting at the higher minimum
@@ -100,7 +100,7 @@ function OpenStreetMapImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
-  let credit = defaultValue(options.credit, defaultCredit);
+  let credit = options.credit ?? defaultCredit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }

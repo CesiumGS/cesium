@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import BufferLoader from "./BufferLoader.js";
@@ -146,7 +146,7 @@ ResourceCache.unload = function (resourceLoader) {
  * @private
  */
 ResourceCache.getSchemaLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { schema, resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -188,7 +188,7 @@ ResourceCache.getSchemaLoader = function (options) {
  * @private
  */
 ResourceCache.getEmbeddedBufferLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { parentResource, bufferId, typedArray } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -228,7 +228,7 @@ ResourceCache.getEmbeddedBufferLoader = function (options) {
  * @private
  */
 ResourceCache.getExternalBufferLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -265,7 +265,7 @@ ResourceCache.getExternalBufferLoader = function (options) {
  * @private
  */
 ResourceCache.getGltfJsonLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltfResource, baseResource, typedArray, gltfJson } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -307,7 +307,7 @@ ResourceCache.getGltfJsonLoader = function (options) {
  * @private
  */
 ResourceCache.getBufferViewLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, bufferViewId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -355,7 +355,7 @@ ResourceCache.getBufferViewLoader = function (options) {
  * @private
  */
 ResourceCache.getDracoLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, primitive, draco, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -392,7 +392,7 @@ ResourceCache.getDracoLoader = function (options) {
 };
 
 ResourceCache.getSpzLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, primitive, spz, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -453,7 +453,7 @@ ResourceCache.getSpzLoader = function (options) {
  * @private
  */
 ResourceCache.getVertexBufferLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     gltfResource,
@@ -589,7 +589,7 @@ function hasDracoCompression(draco, semantic) {
  * @private
  */
 ResourceCache.getIndexBufferLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     accessorId,
@@ -662,7 +662,7 @@ ResourceCache.getIndexBufferLoader = function (options) {
  * @private
  */
 ResourceCache.getImageLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, imageId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -712,7 +712,7 @@ ResourceCache.getImageLoader = function (options) {
  * @private
  */
 ResourceCache.getTextureLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     textureInfo,

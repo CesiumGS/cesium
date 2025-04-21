@@ -8,7 +8,7 @@ import {
   CullFace,
   DepthFunction,
   DrawCommand,
-  defaultValue,
+  Frozen,
   defined,
   GeographicProjection,
   Math as CesiumMath,
@@ -57,12 +57,12 @@ describe(
     };
 
     function mockModel(options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
-      const modelColor = defaultValue(options.color, Color.WHITE);
-      const silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
-      const silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
-      const skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
+      const modelColor = options.color ?? Color.WHITE;
+      const silhouetteColor = options.silhouetteColor ?? Color.RED;
+      const silhouetteSize = options.silhouetteSize ?? 0.0;
+      const skipLevelOfDetail = options.skipLevelOfDetail ?? false;
 
       return {
         sceneGraph: {
@@ -100,7 +100,7 @@ describe(
     }
 
     function mockRenderResources(options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
       const model = mockModel(options.modelOptions);
       const resources = {
@@ -117,10 +117,8 @@ describe(
         hasSkipLevelOfDetail: model.hasSkipLevelOfDetail(),
       };
 
-      const boundingSphereTransform2D = defaultValue(
-        options.boundingSphereTransform2D,
-        Matrix4.IDENTITY,
-      );
+      const boundingSphereTransform2D =
+        options.boundingSphereTransform2D ?? Matrix4.IDENTITY;
 
       const sceneGraph = resources.model.sceneGraph;
       sceneGraph._boundingSphere2D = BoundingSphere.transform(
@@ -133,12 +131,10 @@ describe(
     }
 
     function createDrawCommand(options) {
-      options = defaultValue(options, {});
+      options = options ?? {};
 
-      options.modelMatrix = defaultValue(
-        options.modelMatrix,
-        Matrix4.clone(Matrix4.IDENTITY),
-      );
+      options.modelMatrix =
+        options.modelMatrix ?? Matrix4.clone(Matrix4.IDENTITY);
 
       const boundingSphere = new BoundingSphere(Cartesian3.ZERO, 1.0);
       options.boundingVolume = BoundingSphere.transform(
@@ -147,17 +143,16 @@ describe(
         boundingSphere,
       );
 
-      options.renderState = defaultValue(
-        options.renderState,
+      options.renderState =
+        options.renderState ??
         RenderState.fromCache({
           depthTest: {
             enabled: true,
             func: DepthFunction.LESS_OR_EQUAL,
           },
-        }),
-      );
+        });
 
-      options.pass = defaultValue(options.pass, Pass.OPAQUE);
+      options.pass = options.pass ?? Pass.OPAQUE;
       options.uniformMap = {};
 
       return new DrawCommand(options);
@@ -176,7 +171,7 @@ describe(
 
     // Creates a ModelDrawCommand with the specified derived commands.
     function createModelDrawCommand(options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
       const deriveSilhouette = options.deriveSilhouette;
       const derive2D = options.derive2D;
@@ -232,22 +227,19 @@ describe(
 
     function verifyDerivedCommandsDefined(drawCommand, expected) {
       // Verify if the translucent command is defined / undefined.
-      const translucentDefined = defaultValue(expected.translucent, false);
+      const translucentDefined = expected.translucent ?? false;
       const translucentCommand = drawCommand._translucentCommand;
       expect(defined(translucentCommand)).toBe(translucentDefined);
 
       // Verify if the skip level of detail commands are defined / undefined.
-      const skipLevelOfDetailDefined = defaultValue(
-        expected.skipLevelOfDetail,
-        false,
-      );
+      const skipLevelOfDetailDefined = expected.skipLevelOfDetail ?? false;
       const skipLodBackfaceCommand = drawCommand._skipLodBackfaceCommand;
       const skipLodStencilCommand = drawCommand._skipLodStencilCommand;
       expect(defined(skipLodBackfaceCommand)).toBe(skipLevelOfDetailDefined);
       expect(defined(skipLodStencilCommand)).toBe(skipLevelOfDetailDefined);
 
       // Verify if the silhouette commands are defined / undefined.
-      const silhouetteDefined = defaultValue(expected.silhouette, false);
+      const silhouetteDefined = expected.silhouette ?? false;
       const silhouetteModelCommand = drawCommand._silhouetteModelCommand;
       const silhouetteColorCommand = drawCommand._silhouetteColorCommand;
       expect(defined(silhouetteModelCommand)).toBe(silhouetteDefined);

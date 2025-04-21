@@ -5,7 +5,7 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import InterpolationType from "../Core/InterpolationType.js";
@@ -195,7 +195,7 @@ const GltfLoaderState = {
  * @private
  */
 function GltfLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltfResource,
     typedArray,
@@ -860,7 +860,7 @@ async function loadAccessorBufferView(
     bufferViewLoader.typedArray,
   );
 
-  useQuaternion = defaultValue(useQuaternion, false);
+  useQuaternion = useQuaternion ?? false;
   loadAccessorValues(accessor, typedArray, values, useQuaternion);
 }
 
@@ -1009,7 +1009,7 @@ function setQuantizationFromWeb3dQuantizedAttributes(
 function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   const accessor = gltf.accessors[accessorId];
   const MathType = AttributeType.getMathType(accessor.type);
-  const normalized = defaultValue(accessor.normalized, false);
+  const normalized = accessor.normalized ?? false;
 
   const attribute = new Attribute();
   attribute.name = name;
@@ -1742,10 +1742,7 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 function loadMaterial(loader, gltfMaterial, frameState) {
   const material = new Material();
 
-  const extensions = defaultValue(
-    gltfMaterial.extensions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const extensions = gltfMaterial.extensions ?? Frozen.EMPTY_OBJECT;
   const pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
   const pbrSpecular = extensions.KHR_materials_specular;
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
@@ -1866,9 +1863,9 @@ function loadFeatureIdImplicitRangeLegacy(
   featureIdRange.featureCount = featureCount;
 
   // constant/divisor was renamed to offset/repeat
-  featureIdRange.offset = defaultValue(featureIds.constant, 0);
+  featureIdRange.offset = featureIds.constant ?? 0;
   // The default is now undefined
-  const divisor = defaultValue(featureIds.divisor, 0);
+  const divisor = featureIds.divisor ?? 0;
   featureIdRange.repeat = divisor === 0 ? undefined : divisor;
 
   featureIdRange.positionalLabel = positionalLabel;
@@ -2010,10 +2007,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  const extensions = defaultValue(
-    gltfPrimitive.extensions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
 
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
@@ -2332,10 +2326,8 @@ function loadInstances(loader, nodeExtensions, frameState) {
     }
   }
 
-  const instancingExtExtensions = defaultValue(
-    instancingExtension.extensions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const instancingExtExtensions =
+    instancingExtension.extensions ?? Frozen.EMPTY_OBJECT;
   const instanceFeatures = nodeExtensions.EXT_instance_features;
   const featureMetadataLegacy = instancingExtExtensions.EXT_feature_metadata;
 
@@ -2433,10 +2425,7 @@ function loadNode(loader, gltfNode, frameState) {
   node.rotation = fromArray(Quaternion, gltfNode.rotation);
   node.scale = fromArray(Cartesian3, gltfNode.scale);
 
-  const nodeExtensions = defaultValue(
-    gltfNode.extensions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
 
@@ -2470,7 +2459,7 @@ function loadNode(loader, gltfNode, frameState) {
 
     // If the node has no weights array, it will look for the weights array provided
     // by the mesh. If both are undefined, it will default to an array of zero weights.
-    const morphWeights = defaultValue(gltfNode.weights, mesh.weights);
+    const morphWeights = gltfNode.weights ?? mesh.weights;
     const targets = node.primitives[0].morphTargets;
 
     // Since meshes are not stored as separate components, the mesh weights will still
@@ -2600,10 +2589,8 @@ function loadAnimationSampler(loader, gltfSampler) {
   animationSampler.input = loadAccessor(loader, inputAccessor);
 
   const gltfInterpolation = gltfSampler.interpolation;
-  animationSampler.interpolation = defaultValue(
-    InterpolationType[gltfInterpolation],
-    InterpolationType.LINEAR,
-  );
+  animationSampler.interpolation =
+    InterpolationType[gltfInterpolation] ?? InterpolationType.LINEAR;
 
   const outputAccessor = accessors[gltfSampler.output];
   animationSampler.output = loadAccessor(loader, outputAccessor, true);
@@ -2698,7 +2685,7 @@ function loadArticulation(articulationJson) {
 }
 
 function loadArticulations(gltf) {
-  const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
+  const extensions = gltf.extensions ?? Frozen.EMPTY_OBJECT;
   const articulationJsons = extensions.AGI_articulations?.articulations;
   if (!defined(articulationJsons)) {
     return [];
@@ -2711,7 +2698,7 @@ function getSceneNodeIds(gltf) {
   if (defined(gltf.scenes) && defined(gltf.scene)) {
     nodesIds = gltf.scenes[gltf.scene].nodes;
   }
-  nodesIds = defaultValue(nodesIds, gltf.nodes);
+  nodesIds = nodesIds ?? gltf.nodes;
   nodesIds = defined(nodesIds) ? nodesIds : [];
   return nodesIds;
 }
@@ -2744,7 +2731,7 @@ const scratchCenter = new Cartesian3();
  */
 function parse(loader, frameState) {
   const gltf = loader.gltfJson;
-  const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
+  const extensions = gltf.extensions ?? Frozen.EMPTY_OBJECT;
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
   const cesiumRtcExtension = extensions.CESIUM_RTC;

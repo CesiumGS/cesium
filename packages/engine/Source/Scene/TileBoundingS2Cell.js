@@ -9,7 +9,6 @@ import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeomet
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Check from "../Core/Check.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
@@ -40,9 +39,9 @@ function TileBoundingS2Cell(options) {
   //>>includeEnd('debug');
 
   const s2Cell = S2Cell.fromToken(options.token);
-  const minimumHeight = defaultValue(options.minimumHeight, 0.0);
-  const maximumHeight = defaultValue(options.maximumHeight, 0.0);
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const minimumHeight = options.minimumHeight ?? 0.0;
+  const maximumHeight = options.maximumHeight ?? 0.0;
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
 
   this.s2Cell = s2Cell;
   this.minimumHeight = minimumHeight;

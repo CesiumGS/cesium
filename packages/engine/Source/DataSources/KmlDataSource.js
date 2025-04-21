@@ -11,7 +11,7 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -401,10 +401,8 @@ function loadXmlFromZip(entry, uriResolver) {
 }
 
 function loadDataUriFromZip(entry, uriResolver) {
-  const mimeType = defaultValue(
-    MimeTypes.detectFromFilename(entry.filename),
-    "application/octet-stream",
-  );
+  const mimeType =
+    MimeTypes.detectFromFilename(entry.filename) ?? "application/octet-stream";
   return Promise.resolve(entry.getData(new zip.Data64URIWriter(mimeType))).then(
     function (dataUri) {
       uriResolver[entry.filename] = dataUri;
@@ -851,8 +849,8 @@ function getIconHref(
     const palette = href.charAt(21);
 
     // Get the icon number
-    let x = defaultValue(queryNumericValue(iconNode, "x", namespaces.gx), 0);
-    let y = defaultValue(queryNumericValue(iconNode, "y", namespaces.gx), 0);
+    let x = queryNumericValue(iconNode, "x", namespaces.gx) ?? 0;
+    let y = queryNumericValue(iconNode, "y", namespaces.gx) ?? 0;
     x = Math.min(x / 32, 7);
     y = 7 - Math.min(y / 32, 7);
     const iconNum = 8 * y + x;
@@ -885,18 +883,15 @@ function getIconHref(
       );
     }
 
-    const viewBoundScale = defaultValue(
-      queryStringValue(iconNode, "viewBoundScale", namespaces.kml),
-      1.0,
-    );
+    const viewBoundScale =
+      queryStringValue(iconNode, "viewBoundScale", namespaces.kml) ?? 1.0;
     const defaultViewFormat =
       viewRefreshMode === "onStop"
         ? "BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]"
         : "";
-    const viewFormat = defaultValue(
-      queryStringValue(iconNode, "viewFormat", namespaces.kml),
-      defaultViewFormat,
-    );
+    const viewFormat =
+      queryStringValue(iconNode, "viewFormat", namespaces.kml) ??
+      defaultViewFormat;
     const httpQuery = queryStringValue(iconNode, "httpQuery", namespaces.kml);
     if (defined(viewFormat)) {
       hrefResource.setQueryParameters(queryToObject(cleanupString(viewFormat)));
@@ -982,7 +977,7 @@ function processBillboardIcon(
   //The hotspot origin is the lower left, but we leave
   //our billboard origin at the center and simply
   //modify the pixel offset to take this into account
-  scale = defaultValue(scale, 1.0);
+  scale = scale ?? 1.0;
 
   let xOffset;
   let yOffset;
@@ -1037,14 +1032,10 @@ function applyStyle(
         label = createDefaultLabel();
         targetEntity.label = label;
       }
-      label.scale = defaultValue(
-        queryNumericValue(node, "scale", namespaces.kml),
-        label.scale,
-      );
-      label.fillColor = defaultValue(
-        queryColorValue(node, "color", namespaces.kml),
-        label.fillColor,
-      );
+      label.scale =
+        queryNumericValue(node, "scale", namespaces.kml) ?? label.scale;
+      label.fillColor =
+        queryColorValue(node, "color", namespaces.kml) ?? label.fillColor;
       label.text = targetEntity.name;
     } else if (node.localName === "LineStyle") {
       let polyline = targetEntity.polyline;
@@ -1084,27 +1075,19 @@ function applyStyle(
         polygon = createDefaultPolygon();
         targetEntity.polygon = polygon;
       }
-      polygon.material = defaultValue(
-        queryColorValue(node, "color", namespaces.kml),
-        polygon.material,
-      );
-      polygon.fill = defaultValue(
-        queryBooleanValue(node, "fill", namespaces.kml),
-        polygon.fill,
-      );
-      polygon.outline = defaultValue(
-        queryBooleanValue(node, "outline", namespaces.kml),
-        polygon.outline,
-      );
+      polygon.material =
+        queryColorValue(node, "color", namespaces.kml) ?? polygon.material;
+      polygon.fill =
+        queryBooleanValue(node, "fill", namespaces.kml) ?? polygon.fill;
+      polygon.outline =
+        queryBooleanValue(node, "outline", namespaces.kml) ?? polygon.outline;
     } else if (node.localName === "BalloonStyle") {
-      const bgColor = defaultValue(
-        parseColorString(queryStringValue(node, "bgColor", namespaces.kml)),
-        Color.WHITE,
-      );
-      const textColor = defaultValue(
-        parseColorString(queryStringValue(node, "textColor", namespaces.kml)),
-        Color.BLACK,
-      );
+      const bgColor =
+        parseColorString(queryStringValue(node, "bgColor", namespaces.kml)) ??
+        Color.WHITE;
+      const textColor =
+        parseColorString(queryStringValue(node, "textColor", namespaces.kml)) ??
+        Color.BLACK;
       const text = queryStringValue(node, "text", namespaces.kml);
 
       //This is purely an internal property used in style processing,
@@ -1435,10 +1418,7 @@ function createPositionPropertyFromAltitudeMode(
   ) {
     oneTimeWarning(
       "kml-altitudeMode-unknown",
-      `KML - Unknown altitudeMode: ${defaultValue(
-        altitudeMode,
-        gxAltitudeMode,
-      )}`,
+      `KML - Unknown altitudeMode: ${altitudeMode ?? gxAltitudeMode}`,
     );
   }
 
@@ -1471,10 +1451,7 @@ function createPositionPropertyArrayFromAltitudeMode(
   ) {
     oneTimeWarning(
       "kml-altitudeMode-unknown",
-      `KML - Unknown altitudeMode: ${defaultValue(
-        altitudeMode,
-        gxAltitudeMode,
-      )}`,
+      `KML - Unknown altitudeMode: ${altitudeMode ?? gxAltitudeMode}`,
     );
   }
 
@@ -1660,7 +1637,7 @@ function processLineStringOrLinearRing(
       polylineGraphics.material = defined(polyline.material)
         ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)
         : Color.WHITE;
-      polylineGraphics.width = defaultValue(polyline.width, 1.0);
+      polylineGraphics.width = polyline.width ?? 1.0;
     } else {
       polylineGraphics.material = Color.WHITE;
       polylineGraphics.width = 1.0;
@@ -2123,27 +2100,24 @@ function processDescription(
   const extendedData = kmlData.extendedData;
   const description = queryStringValue(node, "description", namespaces.kml);
 
-  const balloonStyle = defaultValue(
-    entity.balloonStyle,
-    styleEntity.balloonStyle,
-  );
+  const balloonStyle = entity.balloonStyle ?? styleEntity.balloonStyle;
 
   let background = Color.WHITE;
   let foreground = Color.BLACK;
   let text = description;
 
   if (defined(balloonStyle)) {
-    background = defaultValue(balloonStyle.bgColor, Color.WHITE);
-    foreground = defaultValue(balloonStyle.textColor, Color.BLACK);
-    text = defaultValue(balloonStyle.text, description);
+    background = balloonStyle.bgColor ?? Color.WHITE;
+    foreground = balloonStyle.textColor ?? Color.BLACK;
+    text = balloonStyle.text ?? description;
   }
 
   let value;
   if (defined(text)) {
-    text = text.replace("$[name]", defaultValue(entity.name, ""));
-    text = text.replace("$[description]", defaultValue(description, ""));
-    text = text.replace("$[address]", defaultValue(kmlData.address, ""));
-    text = text.replace("$[Snippet]", defaultValue(kmlData.snippet, ""));
+    text = text.replace("$[name]", entity.name ?? "");
+    text = text.replace("$[description]", description ?? "");
+    text = text.replace("$[address]", kmlData.address ?? "");
+    text = text.replace("$[Snippet]", kmlData.snippet ?? "");
     text = text.replace("$[id]", entity.id);
 
     //While not explicitly defined by the OGC spec, in Google Earth
@@ -2165,7 +2139,7 @@ function processDescription(
             value = isDisplayName ? value.displayName : value.value;
           }
           if (defined(value)) {
-            text = text.replace(token, defaultValue(value, ""));
+            text = text.replace(token, value ?? "");
           }
         }
       }
@@ -2179,10 +2153,7 @@ function processDescription(
       for (i = 0; i < keys.length; i++) {
         key = keys[i];
         value = extendedData[key];
-        text += `<tr><th>${defaultValue(
-          value.displayName,
-          key,
-        )}</th><td>${defaultValue(value.value, "")}</td></tr>`;
+        text += `<tr><th>${value.displayName ?? key}</th><td>${value.value ?? ""}</td></tr>`;
       }
       text += "</tbody></table>";
     }
@@ -2294,7 +2265,7 @@ function processFeature(dataSource, featureNode, processingData) {
     "visibility",
     namespaces.kml,
   );
-  entity.show = ancestryIsVisible(parent) && defaultValue(visibility, true);
+  entity.show = ancestryIsVisible(parent) && (visibility ?? true);
   //const open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
   const authorNode = queryFirstNode(featureNode, "author", namespaces.atom);
@@ -2454,31 +2425,14 @@ function processTourFlyTo(tour, entryNode, ellipsoid) {
 function processCamera(featureNode, entity, ellipsoid) {
   const camera = queryFirstNode(featureNode, "Camera", namespaces.kml);
   if (defined(camera)) {
-    const lon = defaultValue(
-      queryNumericValue(camera, "longitude", namespaces.kml),
-      0.0,
-    );
-    const lat = defaultValue(
-      queryNumericValue(camera, "latitude", namespaces.kml),
-      0.0,
-    );
-    const altitude = defaultValue(
-      queryNumericValue(camera, "altitude", namespaces.kml),
-      0.0,
-    );
+    const lon = queryNumericValue(camera, "longitude", namespaces.kml) ?? 0.0;
+    const lat = queryNumericValue(camera, "latitude", namespaces.kml) ?? 0.0;
+    const altitude =
+      queryNumericValue(camera, "altitude", namespaces.kml) ?? 0.0;
 
-    const heading = defaultValue(
-      queryNumericValue(camera, "heading", namespaces.kml),
-      0.0,
-    );
-    const tilt = defaultValue(
-      queryNumericValue(camera, "tilt", namespaces.kml),
-      0.0,
-    );
-    const roll = defaultValue(
-      queryNumericValue(camera, "roll", namespaces.kml),
-      0.0,
-    );
+    const heading = queryNumericValue(camera, "heading", namespaces.kml) ?? 0.0;
+    const tilt = queryNumericValue(camera, "tilt", namespaces.kml) ?? 0.0;
+    const roll = queryNumericValue(camera, "roll", namespaces.kml) ?? 0.0;
 
     const position = Cartesian3.fromDegrees(lon, lat, altitude, ellipsoid);
     const hpr = HeadingPitchRoll.fromDegrees(heading, tilt - 90.0, roll);
@@ -2490,27 +2444,16 @@ function processCamera(featureNode, entity, ellipsoid) {
 function processLookAt(featureNode, entity, ellipsoid) {
   const lookAt = queryFirstNode(featureNode, "LookAt", namespaces.kml);
   if (defined(lookAt)) {
-    const lon = defaultValue(
-      queryNumericValue(lookAt, "longitude", namespaces.kml),
-      0.0,
-    );
-    const lat = defaultValue(
-      queryNumericValue(lookAt, "latitude", namespaces.kml),
-      0.0,
-    );
-    const altitude = defaultValue(
-      queryNumericValue(lookAt, "altitude", namespaces.kml),
-      0.0,
-    );
+    const lon = queryNumericValue(lookAt, "longitude", namespaces.kml) ?? 0.0;
+    const lat = queryNumericValue(lookAt, "latitude", namespaces.kml) ?? 0.0;
+    const altitude =
+      queryNumericValue(lookAt, "altitude", namespaces.kml) ?? 0.0;
     let heading = queryNumericValue(lookAt, "heading", namespaces.kml);
     let tilt = queryNumericValue(lookAt, "tilt", namespaces.kml);
-    const range = defaultValue(
-      queryNumericValue(lookAt, "range", namespaces.kml),
-      0.0,
-    );
+    const range = queryNumericValue(lookAt, "range", namespaces.kml) ?? 0.0;
 
-    tilt = CesiumMath.toRadians(defaultValue(tilt, 0.0));
-    heading = CesiumMath.toRadians(defaultValue(heading, 0.0));
+    tilt = CesiumMath.toRadians(tilt ?? 0.0);
+    heading = CesiumMath.toRadians(heading ?? 0.0);
 
     const hpr = new HeadingPitchRange(
       heading,
@@ -2909,7 +2852,7 @@ function processNetworkLinkQueryString(
     let centerCartesian;
     let centerCartographic;
 
-    bbox = defaultValue(bbox, zeroRectangle);
+    bbox = bbox ?? zeroRectangle;
     if (defined(canvas)) {
       scratchCartesian2.x = canvas.clientWidth * 0.5;
       scratchCartesian2.y = canvas.clientHeight * 0.5;
@@ -3096,18 +3039,15 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
           );
           return;
         }
-        viewBoundScale = defaultValue(
-          queryStringValue(link, "viewBoundScale", namespaces.kml),
-          1.0,
-        );
+        viewBoundScale =
+          queryStringValue(link, "viewBoundScale", namespaces.kml) ?? 1.0;
         const defaultViewFormat =
           viewRefreshMode === "onStop"
             ? "BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]"
             : "";
-        const viewFormat = defaultValue(
-          queryStringValue(link, "viewFormat", namespaces.kml),
-          defaultViewFormat,
-        );
+        const viewFormat =
+          queryStringValue(link, "viewFormat", namespaces.kml) ??
+          defaultViewFormat;
         const httpQuery = queryStringValue(link, "httpQuery", namespaces.kml);
         if (defined(viewFormat)) {
           href.setQueryParameters(queryToObject(cleanupString(viewFormat)));
@@ -3156,10 +3096,8 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             "refreshMode",
             namespaces.kml,
           );
-          let refreshInterval = defaultValue(
-            queryNumericValue(link, "refreshInterval", namespaces.kml),
-            0,
-          );
+          let refreshInterval =
+            queryNumericValue(link, "refreshInterval", namespaces.kml) ?? 0;
           if (
             (refreshMode === "onInterval" && refreshInterval > 0) ||
             refreshMode === "onExpire" ||
@@ -3188,23 +3126,18 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             let minRefreshPeriod = 0;
             if (hasNetworkLinkControl) {
               networkLinkInfo.cookie = queryToObject(
-                defaultValue(
-                  queryStringValue(
-                    networkLinkControl,
-                    "cookie",
-                    namespaces.kml,
-                  ),
-                  "",
-                ),
+                queryStringValue(
+                  networkLinkControl,
+                  "cookie",
+                  namespaces.kml,
+                ) ?? "",
               );
-              minRefreshPeriod = defaultValue(
+              minRefreshPeriod =
                 queryNumericValue(
                   networkLinkControl,
                   "minRefreshPeriod",
                   namespaces.kml,
-                ),
-                0,
-              );
+                ) ?? 0;
             }
 
             if (refreshMode === "onInterval") {
@@ -3246,10 +3179,8 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             } else if (defined(dataSource.camera)) {
               // Only allow onStop refreshes if we have a camera
               networkLinkInfo.refreshMode = RefreshMode.STOP;
-              networkLinkInfo.time = defaultValue(
-                queryNumericValue(link, "viewRefreshTime", namespaces.kml),
-                0,
-              );
+              networkLinkInfo.time =
+                queryNumericValue(link, "viewRefreshTime", namespaces.kml) ?? 0;
             } else {
               oneTimeWarning(
                 "kml-refrehMode-onStop-noCamera",
@@ -3422,7 +3353,7 @@ function loadKmz(
 }
 
 function load(dataSource, entityCollection, data, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   let sourceUri = options.sourceUri;
   const uriResolver = options.uriResolver;
   const context = options.context;
@@ -3432,7 +3363,7 @@ function load(dataSource, entityCollection, data, options) {
   if (typeof data === "string" || data instanceof Resource) {
     data = Resource.createIfNeeded(data);
     promise = data.fetchBlob();
-    sourceUri = defaultValue(sourceUri, data.clone());
+    sourceUri = sourceUri ?? data.clone();
 
     // Add resource credits to our list of credits to display
     const resourceCredits = dataSource._resourceCredits;
@@ -3444,7 +3375,7 @@ function load(dataSource, entityCollection, data, options) {
       }
     }
   } else {
-    sourceUri = defaultValue(sourceUri, Resource.DEFAULT.clone());
+    sourceUri = sourceUri ?? Resource.DEFAULT.clone();
   }
 
   sourceUri = Resource.createIfNeeded(sourceUri);
@@ -3600,7 +3531,7 @@ function load(dataSource, entityCollection, data, options) {
  * );
  */
 function KmlDataSource(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const camera = options.camera;
   const canvas = options.canvas;
 
@@ -3647,7 +3578,7 @@ function KmlDataSource(options) {
       : Rectangle.clone(Rectangle.MAX_VALUE),
   };
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   // User specified credit
   let credit = options.credit;
@@ -3673,7 +3604,7 @@ function KmlDataSource(options) {
  * @returns {Promise<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
 KmlDataSource.load = function (data, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const dataSource = new KmlDataSource(options);
   return dataSource.load(data, options);
 };
@@ -3848,12 +3779,12 @@ KmlDataSource.prototype.load = function (data, options) {
   }
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   DataSource.setLoading(this, true);
 
   const oldName = this._name;
   this._name = undefined;
-  this._clampToGround = defaultValue(options.clampToGround, false);
+  this._clampToGround = options.clampToGround ?? false;
 
   const that = this;
   return load(this, this._entityCollection, data, options)
@@ -3983,19 +3914,14 @@ function getNetworkLinkUpdateCallback(
         return;
       }
       networkLink.cookie = queryToObject(
-        defaultValue(
-          queryStringValue(networkLinkControl, "cookie", namespaces.kml),
-          "",
-        ),
+        queryStringValue(networkLinkControl, "cookie", namespaces.kml) ?? "",
       );
-      minRefreshPeriod = defaultValue(
+      minRefreshPeriod =
         queryNumericValue(
           networkLinkControl,
           "minRefreshPeriod",
           namespaces.kml,
-        ),
-        0,
-      );
+        ) ?? 0;
     }
 
     const now = JulianDate.now();
@@ -4204,7 +4130,7 @@ KmlDataSource.prototype.update = function (time) {
         const href = networkLink.href.clone();
 
         href.setQueryParameters(networkLink.cookie);
-        const ellipsoid = defaultValue(that._ellipsoid, Ellipsoid.default);
+        const ellipsoid = that._ellipsoid ?? Ellipsoid.default;
         processNetworkLinkQueryString(
           href,
           that.camera,

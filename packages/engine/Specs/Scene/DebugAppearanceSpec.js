@@ -1,6 +1,5 @@
 import {
   ComponentDatatype,
-  defaultValue,
   GeometryInstance,
   GeometryInstanceAttribute,
   Rectangle,
@@ -42,7 +41,7 @@ describe(
     function createInstance(vertexFormat) {
       return new GeometryInstance({
         geometry: new RectangleGeometry({
-          vertexFormat: defaultValue(vertexFormat, VertexFormat.ALL),
+          vertexFormat: vertexFormat ?? VertexFormat.ALL,
           rectangle: rectangle,
         }),
       });

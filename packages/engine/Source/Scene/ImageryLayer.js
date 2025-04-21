@@ -2,7 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -85,7 +85,7 @@ import TileImagery from "./TileImagery.js";
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates
  *                          of the imagery tile for which the hue is required, and it is expected to return
- *                          the contrast value to use for the tile.  The function is executed for every
+ *                          the hue value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
  * @property {number|Function} [saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
  *                          Less than 1.0 reduces the saturation while greater than 1.0 increases it.
@@ -93,7 +93,7 @@ import TileImagery from "./TileImagery.js";
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates
  *                          of the imagery tile for which the saturation is required, and it is expected to return
- *                          the contrast value to use for the tile.  The function is executed for every
+ *                          the saturation value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
  * @property {number|Function} [gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
  *                          This can either be a simple number or a function with the signature
@@ -162,8 +162,8 @@ function ImageryLayer(imageryProvider, options) {
   this._readyEvent = new Event();
   this._errorEvent = new Event();
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  imageryProvider = defaultValue(imageryProvider, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  imageryProvider = imageryProvider ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The alpha blending value of this layer, with 0.0 representing fully transparent and
@@ -172,10 +172,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.alpha = defaultValue(
-    options.alpha,
-    defaultValue(imageryProvider._defaultAlpha, 1.0),
-  );
+  this.alpha = options.alpha ?? imageryProvider._defaultAlpha ?? 1.0;
 
   /**
    * The alpha blending value of this layer on the night side of the globe, with 0.0 representing fully transparent and
@@ -184,10 +181,8 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.nightAlpha = defaultValue(
-    options.nightAlpha,
-    defaultValue(imageryProvider._defaultNightAlpha, 1.0),
-  );
+  this.nightAlpha =
+    options.nightAlpha ?? imageryProvider._defaultNightAlpha ?? 1.0;
 
   /**
    * The alpha blending value of this layer on the day side of the globe, with 0.0 representing fully transparent and
@@ -196,10 +191,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.dayAlpha = defaultValue(
-    options.dayAlpha,
-    defaultValue(imageryProvider._defaultDayAlpha, 1.0),
-  );
+  this.dayAlpha = options.dayAlpha ?? imageryProvider._defaultDayAlpha ?? 1.0;
 
   /**
    * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
@@ -208,13 +200,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_BRIGHTNESS}
    */
-  this.brightness = defaultValue(
-    options.brightness,
-    defaultValue(
-      imageryProvider._defaultBrightness,
-      ImageryLayer.DEFAULT_BRIGHTNESS,
-    ),
-  );
+  this.brightness =
+    options.brightness ??
+    imageryProvider._defaultBrightness ??
+    ImageryLayer.DEFAULT_BRIGHTNESS;
 
   /**
    * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
@@ -223,13 +212,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_CONTRAST}
    */
-  this.contrast = defaultValue(
-    options.contrast,
-    defaultValue(
-      imageryProvider._defaultContrast,
-      ImageryLayer.DEFAULT_CONTRAST,
-    ),
-  );
+  this.contrast =
+    options.contrast ??
+    imageryProvider._defaultContrast ??
+    ImageryLayer.DEFAULT_CONTRAST;
 
   /**
    * The hue of this layer in radians. 0.0 uses the unmodified imagery color.
@@ -237,10 +223,8 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_HUE}
    */
-  this.hue = defaultValue(
-    options.hue,
-    defaultValue(imageryProvider._defaultHue, ImageryLayer.DEFAULT_HUE),
-  );
+  this.hue =
+    options.hue ?? imageryProvider._defaultHue ?? ImageryLayer.DEFAULT_HUE;
 
   /**
    * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
@@ -249,13 +233,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_SATURATION}
    */
-  this.saturation = defaultValue(
-    options.saturation,
-    defaultValue(
-      imageryProvider._defaultSaturation,
-      ImageryLayer.DEFAULT_SATURATION,
-    ),
-  );
+  this.saturation =
+    options.saturation ??
+    imageryProvider._defaultSaturation ??
+    ImageryLayer.DEFAULT_SATURATION;
 
   /**
    * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
@@ -263,10 +244,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_GAMMA}
    */
-  this.gamma = defaultValue(
-    options.gamma,
-    defaultValue(imageryProvider._defaultGamma, ImageryLayer.DEFAULT_GAMMA),
-  );
+  this.gamma =
+    options.gamma ??
+    imageryProvider._defaultGamma ??
+    ImageryLayer.DEFAULT_GAMMA;
 
   /**
    * The {@link SplitDirection} to apply to this layer.
@@ -274,10 +255,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {SplitDirection}
    * @default {@link ImageryLayer.DEFAULT_SPLIT}
    */
-  this.splitDirection = defaultValue(
-    options.splitDirection,
-    ImageryLayer.DEFAULT_SPLIT,
-  );
+  this.splitDirection = options.splitDirection ?? ImageryLayer.DEFAULT_SPLIT;
 
   /**
    * The {@link TextureMinificationFilter} to apply to this layer.
@@ -290,13 +268,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {TextureMinificationFilter}
    * @default {@link ImageryLayer.DEFAULT_MINIFICATION_FILTER}
    */
-  this.minificationFilter = defaultValue(
-    options.minificationFilter,
-    defaultValue(
-      imageryProvider._defaultMinificationFilter,
-      ImageryLayer.DEFAULT_MINIFICATION_FILTER,
-    ),
-  );
+  this.minificationFilter =
+    options.minificationFilter ??
+    imageryProvider._defaultMinificationFilter ??
+    ImageryLayer.DEFAULT_MINIFICATION_FILTER;
 
   /**
    * The {@link TextureMagnificationFilter} to apply to this layer.
@@ -309,13 +284,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {TextureMagnificationFilter}
    * @default {@link ImageryLayer.DEFAULT_MAGNIFICATION_FILTER}
    */
-  this.magnificationFilter = defaultValue(
-    options.magnificationFilter,
-    defaultValue(
-      imageryProvider._defaultMagnificationFilter,
-      ImageryLayer.DEFAULT_MAGNIFICATION_FILTER,
-    ),
-  );
+  this.magnificationFilter =
+    options.magnificationFilter ??
+    imageryProvider._defaultMagnificationFilter ??
+    ImageryLayer.DEFAULT_MAGNIFICATION_FILTER;
 
   /**
    * Determines if this layer is shown.
@@ -323,12 +295,12 @@ function ImageryLayer(imageryProvider, options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   this._minimumTerrainLevel = options.minimumTerrainLevel;
   this._maximumTerrainLevel = options.maximumTerrainLevel;
 
-  this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+  this._rectangle = options.rectangle ?? Rectangle.MAX_VALUE;
   this._maximumAnisotropy = options.maximumAnisotropy;
 
   this._imageryCache = {};
@@ -367,10 +339,9 @@ function ImageryLayer(imageryProvider, options) {
    *
    * @type {number}
    */
-  this.colorToAlphaThreshold = defaultValue(
-    options.colorToAlphaThreshold,
-    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD,
-  );
+  this.colorToAlphaThreshold =
+    options.colorToAlphaThreshold ??
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD;
 }
 
 Object.defineProperties(ImageryLayer.prototype, {
@@ -604,7 +575,7 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  * @see ImageryLayer.provider
  */
 ImageryLayer.fromWorldImagery = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   return ImageryLayer.fromProviderAsync(
     createWorldImageryAsync({
@@ -1316,7 +1287,7 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
       ContextLimits.maximumTextureFilterAnisotropy;
     const maximumAnisotropy = Math.min(
       maximumSupportedAnisotropy,
-      defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy),
+      this._maximumAnisotropy ?? maximumSupportedAnisotropy,
     );
     const mipmapSamplerKey = getSamplerKey(
       minificationFilter,
@@ -1383,7 +1354,7 @@ ImageryLayer.prototype._reprojectTexture = function (
   const rectangle = imagery.rectangle;
   const context = frameState.context;
 
-  needGeographicProjection = defaultValue(needGeographicProjection, true);
+  needGeographicProjection = needGeographicProjection ?? true;
 
   // Reproject this texture if it is not already in a geographic projection and
   // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff

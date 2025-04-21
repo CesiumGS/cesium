@@ -3,7 +3,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -48,7 +47,7 @@ function Cesium3DTileBatchTable(
   if (defined(batchTableJson)) {
     extensions = batchTableJson.extensions;
   }
-  this._extensions = defaultValue(extensions, {});
+  this._extensions = extensions ?? {};
 
   const properties = initializeProperties(batchTableJson);
   this._properties = properties;
@@ -266,13 +265,11 @@ Cesium3DTileBatchTable.prototype.applyStyle = function (style) {
   for (let i = 0; i < length; ++i) {
     const feature = content.getFeature(i);
     const color = defined(style.color)
-      ? defaultValue(
-          style.color.evaluateColor(feature, scratchColor),
-          DEFAULT_COLOR_VALUE,
-        )
+      ? (style.color.evaluateColor(feature, scratchColor) ??
+        DEFAULT_COLOR_VALUE)
       : DEFAULT_COLOR_VALUE;
     const show = defined(style.show)
-      ? defaultValue(style.show.evaluate(feature), DEFAULT_SHOW_VALUE)
+      ? (style.show.evaluate(feature) ?? DEFAULT_SHOW_VALUE)
       : DEFAULT_SHOW_VALUE;
     this.setColor(i, color);
     this.setShow(i, show);
@@ -812,9 +809,8 @@ Cesium3DTileBatchTable.prototype.getUniformMapCallback = function () {
     const batchUniformMap = {
       tile_batchTexture: function () {
         // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
-        return defaultValue(
-          that._batchTexture.batchTexture,
-          that._batchTexture.defaultTexture,
+        return (
+          that._batchTexture.batchTexture ?? that._batchTexture.defaultTexture
         );
       },
       tile_textureDimensions: function () {

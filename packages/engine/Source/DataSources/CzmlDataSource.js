@@ -9,7 +9,7 @@ import Color from "../Core/Color.js";
 import CornerType from "../Core/CornerType.js";
 import Credit from "../Core/Credit.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
@@ -180,7 +180,7 @@ function unwrapColorInterval(czmlInterval) {
 }
 
 function unwrapUriInterval(czmlInterval, sourceUri) {
-  const uri = defaultValue(czmlInterval.uri, czmlInterval);
+  const uri = czmlInterval.uri ?? czmlInterval;
   if (defined(sourceUri)) {
     return sourceUri.getDerivedResource({
       url: uri,
@@ -521,11 +521,11 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
   // associations in getPropertyType
   switch (type) {
     case ArcType:
-      return ArcType[defaultValue(czmlInterval.arcType, czmlInterval)];
+      return ArcType[czmlInterval.arcType ?? czmlInterval];
     case Array:
       return czmlInterval.array;
     case Boolean:
-      return defaultValue(czmlInterval["boolean"], czmlInterval);
+      return czmlInterval["boolean"] ?? czmlInterval;
     case BoundingRectangle:
       return czmlInterval.boundingRectangle;
     case Cartesian2:
@@ -538,70 +538,52 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
       return unwrapColorInterval(czmlInterval);
     case ClassificationType:
       return ClassificationType[
-        defaultValue(czmlInterval.classificationType, czmlInterval)
+        czmlInterval.classificationType ?? czmlInterval
       ];
     case ColorBlendMode:
-      return ColorBlendMode[
-        defaultValue(czmlInterval.colorBlendMode, czmlInterval)
-      ];
+      return ColorBlendMode[czmlInterval.colorBlendMode ?? czmlInterval];
     case CornerType:
-      return CornerType[defaultValue(czmlInterval.cornerType, czmlInterval)];
+      return CornerType[czmlInterval.cornerType ?? czmlInterval];
     case HeightReference:
-      return HeightReference[
-        defaultValue(czmlInterval.heightReference, czmlInterval)
-      ];
+      return HeightReference[czmlInterval.heightReference ?? czmlInterval];
     case HorizontalOrigin:
-      return HorizontalOrigin[
-        defaultValue(czmlInterval.horizontalOrigin, czmlInterval)
-      ];
+      return HorizontalOrigin[czmlInterval.horizontalOrigin ?? czmlInterval];
     case Image:
       return unwrapUriInterval(czmlInterval, sourceUri);
     case JulianDate:
-      return JulianDate.fromIso8601(
-        defaultValue(czmlInterval.date, czmlInterval),
-      );
+      return JulianDate.fromIso8601(czmlInterval.date ?? czmlInterval);
     case LabelStyle:
-      return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
+      return LabelStyle[czmlInterval.labelStyle ?? czmlInterval];
     case Number:
-      return defaultValue(czmlInterval.number, czmlInterval);
+      return czmlInterval.number ?? czmlInterval;
     case NearFarScalar:
       return czmlInterval.nearFarScalar;
     case DistanceDisplayCondition:
       return czmlInterval.distanceDisplayCondition;
     case Object:
-      return defaultValue(
-        defaultValue(czmlInterval.object, czmlInterval.value),
-        czmlInterval,
-      );
+      return czmlInterval.object ?? czmlInterval.value ?? czmlInterval;
     case Quaternion:
       return unwrapQuaternionInterval(czmlInterval);
     case Rotation:
-      return defaultValue(czmlInterval.number, czmlInterval);
+      return czmlInterval.number ?? czmlInterval;
     case SensorVolumePortionToDisplay:
       return SensorVolumePortionToDisplay[
-        defaultValue(czmlInterval.portionToDisplay, czmlInterval)
+        czmlInterval.portionToDisplay ?? czmlInterval
       ];
     case ShadowMode:
       return ShadowMode[
-        defaultValue(
-          defaultValue(czmlInterval.shadowMode, czmlInterval.shadows),
-          czmlInterval,
-        )
+        czmlInterval.shadowMode ?? czmlInterval.shadows ?? czmlInterval
       ];
     case String:
-      return defaultValue(czmlInterval.string, czmlInterval);
+      return czmlInterval.string ?? czmlInterval;
     case StripeOrientation:
-      return StripeOrientation[
-        defaultValue(czmlInterval.stripeOrientation, czmlInterval)
-      ];
+      return StripeOrientation[czmlInterval.stripeOrientation ?? czmlInterval];
     case Rectangle:
       return unwrapRectangleInterval(czmlInterval);
     case Uri:
       return unwrapUriInterval(czmlInterval, sourceUri);
     case VerticalOrigin:
-      return VerticalOrigin[
-        defaultValue(czmlInterval.verticalOrigin, czmlInterval)
-      ];
+      return VerticalOrigin[czmlInterval.verticalOrigin ?? czmlInterval];
     default:
       throw new RuntimeError(`Unknown CzmlDataSource interval type: ${type}`);
   }
@@ -736,8 +718,8 @@ function processProperty(
       // not a known value type, bail
       return;
     }
-    packedLength = defaultValue(type.packedLength, 1);
-    unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
+    packedLength = type.packedLength ?? 1;
+    unwrappedIntervalLength = unwrappedInterval.length ?? 1;
     isSampled =
       !defined(packetData.array) &&
       typeof unwrappedInterval !== "string" &&
@@ -969,9 +951,9 @@ function processPositionProperty(
     if (defined(packetData.referenceFrame)) {
       referenceFrame = ReferenceFrame[packetData.referenceFrame];
     }
-    referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+    referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
     unwrappedInterval = unwrapCartesianInterval(packetData);
-    unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
+    unwrappedIntervalLength = unwrappedInterval.length ?? 1;
     isSampled = unwrappedIntervalLength > packedLength;
   }
 
@@ -2674,14 +2656,11 @@ function processDocument(packet, dataSource) {
         multiplier: clockPacket.multiplier,
       };
     } else {
-      clock.interval = defaultValue(clockPacket.interval, clock.interval);
-      clock.currentTime = defaultValue(
-        clockPacket.currentTime,
-        clock.currentTime,
-      );
-      clock.range = defaultValue(clockPacket.range, clock.range);
-      clock.step = defaultValue(clockPacket.step, clock.step);
-      clock.multiplier = defaultValue(clockPacket.multiplier, clock.multiplier);
+      clock.interval = clockPacket.interval ?? clock.interval;
+      clock.currentTime = clockPacket.currentTime ?? clock.currentTime;
+      clock.range = clockPacket.range ?? clock.range;
+      clock.step = clockPacket.step ?? clock.step;
+      clock.multiplier = clockPacket.multiplier ?? clock.multiplier;
     }
   }
 }
@@ -4707,16 +4686,11 @@ function updateClock(dataSource) {
     clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
   }
   if (defined(clockPacket.range)) {
-    clock.clockRange = defaultValue(
-      ClockRange[clockPacket.range],
-      ClockRange.LOOP_STOP,
-    );
+    clock.clockRange = ClockRange[clockPacket.range] ?? ClockRange.LOOP_STOP;
   }
   if (defined(clockPacket.step)) {
-    clock.clockStep = defaultValue(
-      ClockStep[clockPacket.step],
-      ClockStep.SYSTEM_CLOCK_MULTIPLIER,
-    );
+    clock.clockStep =
+      ClockStep[clockPacket.step] ?? ClockStep.SYSTEM_CLOCK_MULTIPLIER;
   }
   if (defined(clockPacket.multiplier)) {
     clock.multiplier = clockPacket.multiplier;
@@ -4737,7 +4711,7 @@ function load(dataSource, czml, options, clear) {
   }
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let promise = czml;
   let sourceUri = options.sourceUri;
@@ -4753,7 +4727,7 @@ function load(dataSource, czml, options, clear) {
   if (typeof czml === "string" || czml instanceof Resource) {
     czml = Resource.createIfNeeded(czml);
     promise = czml.fetchJson();
-    sourceUri = defaultValue(sourceUri, czml.clone());
+    sourceUri = sourceUri ?? czml.clone();
 
     // Add resource credits to our list of credits to display
     const resourceCredits = dataSource._resourceCredits;
@@ -5143,7 +5117,7 @@ CzmlDataSource._processCzml = function (
   updaterFunctions,
   dataSource,
 ) {
-  updaterFunctions = defaultValue(updaterFunctions, CzmlDataSource.updaters);
+  updaterFunctions = updaterFunctions ?? CzmlDataSource.updaters;
 
   if (Array.isArray(czml)) {
     for (let i = 0, len = czml.length; i < len; ++i) {
