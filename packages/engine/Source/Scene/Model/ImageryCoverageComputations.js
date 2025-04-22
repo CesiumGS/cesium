@@ -415,7 +415,7 @@ class ImageryCoverageComputations {
    * @returns {CartesianRectangle} The result
    */
   static _localizeToCartesianRectangle(rectangleA, rectangleB, result) {
-    if (result === undefined) {
+    if (!defined(result)) {
       result = new CartesianRectangle();
     }
     const invX = 1.0 / rectangleB.width;
