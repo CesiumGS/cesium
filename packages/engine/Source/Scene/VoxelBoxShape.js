@@ -60,19 +60,13 @@ function VoxelBoxShape() {
    * @type {Cartesian3}
    * @private
    */
-  this._minBounds = Cartesian3.clone(
-    VoxelBoxShape.DefaultMinBounds,
-    new Cartesian3(),
-  );
+  this._minBounds = VoxelBoxShape.DefaultMinBounds.clone();
 
   /**
    * @type {Cartesian3}
    * @private
    */
-  this._maxBounds = Cartesian3.clone(
-    VoxelBoxShape.DefaultMaxBounds,
-    new Cartesian3(),
-  );
+  this._maxBounds = VoxelBoxShape.DefaultMaxBounds.clone();
 
   /**
    * @private
@@ -147,14 +141,14 @@ VoxelBoxShape.prototype.update = function (
   const defaultMinBounds = VoxelBoxShape.DefaultMinBounds;
   const defaultMaxBounds = VoxelBoxShape.DefaultMaxBounds;
 
-  minBounds = this._minBounds = Cartesian3.clamp(
+  minBounds = Cartesian3.clamp(
     minBounds,
     defaultMinBounds,
     defaultMaxBounds,
     this._minBounds,
   );
 
-  maxBounds = this._maxBounds = Cartesian3.clamp(
+  maxBounds = Cartesian3.clamp(
     maxBounds,
     defaultMinBounds,
     defaultMaxBounds,
