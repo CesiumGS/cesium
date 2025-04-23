@@ -38,7 +38,10 @@ const Check: {
      * @param {*} test The value to test
      * @exception {DeveloperError} test must be typeof 'object'
      */
-    object(name: string, test: any): asserts test is object;
+    object(
+      name: string,
+      test: any,
+    ): asserts test is Record<string | number | symbol, any>;
     /**
      * Throws if test is not typeof 'boolean'
      *
