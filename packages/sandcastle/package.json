@@ -4,9 +4,11 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "vite --config vite.config.dev.ts",
+    "build": "tsc -b && vite build --config vite.config.dev.ts",
+    "preview": "vite preview --config vite.config.dev.ts",
+    "build-app": "tsc -b && vite build --config vite.config.app.ts",
+    "build-ci": "tsc -b && vite build --config vite.config.ci.ts"
   },
   "dependencies": {
     "@itwin/itwinui-react": "^5.0.0-alpha.14",

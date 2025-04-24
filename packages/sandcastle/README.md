@@ -4,9 +4,11 @@ This package is the application for Sandcastle.
 
 ## Running/Building
 
-- `npm run dev` from inside this directory to run the development server
-- `npm run build` will build this to static files in `/Apps/Sandcastle2` for hosting/access from the normal dev server
-- `npm run preview` will run the production build locally. <!--TODO: I'm not sure if we actually need this for our purposes -->
+- `npm run dev`: run the development server
+- `npm run build`: build locally with vite defaults
+- `npm run preview`: run the production build locally. <!--TODO: I'm not sure if we actually need this for our purposes -->
+- `npm run build-app`: build to static files in `/Apps/Sandcastle2` for hosting/access from the root cesium dev server
+- `npm run build-ci`: build to static files in `/Apps/Sandcastle2` and configure paths as needed for CI deployment
 
 Linting and style is managed under the project root's scripts.
 
