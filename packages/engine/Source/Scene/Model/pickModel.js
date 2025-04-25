@@ -180,6 +180,7 @@ export default function pickModel(
 
       if (defined(runtimePrimitive.boundingSphere) && !defined(instances)) {
         const boundingSphere = BoundingSphere.transform(
+          // TODO: Remove
           runtimePrimitive.boundingSphere,
           computedModelMatrix,
           scratchBoundingSphere,

@@ -232,11 +232,15 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    */
   this.primitiveType = primitive.primitiveType;
 
-  const positionMinMax = ModelUtility.getPositionMinMax(
-    primitive,
-    this.runtimeNode.instancingTranslationMin,
-    this.runtimeNode.instancingTranslationMax,
-  );
+  const [positionMin, positionMax] = ModelUtility.getPositionMinMax(primitive);
+
+  // Instancing min and max positions are defined in the node's local space
+  const { instancingTranslationMin, instancingTranslationMax } =
+    this.runtimeNode;
+  if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
+    Cartesian3.add(positionMin, instancingTranslationMin, positionMin);
+    Cartesian3.add(positionMax, instancingTranslationMax, positionMax);
+  }
 
   /**
    * The minimum position value for this primitive.
@@ -246,7 +250,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    *
    * @private
    */
-  this.positionMin = Cartesian3.clone(positionMinMax.min, new Cartesian3());
+  this.positionMin = positionMin;
 
   /**
    * The maximum position value for this primitive.
@@ -256,10 +260,10 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    *
    * @private
    */
-  this.positionMax = Cartesian3.clone(positionMinMax.max, new Cartesian3());
+  this.positionMax = positionMax;
 
   /**
-   * The bounding sphere that contains all the vertices in this primitive.
+   * The bounding sphere that contains all the vertices in this primitive, defined in the node's local space
    *
    * @type {BoundingSphere}
    * @readonly
