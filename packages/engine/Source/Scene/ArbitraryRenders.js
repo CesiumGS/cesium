@@ -24,6 +24,7 @@ const scratchUp = new Cartesian3();
 function ArbitraryRenders(scene) {
   this._scene = scene;
   this._arView = undefined;
+  this.pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
 }
 
 ArbitraryRenders.prototype.destroy = function () {
@@ -110,6 +111,11 @@ ArbitraryRenders.prototype._setupView = function (
     camera,
     new BoundingRectangle(0, 0, viewportWidth, viewportHeight),
   );
+  // TODO: Might want to toggle this only for picker or Float32 pixeldata type renders
+  // These prevent parts of the normal render pipeline from overriding the texture attached to the framebuffer
+  // this is important for ACTUALLY generating float32 outputs
+  this._arView.globeDepth = undefined;
+  this._arView.oit = undefined;
 };
 
 ArbitraryRenders.prototype._updateFrustumViewCommon = function (
@@ -143,8 +149,25 @@ ArbitraryRenders.prototype._updateFrustumViewCommon = function (
   }
 };
 
+ArbitraryRenders.debugMode = false;
+ArbitraryRenders.debugPassState = undefined;
+
 // Static function
-ArbitraryRenders.getSnapshot = function (arbitraryRenderer, scene, ray) {
+ArbitraryRenders.getSnapshotFromRay = function (arbitraryRenderer, scene, ray, overrideUp = undefined) {
+  // This is unique to arbRen (and picker)
+  // This returns culling volume.  See updateMostDetailedRayPick in Picking to see how it's used
+  const updateCameraBehavior = () => updateOffscreenCameraFromRay(ray, arbitraryRenderer._arView.camera, overrideUp);
+  return ArbitraryRenders._getSnapshot(arbitraryRenderer, scene, updateCameraBehavior);
+}
+
+// Static function
+ArbitraryRenders.getSnapshotFromCamera = function (arbitraryRenderer, scene, cameraToClone) {
+  const updateCameraBehavior = () => updateOffscreenCameraFromClone(arbitraryRenderer._arView.camera, cameraToClone);
+  return ArbitraryRenders._getSnapshot(arbitraryRenderer, scene, updateCameraBehavior);
+}
+
+ArbitraryRenders._getSnapshot = function (arbitraryRenderer, scene, updateCameraBehavior) {
+  ArbitraryRenders.debugMode = true;
   // This is identical to scene render
   const frameState = scene.frameState;
   const context = scene.context;
@@ -161,9 +184,7 @@ ArbitraryRenders.getSnapshot = function (arbitraryRenderer, scene, ray) {
   }
   scene.view = view;
 
-  // This is unique to arbRen (and picker)
-  // This returns culling volume.  See updateMostDetailedRayPick in Picking to see how it's used
-  updateOffscreenCameraFromRay(ray, view.camera);
+  updateCameraBehavior();
 
   // Following lines are unique to arbRen (and picker)
   const drawingBufferRectangle = BoundingRectangle.clone(
@@ -173,7 +194,7 @@ ArbitraryRenders.getSnapshot = function (arbitraryRenderer, scene, ray) {
   const passState = view.arbitraryRenderFrameBuffer.begin(
     drawingBufferRectangle,
     view.viewport,
-    PixelDatatype.UNSIGNED_BYTE, // Change this later for point cloud picker renders that need high precision floats
+    arbitraryRenderer.pixelDatatype, // Change this later for point cloud picker renders that need high precision floats
   );
   scene.jobScheduler.disableThisFrame();
 
@@ -190,7 +211,7 @@ ArbitraryRenders.getSnapshot = function (arbitraryRenderer, scene, ray) {
 
   // Don't render this as a picker render (we might need to add a special flag for arbitrary renders)
   frameState.passes.pick = false;
-  // Use normal rendering (this is waht makes)
+  // Use normal rendering (this is what makes it render an image)
   frameState.passes.render = true;
   frameState.passes.offscreen = true;
 
@@ -225,27 +246,51 @@ ArbitraryRenders.getSnapshot = function (arbitraryRenderer, scene, ray) {
   // Missing scene.globe.beginFrame
 
   // This is really similar to scene render
+  ArbitraryRenders.debugPassState = passState;
+  console.log("AAA passState before updateEnvironment", passState);
   scene.updateEnvironment();
+  console.log("AAA passState before updateAndExecuteCommands", passState);
   scene.updateAndExecuteCommands(passState, scratchColorZero); // backgroundColor is used instead of scratchColorZero
+  console.log("AAA passState before resolveFramebuffers", passState);
   scene.resolveFramebuffers(passState);
-
   // passState.framebuffer is set to undefined and overlayCommands are exectuted here
   // globe.endFrame is also called, as well as a flag to load new globe tiles
 
+  console.log("AAA arbitraryRenderFrameBuffer.end (readPixels)");
   const output = view.arbitraryRenderFrameBuffer.end(drawingBufferRectangle);
   scene.view = scene.defaultView;
 
   // This is the last function called in scene render
+  console.log("AAA arbitraryRenderFrameBuffer context.endFrame()");
   context.endFrame();
+  ArbitraryRenders.debugMode = false;
 
   return output;
 };
 
-function updateOffscreenCameraFromRay(ray, camera) {
+function updateOffscreenCameraFromClone(camera, cameraToClone) {
+  Camera.clone(cameraToClone, camera);
+  camera.frustum.computeCullingVolume(
+    camera.positionWC,
+    camera.directionWC,
+    camera.upWC,
+  );
+}
+
+function updateOffscreenCameraFromRay(ray, camera, overrideUp = undefined) {
   const direction = ray.direction;
-  const orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
-  const right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
-  const up = Cartesian3.cross(direction, right, scratchUp);
+
+  let right;
+  let up;
+
+  if (overrideUp) {
+    up = overrideUp;
+    right = Cartesian3.cross(direction, up, scratchRight);
+  } else {
+    const orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
+    right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
+    up = Cartesian3.cross(direction, right, scratchUp);
+  }
 
   camera.position = ray.origin;
   camera.direction = direction;

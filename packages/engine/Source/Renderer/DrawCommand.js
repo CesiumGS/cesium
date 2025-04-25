@@ -1,6 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
+import ArbitraryRenders from "../Scene/ArbitraryRenders.js";
 
 const Flags = {
   CULL: 1,
@@ -38,6 +39,9 @@ function DrawCommand(options) {
   this._shaderProgram = options.shaderProgram;
   this._uniformMap = options.uniformMap;
   this._renderState = options.renderState;
+  // if (ArbitraryRenders.debugMode && this._renderState && this._renderState.depthTest){
+  //   console.trace("AAA Created draw command with depth test");
+  // }
   this._framebuffer = options.framebuffer;
   this._pass = options.pass;
   this._owner = options.owner;
@@ -650,6 +654,39 @@ DrawCommand.shallowClone = function (command, result) {
  * @param {PassState} [passState] The state for the current render pass.
  */
 DrawCommand.prototype.execute = function (context, passState) {
-  context.draw(this, passState);
+  if (ArbitraryRenders.debugMode) {
+    const hasCustomFrag = this._shaderProgram._fragmentShaderText.includes('12345');
+    const gl = context._gl;
+    const fb = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+    // const hasCustomFrameBuffer = !!fb;
+    if (hasCustomFrag) {
+      // console.trace("AAA DrawCommand.execute fb", hasCustomFrag, fb, this._shaderProgram);
+      const attachment = gl.getFramebufferAttachmentParameter(
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME
+      );
+
+      const srgbEnabled = gl.isEnabled(gl.FRAMEBUFFER_SRGB);
+
+      const blending = gl.isEnabled(gl.BLEND);
+      
+      // const internalFormat = gl.getTexLevelParameter(
+      //   gl.TEXTURE_2D,
+      //   0,
+      //   gl.TEXTURE_INTERNAL_FORMAT
+      // );
+      
+      // console.log("AAA DrawCommand.execute", fb.constructor.name, attachment.constructor.name, srgbEnabled, blending); //, attachment, internalFormat);
+    } else {
+      // console.log("AAA DrawCommand.execute fb", hasCustomFrag, fb, this._shaderProgram);
+    }
+  }
+  try {
+    context.draw(this, passState);
+  } catch(err) {
+    console.trace("AAA error", err);
+    throw err;
+  }
 };
 export default DrawCommand;

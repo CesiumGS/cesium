@@ -4698,8 +4698,8 @@ Scene.prototype.setupArbitraryRenderInstance = function (key) {
   if (this._arbitraryRenders[key]) {
     this._arbitraryRenders[key].destroy();
   }
-  return (this._arbitraryRenders[key] = new ArbitraryRenders(this));
-};
+  return this._arbitraryRenders[key] = new ArbitraryRenders(this);
+}
 
 /**
  *
@@ -4711,16 +4711,29 @@ Scene.prototype.setupArbitraryRenderInstance = function (key) {
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  * @exception {DeveloperError} Arbitrary render instance doesn't exist or isn't setup properly
  */
-Scene.prototype.generateArbitraryRender = function (
-  key,
-  ray,
-  snapshotTransforms,
-) {
+Scene.prototype.generateArbitraryRenderFromRay = function (key, ray, snapshotTransforms, overrideUp = undefined) {
   Check.defined("ray", ray);
 
   const arbRen = this._arbitraryRenders[key];
   Check.defined("arbRen", arbRen);
 
+  // Generate render output
+  const renderFunction = (scn) => ArbitraryRenders.getSnapshotFromRay(arbRen, scn, ray, overrideUp);
+  return this._generateArbitraryRender(key, snapshotTransforms, renderFunction);
+};
+
+Scene.prototype.generateArbitraryRenderFromCamera = function (key, camera, snapshotTransforms) {
+  Check.defined("camera", camera);
+
+  const arbRen = this._arbitraryRenders[key];
+  Check.defined("arbRen", arbRen);
+
+  // Generate render output
+  const renderFunction = (scn) => ArbitraryRenders.getSnapshotFromCamera(arbRen, scn, camera);
+  return this._generateArbitraryRender(key, snapshotTransforms, renderFunction);
+};
+
+Scene.prototype._generateArbitraryRender = function (key, snapshotTransforms, renderFunction) {
   if (this.mode !== SceneMode.SCENE3D) {
     throw new DeveloperError("Snapshots are only supported in 3D mode.");
   }
@@ -4733,9 +4746,6 @@ Scene.prototype.generateArbitraryRender = function (
     }
   }
 
-  // Generate render output
-  const renderFunction = (scn) =>
-    ArbitraryRenders.getSnapshot(arbRen, scn, ray);
   const renderOutput = this.triggerArbitraryRender(renderFunction);
 
   // Restore any transformed cesium objects
@@ -5340,9 +5350,7 @@ Scene.prototype.destroy = function () {
     this._brdfLutGenerator && this._brdfLutGenerator.destroy();
   this._picking = this._picking && this._picking.destroy();
 
-  Object.values(this._arbitraryRenders).forEach((ar) => {
-    ar.destroy();
-  });
+  Object.values(this._arbitraryRenders).forEach((ar) => { ar.destroy(); });
   this._arbitraryRenders = {};
 
   this._defaultView = this._defaultView && this._defaultView.destroy();

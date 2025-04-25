@@ -28,6 +28,9 @@ struct czm_modelMaterial {
     vec3 normalEC;
     float occlusion;
     vec3 emissive;
+#ifdef CUSTOM_SHADER_REPLACE_MATERIAL
+    vec4 colorOverride;
+#endif
 #ifdef USE_SPECULAR
     float specularWeight;
 #endif

@@ -82,6 +82,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * @param {Object<string, VaryingType>} [options.varyings] A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
  * @param {string} [options.vertexShaderText] The custom vertex shader as a string of GLSL code. It must include a GLSL function called vertexMain. See the example for the expected signature. If not specified, the custom vertex shader step will be skipped in the computed vertex shader.
  * @param {string} [options.fragmentShaderText] The custom fragment shader as a string of GLSL code. It must include a GLSL function called fragmentMain. See the example for the expected signature. If not specified, the custom fragment shader step will be skipped in the computed fragment shader.
+ * @param {bool} [options.setFragColorDirectly] If true, customShader fragment stage will skip various lighting and styling steps so you can directly set out_FragColor with material.diffuse and material.alpha (RGB and Alpha)
  *
  * @alias CustomShader
  * @constructor
@@ -167,6 +168,14 @@ function CustomShader(options) {
    * @readonly
    */
   this.fragmentShaderText = options.fragmentShaderText;
+  /**
+   * The user-defined GLSL code for the fragment shader
+   *
+   * @type {boolean}
+   * @readonly
+   */
+  this.setFragColorDirectly = defaultValue(options.setFragColorDirectly, false);
+  
 
   /**
    * The translucency mode, which determines how the custom shader will be applied. If the value is

@@ -146,6 +146,7 @@ FramebufferManager.prototype.update = function (
   numSamples,
   pixelDatatype,
   pixelFormat,
+  debug = false
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {
@@ -164,6 +165,10 @@ FramebufferManager.prototype.update = function (
     this._color ? defaultValue(this._pixelFormat, PixelFormat.RGBA) : undefined,
   );
 
+  if (debug) {
+    console.log("AAA FramebufferManager.update", numSamples, pixelDatatype, pixelFormat);
+  }
+  
   if (this.isDirty(width, height, numSamples, pixelDatatype, pixelFormat)) {
     this.destroy();
     this._width = width;
@@ -260,7 +265,7 @@ FramebufferManager.prototype.update = function (
         destroyAttachments: false,
       });
     } else {
-      this._framebuffer = new Framebuffer({
+      const fbOptions = {
         context: context,
         colorTextures: this._colorTextures,
         depthTexture: this._depthTexture,
@@ -268,8 +273,15 @@ FramebufferManager.prototype.update = function (
         depthStencilTexture: this._depthStencilTexture,
         depthStencilRenderbuffer: this._depthStencilRenderbuffer,
         destroyAttachments: false,
-      });
+      };
+      if (debug) {
+        console.log("AAA fbOptions", fbOptions);
+      }
+      this._framebuffer = new Framebuffer(fbOptions, debug);
     }
+  }
+  if (debug) {
+    console.log("AAA fbm", this.framebuffer);
   }
 };
 

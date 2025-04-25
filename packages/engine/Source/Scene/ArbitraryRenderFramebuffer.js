@@ -3,6 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 /**
  * @private
@@ -24,7 +25,10 @@ function ArbitraryRenderFrameBuffer(context) {
 
   this._context = context;
   this._fb = new FramebufferManager({
-    depthStencil: true,
+    color:true,
+    depthStencil: false,
+    depth:true,
+    pixelDatatype: PixelDatatype.FLOAT
   });
   this._passState = passState;
   this._width = 0;
@@ -47,7 +51,7 @@ ArbitraryRenderFrameBuffer.prototype.begin = function (
   // Create or recreate renderbuffers and framebuffer used for picking
   this._width = width;
   this._height = height;
-  this._fb.update(context, width, height, undefined, pixelDatatype);
+  this._fb.update(context, width, height, undefined, pixelDatatype, undefined, true);
   this._passState.framebuffer = this._fb.framebuffer;
 
   this._passState.viewport.width = width;
@@ -67,18 +71,34 @@ ArbitraryRenderFrameBuffer.prototype.end = function (screenSpaceRectangle) {
   const height = defaultValue(screenSpaceRectangle.height, 1.0);
 
   const context = this._context;
+
+  const gl = context._gl;
+  const fb = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+  const attachment = gl.getFramebufferAttachmentParameter(
+    gl.FRAMEBUFFER,
+    gl.COLOR_ATTACHMENT0,
+    gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME
+  );
+
+  const srgbEnabled = gl.isEnabled(gl.FRAMEBUFFER_SRGB);
+  console.log("FRAMEBUFFER_SRGB enabled:", srgbEnabled);
+
+  const blending = gl.isEnabled(gl.BLEND);
+  console.log("BLEND enabled:", blending);
+
+  console.log("AAA ArbitraryRenderFrameBuffer.readPixels", fb, attachment, srgbEnabled, blending); //, attachment, internalFormat);
+
   const pixels = context.readPixels({
     x: screenSpaceRectangle.x,
     y: screenSpaceRectangle.y,
     width: width,
     height: height,
     framebuffer: this._fb.framebuffer,
-  });
+  }, true
+  );
 
   return {
     pixels: pixels,
-    x: screenSpaceRectangle.x,
-    y: screenSpaceRectangle.y,
     width: width,
     height: height,
   };

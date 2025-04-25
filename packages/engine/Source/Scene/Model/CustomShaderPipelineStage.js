@@ -128,6 +128,16 @@ CustomShaderPipelineStage.process = function (
       ShaderDestination.FRAGMENT,
     );
 
+    // Define out_FragColor directly with 
+    if(customShader.setFragColorDirectly) {
+      // console.log("AAA customShader.setFragColorDirectly");
+      shaderBuilder.addDefine(
+        "SET_CUSTOM_FRAG_COLOR_DIRECTLY",
+        undefined,
+        ShaderDestination.FRAGMENT,
+      );
+    }
+
     // add defines like CUSTOM_SHADER_MODIFY_MATERIAL
     const shaderModeDefine = CustomShaderMode.getDefineName(customShader.mode);
     shaderBuilder.addDefine(
