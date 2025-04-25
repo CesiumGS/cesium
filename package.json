@@ -52,7 +52,7 @@
   ],
   "dependencies": {
     "@cesium/engine": "^16.0.0",
-    "@cesium/wasm-splats": "^0.1.0-alpha.1",
+    "@cesium/wasm-splats": "^0.1.0-alpha.2",
     "@cesium/widgets": "^11.1.0",
     "@spz-loader/core": "^0.1.0"
   },
