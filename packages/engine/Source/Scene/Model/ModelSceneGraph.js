@@ -132,7 +132,6 @@ function ModelSceneGraph(options) {
   this._rootBoundingSphere = new BoundingSphere();
   this._rootTransform = Matrix4.clone(Matrix4.IDENTITY);
 
-  // TODO: Computed bounding sphere or something?
   // The scene graph's bounding sphere is model space, so that
   // the model's bounding sphere can be recomputed when given a
   // new model matrix.
@@ -178,7 +177,7 @@ Object.defineProperties(ModelSceneGraph.prototype, {
     },
   },
 
-  // TODO: Rename: The computed model matrix for node is only the transform up to the root. Nor does it include the top-level modelMatrix. Probably should just be the axis correction ?
+  // TODO: Should model.modelMatrix really be stored in this class? Or should it live only at the model level?
   /**
    * The axis-corrected model matrix.
    *
@@ -252,11 +251,12 @@ Object.defineProperties(ModelSceneGraph.prototype, {
 
   hasInstances: {
     get: function () {
-      return this._modelInstances.length > 0;
+      return this._modelInstances && this._modelInstances.length > 0;
     },
   },
 });
 
+// TODO: Doc
 ModelSceneGraph.prototype.initialize = function (model, components) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
@@ -386,7 +386,7 @@ function computeRootTransform(sceneGraph, result) {
  * @returns {Matrix4}
  */
 function computeModelMatrix(modelMatrix, rootTransform, result) {
-  // TODO: MOdel Scale?
+  // TODO: include model scaling
   // modelMatrix = Matrix4.multiplyByUniformScale(
   //   modelMatrix,
   //   computedModelScale,
@@ -438,7 +438,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
   );
 }
 
-// TODO: Private member
+// TODO: A private member function would be cleaner and easier to test.
 /**
  * Recursively traverse through the nodes in the scene graph to create
  * their runtime versions, using a post-order depth-first traversal.
@@ -505,7 +505,7 @@ function traverseAndCreateSceneGraph(sceneGraph, model, node, transformToRoot) {
   const name = node.name;
   if (defined(name)) {
     const publicNode = new ModelNode(model, runtimeNode);
-    // TODO: This is sketch. Why doesn't it live here?
+    // TODO: Why does `_nodesByName` live on the model and not here?
     model._nodesByName[name] = publicNode;
   }
 

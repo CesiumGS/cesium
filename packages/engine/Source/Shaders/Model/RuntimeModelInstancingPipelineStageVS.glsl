@@ -14,5 +14,6 @@ void RuntimeModelInstancingStage(
     attributes.positionMC = (relativePositionMC + translateRelativeToEye).xyz;
 
     instanceModelView = czm_modelViewRelativeToEye;
+    // TODO: Normals
     //instanceModelViewInverseTranspose = mat3(u_instance_modifiedModelView * instanceModel);
 }
