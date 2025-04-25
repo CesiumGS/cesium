@@ -306,26 +306,6 @@ function prepareSpzData(loadPlan, context) {
     position.typedArray[i + 1] = -position.typedArray[i + 1];
     position.typedArray[i + 2] = -position.typedArray[i + 2];
   }
-
-  const rotations = ModelUtility.getAttributeBySemantic(
-    loadPlan.primitive,
-    VertexAttributeSemantic.ROTATION,
-  );
-
-  //180* rotation around Y. move this
-  const rots = rotations.typedArray;
-  for (let q = 0; q < rots.length; q += 4) {
-    const w = rots[q];
-    const x = -rots[q + 3];
-    const y = rots[q + 2];
-    const z = -rots[q + 1];
-
-    rots[q] = y;
-    rots[q + 1] = -x;
-    rots[q + 2] = w;
-    rots[q + 3] = -z;
-  }
-  rotations.typedArray = rots;
 }
 
 /**
