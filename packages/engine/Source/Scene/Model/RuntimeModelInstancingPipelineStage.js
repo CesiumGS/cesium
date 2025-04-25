@@ -1,0 +1,326 @@
+import Cartesian3 from "../../Core/Cartesian3.js";
+import combine from "../../Core/combine.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import defined from "../../Core/defined.js";
+import EncodedCartesian3 from "../../Core/EncodedCartesian3.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import InstancingStageCommon from "../../Shaders/Model/InstancingStageCommon.js";
+import RuntimeModelInstancingPipelineStageVS from "../../Shaders/Model/RuntimeModelInstancingPipelineStageVS.js";
+
+const nodeTransformScratch = new Matrix4();
+
+/**
+ * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
+ * level for model instances specified using <code>ModelInstance</code>
+ *
+ * @namespace RuntimeModelInstancingPipelineStage
+ * @private
+ */
+const RuntimeModelInstancingPipelineStage = {
+  name: "RuntimeModelInstancingPipelineStage", // Helps with debugging
+};
+
+/**
+ * Process a node. This modifies the following parts of the render resources:
+ * <ul>
+ *  <li> creates buffers for the typed arrays of each attribute, if they do not yet exist
+ *  <li> adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
+ *  <li> sets the instancing translation min and max to compute an accurate bounding volume</li>
+ * </ul>
+ *
+ * If the scene is in either 2D or CV mode, this stage also:
+ * <ul>
+ *  <li> adds additional attributes for the transformation attributes projected to 2D
+ *  <li> adds a flag to the shader to use the 2D instanced attributes
+ *  <li> adds a uniform for the view model matrix in 2D
+ * </ul>
+ *
+ * @param {NodeRenderResources} renderResources The render resources for this node.
+ * @param {ModelComponents.Node} node The node.
+ * @param {FrameState} frameState The frame state.
+ */
+RuntimeModelInstancingPipelineStage.process = function (
+  renderResources,
+  node,
+  frameState,
+) {
+  const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("HAS_INSTANCING");
+  shaderBuilder.addDefine(
+    "USE_API_INSTANCING",
+    undefined,
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addVertexLines(InstancingStageCommon);
+  shaderBuilder.addVertexLines(RuntimeModelInstancingPipelineStageVS);
+
+  const model = renderResources.model;
+  const sceneGraph = model.sceneGraph;
+
+  /**
+   * @type {ModelInstance[]}
+   */
+  const modelInstances = sceneGraph.modelInstances;
+
+  const attributes = RuntimeModelInstancingPipelineStage._createAttributes(
+    frameState,
+    renderResources,
+    modelInstances,
+  );
+
+  renderResources.instanceCount = modelInstances.length;
+  renderResources.attributes.push.apply(renderResources.attributes, attributes);
+
+  const uniformMap = RuntimeModelInstancingPipelineStage._createUniforms(
+    renderResources,
+    sceneGraph,
+  );
+  renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
+};
+
+// TODO: ?
+// function getModelMatrixAndNodeTransform(
+//   renderResources,
+//   modelMatrix,
+//   nodeComputedTransform,
+// ) {
+//   const model = renderResources.model;
+//   const sceneGraph = model.sceneGraph;
+
+//   const instances = renderResources.runtimeNode.node.instances;
+//   if (instances.transformInWorldSpace) {
+//     // Replicate the multiplication order in RuntimeModelInstancingPipelineStageVS.
+//     modelMatrix = Matrix4.multiplyTransformation(
+//       model.modelMatrix,
+//       sceneGraph.components.transform,
+//       modelMatrix,
+//     );
+
+//     nodeComputedTransform = Matrix4.multiplyTransformation(
+//       sceneGraph.axisCorrectionMatrix,
+//       renderResources.runtimeNode.computedTransform,
+//       nodeComputedTransform,
+//     );
+//   } else {
+//     // The node transform should be pre-multiplied with the instancing transform.
+//     modelMatrix = Matrix4.clone(sceneGraph.computedModelMatrix, modelMatrix);
+//     modelMatrix = Matrix4.multiplyTransformation(
+//       modelMatrix,
+//       renderResources.runtimeNode.computedTransform,
+//       modelMatrix,
+//     );
+
+//     nodeComputedTransform = Matrix4.clone(
+//       Matrix4.IDENTITY,
+//       nodeComputedTransform,
+//     );
+//   }
+// }
+
+RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
+  modelInstances,
+) {
+  const elements = 18;
+  const count = modelInstances.length;
+  const transformsTypedArray = new Float32Array(count * elements);
+
+  for (let i = 0; i < count; i++) {
+    const modelInstance = modelInstances[i];
+    if (!defined(modelInstance)) {
+      continue;
+    }
+
+    const transform = modelInstance.relativeTransform ?? Matrix4.IDENTITY;
+    const offset = elements * i;
+
+    transformsTypedArray[offset + 0] = transform[0];
+    transformsTypedArray[offset + 1] = transform[4];
+    transformsTypedArray[offset + 2] = transform[8];
+    transformsTypedArray[offset + 3] = transform[12];
+    transformsTypedArray[offset + 4] = transform[1];
+    transformsTypedArray[offset + 5] = transform[5];
+    transformsTypedArray[offset + 6] = transform[9];
+    transformsTypedArray[offset + 7] = transform[13];
+    transformsTypedArray[offset + 8] = transform[2];
+    transformsTypedArray[offset + 9] = transform[6];
+    transformsTypedArray[offset + 10] = transform[10];
+    transformsTypedArray[offset + 11] = transform[14];
+
+    const translation = modelInstance.center ?? Cartesian3.ZERO;
+
+    EncodedCartesian3.writeElements(
+      translation,
+      transformsTypedArray,
+      offset + 12,
+    );
+  }
+
+  return transformsTypedArray;
+};
+
+RuntimeModelInstancingPipelineStage._createAttributes = function (
+  frameState,
+  renderResources,
+  modelInstances,
+) {
+  const context = frameState.context;
+  const usage = BufferUsage.STATIC_DRAW;
+
+  // Create typed array and buffer
+  const transformsTypedArray =
+    RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
+      modelInstances,
+    );
+  const transformsBuffer = Buffer.createVertexBuffer({
+    context,
+    usage,
+    typedArray: transformsTypedArray,
+  });
+
+  // Destruction of resources allocated by the Model
+  // is handled by Model.destroy().
+  transformsBuffer.vertexArrayDestroyable = false;
+
+  // Add attribute declarations
+  const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addAttribute("vec4", `a_instancingTransformRow0`);
+  shaderBuilder.addAttribute("vec4", `a_instancingTransformRow1`);
+  shaderBuilder.addAttribute("vec4", `a_instancingTransformRow2`);
+
+  shaderBuilder.addAttribute("vec3", `a_instancingPositionHigh`);
+  shaderBuilder.addAttribute("vec3", `a_instancingPositionLow`);
+
+  // Create attributes
+  const vertexSizeInFloats = 18;
+  const componentByteSize = ComponentDatatype.getSizeInBytes(
+    ComponentDatatype.FLOAT,
+  );
+  const strideInBytes = componentByteSize * vertexSizeInFloats;
+
+  const attributes = [
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: 0,
+      strideInBytes: strideInBytes,
+      instanceDivisor: 1,
+    },
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: componentByteSize * 4,
+      strideInBytes: strideInBytes,
+      instanceDivisor: 1,
+    },
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: componentByteSize * 8,
+      strideInBytes: strideInBytes,
+      instanceDivisor: 1,
+    },
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsBuffer,
+      componentsPerAttribute: 3,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: componentByteSize * 12,
+      strideInBytes: strideInBytes,
+      instanceDivisor: 1,
+    },
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsBuffer,
+      componentsPerAttribute: 3,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: componentByteSize * 15,
+      strideInBytes: strideInBytes,
+      instanceDivisor: 1,
+    },
+  ];
+
+  return attributes;
+};
+
+RuntimeModelInstancingPipelineStage._createUniforms = function (
+  renderResources,
+  sceneGraph,
+) {
+  const shaderBuilder = renderResources.shaderBuilder;
+  //   shaderBuilder.addUniform(
+  //     "mat4",
+  //     "u_instance_modifiedModelView",
+  //     ShaderDestination.VERTEX,
+  //   );
+  shaderBuilder.addUniform(
+    "mat4",
+    "u_instance_nodeTransform",
+    ShaderDestination.VERTEX,
+  );
+
+  // TODO
+  // The i3dm format applies the instancing transforms in world space.
+  // Instancing matrices come from a vertex attribute rather than a
+  // uniform, and they are multiplied in the middle of the modelView matrix
+  // product. This means czm_modelView can't be used. Instead, we split the
+  // matrix into two parts, modifiedModelView and nodeTransform, and handle
+  // this in RuntimeModelInstancingPipelineStageVS.glsl. Conceptually the product looks like
+  // this:
+  //
+  // modelView = u_modifiedModelView * a_instanceTransform * u_nodeTransform
+  //   uniformMap.u_instance_modifiedModelView = function () {
+  //     // Model matrix without the node hierarchy or axis correction
+  //     // (see u_instance_nodeTransform).
+  //     let modifiedModelMatrix = Matrix4.multiplyTransformation(
+  //       // For 3D Tiles, model.modelMatrix is the computed tile
+  //       // transform (which includes tileset.modelMatrix). This always applies
+  //       // for i3dm, since such models are always part of a tileset.
+  //       model.modelMatrix,
+  //       // For i3dm models, components.transform contains the RTC_CENTER
+  //       // translation.
+  //       sceneGraph.components.transform,
+  //       modelViewScratch,
+  //     );
+
+  //     // modifiedModelView = view * modifiedModel
+  //     return Matrix4.multiplyTransformation(
+  //       frameState.context.uniformState.view,
+  //       modifiedModelMatrix,
+  //       modelViewScratch,
+  //     );
+  //   };
+
+  const runtimeNode = renderResources.runtimeNode;
+
+  const uniformMap = {
+    u_instance_nodeTransform: () => {
+      // nodeTransform = axisCorrection * nodeHierarchyTransform
+      return Matrix4.multiplyTransformation(
+        // includes glTF y-up to 3D Tiles z-up
+        sceneGraph.rootTransform,
+        // This transforms from the node's coordinate system to the root
+        // of the node hierarchy
+        runtimeNode.computedTransform,
+        nodeTransformScratch,
+      );
+    },
+  };
+
+  return uniformMap;
+};
+
+export default RuntimeModelInstancingPipelineStage;

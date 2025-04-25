@@ -334,7 +334,6 @@ function Model(options) {
   // The model's bounding sphere and its initial radius are computed
   // in ModelSceneGraph.
   this._boundingSphere = new BoundingSphere();
-  this._initialRadius = undefined;
 
   this._heightReference = options.heightReference ?? HeightReference.NONE;
   this._heightDirty = this._heightReference !== HeightReference.NONE;
@@ -489,7 +488,9 @@ function Model(options) {
   this._readyEvent = new Event();
   this._texturesReadyEvent = new Event();
 
-  this._sceneGraph = undefined;
+  this._sceneGraph = new ModelSceneGraph({
+    modelInstances: options.instances,
+  });
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 
   /**
@@ -867,6 +868,19 @@ Object.defineProperties(Model.prototype, {
     },
   },
 
+  instances: {
+    get: function () {
+      return this._sceneGraph.modelInstances;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined(value);
+      //>>includeEnd('debug')
+
+      this._sceneGraph.modelInstances = value;
+    },
+  },
+
   /**
    * Gets or sets the distance display condition, which specifies at what distance
    * from the camera this model will be displayed.
@@ -1135,9 +1149,7 @@ Object.defineProperties(Model.prototype, {
       }
       //>>includeEnd('debug');
 
-      const modelMatrix = defined(this._clampedModelMatrix)
-        ? this._clampedModelMatrix
-        : this.modelMatrix;
+      const modelMatrix = this._clampedModelMatrix ?? this.modelMatrix;
       updateBoundingSphere(this, modelMatrix);
 
       return this._boundingSphere;
@@ -1941,12 +1953,9 @@ Model.prototype.update = function (frameState) {
       createModelFeatureTables(this, structuralMetadata);
     }
 
-    const sceneGraph = new ModelSceneGraph({
-      model: this,
-      modelComponents: components,
-    });
+    const sceneGraph = this._sceneGraph;
+    sceneGraph.initialize(this, components);
 
-    this._sceneGraph = sceneGraph;
     this._gltfCredits = sceneGraph.components.asset.credits;
   }
 
@@ -2233,7 +2242,12 @@ function updateVerticalExaggeration(model, frameState) {
 function buildDrawCommands(model, frameState) {
   if (!model._drawCommandsBuilt) {
     model.destroyPipelineResources();
-    model._sceneGraph.buildDrawCommands(frameState);
+
+    const modelMatrix = model._clampedModelMatrix ?? model.modelMatrix;
+    updateBoundingSphere(model, modelMatrix);
+
+    model._sceneGraph.buildDrawCommands(model, frameState);
+
     model._drawCommandsBuilt = true;
   }
 }
@@ -2329,30 +2343,39 @@ function updateBoundingSphereAndScale(model, frameState) {
     ? model._clampedModelMatrix
     : model.modelMatrix;
 
+  model._computedScale = getComputedScale(model, modelMatrix, frameState);
   updateBoundingSphere(model, modelMatrix);
-  updateComputedScale(model, modelMatrix, frameState);
 }
 
+/**
+ * Updates <code>model._boundingSphere</code>, accounting for the model's modelMatrix and scale properties.
+ * @param {Model} model
+ * @param {Matrix4} modelMatrix
+ */
 function updateBoundingSphere(model, modelMatrix) {
-  model._clampedScale = defined(model._maximumScale)
-    ? Math.min(model._scale, model._maximumScale)
-    : model._scale;
+  const maximumScale = model._maximumScale ?? Number.POSITIVE_INFINITY;
+  const scale = (model._clampedScale = Math.min(model._scale, maximumScale));
 
-  model._boundingSphere.center = Cartesian3.multiplyByScalar(
-    model._sceneGraph.boundingSphere.center,
-    model._clampedScale,
-    model._boundingSphere.center,
+  const sceneGraph = model.sceneGraph;
+  const rootBoundingSphere = sceneGraph.rootBoundingSphere;
+  const modelBoundingSphere = model._boundingSphere;
+  modelBoundingSphere.center = Cartesian3.multiplyByScalar(
+    rootBoundingSphere.center,
+    scale,
+    modelBoundingSphere.center,
   );
-  model._boundingSphere.radius = model._initialRadius * model._clampedScale;
+
+  const radius = rootBoundingSphere.radius;
+  modelBoundingSphere.radius = radius * scale;
 
   model._boundingSphere = BoundingSphere.transform(
-    model._boundingSphere,
+    modelBoundingSphere,
     modelMatrix,
-    model._boundingSphere,
+    modelBoundingSphere,
   );
 }
 
-function updateComputedScale(model, modelMatrix, frameState) {
+function getComputedScale(model, modelMatrix, frameState) {
   let scale = model.scale;
 
   if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
@@ -2363,37 +2386,51 @@ function updateComputedScale(model, modelMatrix, frameState) {
       context.drawingBufferHeight,
     );
 
-    Matrix4.getTranslation(modelMatrix, scratchPosition);
+    const radius = model.sceneGraph.rootBoundingSphere.radius;
+    const getScaleInPixels = (transform) => {
+      let position = Matrix4.getTranslation(transform, scratchPosition);
 
-    if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualEllipsoidPosition(
-        frameState,
-        scratchPosition,
-        scratchPosition,
-      );
+      if (model._sceneMode !== SceneMode.SCENE3D) {
+        position = SceneTransforms.computeActualEllipsoidPosition(
+          frameState,
+          position,
+          position,
+        );
+      }
+
+      return scaleInPixels(position, radius, frameState);
+    };
+
+    let maxScaleInPixels = 0.5; // TODO: We need to ensure this is never 0, because we divide by it
+    maxScaleInPixels = Math.max(
+      maxScaleInPixels,
+      getScaleInPixels(modelMatrix),
+    );
+
+    const sceneGraph = model.sceneGraph;
+    if (sceneGraph.hasInstances) {
+      for (const modelInstance of sceneGraph.modelInstances) {
+        const transform = modelInstance.transform;
+        maxScaleInPixels = Math.max(
+          maxScaleInPixels,
+          getScaleInPixels(transform),
+        );
+      }
     }
 
-    const radius = model._boundingSphere.radius;
-    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
-
     // metersPerPixel is always > 0.0
-    const pixelsPerMeter = 1.0 / metersPerPixel;
-    const diameterInPixels = Math.min(
-      pixelsPerMeter * (2.0 * radius),
-      maxPixelSize,
-    );
+    const pixelsPerMeter = 1.0 / maxScaleInPixels;
+    const diameter = 2.0 * radius;
+    const diameterInPixels = Math.min(pixelsPerMeter * diameter, maxPixelSize);
 
     // Maintain model's minimum pixel size
     if (diameterInPixels < model.minimumPixelSize) {
-      scale =
-        (model.minimumPixelSize * metersPerPixel) /
-        (2.0 * model._initialRadius);
+      scale = (model.minimumPixelSize * maxScaleInPixels) / diameter;
     }
   }
 
-  model._computedScale = defined(model.maximumScale)
-    ? Math.min(model.maximumScale, scale)
-    : scale;
+  const maxScale = model.maximumScale ?? Number.POSITIVE_INFINITY;
+  return Math.min(scale, maxScale);
 }
 
 function updatePickIds(model) {
@@ -2556,7 +2593,7 @@ function submitDrawCommands(model, frameState) {
 
   if (showModel && !model._ignoreCommands && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);
-    model._sceneGraph.pushDrawCommands(frameState);
+    model._sceneGraph.pushDrawCommands(model, frameState);
   }
 }
 
@@ -3327,6 +3364,7 @@ function makeModelOptions(loader, modelType, options) {
     pointCloudShading: options.pointCloudShading,
     classificationType: options.classificationType,
     pickObject: options.pickObject,
+    instances: options.instances,
   };
 }
 

@@ -201,52 +201,30 @@ ModelUtility.getAttributeInfo = function (attribute) {
   };
 };
 
-const cartesianMaxScratch = new Cartesian3();
-const cartesianMinScratch = new Cartesian3();
-
 /**
  * Get the minimum and maximum values for a primitive's POSITION attribute.
  * This is used to compute the bounding sphere of the primitive, as well as
  * the bounding sphere of the whole model.
- *
  * @param {ModelComponents.Primitive} primitive The primitive components.
- * @param {Cartesian3} [instancingTranslationMin] The component-wise minimum value of the instancing translation attribute.
- * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
- *
- * @returns {object} An object containing the minimum and maximum position values.
- *
+ * @returns {Cartesian3[]} An array containing the minimum and maximum position values respectively.
  * @private
  */
-ModelUtility.getPositionMinMax = function (
-  primitive,
-  instancingTranslationMin,
-  instancingTranslationMax,
-) {
+ModelUtility.getPositionMinMax = function (primitive) {
   const positionGltfAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     "POSITION",
   );
 
-  let positionMax = positionGltfAttribute.max;
-  let positionMin = positionGltfAttribute.min;
+  const positionMax = Cartesian3.clone(
+    positionGltfAttribute.max,
+    new Cartesian3(),
+  );
+  const positionMin = Cartesian3.clone(
+    positionGltfAttribute.min,
+    new Cartesian3(),
+  );
 
-  if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
-    positionMin = Cartesian3.add(
-      positionMin,
-      instancingTranslationMin,
-      cartesianMinScratch,
-    );
-    positionMax = Cartesian3.add(
-      positionMax,
-      instancingTranslationMax,
-      cartesianMaxScratch,
-    );
-  }
-
-  return {
-    min: positionMin,
-    max: positionMax,
-  };
+  return [positionMin, positionMax];
 };
 
 /**
