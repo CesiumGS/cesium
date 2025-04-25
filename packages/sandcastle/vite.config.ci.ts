@@ -25,12 +25,12 @@ export default defineConfig(() => {
       },
       {
         entry: undefined,
-        template: "bucket2.html",
-        filename: "bucket2.html",
+        template: "bucket.html",
+        filename: "bucket.html",
         injectOptions: {
           data: {
-            scriptPath: `${process.env.BASE_URL}/Build/CesiumUnminified/Cesium.js`,
-            cesiumBase: `${process.env.BASE_URL}/Build/CesiumUnminified`,
+            scriptPath: `${process.env.BASE_URL}Build/CesiumUnminified/Cesium.js`,
+            cesiumBase: `${process.env.BASE_URL}Build/CesiumUnminified`,
           },
         },
       },

@@ -42,8 +42,8 @@ export default defineConfig(() => {
       },
       {
         entry: undefined,
-        template: "bucket2.html",
-        filename: "bucket2.html",
+        template: "bucket.html",
+        filename: "bucket.html",
         injectOptions: {
           data: {
             scriptPath: `${cesiumSource}/Cesium.js`,
