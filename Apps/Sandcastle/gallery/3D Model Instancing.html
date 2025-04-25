@@ -111,8 +111,6 @@
             },
           });
 
-          viewer.zoomTo(modelSphere);
-
           const sceneGraph = model.sceneGraph;
           const axisCorrectionMatrix = sceneGraph.axisCorrectionMatrix;
           const rootNodes = sceneGraph._rootNodes.map((i) => {
@@ -127,11 +125,8 @@
               rootTransform,
               new Matrix4(),
             );
-            const rootBoundingSphere = sceneGraph.rootBoundingSphere;
-            const boundingSphere = BoundingSphere.transform(
-              rootBoundingSphere,
-              rootModelMatrix,
-            );
+
+            const boundingSphere = instance.getBoundingSphere(model);
             const sphere = viewer.entities.add({
               position: boundingSphere.center,
               ellipsoid: {
@@ -145,6 +140,8 @@
                 outlineColor: Cesium.Color.GREEN,
               },
             });
+
+            viewer.camera.flyToBoundingSphere(boundingSphere);
 
             const createDebugBoundingSpheres = (nodes, color) => {
               for (const runtimeNode of nodes) {

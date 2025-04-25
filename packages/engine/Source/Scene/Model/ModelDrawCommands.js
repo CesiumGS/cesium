@@ -84,8 +84,6 @@ function createShaderProgram(
   return shaderProgram;
 }
 
-const scratchBoundingVolumeTransform = new Matrix4();
-
 /**
  * Builds the {@link DrawCommand} that serves as the basis for either creating
  * a {@link ModelDrawCommand} or a {@link ModelRuntimePrimitive}
@@ -241,22 +239,13 @@ ModelDrawCommands.createCommandBoundingSphere = function (
   if (sceneGraph.hasInstances) {
     const instanceBoundingSpheres = [];
     for (const modelInstance of sceneGraph.modelInstances) {
-      // TODO: Can we precompute this in sceneGraph.updateRuntimeNodeTransforms?
-      const rootTransform = Matrix4.multiplyTransformation(
-        sceneGraph.rootTransform,
-        runtimeNode.computedTransform,
-        new Matrix4(),
-      );
-      const primitiveMatrix = modelInstance.computeModelMatrix(
+      const boundingSphere = modelInstance.getPrimitiveBoundingSphere(
         commandModelMatrix,
-        rootTransform,
-        scratchBoundingVolumeTransform,
-      );
-      const bs = BoundingSphere.transform(
+        sceneGraph,
+        runtimeNode,
         primitiveBoundingSphere,
-        primitiveMatrix,
       );
-      instanceBoundingSpheres.push(bs);
+      instanceBoundingSpheres.push(boundingSphere);
     }
 
     return BoundingSphere.fromBoundingSpheres(instanceBoundingSpheres, result);
