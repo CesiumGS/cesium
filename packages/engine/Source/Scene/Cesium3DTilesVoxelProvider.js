@@ -411,6 +411,12 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
 
   const providerOptions = getAttributeInfo(tilesetMetadata, className);
   Object.assign(providerOptions, getShape(root));
+  // TODO: Multiply global transform with shape transform
+  if (defined(root.transform)) {
+    providerOptions.globalTransform = Matrix4.unpack(root.transform);
+  } else {
+    providerOptions.globalTransform = Matrix4.clone(Matrix4.IDENTITY);
+  }
 
   providerOptions.dimensions = Cartesian3.unpack(voxel.dimensions);
   providerOptions.maximumTileCount = getTileCount(tilesetMetadata);
@@ -477,21 +483,13 @@ function validate(tileset) {
 function getShape(tile) {
   const boundingVolume = tile.boundingVolume;
 
-  let tileTransform;
-  if (defined(tile.transform)) {
-    tileTransform = Matrix4.unpack(tile.transform);
-  } else {
-    tileTransform = Matrix4.clone(Matrix4.IDENTITY);
-  }
-
   if (defined(boundingVolume.box)) {
-    return getBoxShape(boundingVolume.box, tileTransform);
+    return getBoxShape(boundingVolume.box);
   } else if (defined(boundingVolume.region)) {
     return getEllipsoidShape(boundingVolume.region);
   } else if (hasExtension(boundingVolume, "3DTILES_bounding_volume_cylinder")) {
     return getCylinderShape(
       boundingVolume.extensions["3DTILES_bounding_volume_cylinder"],
-      tileTransform,
     );
   }
 
@@ -518,11 +516,10 @@ function getEllipsoidShape(region) {
     minBounds: minBounds,
     maxBounds: maxBounds,
     shapeTransform: shapeTransform,
-    globalTransform: Matrix4.clone(Matrix4.IDENTITY),
   };
 }
 
-function getBoxShape(box, tileTransform) {
+function getBoxShape(box) {
   const obb = OrientedBoundingBox.unpack(box);
   const shapeTransform = Matrix4.fromRotationTranslation(
     obb.halfAxes,
@@ -534,11 +531,10 @@ function getBoxShape(box, tileTransform) {
     minBounds: Cartesian3.clone(VoxelBoxShape.DefaultMinBounds),
     maxBounds: Cartesian3.clone(VoxelBoxShape.DefaultMaxBounds),
     shapeTransform: shapeTransform,
-    globalTransform: tileTransform,
   };
 }
 
-function getCylinderShape(cylinder, tileTransform) {
+function getCylinderShape(cylinder) {
   const {
     minRadius,
     maxRadius,
@@ -573,7 +569,6 @@ function getCylinderShape(cylinder, tileTransform) {
     minBounds: Cartesian3.fromElements(minRadius, minAngle, minHeight),
     maxBounds: Cartesian3.fromElements(maxRadius, maxAngle, maxHeight),
     shapeTransform: shapeTransform,
-    globalTransform: tileTransform,
   };
 }
 
