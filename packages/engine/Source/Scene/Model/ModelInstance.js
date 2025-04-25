@@ -7,6 +7,7 @@ import Quaternion from "../../Core/Quaternion";
 
 const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
+const scratchBoundingSphereTransform = new Matrix4();
 
 class ModelInstance {
   constructor(transform) {
@@ -64,8 +65,20 @@ class ModelInstance {
     );
   }
 
-  // TODO: Compute the model matrix to apply to the root node, including the model's modelMatrix, the instance's transform, the component transform, and the axis correction matrix
+  /**
+   * Compute the matrix to transform the instance from the root model
+   * node to world space, taking into accont a top-level modelMatrix
+   * applied to each instance in the collection, and the axis correction
+   * from glTF's up-axis to Cesium's worldspace up-axis.
+   * @param {Matrix4} modelMatrix The model's modelMatrix property
+   * @param {Matrix4} rootTransform The root node transform to model-space
+   * @param {Matrix4} [result] If provided, the instance in which to store the result.
+   * @returns {Matrix4} The computed matrix
+   * @private
+   */
   computeModelMatrix(modelMatrix, rootTransform, result) {
+    result = result ?? new Matrix4();
+
     const instanceTransform = this.transform;
     let transform = Matrix4.multiplyTransformation(
       instanceTransform,
@@ -76,41 +89,78 @@ class ModelInstance {
     return transform;
   }
 
-  getBoundingSphere(modelRadius, result) {
-    const center = this._center;
-    const radius = modelRadius;
+  /**
+   * Get a bounding sphere that encapsulates a model instance.
+   * @param {Model} model The model being instanced.
+   * @param {BoundingSphere} [result] If provided, the instance in which to store the result.
+   * @returns {BoundingSphere} The model instance bounding sphere.
+   * @example
+   * const modelInstance = new Cesium.ModelInstance(instanceModelMatrix);
+   *
+   * // TODO: Model
+   *
+   * const boundingSphere = modelInstance.getBoundingSphere(model);
+   * viewer.camera.flyToBoundingSphere(boundingSphere);
+   */
+  getBoundingSphere(model, result) {
+    const modelMatrix = model.modelMatrix;
+    const sceneGraph = model.sceneGraph;
+    const instanceBoundingSpheres = [];
 
-    if (result) {
-      result.center = Cartesian3.clone(center, result.center);
-      // TODO: This is not how you get the scale
-      result.radius = radius;
-      return result;
+    // TODO: runtime nodes should probably have a internal public accessor
+    for (const runtimeNode of sceneGraph._runtimeNodes) {
+      const runtimePrimitives = runtimeNode.runtimePrimitives;
+      for (const runtimePrimitive of runtimePrimitives) {
+        const primitiveBoundingSphere = runtimePrimitive.boundingSphere;
+        const boundingSphere = this.getPrimitiveBoundingSphere(
+          modelMatrix,
+          sceneGraph,
+          runtimeNode,
+          primitiveBoundingSphere,
+        );
+
+        instanceBoundingSpheres.push(boundingSphere);
+      }
     }
 
-    // TODO: This is not how you get the scale
-    return new BoundingSphere(center, radius);
+    return BoundingSphere.fromBoundingSpheres(instanceBoundingSpheres, result);
   }
 
   /**
-   *
-   * @param {ModelComponents.Primitive} primitive
-   * @param {BoundingSphere} result
-   * @returns
+   * Gets the world space bounding sphere representing this instance of a model primitive.
+   * @param {Matrix4} modelMatrix
+   * @param {ModelSceneGraph} sceneGraph
+   * @param {ModelRuntimeNode} runtimeNode
+   * @param {BoundingSphere} primitiveBoundingSphere
+   * @param {BoundingSphere} [result] If provided, the instance in which to store the result.
+   * @returns {BoundingSphere} The transformed bounding sphere
+   * @private
    */
-  computeNodeBoundingSphere(parentNodeTransform, node, radius, result) {
-    let transform = Matrix4.clone(Matrix4.IDENTITY); //ModelUtility.getNodeTransform(node);
-    transform = Matrix4.multiply(parentNodeTransform, transform, transform);
+  getPrimitiveBoundingSphere(
+    modelMatrix,
+    sceneGraph,
+    runtimeNode,
+    primitiveBoundingSphere,
+    result,
+  ) {
+    result = result ?? new BoundingSphere();
 
-    if (!result) {
-      result = new BoundingSphere();
-    }
-
-    result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
-    result.radius = radius;
-
-    result = BoundingSphere.transform(result, transform, result);
-
-    return result;
+    // TODO: Can we precompute this in sceneGraph.updateRuntimeNodeTransforms?
+    const rootTransform = Matrix4.multiplyTransformation(
+      sceneGraph.rootTransform,
+      runtimeNode.computedTransform,
+      new Matrix4(),
+    );
+    const primitiveMatrix = this.computeModelMatrix(
+      modelMatrix,
+      rootTransform,
+      scratchBoundingSphereTransform,
+    );
+    return BoundingSphere.transform(
+      primitiveBoundingSphere,
+      primitiveMatrix,
+      result,
+    );
   }
 }
 
