@@ -1,4 +1,5 @@
 import { defineConfig, UserConfig } from "vite";
+import { createHtmlPlugin } from "vite-plugin-html";
 import baseConfig from "./vite.config.ts";
 
 export default defineConfig(() => {
@@ -13,6 +14,31 @@ export default defineConfig(() => {
     // "the outDir is not inside project root and will not be emptied" without this setting
     emptyOutDir: true,
   };
+
+  const htmlPlugin = createHtmlPlugin({
+    minify: false,
+    pages: [
+      {
+        entry: "src/main.tsx",
+        template: "index.html",
+        filename: "index.html",
+      },
+      {
+        entry: undefined,
+        template: "bucket2.html",
+        filename: "bucket2.html",
+        injectOptions: {
+          data: {
+            scriptPath: `${process.env.BASE_URL}/Build/CesiumUnminified/Cesium.js`,
+            cesiumBase: `${process.env.BASE_URL}/Build/CesiumUnminified`,
+          },
+        },
+      },
+    ],
+  });
+
+  const plugins = config.plugins ?? [];
+  config.plugins = [...plugins, htmlPlugin];
 
   return config;
 });
