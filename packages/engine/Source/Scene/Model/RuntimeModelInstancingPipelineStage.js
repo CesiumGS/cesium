@@ -81,45 +81,6 @@ RuntimeModelInstancingPipelineStage.process = function (
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
-// TODO: ?
-// function getModelMatrixAndNodeTransform(
-//   renderResources,
-//   modelMatrix,
-//   nodeComputedTransform,
-// ) {
-//   const model = renderResources.model;
-//   const sceneGraph = model.sceneGraph;
-
-//   const instances = renderResources.runtimeNode.node.instances;
-//   if (instances.transformInWorldSpace) {
-//     // Replicate the multiplication order in RuntimeModelInstancingPipelineStageVS.
-//     modelMatrix = Matrix4.multiplyTransformation(
-//       model.modelMatrix,
-//       sceneGraph.components.transform,
-//       modelMatrix,
-//     );
-
-//     nodeComputedTransform = Matrix4.multiplyTransformation(
-//       sceneGraph.axisCorrectionMatrix,
-//       renderResources.runtimeNode.computedTransform,
-//       nodeComputedTransform,
-//     );
-//   } else {
-//     // The node transform should be pre-multiplied with the instancing transform.
-//     modelMatrix = Matrix4.clone(sceneGraph.computedModelMatrix, modelMatrix);
-//     modelMatrix = Matrix4.multiplyTransformation(
-//       modelMatrix,
-//       renderResources.runtimeNode.computedTransform,
-//       modelMatrix,
-//     );
-
-//     nodeComputedTransform = Matrix4.clone(
-//       Matrix4.IDENTITY,
-//       nodeComputedTransform,
-//     );
-//   }
-// }
-
 RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
   modelInstances,
 ) {
@@ -272,43 +233,10 @@ RuntimeModelInstancingPipelineStage._createUniforms = function (
     ShaderDestination.VERTEX,
   );
 
-  // TODO
-  // The i3dm format applies the instancing transforms in world space.
-  // Instancing matrices come from a vertex attribute rather than a
-  // uniform, and they are multiplied in the middle of the modelView matrix
-  // product. This means czm_modelView can't be used. Instead, we split the
-  // matrix into two parts, modifiedModelView and nodeTransform, and handle
-  // this in RuntimeModelInstancingPipelineStageVS.glsl. Conceptually the product looks like
-  // this:
-  //
-  // modelView = u_modifiedModelView * a_instanceTransform * u_nodeTransform
-  //   uniformMap.u_instance_modifiedModelView = function () {
-  //     // Model matrix without the node hierarchy or axis correction
-  //     // (see u_instance_nodeTransform).
-  //     let modifiedModelMatrix = Matrix4.multiplyTransformation(
-  //       // For 3D Tiles, model.modelMatrix is the computed tile
-  //       // transform (which includes tileset.modelMatrix). This always applies
-  //       // for i3dm, since such models are always part of a tileset.
-  //       model.modelMatrix,
-  //       // For i3dm models, components.transform contains the RTC_CENTER
-  //       // translation.
-  //       sceneGraph.components.transform,
-  //       modelViewScratch,
-  //     );
-
-  //     // modifiedModelView = view * modifiedModel
-  //     return Matrix4.multiplyTransformation(
-  //       frameState.context.uniformState.view,
-  //       modifiedModelMatrix,
-  //       modelViewScratch,
-  //     );
-  //   };
-
   const runtimeNode = renderResources.runtimeNode;
 
   const uniformMap = {
     u_instance_nodeTransform: () => {
-      // nodeTransform = axisCorrection * nodeHierarchyTransform
       return Matrix4.multiplyTransformation(
         // includes glTF y-up to 3D Tiles z-up
         sceneGraph.rootTransform,
