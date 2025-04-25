@@ -1,6 +1,5 @@
-import Matrix4 from "../../Core/Matrix4.js";
-import ModelUtility from "./ModelUtility.js";
 import SceneMode from "../SceneMode.js";
+import ModelDrawCommands from "./ModelDrawCommands.js";
 
 /**
  * The model matrix update stage is responsible for updating the model matrices and bounding volumes of the draw commands.
@@ -29,91 +28,43 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   // Skip the update stage if the model is being projected to 2D
   const use2D = frameState.mode !== SceneMode.SCENE3D;
-  if (use2D && sceneGraph._model._projectTo2D) {
+  if (use2D && sceneGraph.projectTo2D) {
     return;
   }
 
-  if (runtimeNode._transformDirty) {
-    const modelMatrix = use2D
-      ? sceneGraph._computedModelMatrix2D
-      : sceneGraph._computedModelMatrix;
-
-    updateRuntimeNode(
+  if (runtimeNode.isComputedTransformDirty) {
+    sceneGraph.updateRuntimeNodeTransforms(
       runtimeNode,
-      sceneGraph,
-      modelMatrix,
       runtimeNode.transformToRoot,
     );
-    runtimeNode._transformDirty = false;
+    updateDrawCommands(runtimeNode, sceneGraph, frameState);
   }
 };
 
 /**
- * Update the modelMatrix and cullFrace of the given draw command.
- *
+ * Recursively update draw commands for all runtime primitives.
  * @private
  */
-function updateDrawCommand(drawCommand, modelMatrix, transformToRoot) {
-  drawCommand.modelMatrix = Matrix4.multiplyTransformation(
-    modelMatrix,
-    transformToRoot,
-    drawCommand.modelMatrix,
-  );
-  drawCommand.cullFace = ModelUtility.getCullFace(
-    drawCommand.modelMatrix,
-    drawCommand.primitiveType,
-  );
-}
-
-/**
- * Recursively update all child runtime nodes and their runtime primitives.
- *
- * @private
- */
-function updateRuntimeNode(
-  runtimeNode,
-  sceneGraph,
-  modelMatrix,
-  transformToRoot,
-) {
-  let i;
-
-  // Apply the current node's transform to the end of the chain
-  transformToRoot = Matrix4.multiplyTransformation(
-    transformToRoot,
-    runtimeNode.transform,
-    new Matrix4(),
-  );
-
-  runtimeNode.updateComputedTransform();
-
+function updateDrawCommands(runtimeNode, sceneGraph, frameState) {
   const primitivesLength = runtimeNode.runtimePrimitives.length;
-  for (i = 0; i < primitivesLength; i++) {
+  for (let i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    updateDrawCommand(
-      runtimePrimitive.drawCommand,
-      modelMatrix,
-      transformToRoot,
+    const drawCommand = runtimePrimitive.drawCommand;
+    const model = runtimePrimitive.model;
+    ModelDrawCommands.updateDrawCommand(
+      drawCommand,
+      model,
+      runtimeNode,
+      runtimePrimitive,
+      frameState,
     );
   }
 
   const childrenLength = runtimeNode.children.length;
-  for (i = 0; i < childrenLength; i++) {
+  for (let i = 0; i < childrenLength; i++) {
     const childRuntimeNode = sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
-    // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
-    childRuntimeNode._transformToRoot = Matrix4.clone(
-      transformToRoot,
-      childRuntimeNode._transformToRoot,
-    );
-
-    updateRuntimeNode(
-      childRuntimeNode,
-      sceneGraph,
-      modelMatrix,
-      transformToRoot,
-    );
-    childRuntimeNode._transformDirty = false;
+    updateDrawCommands(childRuntimeNode, sceneGraph, frameState);
   }
 }
 
