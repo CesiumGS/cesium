@@ -60,15 +60,6 @@ RuntimeModelInstancingPipelineStage.process = function (
   const model = renderResources.model;
   const sceneGraph = model.sceneGraph;
 
-  console.log(
-    "RuntimeModelInstancingPipelineStage sceneGraph.rootTransform ",
-    sceneGraph.rootTransform,
-  );
-  console.log(
-    "RuntimeModelInstancingPipelineStage runtimeNode.computedTransform ",
-    renderResources.runtimeNode.computedTransform,
-  );
-
   /**
    * @type {ModelInstance[]}
    */
