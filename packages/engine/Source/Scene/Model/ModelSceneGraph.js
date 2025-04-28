@@ -209,6 +209,7 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   /**
    * The bounding sphere containing all the primitives in the scene graph
    * in model space.
+   * TODO is this redundant with rootBoundingSphere?
    *
    * @type {BoundingSphere}
    * @readonly
@@ -222,7 +223,8 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   },
 
   /**
-   * TODO
+   * The bounding sphere containing all the primitives in the scene graph
+   * in model space
    */
   rootBoundingSphere: {
     get: function () {
@@ -231,7 +233,9 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   },
 
   /**
-   * TODO
+   * The transform for the scene graph computed by multiplying the
+   * components transform by the the axisCorrectionMatrix
+   * glTF * AxisCorrection
    */
   rootTransform: {
     get: function () {
@@ -244,7 +248,7 @@ Object.defineProperties(ModelSceneGraph.prototype, {
       return this._modelInstances;
     },
     set: function (value) {
-      this._modelInstancess = value;
+      this._modelInstances = value;
     },
   },
 
@@ -360,6 +364,8 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
 
 /**
  * TODO
+ * Multiplies the components transform by the the axisCorrectionMatrix
+ * glTF * AxisCorrection
  * @param {*} sceneGraph
  * @param {*} result
  * @returns
