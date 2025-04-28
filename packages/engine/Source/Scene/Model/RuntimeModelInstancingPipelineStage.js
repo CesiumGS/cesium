@@ -60,6 +60,15 @@ RuntimeModelInstancingPipelineStage.process = function (
   const model = renderResources.model;
   const sceneGraph = model.sceneGraph;
 
+  console.log(
+    "RuntimeModelInstancingPipelineStage sceneGraph.rootTransform ",
+    sceneGraph.rootTransform,
+  );
+  console.log(
+    "RuntimeModelInstancingPipelineStage runtimeNode.computedTransform ",
+    renderResources.runtimeNode.computedTransform,
+  );
+
   /**
    * @type {ModelInstance[]}
    */
@@ -140,6 +149,8 @@ RuntimeModelInstancingPipelineStage._createAttributes = function (
     usage,
     typedArray: transformsTypedArray,
   });
+
+  renderResources.runtimeNode.instancingTransformsBuffer = transformsBuffer;
 
   // Destruction of resources allocated by the Model
   // is handled by Model.destroy().
@@ -238,10 +249,10 @@ RuntimeModelInstancingPipelineStage._createUniforms = function (
   const uniformMap = {
     u_instance_nodeTransform: () => {
       return Matrix4.multiplyTransformation(
-        // includes glTF y-up to 3D Tiles z-up
+        // The transform for the scene graph computed by multiplying the
+        // components transform by the the axisCorrectionMatrix
         sceneGraph.rootTransform,
-        // This transforms from the node's coordinate system to the root
-        // of the node hierarchy
+        // This transforms from the node's local space to the model's scene graph space.
         runtimeNode.computedTransform,
         nodeTransformScratch,
       );

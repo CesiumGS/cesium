@@ -405,41 +405,23 @@ describe(
       expect(rootNode.show).toBe(true);
       expect(meshNode.show).toBe(true);
 
-      sceneGraph.pushDrawCommands(frameState);
+      sceneGraph.pushDrawCommands(model, frameState);
       const originalLength = commandList.length;
       expect(originalLength).not.toEqual(0);
 
       commandList.length = 0;
       meshNode.show = false;
-      sceneGraph.pushDrawCommands(frameState);
+      sceneGraph.pushDrawCommands(model, frameState);
       expect(commandList.length).toEqual(0);
 
       meshNode.show = true;
       rootNode.show = false;
-      sceneGraph.pushDrawCommands(frameState);
+      sceneGraph.pushDrawCommands(model, frameState);
       expect(commandList.length).toEqual(0);
 
       rootNode.show = true;
-      sceneGraph.pushDrawCommands(frameState);
+      sceneGraph.pushDrawCommands(model, frameState);
       expect(commandList.length).toEqual(originalLength);
-    });
-
-    it("throws for undefined options.model", function () {
-      expect(function () {
-        return new ModelSceneGraph({
-          model: undefined,
-          modelComponents: {},
-        });
-      }).toThrowDeveloperError();
-    });
-
-    it("throws for undefined options.modelComponents", function () {
-      expect(function () {
-        return new ModelSceneGraph({
-          model: {},
-          modelComponents: undefined,
-        });
-      }).toThrowDeveloperError();
     });
   },
   "WebGL",
