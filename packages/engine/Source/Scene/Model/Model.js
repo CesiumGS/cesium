@@ -879,10 +879,19 @@ Object.defineProperties(Model.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      Check.defined(value);
+      //Check.defined(value);
       //>>includeEnd('debug')
 
       this._sceneGraph.modelInstances = value;
+      for (const runtimeNode in this._sceneGraph._runtimeNodes) {
+        if (
+          defined(
+            this._sceneGraph._runtimeNodes[runtimeNode]._apiInstancesDirty,
+          )
+        ) {
+          this._sceneGraph._runtimeNodes[runtimeNode]._apiInstancesDirty = true;
+        }
+      }
     },
   },
 
