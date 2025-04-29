@@ -20,6 +20,8 @@ const scratchRectangle = new BoundingRectangle(0.0, 0.0, 3.0, 3.0);
 const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 const scratchRight = new Cartesian3();
 const scratchUp = new Cartesian3();
+const scratchForward = new Cartesian3();
+const scratchProj = new Cartesian3();
 
 function ArbitraryRenders(scene) {
   this._scene = scene;
@@ -153,20 +155,50 @@ ArbitraryRenders.debugMode = false;
 ArbitraryRenders.debugPassState = undefined;
 
 // Static function
-ArbitraryRenders.getSnapshotFromRay = function (arbitraryRenderer, scene, ray, overrideUp = undefined) {
+ArbitraryRenders.getSnapshotFromRay = function (
+  arbitraryRenderer,
+  scene,
+  ray,
+  overrideUp = undefined,
+) {
   // This is unique to arbRen (and picker)
   // This returns culling volume.  See updateMostDetailedRayPick in Picking to see how it's used
-  const updateCameraBehavior = () => updateOffscreenCameraFromRay(ray, arbitraryRenderer._arView.camera, overrideUp);
-  return ArbitraryRenders._getSnapshot(arbitraryRenderer, scene, updateCameraBehavior);
-}
+  const updateCameraBehavior = () =>
+    updateOffscreenCameraFromRay(
+      ray,
+      arbitraryRenderer._arView.camera,
+      overrideUp,
+    );
+  return ArbitraryRenders._getSnapshot(
+    arbitraryRenderer,
+    scene,
+    updateCameraBehavior,
+  );
+};
 
 // Static function
-ArbitraryRenders.getSnapshotFromCamera = function (arbitraryRenderer, scene, cameraToClone) {
-  const updateCameraBehavior = () => updateOffscreenCameraFromClone(arbitraryRenderer._arView.camera, cameraToClone);
-  return ArbitraryRenders._getSnapshot(arbitraryRenderer, scene, updateCameraBehavior);
-}
+ArbitraryRenders.getSnapshotFromCamera = function (
+  arbitraryRenderer,
+  scene,
+  cameraToClone,
+) {
+  const updateCameraBehavior = () =>
+    updateOffscreenCameraFromClone(
+      arbitraryRenderer._arView.camera,
+      cameraToClone,
+    );
+  return ArbitraryRenders._getSnapshot(
+    arbitraryRenderer,
+    scene,
+    updateCameraBehavior,
+  );
+};
 
-ArbitraryRenders._getSnapshot = function (arbitraryRenderer, scene, updateCameraBehavior) {
+ArbitraryRenders._getSnapshot = function (
+  arbitraryRenderer,
+  scene,
+  updateCameraBehavior,
+) {
   ArbitraryRenders.debugMode = true;
   // This is identical to scene render
   const frameState = scene.frameState;
@@ -258,6 +290,8 @@ ArbitraryRenders._getSnapshot = function (arbitraryRenderer, scene, updateCamera
 
   console.log("AAA arbitraryRenderFrameBuffer.end (readPixels)");
   const output = view.arbitraryRenderFrameBuffer.end(drawingBufferRectangle);
+  output.inverseViewMatrix = view.camera.inverseViewMatrix;
+
   scene.view = scene.defaultView;
 
   // This is the last function called in scene render
@@ -280,17 +314,30 @@ function updateOffscreenCameraFromClone(camera, cameraToClone) {
 function updateOffscreenCameraFromRay(ray, camera, overrideUp = undefined) {
   const direction = ray.direction;
 
-  let right;
-  let up;
+  // 1) forward is just the normalized view direction
+  const forward = Cartesian3.normalize(direction, scratchForward);
 
-  if (overrideUp) {
-    up = overrideUp;
-    right = Cartesian3.cross(direction, up, scratchRight);
-  } else {
-    const orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
-    right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
-    up = Cartesian3.cross(direction, right, scratchUp);
-  }
+  // 2) pick an “up” candidate
+  const up = overrideUp
+    ? overrideUp.clone(scratchUp)
+    : Cartesian3.mostOrthogonalAxis(forward, scratchUp);
+
+  // 3) make up orthogonal to forward (Gram–Schmidt)
+  const proj = Cartesian3.multiplyByScalar(
+    forward,
+    Cartesian3.dot(up, forward),
+    scratchProj,
+  );
+  Cartesian3.subtract(up, proj, up);
+  Cartesian3.normalize(up, up);
+
+  // 4) right = forward × up
+  const right = Cartesian3.cross(forward, up, scratchRight);
+  Cartesian3.normalize(right, right);
+
+  // 5) re-recompute up = right × forward (to guarantee perfect orthonormality)
+  Cartesian3.cross(right, forward, up);
+  Cartesian3.normalize(up, up);
 
   camera.position = ray.origin;
   camera.direction = direction;
