@@ -369,7 +369,7 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
  * glTF * AxisCorrection
  * @param {*} sceneGraph
  * @param {*} result
- * @returns
+ * @returns {Matrix4}
  */
 function computeRootTransform(sceneGraph, result) {
   const components = sceneGraph._components;
