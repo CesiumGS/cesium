@@ -9,6 +9,18 @@ const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
 const scratchBoundingSphereTransform = new Matrix4();
 
+/**
+ * An instance of a Cesium {@link Model}, based on {@link https://github.com/KhronosGroup/glTF|glTF}, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
+ * The position and orientation of the instance is determined by the containing {@link Matrix4}.
+ *
+ * @alias ModelInstance
+ * @constructor
+ *
+ * @param {Matrix4} [transform] Matrix4 describing the transform of the instance
+ *
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=3DModelInstancing.html|Cesium Sandcastle 3D Model Instancing Demo}
+ */
+
 class ModelInstance {
   constructor(transform) {
     this._transform = transform;
