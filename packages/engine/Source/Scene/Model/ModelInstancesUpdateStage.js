@@ -44,7 +44,7 @@ ModelInstancesUpdateStage.update = function (
  * @private
  */
 function updateRuntimeNode(runtimeNode, sceneGraph, frameState) {
-  const modelInstances = runtimeNode._sceneGraph.modelInstances;
+  const modelInstances = sceneGraph.modelInstances;
   const buffer = runtimeNode.instancingTransformsBuffer;
 
   const transformsTypedArray =
