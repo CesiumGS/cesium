@@ -4,18 +4,10 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import PixelFormat from "../Core/PixelFormat.js";
-import ArbitraryRenders from "../Scene/ArbitraryRenders.js";
 import ContextLimits from "./ContextLimits.js";
 import PixelDatatype from "./PixelDatatype.js";
 
-function attachTexture(framebuffer, attachment, texture, debug=false) {
-  
-  if (debug) { 
-    console.log("AAA attachTexture", attachment, texture)
-  } else if(ArbitraryRenders.debugMode) {
-    
-    console.trace("AAA SOMETHING ELSE attachTexture", attachment);
-  }
+function attachTexture(framebuffer, attachment, texture) {
   const gl = framebuffer._gl;
   gl.framebufferTexture2D(
     gl.FRAMEBUFFER,
@@ -26,12 +18,7 @@ function attachTexture(framebuffer, attachment, texture, debug=false) {
   );
 }
 
-function attachRenderbuffer(framebuffer, attachment, renderbuffer, debug=false) {
-  if (debug) { 
-    console.log("AAA attachRenderbuffer", attachment, renderbuffer)
-  } else if(ArbitraryRenders.debugMode) {
-    console.trace("AAA SOMETHING ELSE attachRenderbuffer", attachment);
-  }
+function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
   const gl = framebuffer._gl;
   gl.framebufferRenderbuffer(
     gl.FRAMEBUFFER,
@@ -94,9 +81,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer, debug=false) 
  * @private
  * @constructor
  */
-function Framebuffer(options, debug = false) {
-  
-  if (debug) { console.log("AAA new Framebuffer")}
+function Framebuffer(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const context = options.context;
@@ -223,7 +208,7 @@ function Framebuffer(options, debug = false) {
       //>>includeEnd('debug');
 
       const attachmentEnum = this._gl.COLOR_ATTACHMENT0 + i;
-      attachTexture(this, attachmentEnum, texture, debug);
+      attachTexture(this, attachmentEnum, texture);
       this._activeColorAttachments[i] = attachmentEnum;
       this._colorTextures[i] = texture;
     }
@@ -247,7 +232,7 @@ function Framebuffer(options, debug = false) {
     for (let i = 0; i < length; ++i) {
       const renderbuffer = renderbuffers[i];
       const attachmentEnum = this._gl.COLOR_ATTACHMENT0 + i;
-      attachRenderbuffer(this, attachmentEnum, renderbuffer, debug);
+      attachRenderbuffer(this, attachmentEnum, renderbuffer);
       this._activeColorAttachments[i] = attachmentEnum;
       this._colorRenderbuffers[i] = renderbuffer;
     }
@@ -264,19 +249,19 @@ function Framebuffer(options, debug = false) {
     }
     //>>includeEnd('debug');
 
-    attachTexture(this, this._gl.DEPTH_ATTACHMENT, texture, debug);
+    attachTexture(this, this._gl.DEPTH_ATTACHMENT, texture);
     this._depthTexture = texture;
   }
 
   if (defined(options.depthRenderbuffer)) {
     const renderbuffer = options.depthRenderbuffer;
-    attachRenderbuffer(this, this._gl.DEPTH_ATTACHMENT, renderbuffer, debug);
+    attachRenderbuffer(this, this._gl.DEPTH_ATTACHMENT, renderbuffer);
     this._depthRenderbuffer = renderbuffer;
   }
 
   if (defined(options.stencilRenderbuffer)) {
     const renderbuffer = options.stencilRenderbuffer;
-    attachRenderbuffer(this, this._gl.STENCIL_ATTACHMENT, renderbuffer, debug);
+    attachRenderbuffer(this, this._gl.STENCIL_ATTACHMENT, renderbuffer);
     this._stencilRenderbuffer = renderbuffer;
   }
 
@@ -291,19 +276,17 @@ function Framebuffer(options, debug = false) {
     }
     //>>includeEnd('debug');
 
-    attachTexture(this, this._gl.DEPTH_STENCIL_ATTACHMENT, texture, debug);
+    attachTexture(this, this._gl.DEPTH_STENCIL_ATTACHMENT, texture);
     this._depthStencilTexture = texture;
   }
 
   if (defined(options.depthStencilRenderbuffer)) {
     const renderbuffer = options.depthStencilRenderbuffer;
-    attachRenderbuffer(this, this._gl.DEPTH_STENCIL_ATTACHMENT, renderbuffer, debug);
+    attachRenderbuffer(this, this._gl.DEPTH_STENCIL_ATTACHMENT, renderbuffer);
     this._depthStencilRenderbuffer = renderbuffer;
   }
 
   this._unBind();
-  
-  if (debug) { console.log("AAA finished creating new Framebuffer")}
 }
 
 Object.defineProperties(Framebuffer.prototype, {

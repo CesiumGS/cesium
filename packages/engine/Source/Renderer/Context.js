@@ -1215,7 +1215,7 @@ if (typeof WebGLRenderingContext !== "undefined") {
   scratchBackBufferArray = [WebGLConstants.BACK];
 }
 
-function bindFramebuffer(context, framebuffer, debug = false) {
+function bindFramebuffer(context, framebuffer) {
   if (framebuffer !== context._currentFramebuffer) {
     context._currentFramebuffer = framebuffer;
     let buffers = scratchBackBufferArray;
@@ -1456,7 +1456,7 @@ Context.prototype.endFrame = function () {
  * @param {Framebuffer} [readState.framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
  * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
  */
-Context.prototype.readPixels = function (readState, debug = false) {
+Context.prototype.readPixels = function (readState) {
   const gl = this._gl;
 
   readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
@@ -1483,23 +1483,15 @@ Context.prototype.readPixels = function (readState, debug = false) {
     height,
   );
 
-  bindFramebuffer(this, framebuffer, debug);
+  bindFramebuffer(this, framebuffer);
 
-  const webGLPixelDataType = PixelDatatype.toWebGLConstant(pixelDatatype, this)
-
-  if (debug) {
-    console.log("AAA Context.readPixels", framebuffer.getColorTexture(0));
-    const ext = gl.getExtension('EXT_color_buffer_float');
-    console.log('AAA EXT_color_buffer_float supported:', !!ext);
-    console.log('AAA webGLPixelDataType:', webGLPixelDataType);
-  }
   gl.readPixels(
     x,
     y,
     width,
     height,
     PixelFormat.RGBA,
-    webGLPixelDataType,
+    PixelDatatype.toWebGLConstant(pixelDatatype, this),
     pixels,
   );
 

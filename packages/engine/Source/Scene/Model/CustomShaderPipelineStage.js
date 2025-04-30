@@ -128,9 +128,8 @@ CustomShaderPipelineStage.process = function (
       ShaderDestination.FRAGMENT,
     );
 
-    // Define out_FragColor directly with 
-    if(customShader.setFragColorDirectly) {
-      // console.log("AAA customShader.setFragColorDirectly");
+    // Define out_FragColor directly with
+    if (customShader.setFragColorDirectly) {
       shaderBuilder.addDefine(
         "SET_CUSTOM_FRAG_COLOR_DIRECTLY",
         undefined,

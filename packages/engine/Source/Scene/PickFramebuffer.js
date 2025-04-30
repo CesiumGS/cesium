@@ -55,13 +55,9 @@ const colorScratchForPickFramebuffer = new Color();
  * Return the picked object rendered within a given rectangle.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
- * @param {function} [callback=null]
  * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
  */
-PickFramebuffer.prototype.end = function (
-  screenSpaceRectangle,
-  callback = null,
-) {
+PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
   const width = defaultValue(screenSpaceRectangle.width, 1.0);
   const height = defaultValue(screenSpaceRectangle.height, 1.0);
 
@@ -73,16 +69,6 @@ PickFramebuffer.prototype.end = function (
     height: height,
     framebuffer: this._fb.framebuffer,
   });
-
-  if (callback) {
-    callback({
-      pixels: pixels,
-      x: screenSpaceRectangle.x,
-      y: screenSpaceRectangle.y,
-      width: width,
-      height: height,
-    });
-  }
 
   const max = Math.max(width, height);
   const length = max * max;

@@ -273,16 +273,9 @@ function computePickingDrawingBufferRectangle(
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @param {function} [callback=null] Optional callback function to process the picked primitive.
  * @returns {object} Object containing the picked primitive.
  */
-Picking.prototype.pick = function (
-  scene,
-  windowPosition,
-  width,
-  height,
-  callback = null,
-) {
+Picking.prototype.pick = function (scene, windowPosition, width, height) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
@@ -336,7 +329,7 @@ Picking.prototype.pick = function (
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const object = pickFramebuffer.end(drawingBufferRectangle, callback);
+  const object = pickFramebuffer.end(drawingBufferRectangle);
   context.endFrame();
   return object;
 };
@@ -975,7 +968,6 @@ function getRayIntersection(
   width,
   requirePosition,
   mostDetailed,
-  callback,
 ) {
   const { context, frameState } = scene;
   const uniformState = context.uniformState;
@@ -983,22 +975,11 @@ function getRayIntersection(
   const view = picking._pickOffscreenView;
   scene.view = view;
 
-  if (callback) {
-    view.viewport.width = 100;
-    view.viewport.height = 100;
-    console.log("AAA Adjusting viewport size due to callback");
-  }
-
   updateOffscreenCameraFromRay(picking, ray, width, view.camera);
 
   const drawingBufferRectangle = BoundingRectangle.clone(
     view.viewport,
     scratchRectangle,
-  );
-
-  console.log(
-    "AAA getRayIntersection drawingBufferRectangle",
-    drawingBufferRectangle,
   );
 
   const passState = view.pickFramebuffer.begin(
@@ -1026,7 +1007,7 @@ function getRayIntersection(
   scene.resolveFramebuffers(passState);
 
   let position;
-  const object = view.pickFramebuffer.end(drawingBufferRectangle, callback);
+  const object = view.pickFramebuffer.end(drawingBufferRectangle);
 
   if (scene.context.depthTexture) {
     const { frustumCommandsList } = view;
@@ -1048,11 +1029,6 @@ function getRayIntersection(
         break;
       }
     }
-  }
-
-  if (callback) {
-    view.viewport.width = 1;
-    view.viewport.height = 1;
   }
 
   scene.view = scene.defaultView;
@@ -1078,7 +1054,6 @@ function getRayIntersections(
   width,
   requirePosition,
   mostDetailed,
-  callback,
 ) {
   const pickCallback = function () {
     return getRayIntersection(
@@ -1089,7 +1064,6 @@ function getRayIntersections(
       width,
       requirePosition,
       mostDetailed,
-      callback,
     );
   };
   return drillPick(limit, pickCallback);
@@ -1103,7 +1077,6 @@ function pickFromRay(
   width,
   requirePosition,
   mostDetailed,
-  callback,
 ) {
   const results = getRayIntersections(
     picking,
@@ -1114,7 +1087,6 @@ function pickFromRay(
     width,
     requirePosition,
     mostDetailed,
-    callback,
   );
   if (results.length > 0) {
     return results[0];
@@ -1161,13 +1133,7 @@ function deferPromiseUntilPostRender(scene, promise) {
   });
 }
 
-Picking.prototype.pickFromRay = function (
-  scene,
-  ray,
-  objectsToExclude,
-  width,
-  callback,
-) {
+Picking.prototype.pickFromRay = function (scene, ray, objectsToExclude, width) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("ray", ray);
   if (scene.mode !== SceneMode.SCENE3D) {
@@ -1177,16 +1143,7 @@ Picking.prototype.pickFromRay = function (
   }
   //>>includeEnd('debug');
 
-  return pickFromRay(
-    this,
-    scene,
-    ray,
-    objectsToExclude,
-    width,
-    false,
-    false,
-    callback,
-  );
+  return pickFromRay(this, scene, ray, objectsToExclude, width, false, false);
 };
 
 Picking.prototype.drillPickFromRay = function (

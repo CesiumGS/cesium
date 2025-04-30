@@ -114,8 +114,8 @@ ArbitraryRenders.prototype._setupView = function (
     new BoundingRectangle(0, 0, viewportWidth, viewportHeight),
   );
   // TODO: Might want to toggle this only for picker or Float32 pixeldata type renders
-  // These prevent parts of the normal render pipeline from overriding the texture attached to the framebuffer
-  // this is important for ACTUALLY generating float32 outputs
+  // These prevent parts of the normal render pipeline from overriding the texture attached
+  // to the framebuffer. This is important for ACTUALLY generating float32 outputs
   this._arView.globeDepth = undefined;
   this._arView.oit = undefined;
 };
@@ -128,7 +128,6 @@ ArbitraryRenders.prototype._updateFrustumViewCommon = function (
 ) {
   const view = this._arView;
 
-  // Change existing
   if (
     view.viewport.width !== viewportWidth ||
     view.viewport.height !== viewportHeight
@@ -151,9 +150,6 @@ ArbitraryRenders.prototype._updateFrustumViewCommon = function (
   }
 };
 
-ArbitraryRenders.debugMode = false;
-ArbitraryRenders.debugPassState = undefined;
-
 // Static function
 ArbitraryRenders.getSnapshotFromRay = function (
   arbitraryRenderer,
@@ -161,7 +157,7 @@ ArbitraryRenders.getSnapshotFromRay = function (
   ray,
   overrideUp = undefined,
 ) {
-  // This is unique to arbRen (and picker)
+  // This is unique to arbRen (and picker) compared to normal render passes
   // This returns culling volume.  See updateMostDetailedRayPick in Picking to see how it's used
   const updateCameraBehavior = () =>
     updateOffscreenCameraFromRay(
@@ -199,13 +195,12 @@ ArbitraryRenders._getSnapshot = function (
   scene,
   updateCameraBehavior,
 ) {
-  ArbitraryRenders.debugMode = true;
-  // This is identical to scene render
+  // Get relevant scene components
   const frameState = scene.frameState;
   const context = scene.context;
   const uniformState = context.uniformState;
 
-  // Similar but we're using the arbRen view
+  // Using the arbRen view as scene view for this pass
   const view = arbitraryRenderer._arView;
   if (!view) {
     throw new DeveloperError(
@@ -218,7 +213,7 @@ ArbitraryRenders._getSnapshot = function (
 
   updateCameraBehavior();
 
-  // Following lines are unique to arbRen (and picker)
+  // Create drawing buffer and pass state
   const drawingBufferRectangle = BoundingRectangle.clone(
     view.viewport,
     scratchRectangle,
@@ -226,78 +221,51 @@ ArbitraryRenders._getSnapshot = function (
   const passState = view.arbitraryRenderFrameBuffer.begin(
     drawingBufferRectangle,
     view.viewport,
-    arbitraryRenderer.pixelDatatype, // Change this later for point cloud picker renders that need high precision floats
+    arbitraryRenderer.pixelDatatype,
   );
   scene.jobScheduler.disableThisFrame();
 
-  // This is also called in scene render
-  // This calculates culling volume for the scene camera.  It looks like it's working on some different
-  // scene camera but that's a misnomer.  Scene.camera is actually just a getter function for
-  // this._view.camera.  So we're actually setting the scene camera when we set scene.view = view above
+  // This calculates culling volume for the scene camera.
+  // It looks like it's working on some different scene camera but that's a misnomer.
+  // Scene.camera is actually just a getter function for this._view.camera.
+  // So we're actually setting the scene camera when we set scene.view = view above
   scene.updateFrameState();
 
-  // Not sure why this is being set to false explicitly, it's not in the main render loop
-  // It's probably fine though unless we're classifying geometries (associating them with
-  // other geometries such as the terrain)
+  // Don't invert classifications, not needed
   frameState.invertClassification = false;
 
-  // Don't render this as a picker render (we might need to add a special flag for arbitrary renders)
+  // Set framestate pass flags.  We want to use the main render channel since picking passes have
+  // some weird side effects and don't support customShaders which we need for arbRen and custom
+  // point cloude picking
   frameState.passes.pick = false;
-  // Use normal rendering (this is what makes it render an image)
   frameState.passes.render = true;
   frameState.passes.offscreen = true;
 
-  // We're missing this from the scene render function:
-  // frameState.passes.postProcess = scene.postProcessStages.hasSelected;
-
   // Weirdly, using renderTilesetPassState doesn't render everything properly. Pointclouds and objects
-  // might partially render but they're not consistent. My suspicion is that renderTilesetPassState
-  // performs culling based on the main scene camera or something related to it.  pickTilesetPassState
-  // likely is more permissive when it comes to culling since pick renders can be from arbitrary angles.
-  // In the scene render function this would be set to renderTilesetPassState
+  // might partially render but they're not consistent.
+  // My suspicion is that renderTilesetPassState performs culling based on the main scene camera
+  // or something related to it.  pickTilesetPassState however, is likely more permissive when it
+  // comes to culling since pick renders can be from arbitrary angles. In the normal scene render
+  // pipeline this would be set to renderTilesetPassState
   frameState.tilesetPassState = pickTilesetPassState;
 
-  // There's a lot of stuff missing here from the scene render function.
-  //   - Background color is set (some special conditions apply if HDR is enabled)
-  //   - frameState.atmosphere is assigned
-  //   - scene.fog.update(frameState)
-
-  // This is in scene render
+  // Update scene uniforms
   uniformState.update(frameState);
 
-  // Something about shadow map and such are set here
-
-  // _computeCommandList and _overlayCommandList arrays are both set to empty here
-
-  // viewport dimesnsions are setup here based on context drawingBufferWidth and drawingBufferHeight
-  // Not sure what to make of this but we're already using a different view.viewport
-
-  // passState is setup here in scene render, but we've already setup passState earlier in this function
-  // For arbRen passState is returned by arbitraryRenderFrameBuffer.begin
-
-  // Missing scene.globe.beginFrame
-
-  // This is really similar to scene render
-  ArbitraryRenders.debugPassState = passState;
-  console.log("AAA passState before updateEnvironment", passState);
+  // More scene updates.  These are where draw commands are generated and rendering actually happens.
   scene.updateEnvironment();
-  console.log("AAA passState before updateAndExecuteCommands", passState);
-  scene.updateAndExecuteCommands(passState, scratchColorZero); // backgroundColor is used instead of scratchColorZero
-  console.log("AAA passState before resolveFramebuffers", passState);
+  scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
-  // passState.framebuffer is set to undefined and overlayCommands are exectuted here
-  // globe.endFrame is also called, as well as a flag to load new globe tiles
 
-  console.log("AAA arbitraryRenderFrameBuffer.end (readPixels)");
+  // Generate the output by reading pixels from the webgl context.
+  // Includes helpers such as width, height, and inverseViewMatrix for picking calculations
   const output = view.arbitraryRenderFrameBuffer.end(drawingBufferRectangle);
   output.inverseViewMatrix = view.camera.inverseViewMatrix;
 
+  // Restore the scene view to it's default view
   scene.view = scene.defaultView;
 
-  // This is the last function called in scene render
-  console.log("AAA arbitraryRenderFrameBuffer context.endFrame()");
   context.endFrame();
-  ArbitraryRenders.debugMode = false;
 
   return output;
 };

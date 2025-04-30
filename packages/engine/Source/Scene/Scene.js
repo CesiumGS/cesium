@@ -130,8 +130,6 @@ const requestRenderAfterFrame = function (scene) {
  * });
  */
 function Scene(options) {
-  console.log("AAA Now we're coooking with custom Cesium!");
-
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const canvas = options.canvas;
   let creditContainer = options.creditContainer;
@@ -4391,16 +4389,10 @@ Scene.prototype.clampLineWidth = function (width) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @param {function} [callback=null] Optional callback function to grab the framebuffer contents
  * @returns {object} Object containing the picked primitive.
  */
-Scene.prototype.pick = function (
-  windowPosition,
-  width,
-  height,
-  callback = null,
-) {
-  return this._picking.pick(this, windowPosition, width, height, callback);
+Scene.prototype.pick = function (windowPosition, width, height) {
+  return this._picking.pick(this, windowPosition, width, height);
 };
 
 /**
@@ -4674,32 +4666,20 @@ function updateRequestRenderModeDeferCheckPass(scene) {
  * @param {Ray} ray The ray.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @param {function} [callback=null] Optional callback function to grab the framebuffer contents
  * @returns {object} An object containing the object and position of the first intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
-Scene.prototype.pickFromRay = function (
-  ray,
-  objectsToExclude,
-  width,
-  callback = null,
-) {
-  return this._picking.pickFromRay(
-    this,
-    ray,
-    objectsToExclude,
-    width,
-    callback,
-  );
+Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
+  return this._picking.pickFromRay(this, ray, objectsToExclude, width);
 };
 
 Scene.prototype.setupArbitraryRenderInstance = function (key) {
   if (this._arbitraryRenders[key]) {
     this._arbitraryRenders[key].destroy();
   }
-  return this._arbitraryRenders[key] = new ArbitraryRenders(this);
-}
+  return (this._arbitraryRenders[key] = new ArbitraryRenders(this));
+};
 
 /**
  *
@@ -4711,29 +4691,44 @@ Scene.prototype.setupArbitraryRenderInstance = function (key) {
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  * @exception {DeveloperError} Arbitrary render instance doesn't exist or isn't setup properly
  */
-Scene.prototype.generateArbitraryRenderFromRay = function (key, ray, snapshotTransforms, overrideUp = undefined) {
+Scene.prototype.generateArbitraryRenderFromRay = function (
+  key,
+  ray,
+  snapshotTransforms,
+  overrideUp = undefined,
+) {
   Check.defined("ray", ray);
 
   const arbRen = this._arbitraryRenders[key];
   Check.defined("arbRen", arbRen);
 
   // Generate render output
-  const renderFunction = (scn) => ArbitraryRenders.getSnapshotFromRay(arbRen, scn, ray, overrideUp);
+  const renderFunction = (scn) =>
+    ArbitraryRenders.getSnapshotFromRay(arbRen, scn, ray, overrideUp);
   return this._generateArbitraryRender(key, snapshotTransforms, renderFunction);
 };
 
-Scene.prototype.generateArbitraryRenderFromCamera = function (key, camera, snapshotTransforms) {
+Scene.prototype.generateArbitraryRenderFromCamera = function (
+  key,
+  camera,
+  snapshotTransforms,
+) {
   Check.defined("camera", camera);
 
   const arbRen = this._arbitraryRenders[key];
   Check.defined("arbRen", arbRen);
 
   // Generate render output
-  const renderFunction = (scn) => ArbitraryRenders.getSnapshotFromCamera(arbRen, scn, camera);
+  const renderFunction = (scn) =>
+    ArbitraryRenders.getSnapshotFromCamera(arbRen, scn, camera);
   return this._generateArbitraryRender(key, snapshotTransforms, renderFunction);
 };
 
-Scene.prototype._generateArbitraryRender = function (key, snapshotTransforms, renderFunction) {
+Scene.prototype._generateArbitraryRender = function (
+  key,
+  snapshotTransforms,
+  renderFunction,
+) {
   if (this.mode !== SceneMode.SCENE3D) {
     throw new DeveloperError("Snapshots are only supported in 3D mode.");
   }
@@ -5350,7 +5345,9 @@ Scene.prototype.destroy = function () {
     this._brdfLutGenerator && this._brdfLutGenerator.destroy();
   this._picking = this._picking && this._picking.destroy();
 
-  Object.values(this._arbitraryRenders).forEach((ar) => { ar.destroy(); });
+  Object.values(this._arbitraryRenders).forEach((ar) => {
+    ar.destroy();
+  });
   this._arbitraryRenders = {};
 
   this._defaultView = this._defaultView && this._defaultView.destroy();
