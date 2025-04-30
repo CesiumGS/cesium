@@ -3,10 +3,14 @@ import {
   combine,
   GltfLoader,
   RuntimeModelInstancingPipelineStage,
+  ModelInstancesUpdateStage,
   Math as CesiumMath,
+  Buffer,
+  BufferUsage,
   ModelStatistics,
   Resource,
   ResourceCache,
+  SceneMode,
   ShaderBuilder,
   ModelInstance,
   Transforms,
@@ -94,6 +98,7 @@ describe(
         },
         runtimeNode: {
           node: node,
+          children: [],
         },
       };
     }
@@ -188,6 +193,95 @@ describe(
             CesiumMath.EPSILON10,
           );
         }
+      });
+    });
+
+    it("model instances update stage updates transform vertex attributes", function () {
+      return loadGltf(sampleGltfUrl).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const renderResources = mockRenderResources(node);
+        const runtimeNode = renderResources.runtimeNode;
+        const sceneGraph = renderResources.model.sceneGraph;
+
+        scene.renderForSpecs();
+        RuntimeModelInstancingPipelineStage.process(
+          renderResources,
+          node,
+          scene.frameState,
+        );
+
+        const context = scene.frameState.context;
+        const usage = BufferUsage.STATIC_DRAW;
+
+        const expectedTransformsTypedArray = new Float32Array([
+          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 10, 10, 10,
+          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 20, 20, 20,
+        ]);
+
+        const expectedTransformsBuffer = Buffer.createVertexBuffer({
+          context,
+          usage,
+          typedArray: expectedTransformsTypedArray,
+        });
+        expect(runtimeNode.instancingTransformsBuffer._buffer).toEqual(
+          expectedTransformsBuffer._buffer,
+        );
+
+        const samplePosition3 = new Cartesian3(30, 30, 30);
+        const samplePosition4 = new Cartesian3(40, 40, 40);
+
+        const instanceModelMatrix3 =
+          new Transforms.headingPitchRollToFixedFrame(
+            samplePosition3,
+            headingPositionRoll,
+            Ellipsoid.WGS84,
+            fixedFrameTransform,
+          );
+
+        const instanceModelMatrix4 =
+          new Transforms.headingPitchRollToFixedFrame(
+            samplePosition4,
+            headingPositionRoll,
+            Ellipsoid.WGS84,
+            fixedFrameTransform,
+          );
+
+        const sampleInstance3 = new ModelInstance(instanceModelMatrix3);
+        const sampleInstance4 = new ModelInstance(instanceModelMatrix4);
+
+        sceneGraph.modelInstances = [sampleInstance3, sampleInstance4];
+        runtimeNode._apiInstancesDirty = true;
+
+        const frameState = {
+          mode: SceneMode.SCENE3D,
+        };
+
+        ModelInstancesUpdateStage.update(runtimeNode, sceneGraph, frameState);
+
+        const newExpectedTransformsTypedArray = new Float32Array([
+          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 30, 30, 30,
+          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 40, 40, 40,
+        ]);
+
+        const newExpectedTransformsBuffer = Buffer.createVertexBuffer({
+          context,
+          usage,
+          typedArray: newExpectedTransformsTypedArray,
+        });
+
+        expect(runtimeNode._apiInstancesDirty).toBeFalse();
+        expect(runtimeNode.instancingTransformsBuffer._buffer).toEqual(
+          newExpectedTransformsBuffer._buffer,
+        );
       });
     });
   },
