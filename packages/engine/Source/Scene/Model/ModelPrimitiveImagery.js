@@ -8,10 +8,6 @@ import ImageryCoverageComputations from "./ImageryCoverageComputations.js";
 import ModelImageryMapping from "./ModelImageryMapping.js";
 import ModelUtility from "./ModelUtility.js";
 import MappedPositions from "./MappedPositions.js";
-import Model from "./Model.js";
-
-// A scratch variable that is used in _computeMappedPositionsPerEllipsoid
-const primitivePositionsTransformScratch = new Matrix4();
 
 /**
  * A class managing the draping of imagery on a single model primitive.
@@ -269,11 +265,11 @@ class ModelPrimitiveImagery {
     const primitivePositionAttribute = this._primitivePositionAttribute;
     const numPositions = primitivePositionAttribute.count;
 
-    const primitivePositionsTransform =
-      ModelPrimitiveImagery._computePrimitivePositionsTransform(
+    const primitivePositionTransform =
+      ModelPrimitiveImagery._computePrimitivePositionTransform(
         model,
         runtimeNode,
-        primitivePositionsTransformScratch,
+        undefined,
       );
 
     const mappedPositionsPerEllipsoid = [];
@@ -287,7 +283,7 @@ class ModelPrimitiveImagery {
       const cartographicPositions =
         ModelImageryMapping.createCartographicPositions(
           primitivePositionAttribute,
-          primitivePositionsTransform,
+          primitivePositionTransform,
           ellipsoid,
         );
       const cartographicBoundingRectangle =
@@ -400,8 +396,8 @@ class ModelPrimitiveImagery {
     }
     //*/
 
-    // XXX_DRAPING Adding references here?
-    /*
+    // XXX_DRAPING Adding references here? Where will they be removed?
+    //*
     for (const coverage of coverages) {
       const imagery = imageryLayer.getImageryFromCache(
         coverage.x,
@@ -410,13 +406,25 @@ class ModelPrimitiveImagery {
       );
       imagery.addReference();
     }
-    */
+    //*/
 
     return coverages;
   }
 
-  // XXX_DRAPING Comments!
-  _computeImageryLevel(imageryLayer, boundingRectangle) {
+  /**
+   * Compute a <code>level</code> for accessing the imagery from the given
+   * imagery layer that is suitable for a primitive with the given bounding
+   * rectangle.
+   *
+   * TODO_DRAPING Preliminary...
+   *
+   * @param {ImageryLayer} imageryLayer The imagery layer
+   * @param {Rectangle} cartographicBoundingRectangle The cartographic
+   * bounding rectangle, as obtained from the MappedPositions for
+   * the given imagery layer
+   * @returns The imagery level
+   */
+  _computeImageryLevel(imageryLayer, cartographicBoundingRectangle) {
     const imageryProvider = imageryLayer.imageryProvider;
     const tilingScheme = imageryProvider.tilingScheme;
     const rectangle = tilingScheme.rectangle;
@@ -427,16 +435,21 @@ class ModelPrimitiveImagery {
     // Solving for "level" yields
     // level = log2( numberOfTilesCovered * r / b)
 
-    // TODO_DRAPING This should be configurable, eventually...
-    const desiredNumberOfTilesCovered = 2;
+    // TODO_DRAPING This may have to be configurable, eventually.
+    // Right now, it implies to goal to drape approximately (!)
+    // one imagery tile on each primitive. In practice, it may
+    // be more (up to 9 in theory)
+    const desiredNumberOfTilesCovered = 1;
 
     // Perform the computation of the desired level, based on the
     // number of tiles that should be covered (by whatever is
     // larger, the width or the height)
-    let boundingRectangleSize = boundingRectangle.width;
+    let boundingRectangleSize = cartographicBoundingRectangle.width;
     let rectangleSize = rectangle.width;
-    if (boundingRectangle.height > boundingRectangle.width) {
-      boundingRectangleSize = boundingRectangle.height;
+    if (
+      cartographicBoundingRectangle.height > cartographicBoundingRectangle.width
+    ) {
+      boundingRectangleSize = cartographicBoundingRectangle.height;
       rectangleSize = rectangle.height;
     }
     const desiredLevel = Math.log2(
@@ -453,15 +466,13 @@ class ModelPrimitiveImagery {
     );
     const imageryLevel = Math.floor(validImageryLevel);
 
-    if (defined(Model.XXX_DRAPING_LEVEL)) {
-      return Model.XXX_DRAPING_LEVEL;
-    }
-
-    // XXX_DRAPING Still return the fixed value. Lol.
-    console.log(
-      `To cover ${desiredNumberOfTilesCovered} tiles need level ${desiredLevel}, clamped to ${validImageryLevel}, as int ${imageryLevel}`,
-    );
-    return 18;
+    //if (defined(Model.XXX_DRAPING_LEVEL)) {
+    //  return Model.XXX_DRAPING_LEVEL;
+    //}
+    //console.log(
+    //  `To cover ${desiredNumberOfTilesCovered} tiles need level ${desiredLevel}, clamped to ${validImageryLevel}, as int ${imageryLevel}`,
+    //);
+    return imageryLevel;
   }
 
   /**
@@ -602,7 +613,7 @@ class ModelPrimitiveImagery {
    * @returns {Matrix4} The result
    * @private
    */
-  static _computePrimitivePositionsTransform(model, runtimeNode, result) {
+  static _computePrimitivePositionTransform(model, runtimeNode, result) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("model", model);
     Check.defined("runtimeNode", runtimeNode);
@@ -629,18 +640,18 @@ class ModelPrimitiveImagery {
    * defined for the given primitive, then a <code>DeveloperError</code>
    * is thrown.
    *
-   * @param {ModelComponents.Primitive} runtimePrimitive The primitive
+   * @param {ModelComponents.Primitive} primitive The primitive
    * @returns {ModelComponents.Attribute} The position attribute
    * @throws {DeveloperError} If there is no position attribute
    * @private
    */
-  static _obtainPrimitivePositionAttribute(runtimePrimitive) {
+  static _obtainPrimitivePositionAttribute(primitive) {
     //>>includeStart('debug', pragmas.debug);
-    Check.defined("runtimePrimitive", runtimePrimitive);
+    Check.defined("primitive", primitive);
     //>>includeEnd('debug');
 
     const primitivePositionAttribute = ModelUtility.getAttributeBySemantic(
-      runtimePrimitive,
+      primitive,
       "POSITION",
     );
     if (!defined(primitivePositionAttribute)) {

@@ -49,7 +49,6 @@ class ImageryPipelineStageProcessing {
    * <code>a_imagery_texCoord_${imageryTexCoordAttributeSetIndex}</code>
    * in the shader.
    * @returns {ImageryInput[]} The imagery inputs
-   * @private
    */
   static _createImageryInputs(
     imageryLayers,
@@ -185,8 +184,8 @@ class ImageryPipelineStageProcessing {
    * Create texture coordinates in the given primitive render resources,
    * one for each projection.
    *
-   * This will create a texture coordinate attribute for each of the
-   * given projections, using <code>_computeImageryTexCoordAttribute</code>,
+   * This will create a texture coordinate attribute for each of the given projections,
+   * using <code>ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions</code>,
    * and  add this to the given primitive render resources.
    *
    * (This means that the given projections should indeed be unique,
@@ -198,7 +197,6 @@ class ImageryPipelineStageProcessing {
    * @param {PrimitiveRenderResources} primitiveRenderResources The primitive
    * render resources
    * @param {Context} context The GL context
-   * @private
    */
   static _createImageryTexCoordAttributes(
     uniqueProjections,
@@ -226,62 +224,20 @@ class ImageryPipelineStageProcessing {
       // Create the actual attribute, and store it as the
       // last attribute of the primitive render resources
       const imageryTexCoordAttribute =
-        ImageryPipelineStageProcessing._computeImageryTexCoordAttribute(
+        ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions(
           mappedPositions,
           projection,
           context,
         );
 
+      // XXX_DRAPING Why is this tracked like this?
+      // It's just the number of attributes, right?
+      primitiveRenderResources.attributeIndex++;
+
       const index = primitiveRenderResources.attributes.length;
       imageryTexCoordAttribute.index = index;
       primitiveRenderResources.attributes[index] = imageryTexCoordAttribute;
     }
-  }
-
-  /**
-   * Compute a texture coordinate attribute for the given mapped
-   * primitive positions, under the given projection.
-   *
-   * This will project the cartographic positions with the given
-   * projection, and create texture coordinates that are relative
-   * to the bounding rectangle of the mapped positions.
-   *
-   * TODO_DRAPING Maybe add details, or point to the functions
-   * that are used for this....
-   *
-   * @param {MappedPositions} mappedPositions The mapped positions
-   * @param {WebProjection} projection The projection
-   * @param {Context} context The GL context
-   * @return {ModelComponents.Attribute} The attribute
-   * @private
-   */
-  static _computeImageryTexCoordAttribute(
-    mappedPositions,
-    projection,
-    context,
-  ) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("mappedPositions", mappedPositions);
-    Check.defined("projection", projection);
-    Check.defined("context", context);
-    //>>includeEnd('debug');
-
-    const cartographicPositions = mappedPositions.cartographicPositions;
-    const cartographicBoundingRectangle =
-      mappedPositions.cartographicBoundingRectangle;
-    const numPositions = mappedPositions.numPositions;
-
-    // Compute the texture coordinate attribute from
-    // the cartographic primitive positions
-    const imageryTexCoordAttribute =
-      ModelImageryMapping.createTextureCoordinatesAttribute(
-        cartographicPositions,
-        numPositions,
-        cartographicBoundingRectangle,
-        projection,
-        context,
-      );
-    return imageryTexCoordAttribute;
   }
 
   /**
@@ -339,9 +295,9 @@ class ImageryPipelineStageProcessing {
    * This will compute a Cartesian4 containing the
    * (offsetX, offsetY, scaleX, scaleY) that have to be applied to
    * the texture coordinates that that have been computed with
-   * `_computeImageryTexCoordAttribute`. In the shader, this offset
-   * and scale will map the given imagery rectangle to the geometry
-   * rectangle.
+   * `ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions`.
+   * In the shader, this offset and scale will map the given imagery rectangle
+   * to the geometry * rectangle.
    *
    * TODO_DRAPING Maybe add details, or point to ImageryLayer.js...
    *

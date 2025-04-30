@@ -1,7 +1,9 @@
 import defined from "../../Core/defined";
 import Rectangle from "../../Core/Rectangle";
 import Cartesian4 from "../../Core/Cartesian4";
+
 import ImageryCoverage from "./ImageryCoverage";
+import CartesianRectangle from "./CartesianRectangle";
 
 // TODO_DRAPING: Some of this was extracted from ImageryLayer.prototype._createTileImagerySkeletons
 // See https://github.com/CesiumGS/cesium/blob/5eaa2280f495d8f300d9e1f0497118c97aec54c8/packages/engine/Source/Scene/ImageryLayer.js#L700
@@ -10,19 +12,6 @@ import ImageryCoverage from "./ImageryCoverage";
 // up in certain differences in the shaders. The hope is that this can either
 // be abstracted away using a `MapProjection` and/or computing only the
 // right texture coordinates for the respective projection to begin with.
-
-// TODO_DRAPING Preliminary, internal class for texture
-// coordinate and index range computations. This could
-// be emulated with a "BoundingRectangle", but min/max
-// is often more convenient than min/size.
-class CartesianRectangle {
-  constructor() {
-    this.minY = 0;
-    this.maxX = 0;
-    this.maxY = 0;
-    this.minX = 0;
-  }
-}
 
 const imageryBoundsScratch = new Rectangle();
 const overlappedRectangleScratch = new Rectangle();
@@ -415,7 +404,7 @@ class ImageryCoverageComputations {
    * @returns {CartesianRectangle} The result
    */
   static _localizeToCartesianRectangle(rectangleA, rectangleB, result) {
-    if (result === undefined) {
+    if (!defined(result)) {
       result = new CartesianRectangle();
     }
     const invX = 1.0 / rectangleB.width;

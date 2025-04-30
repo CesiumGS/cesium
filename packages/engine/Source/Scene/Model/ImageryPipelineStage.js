@@ -13,7 +13,7 @@ import ImageryFlags from "./ImageryFlags.js";
  * TODO_DRAPING: A debugging flag to draw the boundaries of imagery tiles
  * (Similar to "SHOW_TILE_BOUNDARIES" in GlobeFS.glsl)
  */
-const debugDrawImageryBoundaries = true;
+const debugDrawImageryBoundaries = false;
 
 /**
  * A pipeline stage that modifies the model shader to take into account
@@ -40,10 +40,16 @@ class ImageryPipelineStage {
    * @param {FrameState} frameState The frame state.
    */
   static process(primitiveRenderResources, primitive, frameState) {
-    console.log("Running ImageryPipelineStage");
+    //console.log("Running ImageryPipelineStage");
 
     const model = primitiveRenderResources.model;
     const modelPrimitiveImagery = primitive.modelPrimitiveImagery;
+
+    // XXX_DRAPING
+    //if (!defined(modelPrimitiveImagery)) {
+    //  console.log("Or rather not, because there is no modelPrimitiveImagery");
+    //  return;
+    //}
 
     // This pipeline stage should not be executed for a primitive that
     // does not have a ModelPrimitiveImagery or when it is not 'ready',

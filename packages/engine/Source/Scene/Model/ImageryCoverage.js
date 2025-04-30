@@ -30,7 +30,7 @@ class ImageryCoverage {
    */
   constructor(x, y, level, textureCoordinateRectangle) {
     /**
-     * The x-coordinate of the imagery tile
+     * The x-coordinate of the imagery tile, typically correlated with longitude
      *
      * @type {number}
      * @readonly
@@ -38,7 +38,7 @@ class ImageryCoverage {
     this.x = x;
 
     /**
-     * The x-coordinate of the imagery tile
+     * The y-coordinate of the imagery tile, typically correlated with latitude
      *
      * @type {number}
      * @readonly
@@ -46,7 +46,7 @@ class ImageryCoverage {
     this.y = y;
 
     /**
-     * The x-coordinate of the imagery tile
+     * The level of the imagery tile
      *
      * @type {number}
      * @readonly

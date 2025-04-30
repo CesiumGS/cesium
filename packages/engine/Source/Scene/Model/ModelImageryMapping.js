@@ -13,12 +13,142 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
+import ModelAttributeReader from "./ModelAttributeReader.js";
 
 /**
  * A class for computing the texture coordinates of imagery that is
  * supposed to be mapped on a `Model`/`ModelComponents.Primitive`.
  */
 class ModelImageryMapping {
+  /**
+   * Creates a typed array that contains texture coordinates for
+   * the given <code>MappedPositions</code>, using the given
+   * projection.
+   *
+   * This will be a typed array that contains the texture coordinates
+   * that result from projecting the given positions with the given
+   * projection, and normalizing them to their bounding rectangle.
+   *
+   * @param {MappedPositions} mappedPositions The positions
+   * @param {MapProjection} projection The projection that should be used
+   * @returns {TypedArray} The result
+   */
+  static createTextureCoordinatesForMappedPositions(
+    mappedPositions,
+    projection,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("mappedPositions", mappedPositions);
+    Check.defined("projection", projection);
+    //>>includeEnd('debug');
+
+    const cartographicPositions = mappedPositions.cartographicPositions;
+    const cartographicBoundingRectangle =
+      mappedPositions.cartographicBoundingRectangle;
+    const numPositions = mappedPositions.numPositions;
+    return ModelImageryMapping._createTextureCoordinates(
+      cartographicPositions,
+      numPositions,
+      cartographicBoundingRectangle,
+      projection,
+    );
+  }
+
+  /**
+   * Creates a typed array that contains texture coordinates for
+   * a primitive with the given positions, using the given
+   * projection.
+   *
+   * This will be a typed array of size <code>numPositions*2</code>
+   * that contains the texture coordinates that result from
+   * projecting the given positions with the given projection,
+   * and normalizing them to the given bounding rectangle.
+   *
+   * @param {Iterable<Cartographic>} cartographicPositions The
+   * cartographic positions
+   * @param {number} numPositions The number of positions (vertices)
+   * @param {Rectangle} cartographicBoundingRectangle The bounding
+   * rectangle of the cartographic positions
+   * @param {MapProjection} projection The projection that should be used
+   * @returns {TypedArray} The result
+   * @private
+   */
+  static _createTextureCoordinates(
+    cartographicPositions,
+    numPositions,
+    cartographicBoundingRectangle,
+    projection,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("cartographicPositions", cartographicPositions);
+    Check.typeOf.number.greaterThanOrEquals("numPositions", numPositions, 0);
+    Check.defined(
+      "cartographicBoundingRectangle",
+      cartographicBoundingRectangle,
+    );
+    Check.defined("projection", projection);
+    //>>includeEnd('debug');
+
+    // Convert the bounding `Rectangle`(!) of the cartographic positions
+    // into a `BoundingRectangle`(!) using the given projection
+    const boundingRectangle = new BoundingRectangle();
+    BoundingRectangle.fromRectangle(
+      cartographicBoundingRectangle,
+      projection,
+      boundingRectangle,
+    );
+
+    // Compute the projected positions, using the given projection
+    const projectedPositions = ModelImageryMapping.createProjectedPositions(
+      cartographicPositions,
+      projection,
+    );
+
+    // XXX_DRAPING DEBUG LOG
+    /*//
+    {
+      console.log("Cartographic:");
+      for (const cp of cartographicPositions) {
+        const minX = CesiumMath.toDegrees(cartographicBoundingRectangle.west);
+        const maxX = CesiumMath.toDegrees(cartographicBoundingRectangle.east);
+        const minY = CesiumMath.toDegrees(cartographicBoundingRectangle.south);
+        const maxY = CesiumMath.toDegrees(cartographicBoundingRectangle.north);
+        const x = CesiumMath.toDegrees(cp.longitude);
+        const y = CesiumMath.toDegrees(cp.latitude);
+        const inside = (x >= minX && x <= maxX && y >= minY && y <= maxY);
+        console.log(` ${x} in ${minX} ${maxX} and ${y} in ${minY} ${maxY} : ${inside}`);
+      }
+      console.log("Projected:");
+      for (const cp of projectedPositions) {
+        const minX = boundingRectangle.x;
+        const maxX = boundingRectangle.x + boundingRectangle.width;
+        const minY = boundingRectangle.y;
+        const maxY = boundingRectangle.y + boundingRectangle.height;
+        const x = cp.x;
+        const y = cp.y;
+        const inside = (x >= minX && x <= maxX && y >= minY && y <= maxY);
+        console.log(` ${x} in ${minX} ${maxX} and ${y} in ${minY} ${maxY} : ${inside}`);
+      }
+    }
+    //*/
+
+    // Relativize the projected positions into the bounding rectangle
+    // to obtain texture coordinates
+    const texCoords = ModelImageryMapping.computeTexCoords(
+      projectedPositions,
+      boundingRectangle,
+    );
+
+    // Convert the texture coordinates into a typed array
+    const texCoordsTypedArray =
+      ModelImageryMapping.createTypedArrayFromCartesians2(
+        numPositions,
+        texCoords,
+      );
+
+    return texCoordsTypedArray;
+  }
+
   /**
    * Creates the `ModelComponents.Attribute` for the texture coordinates
    * for a primitive
@@ -44,51 +174,22 @@ class ModelImageryMapping {
    * @param {Context} context The context for allocating GL resources
    * @returns {ModelComponents.Attribute} The new attribute
    */
-  static createTextureCoordinatesAttribute(
-    cartographicPositions,
-    numPositions,
-    cartographicBoundingRectangle,
+  static createTextureCoordinatesAttributeForMappedPositions(
+    mappedPositions,
     projection,
     context,
   ) {
     //>>includeStart('debug', pragmas.debug);
-    Check.defined("cartographicPositions", cartographicPositions);
-    Check.typeOf.number.greaterThanOrEquals("numPositions", numPositions, 0);
-    Check.defined(
-      "cartographicBoundingRectangle",
-      cartographicBoundingRectangle,
-    );
+    Check.defined("mappedPositions", mappedPositions);
     Check.defined("projection", projection);
     Check.defined("context", context);
     //>>includeEnd('debug');
 
-    // Convert the bounding `Rectangle`(!) of the cartographic positions
-    // into a `BoundingRectangle`(!) using the given projection
-    const boundingRectangle = new BoundingRectangle();
-    BoundingRectangle.fromRectangle(
-      cartographicBoundingRectangle,
-      projection,
-      boundingRectangle,
-    );
-
-    // Compute the projected positions, using the given projection
-    const projectedPositions = ModelImageryMapping.createProjectedPositions(
-      cartographicPositions,
-      projection,
-    );
-
-    // Relativize the projected positions into the bounding rectangle
-    // to obtain texture coordinates
-    const texCoords = ModelImageryMapping.computeTexCoords(
-      projectedPositions,
-      boundingRectangle,
-    );
-
-    // Convert the texture coordinates into a typed array
+    // Create the typed array that contains the texture coordinates
     const texCoordsTypedArray =
-      ModelImageryMapping.createTypedArrayFromCartesians2(
-        numPositions,
-        texCoords,
+      ModelImageryMapping.createTextureCoordinatesForMappedPositions(
+        mappedPositions,
+        projection,
       );
 
     // Create an attribute from the texture coordinates typed array
@@ -104,30 +205,31 @@ class ModelImageryMapping {
    * Create an iterable that provides the cartographic positions
    * of the given POSITION attribute, based on the given ellipsoid
    *
-   * @param {ModelComponents.Attribute} primitivePositionsAttribute
+   * @param {ModelComponents.Attribute} primitivePositionAttribute
    * The "POSITION" attribute of the primitive.
-   * @param {Matrix4} primitivePositionsTransform The full transform of the primitive
+   * @param {Matrix4} primitivePositionTransform The full transform of the primitive
    * @param {Elliposid} ellipsoid The ellipsoid that should be used
    * @returns {Iterable<Cartographic>} The iterable over `Cartographic` objects
    */
   static createCartographicPositions(
-    primitivePositionsAttribute,
-    primitivePositionsTransform,
+    primitivePositionAttribute,
+    primitivePositionTransform,
     ellipsoid,
   ) {
     //>>includeStart('debug', pragmas.debug);
-    Check.defined("primitivePositionsAttribute", primitivePositionsAttribute);
-    Check.defined("primitivePositionsTransform", primitivePositionsTransform);
+    Check.defined("primitivePositionAttribute", primitivePositionAttribute);
+    Check.defined("primitivePositionTransform", primitivePositionTransform);
     Check.defined("ellipsoid", ellipsoid);
     //>>includeEnd('debug');
 
     // Extract the positions as a typed array
-    const typedArray = ModelImageryMapping.createTypedArray(
-      primitivePositionsAttribute,
+    // TODO_DRAPING Use AttributeReader here...
+    const typedArray = ModelAttributeReader.readAttributeAsTypedArray(
+      primitivePositionAttribute,
     );
 
     // Create an iterable over the positions
-    const type = primitivePositionsAttribute.type;
+    const type = primitivePositionAttribute.type;
     const numComponents = AttributeType.getNumberOfComponents(type);
     const positions =
       ModelImageryMapping.createIterableCartesian3FromTypedArray(
@@ -138,7 +240,7 @@ class ModelImageryMapping {
     // Compute the positions after they are transformed with the given matrix
     const transformedPositions = ModelImageryMapping.transformCartesians3(
       positions,
-      primitivePositionsTransform,
+      primitivePositionTransform,
     );
 
     // Compute the cartographic positions for the given ellipsoid
@@ -147,68 +249,6 @@ class ModelImageryMapping {
       ellipsoid,
     );
     return cartographicPositions;
-  }
-
-  /**
-   * Creates a typed array from the data of the given attribute, by
-   * reading it back from the vertex buffer.
-   *
-   * @param {ModelComponents.Attribute} attribute The attribute
-   * @returns {TypedArray} The typed array
-   */
-  static createTypedArray(attribute) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("attribute", attribute);
-    //>>includeEnd('debug');
-
-    const buffer = attribute.buffer;
-    const count = attribute.count;
-    const type = attribute.type;
-    const componentsPerAttribute = AttributeType.getNumberOfComponents(type);
-
-    // Without quantization, the data can directly be read
-    // from the buffer into a typed array
-    const quantization = attribute.quantization;
-    if (!defined(quantization)) {
-      const typedArray = ComponentDatatype.createTypedArray(
-        attribute.componentDatatype,
-        count * componentsPerAttribute,
-      );
-      buffer.getBufferData(typedArray);
-      return typedArray;
-    }
-
-    // When the data is quantized, then read the quantized data
-    // into a typed array
-    const quantizedTypedArray = ComponentDatatype.createTypedArray(
-      quantization.componentDatatype,
-      count * componentsPerAttribute,
-    );
-    buffer.getBufferData(quantizedTypedArray);
-    const dequantizedTypedArray = new Float32Array(
-      count * componentsPerAttribute,
-    );
-
-    // Now apply the offset and scale (via step size) of the
-    // quantizaation to the quantized data, to obtain the
-    // dequantized data
-    const p = new Cartesian3();
-
-    // XXX_DRAPING: There's also some quantizedVolumeScale floating around in
-    // some places. I hope that this is the right thing to do here...:
-    const stepSize = quantization.quantizedVolumeStepSize;
-    const offset = quantization.quantizedVolumeOffset;
-    for (let i = 0; i < count; i++) {
-      p.x = quantizedTypedArray[i * componentsPerAttribute + 0];
-      p.y = quantizedTypedArray[i * componentsPerAttribute + 1];
-      p.z = quantizedTypedArray[i * componentsPerAttribute + 2];
-      Cartesian3.multiplyComponents(p, stepSize, p);
-      Cartesian3.add(p, offset, p);
-      dequantizedTypedArray[i * componentsPerAttribute + 0] = p.x;
-      dequantizedTypedArray[i * componentsPerAttribute + 1] = p.y;
-      dequantizedTypedArray[i * componentsPerAttribute + 2] = p.z;
-    }
-    return dequantizedTypedArray;
   }
 
   /**
