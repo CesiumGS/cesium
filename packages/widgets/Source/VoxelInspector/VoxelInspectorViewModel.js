@@ -433,12 +433,40 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingEllipsoidMaxLongitudeMin",
+    initialValue: -CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxLongitudeMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxLongitudeMax",
+    initialValue: CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxLongitudeMax = that._voxelPrimitive.maxBounds.x;
+    },
+  });
+  addProperty({
     name: "clippingEllipsoidMaxLongitude",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "x"),
     getPrimitiveFunction: function () {
       that.clippingEllipsoidMaxLongitude =
         that._voxelPrimitive.maxClippingBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinLongitudeMin",
+    initialValue: -CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinLongitudeMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinLongitudeMax",
+    initialValue: CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinLongitudeMax = that._voxelPrimitive.maxBounds.x;
     },
   });
   addProperty({
@@ -451,12 +479,40 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingEllipsoidMaxLatitudeMin",
+    initialValue: -CesiumMath.PI_OVER_TWO,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxLatitudeMin = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxLatitudeMax",
+    initialValue: CesiumMath.PI_OVER_TWO,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxLatitudeMax = that._voxelPrimitive.maxBounds.y;
+    },
+  });
+  addProperty({
     name: "clippingEllipsoidMaxLatitude",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "y"),
     getPrimitiveFunction: function () {
       that.clippingEllipsoidMaxLatitude =
         that._voxelPrimitive.maxClippingBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinLatitudeMin",
+    initialValue: -CesiumMath.PI_OVER_TWO,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinLatitudeMin = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinLatitudeMax",
+    initialValue: CesiumMath.PI_OVER_TWO,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinLatitudeMax = that._voxelPrimitive.maxBounds.y;
     },
   });
   addProperty({
@@ -469,12 +525,40 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingEllipsoidMaxHeightMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxHeightMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxHeightMax",
+    initialValue: 100000.0,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxHeightMax = that._voxelPrimitive.maxBounds.z;
+    },
+  });
+  addProperty({
     name: "clippingEllipsoidMaxHeight",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "z"),
     getPrimitiveFunction: function () {
       that.clippingEllipsoidMaxHeight =
         that._voxelPrimitive.maxClippingBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinHeightMin",
+    initialValue: -100000.0,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinHeightMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinHeightMax",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinHeightMax = that._voxelPrimitive.maxBounds.z;
     },
   });
   addProperty({
@@ -533,10 +617,16 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "clippingCylinderMaxAngleMin",
     initialValue: -CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxAngleMin = that._voxelPrimitive.minBounds.y;
+    },
   });
   addProperty({
     name: "clippingCylinderMaxAngleMax",
     initialValue: CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxAngleMax = that._voxelPrimitive.maxBounds.y;
+    },
   });
   addProperty({
     name: "clippingCylinderMaxAngle",

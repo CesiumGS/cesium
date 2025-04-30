@@ -411,7 +411,6 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
 
   const providerOptions = getAttributeInfo(tilesetMetadata, className);
   Object.assign(providerOptions, getShape(root));
-  // TODO: Multiply global transform with shape transform
   if (defined(root.transform)) {
     providerOptions.globalTransform = Matrix4.unpack(root.transform);
   } else {

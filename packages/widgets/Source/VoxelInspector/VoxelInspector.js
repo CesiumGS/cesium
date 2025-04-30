@@ -242,7 +242,7 @@ function VoxelInspector(container, scene) {
     clippingPanelContents,
   );
 
-  makeCoordinateRange(
+  makeCoordinateRangeWithDynamicMinMax(
     "Max Longitude",
     "Min Longitude",
     "Max Latitude",
@@ -255,8 +255,6 @@ function VoxelInspector(container, scene) {
     "clippingEllipsoidMinLatitude",
     "clippingEllipsoidMaxHeight",
     "clippingEllipsoidMinHeight",
-    ellipsoidMinBounds,
-    ellipsoidMaxBounds,
     "shapeIsEllipsoid",
     clippingPanelContents,
   );
