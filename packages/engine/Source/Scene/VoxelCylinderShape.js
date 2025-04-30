@@ -143,8 +143,8 @@ VoxelCylinderShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds,
 ) {
-  clipMinBounds = clipMinBounds ?? VoxelCylinderShape.DefaultMinBounds;
-  clipMaxBounds = clipMaxBounds ?? VoxelCylinderShape.DefaultMaxBounds;
+  clipMinBounds = clipMinBounds ?? minBounds.clone(scratchClipMinBounds);
+  clipMaxBounds = clipMaxBounds ?? maxBounds.clone(scratchClipMaxBounds);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);
@@ -160,46 +160,27 @@ VoxelCylinderShape.prototype.update = function (
   const epsilonAngle = CesiumMath.EPSILON10;
 
   // Clamp the bounds to the valid range
-  minBounds = Cartesian3.clamp(
-    minBounds,
-    DefaultMinBounds,
-    DefaultMaxBounds,
-    this._minBounds,
-  );
-  maxBounds = Cartesian3.clamp(
-    maxBounds,
-    DefaultMinBounds,
-    DefaultMaxBounds,
-    this._maxBounds,
-  );
+  minBounds.x = Math.max(0.0, minBounds.x);
+  maxBounds.x = Math.max(0.0, maxBounds.x);
+  minBounds.y = CesiumMath.negativePiToPi(minBounds.y);
+  maxBounds.y = CesiumMath.negativePiToPi(maxBounds.y);
+  Cartesian3.clone(minBounds, this._minBounds);
+  Cartesian3.clone(maxBounds, this._maxBounds);
 
-  clipMinBounds = Cartesian3.clamp(
-    clipMinBounds,
-    DefaultMinBounds,
-    DefaultMaxBounds,
-    scratchClipMinBounds,
-  );
-  clipMaxBounds = Cartesian3.clamp(
-    clipMaxBounds,
-    DefaultMinBounds,
-    DefaultMaxBounds,
-    scratchClipMaxBounds,
-  );
+  clipMinBounds.y = CesiumMath.negativePiToPi(clipMinBounds.y);
+  clipMaxBounds.y = CesiumMath.negativePiToPi(clipMaxBounds.y);
 
-  const renderMinBounds = Cartesian3.clamp(
+  // TODO: what if a min angle is > a max angle? (crossing the 180th meridian)
+  const renderMinBounds = Cartesian3.maximumByComponent(
     minBounds,
     clipMinBounds,
-    clipMaxBounds,
     scratchRenderMinBounds,
   );
-  const renderMaxBounds = Cartesian3.clamp(
+  const renderMaxBounds = Cartesian3.minimumByComponent(
     maxBounds,
-    clipMinBounds,
     clipMaxBounds,
     scratchRenderMaxBounds,
   );
-
-  const scale = Matrix4.getScale(modelMatrix, scratchScale);
 
   // Exit early if the shape is not visible.
   // Note that minAngle may be greater than maxAngle when crossing the 180th meridian.
@@ -209,6 +190,7 @@ VoxelCylinderShape.prototype.update = function (
   // - minRadius is greater than maxRadius
   // - minHeight is greater than maxHeight
   // - scale is 0 for any component (too annoying to reconstruct rotation matrix)
+  const scale = Matrix4.getScale(modelMatrix, scratchScale);
   if (
     renderMaxBounds.x === 0.0 ||
     renderMinBounds.x > renderMaxBounds.x ||
@@ -669,18 +651,6 @@ function computeLooseOrientedBoundingBox(matrix, result) {
  * @private
  */
 function getCylinderChunkObb(chunkMinBounds, chunkMaxBounds, matrix, result) {
-  const { DefaultMinBounds, DefaultMaxBounds } = VoxelCylinderShape;
-
-  // Return early if using the default bounds
-  if (
-    Cartesian3.equals(chunkMinBounds, DefaultMinBounds) &&
-    Cartesian3.equals(chunkMaxBounds, DefaultMaxBounds)
-  ) {
-    result.center = Matrix4.getTranslation(matrix, result.center);
-    result.halfAxes = Matrix4.getMatrix3(matrix, result.halfAxes);
-    return result;
-  }
-
   const radiusStart = chunkMinBounds.x;
   const radiusEnd = chunkMaxBounds.x;
   const angleStart = chunkMinBounds.y;
@@ -692,7 +662,7 @@ function getCylinderChunkObb(chunkMinBounds, chunkMaxBounds, matrix, result) {
   const heightEnd = chunkMaxBounds.z;
 
   const angleRange = angleEnd - angleStart;
-  const angleMid = chunkMinBounds.y + angleRange * 0.5;
+  const angleMid = angleStart + angleRange * 0.5;
 
   const testAngles = scratchTestAngles;
   let testAngleCount = 0;
@@ -707,6 +677,8 @@ function getCylinderChunkObb(chunkMinBounds, chunkMaxBounds, matrix, result) {
   }
 
   // Find bounding box in shape space relative to angleMid
+  // TODO: shortcut if angleRange is CesiumMath.TWO_PI
+  // TODO: are the starting values meaningful? Should be +/-infinity?
   let minX = 1.0;
   let minY = 1.0;
   let maxX = -1.0;

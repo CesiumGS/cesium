@@ -561,7 +561,7 @@ function getCylinderShape(cylinder) {
   const shapeTransform = Matrix4.fromTranslationQuaternionRotationScale(
     Cartesian3.unpack(translation),
     Quaternion.unpack(rotation),
-    new Cartesian3(maxRadius, maxRadius, 0.5 * height),
+    Cartesian3.ONE,
   );
 
   return {
