@@ -159,13 +159,14 @@ VoxelCylinderShape.prototype.update = function (
   const epsilonAngleDiscontinuity = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
   const epsilonAngle = CesiumMath.EPSILON10;
 
+  minBounds = Cartesian3.clone(minBounds, this._minBounds);
+  maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
+
   // Clamp the bounds to the valid range
   minBounds.x = Math.max(0.0, minBounds.x);
   maxBounds.x = Math.max(0.0, maxBounds.x);
   minBounds.y = CesiumMath.negativePiToPi(minBounds.y);
   maxBounds.y = CesiumMath.negativePiToPi(maxBounds.y);
-  Cartesian3.clone(minBounds, this._minBounds);
-  Cartesian3.clone(maxBounds, this._maxBounds);
 
   clipMinBounds.y = CesiumMath.negativePiToPi(clipMinBounds.y);
   clipMaxBounds.y = CesiumMath.negativePiToPi(clipMaxBounds.y);
