@@ -174,20 +174,20 @@ async function generateDevelopmentBuild() {
     const iifeCache = createRoute(
       app,
       "Cesium.js",
-      /\/Build\/CesiumUnminified\/Cesium.js.*/,
+      "/Build/CesiumUnminified/Cesium.js{.map}",
       contexts.iife,
       [iifeWorkersCache],
     );
     const esmCache = createRoute(
       app,
       "index.js",
-      /\/Build\/CesiumUnminified\/index.js.*/,
+      "/Build/CesiumUnminified/index.js{.map}",
       contexts.esm,
     );
     const workersCache = createRoute(
       app,
       "Workers/*",
-      /\/Build\/CesiumUnminified\/Workers\/.*\.js/,
+      "/Build/CesiumUnminified/Workers",
       contexts.workers,
     );
 
@@ -240,7 +240,7 @@ async function generateDevelopmentBuild() {
     const testWorkersCache = createRoute(
       app,
       "TestWorkers/*",
-      /\/Build\/Specs\/TestWorkers\/.*/,
+      "/Build/Specs/TestWorkers",
       contexts.testWorkers,
     );
     chokidar
@@ -250,7 +250,7 @@ async function generateDevelopmentBuild() {
     const specsCache = createRoute(
       app,
       "Specs/*",
-      /\/Build\/Specs\/.*/,
+      "/Build/Specs",
       contexts.specs,
     );
     const specWatcher = chokidar.watch(
@@ -304,21 +304,6 @@ async function generateDevelopmentBuild() {
 
   app.use(express.static(path.resolve(".")));
 
-  function getRemoteUrlFromParam(req) {
-    let remoteUrl = req.params.remote?.join("/");
-    if (remoteUrl) {
-      // add http:// to the URL if no protocol is present
-      if (!/^https?:\/\//.test(remoteUrl)) {
-        remoteUrl = `http://${remoteUrl}`;
-      }
-      remoteUrl = new URL(remoteUrl);
-      // copy query string
-      const baseURL = `${req.protocol}://${req.headers.host}/`;
-      remoteUrl.search = new URL(req.url, baseURL).search;
-    }
-    return remoteUrl;
-  }
-
   const dontProxyHeaderRegex =
     /^(?:Host|Proxy-Connection|Connection|Keep-Alive|Transfer-Encoding|TE|Trailer|Proxy-Authorization|Proxy-Authenticate|Upgrade)$/i;
 
@@ -343,9 +328,27 @@ async function generateDevelopmentBuild() {
   }
 
   //eslint-disable-next-line no-unused-vars
-  app.get("/proxy/{*remote}", function (req, res, next) {
-    // look for request like http://localhost:8080/proxy/http://example.com/file?query=1
-    let remoteUrl = getRemoteUrlFromParam(req);
+  app.param("remote", function (req, res, next, remote) {
+    if (remote) {
+      // Handles request like http://localhost:8080/proxy/http://example.com/file?query=1
+      let remoteUrl = remote.join("/");
+      // add http:// to the URL if no protocol is present
+      if (!/^https?:\/\//.test(remoteUrl)) {
+        remoteUrl = `http://${remoteUrl}`;
+      }
+      remoteUrl = new URL(remoteUrl);
+      // copy query string
+      const baseURL = `${req.protocol}://${req.headers.host}/`;
+      remoteUrl.search = new URL(req.url, baseURL).search;
+
+      req.remote = remoteUrl;
+    }
+    next();
+  });
+
+  //eslint-disable-next-line no-unused-vars
+  app.get("/proxy{/:remote}", function (req, res, next) {
+    let remoteUrl = req.remote;
     if (!remoteUrl) {
       // look for request like http://localhost:8080/proxy/?http%3A%2F%2Fexample.com%2Ffile%3Fquery%3D1
       remoteUrl = Object.keys(req.query)[0];
