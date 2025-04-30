@@ -50,10 +50,8 @@ function VoxelInspector(container, scene) {
   panel.className = "cesium-cesiumInspector-dropDown";
   element.appendChild(panel);
 
-  const createSection = InspectorShared.createSection;
-  const createCheckbox = InspectorShared.createCheckbox;
-  const createRangeInput = InspectorShared.createRangeInput;
-  const createButton = InspectorShared.createButton;
+  const { createSection, createCheckbox, createRangeInput, createButton } =
+    InspectorShared;
 
   const displayPanelContents = createSection(
     panel,
@@ -263,7 +261,7 @@ function VoxelInspector(container, scene) {
     clippingPanelContents,
   );
 
-  makeCoordinateRange(
+  makeCoordinateRangeWithDynamicMinMax(
     "Max Radius",
     "Min Radius",
     "Max Angle",
@@ -276,8 +274,6 @@ function VoxelInspector(container, scene) {
     "clippingCylinderMinAngle",
     "clippingCylinderMaxHeight",
     "clippingCylinderMinHeight",
-    cylinderMinBounds,
-    cylinderMaxBounds,
     "shapeIsCylinder",
     clippingPanelContents,
   );
@@ -387,6 +383,36 @@ function makeCoordinateRange(
   boundsElement.appendChild(createRangeInput(minYTitle, minYVar, min.y, max.y));
   boundsElement.appendChild(createRangeInput(maxZTitle, maxZVar, min.z, max.z));
   boundsElement.appendChild(createRangeInput(minZTitle, minZVar, min.z, max.z));
+}
+
+function makeCoordinateRangeWithDynamicMinMax(
+  maxXTitle,
+  minXTitle,
+  maxYTitle,
+  minYTitle,
+  maxZTitle,
+  minZTitle,
+  maxXVar,
+  minXVar,
+  maxYVar,
+  minYVar,
+  maxZVar,
+  minZVar,
+  allowedShape,
+  parentContainer,
+) {
+  const createRangeInput = InspectorShared.createRangeInputWithDynamicMinMax;
+
+  const boundsElement = parentContainer.appendChild(
+    document.createElement("div"),
+  );
+  boundsElement.setAttribute("data-bind", `if: ${allowedShape}`);
+  boundsElement.appendChild(createRangeInput(maxXTitle, maxXVar));
+  boundsElement.appendChild(createRangeInput(minXTitle, minXVar));
+  boundsElement.appendChild(createRangeInput(maxYTitle, maxYVar));
+  boundsElement.appendChild(createRangeInput(minYTitle, minYVar));
+  boundsElement.appendChild(createRangeInput(maxZTitle, maxZVar));
+  boundsElement.appendChild(createRangeInput(minZTitle, minZVar));
 }
 
 export default VoxelInspector;

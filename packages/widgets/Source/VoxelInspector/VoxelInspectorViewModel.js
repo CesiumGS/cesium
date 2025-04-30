@@ -4,6 +4,7 @@ import {
   defined,
   destroyObject,
   HeadingPitchRoll,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   CustomShader,
@@ -486,11 +487,39 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingCylinderMaxRadiusMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxRadiusMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMaxRadiusMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxRadiusMax = that._voxelPrimitive.maxBounds.x;
+    },
+  });
+  addProperty({
     name: "clippingCylinderMaxRadius",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "x"),
     getPrimitiveFunction: function () {
       that.clippingCylinderMaxRadius = that._voxelPrimitive.maxClippingBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinRadiusMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinRadiusMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinRadiusMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinRadiusMax = that._voxelPrimitive.maxBounds.x;
     },
   });
   addProperty({
@@ -502,12 +531,28 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingCylinderMaxAngleMin",
+    initialValue: -CesiumMath.PI,
+  });
+  addProperty({
+    name: "clippingCylinderMaxAngleMax",
+    initialValue: CesiumMath.PI,
+  });
+  addProperty({
     name: "clippingCylinderMaxAngle",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "y"),
     getPrimitiveFunction: function () {
       that.clippingCylinderMaxAngle = that._voxelPrimitive.maxClippingBounds.y;
     },
+  });
+  addProperty({
+    name: "clippingCylinderMinAngleMin",
+    initialValue: -CesiumMath.PI,
+  });
+  addProperty({
+    name: "clippingCylinderMinAngleMax",
+    initialValue: CesiumMath.PI,
   });
   addProperty({
     name: "clippingCylinderMinAngle",
@@ -518,11 +563,39 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingCylinderMaxHeightMin",
+    initialValue: -1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxHeightMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMaxHeightMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxHeightMax = that._voxelPrimitive.maxBounds.z;
+    },
+  });
+  addProperty({
     name: "clippingCylinderMaxHeight",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "z"),
     getPrimitiveFunction: function () {
       that.clippingCylinderMaxHeight = that._voxelPrimitive.maxClippingBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinHeightMin",
+    initialValue: -1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinHeightMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinHeightMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinHeightMax = that._voxelPrimitive.maxBounds.z;
     },
   });
   addProperty({
@@ -716,33 +789,34 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
       }
 
       // Update properties from the new primitive
-      if (defined(voxelPrimitive)) {
-        this._voxelPrimitive = voxelPrimitive;
-
-        const that = this;
-        that._customShaderCompilationRemoveCallback =
-          that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
-            function (error) {
-              const shaderString =
-                that._voxelPrimitive.customShader.fragmentShaderText;
-              that.shaderString = formatShaderString(shaderString);
-
-              if (!defined(error)) {
-                that.shaderCompilationMessage = "Shader compiled successfully!";
-                that.shaderCompilationSuccess = true;
-              } else {
-                that.shaderCompilationMessage = error.message;
-                that.shaderCompilationSuccess = false;
-              }
-            },
-          );
-        that._modelMatrixReady = false;
-        for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
-          that._getPrimitiveFunctions[i]();
-        }
-        that._modelMatrixReady = true;
-        setModelMatrix(that);
+      if (!defined(voxelPrimitive)) {
+        return;
       }
+      this._voxelPrimitive = voxelPrimitive;
+
+      const that = this;
+      that._customShaderCompilationRemoveCallback =
+        that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
+          function (error) {
+            const shaderString =
+              that._voxelPrimitive.customShader.fragmentShaderText;
+            that.shaderString = formatShaderString(shaderString);
+
+            if (!defined(error)) {
+              that.shaderCompilationMessage = "Shader compiled successfully!";
+              that.shaderCompilationSuccess = true;
+            } else {
+              that.shaderCompilationMessage = error.message;
+              that.shaderCompilationSuccess = false;
+            }
+          },
+        );
+      that._modelMatrixReady = false;
+      for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
+        that._getPrimitiveFunctions[i]();
+      }
+      that._modelMatrixReady = true;
+      setModelMatrix(that);
     },
   },
 });
