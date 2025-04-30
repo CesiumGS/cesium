@@ -198,8 +198,9 @@ ITwinPlatform.getExports = async function (iModelId) {
   } catch (error) {
     const result = JSON.parse(error.response);
     if (error.statusCode === 401) {
+      const code = result.error.details?.[0].code ?? "";
       throw new RuntimeError(
-        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
+        `Unauthorized, bad token, wrong scopes or headers bad. ${code}`,
       );
     } else if (error.statusCode === 403) {
       console.error(result.error.code, result.error.message);
@@ -282,8 +283,9 @@ ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
   } catch (error) {
     const result = JSON.parse(error.response);
     if (error.statusCode === 401) {
+      const code = result.error.details?.[0].code ?? "";
       throw new RuntimeError(
-        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
+        `Unauthorized, bad token, wrong scopes or headers bad. ${code}`,
       );
     } else if (error.statusCode === 403) {
       console.error(result.error.code, result.error.message);
@@ -354,8 +356,9 @@ ITwinPlatform.getRealityDataURL = async function (
   } catch (error) {
     const result = JSON.parse(error.response);
     if (error.statusCode === 401) {
+      const code = result.error.details?.[0].code ?? "";
       throw new RuntimeError(
-        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
+        `Unauthorized, bad token, wrong scopes or headers bad. ${code}`,
       );
     } else if (error.statusCode === 403) {
       console.error(result.error.code, result.error.message);
