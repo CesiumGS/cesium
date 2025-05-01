@@ -1,11 +1,8 @@
 import {
-  Cartesian3,
   Math as CesiumMath,
   Check,
   destroyObject,
-  Ellipsoid,
   getElement,
-  VoxelShapeType,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import InspectorShared from "../InspectorShared.js";
@@ -65,13 +62,6 @@ function VoxelInspector(container, scene) {
     "Transform",
     "transformVisible",
     "toggleTransform",
-  );
-
-  const boundsPanelContents = createSection(
-    panel,
-    "Bounds",
-    "boundsVisible",
-    "toggleBounds",
   );
 
   const clippingPanelContents = createSection(
@@ -139,87 +129,6 @@ function VoxelInspector(container, scene) {
   );
   transformPanelContents.appendChild(
     createRangeInput("Roll", "angleZ", -maxAngle, +maxAngle),
-  );
-
-  // Bounds
-  const boxMinBounds = VoxelShapeType.getMinBounds(VoxelShapeType.BOX);
-  const boxMaxBounds = VoxelShapeType.getMaxBounds(VoxelShapeType.BOX);
-
-  const ellipsoidMinBounds = Cartesian3.fromElements(
-    VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID).x,
-    VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID).y,
-    -Ellipsoid.WGS84.maximumRadius,
-    new Cartesian3(),
-  );
-  const ellipsoidMaxBounds = Cartesian3.fromElements(
-    VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID).x,
-    VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID).y,
-    +10000000.0,
-    new Cartesian3(),
-  );
-
-  const cylinderMinBounds = VoxelShapeType.getMinBounds(
-    VoxelShapeType.CYLINDER,
-  );
-  const cylinderMaxBounds = VoxelShapeType.getMaxBounds(
-    VoxelShapeType.CYLINDER,
-  );
-
-  makeCoordinateRange(
-    "Max X",
-    "Min X",
-    "Max Y",
-    "Min Y",
-    "Max Z",
-    "Min Z",
-    "boundsBoxMaxX",
-    "boundsBoxMinX",
-    "boundsBoxMaxY",
-    "boundsBoxMinY",
-    "boundsBoxMaxZ",
-    "boundsBoxMinZ",
-    boxMinBounds,
-    boxMaxBounds,
-    "shapeIsBox",
-    boundsPanelContents,
-  );
-
-  makeCoordinateRange(
-    "Max Longitude",
-    "Min Longitude",
-    "Max Latitude",
-    "Min Latitude",
-    "Max Height",
-    "Min Height",
-    "boundsEllipsoidMaxLongitude",
-    "boundsEllipsoidMinLongitude",
-    "boundsEllipsoidMaxLatitude",
-    "boundsEllipsoidMinLatitude",
-    "boundsEllipsoidMaxHeight",
-    "boundsEllipsoidMinHeight",
-    ellipsoidMinBounds,
-    ellipsoidMaxBounds,
-    "shapeIsEllipsoid",
-    boundsPanelContents,
-  );
-
-  makeCoordinateRange(
-    "Max Radius",
-    "Min Radius",
-    "Max Angle",
-    "Min Angle",
-    "Max Height",
-    "Min Height",
-    "boundsCylinderMaxRadius",
-    "boundsCylinderMinRadius",
-    "boundsCylinderMaxAngle",
-    "boundsCylinderMinAngle",
-    "boundsCylinderMaxHeight",
-    "boundsCylinderMinHeight",
-    cylinderMinBounds,
-    cylinderMaxBounds,
-    "shapeIsCylinder",
-    boundsPanelContents,
   );
 
   // Clipping
@@ -346,40 +255,6 @@ VoxelInspector.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-
-function makeCoordinateRange(
-  maxXTitle,
-  minXTitle,
-  maxYTitle,
-  minYTitle,
-  maxZTitle,
-  minZTitle,
-  maxXVar,
-  minXVar,
-  maxYVar,
-  minYVar,
-  maxZVar,
-  minZVar,
-  defaultMinBounds,
-  defaultMaxBounds,
-  allowedShape,
-  parentContainer,
-) {
-  const createRangeInput = InspectorShared.createRangeInput;
-
-  const min = defaultMinBounds;
-  const max = defaultMaxBounds;
-  const boundsElement = parentContainer.appendChild(
-    document.createElement("div"),
-  );
-  boundsElement.setAttribute("data-bind", `if: ${allowedShape}`);
-  boundsElement.appendChild(createRangeInput(maxXTitle, maxXVar, min.x, max.x));
-  boundsElement.appendChild(createRangeInput(minXTitle, minXVar, min.x, max.x));
-  boundsElement.appendChild(createRangeInput(maxYTitle, maxYVar, min.y, max.y));
-  boundsElement.appendChild(createRangeInput(minYTitle, minYVar, min.y, max.y));
-  boundsElement.appendChild(createRangeInput(maxZTitle, maxZVar, min.z, max.z));
-  boundsElement.appendChild(createRangeInput(minZTitle, minZVar, min.z, max.z));
-}
 
 function makeCoordinateRangeWithDynamicMinMax(
   maxXTitle,
