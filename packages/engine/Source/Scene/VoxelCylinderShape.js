@@ -59,13 +59,13 @@ function VoxelCylinderShape() {
   this.shapeTransform = new Matrix4();
 
   /**
-   * @type {Cartesian3}
+   * @type {Cartesian3} The minimum bounds of the shape, corresponding to minimum radius, angle, and height.
    * @private
    */
   this._minBounds = VoxelCylinderShape.DefaultMinBounds.clone();
 
   /**
-   * @type {number}
+   * @type {Cartesian3} The maximum bounds of the shape, corresponding to maximum radius, angle, and height.
    * @private
    */
   this._maxBounds = VoxelCylinderShape.DefaultMaxBounds.clone();
@@ -172,7 +172,6 @@ VoxelCylinderShape.prototype.update = function (
   clipMinBounds.y = CesiumMath.negativePiToPi(clipMinBounds.y);
   clipMaxBounds.y = CesiumMath.negativePiToPi(clipMaxBounds.y);
 
-  // TODO: what if a min angle is > a max angle? (crossing the 180th meridian)
   const renderMinBounds = Cartesian3.maximumByComponent(
     minBounds,
     clipMinBounds,
@@ -525,7 +524,6 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
     sampleSizeScratch,
   );
 
-  // TODO: tileUv should first be rounded to lower left corner of the sample?
   const minLerp = Cartesian3.multiplyByScalar(
     Cartesian3.fromElements(
       spatialNode.x + tileUv.x,
@@ -679,12 +677,10 @@ function getCylinderChunkObb(chunkMinBounds, chunkMaxBounds, matrix, result) {
   }
 
   // Find bounding box in shape space relative to angleMid
-  // TODO: shortcut if angleRange is CesiumMath.TWO_PI
-  // TODO: are the starting values meaningful? Should be +/-infinity?
-  let minX = 1.0;
-  let minY = 1.0;
-  let maxX = -1.0;
-  let maxY = -1.0;
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
 
   for (let i = 0; i < testAngleCount; ++i) {
     const angle = testAngles[i] - angleMid;

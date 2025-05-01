@@ -57,13 +57,13 @@ function VoxelBoxShape() {
   this.shapeTransform = new Matrix4();
 
   /**
-   * @type {Cartesian3}
+   * @type {Cartesian3} The minimum bounds of the shape.
    * @private
    */
   this._minBounds = VoxelBoxShape.DefaultMinBounds.clone();
 
   /**
-   * @type {Cartesian3}
+   * @type {Cartesian3} The maximum bounds of the shape.
    * @private
    */
   this._maxBounds = VoxelBoxShape.DefaultMaxBounds.clone();
