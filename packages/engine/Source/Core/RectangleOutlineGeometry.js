@@ -364,7 +364,7 @@ const scratchOptions = {
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {RectangleOutlineGeometry} [result] The object into which to store the result.
- * @returns {RectangleOutlineGeometry} The modified result parameter or a new Quaternion instance if one was not provided.
+ * @returns {RectangleOutlineGeometry} The modified result parameter or a new RectangleOutlineGeometry instance if one was not provided.
  */
 RectangleOutlineGeometry.unpack = function (array, startingIndex, result) {
   //>>includeStart('debug', pragmas.debug);

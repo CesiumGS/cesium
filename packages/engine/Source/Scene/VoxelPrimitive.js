@@ -608,8 +608,8 @@ function initialize(primitive, provider) {
 
   primitive.minBounds = minBounds;
   primitive.maxBounds = maxBounds;
-  primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
-  primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
+  primitive.minClippingBounds = minBounds.clone();
+  primitive.maxClippingBounds = maxBounds.clone();
 
   // Initialize the exaggerated versions of bounds and model matrix
   primitive._exaggeratedMinBounds = Cartesian3.clone(
