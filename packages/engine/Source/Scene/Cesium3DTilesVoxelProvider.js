@@ -9,6 +9,7 @@ import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitSubtreeCache from "./ImplicitSubtreeCache.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import ImplicitTileset from "./ImplicitTileset.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import MetadataSemantic from "./MetadataSemantic.js";
 import MetadataType from "./MetadataType.js";
@@ -17,7 +18,6 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import Resource from "../Core/Resource.js";
 import ResourceCache from "./ResourceCache.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import VoxelBoxShape from "./VoxelBoxShape.js";
 import VoxelContent from "./VoxelContent.js";
 import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 import VoxelShapeType from "./VoxelShapeType.js";
@@ -518,18 +518,19 @@ function getEllipsoidShape(region) {
   };
 }
 
+const scratchScale = new Cartesian3();
+const scratchRotation = new Matrix3();
+
 function getBoxShape(box) {
   const obb = OrientedBoundingBox.unpack(box);
-  const shapeTransform = Matrix4.fromRotationTranslation(
-    obb.halfAxes,
-    obb.center,
-  );
+  const scale = Matrix3.getScale(obb.halfAxes, scratchScale);
+  const rotation = Matrix3.getRotation(obb.halfAxes, scratchRotation);
 
   return {
     shape: VoxelShapeType.BOX,
-    minBounds: Cartesian3.clone(VoxelBoxShape.DefaultMinBounds),
-    maxBounds: Cartesian3.clone(VoxelBoxShape.DefaultMaxBounds),
-    shapeTransform: shapeTransform,
+    minBounds: Cartesian3.negate(scale, new Cartesian3()),
+    maxBounds: Cartesian3.clone(scale),
+    shapeTransform: Matrix4.fromRotationTranslation(rotation, obb.center),
   };
 }
 

@@ -132,8 +132,8 @@ const scratchRenderMaxBounds = new Cartesian3();
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
- * @param {Cartesian3} [clipMinBounds=VoxelCylinderShape.DefaultMinBounds] The minimum clip bounds.
- * @param {Cartesian3} [clipMaxBounds=VoxelCylinderShape.DefaultMaxBounds] The maximum clip bounds.
+ * @param {Cartesian3} [clipMinBounds] The minimum clip bounds.
+ * @param {Cartesian3} [clipMaxBounds] The maximum clip bounds.
  * @returns {boolean} Whether the shape is visible.
  */
 VoxelCylinderShape.prototype.update = function (
@@ -143,13 +143,17 @@ VoxelCylinderShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds,
 ) {
-  clipMinBounds = clipMinBounds ?? minBounds.clone(scratchClipMinBounds);
-  clipMaxBounds = clipMaxBounds ?? maxBounds.clone(scratchClipMaxBounds);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);
   Check.typeOf.object("maxBounds", maxBounds);
   //>>includeEnd('debug');
+
+  clipMinBounds = clipMinBounds ?? minBounds.clone(scratchClipMinBounds);
+  clipMaxBounds = clipMaxBounds ?? maxBounds.clone(scratchClipMaxBounds);
+
+  minBounds = Cartesian3.clone(minBounds, this._minBounds);
+  maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
 
   const { DefaultMinBounds, DefaultMaxBounds } = VoxelCylinderShape;
   const defaultAngleRange = DefaultMaxBounds.y - DefaultMinBounds.y;
@@ -158,9 +162,6 @@ VoxelCylinderShape.prototype.update = function (
   const epsilonZeroScale = CesiumMath.EPSILON10;
   const epsilonAngleDiscontinuity = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
   const epsilonAngle = CesiumMath.EPSILON10;
-
-  minBounds = Cartesian3.clone(minBounds, this._minBounds);
-  maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
 
   // Clamp the bounds to the valid range
   minBounds.x = Math.max(0.0, minBounds.x);

@@ -385,11 +385,39 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingBoxMaxXMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxXMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMaxXMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxXMax = that._voxelPrimitive.maxBounds.x;
+    },
+  });
+  addProperty({
     name: "clippingBoxMaxX",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "x"),
     getPrimitiveFunction: function () {
       that.clippingBoxMaxX = that._voxelPrimitive.maxClippingBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinXMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinXMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinXMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinXMax = that._voxelPrimitive.maxBounds.x;
     },
   });
   addProperty({
@@ -401,11 +429,39 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingBoxMaxYMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxYMin = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMaxYMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxYMax = that._voxelPrimitive.maxBounds.y;
+    },
+  });
+  addProperty({
     name: "clippingBoxMaxY",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "y"),
     getPrimitiveFunction: function () {
       that.clippingBoxMaxY = that._voxelPrimitive.maxClippingBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinYMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinYMin = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinYMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinYMax = that._voxelPrimitive.maxBounds.y;
     },
   });
   addProperty({
@@ -417,11 +473,39 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingBoxMaxZMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxZMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMaxZMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxZMax = that._voxelPrimitive.maxBounds.z;
+    },
+  });
+  addProperty({
     name: "clippingBoxMaxZ",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("maxClippingBounds", "z"),
     getPrimitiveFunction: function () {
       that.clippingBoxMaxZ = that._voxelPrimitive.maxClippingBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinZMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinZMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinZMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinZMax = that._voxelPrimitive.maxBounds.z;
     },
   });
   addProperty({

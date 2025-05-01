@@ -223,7 +223,7 @@ function VoxelInspector(container, scene) {
   );
 
   // Clipping
-  makeCoordinateRange(
+  makeCoordinateRangeWithDynamicMinMax(
     "Max X",
     "Min X",
     "Max Y",
@@ -236,8 +236,6 @@ function VoxelInspector(container, scene) {
     "clippingBoxMinY",
     "clippingBoxMaxZ",
     "clippingBoxMinZ",
-    boxMinBounds,
-    boxMaxBounds,
     "shapeIsBox",
     clippingPanelContents,
   );
