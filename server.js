@@ -187,7 +187,7 @@ async function generateDevelopmentBuild() {
     const workersCache = createRoute(
       app,
       "Workers/*",
-      "/Build/CesiumUnminified/Workers",
+      "/Build/CesiumUnminified/Workers/*file.js",
       contexts.workers,
     );
 
@@ -240,7 +240,7 @@ async function generateDevelopmentBuild() {
     const testWorkersCache = createRoute(
       app,
       "TestWorkers/*",
-      "/Build/Specs/TestWorkers",
+      "/Build/Specs/TestWorkers/*file",
       contexts.testWorkers,
     );
     chokidar
@@ -250,7 +250,7 @@ async function generateDevelopmentBuild() {
     const specsCache = createRoute(
       app,
       "Specs/*",
-      "/Build/Specs",
+      "/Build/Specs/*file",
       contexts.specs,
     );
     const specWatcher = chokidar.watch(
@@ -347,7 +347,7 @@ async function generateDevelopmentBuild() {
   });
 
   //eslint-disable-next-line no-unused-vars
-  app.get("/proxy{/:remote}", function (req, res, next) {
+  app.get("/proxy{/*remote}", function (req, res, next) {
     let remoteUrl = req.remote;
     if (!remoteUrl) {
       // look for request like http://localhost:8080/proxy/?http%3A%2F%2Fexample.com%2Ffile%3Fquery%3D1
