@@ -59,13 +59,15 @@ function VoxelCylinderShape() {
   this.shapeTransform = new Matrix4();
 
   /**
-   * @type {Cartesian3} The minimum bounds of the shape, corresponding to minimum radius, angle, and height.
+   * The minimum bounds of the shape, corresponding to minimum radius, angle, and height.
+   * @type {Cartesian3}
    * @private
    */
   this._minBounds = VoxelCylinderShape.DefaultMinBounds.clone();
 
   /**
-   * @type {Cartesian3} The maximum bounds of the shape, corresponding to maximum radius, angle, and height.
+   * The maximum bounds of the shape, corresponding to maximum radius, angle, and height.
+   * @type {Cartesian3}
    * @private
    */
   this._maxBounds = VoxelCylinderShape.DefaultMaxBounds.clone();
