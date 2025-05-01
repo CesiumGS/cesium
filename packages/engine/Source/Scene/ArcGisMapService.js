@@ -8,7 +8,7 @@ const cesiumWebsiteToken =
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "AAPTxy8BH1VEsoebNVZXo8HurEOF051kAEKlhkOhBEc9BmQHrJmkly5GMmeyeds7qlqGckHbEMszNoB_aHL967jpcpMFlqzgl75smE9bSxUFgvbMH9RZ-1bNm94gP0mBkZCj49YnVLAsh3PgcdtfgQwNxkZdUV2dz75e_dsw_O0bYHnpqlqyefjc7B5QgSv6ClYuonoi55ZvXmrydipr6sBClFcIjCyO89XNoxG1N4yuLS0.AT1_EEoMffUB";
+  "AAPTxy8BH1VEsoebNVZXo8HurEOF051kAEKlhkOhBEc9BmRwxo7rIWoXrG5RJkAAlrdL0n_Ha7z7WbgHT-DpRd_LxLSeba-Kg8HsK3kJVUF2iiOVOza8OZ-DIdJzjyBZ9IIc5W0JagV3wyuZ9CKE3RHRSADOw-9FbeeUyfJA8iS2mKcK8768q4g11vlHUzVYFhWoKctRWWeG3Amwm6ez2n3vMc1fTSqDdbFP2O6x5eslQDE.AT1_SOxgo20E";
 /**
  * Default options for accessing the ArcGIS image tile service.
  *
