@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- `VoxelProvider.minimumBounds` and `.maximumBounds` are now specified as physical values, rather than shape space values. [#12592](https://github.com/CesiumGS/cesium/pull/12592)
+
 #### Additions :tada:
 
 - Added `Material with Custom GLSL` Sandbox Demo. [#12549](https://github.com/CesiumGS/cesium/issues/12549)

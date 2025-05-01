@@ -33,9 +33,9 @@
     "boundingVolume": {
       "extensions": {
         "3DTILES_bounding_volume_cylinder": {
-          "height": 2.0,
+          "height": 12756274.0,
           "minRadius": 0.0,
-          "maxRadius": 1.0
+          "maxRadius": 6378137.0
         }
       }
     },
@@ -61,25 +61,7 @@
       "subtrees": {
         "uri": "subtrees/{level}/{x}/{y}/{z}.json"
       }
-    },
-    "transform": [
-      6378137.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      6378137.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      6378137.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      1.0
-    ]
+    }
   },
   "extensionsUsed": [
     "3DTILES_bounding_volume_cylinder",
