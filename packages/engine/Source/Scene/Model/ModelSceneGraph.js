@@ -527,6 +527,7 @@ const scratchPrimitivePositionMax = new Cartesian3();
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
  * If the model is used for classification, a {@link ClassificationModelDrawCommand}
  * is generated for each primitive instead.
+ * Updates the bounding sphere for the scene graph and each primitive.
  * @param {Model} model TODO
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -735,6 +736,7 @@ ModelSceneGraph.prototype.computeBoundingVolumes = function (
   );
 
   this._rootBoundingSphere = boundingSphere;
+  // TODO: resolve model space bounding sphere
   this._boundingSphere = BoundingSphere.clone(boundingSphere);
 };
 
