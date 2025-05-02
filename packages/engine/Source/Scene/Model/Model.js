@@ -4,6 +4,7 @@ import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import Credit from "../../Core/Credit.js";
 import Color from "../../Core/Color.js";
+import CesiumMath from "../../Core/Math.js";
 import defined from "../../Core/defined.js";
 import Frozen from "../../Core/Frozen.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -2415,7 +2416,8 @@ function getComputedScale(model, modelMatrix, frameState) {
       return scaleInPixels(position, radius, frameState);
     };
 
-    let maxScaleInPixels = 0.5; // TODO: We need to ensure this is never 0, because we divide by it
+    // maxScaleInPixels is always > 0
+    let maxScaleInPixels = CesiumMath.EPSILON12;
     maxScaleInPixels = Math.max(
       maxScaleInPixels,
       getScaleInPixels(modelMatrix),
@@ -2519,7 +2521,7 @@ function updateSceneGraph(model, frameState) {
     const modelMatrix = defined(model._clampedModelMatrix)
       ? model._clampedModelMatrix
       : model.modelMatrix;
-    sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    sceneGraph.updateModelMatrix(modelMatrix, model._computedScale, frameState);
     model._updateModelMatrix = false;
   }
 
