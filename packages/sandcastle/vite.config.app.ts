@@ -1,8 +1,11 @@
-import { defineConfig, UserConfig } from "vite";
+import { fileURLToPath } from "url";
+import { defineConfig, PluginOption, UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import { createHtmlPlugin } from "vite-plugin-html";
 
 import baseConfig from "./vite.config.ts";
+
+const cesiumSource = "../../Build/CesiumUnminified";
+const cesiumBaseUrl = "Build/CesiumUnminified";
 
 export default defineConfig(() => {
   const config: UserConfig = baseConfig;
@@ -10,15 +13,22 @@ export default defineConfig(() => {
   // for the normal local server.js to work correctly
   config.base = "/Apps/Sandcastle2";
 
+  config.define = {
+    __base_url__: JSON.stringify(`/${cesiumBaseUrl}`),
+  };
+
   config.build = {
     ...config.build,
     outDir: "../../Apps/Sandcastle2",
     // "the outDir is not inside project root and will not be emptied" without this setting
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        index: fileURLToPath(new URL("./index.html", import.meta.url)),
+        bucket: fileURLToPath(new URL("./bucket.html", import.meta.url)),
+      },
+    },
   };
-
-  const cesiumSource = "../../Build/CesiumUnminified";
-  const cesiumBaseUrl = "Build/CesiumUnminified";
 
   const copyPlugin = viteStaticCopy({
     targets: [
@@ -32,30 +42,17 @@ export default defineConfig(() => {
     ],
   });
 
-  const htmlPlugin = createHtmlPlugin({
-    minify: false,
-    pages: [
-      {
-        entry: "src/main.tsx",
-        template: "index.html",
-        filename: "index.html",
+  const htmlPlugin = (): PluginOption => {
+    return {
+      name: "custom-cesium-path-plugin",
+      transformIndexHtml(html) {
+        return html.replace("__base_url__", `/${cesiumBaseUrl}`);
       },
-      {
-        entry: undefined,
-        template: "bucket.html",
-        filename: "bucket.html",
-        injectOptions: {
-          data: {
-            scriptPath: `${cesiumSource}/Cesium.js`,
-            cesiumBase: `/${cesiumBaseUrl}`,
-          },
-        },
-      },
-    ],
-  });
+    };
+  };
 
   const plugins = config.plugins ?? [];
-  config.plugins = [...plugins, copyPlugin, htmlPlugin];
+  config.plugins = [...plugins, copyPlugin, htmlPlugin()];
 
   return config;
 });

@@ -8,15 +8,31 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <title>Cesium Demo</title>
-    <script type="text/javascript" src="./Sandcastle-header.js"></script>
-    <script src="<%- scriptPath %>"></script>
-    <link rel="stylesheet" href="<%- cesiumBase %>/Widgets/widgets.css" />
-    <link rel="stylesheet" href="<%- cesiumBase %>/Widgets/lighter.css" />
+    <script
+      type="text/javascript"
+      src="./Sandcastle-header.js"
+      vite-ignore
+    ></script>
+    <script src="__base_url__/Cesium.js" vite-ignore></script>
+    <link
+      rel="stylesheet"
+      href="__base_url__/Widgets/widgets.css"
+      vite-ignore
+    />
+    <link
+      rel="stylesheet"
+      href="__base_url__/Widgets/lighter.css"
+      vite-ignore
+    />
     <script>
-      window.CESIUM_BASE_URL = "<%- cesiumBase %>";
+      window.CESIUM_BASE_URL = "__base_url__";
     </script>
   </head>
   <body>
-    <script type="text/javascript" src="./Sandcastle-client.js"></script>
+    <script
+      type="text/javascript"
+      src="./Sandcastle-client.js"
+      vite-ignore
+    ></script>
   </body>
 </html>
