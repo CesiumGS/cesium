@@ -29,6 +29,7 @@ const requestHeap = new Heap({
 requestHeap.maximumLength = priorityHeapLength;
 requestHeap.reserve(priorityHeapLength);
 
+/** @type {Request[]} */
 const activeRequests = [];
 let numberOfActiveRequestsByServer = {};
 
@@ -189,6 +190,11 @@ RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
   return hasOpenSlotsHeap;
 };
 
+/**
+ * @private
+ * @param {Request} request
+ * @returns {Promise<any>}
+ */
 function issueRequest(request) {
   if (request.state === RequestState.UNISSUED) {
     request.state = RequestState.ISSUED;
@@ -231,6 +237,11 @@ function getRequestFailedFunction(request) {
   };
 }
 
+/**
+ * @private
+ * @param {Request} request
+ * @returns {Promise<any>}
+ */
 function startRequest(request) {
   const promise = issueRequest(request);
   request.state = RequestState.ACTIVE;
@@ -245,6 +256,10 @@ function startRequest(request) {
   return promise;
 }
 
+/**
+ * @private
+ * @param {Request} request
+ */
 function cancelRequest(request) {
   const active = request.state === RequestState.ACTIVE;
   request.state = RequestState.CANCELLED;
