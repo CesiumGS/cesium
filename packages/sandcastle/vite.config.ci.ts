@@ -2,10 +2,12 @@ import { fileURLToPath } from "url";
 import { defineConfig, PluginOption, UserConfig } from "vite";
 import baseConfig from "./vite.config.ts";
 
-// const cesiumSource = "../../Build/CesiumUnminified";
-const cesiumBaseUrl = `${process.env.BASE_URL}Build/CesiumUnminified`;
-
 export default defineConfig(() => {
+  // const cesiumSource = "../../Build/CesiumUnminified";
+  const cesiumBaseUrl = `${process.env.BASE_URL}Build/CesiumUnminified`;
+  console.log(process);
+  console.log({ cesiumBaseUrl });
+
   const config: UserConfig = baseConfig;
   // This will make the built files point to routes in the correct nested path
   // for the normal local server.js to work correctly
@@ -28,6 +30,7 @@ export default defineConfig(() => {
     },
   };
 
+  // TODO: may need to add this to the dev config too to hook up the correct paths and not have 2 bucket.html files
   const htmlPlugin = (): PluginOption => {
     return {
       name: "custom-cesium-path-plugin",
