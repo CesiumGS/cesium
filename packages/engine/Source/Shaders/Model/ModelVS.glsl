@@ -89,7 +89,7 @@ void main()
         RuntimeModelInstancingStage(attributes, instanceModelView, instanceModelViewInverseTranspose);
         
         modelView = instanceModelView;
-        //normal = instanceModelViewInverseTranspose;
+        normal = instanceModelViewInverseTranspose;
         #else
         instancingStage(attributes);
         #endif
