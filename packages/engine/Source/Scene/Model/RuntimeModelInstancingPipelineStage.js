@@ -49,6 +49,7 @@ RuntimeModelInstancingPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
+  shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
   shaderBuilder.addDefine(
     "USE_API_INSTANCING",
     undefined,
