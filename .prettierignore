@@ -9,6 +9,7 @@
 !Apps/**/
 !Documentation/**/
 !packages/**/
+!scripts/**/
 !Specs/**/
 !Tools/**/
 

@@ -1526,7 +1526,11 @@ function updateHeights(primitive, frameState) {
         }
         if (defined(position)) {
           if (defined(data.callback)) {
-            data.callback(position);
+            const positionCarto = ellipsoid.cartesianToCartographic(
+              position,
+              scratchCartographic,
+            );
+            data.callback(positionCarto);
           }
           data.level = tile.level;
         }

@@ -137,6 +137,50 @@ InspectorShared.createRangeInput = function (
 };
 
 /**
+ * Creates a range input
+ * @param {string} rangeText The text to display
+ * @param {string} sliderValueBinding The name of the variable used for slider value binding
+ * @param {number} [step] The step size. Defaults to "any".
+ * @param {string} [inputValueBinding] The name of the variable used for input value binding
+ * @return {Element}
+ */
+InspectorShared.createRangeInputWithDynamicMinMax = function (
+  rangeText,
+  sliderValueBinding,
+  step,
+  inputValueBinding,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("rangeText", rangeText);
+  Check.typeOf.string("sliderValueBinding", sliderValueBinding);
+  //>>includeEnd('debug');
+
+  inputValueBinding = inputValueBinding ?? sliderValueBinding;
+  const input = document.createElement("input");
+  input.setAttribute("data-bind", `value: ${inputValueBinding}`);
+  input.type = "number";
+
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.step = step ?? "any";
+  slider.setAttribute(
+    "data-bind",
+    `valueUpdate: "input", value: ${sliderValueBinding}, attr: { min: ${sliderValueBinding}Min, max: ${sliderValueBinding}Max }`,
+  );
+
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(slider);
+
+  const container = document.createElement("div");
+  container.className = "cesium-cesiumInspector-slider";
+  container.appendChild(document.createTextNode(rangeText));
+  container.appendChild(input);
+  container.appendChild(wrapper);
+
+  return container;
+};
+
+/**
  * Creates a button component
  * @param {string} buttonText The button text
  * @param {string} clickedBinding The name of the variable used for clicked binding
