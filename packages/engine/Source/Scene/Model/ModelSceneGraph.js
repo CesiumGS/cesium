@@ -275,6 +275,7 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
   );
 
   this._projectTo2D = model._projectTo2D;
+  this._computedModelScale = model._computedScale;
   // TODO: 2DBoundingSphere?
 
   // If the model has a height reference that modifies the model matrix,
@@ -283,6 +284,7 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
   this._rootTransform = computeRootTransform(this, this._rootTransform);
   this._computedModelMatrix = computeModelMatrix(
     modelMatrix,
+    this._computedModelScale,
     this._rootTransform,
     this._computedModelMatrix,
   );
@@ -390,13 +392,17 @@ function computeRootTransform(sceneGraph, result) {
  * @param {Matrix4} result
  * @returns {Matrix4}
  */
-function computeModelMatrix(modelMatrix, rootTransform, result) {
-  // TODO: include model scaling
-  // modelMatrix = Matrix4.multiplyByUniformScale(
-  //   modelMatrix,
-  //   computedModelScale,
-  //   result,
-  // );
+function computeModelMatrix(
+  modelMatrix,
+  computedModelScale,
+  rootTransform,
+  result,
+) {
+  modelMatrix = Matrix4.multiplyByUniformScale(
+    modelMatrix,
+    computedModelScale,
+    result,
+  );
 
   const transform = Matrix4.multiplyTransformation(
     modelMatrix,
@@ -870,11 +876,14 @@ ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
 
 ModelSceneGraph.prototype.updateModelMatrix = function (
   modelMatrix,
+  computedScale,
   frameState,
 ) {
   this._rootTransform = computeRootTransform(this, this._rootTransform);
+  this._computedModelScale = computedScale;
   this._computedModelMatrix = computeModelMatrix(
     modelMatrix,
+    this._computedModelScale,
     this._rootTransform,
     this._computedModelMatrix,
   );
