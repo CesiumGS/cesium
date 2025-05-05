@@ -12,6 +12,11 @@ export default defineConfig(() => {
   // based on the ci branch path
   config.base = `${process.env.BASE_URL}Apps/Sandcastle2`;
 
+  config.define = {
+    ...config.define,
+    __PAGE_BASE_URL__: JSON.stringify(process.env.BASE_URL),
+  };
+
   config.build = {
     ...config.build,
     outDir: "../../Apps/Sandcastle2",

@@ -15,6 +15,11 @@ export default defineConfig(() => {
     outDir: "../../Apps/Sandcastle2",
   };
 
+  config.define = {
+    ...config.define,
+    __PAGE_BASE_URL__: JSON.stringify("/"),
+  };
+
   const plugins = config.plugins ?? [];
   config.plugins = [...plugins, cesiumPathReplace(cesiumBaseUrl)];
 

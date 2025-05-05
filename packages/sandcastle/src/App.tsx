@@ -299,7 +299,7 @@ function applyBucket(
 //   true,
 // );
 
-const TYPES_URL = "/Source/Cesium.d.ts";
+const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 
 // function appendCode(code, run = true) {
 //   const codeMirror = getJsCodeMirror();
