@@ -46,7 +46,7 @@ describe(
     function createBasicCorridor() {
       const corridor = new CorridorGraphics();
       corridor.positions = new ConstantProperty(
-        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       corridor.width = new ConstantProperty(1);
       corridor.height = new ConstantProperty(0);
@@ -58,7 +58,7 @@ describe(
     function createDynamicCorridor() {
       const entity = createBasicCorridor();
       entity.corridor.positions = createDynamicProperty(
-        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       return entity;
     }
@@ -66,7 +66,7 @@ describe(
     function createBasicCorridorWithoutHeight() {
       const corridor = new CorridorGraphics();
       corridor.positions = new ConstantProperty(
-        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       corridor.width = new ConstantProperty(1);
       const entity = new Entity();
@@ -77,7 +77,7 @@ describe(
     function createDynamicCorridorWithoutHeight() {
       const entity = createBasicCorridorWithoutHeight();
       entity.corridor.positions = createDynamicProperty(
-        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       return entity;
     }
@@ -148,7 +148,7 @@ describe(
           start: JulianDate.now(),
           stop: JulianDate.now(),
           data: CornerType.ROUNDED,
-        })
+        }),
       );
       updater._onEntityPropertyChanged(entity, "corridor");
 
@@ -199,7 +199,7 @@ describe(
     it("dynamic updater sets properties", function () {
       const corridor = new CorridorGraphics();
       corridor.positions = createDynamicProperty(
-        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       corridor.show = createDynamicProperty(true);
       corridor.height = createDynamicProperty(3);
@@ -216,7 +216,7 @@ describe(
       const updater = new CorridorGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
 
@@ -224,7 +224,7 @@ describe(
       expect(options.positions).toEqual(corridor.positions.getValue());
       expect(options.height).toEqual(corridor.height.getValue());
       expect(options.extrudedHeight).toEqual(
-        corridor.extrudedHeight.getValue()
+        corridor.extrudedHeight.getValue(),
       );
       expect(options.width).toEqual(corridor.width.getValue());
       expect(options.granularity).toEqual(corridor.granularity.getValue());
@@ -270,7 +270,7 @@ describe(
 
       expect(updater._computeCenter(time)).toEqualEpsilon(
         Cartesian3.fromDegrees(1.0, 1.0),
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
 
@@ -282,14 +282,14 @@ describe(
       CorridorGeometryUpdater,
       "corridor",
       createBasicCorridor,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       CorridorGeometryUpdater,
       "corridor",
       createDynamicCorridor,
-      getScene
+      getScene,
     );
 
     createGeometryUpdaterGroundGeometrySpecs(
@@ -297,8 +297,8 @@ describe(
       "corridor",
       createBasicCorridorWithoutHeight,
       createDynamicCorridorWithoutHeight,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

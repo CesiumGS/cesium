@@ -32,9 +32,15 @@ function serveResult (result, fileName, res, next) {
 function createRoute(app, name, route, context, dependantCaches) {
     const cache = new ContextCache(context);
     app.get(route, async function (req, res, next) {
+      const fileName = path.basename(req.originalUrl);
+
       // Multiple files may be requested at this path, calling this function in quick succession.
       // Await the previous build before re-building again.
-      await cache.promise;
+      try {
+        await cache.promise;
+      } catch {
+        // Error is reported upstream
+      }
   
       if (!cache.isBuilt()) {
         try {
@@ -57,7 +63,7 @@ function createRoute(app, name, route, context, dependantCaches) {
         }
       }
   
-      return serveResult(cache.result, path.basename(req.originalUrl), res, next);
+      return serveResult(cache.result, fileName, res, next);
     });
   
     return cache;

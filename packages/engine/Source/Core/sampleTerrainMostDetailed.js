@@ -37,7 +37,7 @@ const scratchCartesian2 = new Cartesian2();
 async function sampleTerrainMostDetailed(
   terrainProvider,
   positions,
-  rejectOnTileFail
+  rejectOnTileFail,
 ) {
   if (!defined(rejectOnTileFail)) {
     rejectOnTileFail = false;
@@ -59,7 +59,7 @@ async function sampleTerrainMostDetailed(
   //>>includeStart('debug', pragmas.debug);
   if (!defined(availability)) {
     throw new DeveloperError(
-      "sampleTerrainMostDetailed requires a terrain provider that has tile availability."
+      "sampleTerrainMostDetailed requires a terrain provider that has tile availability.",
     );
   }
   //>>includeEnd('debug');
@@ -76,12 +76,12 @@ async function sampleTerrainMostDetailed(
       terrainProvider.tilingScheme.positionToTileXY(
         position,
         1,
-        scratchCartesian2
+        scratchCartesian2,
       );
       const promise = terrainProvider.loadTileDataAvailability(
         scratchCartesian2.x,
         scratchCartesian2.y,
-        1
+        1,
       );
       if (defined(promise)) {
         promises.push(promise);
@@ -103,10 +103,10 @@ async function sampleTerrainMostDetailed(
           terrainProvider,
           index,
           positionsAtLevel,
-          rejectOnTileFail
+          rejectOnTileFail,
         );
       }
-    })
+    }),
   );
   const changedPositions = [];
   for (let i = 0; i < positions.length; ++i) {
@@ -123,7 +123,7 @@ async function sampleTerrainMostDetailed(
     await sampleTerrainMostDetailed(
       terrainProvider,
       changedPositions,
-      rejectOnTileFail
+      rejectOnTileFail,
     );
   }
 

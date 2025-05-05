@@ -31,14 +31,14 @@ function findTileMetadata(tileset, tileHeader) {
   if (!defined(tileset.schema)) {
     findTileMetadata._oneTimeWarning(
       "findTileMetadata-missing-root-schema",
-      "Could not find a metadata schema for tile metadata. For tilesets that contain external tilesets, make sure the schema is added to the root tileset.json."
+      "Could not find a metadata schema for tile metadata. For tilesets that contain external tilesets, make sure the schema is added to the root tileset.json.",
     );
     return undefined;
   }
 
   const classes = defaultValue(
     tileset.schema.classes,
-    defaultValue.EMPTY_OBJECT
+    defaultValue.EMPTY_OBJECT,
   );
   if (defined(metadataJson.class)) {
     const tileClass = classes[metadataJson.class];

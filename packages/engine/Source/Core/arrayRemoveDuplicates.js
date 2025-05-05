@@ -51,7 +51,7 @@ function arrayRemoveDuplicates(
   values,
   equalsEpsilon,
   wrapAround,
-  removedIndices
+  removedIndices,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("equalsEpsilon", equalsEpsilon);

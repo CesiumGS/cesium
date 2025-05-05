@@ -142,7 +142,7 @@ PrimitiveCollection.prototype.add = function (primitive, index) {
       throw new DeveloperError("index must be greater than or equal to zero.");
     } else if (index > this._primitives.length) {
       throw new DeveloperError(
-        "index must be less than or equal to the number of primitives."
+        "index must be less than or equal to the number of primitives.",
       );
     }
   }

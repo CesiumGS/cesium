@@ -54,7 +54,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     const batch = new StaticGroundGeometryPerMaterialBatch(
       scene.primitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     const ellipse = new EllipseGraphics();
@@ -121,7 +121,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: new DistanceDisplayCondition(1.0, 2.0),
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -141,7 +141,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     const batch = new StaticGroundGeometryPerMaterialBatch(
       scene.primitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -158,7 +158,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqualEpsilon(
         [1.0, 2.0],
-        CesiumMath.EPSILON6
+        CesiumMath.EPSILON6,
       );
 
       batch.update(outOfRangeTime);
@@ -188,7 +188,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: true,
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -208,7 +208,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     const batch = new StaticGroundGeometryPerMaterialBatch(
       scene.primitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -248,7 +248,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     const batch = new StaticGroundGeometryPerMaterialBatch(
       scene.primitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     function buildEntity(x, y, z) {
@@ -329,7 +329,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     const batch = new StaticGroundGeometryPerMaterialBatch(
       scene.primitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     const ellipse = new EllipseGraphics();
@@ -381,7 +381,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     const batch = new StaticGroundGeometryPerMaterialBatch(
       scene.primitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
     const entity = new Entity({
       position: new Cartesian3(1234, 5678, 9101112),
@@ -434,7 +434,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     const batch = new StaticGroundGeometryPerMaterialBatch(
       scene.primitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     function buildEntity(x, y, z) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -38,25 +35,14 @@
 
         // Example 1: Draw the outline of a polygon on the globe surface.
         let positions = Cesium.Cartesian3.fromDegreesArray([
-          -95,
-          37.0,
-          -95,
-          32.0,
-          -90,
-          33.0,
-          -87,
-          31.0,
-          -87,
-          35.0,
+          -95, 37.0, -95, 32.0, -90, 33.0, -87, 31.0, -87, 35.0,
         ]);
         const polygonOutlineInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonOutlineGeometry.fromPositions({
             positions: positions,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
           },
         });
 
@@ -67,26 +53,12 @@
         // edges and the positions of the holes.
         const polygonHierarchy = {
           positions: Cesium.Cartesian3.fromDegreesArray([
-            -108.0,
-            30.0,
-            -98.0,
-            30.0,
-            -98.0,
-            40.0,
-            -108.0,
-            40.0,
+            -108.0, 30.0, -98.0, 30.0, -98.0, 40.0, -108.0, 40.0,
           ]),
           holes: [
             {
               positions: Cesium.Cartesian3.fromDegreesArray([
-                -106.0,
-                31.0,
-                -106.0,
-                39.0,
-                -100.0,
-                39.0,
-                -100.0,
-                31.0,
+                -106.0, 31.0, -106.0, 39.0, -100.0, 39.0, -100.0, 31.0,
               ]),
             },
           ],
@@ -99,23 +71,13 @@
             extrudedHeight: 500000.0,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
           },
         });
 
         // Example 3: Draw a polygon outline with per position heights.
         positions = Cesium.Cartesian3.fromDegreesArrayHeights([
-          -95,
-          44.0,
-          400000,
-          -95,
-          39.0,
-          100000,
-          -87,
-          42.0,
-          100000,
+          -95, 44.0, 400000, -95, 39.0, 100000, -87, 42.0, 100000,
         ]);
         // Set the perPositionHeight option to true for the polygon
         // to use the heights each position.
@@ -125,9 +87,7 @@
             perPositionHeight: true,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
           },
         });
 
@@ -145,7 +105,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

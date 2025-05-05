@@ -109,7 +109,7 @@ Matrix2.packArray = function (array, result) {
   } else if (!Array.isArray(result) && result.length !== resultLength) {
     //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
-      "If result is a typed array, it must have exactly array.length * 4 elements"
+      "If result is a typed array, it must have exactly array.length * 4 elements",
     );
     //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
@@ -584,10 +584,10 @@ Matrix2.getScale = function (matrix, result) {
   //>>includeEnd('debug');
 
   result.x = Cartesian2.magnitude(
-    Cartesian2.fromElements(matrix[0], matrix[1], scratchColumn)
+    Cartesian2.fromElements(matrix[0], matrix[1], scratchColumn),
   );
   result.y = Cartesian2.magnitude(
-    Cartesian2.fromElements(matrix[2], matrix[3], scratchColumn)
+    Cartesian2.fromElements(matrix[2], matrix[3], scratchColumn),
   );
   return result;
 };

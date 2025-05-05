@@ -152,7 +152,7 @@ Tipsify.tipsify = function (options) {
     vertices,
     s,
     deadEnd,
-    maximumIndexPlusOne
+    maximumIndexPlusOne,
   ) {
     let n = -1;
     let p;
@@ -305,7 +305,7 @@ Tipsify.tipsify = function (options) {
       vertices,
       s,
       deadEnd,
-      maximumIndexPlusOne
+      maximumIndexPlusOne,
     );
   }
 

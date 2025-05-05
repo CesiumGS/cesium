@@ -23,7 +23,7 @@ function TranslationRotationScale(translation, rotation, scale) {
    * @default Cartesian3.ZERO
    */
   this.translation = Cartesian3.clone(
-    defaultValue(translation, defaultTranslation)
+    defaultValue(translation, defaultTranslation),
   );
 
   /**

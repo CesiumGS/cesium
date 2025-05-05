@@ -139,7 +139,7 @@ function Clock(options) {
   this.shouldAnimate = defaultValue(options.shouldAnimate, false);
   this.clockStep = defaultValue(
     options.clockStep,
-    ClockStep.SYSTEM_CLOCK_MULTIPLIER
+    ClockStep.SYSTEM_CLOCK_MULTIPLIER,
   );
 }
 
@@ -273,14 +273,14 @@ Clock.prototype.tick = function () {
         currentTime = JulianDate.addSeconds(
           currentTime,
           multiplier,
-          currentTime
+          currentTime,
         );
       } else {
         const milliseconds = currentSystemTime - this._lastSystemTime;
         currentTime = JulianDate.addSeconds(
           currentTime,
           multiplier * (milliseconds / 1000.0),
-          currentTime
+          currentTime,
         );
       }
 
@@ -303,7 +303,7 @@ Clock.prototype.tick = function () {
           currentTime = JulianDate.addSeconds(
             startTime,
             JulianDate.secondsDifference(currentTime, stopTime),
-            currentTime
+            currentTime,
           );
           this.onStop.raiseEvent(this);
         }

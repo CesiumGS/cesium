@@ -53,7 +53,7 @@ function TileBoundingS2Cell(options) {
     s2Cell,
     minimumHeight,
     maximumHeight,
-    ellipsoid
+    ellipsoid,
   );
   this._boundingPlanes = boundingPlanes;
 
@@ -66,7 +66,7 @@ function TileBoundingS2Cell(options) {
 
   this._edgeNormals[0] = computeEdgeNormals(
     boundingPlanes[0],
-    vertices.slice(0, 4)
+    vertices.slice(0, 4),
   );
   let i;
   // Based on the way the edge normals are computed, the edge normals all point away from the "face"
@@ -75,13 +75,13 @@ function TileBoundingS2Cell(options) {
   for (i = 0; i < 4; i++) {
     this._edgeNormals[0][i] = Cartesian3.negate(
       this._edgeNormals[0][i],
-      this._edgeNormals[0][i]
+      this._edgeNormals[0][i],
     );
   }
 
   this._edgeNormals[1] = computeEdgeNormals(
     boundingPlanes[1],
-    vertices.slice(4, 8)
+    vertices.slice(4, 8),
   );
   for (i = 0; i < 4; i++) {
     // For each plane, iterate through the vertices in CCW order.
@@ -109,12 +109,12 @@ function TileBoundingS2Cell(options) {
   const center = s2Cell.getCenter();
   centerCartographicScratch = ellipsoid.cartesianToCartographic(
     center,
-    centerCartographicScratch
+    centerCartographicScratch,
   );
   centerCartographicScratch.height = (maximumHeight + minimumHeight) / 2;
   this.center = ellipsoid.cartographicToCartesian(
     centerCartographicScratch,
-    center
+    center,
   );
 
   this._boundingSphere = BoundingSphere.fromPoints(vertices);
@@ -136,7 +136,7 @@ function computeBoundingPlanes(
   s2Cell,
   minimumHeight,
   maximumHeight,
-  ellipsoid
+  ellipsoid,
 ) {
   const planes = new Array(6);
   const centerPoint = s2Cell.getCenter();
@@ -147,11 +147,11 @@ function computeBoundingPlanes(
   // - Create top plane from surface normal and top point.
   const centerSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
     centerPoint,
-    centerGeodeticNormalScratch
+    centerGeodeticNormalScratch,
   );
   const topCartographic = ellipsoid.cartesianToCartographic(
     centerPoint,
-    topCartographicScratch
+    topCartographicScratch,
   );
   topCartographic.height = maximumHeight;
   const top = ellipsoid.cartographicToCartesian(topCartographic, topScratch);
@@ -172,12 +172,12 @@ function computeBoundingPlanes(
     vertices[i] = vertex;
     vertexCartographic = ellipsoid.cartesianToCartographic(
       vertex,
-      vertexCartographicScratch
+      vertexCartographicScratch,
     );
     vertexCartographic.height = minimumHeight;
     const distance = Plane.getPointDistance(
       topPlane,
-      ellipsoid.cartographicToCartesian(vertexCartographic, vertexScratch)
+      ellipsoid.cartographicToCartesian(vertexCartographic, vertexScratch),
     );
     if (distance < maxDistance) {
       maxDistance = distance;
@@ -187,7 +187,7 @@ function computeBoundingPlanes(
   // Negate the normal of the bottom plane since we want all normals to point "outwards".
   bottomPlane.normal = Cartesian3.negate(
     bottomPlane.normal,
-    bottomPlane.normal
+    bottomPlane.normal,
   );
   bottomPlane.distance = bottomPlane.distance * -1 + maxDistance;
   planes[1] = bottomPlane;
@@ -203,7 +203,7 @@ function computeBoundingPlanes(
     const adjacentVertex = vertices[(i + 1) % 4];
     const geodeticNormal = ellipsoid.geodeticSurfaceNormal(
       vertex,
-      vertexGeodeticNormalScratch
+      vertexGeodeticNormalScratch,
     );
     const side = Cartesian3.subtract(adjacentVertex, vertex, sideScratch);
     let sideNormal = Cartesian3.cross(side, geodeticNormal, sideNormalScratch);
@@ -244,17 +244,17 @@ function computeIntersection(p0, p1, p2) {
   f0Scratch = Cartesian3.multiplyByScalar(
     Cartesian3.cross(n1Scratch, n2Scratch, t0Scratch),
     Cartesian3.dot(x0Scratch, n0Scratch),
-    f0Scratch
+    f0Scratch,
   );
   f1Scratch = Cartesian3.multiplyByScalar(
     Cartesian3.cross(n2Scratch, n0Scratch, t1Scratch),
     Cartesian3.dot(x1Scratch, n1Scratch),
-    f1Scratch
+    f1Scratch,
   );
   f2Scratch = Cartesian3.multiplyByScalar(
     Cartesian3.cross(n0Scratch, n1Scratch, t2Scratch),
     Cartesian3.dot(x2Scratch, n2Scratch),
-    f2Scratch
+    f2Scratch,
   );
 
   matrixScratch[0] = n0Scratch.x;
@@ -272,7 +272,7 @@ function computeIntersection(p0, p1, p2) {
   return new Cartesian3(
     sScratch.x / determinant,
     sScratch.y / determinant,
-    sScratch.z / determinant
+    sScratch.z / determinant,
   );
 }
 /**
@@ -286,13 +286,13 @@ function computeVertices(boundingPlanes) {
     vertices[i] = computeIntersection(
       boundingPlanes[0],
       boundingPlanes[2 + ((i + 3) % 4)],
-      boundingPlanes[2 + (i % 4)]
+      boundingPlanes[2 + (i % 4)],
     );
     // Vertices on the bottom plane.
     vertices[i + 4] = computeIntersection(
       boundingPlanes[1],
       boundingPlanes[2 + ((i + 3) % 4)],
-      boundingPlanes[2 + (i % 4)]
+      boundingPlanes[2 + (i % 4)],
     );
   }
   return vertices;
@@ -310,16 +310,16 @@ function computeEdgeNormals(plane, vertices) {
     edgeScratch = Cartesian3.subtract(
       vertices[(i + 1) % 4],
       vertices[i],
-      edgeScratch
+      edgeScratch,
     );
     edgeNormalScratch = Cartesian3.cross(
       plane.normal,
       edgeScratch,
-      edgeNormalScratch
+      edgeNormalScratch,
     );
     edgeNormalScratch = Cartesian3.normalize(
       edgeNormalScratch,
-      edgeNormalScratch
+      edgeNormalScratch,
     );
     edgeNormals[i] = Cartesian3.clone(edgeNormalScratch);
   }
@@ -438,7 +438,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
       Plane.projectPointOntoPlane(selectedPlane, point, facePointScratch),
       vertices[0],
       selectedPlane,
-      edgeNormals
+      edgeNormals,
     );
 
     return Cartesian3.distance(facePoint, point);
@@ -466,7 +466,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
         Plane.projectPointOntoPlane(selectedPlane, point, facePointScratch),
         vertices[i],
         selectedPlane,
-        this._edgeNormals[selectedPlaneIndices[i]]
+        this._edgeNormals[selectedPlaneIndices[i]],
       );
 
       distance = Cartesian3.distanceSquared(facePoint, point);
@@ -481,11 +481,11 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
       Plane.projectPointOntoPlane(
         this._boundingPlanes[1],
         point,
-        facePointScratch
+        facePointScratch,
       ),
       this._planeVertices[1],
       this._boundingPlanes[1],
-      this._edgeNormals[1]
+      this._edgeNormals[1],
     );
     return Cartesian3.distance(facePoint, point);
   }
@@ -498,14 +498,14 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   if (selectedPlaneIndices[0] === 0) {
     return Cartesian3.distance(
       point,
-      this._vertices[(selectedPlaneIndices[1] - 2 + skip) % 4]
+      this._vertices[(selectedPlaneIndices[1] - 2 + skip) % 4],
     );
   }
 
   // Vertex is on bottom plane.
   return Cartesian3.distance(
     point,
-    this._vertices[4 + ((selectedPlaneIndices[1] - 2 + skip) % 4)]
+    this._vertices[4 + ((selectedPlaneIndices[1] - 2 + skip) % 4)],
   );
 };
 
@@ -533,7 +533,7 @@ function closestPointLineSegment(p, l0, l1) {
   return new Cartesian3(
     (1 - t) * l0.x + t * l1.x,
     (1 - t) * l0.y + t * l1.y,
-    (1 - t) * l0.z + t * l1.z
+    (1 - t) * l0.z + t * l1.z,
   );
 }
 
@@ -553,7 +553,7 @@ function closestPointPolygon(p, vertices, plane, edgeNormals) {
     const edgePlane = Plane.fromPointNormal(
       vertices[i],
       edgeNormals[i],
-      edgePlaneScratch
+      edgePlaneScratch,
     );
     const edgePlaneDistance = Plane.getPointDistance(edgePlane, p);
 
@@ -566,7 +566,7 @@ function closestPointPolygon(p, vertices, plane, edgeNormals) {
     closestPointOnEdge = closestPointLineSegment(
       p,
       vertices[i],
-      vertices[(i + 1) % 4]
+      vertices[(i + 1) % 4],
     );
 
     distance = Cartesian3.distance(p, closestPointOnEdge);
@@ -634,9 +634,8 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
       positions: this._planeVertices[0],
     },
   });
-  const topPlaneGeometry = CoplanarPolygonOutlineGeometry.createGeometry(
-    topPlanePolygon
-  );
+  const topPlaneGeometry =
+    CoplanarPolygonOutlineGeometry.createGeometry(topPlanePolygon);
   const topPlaneInstance = new GeometryInstance({
     geometry: topPlaneGeometry,
     id: "outline",
@@ -651,9 +650,8 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
       positions: this._planeVertices[1],
     },
   });
-  const bottomPlaneGeometry = CoplanarPolygonOutlineGeometry.createGeometry(
-    bottomPlanePolygon
-  );
+  const bottomPlaneGeometry =
+    CoplanarPolygonOutlineGeometry.createGeometry(bottomPlanePolygon);
   const bottomPlaneInstance = new GeometryInstance({
     geometry: bottomPlaneGeometry,
     id: "outline",
@@ -670,9 +668,8 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
         positions: this._planeVertices[2 + i],
       },
     });
-    const sidePlaneGeometry = CoplanarPolygonOutlineGeometry.createGeometry(
-      sidePlanePolygon
-    );
+    const sidePlaneGeometry =
+      CoplanarPolygonOutlineGeometry.createGeometry(sidePlanePolygon);
     sideInstances[i] = new GeometryInstance({
       geometry: sidePlaneGeometry,
       id: "outline",

@@ -149,9 +149,12 @@ function VRButtonViewModel(scene, vrElement) {
   this._locked = false;
   this._noSleep = new NoSleep();
 
-  this._command = createCommand(function () {
-    toggleVR(that, scene, isVRMode, isOrthographic);
-  }, knockout.getObservable(this, "isVREnabled"));
+  this._command = createCommand(
+    function () {
+      toggleVR(that, scene, isVRMode, isOrthographic);
+    },
+    knockout.getObservable(this, "isVREnabled"),
+  );
 
   this._vrElement = defaultValue(getElement(vrElement), document.body);
 

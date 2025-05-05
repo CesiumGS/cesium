@@ -8,7 +8,7 @@ import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const defaultCredit = new Credit(
-  "MapQuest, Open Street Map and contributors, CC-BY-SA"
+  "MapQuest, Open Street Map and contributors, CC-BY-SA",
 );
 
 /**
@@ -60,7 +60,7 @@ function OpenStreetMapImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://tile.openstreetmap.org/")
+    defaultValue(options.url, "https://tile.openstreetmap.org/"),
   );
   resource.appendForwardSlash();
   resource.url += `{z}/{x}/{y}${
@@ -84,18 +84,18 @@ function OpenStreetMapImageryProvider(options) {
   // level will cause too many tiles to be downloaded and rendered.
   const swTile = tilingScheme.positionToTileXY(
     Rectangle.southwest(rectangle),
-    minimumLevel
+    minimumLevel,
   );
   const neTile = tilingScheme.positionToTileXY(
     Rectangle.northeast(rectangle),
-    minimumLevel
+    minimumLevel,
   );
   const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      `The rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
+      `The rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`,
     );
   }
   //>>includeEnd('debug');
@@ -119,9 +119,10 @@ function OpenStreetMapImageryProvider(options) {
 
 if (defined(Object.create)) {
   OpenStreetMapImageryProvider.prototype = Object.create(
-    UrlTemplateImageryProvider.prototype
+    UrlTemplateImageryProvider.prototype,
   );
-  OpenStreetMapImageryProvider.prototype.constructor = OpenStreetMapImageryProvider;
+  OpenStreetMapImageryProvider.prototype.constructor =
+    OpenStreetMapImageryProvider;
 }
 
 export default OpenStreetMapImageryProvider;

@@ -104,8 +104,6 @@ function Geometry(options) {
    *
    * @type GeometryAttributes
    *
-   * @default undefined
-   *
    *
    * @example
    * geometry.attributes.position = new Cesium.GeometryAttribute({
@@ -123,7 +121,7 @@ function Geometry(options) {
    * Optional index data that - along with {@link Geometry#primitiveType} -
    * determines the primitives in the geometry.
    *
-   * @type {Array}
+   * @type {Array|undefined}
    *
    * @default undefined
    */
@@ -133,20 +131,20 @@ function Geometry(options) {
    * The type of primitives in the geometry.  This is most often {@link PrimitiveType.TRIANGLES},
    * but can varying based on the specific geometry.
    *
-   * @type PrimitiveType
+   * @type {PrimitiveType|undefined}
    *
-   * @default undefined
+   * @default PrimitiveType.TRIANGLES
    */
   this.primitiveType = defaultValue(
     options.primitiveType,
-    PrimitiveType.TRIANGLES
+    PrimitiveType.TRIANGLES,
   );
 
   /**
    * An optional bounding sphere that fully encloses the geometry.  This is
    * commonly used for culling.
    *
-   * @type BoundingSphere
+   * @type {BoundingSphere|undefined}
    *
    * @default undefined
    */
@@ -196,7 +194,7 @@ Geometry.computeNumberOfVertices = function (geometry) {
       //>>includeStart('debug', pragmas.debug);
       if (numberOfVertices !== num && numberOfVertices !== -1) {
         throw new DeveloperError(
-          "All attribute lists must have the same number of attributes."
+          "All attribute lists must have the same number of attributes.",
         );
       }
       //>>includeEnd('debug');
@@ -254,7 +252,7 @@ Geometry._textureCoordinateRotationPoints = function (
   positions,
   stRotation,
   ellipsoid,
-  boundingRectangle
+  boundingRectangle,
 ) {
   let i;
 
@@ -264,21 +262,21 @@ Geometry._textureCoordinateRotationPoints = function (
   // aka "ENU texture space."
   const rectangleCenter = Rectangle.center(
     boundingRectangle,
-    rectangleCenterScratch
+    rectangleCenterScratch,
   );
   const enuCenter = Cartographic.toCartesian(
     rectangleCenter,
     ellipsoid,
-    enuCenterScratch
+    enuCenterScratch,
   );
   const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
     enuCenter,
     ellipsoid,
-    fixedFrameToEnuScratch
+    fixedFrameToEnuScratch,
   );
   const fixedFrameToEnu = Matrix4.inverse(
     enuToFixedFrame,
-    fixedFrameToEnuScratch
+    fixedFrameToEnuScratch,
   );
 
   const boundingPointsEnu = boundingRectanglePointsEnuScratch;
@@ -308,11 +306,11 @@ Geometry._textureCoordinateRotationPoints = function (
   const rotation = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_Z,
     -stRotation,
-    enuRotationScratch
+    enuRotationScratch,
   );
   const textureMatrix = Matrix3.fromQuaternion(
     rotation,
-    enuRotationMatrixScratch
+    enuRotationMatrixScratch,
   );
 
   const positionsLength = positions.length;
@@ -324,7 +322,7 @@ Geometry._textureCoordinateRotationPoints = function (
     posEnu = Matrix4.multiplyByPointAsVector(
       fixedFrameToEnu,
       positions[i],
-      posEnu
+      posEnu,
     );
     posEnu = Matrix3.multiplyByVector(textureMatrix, posEnu, posEnu);
 
@@ -336,7 +334,7 @@ Geometry._textureCoordinateRotationPoints = function (
 
   const toDesiredInComputed = Matrix2.fromRotation(
     stRotation,
-    rotation2DScratch
+    rotation2DScratch,
   );
 
   const points2D = points2DScratch;

@@ -35,7 +35,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.isReady = function () {
  * @returns {boolean} True if the image should be discarded; otherwise, false.
  */
 GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
-  image
+  image,
 ) {
   return image === this._image;
 };
@@ -107,7 +107,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
       -CesiumMath.PI,
       -CesiumMath.PI,
       CesiumMath.PI,
-      CesiumMath.PI
+      CesiumMath.PI,
     ),
     ellipsoid: options.ellipsoid,
   });
@@ -299,7 +299,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
  */
 GoogleEarthEnterpriseImageryProvider.fromMetadata = function (
   metadata,
-  options
+  options,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("metadata", metadata);
@@ -325,7 +325,7 @@ GoogleEarthEnterpriseImageryProvider.fromMetadata = function (
 GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
   x,
   y,
-  level
+  level,
 ) {
   const metadata = this._metadata;
   const info = metadata.getTileInformation(x, y, level);
@@ -353,7 +353,7 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const invalidImage = this._tileDiscardPolicy._image; // Empty image or undefined depending on discard policy
   const metadata = this._metadata;
@@ -383,7 +383,7 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
     x,
     y,
     level,
-    request
+    request,
   ).fetchArrayBuffer();
   if (!defined(promise)) {
     return undefined; // Throttled
@@ -433,7 +433,7 @@ GoogleEarthEnterpriseImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };
@@ -529,7 +529,7 @@ function decodeEarthImageryPacket(data) {
         break;
       default:
         throw new RuntimeError(
-          "GoogleEarthEnterpriseImageryProvider: Unsupported image type."
+          "GoogleEarthEnterpriseImageryProvider: Unsupported image type.",
         );
     }
   }
@@ -537,7 +537,7 @@ function decodeEarthImageryPacket(data) {
   const alphaType = message.alphaType;
   if (defined(alphaType) && alphaType !== 0) {
     console.log(
-      "GoogleEarthEnterpriseImageryProvider: External alpha not supported."
+      "GoogleEarthEnterpriseImageryProvider: External alpha not supported.",
     );
     delete message.alphaType;
     delete message.imageAlpha;

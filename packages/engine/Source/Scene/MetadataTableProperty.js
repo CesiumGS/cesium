@@ -63,23 +63,23 @@ function MetadataTableProperty(options) {
     // EXT_feature_metadata uses offsetType for both arrays and strings
     let arrayOffsetType = defaultValue(
       property.arrayOffsetType,
-      property.offsetType
+      property.offsetType,
     );
     arrayOffsetType = defaultValue(
       MetadataComponentType[arrayOffsetType],
-      MetadataComponentType.UINT32
+      MetadataComponentType.UINT32,
     );
 
     // EXT_structural_metadata uses arrayOffsets.
     // EXT_feature_metadata uses arrayOffsetBufferView
     const arrayOffsetBufferView = defaultValue(
       property.arrayOffsets,
-      property.arrayOffsetBufferView
+      property.arrayOffsetBufferView,
     );
     arrayOffsets = new BufferView(
       bufferViews[arrayOffsetBufferView],
       arrayOffsetType,
-      count + 1
+      count + 1,
     );
 
     byteLength += arrayOffsets.typedArray.byteLength;
@@ -103,23 +103,23 @@ function MetadataTableProperty(options) {
     // EXT_structural_metadata uses stringOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
     let stringOffsetType = defaultValue(
       property.stringOffsetType,
-      property.offsetType
+      property.offsetType,
     );
     stringOffsetType = defaultValue(
       MetadataComponentType[stringOffsetType],
-      MetadataComponentType.UINT32
+      MetadataComponentType.UINT32,
     );
 
     // EXT_structural_metadata uses stringOffsets.
     // EXT_feature_metadata uses stringOffsetBufferView
     const stringOffsetBufferView = defaultValue(
       property.stringOffsets,
-      property.stringOffsetBufferView
+      property.stringOffsetBufferView,
     );
     stringOffsets = new BufferView(
       bufferViews[stringOffsetBufferView],
       stringOffsetType,
-      componentCount + 1
+      componentCount + 1,
     );
 
     byteLength += stringOffsets.typedArray.byteLength;
@@ -145,7 +145,7 @@ function MetadataTableProperty(options) {
   const values = new BufferView(
     bufferViews[valuesBufferView],
     valueType,
-    valueCount
+    valueCount,
   );
   byteLength += values.typedArray.byteLength;
 
@@ -402,7 +402,7 @@ function checkIndex(table, index) {
   if (!defined(index) || index < 0 || index >= count) {
     const maximumIndex = count - 1;
     throw new DeveloperError(
-      `index is required and between zero and count - 1. Actual value: ${maximumIndex}`
+      `index is required and between zero and count - 1. Actual value: ${maximumIndex}`,
     );
   }
 }
@@ -510,7 +510,7 @@ function getString(index, values, stringOffsets) {
   return getStringFromTypedArray(
     values.typedArray,
     stringByteOffset,
-    stringByteLength
+    stringByteLength,
   );
 }
 
@@ -734,7 +734,7 @@ function applyValueTransform(property, value) {
     value,
     property._offset,
     property._scale,
-    MetadataComponentType.applyValueTransform
+    MetadataComponentType.applyValueTransform,
   );
 }
 
@@ -749,7 +749,7 @@ function unapplyValueTransform(property, value) {
     value,
     property._offset,
     property._scale,
-    MetadataComponentType.unapplyValueTransform
+    MetadataComponentType.unapplyValueTransform,
   );
 }
 
@@ -763,12 +763,12 @@ function BufferView(bufferView, componentType, length) {
   if (componentType === MetadataComponentType.INT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
-        "INT64 type is not fully supported on this platform. Values greater than 2^53 - 1 or less than -(2^53 - 1) may lose precision when read."
+        "INT64 type is not fully supported on this platform. Values greater than 2^53 - 1 or less than -(2^53 - 1) may lose precision when read.",
       );
       typedArray = new Uint8Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length * 8
+        length * 8,
       );
       getFunction = function (index) {
         return getInt64NumberFallback(index, that);
@@ -777,7 +777,7 @@ function BufferView(bufferView, componentType, length) {
       typedArray = new Uint8Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length * 8
+        length * 8,
       );
       getFunction = function (index) {
         return getInt64BigIntFallback(index, that);
@@ -787,7 +787,7 @@ function BufferView(bufferView, componentType, length) {
       typedArray = new BigInt64Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length
+        length,
       );
       setFunction = function (index, value) {
         // Convert the number to a BigInt before setting the value in the typed array
@@ -797,12 +797,12 @@ function BufferView(bufferView, componentType, length) {
   } else if (componentType === MetadataComponentType.UINT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
-        "UINT64 type is not fully supported on this platform. Values greater than 2^53 - 1 may lose precision when read."
+        "UINT64 type is not fully supported on this platform. Values greater than 2^53 - 1 may lose precision when read.",
       );
       typedArray = new Uint8Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length * 8
+        length * 8,
       );
       getFunction = function (index) {
         return getUint64NumberFallback(index, that);
@@ -811,7 +811,7 @@ function BufferView(bufferView, componentType, length) {
       typedArray = new Uint8Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length * 8
+        length * 8,
       );
       getFunction = function (index) {
         return getUint64BigIntFallback(index, that);
@@ -821,7 +821,7 @@ function BufferView(bufferView, componentType, length) {
       typedArray = new BigUint64Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length
+        length,
       );
       setFunction = function (index, value) {
         // Convert the number to a BigInt before setting the value in the typed array
@@ -834,7 +834,7 @@ function BufferView(bufferView, componentType, length) {
       componentDatatype,
       bufferView.buffer,
       bufferView.byteOffset,
-      length
+      length,
     );
     setFunction = function (index, value) {
       that.typedArray[index] = value;

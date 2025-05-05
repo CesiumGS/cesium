@@ -7,7 +7,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const trailingSlashRegex = /\/$/;
 const defaultCredit = new Credit(
-  '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>'
+  '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>',
 );
 
 /**
@@ -74,7 +74,7 @@ function MapboxImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/")
+    defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/"),
   );
 
   this._mapId = mapId;
@@ -322,7 +322,7 @@ MapboxImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
 };

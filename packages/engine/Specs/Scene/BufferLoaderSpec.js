@@ -44,7 +44,7 @@ describe("Scene/BufferLoader", function () {
 
     await expectAsync(bufferLoader.load()).toBeRejectedWithError(
       RuntimeError,
-      "Failed to load external buffer: https://example.com/external.bin\n404 Not Found"
+      "Failed to load external buffer: https://example.com/external.bin\n404 Not Found",
     );
   });
 
@@ -61,7 +61,7 @@ describe("Scene/BufferLoader", function () {
   it("loads external buffer", async function () {
     const fetchBuffer = spyOn(
       Resource.prototype,
-      "fetchArrayBuffer"
+      "fetchArrayBuffer",
     ).and.returnValue(Promise.resolve(arrayBuffer));
 
     const bufferLoader = new BufferLoader({
@@ -76,7 +76,7 @@ describe("Scene/BufferLoader", function () {
 
   it("destroys buffer", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(arrayBuffer)
+      Promise.resolve(arrayBuffer),
     );
 
     const bufferLoader = new BufferLoader({
@@ -97,7 +97,7 @@ describe("Scene/BufferLoader", function () {
 
   it("handles asynchronous load after destroy", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(arrayBuffer)
+      Promise.resolve(arrayBuffer),
     );
 
     const bufferLoader = new BufferLoader({
@@ -116,7 +116,7 @@ describe("Scene/BufferLoader", function () {
 
   it("handles asynchronous error after destroy", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.reject(new Error())
+      Promise.reject(new Error()),
     );
 
     const bufferLoader = new BufferLoader({

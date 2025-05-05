@@ -21,14 +21,14 @@ function demodernizeShader(input, isFragmentShader) {
   // Replace all texture calls with texture2D
   output = output.replaceAll(
     /(texture\()/g,
-    `texture2D(` // Trailing ')' is included in the match group.
+    `texture2D(`, // Trailing ')' is included in the match group.
   );
 
   if (isFragmentShader) {
     // Replace the in with varying.
     output = output.replaceAll(
       /\n\s*(in)\s+(vec\d|mat\d|float)/g,
-      `\nvarying $2`
+      `\nvarying $2`,
     );
 
     if (/out_FragData_(\d+)/.test(output)) {
@@ -37,7 +37,7 @@ function demodernizeShader(input, isFragmentShader) {
       // Remove all layout declarations for out_FragData.
       output = output.replaceAll(
         /layout\s+\(location\s*=\s*\d+\)\s*out\s+vec4\s+out_FragData_\d+;/g,
-        ``
+        ``,
       );
 
       // Replace out_FragData with gl_FragData.
@@ -47,7 +47,7 @@ function demodernizeShader(input, isFragmentShader) {
     // Remove all layout declarations for out_FragColor.
     output = output.replaceAll(
       /layout\s+\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g,
-      ``
+      ``,
     );
 
     // Replace out_FragColor with gl_FragColor.
@@ -60,6 +60,8 @@ function demodernizeShader(input, isFragmentShader) {
       output = output.replaceAll(/gl_FragDepth/g, `gl_FragDepthEXT`);
     }
 
+    // Enable the EXT_shader_texture_lod extension
+    output = `#ifdef GL_EXT_shader_texture_lod\n#extension GL_EXT_shader_texture_lod : enable\n#endif\n${output}`;
     // Enable the OES_standard_derivatives extension
     output = `#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n${output}`;
   } else {
@@ -69,7 +71,7 @@ function demodernizeShader(input, isFragmentShader) {
     // Replace the out with varying.
     output = output.replaceAll(
       /(out)\s+(vec\d|mat\d|float)\s+([\w]+);/g,
-      `varying $2 $3;`
+      `varying $2 $3;`,
     );
   }
 

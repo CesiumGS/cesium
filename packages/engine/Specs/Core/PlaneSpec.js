@@ -107,7 +107,7 @@ describe("Core/Plane", function () {
     const point = new Cartesian3(4.0, 5.0, 6.0);
 
     expect(Plane.getPointDistance(plane, point)).toEqual(
-      Cartesian3.dot(plane.normal, point) + plane.distance
+      Cartesian3.dot(plane.normal, point) + plane.distance,
     );
   });
 
@@ -149,7 +149,7 @@ describe("Core/Plane", function () {
     expect(function () {
       return Plane.projectPointOntoPlane(
         new Plane(Cartesian3.UNIT_X, 0),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
 
@@ -230,14 +230,14 @@ describe("Core/Plane", function () {
     transform = Matrix4.multiplyByMatrix3(
       transform,
       Matrix3.fromRotationY(Math.PI),
-      transform
+      transform,
     );
 
     const transformedPlane = Plane.transform(plane, transform);
     expect(transformedPlane.distance).toEqual(plane.distance * 2.0);
     expect(transformedPlane.normal.x).toEqualEpsilon(
       -plane.normal.x,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(transformedPlane.normal.y).toEqual(plane.normal.y);
     expect(transformedPlane.normal.z).toEqual(-plane.normal.z);
@@ -252,25 +252,25 @@ describe("Core/Plane", function () {
     const planeDiff = Cartesian3.subtract(
       planePosition,
       planeOrigin,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(Cartesian3.dot(planeDiff, plane.normal)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON16
+      CesiumMath.EPSILON16,
     );
 
     const transform = Matrix4.fromScale(
       new Cartesian3(4.0, 1.0, 10.0),
-      new Matrix4()
+      new Matrix4(),
     );
     const transformPlane = Plane.transform(plane, transform);
     const transformPlaneDiff = Matrix4.multiplyByPointAsVector(
       transform,
       planeDiff,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(
-      Cartesian3.dot(transformPlaneDiff, transformPlane.normal)
+      Cartesian3.dot(transformPlaneDiff, transformPlane.normal),
     ).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
   });
 

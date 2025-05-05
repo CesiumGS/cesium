@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -50,24 +47,19 @@
           const icrfToFixed = scratchIcrfToFixed;
           const date = viewer.clock.currentTime;
           if (
-            !Cesium.defined(
-              Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed)
-            )
+            !Cesium.defined(Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))
           ) {
             Cesium.Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
           }
-          const moonPosition = Cesium.Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
-            date,
-            scratchMoonPosition
-          );
-          Cesium.Matrix3.multiplyByVector(
-            icrfToFixed,
-            moonPosition,
-            moonPosition
-          );
+          const moonPosition =
+            Cesium.Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
+              date,
+              scratchMoonPosition,
+            );
+          Cesium.Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
           const moonDirection = Cesium.Cartesian3.normalize(
             moonPosition,
-            scratchMoonDirection
+            scratchMoonDirection,
           );
           return Cesium.Cartesian3.negate(moonDirection, result);
         }
@@ -76,12 +68,14 @@
           direction: new Cesium.Cartesian3(
             0.2454278300540191,
             0.8842635425193919,
-            0.39729481195458805
+            0.39729481195458805,
           ),
+          intensity: 2.0,
         });
 
         const flashlight = new Cesium.DirectionalLight({
           direction: scene.camera.directionWC, // Updated every frame
+          intensity: 3.0,
         });
 
         const moonLight = new Cesium.DirectionalLight({
@@ -96,7 +90,7 @@
           direction: new Cesium.Cartesian3(
             -0.2454278300540191,
             0.8842635425193919,
-            0.39729481195458805
+            0.39729481195458805,
           ),
           color: Cesium.Color.fromCssColorString("#deca7c"),
         });
@@ -105,7 +99,7 @@
           if (scene.light === flashlight) {
             scene.light.direction = Cesium.Cartesian3.clone(
               scene.camera.directionWC,
-              scene.light.direction
+              scene.light.direction,
             );
           } else if (scene.light === moonLight) {
             scene.light.direction = getMoonDirection(scene.light.direction);
@@ -116,7 +110,7 @@
           position: Cesium.Cartesian3.fromRadians(
             -2.1463338399937277,
             0.6677959688982861,
-            32.18991401746337
+            32.18991401746337,
           ),
           model: {
             uri: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
@@ -128,7 +122,7 @@
           position: Cesium.Cartesian3.fromRadians(
             -2.14633449752228,
             0.667796065242357,
-            24.47647034111423
+            24.47647034111423,
           ),
           cylinder: {
             length: 8.0,
@@ -142,7 +136,7 @@
           position: Cesium.Cartesian3.fromRadians(
             -2.1463332294173365,
             0.6677959755384729,
-            26.2876064083145
+            26.2876064083145,
           ),
           ellipsoid: {
             radii: new Cesium.Cartesian3(2.5, 2.5, 2.5),
@@ -155,7 +149,7 @@
           const endTime = Cesium.JulianDate.addDays(
             currentTime,
             2,
-            new Cesium.JulianDate()
+            new Cesium.JulianDate(),
           );
 
           viewer.clock.currentTime = currentTime;
@@ -167,6 +161,7 @@
           scene.light = sunLight;
           scene.globe.dynamicAtmosphereLighting = true;
           scene.globe.dynamicAtmosphereLightingFromSun = false;
+          scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.NONE;
           setTime("2020-01-09T23:00:39.018261982600961346Z");
         }
 
@@ -174,12 +169,12 @@
           destination: new Cesium.Cartesian3(
             -2729490.8390059783,
             -4206389.878855597,
-            3928671.2763356343
+            3928671.2763356343,
           ),
           orientation: new Cesium.HeadingPitchRoll(
             2.2482480507178426,
             -0.20084951548781982,
-            0.002593933673552762
+            0.002593933673552762,
           ),
           endTransform: Cesium.Matrix4.IDENTITY,
         });
@@ -206,6 +201,8 @@
               reset();
               scene.light = moonLight;
               scene.globe.dynamicAtmosphereLightingFromSun = true;
+              scene.atmosphere.dynamicLighting =
+                Cesium.DynamicAtmosphereLightingType.SCENE_LIGHT;
               setTime("2020-01-10T05:29:41.17946898164518643Z");
             },
           },
@@ -213,6 +210,8 @@
             text: "Sunlight",
             onselect: function () {
               reset();
+              scene.atmosphere.dynamicLighting =
+                Cesium.DynamicAtmosphereLightingType.SUNLIGHT;
             },
           },
           {

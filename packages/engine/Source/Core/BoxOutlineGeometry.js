@@ -48,7 +48,7 @@ function BoxOutlineGeometry(options) {
     options.offsetAttribute === GeometryOffsetAttribute.TOP
   ) {
     throw new DeveloperError(
-      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry."
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -155,7 +155,7 @@ BoxOutlineGeometry.pack = function (value, array, startingIndex) {
   Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
   array[startingIndex + Cartesian3.packedLength * 2] = defaultValue(
     value._offsetAttribute,
-    -1
+    -1,
   );
 
   return array;
@@ -188,7 +188,7 @@ BoxOutlineGeometry.unpack = function (array, startingIndex, result) {
   const max = Cartesian3.unpack(
     array,
     startingIndex + Cartesian3.packedLength,
-    scratchMax
+    scratchMax,
   );
   const offsetAttribute = array[startingIndex + Cartesian3.packedLength * 2];
 

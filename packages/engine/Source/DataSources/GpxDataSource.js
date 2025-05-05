@@ -168,13 +168,13 @@ function createDefaultBillboard(image) {
     BILLBOARD_NEAR_DISTANCE,
     BILLBOARD_NEAR_RATIO,
     BILLBOARD_FAR_DISTANCE,
-    BILLBOARD_FAR_RATIO
+    BILLBOARD_FAR_RATIO,
   );
   billboard.pixelOffsetScaleByDistance = new NearFarScalar(
     BILLBOARD_NEAR_DISTANCE,
     BILLBOARD_NEAR_RATIO,
     BILLBOARD_FAR_DISTANCE,
-    BILLBOARD_FAR_RATIO
+    BILLBOARD_FAR_RATIO,
   );
   billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
   billboard.image = image;
@@ -248,7 +248,7 @@ function processDescription(node, entity) {
     const infoType = descriptiveInfoTypes[infoTypeName];
     infoType.value = defaultValue(
       queryStringValue(node, infoType.tag, namespaces.gpx),
-      ""
+      "",
     );
     if (defined(infoType.value) && infoType.value !== "") {
       text = `${text}<p>${infoType.text}: ${infoType.value}</p>`;
@@ -299,7 +299,7 @@ function processWpt(dataSource, geometryNode, entityCollection, options) {
     : dataSource._pinBuilder.fromMakiIconId(
         "marker",
         Color.RED,
-        BILLBOARD_SIZE
+        BILLBOARD_SIZE,
       );
   entity.billboard = createDefaultBillboard(image);
 
@@ -364,7 +364,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
       : dataSource._pinBuilder.fromMakiIconId(
           "marker",
           Color.RED,
-          BILLBOARD_SIZE
+          BILLBOARD_SIZE,
         );
     entity.billboard = createDefaultBillboard(image);
     entity.position = property;
@@ -376,7 +376,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
       new TimeInterval({
         start: times[0],
         stop: times[times.length - 1],
-      })
+      }),
     );
   }
   entity.polyline = createDefaultPolyline(options.trackColor);
@@ -608,8 +608,8 @@ function loadGpx(dataSource, gpx, options) {
     clock.multiplier = Math.round(
       Math.min(
         Math.max(JulianDate.secondsDifference(stop, start) / 60, 1),
-        3.15569e7
-      )
+        3.15569e7,
+      ),
     );
   }
   let changed = false;
@@ -987,8 +987,8 @@ GpxDataSource.prototype.load = function (data, options) {
         clock.multiplier = Math.round(
           Math.min(
             Math.max(JulianDate.secondsDifference(stop, start) / 60, 1),
-            3.15569e7
-          )
+            3.15569e7,
+          ),
         );
       }
 

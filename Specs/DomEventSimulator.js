@@ -33,7 +33,7 @@ function createMouseEvent(type, options) {
     shiftKey,
     metaKey,
     button,
-    relatedTarget
+    relatedTarget,
   );
   return event;
 }
@@ -89,7 +89,7 @@ function createMouseWheelEvent(type, options) {
     button,
     relatedTarget,
     modifiersList,
-    wheelDelta
+    wheelDelta,
   );
   return event;
 }
@@ -140,7 +140,7 @@ function createWheelEvent(type, options) {
       ctrlKey,
       altKey,
       shiftKey,
-      metaKey
+      metaKey,
     );
     event.initWheelEvent(
       type,
@@ -158,7 +158,7 @@ function createWheelEvent(type, options) {
       deltaX,
       deltaY,
       deltaZ,
-      deltaMode
+      deltaMode,
     );
     return event;
   }
@@ -241,7 +241,7 @@ function createPointerEvent(type, options) {
       pointerId,
       pointerType,
       hwTimestamp,
-      isPrimary
+      isPrimary,
     );
   } else {
     event = new window.PointerEvent(type, {
@@ -295,7 +295,7 @@ function createDeviceOrientationEvent(type, options) {
       alpha,
       beta,
       gamma,
-      absolute
+      absolute,
     );
   } else {
     event = new DeviceOrientationEvent("deviceorientation", {
@@ -356,7 +356,7 @@ const DomEventSimulator = {
   },
   fireDeviceOrientation: function (element, options) {
     element.dispatchEvent(
-      createDeviceOrientationEvent("deviceorientation", options)
+      createDeviceOrientationEvent("deviceorientation", options),
     );
   },
   fireMockEvent: function (eventHandler, event) {

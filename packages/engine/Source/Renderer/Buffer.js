@@ -19,13 +19,13 @@ function Buffer(options) {
 
   if (!defined(options.typedArray) && !defined(options.sizeInBytes)) {
     throw new DeveloperError(
-      "Either options.sizeInBytes or options.typedArray is required."
+      "Either options.sizeInBytes or options.typedArray is required.",
     );
   }
 
   if (defined(options.typedArray) && defined(options.sizeInBytes)) {
     throw new DeveloperError(
-      "Cannot pass in both options.sizeInBytes and options.typedArray."
+      "Cannot pass in both options.sizeInBytes and options.typedArray.",
     );
   }
 
@@ -33,7 +33,7 @@ function Buffer(options) {
     Check.typeOf.object("options.typedArray", options.typedArray);
     Check.typeOf.number(
       "options.typedArray.byteLength",
-      options.typedArray.byteLength
+      options.typedArray.byteLength,
     );
   }
 
@@ -184,7 +184,7 @@ Buffer.createIndexBuffer = function (options) {
     !options.context.elementIndexUint
   ) {
     throw new DeveloperError(
-      "IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint."
+      "IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint.",
     );
   }
   //>>includeEnd('debug');
@@ -250,7 +250,7 @@ Buffer.prototype.copyFromArrayView = function (arrayView, offsetInBytes) {
   Check.typeOf.number.lessThanOrEquals(
     "offsetInBytes + arrayView.byteLength",
     offsetInBytes + arrayView.byteLength,
-    this._sizeInBytes
+    this._sizeInBytes,
   );
   //>>includeEnd('debug');
 
@@ -265,7 +265,7 @@ Buffer.prototype.copyFromBuffer = function (
   readBuffer,
   readOffset,
   writeOffset,
-  sizeInBytes
+  sizeInBytes,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._webgl2) {
@@ -276,7 +276,7 @@ Buffer.prototype.copyFromBuffer = function (
   }
   if (!defined(sizeInBytes) || sizeInBytes <= 0) {
     throw new DeveloperError(
-      "sizeInBytes must be defined and be greater than zero."
+      "sizeInBytes must be defined and be greater than zero.",
     );
   }
   if (
@@ -285,7 +285,7 @@ Buffer.prototype.copyFromBuffer = function (
     readOffset + sizeInBytes > readBuffer._sizeInBytes
   ) {
     throw new DeveloperError(
-      "readOffset must be greater than or equal to zero and readOffset + sizeInBytes must be less than of equal to readBuffer.sizeInBytes."
+      "readOffset must be greater than or equal to zero and readOffset + sizeInBytes must be less than of equal to readBuffer.sizeInBytes.",
     );
   }
   if (
@@ -294,7 +294,7 @@ Buffer.prototype.copyFromBuffer = function (
     writeOffset + sizeInBytes > this._sizeInBytes
   ) {
     throw new DeveloperError(
-      "writeOffset must be greater than or equal to zero and writeOffset + sizeInBytes must be less than of equal to this.sizeInBytes."
+      "writeOffset must be greater than or equal to zero and writeOffset + sizeInBytes must be less than of equal to this.sizeInBytes.",
     );
   }
   if (
@@ -303,7 +303,7 @@ Buffer.prototype.copyFromBuffer = function (
       (readOffset > writeOffset && readOffset < writeOffset + sizeInBytes))
   ) {
     throw new DeveloperError(
-      "When readBuffer is equal to this, the ranges [readOffset + sizeInBytes) and [writeOffset, writeOffset + sizeInBytes) must not overlap."
+      "When readBuffer is equal to this, the ranges [readOffset + sizeInBytes) and [writeOffset, writeOffset + sizeInBytes) must not overlap.",
     );
   }
   if (
@@ -313,7 +313,7 @@ Buffer.prototype.copyFromBuffer = function (
       readBuffer._bufferTarget === WebGLConstants.ELEMENT_ARRAY_BUFFER)
   ) {
     throw new DeveloperError(
-      "Can not copy an index buffer into another buffer type."
+      "Can not copy an index buffer into another buffer type.",
     );
   }
   //>>includeEnd('debug');
@@ -329,7 +329,7 @@ Buffer.prototype.copyFromBuffer = function (
     writeTarget,
     readOffset,
     writeOffset,
-    sizeInBytes
+    sizeInBytes,
   );
   gl.bindBuffer(writeTarget, null);
   gl.bindBuffer(readTarget, null);
@@ -339,7 +339,7 @@ Buffer.prototype.getBufferData = function (
   arrayView,
   sourceOffset,
   destinationOffset,
-  length
+  length,
 ) {
   sourceOffset = defaultValue(sourceOffset, 0);
   destinationOffset = defaultValue(destinationOffset, 0);
@@ -376,22 +376,22 @@ Buffer.prototype.getBufferData = function (
 
   if (destinationOffset < 0 || destinationOffset > arrayLength) {
     throw new DeveloperError(
-      "destinationOffset must be greater than zero and less than the arrayView length."
+      "destinationOffset must be greater than zero and less than the arrayView length.",
     );
   }
   if (destinationOffset + copyLength > arrayLength) {
     throw new DeveloperError(
-      "destinationOffset + length must be less than or equal to the arrayViewLength."
+      "destinationOffset + length must be less than or equal to the arrayViewLength.",
     );
   }
   if (sourceOffset < 0 || sourceOffset > this._sizeInBytes) {
     throw new DeveloperError(
-      "sourceOffset must be greater than zero and less than the buffers size."
+      "sourceOffset must be greater than zero and less than the buffers size.",
     );
   }
   if (sourceOffset + copyLength * elementSize > this._sizeInBytes) {
     throw new DeveloperError(
-      "sourceOffset + length must be less than the buffers size."
+      "sourceOffset + length must be less than the buffers size.",
     );
   }
   //>>includeEnd('debug');
@@ -404,7 +404,7 @@ Buffer.prototype.getBufferData = function (
     sourceOffset,
     arrayView,
     destinationOffset,
-    length
+    length,
   );
   gl.bindBuffer(target, null);
 };

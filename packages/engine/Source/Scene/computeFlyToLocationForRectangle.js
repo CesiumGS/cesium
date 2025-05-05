@@ -45,10 +45,11 @@ async function computeFlyToLocationForRectangle(rectangle, scene) {
     Rectangle.northwest(rectangle),
   ];
 
-  const positionsOnTerrain = await computeFlyToLocationForRectangle._sampleTerrainMostDetailed(
-    terrainProvider,
-    cartographics
-  );
+  const positionsOnTerrain =
+    await computeFlyToLocationForRectangle._sampleTerrainMostDetailed(
+      terrainProvider,
+      cartographics,
+    );
 
   let heightFound = false;
   const maxHeight = positionsOnTerrain.reduce(function (currentMax, item) {
@@ -68,5 +69,6 @@ async function computeFlyToLocationForRectangle(rectangle, scene) {
 }
 
 //Exposed for testing.
-computeFlyToLocationForRectangle._sampleTerrainMostDetailed = sampleTerrainMostDetailed;
+computeFlyToLocationForRectangle._sampleTerrainMostDetailed =
+  sampleTerrainMostDetailed;
 export default computeFlyToLocationForRectangle;

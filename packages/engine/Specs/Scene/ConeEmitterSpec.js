@@ -38,7 +38,7 @@ describe("Scene/ConeEmitter", function () {
       expect(particle.position).toEqual(Cartesian3.ZERO);
       expect(Cartesian3.magnitude(particle.velocity)).toEqualEpsilon(
         1.0,
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
 
       // acos(dot(unit v, unit z)) <= angle

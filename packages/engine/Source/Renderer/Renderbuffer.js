@@ -36,7 +36,7 @@ function Renderbuffer(options) {
 
   if (width > maximumRenderbufferSize) {
     throw new DeveloperError(
-      `Width must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`
+      `Width must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`,
     );
   }
 
@@ -44,7 +44,7 @@ function Renderbuffer(options) {
 
   if (height > maximumRenderbufferSize) {
     throw new DeveloperError(
-      `Height must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`
+      `Height must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`,
     );
   }
   //>>includeEnd('debug');
@@ -62,7 +62,7 @@ function Renderbuffer(options) {
       numSamples,
       format,
       width,
-      height
+      height,
     );
   } else {
     gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);

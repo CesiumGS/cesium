@@ -53,30 +53,30 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
 
     spyOn(
       computeFlyToLocationForRectangle,
-      "_sampleTerrainMostDetailed"
+      "_sampleTerrainMostDetailed",
     ).and.returnValue(Promise.resolve(sampledResults));
 
     // Basically do the computation ourselves with our known values;
     let expectedResult;
     if (sceneMode === SceneMode.SCENE3D) {
       expectedResult = scene.ellipsoid.cartesianToCartographic(
-        scene.camera.getRectangleCameraCoordinates(rectangle)
+        scene.camera.getRectangleCameraCoordinates(rectangle),
       );
     } else {
       expectedResult = scene.mapProjection.unproject(
-        scene.camera.getRectangleCameraCoordinates(rectangle)
+        scene.camera.getRectangleCameraCoordinates(rectangle),
       );
     }
     expectedResult.height += maxHeight;
 
-    return computeFlyToLocationForRectangle(rectangle, scene).then(function (
-      result
-    ) {
-      expect(result).toEqual(expectedResult);
-      expect(
-        computeFlyToLocationForRectangle._sampleTerrainMostDetailed
-      ).toHaveBeenCalledWith(terrainProvider, cartographics);
-    });
+    return computeFlyToLocationForRectangle(rectangle, scene).then(
+      function (result) {
+        expect(result).toEqual(expectedResult);
+        expect(
+          computeFlyToLocationForRectangle._sampleTerrainMostDetailed,
+        ).toHaveBeenCalledWith(terrainProvider, cartographics);
+      },
+    );
   }
 
   it("samples terrain and returns expected result in 3D", function () {
@@ -97,18 +97,18 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
 
     const rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
     const expectedResult = scene.mapProjection.unproject(
-      scene.camera.getRectangleCameraCoordinates(rectangle)
+      scene.camera.getRectangleCameraCoordinates(rectangle),
     );
 
     spyOn(computeFlyToLocationForRectangle, "_sampleTerrainMostDetailed");
-    return computeFlyToLocationForRectangle(rectangle, scene).then(function (
-      result
-    ) {
-      expect(result).toEqual(expectedResult);
-      expect(
-        computeFlyToLocationForRectangle._sampleTerrainMostDetailed
-      ).not.toHaveBeenCalled();
-    });
+    return computeFlyToLocationForRectangle(rectangle, scene).then(
+      function (result) {
+        expect(result).toEqual(expectedResult);
+        expect(
+          computeFlyToLocationForRectangle._sampleTerrainMostDetailed,
+        ).not.toHaveBeenCalled();
+      },
+    );
   });
 
   it("returns height above ellipsoid when terrain not available", function () {
@@ -119,16 +119,16 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
     spyOn(computeFlyToLocationForRectangle, "_sampleTerrainMostDetailed");
 
     const expectedResult = scene.ellipsoid.cartesianToCartographic(
-      scene.camera.getRectangleCameraCoordinates(rectangle)
+      scene.camera.getRectangleCameraCoordinates(rectangle),
     );
-    return computeFlyToLocationForRectangle(rectangle, scene).then(function (
-      result
-    ) {
-      expect(result).toEqual(expectedResult);
-      expect(
-        computeFlyToLocationForRectangle._sampleTerrainMostDetailed
-      ).not.toHaveBeenCalled();
-    });
+    return computeFlyToLocationForRectangle(rectangle, scene).then(
+      function (result) {
+        expect(result).toEqual(expectedResult);
+        expect(
+          computeFlyToLocationForRectangle._sampleTerrainMostDetailed,
+        ).not.toHaveBeenCalled();
+      },
+    );
   });
 
   it("returns height above ellipsoid when terrain undefined", function () {
@@ -137,15 +137,15 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
     spyOn(computeFlyToLocationForRectangle, "_sampleTerrainMostDetailed");
 
     const expectedResult = scene.ellipsoid.cartesianToCartographic(
-      scene.camera.getRectangleCameraCoordinates(rectangle)
+      scene.camera.getRectangleCameraCoordinates(rectangle),
     );
-    return computeFlyToLocationForRectangle(rectangle, scene).then(function (
-      result
-    ) {
-      expect(result).toEqual(expectedResult);
-      expect(
-        computeFlyToLocationForRectangle._sampleTerrainMostDetailed
-      ).not.toHaveBeenCalled();
-    });
+    return computeFlyToLocationForRectangle(rectangle, scene).then(
+      function (result) {
+        expect(result).toEqual(expectedResult);
+        expect(
+          computeFlyToLocationForRectangle._sampleTerrainMostDetailed,
+        ).not.toHaveBeenCalled();
+      },
+    );
   });
 });

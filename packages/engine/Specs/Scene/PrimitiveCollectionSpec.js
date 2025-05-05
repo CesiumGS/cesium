@@ -49,13 +49,7 @@ describe(
       // render until all labels have been updated
       return pollToPromise(function () {
         scene.renderForSpecs();
-        const backgroundBillboard = labels._backgroundBillboardCollection.get(
-          0
-        );
-        return (
-          (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
-          labels._labelsToUpdate.length === 0
-        );
+        return labels.ready;
       });
     }
 
@@ -695,5 +689,5 @@ describe(
       p2.destroy();
     });
   },
-  "WebGL"
+  "WebGL",
 );

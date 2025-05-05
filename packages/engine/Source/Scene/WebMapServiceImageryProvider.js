@@ -114,7 +114,7 @@ function WebMapServiceImageryProvider(options) {
 
   if (defined(options.times) && !defined(options.clock)) {
     throw new DeveloperError(
-      "options.times was specified, so options.clock is required."
+      "options.times was specified, so options.clock is required.",
     );
   }
 
@@ -131,7 +131,7 @@ function WebMapServiceImageryProvider(options) {
 
   this._getFeatureInfoUrl = defaultValue(
     options.getFeatureInfoUrl,
-    options.url
+    options.url,
   );
 
   const resource = Resource.createIfNeeded(options.url);
@@ -139,11 +139,11 @@ function WebMapServiceImageryProvider(options) {
 
   resource.setQueryParameters(
     WebMapServiceImageryProvider.DefaultParameters,
-    true
+    true,
   );
   pickFeatureResource.setQueryParameters(
     WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters,
-    true
+    true,
   );
 
   if (defined(options.parameters)) {
@@ -152,7 +152,7 @@ function WebMapServiceImageryProvider(options) {
 
   if (defined(options.getFeatureInfoParameters)) {
     pickFeatureResource.setQueryParameters(
-      objectToLowercase(options.getFeatureInfoParameters)
+      objectToLowercase(options.getFeatureInfoParameters),
     );
   }
 
@@ -190,7 +190,7 @@ function WebMapServiceImageryProvider(options) {
       options.tilingScheme &&
         options.tilingScheme.projection instanceof WebMercatorProjection
         ? "EPSG:3857"
-        : "CRS:84"
+        : "CRS:84",
     );
 
     // The axis order in previous versions of the WMS specifications was to always use easting (x or lon ) and northing (y or
@@ -218,7 +218,7 @@ function WebMapServiceImageryProvider(options) {
       options.tilingScheme &&
         options.tilingScheme.projection instanceof WebMercatorProjection
         ? "EPSG:3857"
-        : "EPSG:4326"
+        : "EPSG:4326",
     );
   }
 
@@ -249,7 +249,7 @@ function WebMapServiceImageryProvider(options) {
     pickFeaturesUrl: pickFeatureResource,
     tilingScheme: defaultValue(
       options.tilingScheme,
-      new GeographicTilingScheme({ ellipsoid: options.ellipsoid })
+      new GeographicTilingScheme({ ellipsoid: options.ellipsoid }),
     ),
     rectangle: options.rectangle,
     tileWidth: options.tileWidth,
@@ -261,7 +261,7 @@ function WebMapServiceImageryProvider(options) {
     credit: options.credit,
     getFeatureInfoFormats: defaultValue(
       options.getFeatureInfoFormats,
-      WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats
+      WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats,
     ),
     enablePickFeatures: options.enablePickFeatures,
   });
@@ -285,7 +285,7 @@ function pickFeatures(
   level,
   longitude,
   latitude,
-  interval
+  interval,
 ) {
   const dynamicIntervalData = defined(interval) ? interval.data : undefined;
   const tileProvider = imageryProvider._tileProvider;
@@ -550,7 +550,7 @@ WebMapServiceImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   let result;
   const timeDynamicImagery = this._timeDynamicImagery;
@@ -593,7 +593,7 @@ WebMapServiceImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   const timeDynamicImagery = this._timeDynamicImagery;
   const currentInterval = defined(timeDynamicImagery)

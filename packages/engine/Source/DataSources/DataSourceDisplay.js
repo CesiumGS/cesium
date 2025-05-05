@@ -38,7 +38,7 @@ function DataSourceDisplay(options) {
   Check.typeOf.object("options.scene", options.scene);
   Check.typeOf.object(
     "options.dataSourceCollection",
-    options.dataSourceCollection
+    options.dataSourceCollection,
   );
   //>>includeEnd('debug');
 
@@ -52,17 +52,17 @@ function DataSourceDisplay(options) {
   this._eventHelper.add(
     dataSourceCollection.dataSourceAdded,
     this._onDataSourceAdded,
-    this
+    this,
   );
   this._eventHelper.add(
     dataSourceCollection.dataSourceRemoved,
     this._onDataSourceRemoved,
-    this
+    this,
   );
   this._eventHelper.add(
     dataSourceCollection.dataSourceMoved,
     this._onDataSourceMoved,
-    this
+    this,
   );
   this._eventHelper.add(scene.postRender, this._postRender, this);
 
@@ -70,7 +70,7 @@ function DataSourceDisplay(options) {
   this._scene = scene;
   this._visualizersCallback = defaultValue(
     options.visualizersCallback,
-    DataSourceDisplay.defaultVisualizersCallback
+    DataSourceDisplay.defaultVisualizersCallback,
   );
 
   let primitivesAdded = false;
@@ -106,12 +106,12 @@ function DataSourceDisplay(options) {
       that._removeDefaultDataSourceListener = undefined;
       that._removeDataSourceCollectionListener = undefined;
     };
-    removeDefaultDataSourceListener = defaultDataSource.entities.collectionChanged.addEventListener(
-      addPrimitives
-    );
-    removeDataSourceCollectionListener = dataSourceCollection.dataSourceAdded.addEventListener(
-      addPrimitives
-    );
+    removeDefaultDataSourceListener =
+      defaultDataSource.entities.collectionChanged.addEventListener(
+        addPrimitives,
+      );
+    removeDataSourceCollectionListener =
+      dataSourceCollection.dataSourceAdded.addEventListener(addPrimitives);
   }
 
   this._removeDefaultDataSourceListener = removeDefaultDataSourceListener;
@@ -153,7 +153,7 @@ DataSourceDisplay.unregisterVisualizer = function (visualizer) {
 DataSourceDisplay.defaultVisualizersCallback = function (
   scene,
   entityCluster,
-  dataSource
+  dataSource,
 ) {
   const entities = dataSource.entities;
   return [
@@ -162,7 +162,7 @@ DataSourceDisplay.defaultVisualizersCallback = function (
       scene,
       entities,
       dataSource._primitives,
-      dataSource._groundPrimitives
+      dataSource._groundPrimitives,
     ),
     new LabelVisualizer(entityCluster, entities),
     new ModelVisualizer(scene, entities),
@@ -173,10 +173,10 @@ DataSourceDisplay.defaultVisualizersCallback = function (
       scene,
       entities,
       dataSource._primitives,
-      dataSource._groundPrimitives
+      dataSource._groundPrimitives,
     ),
     ...ExtraVisualizers.map(
-      (VisualizerClass) => new VisualizerClass(scene, entities)
+      (VisualizerClass) => new VisualizerClass(scene, entities),
     ),
   ];
 };
@@ -266,7 +266,7 @@ DataSourceDisplay.prototype.destroy = function () {
   for (let i = 0, length = dataSourceCollection.length; i < length; ++i) {
     this._onDataSourceRemoved(
       this._dataSourceCollection,
-      dataSourceCollection.get(i)
+      dataSourceCollection.get(i),
     );
   }
   this._onDataSourceRemoved(undefined, this._defaultDataSource);
@@ -330,7 +330,10 @@ DataSourceDisplay.prototype.update = function (time) {
   if (!this._ready && result) {
     this._scene.requestRender();
   }
-  this._ready = result;
+
+  // once the DataSourceDisplay is ready it should stay ready to prevent
+  // entities from breaking updates when they become "un-ready"
+  this._ready = this._ready || result;
 
   return result;
 };
@@ -378,7 +381,7 @@ const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
 DataSourceDisplay.prototype.getBoundingSphere = function (
   entity,
   allowPartial,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("entity", entity);
@@ -428,7 +431,7 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
       } else if (state === BoundingSphereState.DONE) {
         boundingSpheres[count] = BoundingSphere.clone(
           tmp,
-          boundingSpheres[count]
+          boundingSpheres[count],
         );
         count++;
       }
@@ -446,7 +449,7 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
 
 DataSourceDisplay.prototype._onDataSourceAdded = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   const scene = this._scene;
 
@@ -455,7 +458,7 @@ DataSourceDisplay.prototype._onDataSourceAdded = function (
 
   const primitives = displayPrimitives.add(new PrimitiveCollection());
   const groundPrimitives = displayGroundPrimitives.add(
-    new OrderedGroundPrimitiveCollection()
+    new OrderedGroundPrimitiveCollection(),
   );
 
   dataSource._primitives = primitives;
@@ -469,13 +472,13 @@ DataSourceDisplay.prototype._onDataSourceAdded = function (
   dataSource._visualizers = this._visualizersCallback(
     scene,
     entityCluster,
-    dataSource
+    dataSource,
   );
 };
 
 DataSourceDisplay.prototype._onDataSourceRemoved = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   const displayPrimitives = this._primitives;
   const displayGroundPrimitives = this._groundPrimitives;
@@ -501,7 +504,7 @@ DataSourceDisplay.prototype._onDataSourceRemoved = function (
 DataSourceDisplay.prototype._onDataSourceMoved = function (
   dataSource,
   newIndex,
-  oldIndex
+  oldIndex,
 ) {
   const displayPrimitives = this._primitives;
   const displayGroundPrimitives = this._groundPrimitives;

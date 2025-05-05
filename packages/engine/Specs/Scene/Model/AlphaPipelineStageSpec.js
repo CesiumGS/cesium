@@ -35,7 +35,7 @@ describe(
       AlphaPipelineStage.process(
         renderResources,
         mockPrimitive,
-        mockFrameState
+        mockFrameState,
       );
       expect(renderResources.alphaOptions.pass).toBe(mockModel.opaquePass);
     });
@@ -50,7 +50,7 @@ describe(
       AlphaPipelineStage.process(
         renderResources,
         mockPrimitive,
-        mockFrameState
+        mockFrameState,
       );
 
       const renderStateOptions = renderResources.renderStateOptions;
@@ -69,7 +69,7 @@ describe(
       AlphaPipelineStage.process(
         renderResources,
         mockPrimitive,
-        mockFrameState
+        mockFrameState,
       );
 
       const shaderBuilder = renderResources.shaderBuilder;
@@ -82,5 +82,5 @@ describe(
       expect(renderResources.uniformMap.u_alphaCutoff()).toBe(cutoff);
     });
   },
-  "WebGL"
+  "WebGL",
 );

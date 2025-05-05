@@ -98,12 +98,12 @@ const cartesianToCartographicH = new Cartesian3();
 Cartographic._ellipsoidOneOverRadii = new Cartesian3(
   1.0 / 6378137.0,
   1.0 / 6378137.0,
-  1.0 / 6356752.3142451793
+  1.0 / 6356752.3142451793,
 );
 Cartographic._ellipsoidOneOverRadiiSquared = new Cartesian3(
   1.0 / (6378137.0 * 6378137.0),
   1.0 / (6378137.0 * 6378137.0),
-  1.0 / (6356752.3142451793 * 6356752.3142451793)
+  1.0 / (6356752.3142451793 * 6356752.3142451793),
 );
 Cartographic._ellipsoidCenterToleranceSquared = CesiumMath.EPSILON1;
 
@@ -133,7 +133,7 @@ Cartographic.fromCartesian = function (cartesian, ellipsoid, result) {
     oneOverRadii,
     oneOverRadiiSquared,
     centerToleranceSquared,
-    cartesianToCartographicP
+    cartesianToCartographicP,
   );
 
   if (!defined(p)) {
@@ -143,7 +143,7 @@ Cartographic.fromCartesian = function (cartesian, ellipsoid, result) {
   let n = Cartesian3.multiplyComponents(
     p,
     oneOverRadiiSquared,
-    cartesianToCartographicN
+    cartesianToCartographicN,
   );
   n = Cartesian3.normalize(n, n);
 
@@ -182,7 +182,7 @@ Cartographic.toCartesian = function (cartographic, ellipsoid, result) {
     cartographic.latitude,
     cartographic.height,
     ellipsoid,
-    result
+    result,
   );
 };
 
@@ -201,7 +201,7 @@ Cartographic.clone = function (cartographic, result) {
     return new Cartographic(
       cartographic.longitude,
       cartographic.latitude,
-      cartographic.height
+      cartographic.height,
     );
   }
   result.longitude = cartographic.longitude;

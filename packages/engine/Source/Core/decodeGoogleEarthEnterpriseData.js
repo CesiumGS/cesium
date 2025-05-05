@@ -25,7 +25,7 @@ function decodeGoogleEarthEnterpriseData(key, data) {
   const keyLength = key.byteLength;
   if (keyLength === 0 || keyLength % 4 !== 0) {
     throw new RuntimeError(
-      "The length of key must be greater than 0 and a multiple of 4."
+      "The length of key must be greater than 0 and a multiple of 4.",
     );
   }
 
@@ -51,7 +51,7 @@ function decodeGoogleEarthEnterpriseData(key, data) {
   // while we have a full uint64 (8 bytes) left to do
   // assumes buffer is 64bit aligned (or processor doesn't care)
   while (dp < dpend64) {
-    // rotate the key each time through by using the offets 16,0,8,16,0,8,...
+    // rotate the key each time through by using the offsets 16,0,8,16,0,8,...
     off = (off + 8) % 24;
     kp = off;
 
@@ -61,12 +61,12 @@ function decodeGoogleEarthEnterpriseData(key, data) {
       dataView.setUint32(
         dp,
         dataView.getUint32(dp, true) ^ keyView.getUint32(kp, true),
-        true
+        true,
       );
       dataView.setUint32(
         dp + 4,
         dataView.getUint32(dp + 4, true) ^ keyView.getUint32(kp + 4, true),
-        true
+        true,
       );
       dp += 8;
       kp += 24;

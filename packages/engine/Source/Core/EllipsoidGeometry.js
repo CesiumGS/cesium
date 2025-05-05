@@ -70,12 +70,12 @@ function EllipsoidGeometry(options) {
   //>>includeStart('debug', pragmas.debug);
   if (slicePartitions < 3) {
     throw new DeveloperError(
-      "options.slicePartitions cannot be less than three."
+      "options.slicePartitions cannot be less than three.",
     );
   }
   if (stackPartitions < 3) {
     throw new DeveloperError(
-      "options.stackPartitions cannot be less than three."
+      "options.stackPartitions cannot be less than three.",
     );
   }
   //>>includeEnd('debug');
@@ -183,7 +183,7 @@ EllipsoidGeometry.unpack = function (array, startingIndex, result) {
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
 
@@ -252,10 +252,10 @@ EllipsoidGeometry.createGeometry = function (ellipsoidGeometry) {
 
   slicePartitions = Math.round(
     (slicePartitions * Math.abs(maximumClock - minimumClock)) /
-      CesiumMath.TWO_PI
+      CesiumMath.TWO_PI,
   );
   stackPartitions = Math.round(
-    (stackPartitions * Math.abs(maximumCone - minimumCone)) / CesiumMath.PI
+    (stackPartitions * Math.abs(maximumCone - minimumCone)) / CesiumMath.PI,
   );
 
   if (slicePartitions < 2) {
@@ -275,13 +275,14 @@ EllipsoidGeometry.createGeometry = function (ellipsoidGeometry) {
   const thetas = [minimumClock];
   for (i = 0; i < stackPartitions; i++) {
     phis.push(
-      minimumCone + (i * (maximumCone - minimumCone)) / (stackPartitions - 1)
+      minimumCone + (i * (maximumCone - minimumCone)) / (stackPartitions - 1),
     );
   }
   phis.push(maximumCone);
   for (j = 0; j < slicePartitions; j++) {
     thetas.push(
-      minimumClock + (j * (maximumClock - minimumClock)) / (slicePartitions - 1)
+      minimumClock +
+        (j * (maximumClock - minimumClock)) / (slicePartitions - 1),
     );
   }
   thetas.push(maximumClock);
@@ -641,7 +642,7 @@ EllipsoidGeometry.getUnitEllipsoid = function () {
       new EllipsoidGeometry({
         radii: new Cartesian3(1.0, 1.0, 1.0),
         vertexFormat: VertexFormat.POSITION_ONLY,
-      })
+      }),
     );
   }
   return unitEllipsoidGeometry;

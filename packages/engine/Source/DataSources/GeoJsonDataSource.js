@@ -103,7 +103,7 @@ function createDescriptionCallback(describe, properties, nameProperty) {
 function defaultDescribeProperty(properties, nameProperty) {
   return new CallbackProperty(
     createDescriptionCallback(defaultDescribe, properties, nameProperty),
-    true
+    true,
   );
 }
 
@@ -236,7 +236,7 @@ function processFeatureCollection(
   featureCollection,
   notUsed,
   crsFunction,
-  options
+  options,
 ) {
   const features = featureCollection.features;
   for (let i = 0, len = features.length; i < len; i++) {
@@ -249,7 +249,7 @@ function processGeometryCollection(
   geoJson,
   geometryCollection,
   crsFunction,
-  options
+  options,
 ) {
   const geometries = geometryCollection.geometries;
   for (let i = 0, len = geometries.length; i < len; i++) {
@@ -288,13 +288,13 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
       canvasOrPromise = dataSource._pinBuilder.fromText(
         symbol.toUpperCase(),
         color,
-        size
+        size,
       );
     } else {
       canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(
         symbol,
         color,
-        size
+        size,
       );
     }
   } else {
@@ -312,7 +312,7 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
   const entity = createObject(
     geoJson,
     dataSource._entityCollection,
-    options.describe
+    options.describe,
   );
   entity.billboard = billboard;
   entity.position = new ConstantPositionProperty(crsFunction(coordinates));
@@ -323,7 +323,7 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
     })
     .catch(function () {
       billboard.image = new ConstantProperty(
-        dataSource._pinBuilder.fromColor(color, size)
+        dataSource._pinBuilder.fromColor(color, size),
       );
     });
 
@@ -339,7 +339,7 @@ function processMultiPoint(
   geoJson,
   geometry,
   crsFunction,
-  options
+  options,
 ) {
   const coordinates = geometry.coordinates;
   for (let i = 0; i < coordinates.length; i++) {
@@ -352,7 +352,7 @@ function createLineString(
   geoJson,
   crsFunction,
   coordinates,
-  options
+  options,
 ) {
   let material = options.strokeMaterialProperty;
   let widthProperty = options.strokeWidthProperty;
@@ -384,7 +384,7 @@ function createLineString(
   const entity = createObject(
     geoJson,
     dataSource._entityCollection,
-    options.describe
+    options.describe,
   );
   const polylineGraphics = new PolylineGraphics();
   entity.polyline = polylineGraphics;
@@ -393,7 +393,7 @@ function createLineString(
   polylineGraphics.material = material;
   polylineGraphics.width = widthProperty;
   polylineGraphics.positions = new ConstantProperty(
-    coordinatesArrayToCartesianArray(coordinates, crsFunction)
+    coordinatesArrayToCartesianArray(coordinates, crsFunction),
   );
   polylineGraphics.arcType = ArcType.RHUMB;
 }
@@ -403,14 +403,14 @@ function processLineString(
   geoJson,
   geometry,
   crsFunction,
-  options
+  options,
 ) {
   createLineString(
     dataSource,
     geoJson,
     crsFunction,
     geometry.coordinates,
-    options
+    options,
   );
 }
 
@@ -419,7 +419,7 @@ function processMultiLineString(
   geoJson,
   geometry,
   crsFunction,
-  options
+  options,
 ) {
   const lineStrings = geometry.coordinates;
   for (let i = 0; i < lineStrings.length; i++) {
@@ -490,8 +490,8 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
   for (let i = 1, len = coordinates.length; i < len; i++) {
     holes.push(
       new PolygonHierarchy(
-        coordinatesArrayToCartesianArray(coordinates[i], crsFunction)
-      )
+        coordinatesArrayToCartesianArray(coordinates[i], crsFunction),
+      ),
     );
   }
 
@@ -499,8 +499,8 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
   polygon.hierarchy = new ConstantProperty(
     new PolygonHierarchy(
       coordinatesArrayToCartesianArray(positions, crsFunction),
-      holes
-    )
+      holes,
+    ),
   );
   if (positions[0].length > 2) {
     polygon.perPositionHeight = new ConstantProperty(true);
@@ -511,7 +511,7 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
   const entity = createObject(
     geoJson,
     dataSource._entityCollection,
-    options.describe
+    options.describe,
   );
   entity.polygon = polygon;
 }
@@ -522,7 +522,7 @@ function processPolygon(dataSource, geoJson, geometry, crsFunction, options) {
     geoJson,
     crsFunction,
     geometry.coordinates,
-    options
+    options,
   );
 }
 
@@ -531,7 +531,7 @@ function processMultiPolygon(
   geoJson,
   geometry,
   crsFunction,
-  options
+  options,
 ) {
   const polygons = geometry.coordinates;
   for (let i = 0; i < polygons.length; i++) {
@@ -947,13 +947,13 @@ function preload(that, data, options, clear) {
     markerSymbol: defaultValue(options.markerSymbol, defaultMarkerSymbol),
     markerColor: defaultValue(options.markerColor, defaultMarkerColor),
     strokeWidthProperty: new ConstantProperty(
-      defaultValue(options.strokeWidth, defaultStrokeWidth)
+      defaultValue(options.strokeWidth, defaultStrokeWidth),
     ),
     strokeMaterialProperty: new ColorMaterialProperty(
-      defaultValue(options.stroke, defaultStroke)
+      defaultValue(options.stroke, defaultStroke),
     ),
     fillMaterialProperty: new ColorMaterialProperty(
-      defaultValue(options.fill, defaultFill)
+      defaultValue(options.fill, defaultFill),
     ),
     clampToGround: defaultValue(options.clampToGround, defaultClampToGround),
   };
@@ -1021,7 +1021,7 @@ function load(that, geoJson, options, sourceUri, clear) {
 
       if (!defined(handler)) {
         throw new RuntimeError(
-          `Unable to resolve crs link: ${JSON.stringify(properties)}`
+          `Unable to resolve crs link: ${JSON.stringify(properties)}`,
         );
       }
 

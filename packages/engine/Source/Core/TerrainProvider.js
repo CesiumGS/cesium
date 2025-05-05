@@ -105,7 +105,7 @@ TerrainProvider.getRegularGridIndices = function (width, height) {
   //>>includeStart('debug', pragmas.debug);
   if (width * height >= CesiumMath.FOUR_GIGABYTES) {
     throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296."
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
     );
   }
   //>>includeEnd('debug');
@@ -119,11 +119,11 @@ TerrainProvider.getRegularGridIndices = function (width, height) {
   if (!defined(indices)) {
     if (width * height < CesiumMath.SIXTY_FOUR_KILOBYTES) {
       indices = byWidth[height] = new Uint16Array(
-        (width - 1) * (height - 1) * 6
+        (width - 1) * (height - 1) * 6,
       );
     } else {
       indices = byWidth[height] = new Uint32Array(
-        (width - 1) * (height - 1) * 6
+        (width - 1) * (height - 1) * 6,
       );
     }
     addRegularGridIndices(width, height, indices, 0);
@@ -141,7 +141,7 @@ TerrainProvider.getRegularGridIndicesAndEdgeIndices = function (width, height) {
   //>>includeStart('debug', pragmas.debug);
   if (width * height >= CesiumMath.FOUR_GIGABYTES) {
     throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296."
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
     );
   }
   //>>includeEnd('debug');
@@ -180,12 +180,12 @@ const regularGridAndSkirtAndEdgeIndicesCache = [];
  */
 TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
   width,
-  height
+  height,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (width * height >= CesiumMath.FOUR_GIGABYTES) {
     throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296."
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
     );
   }
   //>>includeEnd('debug');
@@ -219,7 +219,7 @@ TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
       northIndicesWestToEast,
       gridVertexCount,
       indices,
-      gridIndexCount
+      gridIndexCount,
     );
 
     indicesAndEdges = byWidth[height] = {
@@ -245,28 +245,28 @@ TerrainProvider.addSkirtIndices = function (
   northIndicesWestToEast,
   vertexCount,
   indices,
-  offset
+  offset,
 ) {
   let vertexIndex = vertexCount;
   offset = addSkirtIndices(
     westIndicesSouthToNorth,
     vertexIndex,
     indices,
-    offset
+    offset,
   );
   vertexIndex += westIndicesSouthToNorth.length;
   offset = addSkirtIndices(
     southIndicesEastToWest,
     vertexIndex,
     indices,
-    offset
+    offset,
   );
   vertexIndex += southIndicesEastToWest.length;
   offset = addSkirtIndices(
     eastIndicesNorthToSouth,
     vertexIndex,
     indices,
-    offset
+    offset,
   );
   vertexIndex += eastIndicesNorthToSouth.length;
   addSkirtIndices(northIndicesWestToEast, vertexIndex, indices, offset);
@@ -362,7 +362,7 @@ TerrainProvider.heightmapTerrainQuality = 0.25;
 TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function (
   ellipsoid,
   tileImageWidth,
-  numberOfTilesAtLevelZero
+  numberOfTilesAtLevelZero,
 ) {
   return (
     (ellipsoid.maximumRadius *

@@ -112,7 +112,7 @@ Object.defineProperties(PathGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 });
 
@@ -157,7 +157,7 @@ PathGraphics.prototype.merge = function (source) {
   this.material = defaultValue(this.material, source.material);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
 };
 export default PathGraphics;

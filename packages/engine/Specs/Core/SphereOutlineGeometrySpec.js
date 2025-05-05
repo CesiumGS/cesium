@@ -33,7 +33,7 @@ describe("Core/SphereOutlineGeometry", function () {
         stackPartitions: 2,
         slicePartitions: 2,
         subdivisions: 2,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(12 * 3);

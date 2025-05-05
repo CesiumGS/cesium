@@ -153,7 +153,7 @@ Object.defineProperties(BoxGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 });
 
@@ -197,7 +197,7 @@ BoxGraphics.prototype.merge = function (source) {
   this.dimensions = defaultValue(this.dimensions, source.dimensions);
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.fill = defaultValue(this.fill, source.fill);
   this.material = defaultValue(this.material, source.material);
@@ -207,7 +207,7 @@ BoxGraphics.prototype.merge = function (source) {
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
 };
 export default BoxGraphics;

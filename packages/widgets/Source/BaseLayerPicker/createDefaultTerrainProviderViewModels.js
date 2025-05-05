@@ -20,14 +20,14 @@ function createDefaultTerrainProviderViewModels() {
       creationFunction: function () {
         return new EllipsoidTerrainProvider({ ellipsoid: Ellipsoid.WGS84 });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Cesium World Terrain",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/TerrainProviders/CesiumWorldTerrain.png"
+        "Widgets/Images/TerrainProviders/CesiumWorldTerrain.png",
       ),
       tooltip:
         "High-resolution global terrain tileset curated from several datasources and hosted by Cesium ion",
@@ -38,7 +38,7 @@ function createDefaultTerrainProviderViewModels() {
           requestVertexNormals: true,
         });
       },
-    })
+    }),
   );
 
   return providerViewModels;

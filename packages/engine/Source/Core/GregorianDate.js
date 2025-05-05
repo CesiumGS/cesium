@@ -30,7 +30,7 @@ function GregorianDate(
   minute,
   second,
   millisecond,
-  isLeapSecond
+  isLeapSecond,
 ) {
   const minimumYear = 1;
   const minimumMonth = 1;
@@ -124,18 +124,18 @@ function GregorianDate(
     Check.typeOf.number.lessThanOrEquals(
       "Second",
       second,
-      isLeapSecond ? maximumSecond + 1 : maximumSecond
+      isLeapSecond ? maximumSecond + 1 : maximumSecond,
     );
 
     Check.typeOf.number.greaterThanOrEquals(
       "Millisecond",
       millisecond,
-      minimumMillisecond
+      minimumMillisecond,
     );
     Check.typeOf.number.lessThan(
       "Millisecond",
       millisecond,
-      excludedMaximumMilisecond
+      excludedMaximumMilisecond,
     );
   }
 

@@ -80,7 +80,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
    * True if offset/scale should be applied. If both offset/scale were
    * undefined, they default to identity so this property is set false
    *
-   * @memberof MetadataClassProperty.prototype
+   * @memberof PropertyAttributeProperty.prototype
    * @type {boolean}
    * @readonly
    * @private
@@ -94,7 +94,13 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
-   * @memberof MetadataClassProperty.prototype
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the property JSON itself did not define it, then it will inherit the
+   * value from the `MetadataClassProperty`. There, it also is always
+   * defined, and initialized to the default value if it was not contained
+   * in the class property JSON.
+   *
+   * @memberof PropertyAttributeProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
    * @private
@@ -108,7 +114,13 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
   /**
    * The scale to be multiplied to property values as part of the value transform.
    *
-   * @memberof MetadataClassProperty.prototype
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the property JSON itself did not define it, then it will inherit the
+   * value from the `MetadataClassProperty`. There, it also is always
+   * defined, and initialized to the default value if it was not contained
+   * in the class property JSON.
+   *
+   * @memberof PropertyAttributeProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
    * @private

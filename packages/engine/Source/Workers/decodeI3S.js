@@ -62,7 +62,7 @@ function sampleGeoidFromList(lon, lat, geoidDataList) {
     if (geoidDataList[i].projectionType === "WebMercator") {
       const radii = geoidDataList[i].projection._ellipsoid._radii;
       const webMercatorProj = new WebMercatorProjection(
-        new Ellipsoid(radii.x, radii.y, radii.z)
+        new Ellipsoid(radii.x, radii.y, radii.z),
       );
       localPt = webMercatorProj.project(new Cartographic(lon, lat, 0));
     } else {
@@ -90,7 +90,7 @@ function orthometricToEllipsoidal(
   scale_y,
   center,
   geoidDataList,
-  fast
+  fast,
 ) {
   if (fast) {
     // Geometry is already relative to the tile origin which has already been shifted to account for geoid height
@@ -102,14 +102,14 @@ function orthometricToEllipsoidal(
   const centerHeight = sampleGeoidFromList(
     center.longitude,
     center.latitude,
-    geoidDataList
+    geoidDataList,
   );
 
   for (let i = 0; i < vertexCount; ++i) {
     const height = sampleGeoidFromList(
       center.longitude + CesiumMath.toRadians(scale_x * position[i * 3]),
       center.latitude + CesiumMath.toRadians(scale_y * position[i * 3 + 1]),
-      geoidDataList
+      geoidDataList,
     );
     position[i * 3 + 2] += height - centerHeight;
   }
@@ -124,7 +124,7 @@ function transformToLocal(
   parentRotation,
   ellipsoidRadiiSquare,
   scale_x,
-  scale_y
+  scale_y,
 ) {
   if (vertexCount === 0 || !defined(positions) || positions.length === 0) {
     return;
@@ -133,7 +133,7 @@ function transformToLocal(
   const ellipsoid = new Ellipsoid(
     Math.sqrt(ellipsoidRadiiSquare.x),
     Math.sqrt(ellipsoidRadiiSquare.y),
-    Math.sqrt(ellipsoidRadiiSquare.z)
+    Math.sqrt(ellipsoidRadiiSquare.z),
   );
   for (let i = 0; i < vertexCount; ++i) {
     const indexOffset = i * 3;
@@ -168,7 +168,7 @@ function transformToLocal(
       const normal = new Cartesian3(
         normals[indexOffset],
         normals[indexOffset1],
-        normals[indexOffset2]
+        normals[indexOffset2],
       );
 
       const rotatedNormal = {};
@@ -203,7 +203,7 @@ function generateIndexArray(
   vertexCount,
   indices,
   colors,
-  splitGeometryByColorTransparency
+  splitGeometryByColorTransparency,
 ) {
   // Allocate array
   const indexArray = new Uint32Array(vertexCount);
@@ -276,7 +276,7 @@ function getFeatureHash(symbologyData, outlinesHash, featureIndex) {
   });
   const featureSymbology = defaultValue(
     symbologyData[featureIndex],
-    symbologyData.default
+    symbologyData.default,
   );
   newFeatureHash.hasOutline = defined(featureSymbology?.edges);
   return newFeatureHash;
@@ -306,7 +306,7 @@ function addEdgeToHash(
   vertexBIndex,
   vertexAIndexUnique,
   vertexBIndexUnique,
-  normalIndex
+  normalIndex,
 ) {
   let startVertexIndex;
   let endVertexIndex;
@@ -342,7 +342,7 @@ function generateOutlinesHash(
   symbologyData,
   featureIndexArray,
   indexArray,
-  positions
+  positions,
 ) {
   const outlinesHash = [];
   for (let i = 0; i < indexArray.length; i += 3) {
@@ -352,7 +352,7 @@ function generateOutlinesHash(
     const featureHash = getFeatureHash(
       symbologyData,
       outlinesHash,
-      featureIndex
+      featureIndex,
     );
     if (!featureHash.hasOutline) {
       continue;
@@ -377,7 +377,7 @@ function generateOutlinesHash(
         nextVertexIndex,
         uniqueVertexIndex,
         uniqueNextVertexIndex,
-        i
+        i,
       );
     }
   }
@@ -398,24 +398,24 @@ function calculateFaceNormal(normals, vertexAIndex, indexArray, positions) {
   Cartesian3.subtract(
     calculateFaceNormalB,
     calculateFaceNormalA,
-    calculateFaceNormalB
+    calculateFaceNormalB,
   );
   Cartesian3.subtract(
     calculateFaceNormalC,
     calculateFaceNormalA,
-    calculateFaceNormalC
+    calculateFaceNormalC,
   );
   Cartesian3.cross(
     calculateFaceNormalB,
     calculateFaceNormalC,
-    calculateFaceNormalA
+    calculateFaceNormalA,
   );
   const magnitude = Cartesian3.magnitude(calculateFaceNormalA);
   if (magnitude !== 0) {
     Cartesian3.divideByScalar(
       calculateFaceNormalA,
       magnitude,
-      calculateFaceNormalA
+      calculateFaceNormalA,
     );
   }
   const normalAIndex = vertexAIndex * 3;
@@ -433,7 +433,7 @@ function isEdgeSmooth(normals, normalAIndex, normalBIndex) {
   Cartesian3.fromArray(normals, normalBIndex, isEdgeSmoothB);
   const cosine = Cartesian3.dot(isEdgeSmoothA, isEdgeSmoothB);
   const sine = Cartesian3.magnitude(
-    Cartesian3.cross(isEdgeSmoothA, isEdgeSmoothB, isEdgeSmoothA)
+    Cartesian3.cross(isEdgeSmoothA, isEdgeSmoothB, isEdgeSmoothA),
   );
   return Math.atan2(sine, cosine) < 0.25;
 }
@@ -443,7 +443,7 @@ function addOutlinesForEdge(
   edgeData,
   indexArray,
   positions,
-  normals
+  normals,
 ) {
   if (edgeData.normalsIndex.length > 1) {
     const normalsByIndex = positions.length === normals.length;
@@ -477,7 +477,7 @@ function addOutlinesForFeature(
   edgeHash,
   indexArray,
   positions,
-  normals
+  normals,
 ) {
   const edgeStartKeys = Object.keys(edgeHash);
   for (let startIndex = 0; startIndex < edgeStartKeys.length; startIndex++) {
@@ -494,7 +494,7 @@ function generateOutlinesFromHash(
   outlinesHash,
   indexArray,
   positions,
-  normals
+  normals,
 ) {
   const outlines = [];
   const features = Object.keys(outlinesHash);
@@ -510,7 +510,7 @@ function generateOutlinesIndexArray(
   featureIndexArray,
   indexArray,
   positions,
-  normals
+  normals,
 ) {
   if (!defined(symbologyData) || Object.keys(symbologyData).length === 0) {
     return undefined;
@@ -519,7 +519,7 @@ function generateOutlinesIndexArray(
     symbologyData,
     featureIndexArray,
     indexArray,
-    positions
+    positions,
   );
   if (!defined(normals) || indexArray.length * 3 !== normals.length) {
     // Need to calculate flat normals per faces
@@ -529,7 +529,7 @@ function generateOutlinesIndexArray(
     outlinesHash,
     indexArray,
     positions,
-    normals
+    normals,
   );
   const outlinesIndexArray =
     outlines.length > 0 ? new Uint32Array(outlines) : undefined;
@@ -556,7 +556,7 @@ function generateNormals(
   normals,
   uv0s,
   colors,
-  featureIndex
+  featureIndex,
 ) {
   const result = {
     normals: undefined,
@@ -632,7 +632,7 @@ function generateGltfBuffer(
   uv0s,
   colors,
   featureIndex,
-  parameters
+  parameters,
 ) {
   if (vertexCount === 0 || !defined(positions) || positions.length === 0) {
     return {
@@ -665,7 +665,7 @@ function generateGltfBuffer(
     vertexCount,
     indices,
     colors,
-    parameters.splitGeometryByColorTransparency
+    parameters.splitGeometryByColorTransparency,
   );
 
   // Push to the buffers, bufferViews and accessors
@@ -699,7 +699,7 @@ function generateGltfBuffer(
     featureIndex,
     indexArray,
     positions,
-    normals
+    normals,
   );
   if (defined(outlinesIndexArray)) {
     const outlinesIndicesBlob = new Blob([outlinesIndexArray], {
@@ -1126,7 +1126,7 @@ function decodeDracoEncodedGeometry(data) {
     for (let attrIndex = 0; attrIndex < attributesCount; ++attrIndex) {
       const dracoAttribute = dracoDecoder.GetAttribute(
         dracoGeometry,
-        attrIndex
+        attrIndex,
       );
 
       const attributeData = decodeDracoAttribute(
@@ -1134,7 +1134,7 @@ function decodeDracoEncodedGeometry(data) {
         dracoDecoder,
         dracoGeometry,
         dracoAttribute,
-        vertexCount
+        vertexCount,
       );
 
       // initial mapping
@@ -1154,7 +1154,7 @@ function decodeDracoEncodedGeometry(data) {
       // get the metadata
       const metadata = dracoDecoder.GetAttributeMetadata(
         dracoGeometry,
-        attrIndex
+        attrIndex,
       );
 
       if (metadata.ptr !== 0) {
@@ -1164,17 +1164,17 @@ function decodeDracoEncodedGeometry(data) {
           if (entryName === "i3s-scale_x") {
             decodedGeometry.scale_x = metadataQuerier.GetDoubleEntry(
               metadata,
-              "i3s-scale_x"
+              "i3s-scale_x",
             );
           } else if (entryName === "i3s-scale_y") {
             decodedGeometry.scale_y = metadataQuerier.GetDoubleEntry(
               metadata,
-              "i3s-scale_y"
+              "i3s-scale_y",
             );
           } else if (entryName === "i3s-attribute-type") {
             attributei3sName = metadataQuerier.GetStringEntry(
               metadata,
-              "i3s-attribute-type"
+              "i3s-attribute-type",
             );
           }
         }
@@ -1205,7 +1205,7 @@ function decodeDracoAttribute(
   dracoDecoder,
   dracoGeometry,
   dracoAttribute,
-  vertexCount
+  vertexCount,
 ) {
   const bufferSize = dracoAttribute.num_components() * vertexCount;
   let dracoAttributeData;
@@ -1218,7 +1218,7 @@ function decodeDracoAttribute(
       const success = dracoDecoder.GetAttributeInt8ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        dracoAttributeData
+        dracoAttributeData,
       );
 
       if (!success) {
@@ -1236,7 +1236,7 @@ function decodeDracoAttribute(
       const success = dracoDecoder.GetAttributeUInt8ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        dracoAttributeData
+        dracoAttributeData,
       );
 
       if (!success) {
@@ -1254,7 +1254,7 @@ function decodeDracoAttribute(
       const success = dracoDecoder.GetAttributeInt16ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        dracoAttributeData
+        dracoAttributeData,
       );
 
       if (!success) {
@@ -1272,7 +1272,7 @@ function decodeDracoAttribute(
       const success = dracoDecoder.GetAttributeUInt16ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        dracoAttributeData
+        dracoAttributeData,
       );
 
       if (!success) {
@@ -1290,7 +1290,7 @@ function decodeDracoAttribute(
       const success = dracoDecoder.GetAttributeInt32ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        dracoAttributeData
+        dracoAttributeData,
       );
 
       if (!success) {
@@ -1308,7 +1308,7 @@ function decodeDracoAttribute(
       const success = dracoDecoder.GetAttributeUInt32ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        dracoAttributeData
+        dracoAttributeData,
       );
 
       if (!success) {
@@ -1332,7 +1332,7 @@ function decodeDracoAttribute(
       const success = dracoDecoder.GetAttributeFloatForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        dracoAttributeData
+        dracoAttributeData,
       );
 
       if (!success) {
@@ -1353,7 +1353,7 @@ function decodeDracoAttribute(
       const success = dracoDecoder.GetAttributeUInt8ForAllPoints(
         dracoGeometry,
         dracoAttribute,
-        dracoAttributeData
+        dracoAttributeData,
       );
 
       if (!success) {
@@ -1462,12 +1462,12 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
           offset = binaryAttributeDecoders[bufferInfo.attributes[attrIndex]](
             decodedGeometry,
             data,
-            offset
+            offset,
           );
         } else {
           console.error(
             "Unknown decoder for",
-            bufferInfo.attributes[attrIndex]
+            bufferInfo.attributes[attrIndex],
           );
         }
       }
@@ -1482,10 +1482,10 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
         defined(featureData.geometryData[0].params)
       ) {
         ordering = Object.keys(
-          featureData.geometryData[0].params.vertexAttributes
+          featureData.geometryData[0].params.vertexAttributes,
         );
         featureAttributeOrder = Object.keys(
-          featureData.geometryData[0].params.featureAttributes
+          featureData.geometryData[0].params.featureAttributes,
         );
       }
 
@@ -1516,7 +1516,7 @@ function decodeAndCreateGltf(parameters) {
     parameters.binaryData,
     parameters.schema,
     parameters.bufferInfo,
-    parameters.featureData
+    parameters.featureData,
   );
 
   // Adjust height from orthometric to ellipsoidal
@@ -1531,7 +1531,7 @@ function decodeAndCreateGltf(parameters) {
       geometryData.scale_y,
       parameters.cartographicCenter,
       parameters.geoidDataList,
-      false
+      false,
     );
   }
 
@@ -1545,7 +1545,7 @@ function decodeAndCreateGltf(parameters) {
     parameters.parentRotation,
     parameters.ellipsoidRadiiSquare,
     geometryData.scale_x,
-    geometryData.scale_y
+    geometryData.scale_y,
   );
 
   // Adjust UVs if there is a UV region
@@ -1553,7 +1553,7 @@ function decodeAndCreateGltf(parameters) {
     cropUVs(
       geometryData.vertexCount,
       geometryData.uv0s,
-      geometryData["uv-region"]
+      geometryData["uv-region"],
     );
   }
 
@@ -1587,7 +1587,7 @@ function decodeAndCreateGltf(parameters) {
       geometryData.normals,
       geometryData.uv0s,
       geometryData.colors,
-      featureIndex
+      featureIndex,
     );
     if (defined(data.normals)) {
       geometryData.normals = data.normals;
@@ -1611,7 +1611,7 @@ function decodeAndCreateGltf(parameters) {
     geometryData.uv0s,
     geometryData.colors,
     featureIndex,
-    parameters
+    parameters,
   );
 
   const customAttributes = {

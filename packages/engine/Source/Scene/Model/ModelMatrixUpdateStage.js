@@ -42,11 +42,28 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
       runtimeNode,
       sceneGraph,
       modelMatrix,
-      runtimeNode.transformToRoot
+      runtimeNode.transformToRoot,
     );
     runtimeNode._transformDirty = false;
   }
 };
+
+/**
+ * Update the modelMatrix and cullFrace of the given draw command.
+ *
+ * @private
+ */
+function updateDrawCommand(drawCommand, modelMatrix, transformToRoot) {
+  drawCommand.modelMatrix = Matrix4.multiplyTransformation(
+    modelMatrix,
+    transformToRoot,
+    drawCommand.modelMatrix,
+  );
+  drawCommand.cullFace = ModelUtility.getCullFace(
+    drawCommand.modelMatrix,
+    drawCommand.primitiveType,
+  );
+}
 
 /**
  * Recursively update all child runtime nodes and their runtime primitives.
@@ -57,7 +74,7 @@ function updateRuntimeNode(
   runtimeNode,
   sceneGraph,
   modelMatrix,
-  transformToRoot
+  transformToRoot,
 ) {
   let i;
 
@@ -65,7 +82,7 @@ function updateRuntimeNode(
   transformToRoot = Matrix4.multiplyTransformation(
     transformToRoot,
     runtimeNode.transform,
-    new Matrix4()
+    new Matrix4(),
   );
 
   runtimeNode.updateComputedTransform();
@@ -73,15 +90,10 @@ function updateRuntimeNode(
   const primitivesLength = runtimeNode.runtimePrimitives.length;
   for (i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    const drawCommand = runtimePrimitive.drawCommand;
-    drawCommand.modelMatrix = Matrix4.multiplyTransformation(
+    updateDrawCommand(
+      runtimePrimitive.drawCommand,
       modelMatrix,
       transformToRoot,
-      drawCommand.modelMatrix
-    );
-    drawCommand.cullFace = ModelUtility.getCullFace(
-      drawCommand.modelMatrix,
-      drawCommand.primitiveType
     );
   }
 
@@ -92,14 +104,14 @@ function updateRuntimeNode(
     // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
     childRuntimeNode._transformToRoot = Matrix4.clone(
       transformToRoot,
-      childRuntimeNode._transformToRoot
+      childRuntimeNode._transformToRoot,
     );
 
     updateRuntimeNode(
       childRuntimeNode,
       sceneGraph,
       modelMatrix,
-      transformToRoot
+      transformToRoot,
     );
     childRuntimeNode._transformDirty = false;
   }

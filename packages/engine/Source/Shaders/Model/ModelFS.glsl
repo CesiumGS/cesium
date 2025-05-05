@@ -28,8 +28,15 @@ SelectedFeature selectedFeature;
 
 void main()
 {
+    #ifdef HAS_POINT_CLOUD_SHOW_STYLE
+        if (v_pointCloudShow == 0.0)
+        {
+            discard;
+        }
+    #endif
+
     #ifdef HAS_MODEL_SPLITTER
-    modelSplitterStage();
+        modelSplitterStage();
     #endif
 
     czm_modelMaterial material = defaultModelMaterial();
@@ -45,49 +52,83 @@ void main()
     MetadataStatistics metadataStatistics;
     metadataStage(metadata, metadataClass, metadataStatistics, attributes);
 
-    #ifdef HAS_SELECTED_FEATURE_ID
-    selectedFeatureIdStage(selectedFeature, featureIds);
+    //========================================================================
+    // When not picking metadata START
+    #ifndef METADATA_PICKING_ENABLED
+
+        #ifdef HAS_SELECTED_FEATURE_ID
+            selectedFeatureIdStage(selectedFeature, featureIds);
+        #endif
+
+        #ifndef CUSTOM_SHADER_REPLACE_MATERIAL
+            materialStage(material, attributes, selectedFeature);
+        #endif
+
+        #ifdef HAS_CUSTOM_FRAGMENT_SHADER
+            customShaderStage(material, attributes, featureIds, metadata, metadataClass, metadataStatistics);
+        #endif
+
+        #ifdef SET_CUSTOM_FRAG_COLOR_DIRECTLY
+            vec4 color = vec4(material.diffuse, material.alpha);
+            color.z = 1.0;
+        #else
+            lightingStage(material, attributes);
+
+            #ifdef HAS_SELECTED_FEATURE_ID
+                cpuStylingStage(material, selectedFeature);
+            #endif
+
+            #ifdef HAS_MODEL_COLOR
+                modelColorStage(material);
+            #endif
+
+            #ifdef HAS_PRIMITIVE_OUTLINE
+                primitiveOutlineStage(material);
+            #endif
+
+            vec4 color = handleAlpha(material.diffuse, material.alpha);
+        #endif
+
+        // When not picking metadata END
+        //========================================================================
+    #else 
+        //========================================================================
+        // When picking metadata START
+
+        vec4 metadataValues = vec4(0.0, 0.0, 0.0, 0.0);
+        metadataPickingStage(metadata, metadataClass, metadataValues);
+        vec4 color = metadataValues;
+
     #endif
-
-    #ifndef CUSTOM_SHADER_REPLACE_MATERIAL
-    materialStage(material, attributes, selectedFeature);
-    #endif
-
-    #ifdef HAS_CUSTOM_FRAGMENT_SHADER
-    customShaderStage(material, attributes, featureIds, metadata, metadataClass, metadataStatistics);
-    #endif
-
-    lightingStage(material, attributes);
-
-    #ifdef HAS_SELECTED_FEATURE_ID
-    cpuStylingStage(material, selectedFeature);
-    #endif
-
-    #ifdef HAS_MODEL_COLOR
-    modelColorStage(material);
-    #endif
-
-    #ifdef HAS_PRIMITIVE_OUTLINE
-    primitiveOutlineStage(material);
-    #endif
-
-    vec4 color = handleAlpha(material.diffuse, material.alpha);
+    // When picking metadata END
+    //========================================================================
 
     #ifdef HAS_CLIPPING_PLANES
-    modelClippingPlanesStage(color);
+        modelClippingPlanesStage(color);
     #endif
 
     #ifdef ENABLE_CLIPPING_POLYGONS
-    modelClippingPolygonsStage();
+        modelClippingPolygonsStage();
     #endif
 
-    #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
-    silhouetteStage(color);
-    #endif
+    //========================================================================
+    // When not picking metadata or setting custom frag color directly START
+    #if !defined(METADATA_PICKING_ENABLED) && !defined(SET_CUSTOM_FRAG_COLOR_DIRECTLY)
 
-    #ifdef HAS_ATMOSPHERE
-    atmosphereStage(color, attributes);
-    #endif
+        #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
+            silhouetteStage(color);
+        #endif
 
-    out_FragColor = color;
+        #ifdef HAS_ATMOSPHERE
+            atmosphereStage(color, attributes);
+        #endif
+
+    #endif
+    // When not picking metadata END
+    //========================================================================
+    #ifdef SET_CUSTOM_FRAG_COLOR_DIRECTLY
+        out_FragColor = material.colorOverride;
+    #else
+        out_FragColor = color;
+    #endif
 }

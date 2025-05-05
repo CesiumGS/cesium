@@ -1,0 +1,88 @@
+{
+  "asset": {
+    "version": "2.0"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "mode": 2147483650,
+          "attributes": {
+            "_a": 0
+          },
+          "extensions": {
+            "EXT_primitive_voxels": {
+              "dimensions": [
+                2,
+                2,
+                2
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "extensionsUsed": [
+    "EXT_primitive_voxels",
+    "EXT_structural_metadata"
+  ],
+  "extensionsRequired": [
+    "EXT_primitive_voxels",
+    "EXT_structural_metadata"
+  ],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schemaUri": "../../../../schema.json",
+      "propertyAttributes": [
+        {
+          "class": "voxel",
+          "properties": {
+            "a": {
+              "attribute": "_a"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "accessors": [
+    {
+      "bufferView": 0,
+      "type": "SCALAR",
+      "componentType": 5126,
+      "min": [
+        0.0
+      ],
+      "max": [
+        1.0
+      ],
+      "count": 8
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 32
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "a.bin",
+      "byteLength": 32
+    }
+  ]
+}

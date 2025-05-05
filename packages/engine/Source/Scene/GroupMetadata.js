@@ -119,7 +119,7 @@ GroupMetadata.prototype.hasPropertyBySemantic = function (semantic) {
   return MetadataEntity.hasPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -164,7 +164,7 @@ GroupMetadata.prototype.setProperty = function (propertyId, value) {
     propertyId,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -179,7 +179,7 @@ GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -196,7 +196,7 @@ GroupMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
     semantic,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 

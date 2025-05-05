@@ -194,7 +194,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 });
 
@@ -244,7 +244,7 @@ CylinderGraphics.prototype.merge = function (source) {
   this.bottomRadius = defaultValue(this.bottomRadius, source.bottomRadius);
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.fill = defaultValue(this.fill, source.fill);
   this.material = defaultValue(this.material, source.material);
@@ -253,13 +253,13 @@ CylinderGraphics.prototype.merge = function (source) {
   this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
   this.numberOfVerticalLines = defaultValue(
     this.numberOfVerticalLines,
-    source.numberOfVerticalLines
+    source.numberOfVerticalLines,
   );
   this.slices = defaultValue(this.slices, source.slices);
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
 };
 export default CylinderGraphics;

@@ -33,7 +33,7 @@ const PickingPipelineStage = {
 PickingPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const context = frameState.context;
   const runtimeNode = renderResources.runtimeNode;
@@ -57,7 +57,7 @@ PickingPipelineStage.process = function (
     shaderBuilder.addUniform(
       "vec4",
       "czm_pickColor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     const uniformMap = renderResources.uniformMap;
@@ -129,14 +129,14 @@ function processPickTexture(renderResources, primitive, instances) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
     featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
       instances.featureIds,
-      instanceFeatureIdLabel
+      instanceFeatureIdLabel,
     );
     featureTableId = featureIdAttribute.propertyTableId;
   } else {
     // Extract the Feature Table ID from the primitive Feature ID attributes.
     featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
       primitive.featureIds,
-      featureIdLabel
+      featureIdLabel,
     );
     featureTableId = featureIdAttribute.propertyTableId;
   }
@@ -147,7 +147,7 @@ function processPickTexture(renderResources, primitive, instances) {
   shaderBuilder.addUniform(
     "sampler2D",
     "model_pickTexture",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   const batchTexture = featureTable.batchTexture;

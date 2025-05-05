@@ -136,7 +136,7 @@ Quaternion.fromRotationMatrix = function (matrix, result) {
       matrix[Matrix3.getElementIndex(i, i)] -
         matrix[Matrix3.getElementIndex(j, j)] -
         matrix[Matrix3.getElementIndex(k, k)] +
-        1.0
+        1.0,
     );
 
     const quat = fromRotationMatrixQuat;
@@ -192,22 +192,22 @@ Quaternion.fromHeadingPitchRoll = function (headingPitchRoll, result) {
   scratchRollQuaternion = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_X,
     headingPitchRoll.roll,
-    scratchHPRQuaternion
+    scratchHPRQuaternion,
   );
   scratchPitchQuaternion = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_Y,
     -headingPitchRoll.pitch,
-    result
+    result,
   );
   result = Quaternion.multiply(
     scratchPitchQuaternion,
     scratchRollQuaternion,
-    scratchPitchQuaternion
+    scratchPitchQuaternion,
   );
   scratchHeadingQuaternion = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_Z,
     -headingPitchRoll.heading,
-    scratchHPRQuaternion
+    scratchHPRQuaternion,
   );
   return Quaternion.multiply(scratchHeadingQuaternion, result, result);
 };
@@ -292,16 +292,16 @@ Quaternion.convertPackedArrayForInterpolation = function (
   packedArray,
   startingIndex,
   lastIndex,
-  result
+  result,
 ) {
   Quaternion.unpack(
     packedArray,
     lastIndex * 4,
-    sampledQuaternionQuaternion0Conjugate
+    sampledQuaternionQuaternion0Conjugate,
   );
   Quaternion.conjugate(
     sampledQuaternionQuaternion0Conjugate,
-    sampledQuaternionQuaternion0Conjugate
+    sampledQuaternionQuaternion0Conjugate,
   );
 
   for (let i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
@@ -309,25 +309,25 @@ Quaternion.convertPackedArrayForInterpolation = function (
     Quaternion.unpack(
       packedArray,
       (startingIndex + i) * 4,
-      sampledQuaternionTempQuaternion
+      sampledQuaternionTempQuaternion,
     );
 
     Quaternion.multiply(
       sampledQuaternionTempQuaternion,
       sampledQuaternionQuaternion0Conjugate,
-      sampledQuaternionTempQuaternion
+      sampledQuaternionTempQuaternion,
     );
 
     if (sampledQuaternionTempQuaternion.w < 0) {
       Quaternion.negate(
         sampledQuaternionTempQuaternion,
-        sampledQuaternionTempQuaternion
+        sampledQuaternionTempQuaternion,
       );
     }
 
     Quaternion.computeAxis(
       sampledQuaternionTempQuaternion,
-      sampledQuaternionAxis
+      sampledQuaternionAxis,
     );
     const angle = Quaternion.computeAngle(sampledQuaternionTempQuaternion);
     if (!defined(result)) {
@@ -354,7 +354,7 @@ Quaternion.unpackInterpolationResult = function (
   sourceArray,
   firstIndex,
   lastIndex,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = new Quaternion();
@@ -370,14 +370,14 @@ Quaternion.unpackInterpolationResult = function (
     Quaternion.fromAxisAngle(
       sampledQuaternionRotation,
       magnitude,
-      sampledQuaternionTempQuaternion
+      sampledQuaternionTempQuaternion,
     );
   }
 
   return Quaternion.multiply(
     sampledQuaternionTempQuaternion,
     sampledQuaternionQuaternion0,
-    result
+    result,
   );
 };
 
@@ -398,7 +398,7 @@ Quaternion.clone = function (quaternion, result) {
       quaternion.x,
       quaternion.y,
       quaternion.z,
-      quaternion.w
+      quaternion.w,
     );
   }
 
@@ -776,12 +776,12 @@ Quaternion.slerp = function (start, end, t, result) {
   slerpScaledP = Quaternion.multiplyByScalar(
     start,
     Math.sin((1 - t) * theta),
-    slerpScaledP
+    slerpScaledP,
   );
   slerpScaledR = Quaternion.multiplyByScalar(
     r,
     Math.sin(t * theta),
-    slerpScaledR
+    slerpScaledR,
   );
   result = Quaternion.add(slerpScaledP, slerpScaledR, result);
   return Quaternion.multiplyByScalar(result, 1.0 / Math.sin(theta), result);
@@ -1006,7 +1006,7 @@ Quaternion.fastSlerp = function (start, end, t, result) {
   const temp = Quaternion.multiplyByScalar(
     start,
     cD,
-    fastSlerpScratchQuaternion
+    fastSlerpScratchQuaternion,
   );
   Quaternion.multiplyByScalar(end, cT, result);
   return Quaternion.add(temp, result, result);

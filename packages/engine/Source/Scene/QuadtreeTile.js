@@ -28,12 +28,12 @@ function QuadtreeTile(options) {
     throw new DeveloperError("options.y is required.");
   } else if (options.x < 0 || options.y < 0) {
     throw new DeveloperError(
-      "options.x and options.y must be greater than or equal to zero."
+      "options.x and options.y must be greater than or equal to zero.",
     );
   }
   if (!defined(options.level)) {
     throw new DeveloperError(
-      "options.level is required and must be greater than or equal to zero."
+      "options.level is required and must be greater than or equal to zero.",
     );
   }
   if (!defined(options.tilingScheme)) {
@@ -49,7 +49,7 @@ function QuadtreeTile(options) {
   this._rectangle = this._tilingScheme.tileXYToRectangle(
     this._x,
     this._y,
-    this._level
+    this._level,
   );
 
   this._southwestChild = undefined;
@@ -146,7 +146,7 @@ QuadtreeTile.createLevelZeroTiles = function (tilingScheme) {
 QuadtreeTile.prototype._updateCustomData = function (
   frameNumber,
   added,
-  removed
+  removed,
 ) {
   let customData = this.customData;
 

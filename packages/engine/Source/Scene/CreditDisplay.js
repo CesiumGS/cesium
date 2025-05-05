@@ -102,7 +102,7 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
             if (existingDelimiter.className !== delimiterClassName) {
               container.replaceChild(
                 createDelimiterElement(delimiter),
-                existingDelimiter
+                existingDelimiter,
               );
             }
           }
@@ -114,7 +114,7 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
       // check to see if the correct credit is in the right place
       if (childNodes.length <= domIndex) {
         container.appendChild(
-          createCreditElement(element, elementWrapperTagName)
+          createCreditElement(element, elementWrapperTagName),
         );
       } else {
         const existingElement = childNodes[domIndex];
@@ -122,7 +122,7 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
           // not the right credit, swap it in
           container.replaceChild(
             createCreditElement(element, elementWrapperTagName),
-            existingElement
+            existingElement,
           );
         }
       }
@@ -149,7 +149,7 @@ function styleLightboxContainer(that) {
       lightboxCredits.className =
         "cesium-credit-lightbox cesium-credit-lightbox-expanded";
       lightboxCredits.style.marginTop = `${Math.floor(
-        (height - lightboxCredits.clientHeight) * 0.5
+        (height - lightboxCredits.clientHeight) * 0.5,
       )}px`;
     }
     that._lastViewportWidth = width;
@@ -157,7 +157,7 @@ function styleLightboxContainer(that) {
 
   if (width >= mobileWidth && height !== that._lastViewportHeight) {
     lightboxCredits.style.marginTop = `${Math.floor(
-      (height - lightboxCredits.clientHeight) * 0.5
+      (height - lightboxCredits.clientHeight) * 0.5,
     )}px`;
     that._lastViewportHeight = height;
   }
@@ -275,7 +275,7 @@ function appendCss(container) {
 
   const shadowRootOrDocumentHead = defaultValue(
     getShadowRoot(container),
-    document.head
+    document.head,
   );
   const styleElem = document.createElement("style");
   styleElem.innerHTML = style;
@@ -562,7 +562,7 @@ CreditDisplay.prototype.endFrame = function () {
     this._screenContainer,
     screenCredits,
     this._delimiter,
-    undefined
+    undefined,
   );
 
   const lightboxCredits = this._currentFrameCredits.lightboxCredits.values;
@@ -625,7 +625,7 @@ function getDefaultCredit() {
 
     defaultCredit = new Credit(
       `<a href="https://cesium.com/" target="_blank"><img src="${logo}" style="vertical-align: -7px" title="Cesium ion"/></a>`,
-      true
+      true,
     );
   }
 

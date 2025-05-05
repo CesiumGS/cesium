@@ -285,7 +285,7 @@ describe(
         expect(spyListener).toHaveBeenCalledWith(
           viewer,
           "czml1.czml",
-          jasmine.any(SyntaxError)
+          jasmine.any(SyntaxError),
         );
 
         viewer.dropError.removeEventListener(spyListener);
@@ -320,7 +320,7 @@ describe(
         expect(spyListener).toHaveBeenCalledWith(
           viewer,
           mockEvent.dataTransfer.files[0].name,
-          mockEvent.dataTransfer.files[0].errorMessage
+          mockEvent.dataTransfer.files[0].errorMessage,
         );
 
         viewer.dropError.removeEventListener(spyListener);
@@ -471,5 +471,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

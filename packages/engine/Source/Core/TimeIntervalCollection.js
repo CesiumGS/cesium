@@ -197,7 +197,7 @@ TimeIntervalCollection.prototype.findIntervalContainingDate = function (date) {
  * @returns {object} The data for the interval containing the specified date, or <code>undefined</code> if no such interval exists.
  */
 TimeIntervalCollection.prototype.findDataForIntervalContainingDate = function (
-  date
+  date,
 ) {
   const index = this.indexOf(date);
   return index >= 0 ? this._intervals[index].data : undefined;
@@ -237,7 +237,7 @@ TimeIntervalCollection.prototype.indexOf = function (date) {
   let index = binarySearch(
     intervals,
     indexOfScratch,
-    compareIntervalStartTimes
+    compareIntervalStartTimes,
   );
   if (index >= 0) {
     if (intervals[index].isStartIncluded) {
@@ -309,7 +309,7 @@ TimeIntervalCollection.prototype.findInterval = function (options) {
  */
 TimeIntervalCollection.prototype.addInterval = function (
   interval,
-  dataComparer
+  dataComparer,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(interval)) {
@@ -409,7 +409,7 @@ TimeIntervalCollection.prototype.addInterval = function (
         // split the existing interval into two intervals.
         comparison = JulianDate.compare(
           intervals[index - 1].stop,
-          interval.stop
+          interval.stop,
         );
         if (
           comparison > 0 ||
@@ -426,7 +426,7 @@ TimeIntervalCollection.prototype.addInterval = function (
               isStartIncluded: !interval.isStopIncluded,
               isStopIncluded: intervals[index - 1].isStopIncluded,
               data: intervals[index - 1].data,
-            })
+            }),
           );
         }
         intervals[index - 1] = new TimeInterval({
@@ -463,7 +463,7 @@ TimeIntervalCollection.prototype.addInterval = function (
           isStartIncluded: interval.isStartIncluded,
           isStopIncluded: JulianDate.greaterThan(
             intervals[index].stop,
-            interval.stop
+            interval.stop,
           )
             ? intervals[index].isStopIncluded
             : interval.isStopIncluded,
@@ -553,7 +553,7 @@ TimeIntervalCollection.prototype.removeInterval = function (interval) {
           isStartIncluded: !interval.isStopIncluded,
           isStopIncluded: intervals[index - 1].isStopIncluded,
           data: intervals[index - 1].data,
-        })
+        }),
       );
     }
     intervals[index - 1] = new TimeInterval({
@@ -584,7 +584,7 @@ TimeIntervalCollection.prototype.removeInterval = function (interval) {
         isStartIncluded: true,
         isStopIncluded: true,
         data: intervals[index].data,
-      })
+      }),
     );
     ++index;
   }
@@ -671,7 +671,7 @@ TimeIntervalCollection.prototype.removeInterval = function (interval) {
 TimeIntervalCollection.prototype.intersect = function (
   other,
   dataComparer,
-  mergeCallback
+  mergeCallback,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(other)) {
@@ -704,7 +704,7 @@ TimeIntervalCollection.prototype.intersect = function (
           leftInterval,
           rightInterval,
           new TimeInterval(),
-          mergeCallback
+          mergeCallback,
         );
         if (!intersection.isEmpty) {
           // Since we start with an empty collection for 'result', and there are no overlapping intervals in 'this' (as a rule),
@@ -893,7 +893,8 @@ function addToDate(julianDate, duration, result) {
 }
 
 const scratchJulianDate = new JulianDate();
-const durationRegex = /P(?:([\d.,]+)Y)?(?:([\d.,]+)M)?(?:([\d.,]+)W)?(?:([\d.,]+)D)?(?:T(?:([\d.,]+)H)?(?:([\d.,]+)M)?(?:([\d.,]+)S)?)?/;
+const durationRegex =
+  /P(?:([\d.,]+)Y)?(?:([\d.,]+)M)?(?:([\d.,]+)W)?(?:([\d.,]+)D)?(?:T(?:([\d.,]+)H)?(?:([\d.,]+)M)?(?:([\d.,]+)S)?)?/;
 
 /**
  * Parses ISO8601 duration string
@@ -961,7 +962,7 @@ function parseDuration(iso8601, result) {
     }
     JulianDate.toGregorianDate(
       JulianDate.fromIso8601(iso8601, scratchJulianDate),
-      result
+      result,
     );
   }
 
@@ -1031,7 +1032,7 @@ TimeIntervalCollection.fromIso8601 = function (options, result) {
       trailingInterval: options.trailingInterval,
       dataCallback: options.dataCallback,
     },
-    result
+    result,
   );
 };
 
@@ -1069,7 +1070,7 @@ TimeIntervalCollection.fromIso8601DateArray = function (options, result) {
       trailingInterval: options.trailingInterval,
       dataCallback: options.dataCallback,
     },
-    result
+    result,
   );
 };
 
@@ -1130,7 +1131,7 @@ TimeIntervalCollection.fromIso8601DurationArray = function (options, result) {
       trailingInterval: options.trailingInterval,
       dataCallback: options.dataCallback,
     },
-    result
+    result,
   );
 };
 export default TimeIntervalCollection;

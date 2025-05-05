@@ -73,7 +73,8 @@ TerrainProviderBuilder.prototype.build = function (provider) {
   provider._hasAvailability = this.hasAvailability;
   provider._tilesAvailable = this.tilesAvailable;
   provider._tilesAvailabilityLoaded = this.tilesAvailabilityLoaded;
-  provider._levelZeroMaximumGeometricError = this.levelZeroMaximumGeometricError;
+  provider._levelZeroMaximumGeometricError =
+    this.levelZeroMaximumGeometricError;
   provider._terrainDataStructure = this.terrainDataStructure;
 };
 
@@ -94,10 +95,10 @@ function parseMetadataSuccess(terrainProviderBuilder, metadata) {
       extent.xmin,
       extent.ymin,
       extent.xmax,
-      extent.ymax
+      extent.ymax,
     );
     terrainProviderBuilder.tilingScheme = new GeographicTilingScheme(
-      tilingSchemeOptions
+      tilingSchemeOptions,
     );
   } else if (wkid === 3857) {
     // Clamp extent to EPSG 3857 bounds
@@ -118,14 +119,14 @@ function parseMetadataSuccess(terrainProviderBuilder, metadata) {
 
     tilingSchemeOptions.rectangleSouthwestInMeters = new Cartesian2(
       extent.xmin,
-      extent.ymin
+      extent.ymin,
     );
     tilingSchemeOptions.rectangleNortheastInMeters = new Cartesian2(
       extent.xmax,
-      extent.ymax
+      extent.ymax,
     );
     terrainProviderBuilder.tilingScheme = new WebMercatorTilingScheme(
-      tilingSchemeOptions
+      tilingSchemeOptions,
     );
   } else {
     throw new RuntimeError("Invalid spatial reference");
@@ -149,30 +150,31 @@ function parseMetadataSuccess(terrainProviderBuilder, metadata) {
   if (hasAvailability) {
     terrainProviderBuilder.tilesAvailable = new TileAvailability(
       terrainProviderBuilder.tilingScheme,
-      terrainProviderBuilder.lodCount
+      terrainProviderBuilder.lodCount,
     );
     terrainProviderBuilder.tilesAvailable.addAvailableTileRange(
       0,
       0,
       0,
       terrainProviderBuilder.tilingScheme.getNumberOfXTilesAtLevel(0),
-      terrainProviderBuilder.tilingScheme.getNumberOfYTilesAtLevel(0)
+      terrainProviderBuilder.tilingScheme.getNumberOfYTilesAtLevel(0),
     );
     terrainProviderBuilder.tilesAvailabilityLoaded = new TileAvailability(
       terrainProviderBuilder.tilingScheme,
-      terrainProviderBuilder.lodCount
+      terrainProviderBuilder.lodCount,
     );
   }
 
-  terrainProviderBuilder.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-    terrainProviderBuilder.tilingScheme.ellipsoid,
-    terrainProviderBuilder.width,
-    terrainProviderBuilder.tilingScheme.getNumberOfXTilesAtLevel(0)
-  );
+  terrainProviderBuilder.levelZeroMaximumGeometricError =
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      terrainProviderBuilder.tilingScheme.ellipsoid,
+      terrainProviderBuilder.width,
+      terrainProviderBuilder.tilingScheme.getNumberOfXTilesAtLevel(0),
+    );
 
   if (metadata.bandCount > 1) {
     console.log(
-      "ArcGISTiledElevationTerrainProvider: Terrain data has more than 1 band. Using the first one."
+      "ArcGISTiledElevationTerrainProvider: Terrain data has more than 1 band. Using the first one.",
     );
   }
 
@@ -192,7 +194,7 @@ function parseMetadataSuccess(terrainProviderBuilder, metadata) {
 async function requestMetadata(
   terrainProviderBuilder,
   metadataResource,
-  provider
+  provider,
 ) {
   try {
     const metadata = await metadataResource.fetchJson();
@@ -203,7 +205,7 @@ async function requestMetadata(
       undefined,
       provider,
       defined(provider) ? provider._errorEvent : undefined,
-      message
+      message,
     );
 
     throw error;
@@ -400,7 +402,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const tileResource = this._resource.getDerivedResource({
     url: `tile/${level}/${y}/${x}`,
@@ -419,7 +421,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
       this,
       level + 1,
       x * 2,
-      y * 2
+      y * 2,
     );
 
     availabilityPromise = availabilityResult.promise;
@@ -499,11 +501,10 @@ function isTileAvailable(that, level, x, y) {
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
-ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError = function (
-  level
-) {
-  return this._levelZeroMaximumGeometricError / (1 << level);
-};
+ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError =
+  function (level) {
+    return this._levelZeroMaximumGeometricError / (1 << level);
+  };
 
 /**
  * Determines whether data for a tile is available to be loaded.
@@ -516,7 +517,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError = fu
 ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
   x,
   y,
-  level
+  level,
 ) {
   if (!this._hasAvailability) {
     return undefined;
@@ -540,13 +541,10 @@ ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined} This provider does not support loading availability.
  */
-ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability = function (
-  x,
-  y,
-  level
-) {
-  return undefined;
-};
+ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability =
+  function (x, y, level) {
+    return undefined;
+  };
 
 function findRange(origin, width, height, data) {
   const endCol = width - 1;
@@ -710,7 +708,7 @@ function requestAvailability(that, level, x, y) {
       yOffset,
       dim,
       dim,
-      result.data
+      result.data,
     );
 
     // Mark whole area as having availability loaded
@@ -719,7 +717,7 @@ function requestAvailability(that, level, x, y) {
       xOffset,
       yOffset,
       xOffset + dim,
-      yOffset + dim
+      yOffset + dim,
     );
 
     const tilesAvailable = that._tilesAvailable;
@@ -730,7 +728,7 @@ function requestAvailability(that, level, x, y) {
         range.startX,
         range.startY,
         range.endX,
-        range.endY
+        range.endY,
       );
     }
 

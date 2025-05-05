@@ -35,12 +35,12 @@ function TextureUniform(options) {
   const hasUrl = defined(options.url);
   if (hasTypedArray === hasUrl) {
     throw new DeveloperError(
-      "exactly one of options.typedArray, options.url must be defined"
+      "exactly one of options.typedArray, options.url must be defined",
     );
   }
   if (hasTypedArray && (!defined(options.width) || !defined(options.height))) {
     throw new DeveloperError(
-      "options.width and options.height are required when options.typedArray is defined"
+      "options.width and options.height are required when options.typedArray is defined",
     );
   }
   //>>includeEnd('debug');
@@ -51,7 +51,7 @@ function TextureUniform(options) {
   this.pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
   this.pixelDatatype = defaultValue(
     options.pixelDatatype,
-    PixelDatatype.UNSIGNED_BYTE
+    PixelDatatype.UNSIGNED_BYTE,
   );
 
   let resource = options.url;

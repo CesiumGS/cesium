@@ -25,7 +25,7 @@ function addAttribute(attributes, attribute, index, context) {
   }
   if (hasVertexBuffer && hasValue) {
     throw new DeveloperError(
-      "attribute cannot have both a vertexBuffer and a value.  It must have either a vertexBuffer property defining per-vertex data or a value property defining data for all vertices."
+      "attribute cannot have both a vertexBuffer and a value.  It must have either a vertexBuffer property defining per-vertex data or a value property defining data for all vertices.",
     );
   }
   if (
@@ -36,12 +36,12 @@ function addAttribute(attributes, attribute, index, context) {
   ) {
     if (hasValue) {
       throw new DeveloperError(
-        "attribute.value.length must be in the range [1, 4]."
+        "attribute.value.length must be in the range [1, 4].",
       );
     }
 
     throw new DeveloperError(
-      "attribute.componentsPerAttribute must be in the range [1, 4]."
+      "attribute.componentsPerAttribute must be in the range [1, 4].",
     );
   }
   if (
@@ -49,13 +49,13 @@ function addAttribute(attributes, attribute, index, context) {
     !ComponentDatatype.validate(attribute.componentDatatype)
   ) {
     throw new DeveloperError(
-      "attribute must have a valid componentDatatype or not specify it."
+      "attribute must have a valid componentDatatype or not specify it.",
     );
   }
   if (defined(attribute.strideInBytes) && attribute.strideInBytes > 255) {
     // WebGL limit.  Not in GL ES.
     throw new DeveloperError(
-      "attribute must have a strideInBytes less than or equal to 255 or not specify it."
+      "attribute must have a strideInBytes less than or equal to 255 or not specify it.",
     );
   }
   if (
@@ -67,12 +67,12 @@ function addAttribute(attributes, attribute, index, context) {
   }
   if (defined(attribute.instanceDivisor) && attribute.instanceDivisor < 0) {
     throw new DeveloperError(
-      "attribute must have an instanceDivisor greater than or equal to zero"
+      "attribute must have an instanceDivisor greater than or equal to zero",
     );
   }
   if (defined(attribute.instanceDivisor) && hasValue) {
     throw new DeveloperError(
-      "attribute cannot have have an instanceDivisor if it is not backed by a buffer"
+      "attribute cannot have have an instanceDivisor if it is not backed by a buffer",
     );
   }
   if (
@@ -81,7 +81,7 @@ function addAttribute(attributes, attribute, index, context) {
     attribute.index === 0
   ) {
     throw new DeveloperError(
-      "attribute zero cannot have an instanceDivisor greater than 0"
+      "attribute zero cannot have an instanceDivisor greater than 0",
     );
   }
   //>>includeEnd('debug');
@@ -95,7 +95,7 @@ function addAttribute(attributes, attribute, index, context) {
     componentsPerAttribute: componentsPerAttribute,
     componentDatatype: defaultValue(
       attribute.componentDatatype,
-      ComponentDatatype.FLOAT
+      ComponentDatatype.FLOAT,
     ),
     normalize: defaultValue(attribute.normalize, false),
     offsetInBytes: defaultValue(attribute.offsetInBytes, 0),
@@ -114,7 +114,7 @@ function addAttribute(attributes, attribute, index, context) {
         this.componentDatatype,
         this.normalize,
         this.strideInBytes,
-        this.offsetInBytes
+        this.offsetInBytes,
       );
       gl.enableVertexAttribArray(index);
       if (this.instanceDivisor > 0) {
@@ -341,7 +341,7 @@ function VertexArray(options) {
     const index = vaAttributes[i].index;
     if (uniqueIndices[index]) {
       throw new DeveloperError(
-        `Index ${index} is used by more than one attribute.`
+        `Index ${index} is used by more than one attribute.`,
       );
     }
     uniqueIndices[index] = true;
@@ -399,7 +399,7 @@ function interleaveAttributes(attributes) {
         attributes[name].componentDatatype = ComponentDatatype.FLOAT;
         attributes[name].values = ComponentDatatype.createTypedArray(
           ComponentDatatype.FLOAT,
-          attributes[name].values
+          attributes[name].values,
         );
       }
     }
@@ -414,7 +414,7 @@ function interleaveAttributes(attributes) {
 
     for (j = 1; j < namesLength; ++j) {
       const currentNumberOfVertices = computeNumberOfVertices(
-        attributes[names[j]]
+        attributes[names[j]],
       );
 
       if (currentNumberOfVertices !== numberOfVertices) {
@@ -424,7 +424,7 @@ function interleaveAttributes(attributes) {
             "Attribute "
           }${names[j]} has a different number of vertices ` +
             `(${currentNumberOfVertices.toString()})` +
-            ` than attribute ${names[0]} (${numberOfVertices.toString()}).`
+            ` than attribute ${names[0]} (${numberOfVertices.toString()}).`,
         );
       }
     }
@@ -454,7 +454,7 @@ function interleaveAttributes(attributes) {
     // Pad each vertex to be a multiple of the largest component datatype so each
     // attribute can be addressed using typed arrays.
     const maxComponentSizeInBytes = ComponentDatatype.getSizeInBytes(
-      attributes[names[0]].componentDatatype
+      attributes[names[0]].componentDatatype,
     ); // Sorted large to small
     const remainder = vertexSizeInBytes % maxComponentSizeInBytes;
     if (remainder !== 0) {
@@ -471,13 +471,13 @@ function interleaveAttributes(attributes) {
     for (j = 0; j < namesLength; ++j) {
       name = names[j];
       const sizeInBytes = ComponentDatatype.getSizeInBytes(
-        attributes[name].componentDatatype
+        attributes[name].componentDatatype,
       );
 
       views[name] = {
         pointer: ComponentDatatype.createTypedArray(
           attributes[name].componentDatatype,
-          buffer
+          buffer,
         ),
         index: offsetsInBytes[name] / sizeInBytes, // Offset in ComponentType
         strideInComponentType: vertexSizeInBytes / sizeInBytes,
@@ -582,12 +582,12 @@ VertexArray.fromGeometry = function (options) {
 
   const bufferUsage = defaultValue(
     options.bufferUsage,
-    BufferUsage.DYNAMIC_DRAW
+    BufferUsage.DYNAMIC_DRAW,
   );
 
   const attributeLocations = defaultValue(
     options.attributeLocations,
-    defaultValue.EMPTY_OBJECT
+    defaultValue.EMPTY_OBJECT,
   );
   const interleave = defaultValue(options.interleave, false);
   const createdVAAttributes = options.vertexArrayAttributes;
@@ -654,7 +654,7 @@ VertexArray.fromGeometry = function (options) {
             context: context,
             typedArray: ComponentDatatype.createTypedArray(
               componentDatatype,
-              attribute.values
+              attribute.values,
             ),
             usage: bufferUsage,
           });

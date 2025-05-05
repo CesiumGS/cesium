@@ -5,7 +5,7 @@ function createPackableArraySpecs(
   unpackedArray,
   packedArray,
   stride,
-  namePrefix
+  namePrefix,
 ) {
   namePrefix = defaultValue(namePrefix, "");
 

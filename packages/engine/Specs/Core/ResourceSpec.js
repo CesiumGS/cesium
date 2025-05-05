@@ -50,22 +50,22 @@ describe("Core/Resource", function () {
     });
 
     expect(resource.getUrlComponent(false, false)).toEqual(
-      "http://test.com/tileset"
+      "http://test.com/tileset",
     );
     expect(resource.getUrlComponent(true, false)).toEqual(
-      "http://test.com/tileset?key1=value1&key2=value2"
+      "http://test.com/tileset?key1=value1&key2=value2",
     );
     expect(resource.getUrlComponent(false, true)).toEqual(
-      proxy.getURL("http://test.com/tileset")
+      proxy.getURL("http://test.com/tileset"),
     );
     expect(resource.getUrlComponent(true, true)).toEqual(
-      proxy.getURL("http://test.com/tileset?key1=value1&key2=value2")
+      proxy.getURL("http://test.com/tileset?key1=value1&key2=value2"),
     );
     expect(resource.url).toEqual(
-      proxy.getURL("http://test.com/tileset?key1=value1&key2=value2")
+      proxy.getURL("http://test.com/tileset?key1=value1&key2=value2"),
     );
     expect(String(resource)).toEqual(
-      proxy.getURL("http://test.com/tileset?key1=value1&key2=value2")
+      proxy.getURL("http://test.com/tileset?key1=value1&key2=value2"),
     );
     expect(resource.queryParameters).toEqual({
       key1: "value1",
@@ -131,7 +131,7 @@ describe("Core/Resource", function () {
     });
     expect(resource.getUrlComponent()).toEqual("http://test.com/tileset");
     expect(resource.getUrlComponent(true)).toEqual(
-      "http://test.com/tileset?foo=bar&baz=foo"
+      "http://test.com/tileset?foo=bar&baz=foo",
     );
     expect(resource.queryParameters).toEqual({
       foo: "bar",
@@ -145,10 +145,10 @@ describe("Core/Resource", function () {
       parseUrl: false,
     });
     expect(resource.getUrlComponent()).toEqual(
-      "http://test.com/tileset?foo=bar&baz=foo"
+      "http://test.com/tileset?foo=bar&baz=foo",
     );
     expect(resource.getUrlComponent(true)).toEqual(
-      "http://test.com/tileset?foo=bar&baz=foo"
+      "http://test.com/tileset?foo=bar&baz=foo",
     );
     expect(resource.queryParameters).toEqual({});
   });
@@ -171,25 +171,25 @@ describe("Core/Resource", function () {
 
   it("multiple values for query parameters are allowed", function () {
     const resource = new Resource(
-      "http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4"
+      "http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4",
     );
     expect(resource.queryParameters.a).toEqual(["1", "2", "4"]);
     expect(resource.queryParameters.b).toEqual("3");
 
     expect(resource.url).toEqual(
-      "http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3"
+      "http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3",
     );
   });
 
   it("multiple values for query parameters works with getDerivedResource without preserverQueryParameters", function () {
     const resource = new Resource(
-      "http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4"
+      "http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4",
     );
     expect(resource.queryParameters.a).toEqual(["1", "2", "4"]);
     expect(resource.queryParameters.b).toEqual("3");
 
     expect(resource.url).toEqual(
-      "http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3"
+      "http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3",
     );
 
     const derived = resource.getDerivedResource({
@@ -200,19 +200,19 @@ describe("Core/Resource", function () {
     expect(derived.queryParameters.b).toEqual("6");
 
     expect(derived.url).toEqual(
-      "http://test.com/tileset/other_endpoint?a=5&a=7&b=6"
+      "http://test.com/tileset/other_endpoint?a=5&a=7&b=6",
     );
   });
 
   it("multiple values for query parameters works with getDerivedResource with preserveQueryParameters", function () {
     const resource = new Resource(
-      "http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4"
+      "http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4",
     );
     expect(resource.queryParameters.a).toEqual(["1", "2", "4"]);
     expect(resource.queryParameters.b).toEqual("3");
 
     expect(resource.url).toEqual(
-      "http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3"
+      "http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3",
     );
 
     const derived = resource.getDerivedResource({
@@ -224,7 +224,7 @@ describe("Core/Resource", function () {
     expect(derived.queryParameters.b).toEqual(["6", "3"]);
 
     expect(derived.url).toEqual(
-      "http://test.com/tileset/other_endpoint?a=5&a=7&a=1&a=2&a=4&b=6&b=3"
+      "http://test.com/tileset/other_endpoint?a=5&a=7&a=1&a=2&a=4&b=6&b=3",
     );
   });
 
@@ -309,23 +309,23 @@ describe("Core/Resource", function () {
     });
 
     expect(resource.getUrlComponent(false, false)).toEqual(
-      "http://test.com/tileset/tileset.json"
+      "http://test.com/tileset/tileset.json",
     );
     expect(resource.getUrlComponent(true, false)).toEqual(
-      "http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar"
+      "http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar",
     );
     expect(resource.getUrlComponent(false, true)).toEqual(
-      proxy.getURL("http://test.com/tileset/tileset.json")
+      proxy.getURL("http://test.com/tileset/tileset.json"),
     );
     expect(resource.getUrlComponent(true, true)).toEqual(
       proxy.getURL(
-        "http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar"
-      )
+        "http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar",
+      ),
     );
     expect(resource.url).toEqual(
       proxy.getURL(
-        "http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar"
-      )
+        "http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar",
+      ),
     );
     expect(resource.queryParameters).toEqual({
       foo: "bar",
@@ -433,7 +433,7 @@ describe("Core/Resource", function () {
         y: 4,
         z: 0,
       },
-      true
+      true,
     );
 
     expect(resource.queryParameters).toEqual({
@@ -463,7 +463,7 @@ describe("Core/Resource", function () {
         y: 4,
         z: 0,
       },
-      false
+      false,
     );
 
     expect(resource.queryParameters).toEqual({
@@ -552,7 +552,7 @@ describe("Core/Resource", function () {
         z: 0,
         style: "my style",
       },
-      true
+      true,
     );
 
     expect(resource.templateValues).toEqual({
@@ -587,7 +587,7 @@ describe("Core/Resource", function () {
         z: 0,
         style: "my style",
       },
-      false
+      false,
     );
 
     expect(resource.templateValues).toEqual({
@@ -698,24 +698,26 @@ describe("Core/Resource", function () {
       headers: expectedHeaders,
     });
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(responseType).toEqual(expectedResponseType);
-      expect(method).toEqual("POST");
-      expect(data).toEqual(expectedData);
-      expect(headers["X-My-Header"]).toEqual("My-Value");
-      expect(headers["X-My-Other-Header"]).toEqual("My-Other-Value");
-      expect(overrideMimeType).toBe(expectedMimeType);
-      deferred.resolve(expectedResult);
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(responseType).toEqual(expectedResponseType);
+        expect(method).toEqual("POST");
+        expect(data).toEqual(expectedData);
+        expect(headers["X-My-Header"]).toEqual("My-Value");
+        expect(headers["X-My-Other-Header"]).toEqual("My-Other-Value");
+        expect(overrideMimeType).toBe(expectedMimeType);
+        deferred.resolve(expectedResult);
+      },
+    );
 
     return resource
       .post(expectedData, {
@@ -744,23 +746,25 @@ describe("Core/Resource", function () {
     };
     const expectedMimeType = "application/test-data";
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(responseType).toEqual(expectedResponseType);
-      expect(method).toEqual("POST");
-      expect(data).toEqual(expectedData);
-      expect(headers).toEqual(expectedHeaders);
-      expect(overrideMimeType).toBe(expectedMimeType);
-      deferred.resolve(expectedResult);
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(responseType).toEqual(expectedResponseType);
+        expect(method).toEqual("POST");
+        expect(data).toEqual(expectedData);
+        expect(headers).toEqual(expectedHeaders);
+        expect(overrideMimeType).toBe(expectedMimeType);
+        deferred.resolve(expectedResult);
+      },
+    );
 
     return Resource.post({
       url: expectedUrl,
@@ -791,24 +795,26 @@ describe("Core/Resource", function () {
       headers: expectedHeaders,
     });
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(responseType).toEqual(expectedResponseType);
-      expect(method).toEqual("PUT");
-      expect(data).toEqual(expectedData);
-      expect(headers["X-My-Header"]).toEqual("My-Value");
-      expect(headers["X-My-Other-Header"]).toEqual("My-Other-Value");
-      expect(overrideMimeType).toBe(expectedMimeType);
-      deferred.resolve(expectedResult);
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(responseType).toEqual(expectedResponseType);
+        expect(method).toEqual("PUT");
+        expect(data).toEqual(expectedData);
+        expect(headers["X-My-Header"]).toEqual("My-Value");
+        expect(headers["X-My-Other-Header"]).toEqual("My-Other-Value");
+        expect(overrideMimeType).toBe(expectedMimeType);
+        deferred.resolve(expectedResult);
+      },
+    );
 
     return resource
       .put(expectedData, {
@@ -837,23 +843,25 @@ describe("Core/Resource", function () {
     };
     const expectedMimeType = "application/test-data";
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(responseType).toEqual(expectedResponseType);
-      expect(method).toEqual("PUT");
-      expect(data).toEqual(expectedData);
-      expect(headers).toEqual(expectedHeaders);
-      expect(overrideMimeType).toBe(expectedMimeType);
-      deferred.resolve(expectedResult);
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(responseType).toEqual(expectedResponseType);
+        expect(method).toEqual("PUT");
+        expect(data).toEqual(expectedData);
+        expect(headers).toEqual(expectedHeaders);
+        expect(overrideMimeType).toBe(expectedMimeType);
+        deferred.resolve(expectedResult);
+      },
+    );
 
     return Resource.put({
       url: expectedUrl,
@@ -884,24 +892,26 @@ describe("Core/Resource", function () {
       headers: expectedHeaders,
     });
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(responseType).toEqual(expectedResponseType);
-      expect(method).toEqual("PATCH");
-      expect(data).toEqual(expectedData);
-      expect(headers["X-My-Header"]).toEqual("My-Value");
-      expect(headers["X-My-Other-Header"]).toEqual("My-Other-Value");
-      expect(overrideMimeType).toBe(expectedMimeType);
-      deferred.resolve(expectedResult);
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(responseType).toEqual(expectedResponseType);
+        expect(method).toEqual("PATCH");
+        expect(data).toEqual(expectedData);
+        expect(headers["X-My-Header"]).toEqual("My-Value");
+        expect(headers["X-My-Other-Header"]).toEqual("My-Other-Value");
+        expect(overrideMimeType).toBe(expectedMimeType);
+        deferred.resolve(expectedResult);
+      },
+    );
 
     return resource
       .patch(expectedData, {
@@ -930,23 +940,25 @@ describe("Core/Resource", function () {
     };
     const expectedMimeType = "application/test-data";
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(responseType).toEqual(expectedResponseType);
-      expect(method).toEqual("PATCH");
-      expect(data).toEqual(expectedData);
-      expect(headers).toEqual(expectedHeaders);
-      expect(overrideMimeType).toBe(expectedMimeType);
-      deferred.resolve(expectedResult);
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(responseType).toEqual(expectedResponseType);
+        expect(method).toEqual("PATCH");
+        expect(data).toEqual(expectedData);
+        expect(headers).toEqual(expectedHeaders);
+        expect(overrideMimeType).toBe(expectedMimeType);
+        deferred.resolve(expectedResult);
+      },
+    );
 
     return Resource.patch({
       url: expectedUrl,
@@ -963,7 +975,7 @@ describe("Core/Resource", function () {
     const url = "http://test.com/data";
     const expectedResult = Promise.resolve();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      expectedResult
+      expectedResult,
     );
     const result = Resource.fetchArrayBuffer(url);
     expect(result).toBe(expectedResult);
@@ -1059,7 +1071,7 @@ describe("Core/Resource", function () {
   it("fetchJson calls fetch with expected parameters and parses result", function () {
     const expectedResult = { x: 123 };
     spyOn(Resource.prototype, "fetch").and.returnValue(
-      Promise.resolve(JSON.stringify(expectedResult))
+      Promise.resolve(JSON.stringify(expectedResult)),
     );
     return Resource.fetchJson("url").then(function (result) {
       expect(result).toEqual(expectedResult);
@@ -1116,19 +1128,21 @@ describe("Core/Resource", function () {
       status: "success",
     };
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(method).toEqual("GET");
-      deferred.resolve(expectedResult);
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(method).toEqual("GET");
+        deferred.resolve(expectedResult);
+      },
+    );
 
     const resource = new Resource({ url: expectedUrl });
     return resource.fetch().then(function (result) {
@@ -1150,19 +1164,21 @@ describe("Core/Resource", function () {
       status: "success",
     };
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(method).toEqual("DELETE");
-      deferred.resolve(expectedResult);
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(method).toEqual("DELETE");
+        deferred.resolve(expectedResult);
+      },
+    );
 
     const resource = new Resource({ url: expectedUrl });
     return resource.delete().then(function (result) {
@@ -1212,27 +1228,29 @@ describe("Core/Resource", function () {
     };
     spyOn(window, "XMLHttpRequest").and.returnValue(fakeXHR);
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(method).toEqual("HEAD");
-      Resource._DefaultImplementations.loadWithXhr(
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
         url,
         responseType,
         method,
         data,
         headers,
         deferred,
-        overrideMimeType
-      );
-    });
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(method).toEqual("HEAD");
+        Resource._DefaultImplementations.loadWithXhr(
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        );
+      },
+    );
 
     const resource = new Resource({ url: expectedUrl });
     return resource.head().then(function (result) {
@@ -1242,15 +1260,15 @@ describe("Core/Resource", function () {
       expect(result.etag).toEqual(expectedResult.etag);
       expect(result["content-type"]).toEqual(expectedResult["content-type"]);
       expect(result["access-control-allow-origin"]).toEqual(
-        expectedResult["access-control-allow-origin"]
+        expectedResult["access-control-allow-origin"],
       );
       expect(result["cache-control"]).toEqual(expectedResult["cache-control"]);
       expect(result["accept-ranges"]).toEqual(expectedResult["accept-ranges"]);
       expect(result["access-control-allow-headers"]).toEqual(
-        expectedResult["access-control-allow-headers"]
+        expectedResult["access-control-allow-headers"],
       );
       expect(result["content-length"]).toEqual(
-        expectedResult["content-length"]
+        expectedResult["content-length"],
       );
     });
   });
@@ -1296,27 +1314,29 @@ describe("Core/Resource", function () {
     };
     spyOn(window, "XMLHttpRequest").and.returnValue(fakeXHR);
 
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toEqual(expectedUrl);
-      expect(method).toEqual("OPTIONS");
-      Resource._DefaultImplementations.loadWithXhr(
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
         url,
         responseType,
         method,
         data,
         headers,
         deferred,
-        overrideMimeType
-      );
-    });
+        overrideMimeType,
+      ) {
+        expect(url).toEqual(expectedUrl);
+        expect(method).toEqual("OPTIONS");
+        Resource._DefaultImplementations.loadWithXhr(
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        );
+      },
+    );
 
     const resource = new Resource({ url: expectedUrl });
     return resource.options().then(function (result) {
@@ -1325,45 +1345,45 @@ describe("Core/Resource", function () {
       expect(result.etag).toEqual(expectedResult.etag);
       expect(result["content-type"]).toEqual(expectedResult["content-type"]);
       expect(result["access-control-allow-origin"]).toEqual(
-        expectedResult["access-control-allow-origin"]
+        expectedResult["access-control-allow-origin"],
       );
       expect(result["access-control-allow-methods"]).toEqual(
-        expectedResult["access-control-allow-methods"]
+        expectedResult["access-control-allow-methods"],
       );
       expect(result["access-control-allow-headers"]).toEqual(
-        expectedResult["access-control-allow-headers"]
+        expectedResult["access-control-allow-headers"],
       );
       expect(result["content-length"]).toEqual(
-        expectedResult["content-length"]
+        expectedResult["content-length"],
       );
     });
   });
 
   it("can load an SVG", function () {
-    return Resource.fetchImage("./Data/Images/Red16x16.svg").then(function (
-      loadedImage
-    ) {
-      expect(loadedImage.width).toEqual(16);
-      expect(loadedImage.height).toEqual(16);
-    });
+    return Resource.fetchImage("./Data/Images/Red16x16.svg").then(
+      function (loadedImage) {
+        expect(loadedImage.width).toEqual(16);
+        expect(loadedImage.height).toEqual(16);
+      },
+    );
   });
 
   it("can load a dimensionless SVG", function () {
-    return Resource.fetchImage("./Data/Images/Blue.svg").then(function (
-      loadedImage
-    ) {
-      expect(loadedImage.width).toBeGreaterThan(0);
-      expect(loadedImage.height).toBeGreaterThan(0);
-    });
+    return Resource.fetchImage("./Data/Images/Blue.svg").then(
+      function (loadedImage) {
+        expect(loadedImage.width).toBeGreaterThan(0);
+        expect(loadedImage.height).toBeGreaterThan(0);
+      },
+    );
   });
 
   it("can load an image preferring blob", function () {
-    return Resource.fetchImage("./Data/Images/Green.png", true).then(function (
-      loadedImage
-    ) {
-      expect(loadedImage.width).toEqual(1);
-      expect(loadedImage.height).toEqual(1);
-    });
+    return Resource.fetchImage("./Data/Images/Green.png", true).then(
+      function (loadedImage) {
+        expect(loadedImage.width).toEqual(1);
+        expect(loadedImage.height).toEqual(1);
+      },
+    );
   });
 
   it("can load an image from a data URI", function () {
@@ -1514,7 +1534,7 @@ describe("Core/Resource", function () {
       }
 
       spyOn(Resource, "supportsImageBitmapOptions").and.returnValue(
-        Promise.resolve(false)
+        Promise.resolve(false),
       );
       spyOn(window, "createImageBitmap").and.callThrough();
 
@@ -1550,7 +1570,7 @@ describe("Core/Resource", function () {
 
       // Force the fetching of a bad blob that is not an image to trigger the error
       spyOn(Resource.prototype, "fetch").and.returnValue(
-        Promise.resolve(new Blob([new Uint8Array([])], { type: "text/plain" }))
+        Promise.resolve(new Blob([new Uint8Array([])], { type: "text/plain" })),
       );
 
       return Resource.fetchImage({
@@ -1573,17 +1593,17 @@ describe("Core/Resource", function () {
       // specific functionality of this code path. For example, the crossOrigin
       // restriction does not apply to images loaded with ImageBitmap.
       spyOn(Resource, "supportsImageBitmapOptions").and.returnValue(
-        Promise.resolve(false)
+        Promise.resolve(false),
       );
     });
 
     it("can load an image", function () {
-      return Resource.fetchImage("./Data/Images/Green.png").then(function (
-        loadedImage
-      ) {
-        expect(loadedImage.width).toEqual(1);
-        expect(loadedImage.height).toEqual(1);
-      });
+      return Resource.fetchImage("./Data/Images/Green.png").then(
+        function (loadedImage) {
+          expect(loadedImage.width).toEqual(1);
+          expect(loadedImage.height).toEqual(1);
+        },
+      );
     });
 
     it("sets the crossOrigin property for cross-origin images", function () {
@@ -1593,7 +1613,7 @@ describe("Core/Resource", function () {
         function () {
           deferred.resolve();
           return fakeImage;
-        }
+        },
       );
 
       // mock image loading so that the promise resolves
@@ -1605,7 +1625,7 @@ describe("Core/Resource", function () {
         function () {
           expect(imageConstructorSpy).toHaveBeenCalled();
           expect(fakeImage.crossOrigin).toEqual("");
-        }
+        },
       );
     });
 
@@ -1616,7 +1636,7 @@ describe("Core/Resource", function () {
         function () {
           deferred.resolve();
           return fakeImage;
-        }
+        },
       );
 
       // mock image loading so that the promise resolves
@@ -1637,7 +1657,7 @@ describe("Core/Resource", function () {
         function () {
           deferred.resolve();
           return fakeImage;
-        }
+        },
       );
 
       // mock image loading so that the promise resolves
@@ -1727,23 +1747,25 @@ describe("Core/Resource", function () {
       const expectedHeaders = {
         "X-my-header": "my-value",
       };
-      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        expect(url).toEqual(expectedUrl);
-        expect(headers).toEqual(expectedHeaders);
-        expect(responseType).toEqual("blob");
+      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        function (
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        ) {
+          expect(url).toEqual(expectedUrl);
+          expect(headers).toEqual(expectedHeaders);
+          expect(responseType).toEqual("blob");
 
-        const binary = dataUriToBuffer(dataUri);
+          const binary = dataUriToBuffer(dataUri);
 
-        deferred.resolve(new Blob([binary], { type: "image/png" }));
-      });
+          deferred.resolve(new Blob([binary], { type: "image/png" }));
+        },
+      );
 
       const testResource = new Resource({
         url: expectedUrl,
@@ -1758,17 +1780,19 @@ describe("Core/Resource", function () {
     });
 
     it("Doesn't call loadWithXhr with blob response type if headers is set but is a data URI", function () {
-      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        deferred.reject("this shouldn't happen");
-      });
+      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        function (
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        ) {
+          deferred.reject("this shouldn't happen");
+        },
+      );
 
       spyOn(Resource._Implementations, "createImage")
         .and.callFake(function (url, crossOrigin, deferred) {
@@ -2143,7 +2167,7 @@ describe("Core/Resource", function () {
             responseType: "json",
           }).then(function (result) {
             expect(result).toEqual(
-              jasmine.objectContaining({ hello: "world" })
+              jasmine.objectContaining({ hello: "world" }),
             );
           });
         });
@@ -2187,7 +2211,7 @@ describe("Core/Resource", function () {
         };
 
         requestConstructorSpy = spyOn(window, "XMLHttpRequest").and.returnValue(
-          fakeXHR
+          fakeXHR,
         );
       });
 
@@ -2489,7 +2513,7 @@ describe("Core/Resource", function () {
               expect(receivedResource.url).toEqual(resource.url);
               expect(receivedResource._retryCount).toEqual(1);
               expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
-                true
+                true,
               );
             });
         });
@@ -2519,7 +2543,7 @@ describe("Core/Resource", function () {
               expect(receivedResource.url).toEqual(resource.url);
               expect(receivedResource._retryCount).toEqual(1);
               expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
-                true
+                true,
               );
             });
         });
@@ -2553,7 +2577,7 @@ describe("Core/Resource", function () {
             expect(receivedResource.url).toEqual(resource.url);
             expect(receivedResource._retryCount).toEqual(1);
             expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
-              true
+              true,
             );
           });
         });
@@ -2570,7 +2594,7 @@ describe("Core/Resource", function () {
           expect(name).toContain("loadJsonp");
           expect(deferred).toBeDefined();
           deferred.resolve();
-        }
+        },
       );
       return Resource.fetchJsonp(testUrl);
     });
@@ -2591,7 +2615,7 @@ describe("Core/Resource", function () {
         function (url, functionName, deferred) {
           expect(url).toContain("callback=loadJsonp");
           deferred.resolve();
-        }
+        },
       );
       return Resource.fetchJsonp(testUrl, options);
     });
@@ -2604,7 +2628,7 @@ describe("Core/Resource", function () {
         spyOn(Resource._Implementations, "loadAndExecuteScript").and.callFake(
           function (url, functionName, deferred) {
             lastDeferred = deferred;
-          }
+          },
         );
 
         const resource = new Resource({
@@ -2646,7 +2670,7 @@ describe("Core/Resource", function () {
         spyOn(Resource._Implementations, "loadAndExecuteScript").and.callFake(
           function (url, functionName, deferred) {
             lastDeferred = deferred;
-          }
+          },
         );
 
         const resource = new Resource({
@@ -2683,7 +2707,7 @@ describe("Core/Resource", function () {
           function (url, functionName, deferred) {
             lastUrl = url;
             lastDeferred = deferred;
-          }
+          },
         );
 
         const resource = new Resource({

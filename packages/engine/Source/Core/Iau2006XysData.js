@@ -29,17 +29,17 @@ function Iau2006XysData(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   this._xysFileUrlTemplate = Resource.createIfNeeded(
-    options.xysFileUrlTemplate
+    options.xysFileUrlTemplate,
   );
   this._interpolationOrder = defaultValue(options.interpolationOrder, 9);
   this._sampleZeroJulianEphemerisDate = defaultValue(
     options.sampleZeroJulianEphemerisDate,
-    2442396.5
+    2442396.5,
   );
   this._sampleZeroDateTT = new JulianDate(
     this._sampleZeroJulianEphemerisDate,
     0.0,
-    TimeStandard.TAI
+    TimeStandard.TAI,
   );
   this._stepSizeDays = defaultValue(options.stepSizeDays, 1.0);
   this._samplesPerXysFile = defaultValue(options.samplesPerXysFile, 1000);
@@ -100,12 +100,12 @@ Iau2006XysData.prototype.preload = function (
   startDayTT,
   startSecondTT,
   stopDayTT,
-  stopSecondTT
+  stopSecondTT,
 ) {
   const startDaysSinceEpoch = getDaysSinceEpoch(
     this,
     startDayTT,
-    startSecondTT
+    startSecondTT,
   );
   const stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
 
@@ -152,7 +152,7 @@ Iau2006XysData.prototype.preload = function (
 Iau2006XysData.prototype.computeXysRadians = function (
   dayTT,
   secondTT,
-  result
+  result,
 ) {
   const daysSinceEpoch = getDaysSinceEpoch(this, dayTT, secondTT);
   if (daysSinceEpoch < 0.0) {

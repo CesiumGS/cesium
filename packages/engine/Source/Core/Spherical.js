@@ -107,8 +107,8 @@ Spherical.normalize = function (spherical, result) {
 /**
  * Returns true if the first spherical is equal to the second spherical, false otherwise.
  *
- * @param {Spherical} left The first Spherical to be compared.
- * @param {Spherical} right The second Spherical to be compared.
+ * @param {Spherical} [left] The first Spherical to be compared.
+ * @param {Spherical} [right] The second Spherical to be compared.
  * @returns {boolean} true if the first spherical is equal to the second spherical, false otherwise.
  */
 Spherical.equals = function (left, right) {
@@ -145,7 +145,7 @@ Spherical.equalsEpsilon = function (left, right, epsilon) {
 /**
  * Returns true if this spherical is equal to the provided spherical, false otherwise.
  *
- * @param {Spherical} other The Spherical to be compared.
+ * @param {Spherical} [other] The Spherical to be compared.
  * @returns {boolean} true if this spherical is equal to the provided spherical, false otherwise.
  */
 Spherical.prototype.equals = function (other) {

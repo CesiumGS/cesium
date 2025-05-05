@@ -20,7 +20,7 @@ describe("Core/Ray", function () {
     const direction = Cartesian3.multiplyByScalar(
       Cartesian3.UNIT_X,
       18,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(origin, direction);
     expect(ray.origin).toEqual(origin);
@@ -30,7 +30,7 @@ describe("Core/Ray", function () {
   it("clone without a result parameter", function () {
     const direction = Cartesian3.normalize(
       new Cartesian3(1, 2, 3),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(Cartesian3.UNIT_X, direction);
     const returnedResult = Ray.clone(ray);
@@ -43,7 +43,7 @@ describe("Core/Ray", function () {
   it("clone with a result parameter", function () {
     const direction = Cartesian3.normalize(
       new Cartesian3(1, 2, 3),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(Cartesian3.UNIT_X, direction);
     const result = new Ray();
@@ -58,7 +58,7 @@ describe("Core/Ray", function () {
   it("clone works with a result parameter that is an input parameter", function () {
     const direction = Cartesian3.normalize(
       new Cartesian3(1, 2, 3),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(Cartesian3.UNIT_X, direction);
     const returnedResult = Ray.clone(ray, ray);
@@ -72,14 +72,14 @@ describe("Core/Ray", function () {
   it("getPoint along ray works without a result parameter", function () {
     const direction = Cartesian3.normalize(
       new Cartesian3(1, 2, 3),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(Cartesian3.UNIT_X, direction);
     for (let i = -10; i < 11; i++) {
       const expectedResult = Cartesian3.add(
         Cartesian3.multiplyByScalar(direction, i, new Cartesian3()),
         Cartesian3.UNIT_X,
-        new Cartesian3()
+        new Cartesian3(),
       );
       const returnedResult = Ray.getPoint(ray, i);
       expect(returnedResult).toEqual(expectedResult);
@@ -89,7 +89,7 @@ describe("Core/Ray", function () {
   it("getPoint works with a result parameter", function () {
     const direction = Cartesian3.normalize(
       new Cartesian3(1, 2, 3),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(Cartesian3.UNIT_X, direction);
     const result = new Cartesian3();
@@ -97,7 +97,7 @@ describe("Core/Ray", function () {
       const expectedResult = Cartesian3.add(
         Cartesian3.multiplyByScalar(direction, i, new Cartesian3()),
         Cartesian3.UNIT_X,
-        new Cartesian3()
+        new Cartesian3(),
       );
       const returnedResult = Ray.getPoint(ray, i, result);
       expect(result).toBe(returnedResult);
@@ -108,7 +108,7 @@ describe("Core/Ray", function () {
   it("getPoint throws without a point", function () {
     const direction = Cartesian3.normalize(
       new Cartesian3(1, 2, 3),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const ray = new Ray(Cartesian3.UNIT_X, direction);
     expect(function () {

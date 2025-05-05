@@ -46,7 +46,7 @@ function createUniform(gl, activeUniform, uniformName, location) {
       return new UniformMat4(gl, activeUniform, uniformName, location);
     default:
       throw new RuntimeError(
-        `Unrecognized uniform type: ${activeUniform.type} for uniform "${uniformName}".`
+        `Unrecognized uniform type: ${activeUniform.type} for uniform "${uniformName}".`,
       );
   }
 }

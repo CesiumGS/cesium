@@ -67,12 +67,12 @@ describe("Scene/DeviceOrientationCameraController", function () {
     expect(camera.position).toEqual(position);
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.UNIT_Y,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON14);
     expect(camera.right).toEqualEpsilon(
       Cartesian3.UNIT_X,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -89,7 +89,7 @@ describe("Scene/DeviceOrientationCameraController", function () {
     expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14);
     expect(camera.right).toEqualEpsilon(
       Cartesian3.UNIT_Z,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -104,7 +104,7 @@ describe("Scene/DeviceOrientationCameraController", function () {
     expect(camera.position).toEqual(position);
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON14);
     expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON14);

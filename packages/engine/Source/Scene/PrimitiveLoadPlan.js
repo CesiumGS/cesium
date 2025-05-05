@@ -196,7 +196,7 @@ function generateOutlines(loadPlan) {
   // The outline generator creates a new attribute for the outline coordinates
   // that are used with a lookup texture.
   const outlineCoordinates = makeOutlineCoordinatesAttribute(
-    generator.outlineCoordinates
+    generator.outlineCoordinates,
   );
   const outlineCoordinatesPlan = new AttributeLoadPlan(outlineCoordinates);
   outlineCoordinatesPlan.loadBuffer = true;

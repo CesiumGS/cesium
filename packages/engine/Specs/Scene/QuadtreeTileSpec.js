@@ -29,7 +29,7 @@ describe("Scene/QuadtreeTile", function () {
           -CesiumMath.PI_OVER_FOUR,
           0.0,
           CesiumMath.PI_OVER_FOUR,
-          CesiumMath.PI_OVER_FOUR
+          CesiumMath.PI_OVER_FOUR,
         ),
         x: 0,
         y: 0,
@@ -58,7 +58,7 @@ describe("Scene/QuadtreeTile", function () {
     const rectangle = desc.tilingScheme.tileXYToRectangle(
       desc.x,
       desc.y,
-      desc.level
+      desc.level,
     );
     expect(tile.rectangle).toEqual(rectangle);
   });
@@ -365,16 +365,16 @@ describe("Scene/QuadtreeTile", function () {
       const southeast = tiles[3];
 
       expect(northeast.rectangle.west).toBeGreaterThan(
-        northwest.rectangle.west
+        northwest.rectangle.west,
       );
       expect(southeast.rectangle.west).toBeGreaterThan(
-        southwest.rectangle.west
+        southwest.rectangle.west,
       );
       expect(northeast.rectangle.south).toBeGreaterThan(
-        southeast.rectangle.south
+        southeast.rectangle.south,
       );
       expect(northwest.rectangle.south).toBeGreaterThan(
-        southwest.rectangle.south
+        southwest.rectangle.south,
       );
     });
   });

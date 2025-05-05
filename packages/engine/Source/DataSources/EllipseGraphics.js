@@ -249,7 +249,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -321,15 +321,15 @@ EllipseGraphics.prototype.merge = function (source) {
   this.height = defaultValue(this.height, source.height);
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.extrudedHeight = defaultValue(
     this.extrudedHeight,
-    source.extrudedHeight
+    source.extrudedHeight,
   );
   this.extrudedHeightReference = defaultValue(
     this.extrudedHeightReference,
-    source.extrudedHeightReference
+    source.extrudedHeightReference,
   );
   this.rotation = defaultValue(this.rotation, source.rotation);
   this.stRotation = defaultValue(this.stRotation, source.stRotation);
@@ -341,16 +341,16 @@ EllipseGraphics.prototype.merge = function (source) {
   this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
   this.numberOfVerticalLines = defaultValue(
     this.numberOfVerticalLines,
-    source.numberOfVerticalLines
+    source.numberOfVerticalLines,
   );
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
   this.classificationType = defaultValue(
     this.classificationType,
-    source.classificationType
+    source.classificationType,
   );
   this.zIndex = defaultValue(this.zIndex, source.zIndex);
 };

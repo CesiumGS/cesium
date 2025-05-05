@@ -19,6 +19,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
  * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @property {Property | SplitDirection} [splitDirection] A Property specifying the {@link SplitDirection} split to apply to this point.
  */
 
 /**
@@ -51,6 +52,8 @@ function PointGraphics(options) {
   this._distanceDisplayConditionSubscription = undefined;
   this._disableDepthTestDistance = undefined;
   this._disableDepthTestDistanceSubscription = undefined;
+  this._splitDirection = undefined;
+  this._splitDirectionSubscription = undefined;
 
   this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
 }
@@ -142,7 +145,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -152,8 +155,16 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
+
+  /**
+   * Gets or sets the Property specifying the {@link SplitDirection} of this point.
+   * @memberof PointGraphics.prototype
+   * @type {Property|undefined}
+   * @default SplitDirection.NONE
+   */
+  splitDirection: createPropertyDescriptor("splitDirection"),
 });
 
 /**
@@ -176,6 +187,7 @@ PointGraphics.prototype.clone = function (result) {
   result.translucencyByDistance = this._translucencyByDistance;
   result.distanceDisplayCondition = this.distanceDisplayCondition;
   result.disableDepthTestDistance = this.disableDepthTestDistance;
+  result.splitDirection = this.splitDirection;
   return result;
 };
 
@@ -196,26 +208,31 @@ PointGraphics.prototype.merge = function (source) {
   this.pixelSize = defaultValue(this.pixelSize, source.pixelSize);
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.color = defaultValue(this.color, source.color);
   this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
   this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
   this.scaleByDistance = defaultValue(
     this.scaleByDistance,
-    source.scaleByDistance
+    source.scaleByDistance,
   );
   this.translucencyByDistance = defaultValue(
     this._translucencyByDistance,
-    source.translucencyByDistance
+    source.translucencyByDistance,
   );
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
   this.disableDepthTestDistance = defaultValue(
     this.disableDepthTestDistance,
-    source.disableDepthTestDistance
+    source.disableDepthTestDistance,
+  );
+
+  this.splitDirection = defaultValue(
+    this.splitDirection,
+    source.splitDirection,
   );
 };
 export default PointGraphics;

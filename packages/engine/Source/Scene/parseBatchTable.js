@@ -47,14 +47,14 @@ function parseBatchTable(options) {
   const binaryBody = options.binaryBody;
   const parseAsPropertyAttributes = defaultValue(
     options.parseAsPropertyAttributes,
-    false
+    false,
   );
   const customAttributeOutput = options.customAttributeOutput;
 
   //>>includeStart('debug', pragmas.debug);
   if (parseAsPropertyAttributes && !defined(customAttributeOutput)) {
     throw new DeveloperError(
-      "customAttributeOutput is required when parsing batch table as property attributes"
+      "customAttributeOutput is required when parsing batch table as property attributes",
     );
   }
   //>>includeEnd('debug');
@@ -90,7 +90,7 @@ function parseBatchTable(options) {
       className,
       binaryProperties,
       binaryBody,
-      customAttributeOutput
+      customAttributeOutput,
     );
     transcodedSchema = attributeResults.transcodedSchema;
     const propertyAttribute = new PropertyAttribute({
@@ -104,7 +104,7 @@ function parseBatchTable(options) {
       featureCount,
       className,
       binaryProperties,
-      binaryBody
+      binaryBody,
     );
     transcodedSchema = binaryResults.transcodedSchema;
     const featureTableJson = binaryResults.featureTableJson;
@@ -163,7 +163,7 @@ function partitionProperties(batchTable) {
   if (defined(legacyHierarchy)) {
     parseBatchTable._deprecationWarning(
       "batchTableHierarchyExtension",
-      "The batch table HIERARCHY property has been moved to an extension. Use extensions.3DTILES_batch_table_hierarchy instead."
+      "The batch table HIERARCHY property has been moved to an extension. Use extensions.3DTILES_batch_table_hierarchy instead.",
     );
     hierarchyExtension = legacyHierarchy;
   } else if (defined(extensions)) {
@@ -220,7 +220,7 @@ function transcodeBinaryProperties(
   featureCount,
   className,
   binaryProperties,
-  binaryBody
+  binaryBody,
 ) {
   const classProperties = {};
   const featureTableProperties = {};
@@ -233,7 +233,7 @@ function transcodeBinaryProperties(
 
     if (!defined(binaryBody)) {
       throw new RuntimeError(
-        `Property ${propertyId} requires a batch table binary.`
+        `Property ${propertyId} requires a batch table binary.`,
       );
     }
 
@@ -246,13 +246,12 @@ function transcodeBinaryProperties(
 
     classProperties[propertyId] = transcodePropertyType(property);
 
-    bufferViewsTypedArrays[
-      bufferViewCount
-    ] = binaryAccessor.createArrayBufferView(
-      binaryBody.buffer,
-      binaryBody.byteOffset + property.byteOffset,
-      featureCount
-    );
+    bufferViewsTypedArrays[bufferViewCount] =
+      binaryAccessor.createArrayBufferView(
+        binaryBody.buffer,
+        binaryBody.byteOffset + property.byteOffset,
+        featureCount,
+      );
 
     bufferViewCount++;
   }
@@ -285,7 +284,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
   className,
   binaryProperties,
   binaryBody,
-  customAttributeOutput
+  customAttributeOutput,
 ) {
   const classProperties = {};
   const propertyAttributeProperties = {};
@@ -302,7 +301,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     const property = binaryProperties[propertyId];
     if (!defined(binaryBody) && !defined(property.typedArray)) {
       throw new RuntimeError(
-        `Property ${propertyId} requires a batch table binary.`
+        `Property ${propertyId} requires a batch table binary.`,
       );
     }
 
@@ -346,7 +345,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
       attributeTypedArray = binaryAccessor.createArrayBufferView(
         binaryBody.buffer,
         binaryBody.byteOffset + property.byteOffset,
-        featureCount
+        featureCount,
       );
     }
 
@@ -354,9 +353,8 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     attribute.name = customAttributeName;
     attribute.count = featureCount;
     attribute.type = property.type;
-    const componentDatatype = ComponentDatatype.fromTypedArray(
-      attributeTypedArray
-    );
+    const componentDatatype =
+      ComponentDatatype.fromTypedArray(attributeTypedArray);
     if (
       componentDatatype === ComponentDatatype.INT ||
       componentDatatype === ComponentDatatype.UNSIGNED_INT ||
@@ -364,13 +362,12 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     ) {
       parseBatchTable._oneTimeWarning(
         "Cast pnts property to floats",
-        `Point cloud property "${customAttributeName}" will be cast to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`
+        `Point cloud property "${customAttributeName}" will be cast to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`,
       );
       attributeTypedArray = new Float32Array(attributeTypedArray);
     }
-    attribute.componentDatatype = ComponentDatatype.fromTypedArray(
-      attributeTypedArray
-    );
+    attribute.componentDatatype =
+      ComponentDatatype.fromTypedArray(attributeTypedArray);
     attribute.typedArray = attributeTypedArray;
     customAttributeOutput.push(attribute);
 

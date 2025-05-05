@@ -213,7 +213,7 @@ describe("Scene/Model/ModelUtility", function () {
     const minMax = ModelUtility.getPositionMinMax(
       mockPrimitive,
       new Cartesian3(-5, -5, -5),
-      new Cartesian3(5, 5, 5)
+      new Cartesian3(5, 5, 5),
     );
 
     const expectedMin = new Cartesian3(-5.5, -5.5, -5.5);
@@ -228,14 +228,14 @@ describe("Scene/Model/ModelUtility", function () {
     const expectedCombinedMatrix = Matrix4.multiplyTransformation(
       expectedYToZMatrix,
       Axis.Z_UP_TO_X_UP,
-      new Matrix4()
+      new Matrix4(),
     );
 
     // If already in ECEF, this should return identity
     let resultMatrix = ModelUtility.getAxisCorrectionMatrix(
       Axis.Z,
       Axis.X,
-      new Matrix4()
+      new Matrix4(),
     );
     expect(Matrix4.equals(resultMatrix, Matrix4.IDENTITY)).toBe(true);
 
@@ -243,7 +243,7 @@ describe("Scene/Model/ModelUtility", function () {
     resultMatrix = ModelUtility.getAxisCorrectionMatrix(
       Axis.Y,
       Axis.Z,
-      new Matrix4()
+      new Matrix4(),
     );
     expect(Matrix4.equals(resultMatrix, expectedCombinedMatrix)).toBe(true);
 
@@ -251,14 +251,14 @@ describe("Scene/Model/ModelUtility", function () {
     resultMatrix = ModelUtility.getAxisCorrectionMatrix(
       Axis.Y,
       Axis.X,
-      new Matrix4()
+      new Matrix4(),
     );
     expect(Matrix4.equals(resultMatrix, expectedYToZMatrix)).toBe(true);
 
     resultMatrix = ModelUtility.getAxisCorrectionMatrix(
       Axis.X,
       Axis.Y,
-      new Matrix4()
+      new Matrix4(),
     );
     expect(Matrix4.equals(resultMatrix, expectedXToZMatrix)).toBe(true);
   });
@@ -276,29 +276,29 @@ describe("Scene/Model/ModelUtility", function () {
     expect(
       ModelUtility.getAttributeBySemantic(
         nodeIntanceAttributes,
-        InstanceAttributeSemantic.TRANSLATION
-      )
+        InstanceAttributeSemantic.TRANSLATION,
+      ),
     ).toBeDefined();
     expect(
       ModelUtility.getAttributeBySemantic(
         nodeIntanceAttributes,
-        InstanceAttributeSemantic.ROTATION
-      )
+        InstanceAttributeSemantic.ROTATION,
+      ),
     ).toBeDefined();
     expect(
       ModelUtility.getAttributeBySemantic(
         nodeIntanceAttributes,
-        InstanceAttributeSemantic.SCALE
-      )
+        InstanceAttributeSemantic.SCALE,
+      ),
     ).toBeDefined();
     expect(
       ModelUtility.getAttributeBySemantic(
         nodeIntanceAttributes,
-        InstanceAttributeSemantic.FEATURE_ID
-      )
+        InstanceAttributeSemantic.FEATURE_ID,
+      ),
     ).toBeDefined();
     expect(
-      ModelUtility.getAttributeBySemantic(nodeIntanceAttributes, "UNKNOWN")
+      ModelUtility.getAttributeBySemantic(nodeIntanceAttributes, "UNKNOWN"),
     ).toBeUndefined();
 
     const primitiveAttributes = {
@@ -314,37 +314,37 @@ describe("Scene/Model/ModelUtility", function () {
     expect(
       ModelUtility.getAttributeBySemantic(
         primitiveAttributes,
-        VertexAttributeSemantic.POSITION
-      )
+        VertexAttributeSemantic.POSITION,
+      ),
     ).toBeDefined();
     expect(
       ModelUtility.getAttributeBySemantic(
         primitiveAttributes,
-        VertexAttributeSemantic.NORMAL
-      )
+        VertexAttributeSemantic.NORMAL,
+      ),
     ).toBeDefined();
     expect(
       ModelUtility.getAttributeBySemantic(
         primitiveAttributes,
-        VertexAttributeSemantic.TANGENT
-      )
-    ).toBeDefined();
-    expect(
-      ModelUtility.getAttributeBySemantic(
-        primitiveAttributes,
-        VertexAttributeSemantic.TEXCOORD,
-        0
-      )
+        VertexAttributeSemantic.TANGENT,
+      ),
     ).toBeDefined();
     expect(
       ModelUtility.getAttributeBySemantic(
         primitiveAttributes,
         VertexAttributeSemantic.TEXCOORD,
-        1
-      )
+        0,
+      ),
     ).toBeDefined();
     expect(
-      ModelUtility.getAttributeBySemantic(primitiveAttributes, "UNKNOWN")
+      ModelUtility.getAttributeBySemantic(
+        primitiveAttributes,
+        VertexAttributeSemantic.TEXCOORD,
+        1,
+      ),
+    ).toBeDefined();
+    expect(
+      ModelUtility.getAttributeBySemantic(primitiveAttributes, "UNKNOWN"),
     ).toBeUndefined();
   });
 
@@ -352,10 +352,10 @@ describe("Scene/Model/ModelUtility", function () {
     const featureIds = [{ label: "perVertex" }, { label: "perFace" }];
 
     expect(ModelUtility.getFeatureIdsByLabel(featureIds, "perVertex")).toBe(
-      featureIds[0]
+      featureIds[0],
     );
     expect(ModelUtility.getFeatureIdsByLabel(featureIds, "perFace")).toBe(
-      featureIds[1]
+      featureIds[1],
     );
   });
 
@@ -366,10 +366,10 @@ describe("Scene/Model/ModelUtility", function () {
     ];
 
     expect(ModelUtility.getFeatureIdsByLabel(featureIds, "featureId_0")).toBe(
-      featureIds[0]
+      featureIds[0],
     );
     expect(ModelUtility.getFeatureIdsByLabel(featureIds, "featureId_1")).toBe(
-      featureIds[1]
+      featureIds[1],
     );
   });
 
@@ -377,7 +377,7 @@ describe("Scene/Model/ModelUtility", function () {
     const featureIds = [{ label: "perVertex" }, { label: "perFace" }];
 
     expect(
-      ModelUtility.getFeatureIdsByLabel(featureIds, "other")
+      ModelUtility.getFeatureIdsByLabel(featureIds, "other"),
     ).not.toBeDefined();
   });
 

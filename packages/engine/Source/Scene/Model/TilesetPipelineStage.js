@@ -43,7 +43,7 @@ TilesetPipelineStage.process = function (renderResources, model, frameState) {
     shaderBuilder.addDefine(
       "POLYGON_OFFSET",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     // This value will be overriden by the depth-only back face derived command.
@@ -58,7 +58,7 @@ TilesetPipelineStage.process = function (renderResources, model, frameState) {
 
     renderResources.uniformMap = combine(
       uniformMap,
-      renderResources.uniformMap
+      renderResources.uniformMap,
     );
     renderResources.hasSkipLevelOfDetail = true;
   }

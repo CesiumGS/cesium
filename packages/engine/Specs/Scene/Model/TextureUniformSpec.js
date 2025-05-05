@@ -108,7 +108,7 @@ describe("Scene/Model/TextureUniform", function () {
         minificationFilter: TextureMinificationFilter.NEAREST,
         magnificationFilter: TextureMagnificationFilter.NEAREST,
         maximumAnisotropy: 2,
-      })
+      }),
     );
   });
 

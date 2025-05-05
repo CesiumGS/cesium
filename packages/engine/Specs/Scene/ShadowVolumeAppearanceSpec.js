@@ -31,24 +31,26 @@ describe("Scene/ShadowVolumeAppearance", function () {
   const largeTestRectangle = Rectangle.fromDegrees(-45.0, -45.0, 45.0, 45.0);
   const smallTestRectangle = Rectangle.fromDegrees(-0.1, -0.1, 0.1, 0.1);
 
-  const largeRectangleAttributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(
-    largeTestRectangle,
-    [0, 0, 0, 1, 1, 0],
-    unitSphereEllipsoid,
-    projection
-  );
-  const smallRectangleAttributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(
-    smallTestRectangle,
-    [0, 0, 0, 1, 1, 0],
-    unitSphereEllipsoid,
-    projection
-  );
+  const largeRectangleAttributes =
+    ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(
+      largeTestRectangle,
+      [0, 0, 0, 1, 1, 0],
+      unitSphereEllipsoid,
+      projection,
+    );
+  const smallRectangleAttributes =
+    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(
+      smallTestRectangle,
+      [0, 0, 0, 1, 1, 0],
+      unitSphereEllipsoid,
+      projection,
+    );
 
   const perInstanceColorMaterialAppearance = new PerInstanceColorAppearance();
   const flatPerInstanceColorMaterialAppearance = new PerInstanceColorAppearance(
     {
       flat: true,
-    }
+    },
   );
 
   const textureMaterialAppearance = new MaterialAppearance({
@@ -81,13 +83,13 @@ describe("Scene/ShadowVolumeAppearance", function () {
   const eastMostCartesian = projection.project(eastMostCartographic);
   let encoded = EncodedCartesian3.encode(
     eastMostCartesian.x,
-    longitudeExtentsEncodeScratch
+    longitudeExtentsEncodeScratch,
   );
   const eastMostYhighDefine = `EAST_MOST_X_HIGH ${encoded.high.toFixed(
-    `${encoded.high}`.length + 1
+    `${encoded.high}`.length + 1,
   )}`;
   const eastMostYlowDefine = `EAST_MOST_X_LOW ${encoded.low.toFixed(
-    `${encoded.low}`.length + 1
+    `${encoded.low}`.length + 1,
   )}`;
 
   const westMostCartographic = new Cartographic();
@@ -97,13 +99,13 @@ describe("Scene/ShadowVolumeAppearance", function () {
   const westMostCartesian = projection.project(westMostCartographic);
   encoded = EncodedCartesian3.encode(
     westMostCartesian.x,
-    longitudeExtentsEncodeScratch
+    longitudeExtentsEncodeScratch,
   );
   const westMostYhighDefine = `WEST_MOST_X_HIGH ${encoded.high.toFixed(
-    `${encoded.high}`.length + 1
+    `${encoded.high}`.length + 1,
   )}`;
   const westMostYlowDefine = `WEST_MOST_X_LOW ${encoded.low.toFixed(
-    `${encoded.low}`.length + 1
+    `${encoded.low}`.length + 1,
   )}`;
 
   it("provides attributes for computing texture coordinates from Spherical extents", function () {
@@ -116,24 +118,24 @@ describe("Scene/ShadowVolumeAppearance", function () {
     let value = sphericalExtents.value;
     expect(value[0]).toEqualEpsilon(
       -CesiumMath.PI_OVER_FOUR,
-      CesiumMath.EPSILON4
+      CesiumMath.EPSILON4,
     );
     expect(value[1]).toEqualEpsilon(
       -CesiumMath.PI_OVER_FOUR,
-      CesiumMath.EPSILON4
+      CesiumMath.EPSILON4,
     );
     expect(value[2]).toEqualEpsilon(
       1.0 / CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON4
+      CesiumMath.EPSILON4,
     );
     expect(value[3]).toEqualEpsilon(
       1.0 / CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON4
+      CesiumMath.EPSILON4,
     );
 
     const longitudeRotation = attributes.longitudeRotation;
     expect(longitudeRotation.componentDatatype).toEqual(
-      ComponentDatatype.FLOAT
+      ComponentDatatype.FLOAT,
     );
     expect(longitudeRotation.componentsPerAttribute).toEqual(1);
     expect(longitudeRotation.normalize).toEqual(false);
@@ -167,46 +169,46 @@ describe("Scene/ShadowVolumeAppearance", function () {
     expect(southWest_HIGH.value[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
 
     expect(southWest_LOW.value[0]).toBeGreaterThan(
-      Math.cos(CesiumMath.toRadians(0.2))
+      Math.cos(CesiumMath.toRadians(0.2)),
     );
 
     // Expect eastward and northward to be unit-direction vectors in the ENU coordinate system at the rectangle center
     const smallRectangleCenter = Cartographic.toCartesian(
       Rectangle.center(smallTestRectangle),
-      unitSphereEllipsoid
+      unitSphereEllipsoid,
     );
     const enuMatrix = Transforms.eastNorthUpToFixedFrame(
       smallRectangleCenter,
-      unitSphereEllipsoid
+      unitSphereEllipsoid,
     );
     const inverseEnu = Matrix4.inverse(enuMatrix, new Matrix4());
 
     let eastwardENU = Matrix4.multiplyByPointAsVector(
       inverseEnu,
       Cartesian3.fromArray(eastward.value),
-      new Cartesian3()
+      new Cartesian3(),
     );
     eastwardENU = Cartesian3.normalize(eastwardENU, eastwardENU);
     expect(
       Cartesian3.equalsEpsilon(
         eastwardENU,
         Cartesian3.UNIT_X,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     let northwardENU = Matrix4.multiplyByPointAsVector(
       inverseEnu,
       Cartesian3.fromArray(northward.value),
-      new Cartesian3()
+      new Cartesian3(),
     );
     northwardENU = Cartesian3.normalize(northwardENU, northwardENU);
     expect(
       Cartesian3.equalsEpsilon(
         northwardENU,
         Cartesian3.UNIT_Y,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
   });
 
@@ -234,19 +236,19 @@ describe("Scene/ShadowVolumeAppearance", function () {
     let lowValue = planes2D_LOW.value;
     expect(lowValue[0]).toEqualEpsilon(
       southwestCartesian.x,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(lowValue[1]).toEqualEpsilon(
       southwestCartesian.y,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(lowValue[2]).toEqualEpsilon(
       -southwestCartesian.y,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(lowValue[3]).toEqualEpsilon(
       -southwestCartesian.x,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     // Small case
@@ -262,31 +264,32 @@ describe("Scene/ShadowVolumeAppearance", function () {
     lowValue = smallRectangleAttributes.planes2D_LOW.value;
     expect(lowValue[0]).toEqualEpsilon(
       southwestCartesian.x,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(lowValue[1]).toEqualEpsilon(
       southwestCartesian.y,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(lowValue[2]).toEqualEpsilon(
       -southwestCartesian.y,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(lowValue[3]).toEqualEpsilon(
       -southwestCartesian.x,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
   it("provides attributes for rotating texture coordinates", function () {
     // 90 degree rotation of a square, so "max" in Y direction is (0,0), "max" in X direction is (1,1)
-    const attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(
-      smallTestRectangle,
-      [1, 0, 0, 0, 1, 1],
-      unitSphereEllipsoid,
-      projection,
-      0.0
-    );
+    const attributes =
+      ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(
+        smallTestRectangle,
+        [1, 0, 0, 0, 1, 1],
+        unitSphereEllipsoid,
+        projection,
+        0.0,
+      );
 
     const uMaxVmax = attributes.uMaxVmax;
     const uvMinAndExtents = attributes.uvMinAndExtents;
@@ -315,35 +318,35 @@ describe("Scene/ShadowVolumeAppearance", function () {
   it("checks for spherical extent attributes", function () {
     expect(
       ShadowVolumeAppearance.hasAttributesForSphericalExtents(
-        smallRectangleAttributes
-      )
+        smallRectangleAttributes,
+      ),
     ).toBe(false);
     expect(
       ShadowVolumeAppearance.hasAttributesForSphericalExtents(
-        largeRectangleAttributes
-      )
+        largeRectangleAttributes,
+      ),
     ).toBe(true);
   });
 
   it("checks for planar texture coordinate attributes", function () {
     expect(
       ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(
-        smallRectangleAttributes
-      )
+        smallRectangleAttributes,
+      ),
     ).toBe(true);
     expect(
       ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(
-        largeRectangleAttributes
-      )
+        largeRectangleAttributes,
+      ),
     ).toBe(false);
   });
 
   it("checks if a rectangle should use spherical texture coordinates", function () {
     expect(
-      ShadowVolumeAppearance.shouldUseSphericalCoordinates(smallTestRectangle)
+      ShadowVolumeAppearance.shouldUseSphericalCoordinates(smallTestRectangle),
     ).toBe(false);
     expect(
-      ShadowVolumeAppearance.shouldUseSphericalCoordinates(largeTestRectangle)
+      ShadowVolumeAppearance.shouldUseSphericalCoordinates(largeTestRectangle),
     ).toBe(true);
   });
 
@@ -352,13 +355,13 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const sphericalTexturedAppearance = new ShadowVolumeAppearance(
       true,
       false,
-      textureMaterialAppearance
+      textureMaterialAppearance,
     );
     let shaderSource = sphericalTexturedAppearance.createVertexShader(
       [],
       testVs,
       false,
-      projection
+      projection,
     );
     let defines = shaderSource.defines;
     expect(defines.length).toEqual(2);
@@ -370,7 +373,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       [],
       testVs,
       true,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
     expect(defines.length).toEqual(6);
@@ -386,13 +389,13 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const sphericalUnculledColorAppearance = new ShadowVolumeAppearance(
       false,
       false,
-      perInstanceColorMaterialAppearance
+      perInstanceColorMaterialAppearance,
     );
     shaderSource = sphericalUnculledColorAppearance.createVertexShader(
       [],
       testVs,
       false,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
     expect(defines.length).toEqual(1);
@@ -403,7 +406,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       [],
       testVs,
       true,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
     expect(defines.length).toEqual(5);
@@ -419,13 +422,13 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const planarTexturedAppearance = new ShadowVolumeAppearance(
       false,
       true,
-      textureMaterialAppearance
+      textureMaterialAppearance,
     );
     shaderSource = planarTexturedAppearance.createVertexShader(
       [],
       testVs,
       false,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
     expect(defines.indexOf("TEXTURE_COORDINATES")).not.toEqual(-1);
@@ -435,7 +438,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       [],
       testVs,
       true,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
     expect(defines.indexOf("TEXTURE_COORDINATES")).not.toEqual(-1);
@@ -454,13 +457,13 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const sphericalTexturedAppearance = new ShadowVolumeAppearance(
       true,
       false,
-      textureMaterialAppearance
+      textureMaterialAppearance,
     );
     let shaderSource = sphericalTexturedAppearance.createPickVertexShader(
       [],
       testVs,
       false,
-      projection
+      projection,
     );
     let defines = shaderSource.defines;
     expect(defines.length).toEqual(2);
@@ -472,7 +475,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       [],
       testVs,
       true,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
     expect(defines.length).toEqual(6);
@@ -488,13 +491,13 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const sphericalUnculledColorAppearance = new ShadowVolumeAppearance(
       false,
       false,
-      perInstanceColorMaterialAppearance
+      perInstanceColorMaterialAppearance,
     );
     shaderSource = sphericalUnculledColorAppearance.createPickVertexShader(
       [],
       testVs,
       false,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
     expect(defines.length).toEqual(0);
@@ -504,7 +507,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       [],
       testVs,
       true,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
 
@@ -519,13 +522,13 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const planarTexturedAppearance = new ShadowVolumeAppearance(
       false,
       true,
-      textureMaterialAppearance
+      textureMaterialAppearance,
     );
     shaderSource = planarTexturedAppearance.createPickVertexShader(
       [],
       testVs,
       false,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
     expect(defines.length).toEqual(0);
@@ -534,7 +537,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       [],
       testVs,
       true,
-      projection
+      projection,
     );
     defines = shaderSource.defines;
 
@@ -551,7 +554,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const sphericalTexturedAppearance = new ShadowVolumeAppearance(
       true,
       false,
-      textureMaterialAppearance
+      textureMaterialAppearance,
     );
     let shaderSource = sphericalTexturedAppearance.createFragmentShader(false);
     let defines = shaderSource.defines;
@@ -588,7 +591,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const planarColorAppearance = new ShadowVolumeAppearance(
       true,
       true,
-      perInstanceColorMaterialAppearance
+      perInstanceColorMaterialAppearance,
     );
     shaderSource = planarColorAppearance.createFragmentShader(false);
     defines = shaderSource.defines;
@@ -616,7 +619,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const flatSphericalTexturedAppearance = new ShadowVolumeAppearance(
       true,
       false,
-      flatTextureMaterialAppearance
+      flatTextureMaterialAppearance,
     );
     shaderSource = flatSphericalTexturedAppearance.createFragmentShader(false);
     defines = shaderSource.defines;
@@ -635,7 +638,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
     const flatSphericalColorAppearance = new ShadowVolumeAppearance(
       false,
       false,
-      flatPerInstanceColorMaterialAppearance
+      flatPerInstanceColorMaterialAppearance,
     );
     shaderSource = flatSphericalColorAppearance.createFragmentShader(false);
     defines = shaderSource.defines;

@@ -26,7 +26,7 @@ function computeAttributes(
   combinedPositions,
   shape,
   boundingRectangle,
-  vertexFormat
+  vertexFormat,
 ) {
   const attributes = new GeometryAttributes();
   if (vertexFormat.position) {
@@ -150,7 +150,7 @@ function computeAttributes(
     } catch (e) {
       oneTimeWarning(
         "polyline-volume-tangent-bitangent",
-        "Unable to compute tangents and bitangents for polyline volume geometry"
+        "Unable to compute tangents and bitangents for polyline volume geometry",
       );
       //TODO https://github.com/CesiumGS/cesium/issues/3609
     }
@@ -223,15 +223,15 @@ function PolylineVolumeGeometry(options) {
   this._positions = positions;
   this._shape = shape;
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default)
+    defaultValue(options.ellipsoid, Ellipsoid.default),
   );
   this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
   this._vertexFormat = VertexFormat.clone(
-    defaultValue(options.vertexFormat, VertexFormat.DEFAULT)
+    defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
   );
   this._granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   this._workerName = "createPolylineVolumeGeometry";
 
@@ -347,7 +347,7 @@ PolylineVolumeGeometry.unpack = function (array, startingIndex, result) {
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
 
@@ -384,7 +384,7 @@ PolylineVolumeGeometry.createGeometry = function (polylineVolumeGeometry) {
   const positions = polylineVolumeGeometry._positions;
   const cleanPositions = arrayRemoveDuplicates(
     positions,
-    Cartesian3.equalsEpsilon
+    Cartesian3.equalsEpsilon,
   );
   let shape2D = polylineVolumeGeometry._shape;
   shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
@@ -405,13 +405,13 @@ PolylineVolumeGeometry.createGeometry = function (polylineVolumeGeometry) {
     shape2D,
     boundingRectangle,
     polylineVolumeGeometry,
-    true
+    true,
   );
   return computeAttributes(
     computedPositions,
     shape2D,
     boundingRectangle,
-    polylineVolumeGeometry._vertexFormat
+    polylineVolumeGeometry._vertexFormat,
   );
 };
 export default PolylineVolumeGeometry;

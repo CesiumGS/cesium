@@ -10,7 +10,7 @@ import createFakeBingMapsMetadataResponse from "../createFakeBingMapsMetadataRes
 describe("Core/createWorldImageryAsync", function () {
   it("resolves to IonImageryProvider instance with default parameters", async function () {
     spyOn(Resource.prototype, "fetchJsonp").and.callFake(() =>
-      Promise.resolve(createFakeBingMapsMetadataResponse(BingMapsStyle.AERIAL))
+      Promise.resolve(createFakeBingMapsMetadataResponse(BingMapsStyle.AERIAL)),
     );
 
     const provider = await createWorldImageryAsync();

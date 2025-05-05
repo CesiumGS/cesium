@@ -205,7 +205,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
 TileCoordinatesImageryProvider.prototype.getTileCredits = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
@@ -223,7 +223,7 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
@@ -262,7 +262,7 @@ TileCoordinatesImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };

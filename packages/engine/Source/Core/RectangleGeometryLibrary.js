@@ -27,7 +27,7 @@ RectangleGeometryLibrary.computePosition = function (
   row,
   col,
   position,
-  st
+  st,
 ) {
   const radiiSquared = ellipsoid.radiiSquared;
   const nwCorner = computedOptions.nwCorner;
@@ -91,7 +91,7 @@ function getRotationOptions(
   granularityY,
   center,
   width,
-  height
+  height,
 ) {
   const cosRotation = Math.cos(rotation);
   const granYCos = granularityY * cosRotation;
@@ -109,7 +109,7 @@ function getRotationOptions(
   nwCartesian = Matrix2.multiplyByVector(
     rotationMatrix,
     nwCartesian,
-    nwCartesian
+    nwCartesian,
   );
   nwCartesian = Cartesian3.add(nwCartesian, centerCartesian, nwCartesian);
   nwCorner = proj.unproject(nwCartesian, nwCorner);
@@ -156,7 +156,7 @@ RectangleGeometryLibrary.computeOptions = function (
   stRotation,
   boundingRectangleScratch,
   nwCornerResult,
-  stNwCornerResult
+  stNwCornerResult,
 ) {
   let east = rectangle.east;
   let west = rectangle.west;
@@ -203,7 +203,7 @@ RectangleGeometryLibrary.computeOptions = function (
 
   const boundingRectangle = Rectangle.clone(
     rectangle,
-    boundingRectangleScratch
+    boundingRectangleScratch,
   );
 
   const computedOptions = {
@@ -227,7 +227,7 @@ RectangleGeometryLibrary.computeOptions = function (
       granularityY,
       center,
       width,
-      height
+      height,
     );
     north = rotationOptions.north;
     south = rotationOptions.south;
@@ -242,7 +242,7 @@ RectangleGeometryLibrary.computeOptions = function (
       south > CesiumMath.PI_OVER_TWO
     ) {
       throw new DeveloperError(
-        "Rotated rectangle is invalid.  It crosses over either the north or south pole."
+        "Rotated rectangle is invalid.  It crosses over either the north or south pole.",
       );
     }
     //>>includeEnd('debug')
@@ -269,7 +269,7 @@ RectangleGeometryLibrary.computeOptions = function (
       granularityY,
       center,
       width,
-      height
+      height,
     );
 
     computedOptions.stGranYCos = stRotationOptions.granYCos;

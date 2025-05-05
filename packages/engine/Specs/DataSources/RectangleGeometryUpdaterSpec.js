@@ -44,7 +44,7 @@ describe(
       const entity = new Entity();
       entity.rectangle = rectangle;
       entity.rectangle.coordinates = new ConstantProperty(
-        new Rectangle(-1, -1, 1, 1)
+        new Rectangle(-1, -1, 1, 1),
       );
       entity.rectangle.height = new ConstantProperty(0);
       return entity;
@@ -61,7 +61,7 @@ describe(
       const entity = new Entity();
       entity.rectangle = rectangle;
       entity.rectangle.coordinates = new ConstantProperty(
-        new Rectangle(0, 0, 1, 1)
+        new Rectangle(0, 0, 1, 1),
       );
       return entity;
     }
@@ -187,7 +187,7 @@ describe(
       const updater = new RectangleGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
 
@@ -196,7 +196,7 @@ describe(
       expect(options.rectangle).toEqual(rectangle.coordinates.getValue());
       expect(options.height).toEqual(rectangle.height.getValue());
       expect(options.extrudedHeight).toEqual(
-        rectangle.extrudedHeight.getValue()
+        rectangle.extrudedHeight.getValue(),
       );
       expect(options.granularity).toEqual(rectangle.granularity.getValue());
       expect(options.stRotation).toEqual(rectangle.stRotation.getValue());
@@ -237,7 +237,7 @@ describe(
 
       expect(updater._computeCenter(time)).toEqualEpsilon(
         Cartesian3.fromDegrees(0.0, 0.0),
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
 
@@ -248,14 +248,14 @@ describe(
       RectangleGeometryUpdater,
       "rectangle",
       createBasicRectangle,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       RectangleGeometryUpdater,
       "rectangle",
       createDynamicRectangle,
-      getScene
+      getScene,
     );
 
     createGeometryUpdaterGroundGeometrySpecs(
@@ -263,8 +263,8 @@ describe(
       "rectangle",
       createBasicRectangleWithoutHeight,
       createDynamicRectangleWithoutHeight,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

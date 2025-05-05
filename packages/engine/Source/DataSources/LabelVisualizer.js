@@ -69,7 +69,7 @@ function LabelVisualizer(entityCluster, entityCollection) {
 
   entityCollection.collectionChanged.addEventListener(
     LabelVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   this._cluster = entityCluster;
@@ -111,7 +111,7 @@ LabelVisualizer.prototype.update = function (time) {
       position = Property.getValueOrUndefined(
         entity._position,
         time,
-        positionScratch
+        positionScratch,
       );
       text = Property.getValueOrUndefined(labelGraphics._text, time);
       show = defined(position) && defined(text);
@@ -131,7 +131,7 @@ LabelVisualizer.prototype.update = function (time) {
     const heightReference = Property.getValueOrDefault(
       labelGraphics._heightReference,
       time,
-      defaultHeightReference
+      defaultHeightReference,
     );
 
     if (!defined(label)) {
@@ -154,98 +154,98 @@ LabelVisualizer.prototype.update = function (time) {
     label.scale = Property.getValueOrDefault(
       labelGraphics._scale,
       time,
-      defaultScale
+      defaultScale,
     );
     label.font = Property.getValueOrDefault(
       labelGraphics._font,
       time,
-      defaultFont
+      defaultFont,
     );
     label.style = Property.getValueOrDefault(
       labelGraphics._style,
       time,
-      defaultStyle
+      defaultStyle,
     );
     label.fillColor = Property.getValueOrDefault(
       labelGraphics._fillColor,
       time,
       defaultFillColor,
-      fillColorScratch
+      fillColorScratch,
     );
     label.outlineColor = Property.getValueOrDefault(
       labelGraphics._outlineColor,
       time,
       defaultOutlineColor,
-      outlineColorScratch
+      outlineColorScratch,
     );
     label.outlineWidth = Property.getValueOrDefault(
       labelGraphics._outlineWidth,
       time,
-      defaultOutlineWidth
+      defaultOutlineWidth,
     );
     label.showBackground = Property.getValueOrDefault(
       labelGraphics._showBackground,
       time,
-      defaultShowBackground
+      defaultShowBackground,
     );
     label.backgroundColor = Property.getValueOrDefault(
       labelGraphics._backgroundColor,
       time,
       defaultBackgroundColor,
-      backgroundColorScratch
+      backgroundColorScratch,
     );
     label.backgroundPadding = Property.getValueOrDefault(
       labelGraphics._backgroundPadding,
       time,
       defaultBackgroundPadding,
-      backgroundPaddingScratch
+      backgroundPaddingScratch,
     );
     label.pixelOffset = Property.getValueOrDefault(
       labelGraphics._pixelOffset,
       time,
       defaultPixelOffset,
-      pixelOffsetScratch
+      pixelOffsetScratch,
     );
     label.eyeOffset = Property.getValueOrDefault(
       labelGraphics._eyeOffset,
       time,
       defaultEyeOffset,
-      eyeOffsetScratch
+      eyeOffsetScratch,
     );
     label.heightReference = heightReference;
     label.horizontalOrigin = Property.getValueOrDefault(
       labelGraphics._horizontalOrigin,
       time,
-      defaultHorizontalOrigin
+      defaultHorizontalOrigin,
     );
     label.verticalOrigin = Property.getValueOrDefault(
       labelGraphics._verticalOrigin,
       time,
-      defaultVerticalOrigin
+      defaultVerticalOrigin,
     );
     label.translucencyByDistance = Property.getValueOrUndefined(
       labelGraphics._translucencyByDistance,
       time,
-      translucencyByDistanceScratch
+      translucencyByDistanceScratch,
     );
     label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(
       labelGraphics._pixelOffsetScaleByDistance,
       time,
-      pixelOffsetScaleByDistanceScratch
+      pixelOffsetScaleByDistanceScratch,
     );
     label.scaleByDistance = Property.getValueOrUndefined(
       labelGraphics._scaleByDistance,
       time,
-      scaleByDistanceScratch
+      scaleByDistanceScratch,
     );
     label.distanceDisplayCondition = Property.getValueOrUndefined(
       labelGraphics._distanceDisplayCondition,
       time,
-      distanceDisplayConditionScratch
+      distanceDisplayConditionScratch,
     );
     label.disableDepthTestDistance = Property.getValueOrUndefined(
       labelGraphics._disableDepthTestDistance,
-      time
+      time,
     );
 
     if (updateClamping) {
@@ -284,7 +284,7 @@ LabelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   const label = item.label;
   result.center = Cartesian3.clone(
     defaultValue(label._clampedPosition, label.position),
-    result.center
+    result.center,
   );
   result.radius = 0;
   return BoundingSphereState.DONE;
@@ -305,7 +305,7 @@ LabelVisualizer.prototype.isDestroyed = function () {
 LabelVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     LabelVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   const entities = this._entityCollection.values;
   for (let i = 0; i < entities.length; i++) {
@@ -318,7 +318,7 @@ LabelVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
   removed,
-  changed
+  changed,
 ) {
   let i;
   let entity;

@@ -96,47 +96,47 @@ describe(
     });
 
     it("updates statistics for an instanced model", function () {
-      return loadGltf(boxInstancedTranslationMinMax).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const renderResources = mockRenderResources(components);
+      return loadGltf(boxInstancedTranslationMinMax).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
+          const renderResources = mockRenderResources(components);
 
-        NodeStatisticsPipelineStage.process(renderResources, node);
+          NodeStatisticsPipelineStage.process(renderResources, node);
 
-        const statistics = renderResources.model.statistics;
+          const statistics = renderResources.model.statistics;
 
-        // Model contains four translated instances:
-        // 4 vec3s * 3 floats/vec3 * 4 bytes/float = 48
-        const expectedByteLength = 48;
+          // Model contains four translated instances:
+          // 4 vec3s * 3 floats/vec3 * 4 bytes/float = 48
+          const expectedByteLength = 48;
 
-        expect(statistics.pointsLength).toBe(0);
-        expect(statistics.trianglesLength).toBe(0);
-        expect(statistics.geometryByteLength).toBe(expectedByteLength);
-        expect(statistics.texturesByteLength).toBe(0);
-        expect(statistics.propertyTablesByteLength).toBe(0);
-      });
+          expect(statistics.pointsLength).toBe(0);
+          expect(statistics.trianglesLength).toBe(0);
+          expect(statistics.geometryByteLength).toBe(expectedByteLength);
+          expect(statistics.texturesByteLength).toBe(0);
+          expect(statistics.propertyTablesByteLength).toBe(0);
+        },
+      );
     });
 
     it("_countInstancingAttributes counts attributes with buffers", function () {
-      return loadGltf(boxInstancedTranslationMinMax).then(function (
-        gltfLoader
-      ) {
-        const statistics = new ModelStatistics();
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
+      return loadGltf(boxInstancedTranslationMinMax).then(
+        function (gltfLoader) {
+          const statistics = new ModelStatistics();
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
 
-        NodeStatisticsPipelineStage._countInstancingAttributes(
-          statistics,
-          node.instances
-        );
+          NodeStatisticsPipelineStage._countInstancingAttributes(
+            statistics,
+            node.instances,
+          );
 
-        // Model contains four translated instances:
-        // 4 instances * 3 floats * 4 bytes per float
-        const expectedByteLength = 4 * 12;
-        expect(statistics.geometryByteLength).toBe(expectedByteLength);
-      });
+          // Model contains four translated instances:
+          // 4 instances * 3 floats * 4 bytes per float
+          const expectedByteLength = 4 * 12;
+          expect(statistics.geometryByteLength).toBe(expectedByteLength);
+        },
+      );
     });
 
     it("_countInstancingAttributes does not count attributes without buffers", function () {
@@ -150,7 +150,7 @@ describe(
 
         NodeStatisticsPipelineStage._countInstancingAttributes(
           statistics,
-          node.instances
+          node.instances,
         );
 
         // 4 feature ids * 4 bytes per float
@@ -172,12 +172,12 @@ describe(
 
         NodeStatisticsPipelineStage._countGeneratedBuffers(
           statistics,
-          mockRuntimeNode
+          mockRuntimeNode,
         );
 
         const transformsBuffer = mockRuntimeNode.instancingTransformsBuffer;
         expect(statistics.geometryByteLength).toBe(
-          transformsBuffer.sizeInBytes
+          transformsBuffer.sizeInBytes,
         );
       });
     });
@@ -195,41 +195,41 @@ describe(
 
         NodeStatisticsPipelineStage._countGeneratedBuffers(
           statistics,
-          mockRuntimeNode
+          mockRuntimeNode,
         );
 
         const transformsBuffer2D = mockRuntimeNode.instancingTransformsBuffer2D;
         expect(statistics.geometryByteLength).toBe(
-          transformsBuffer2D.sizeInBytes
+          transformsBuffer2D.sizeInBytes,
         );
       });
     });
 
     it("_countGeneratedBuffers counts instancing translation buffer for 2D", function () {
-      return loadGltf(boxInstancedTranslationMinMax).then(function (
-        gltfLoader
-      ) {
-        const statistics = new ModelStatistics();
-        const mockRuntimeNode = {
-          instancingTranslationBuffer2D: {
-            // Model contains four translated instances:
-            // 4 instances * 3 floats * 4 bytes per float
-            sizeInBytes: 48,
-          },
-        };
+      return loadGltf(boxInstancedTranslationMinMax).then(
+        function (gltfLoader) {
+          const statistics = new ModelStatistics();
+          const mockRuntimeNode = {
+            instancingTranslationBuffer2D: {
+              // Model contains four translated instances:
+              // 4 instances * 3 floats * 4 bytes per float
+              sizeInBytes: 48,
+            },
+          };
 
-        NodeStatisticsPipelineStage._countGeneratedBuffers(
-          statistics,
-          mockRuntimeNode
-        );
+          NodeStatisticsPipelineStage._countGeneratedBuffers(
+            statistics,
+            mockRuntimeNode,
+          );
 
-        const translationBuffer2D =
-          mockRuntimeNode.instancingTranslationBuffer2D;
-        expect(statistics.geometryByteLength).toBe(
-          translationBuffer2D.sizeInBytes
-        );
-      });
+          const translationBuffer2D =
+            mockRuntimeNode.instancingTranslationBuffer2D;
+          expect(statistics.geometryByteLength).toBe(
+            translationBuffer2D.sizeInBytes,
+          );
+        },
+      );
     });
   },
-  "WebGL"
+  "WebGL",
 );

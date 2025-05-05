@@ -113,26 +113,26 @@ CircleGeometry.unpack = function (array, startingIndex, result) {
   const ellipseGeometry = EllipseGeometry.unpack(
     array,
     startingIndex,
-    scratchEllipseGeometry
+    scratchEllipseGeometry,
   );
   scratchOptions.center = Cartesian3.clone(
     ellipseGeometry._center,
-    scratchOptions.center
+    scratchOptions.center,
   );
   scratchOptions.ellipsoid = Ellipsoid.clone(
     ellipseGeometry._ellipsoid,
-    scratchOptions.ellipsoid
+    scratchOptions.ellipsoid,
   );
   scratchOptions.ellipsoid = Ellipsoid.clone(
     ellipseGeometry._ellipsoid,
-    scratchEllipseGeometry._ellipsoid
+    scratchEllipseGeometry._ellipsoid,
   );
   scratchOptions.height = ellipseGeometry._height;
   scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;
   scratchOptions.granularity = ellipseGeometry._granularity;
   scratchOptions.vertexFormat = VertexFormat.clone(
     ellipseGeometry._vertexFormat,
-    scratchOptions.vertexFormat
+    scratchOptions.vertexFormat,
   );
   scratchOptions.stRotation = ellipseGeometry._stRotation;
   scratchOptions.shadowVolume = ellipseGeometry._shadowVolume;
@@ -164,7 +164,7 @@ CircleGeometry.createGeometry = function (circleGeometry) {
 CircleGeometry.createShadowVolume = function (
   circleGeometry,
   minHeightFunc,
-  maxHeightFunc
+  maxHeightFunc,
 ) {
   const granularity = circleGeometry._ellipseGeometry._granularity;
   const ellipsoid = circleGeometry._ellipseGeometry._ellipsoid;

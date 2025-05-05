@@ -109,7 +109,7 @@ function VertexFormat(options) {
 VertexFormat.POSITION_ONLY = Object.freeze(
   new VertexFormat({
     position: true,
-  })
+  }),
 );
 
 /**
@@ -126,7 +126,7 @@ VertexFormat.POSITION_AND_NORMAL = Object.freeze(
   new VertexFormat({
     position: true,
     normal: true,
-  })
+  }),
 );
 
 /**
@@ -146,7 +146,7 @@ VertexFormat.POSITION_NORMAL_AND_ST = Object.freeze(
     position: true,
     normal: true,
     st: true,
-  })
+  }),
 );
 
 /**
@@ -163,7 +163,7 @@ VertexFormat.POSITION_AND_ST = Object.freeze(
   new VertexFormat({
     position: true,
     st: true,
-  })
+  }),
 );
 
 /**
@@ -179,7 +179,7 @@ VertexFormat.POSITION_AND_COLOR = Object.freeze(
   new VertexFormat({
     position: true,
     color: true,
-  })
+  }),
 );
 
 /**
@@ -201,7 +201,7 @@ VertexFormat.ALL = Object.freeze(
     st: true,
     tangent: true,
     bitangent: true,
-  })
+  }),
 );
 
 /**

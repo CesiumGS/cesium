@@ -51,7 +51,7 @@ function OpenCageGeocoderService(url, apiKey, params) {
   this._params = defaultValue(params, {});
   this._credit = new Credit(
     `Geodata copyright <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors`,
-    false
+    false,
   );
 }
 
@@ -117,7 +117,7 @@ OpenCageGeocoderService.prototype.geocode = async function (query) {
           bounds.southwest.lng,
           bounds.southwest.lat,
           bounds.northeast.lng,
-          bounds.northeast.lat
+          bounds.northeast.lat,
         );
       } else {
         const lon = resultObject.geometry.lat;

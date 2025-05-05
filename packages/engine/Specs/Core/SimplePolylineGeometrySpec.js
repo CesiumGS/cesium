@@ -46,12 +46,12 @@ describe("Core/SimplePolylineGeometry", function () {
         positions: positions,
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
-      })
+      }),
     );
 
     expect(line.attributes.position.values).toEqualEpsilon(
       [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(line.indices).toEqual([0, 1, 1, 2]);
     expect(line.primitiveType).toEqual(PrimitiveType.LINES);
@@ -66,7 +66,7 @@ describe("Core/SimplePolylineGeometry", function () {
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
         arcType: ArcType.RHUMB,
-      })
+      }),
     );
 
     const cartesian3Array = [];
@@ -74,7 +74,7 @@ describe("Core/SimplePolylineGeometry", function () {
 
     expect(line.attributes.position.values).toEqualEpsilon(
       cartesian3Array,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
     expect(line.indices).toEqual([0, 1, 1, 2]);
     expect(line.primitiveType).toEqual(PrimitiveType.LINES);
@@ -98,7 +98,7 @@ describe("Core/SimplePolylineGeometry", function () {
         colors: colors,
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
-      })
+      }),
     );
 
     expect(line.attributes.color).toBeDefined();
@@ -125,7 +125,7 @@ describe("Core/SimplePolylineGeometry", function () {
         colorsPerVertex: true,
         granularity: Math.PI,
         ellipsoid: Ellipsoid.UNIT_SPHERE,
-      })
+      }),
     );
 
     expect(line.attributes.color).toBeDefined();
@@ -144,19 +144,11 @@ describe("Core/SimplePolylineGeometry", function () {
       new SimplePolylineGeometry({
         positions: positions,
         arcType: ArcType.NONE,
-      })
+      }),
     );
 
     expect(line.attributes.position.values).toEqual([
-      0.0,
-      0.0,
-      0.0,
-      1.0,
-      0.0,
-      0.0,
-      2.0,
-      0.0,
-      0.0,
+      0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0,
     ]);
     expect(line.indices).toEqual([0, 1, 1, 2]);
     expect(line.primitiveType).toEqual(PrimitiveType.LINES);
@@ -179,7 +171,7 @@ describe("Core/SimplePolylineGeometry", function () {
         positions: positions,
         colors: colors,
         arcType: ArcType.NONE,
-      })
+      }),
     );
 
     expect(line.attributes.color).toBeDefined();
@@ -205,7 +197,7 @@ describe("Core/SimplePolylineGeometry", function () {
         colors: colors,
         colorsPerVertex: true,
         arcType: ArcType.NONE,
-      })
+      }),
     );
 
     expect(line.attributes.color).toBeDefined();
@@ -228,41 +220,14 @@ describe("Core/SimplePolylineGeometry", function () {
     ellipsoid: new Ellipsoid(12, 13, 14),
   });
   let packedInstance = [
-    3,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    3,
-    1,
-    0,
-    0,
-    1,
-    0,
-    1,
-    0,
-    1,
-    0,
-    0,
-    1,
-    1,
-    12,
-    13,
-    14,
-    1,
-    0,
-    11,
+    3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13,
+    14, 1, 0, 11,
   ];
   createPackableSpecs(
     SimplePolylineGeometry,
     line,
     packedInstance,
-    "per vertex colors"
+    "per vertex colors",
   );
 
   line = new SimplePolylineGeometry({
@@ -288,7 +253,7 @@ describe("Core/SimplePolylineGeometry", function () {
     SimplePolylineGeometry,
     line,
     packedInstance,
-    "geodesic line"
+    "geodesic line",
   );
 
   line = new SimplePolylineGeometry({
@@ -304,7 +269,7 @@ describe("Core/SimplePolylineGeometry", function () {
     SimplePolylineGeometry,
     line,
     packedInstance,
-    "rhumb line"
+    "rhumb line",
   );
 
   line = new SimplePolylineGeometry({
@@ -320,6 +285,6 @@ describe("Core/SimplePolylineGeometry", function () {
     SimplePolylineGeometry,
     line,
     packedInstance,
-    "straight line"
+    "straight line",
   );
 });

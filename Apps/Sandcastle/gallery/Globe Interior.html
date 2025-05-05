@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -37,6 +34,7 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           orderIndependentTranslucency: false,
+          geocoder: Cesium.IonGeocodeProviderType.BING,
         });
 
         const scene = viewer.scene;
@@ -74,7 +72,7 @@
             -120.0,
             0.0,
             -30.0,
-            45.0
+            45.0,
           );
         }
 
@@ -106,7 +104,7 @@
             radii: new Cesium.Cartesian3(
               innerCoreRadius,
               innerCoreRadius,
-              innerCoreRadius
+              innerCoreRadius,
             ),
             material: Cesium.Color.YELLOW,
           },
@@ -119,7 +117,7 @@
             radii: new Cesium.Cartesian3(
               outerCoreRadius,
               outerCoreRadius,
-              outerCoreRadius
+              outerCoreRadius,
             ),
             material: Cesium.Color.ORANGE,
           },
@@ -129,11 +127,7 @@
           name: "Mantle",
           position: Cesium.Cartesian3.ZERO,
           ellipsoid: {
-            radii: new Cesium.Cartesian3(
-              mantleRadius,
-              mantleRadius,
-              mantleRadius
-            ),
+            radii: new Cesium.Cartesian3(mantleRadius, mantleRadius, mantleRadius),
             material: Cesium.Color.RED,
           },
         });

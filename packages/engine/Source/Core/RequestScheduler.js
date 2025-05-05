@@ -168,7 +168,7 @@ RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
 
   const maxRequests = defaultValue(
     RequestScheduler.requestsByServer[serverKey],
-    RequestScheduler.maximumRequestsPerServer
+    RequestScheduler.maximumRequestsPerServer,
   );
   const hasOpenSlotsServer =
     numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests;
@@ -311,7 +311,7 @@ RequestScheduler.update = function () {
   // Un-throttled requests are automatically added to activeRequests, so activeRequests.length may exceed maximumRequests
   const openSlots = Math.max(
     RequestScheduler.maximumRequests - activeRequests.length,
-    0
+    0,
   );
   let filledSlots = 0;
   while (filledSlots < openSlots && requestHeap.length > 0) {
@@ -446,28 +446,28 @@ function updateStatistics() {
   ) {
     if (statistics.numberOfAttemptedRequests > 0) {
       console.log(
-        `Number of attempted requests: ${statistics.numberOfAttemptedRequests}`
+        `Number of attempted requests: ${statistics.numberOfAttemptedRequests}`,
       );
       statistics.numberOfAttemptedRequests = 0;
     }
 
     if (statistics.numberOfCancelledRequests > 0) {
       console.log(
-        `Number of cancelled requests: ${statistics.numberOfCancelledRequests}`
+        `Number of cancelled requests: ${statistics.numberOfCancelledRequests}`,
       );
       statistics.numberOfCancelledRequests = 0;
     }
 
     if (statistics.numberOfCancelledActiveRequests > 0) {
       console.log(
-        `Number of cancelled active requests: ${statistics.numberOfCancelledActiveRequests}`
+        `Number of cancelled active requests: ${statistics.numberOfCancelledActiveRequests}`,
       );
       statistics.numberOfCancelledActiveRequests = 0;
     }
 
     if (statistics.numberOfFailedRequests > 0) {
       console.log(
-        `Number of failed requests: ${statistics.numberOfFailedRequests}`
+        `Number of failed requests: ${statistics.numberOfFailedRequests}`,
       );
       statistics.numberOfFailedRequests = 0;
     }

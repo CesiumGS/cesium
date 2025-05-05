@@ -16,7 +16,7 @@ const InspectorShared = {};
 InspectorShared.createCheckbox = function (
   labelText,
   checkedBinding,
-  enableBinding
+  enableBinding,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("labelText", labelText);
@@ -50,7 +50,7 @@ InspectorShared.createSection = function (
   panel,
   headerText,
   sectionVisibleBinding,
-  toggleSectionVisibilityBinding
+  toggleSectionVisibilityBinding,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("panel", panel);
@@ -58,14 +58,14 @@ InspectorShared.createSection = function (
   Check.typeOf.string("sectionVisibleBinding", sectionVisibleBinding);
   Check.typeOf.string(
     "toggleSectionVisibilityBinding",
-    toggleSectionVisibilityBinding
+    toggleSectionVisibilityBinding,
   );
   //>>includeEnd('debug');
   const section = document.createElement("div");
   section.className = "cesium-cesiumInspector-section";
   section.setAttribute(
     "data-bind",
-    `css: { "cesium-cesiumInspector-section-collapsed": !${sectionVisibleBinding} }`
+    `css: { "cesium-cesiumInspector-section-collapsed": !${sectionVisibleBinding} }`,
   );
   panel.appendChild(section);
 
@@ -74,7 +74,7 @@ InspectorShared.createSection = function (
   sectionHeader.appendChild(document.createTextNode(headerText));
   sectionHeader.setAttribute(
     "data-bind",
-    `click: ${toggleSectionVisibilityBinding}`
+    `click: ${toggleSectionVisibilityBinding}`,
   );
   section.appendChild(sectionHeader);
 
@@ -100,7 +100,7 @@ InspectorShared.createRangeInput = function (
   min,
   max,
   step,
-  inputValueBinding
+  inputValueBinding,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("rangeText", rangeText);
@@ -121,7 +121,7 @@ InspectorShared.createRangeInput = function (
   slider.step = defaultValue(step, "any");
   slider.setAttribute(
     "data-bind",
-    `valueUpdate: "input", value: ${sliderValueBinding}`
+    `valueUpdate: "input", value: ${sliderValueBinding}`,
   );
 
   const wrapper = document.createElement("div");
@@ -146,7 +146,7 @@ InspectorShared.createRangeInput = function (
 InspectorShared.createButton = function (
   buttonText,
   clickedBinding,
-  activeBinding
+  activeBinding,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("buttonText", buttonText);

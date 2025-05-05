@@ -39,7 +39,7 @@ function Particle(options) {
    * @default Cartesian3.ZERO
    */
   this.position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO)
+    defaultValue(options.position, Cartesian3.ZERO),
   );
   /**
    * The velocity of the particle in world coordinates.
@@ -47,7 +47,7 @@ function Particle(options) {
    * @default Cartesian3.ZERO
    */
   this.velocity = Cartesian3.clone(
-    defaultValue(options.velocity, Cartesian3.ZERO)
+    defaultValue(options.velocity, Cartesian3.ZERO),
   );
   /**
    * The life of the particle in seconds.
@@ -91,7 +91,7 @@ function Particle(options) {
    * @default new Cartesian(1.0, 1.0)
    */
   this.imageSize = Cartesian2.clone(
-    defaultValue(options.imageSize, defaultSize)
+    defaultValue(options.imageSize, defaultSize),
   );
 
   this._age = 0.0;

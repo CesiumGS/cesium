@@ -13,7 +13,7 @@ function loadImageFromTypedArray(options) {
   const flipY = defaultValue(options.flipY, false);
   const skipColorSpaceConversion = defaultValue(
     options.skipColorSpaceConversion,
-    false
+    false,
   );
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("uint8Array", uint8Array);
@@ -33,7 +33,7 @@ function loadImageFromTypedArray(options) {
             flipY: flipY,
             premultiplyAlpha: false,
             skipColorSpaceConversion: skipColorSpaceConversion,
-          })
+          }),
         );
       }
 

@@ -54,16 +54,13 @@ Batch.prototype.add = function (updater, instance) {
     const that = this;
     this.subscriptions.set(
       id,
-      updater.entity.definitionChanged.addEventListener(function (
-        entity,
-        propertyName,
-        newValue,
-        oldValue
-      ) {
-        if (propertyName === "isShowing") {
-          that.showsUpdated.set(updater.id, updater);
-        }
-      })
+      updater.entity.definitionChanged.addEventListener(
+        function (entity, propertyName, newValue, oldValue) {
+          if (propertyName === "isShowing") {
+            that.showsUpdated.set(updater.id, updater);
+          }
+        },
+      ),
     );
   }
 };
@@ -75,7 +72,7 @@ Batch.prototype.remove = function (updater) {
   if (this.updaters.remove(id)) {
     this.rectangleCollisionCheck.remove(
       id,
-      geometryInstance.geometry.rectangle
+      geometryInstance.geometry.rectangle,
     );
     this.updatersWithAttributes.remove(id);
     const unsubscribe = this.subscriptions.get(id);
@@ -157,14 +154,14 @@ Batch.prototype.update = function (time) {
           colorProperty,
           time,
           Color.WHITE,
-          colorScratch
+          colorScratch,
         );
 
         if (!Color.equals(attributes._lastColor, fillColor)) {
           attributes._lastColor = Color.clone(fillColor, attributes._lastColor);
           attributes.color = ColorGeometryInstanceAttribute.toValue(
             fillColor,
-            attributes.color
+            attributes.color,
           );
         }
       }
@@ -176,7 +173,7 @@ Batch.prototype.update = function (time) {
       if (show !== currentShow) {
         attributes.show = ShowGeometryInstanceAttribute.toValue(
           show,
-          attributes.show
+          attributes.show,
         );
       }
 
@@ -187,22 +184,24 @@ Batch.prototype.update = function (time) {
           distanceDisplayConditionProperty,
           time,
           defaultDistanceDisplayCondition,
-          distanceDisplayConditionScratch
+          distanceDisplayConditionScratch,
         );
         if (
           !DistanceDisplayCondition.equals(
             distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
+            attributes._lastDistanceDisplayCondition,
           )
         ) {
-          attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(
-            distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
-          );
-          attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-            distanceDisplayCondition,
-            attributes.distanceDisplayCondition
-          );
+          attributes._lastDistanceDisplayCondition =
+            DistanceDisplayCondition.clone(
+              distanceDisplayCondition,
+              attributes._lastDistanceDisplayCondition,
+            );
+          attributes.distanceDisplayCondition =
+            DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+              distanceDisplayCondition,
+              attributes.distanceDisplayCondition,
+            );
         }
       }
     }
@@ -234,7 +233,7 @@ Batch.prototype.updateShows = function (primitive) {
     if (show !== currentShow) {
       attributes.show = ShowGeometryInstanceAttribute.toValue(
         show,
-        attributes.show
+        attributes.show,
       );
       instance.attributes.show.value[0] = attributes.show[0];
     }
@@ -310,7 +309,7 @@ StaticGroundGeometryColorBatch.prototype.add = function (time, updater) {
       this._primitives,
       this._classificationType,
       instance.attributes.color.value,
-      zIndex
+      zIndex,
     );
     batches.push(batch);
   }
@@ -371,7 +370,7 @@ StaticGroundGeometryColorBatch.prototype.update = function (time) {
 
 StaticGroundGeometryColorBatch.prototype.getBoundingSphere = function (
   updater,
-  result
+  result,
 ) {
   const batches = this._batches;
   const batchCount = batches.length;

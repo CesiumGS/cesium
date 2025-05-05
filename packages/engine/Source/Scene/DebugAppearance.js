@@ -80,7 +80,7 @@ function DebugAppearance(options) {
       //>>includeStart('debug', pragmas.debug);
       default:
         throw new DeveloperError(
-          "options.glslDatatype must be float, vec2, vec3, or vec4."
+          "options.glslDatatype must be float, vec2, vec3, or vec4.",
         );
       //>>includeEnd('debug');
     }
@@ -133,7 +133,7 @@ function DebugAppearance(options) {
   this._renderState = Appearance.getDefaultRenderState(
     false,
     false,
-    options.renderState
+    options.renderState,
   );
   this._closed = defaultValue(options.closed, false);
 

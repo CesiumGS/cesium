@@ -545,7 +545,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.translationX = Matrix4.getTranslation(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).x;
     },
   });
@@ -560,7 +560,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.translationY = Matrix4.getTranslation(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).y;
     },
   });
@@ -575,7 +575,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.translationZ = Matrix4.getTranslation(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).z;
     },
   });
@@ -591,7 +591,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.scaleX = Matrix4.getScale(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).x;
     },
   });
@@ -606,7 +606,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.scaleY = Matrix4.getScale(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).y;
     },
   });
@@ -621,7 +621,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.scaleZ = Matrix4.getScale(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).z;
     },
   });
@@ -667,13 +667,13 @@ function setModelMatrix(viewModel) {
     viewModel.translationX,
     viewModel.translationY,
     viewModel.translationZ,
-    scratchTranslation
+    scratchTranslation,
   );
   const scale = Cartesian3.fromElements(
     viewModel.scaleX,
     viewModel.scaleY,
     viewModel.scaleZ,
-    scratchScale
+    scratchScale,
   );
   const hpr = scratchHeadingPitchRoll;
   hpr.heading = viewModel.angleX;
@@ -684,7 +684,7 @@ function setModelMatrix(viewModel) {
   viewModel._voxelPrimitive.modelMatrix = Matrix4.fromRotationTranslation(
     rotationScale,
     translation,
-    viewModel._voxelPrimitive.modelMatrix
+    viewModel._voxelPrimitive.modelMatrix,
   );
 }
 
@@ -720,21 +720,22 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
         this._voxelPrimitive = voxelPrimitive;
 
         const that = this;
-        that._customShaderCompilationRemoveCallback = that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
-          function (error) {
-            const shaderString =
-              that._voxelPrimitive.customShader.fragmentShaderText;
-            that.shaderString = formatShaderString(shaderString);
+        that._customShaderCompilationRemoveCallback =
+          that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
+            function (error) {
+              const shaderString =
+                that._voxelPrimitive.customShader.fragmentShaderText;
+              that.shaderString = formatShaderString(shaderString);
 
-            if (!defined(error)) {
-              that.shaderCompilationMessage = "Shader compiled successfully!";
-              that.shaderCompilationSuccess = true;
-            } else {
-              that.shaderCompilationMessage = error.message;
-              that.shaderCompilationSuccess = false;
-            }
-          }
-        );
+              if (!defined(error)) {
+                that.shaderCompilationMessage = "Shader compiled successfully!";
+                that.shaderCompilationSuccess = true;
+              } else {
+                that.shaderCompilationMessage = error.message;
+                that.shaderCompilationSuccess = false;
+              }
+            },
+          );
         that._modelMatrixReady = false;
         for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
           that._getPrimitiveFunctions[i]();
@@ -806,7 +807,7 @@ VoxelInspectorViewModel.prototype.compileShader = function () {
  */
 VoxelInspectorViewModel.prototype.shaderEditorKeyPress = function (
   sender,
-  event
+  event,
 ) {
   if (event.keyCode === 9) {
     //tab

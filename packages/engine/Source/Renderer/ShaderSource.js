@@ -72,7 +72,7 @@ function generateDependencies(currentNode, dependencyNodes) {
         const referencedNode = getDependencyNode(
           element,
           ShaderSource._czmBuiltinsAndUniforms[element],
-          dependencyNodes
+          dependencyNodes,
         );
         currentNode.dependsOn.push(referencedNode);
         referencedNode.requiredBy.push(currentNode);
@@ -170,45 +170,46 @@ function combineShader(shaderSource, isFragmentShader, context) {
 
   // Extract existing shader version from sources
   let version;
-  combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function (
-    match,
-    group1
-  ) {
-    //>>includeStart('debug', pragmas.debug);
-    if (defined(version) && version !== group1) {
-      throw new DeveloperError(
-        `inconsistent versions found: ${version} and ${group1}`
-      );
-    }
-    //>>includeEnd('debug');
+  combinedSources = combinedSources.replace(
+    /#version\s+(.*?)\n/gm,
+    function (match, group1) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(version) && version !== group1) {
+        throw new DeveloperError(
+          `inconsistent versions found: ${version} and ${group1}`,
+        );
+      }
+      //>>includeEnd('debug');
 
-    // Extract #version to put at the top
-    version = group1;
+      // Extract #version to put at the top
+      version = group1;
 
-    // Replace original #version directive with a new line so the line numbers
-    // are not off by one.  There can be only one #version directive
-    // and it must appear at the top of the source, only preceded by
-    // whitespace and comments.
-    return "\n";
-  });
+      // Replace original #version directive with a new line so the line numbers
+      // are not off by one.  There can be only one #version directive
+      // and it must appear at the top of the source, only preceded by
+      // whitespace and comments.
+      return "\n";
+    },
+  );
 
   // Extract shader extensions from sources
   const extensions = [];
-  combinedSources = combinedSources.replace(/#extension.*\n/gm, function (
-    match
-  ) {
-    // Extract extension to put at the top
-    extensions.push(match);
+  combinedSources = combinedSources.replace(
+    /#extension.*\n/gm,
+    function (match) {
+      // Extract extension to put at the top
+      extensions.push(match);
 
-    // Replace original #extension directive with a new line so the line numbers
-    // are not off by one.
-    return "\n";
-  });
+      // Replace original #extension directive with a new line so the line numbers
+      // are not off by one.
+      return "\n";
+    },
+  );
 
   // Remove precision qualifier
   combinedSources = combinedSources.replace(
     /precision\s(lowp|mediump|highp)\s(float|int);/,
-    ""
+    "",
   );
 
   // Replace main() for picked if desired.
@@ -216,7 +217,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   if (defined(pickColorQualifier)) {
     combinedSources = ShaderSource.createPickFragmentShaderSource(
       combinedSources,
-      pickColorQualifier
+      pickColorQualifier,
     );
   }
 
@@ -280,7 +281,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
     context.webgl2 &&
     isFragmentShader &&
     !/layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g.test(
-      combinedShader
+      combinedShader,
     ) &&
     !/czm_out_FragColor/g.test(combinedShader) &&
     /out_FragColor/g.test(combinedShader)
@@ -338,7 +339,7 @@ function ShaderSource(options) {
     pickColorQualifier !== "in"
   ) {
     throw new DeveloperError(
-      "options.pickColorQualifier must be 'uniform' or 'in'."
+      "options.pickColorQualifier must be 'uniform' or 'in'.",
     );
   }
   //>>includeEnd('debug');
@@ -422,9 +423,8 @@ for (const uniformName in AutomaticUniforms) {
   if (AutomaticUniforms.hasOwnProperty(uniformName)) {
     const uniform = AutomaticUniforms[uniformName];
     if (typeof uniform.getDeclaration === "function") {
-      ShaderSource._czmBuiltinsAndUniforms[
-        uniformName
-      ] = uniform.getDeclaration(uniformName);
+      ShaderSource._czmBuiltinsAndUniforms[uniformName] =
+        uniform.getDeclaration(uniformName);
     }
   }
 }
@@ -432,7 +432,7 @@ for (const uniformName in AutomaticUniforms) {
 ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
   const renamedVS = ShaderSource.replaceMain(
     vertexShaderSource,
-    "czm_old_main"
+    "czm_old_main",
   );
   const pickMain =
     "in vec4 pickColor; \n" +
@@ -448,11 +448,11 @@ ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
 
 ShaderSource.createPickFragmentShaderSource = function (
   fragmentShaderSource,
-  pickColorQualifier
+  pickColorQualifier,
 ) {
   const renamedFS = ShaderSource.replaceMain(
     fragmentShaderSource,
-    "czm_old_main"
+    "czm_old_main",
   );
   const pickMain =
     `${pickColorQualifier} vec4 czm_pickColor; \n` +

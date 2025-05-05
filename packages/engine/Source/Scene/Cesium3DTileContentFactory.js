@@ -18,7 +18,7 @@ const Cesium3DTileContentFactory = {
       tile,
       resource,
       arrayBuffer,
-      byteOffset
+      byteOffset,
     );
   },
   pnts: function (tileset, tile, resource, arrayBuffer, byteOffset) {
@@ -27,7 +27,7 @@ const Cesium3DTileContentFactory = {
       tile,
       resource,
       arrayBuffer,
-      byteOffset
+      byteOffset,
     );
   },
   i3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
@@ -36,7 +36,7 @@ const Cesium3DTileContentFactory = {
       tile,
       resource,
       arrayBuffer,
-      byteOffset
+      byteOffset,
     );
   },
   cmpt: function (tileset, tile, resource, arrayBuffer, byteOffset) {
@@ -47,7 +47,7 @@ const Cesium3DTileContentFactory = {
       resource,
       arrayBuffer,
       byteOffset,
-      Cesium3DTileContentFactory
+      Cesium3DTileContentFactory,
     );
   },
   externalTileset: function (tileset, tile, resource, json) {
@@ -59,7 +59,7 @@ const Cesium3DTileContentFactory = {
       tile,
       resource,
       arrayBuffer,
-      byteOffset
+      byteOffset,
     );
   },
   vctr: function (tileset, tile, resource, arrayBuffer, byteOffset) {
@@ -68,7 +68,7 @@ const Cesium3DTileContentFactory = {
       tile,
       resource,
       arrayBuffer,
-      byteOffset
+      byteOffset,
     );
   },
   subt: function (tileset, tile, resource, arrayBuffer, byteOffset) {
@@ -78,7 +78,7 @@ const Cesium3DTileContentFactory = {
       resource,
       undefined,
       arrayBuffer,
-      byteOffset
+      byteOffset,
     );
   },
   subtreeJson: function (tileset, tile, resource, json) {

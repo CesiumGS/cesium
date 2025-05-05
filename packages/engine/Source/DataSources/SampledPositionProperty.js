@@ -4,6 +4,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import PositionProperty from "./PositionProperty.js";
 import Property from "./Property.js";
@@ -178,14 +179,19 @@ Object.defineProperties(SampledPositionProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the position at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 SampledPositionProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
 };
 
@@ -200,7 +206,7 @@ SampledPositionProperty.prototype.getValue = function (time, result) {
 SampledPositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
@@ -214,7 +220,7 @@ SampledPositionProperty.prototype.getValueInReferenceFrame = function (
       result,
       this._referenceFrame,
       referenceFrame,
-      result
+      result,
     );
   }
   return undefined;
@@ -241,7 +247,7 @@ SampledPositionProperty.prototype.setInterpolationOptions = function (options) {
 SampledPositionProperty.prototype.addSample = function (
   time,
   position,
-  derivatives
+  derivatives,
 ) {
   const numberOfDerivatives = this._numberOfDerivatives;
   //>>includeStart('debug', pragmas.debug);
@@ -250,7 +256,7 @@ SampledPositionProperty.prototype.addSample = function (
     (!defined(derivatives) || derivatives.length !== numberOfDerivatives)
   ) {
     throw new DeveloperError(
-      "derivatives length must be equal to the number of derivatives."
+      "derivatives length must be equal to the number of derivatives.",
     );
   }
   //>>includeEnd('debug');
@@ -269,7 +275,7 @@ SampledPositionProperty.prototype.addSample = function (
 SampledPositionProperty.prototype.addSamples = function (
   times,
   positions,
-  derivatives
+  derivatives,
 ) {
   this._property.addSamples(times, positions, derivatives);
 };
@@ -283,7 +289,7 @@ SampledPositionProperty.prototype.addSamples = function (
  */
 SampledPositionProperty.prototype.addSamplesPackedArray = function (
   packedSamples,
-  epoch
+  epoch,
 ) {
   this._property.addSamplesPackedArray(packedSamples, epoch);
 };

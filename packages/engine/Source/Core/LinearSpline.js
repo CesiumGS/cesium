@@ -53,7 +53,7 @@ function LinearSpline(options) {
   }
   if (points.length < 2) {
     throw new DeveloperError(
-      "points.length must be greater than or equal to 2."
+      "points.length must be greater than or equal to 2.",
     );
   }
   if (times.length !== points.length) {
@@ -147,7 +147,7 @@ LinearSpline.prototype.evaluate = function (time, result) {
 
   const i = (this._lastTimeIndex = this.findTimeInterval(
     time,
-    this._lastTimeIndex
+    this._lastTimeIndex,
   ));
   const u = (time - times[i]) / (times[i + 1] - times[i]);
 

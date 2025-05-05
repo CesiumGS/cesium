@@ -48,7 +48,7 @@ function viewerDragDropMixin(viewer, options) {
   }
   if (viewer.hasOwnProperty("dropEnabled")) {
     throw new DeveloperError(
-      "dropEnabled is already defined by another mixin."
+      "dropEnabled is already defined by another mixin.",
     );
   }
   if (viewer.hasOwnProperty("dropError")) {
@@ -56,12 +56,12 @@ function viewerDragDropMixin(viewer, options) {
   }
   if (viewer.hasOwnProperty("clearOnDrop")) {
     throw new DeveloperError(
-      "clearOnDrop is already defined by another mixin."
+      "clearOnDrop is already defined by another mixin.",
     );
   }
   if (viewer.hasOwnProperty("flyToOnDrop")) {
     throw new DeveloperError(
-      "flyToOnDrop is already defined by another mixin."
+      "flyToOnDrop is already defined by another mixin.",
     );
   }
   //>>includeEnd('debug');
@@ -283,7 +283,7 @@ function createOnLoadCallback(viewer, file, proxy, clampToGround) {
         viewer.dropError.raiseEvent(
           viewer,
           fileName,
-          `Unrecognized file: ${fileName}`
+          `Unrecognized file: ${fileName}`,
         );
         return;
       }

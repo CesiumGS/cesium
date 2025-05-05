@@ -182,10 +182,10 @@ BoundingRectangle.fromRectangle = function (rectangle, projection, result) {
   projection = defaultValue(projection, defaultProjection);
 
   const lowerLeft = projection.project(
-    Rectangle.southwest(rectangle, fromRectangleLowerLeft)
+    Rectangle.southwest(rectangle, fromRectangleLowerLeft),
   );
   const upperRight = projection.project(
-    Rectangle.northeast(rectangle, fromRectangleUpperRight)
+    Rectangle.northeast(rectangle, fromRectangleUpperRight),
   );
 
   Cartesian2.subtract(upperRight, lowerLeft, upperRight);
@@ -214,7 +214,7 @@ BoundingRectangle.clone = function (rectangle, result) {
       rectangle.x,
       rectangle.y,
       rectangle.width,
-      rectangle.height
+      rectangle.height,
     );
   }
 

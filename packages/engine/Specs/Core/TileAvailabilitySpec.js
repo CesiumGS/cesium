@@ -18,7 +18,7 @@ describe("Core/TileAvailability", function () {
       0,
       0,
       tilingScheme.getNumberOfXTilesAtLevel(),
-      tilingScheme.getNumberOfYTilesAtLevel()
+      tilingScheme.getNumberOfYTilesAtLevel(),
     );
     return availability;
   }
@@ -28,8 +28,8 @@ describe("Core/TileAvailability", function () {
       const availability = createAvailability(webMercator, 15);
       expect(
         availability.computeMaximumLevelAtPosition(
-          Cartographic.fromDegrees(25.0, 88.0)
-        )
+          Cartographic.fromDegrees(25.0, 88.0),
+        ),
       ).toBe(-1);
     });
 
@@ -37,8 +37,8 @@ describe("Core/TileAvailability", function () {
       const availability = createAvailability(geographic, 15);
       expect(
         availability.computeMaximumLevelAtPosition(
-          Cartographic.fromDegrees(25.0, 88.0)
-        )
+          Cartographic.fromDegrees(25.0, 88.0),
+        ),
       ).toBe(0);
     });
 
@@ -48,8 +48,8 @@ describe("Core/TileAvailability", function () {
       availability.addAvailableTileRange(1, 1, 0, 1, 0);
       expect(
         availability.computeMaximumLevelAtPosition(
-          Cartographic.fromRadians(0.0, 0.0)
-        )
+          Cartographic.fromRadians(0.0, 0.0),
+        ),
       ).toBe(1);
 
       // Make sure it isn't dependent on the order we add the rectangles.
@@ -58,8 +58,8 @@ describe("Core/TileAvailability", function () {
       availability.addAvailableTileRange(0, 0, 0, 0, 0);
       expect(
         availability.computeMaximumLevelAtPosition(
-          Cartographic.fromRadians(0.0, 0.0)
-        )
+          Cartographic.fromRadians(0.0, 0.0),
+        ),
       ).toBe(1);
     });
 
@@ -69,8 +69,8 @@ describe("Core/TileAvailability", function () {
       availability.addAvailableTileRange(1, 1, 1, 1, 1);
       expect(
         availability.computeMaximumLevelAtPosition(
-          Cartographic.fromRadians(-Math.PI / 2.0, 0.0)
-        )
+          Cartographic.fromRadians(-Math.PI / 2.0, 0.0),
+        ),
       ).toBe(1);
     });
   });
@@ -80,8 +80,8 @@ describe("Core/TileAvailability", function () {
       const availability = createAvailability(geographic, 15);
       expect(
         availability.computeBestAvailableLevelOverRectangle(
-          Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0)
-        )
+          Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0),
+        ),
       ).toBe(0);
     });
 
@@ -92,13 +92,13 @@ describe("Core/TileAvailability", function () {
         0,
         0,
         geographic.getNumberOfXTilesAtLevel(5) - 1,
-        geographic.getNumberOfYTilesAtLevel(5) - 1
+        geographic.getNumberOfYTilesAtLevel(5) - 1,
       );
       availability.addAvailableTileRange(6, 7, 8, 9, 10);
       expect(
         availability.computeBestAvailableLevelOverRectangle(
-          Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0)
-        )
+          Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0),
+        ),
       ).toBe(5);
     });
 
@@ -109,12 +109,12 @@ describe("Core/TileAvailability", function () {
         0,
         0,
         geographic.getNumberOfXTilesAtLevel(5) - 1,
-        geographic.getNumberOfYTilesAtLevel(5) - 1
+        geographic.getNumberOfYTilesAtLevel(5) - 1,
       );
       availability.addAvailableTileRange(6, 7, 8, 9, 10);
       const rectangle = geographic.tileXYToRectangle(8, 9, 6);
       expect(
-        availability.computeBestAvailableLevelOverRectangle(rectangle)
+        availability.computeBestAvailableLevelOverRectangle(rectangle),
       ).toBe(6);
     });
 
@@ -125,7 +125,7 @@ describe("Core/TileAvailability", function () {
         0,
         0,
         geographic.getNumberOfXTilesAtLevel(5) - 1,
-        geographic.getNumberOfYTilesAtLevel(5) - 1
+        geographic.getNumberOfYTilesAtLevel(5) - 1,
       );
       availability.addAvailableTileRange(6, 7, 8, 7, 8);
       const rectangle = geographic.tileXYToRectangle(7, 8, 6);
@@ -134,7 +134,7 @@ describe("Core/TileAvailability", function () {
       rectangle.south -= 0.01;
       rectangle.north += 0.01;
       expect(
-        availability.computeBestAvailableLevelOverRectangle(rectangle)
+        availability.computeBestAvailableLevelOverRectangle(rectangle),
       ).toBe(5);
     });
 
@@ -145,30 +145,30 @@ describe("Core/TileAvailability", function () {
         0,
         0,
         geographic.getNumberOfXTilesAtLevel(5) - 1,
-        geographic.getNumberOfYTilesAtLevel(5) - 1
+        geographic.getNumberOfYTilesAtLevel(5) - 1,
       );
       availability.addAvailableTileRange(
         6,
         0,
         0,
         10,
-        geographic.getNumberOfYTilesAtLevel(6) - 1
+        geographic.getNumberOfYTilesAtLevel(6) - 1,
       );
       availability.addAvailableTileRange(
         6,
         geographic.getNumberOfXTilesAtLevel(6) - 11,
         0,
         geographic.getNumberOfXTilesAtLevel(6) - 1,
-        geographic.getNumberOfYTilesAtLevel(6) - 1
+        geographic.getNumberOfYTilesAtLevel(6) - 1,
       );
       let rectangle = Rectangle.fromDegrees(179.0, 45.0, -179.0, 50.0);
       expect(
-        availability.computeBestAvailableLevelOverRectangle(rectangle)
+        availability.computeBestAvailableLevelOverRectangle(rectangle),
       ).toBe(6);
 
       rectangle = Rectangle.fromDegrees(45.0, 45.0, -45.0, 50.0);
       expect(
-        availability.computeBestAvailableLevelOverRectangle(rectangle)
+        availability.computeBestAvailableLevelOverRectangle(rectangle),
       ).toBe(5);
     });
 
@@ -179,7 +179,7 @@ describe("Core/TileAvailability", function () {
         0,
         0,
         geographic.getNumberOfXTilesAtLevel(5) - 1,
-        geographic.getNumberOfYTilesAtLevel(5) - 1
+        geographic.getNumberOfYTilesAtLevel(5) - 1,
       );
       availability.addAvailableTileRange(6, 0, 2, 1, 3);
       availability.addAvailableTileRange(6, 2, 0, 3, 1);
@@ -187,7 +187,7 @@ describe("Core/TileAvailability", function () {
       availability.addAvailableTileRange(6, 2, 2, 3, 3);
       const rectangle = geographic.tileXYToRectangle(0, 0, 4);
       expect(
-        availability.computeBestAvailableLevelOverRectangle(rectangle)
+        availability.computeBestAvailableLevelOverRectangle(rectangle),
       ).toBe(6);
     });
   });
@@ -202,7 +202,7 @@ describe("Core/TileAvailability", function () {
       for (let i = 0; i < levelRectangles.length; ++i) {
         for (let j = i; j < levelRectangles.length; ++j) {
           expect(levelRectangles[i].level <= levelRectangles[j].level).toBe(
-            true
+            true,
           );
         }
       }
@@ -219,8 +219,8 @@ describe("Core/TileAvailability", function () {
       availability.addAvailableTileRange(1, 0, 0, 3, 1);
       expect(
         availability.computeMaximumLevelAtPosition(
-          new Cartographic(-Math.PI / 2.0, 0.0)
-        )
+          new Cartographic(-Math.PI / 2.0, 0.0),
+        ),
       ).toBe(1);
 
       // We should get the same result adding them in the opposite order.
@@ -229,8 +229,8 @@ describe("Core/TileAvailability", function () {
       availability.addAvailableTileRange(0, 0, 0, 1, 0);
       expect(
         availability.computeMaximumLevelAtPosition(
-          new Cartographic(-Math.PI / 2.0, 0.0)
-        )
+          new Cartographic(-Math.PI / 2.0, 0.0),
+        ),
       ).toBe(1);
     });
 

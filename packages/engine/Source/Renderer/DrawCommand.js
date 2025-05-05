@@ -16,6 +16,9 @@ const Flags = {
 /**
  * Represents a command to the renderer for drawing.
  *
+ * @alias DrawCommand
+ * @constructor
+ *
  * @private
  */
 function DrawCommand(options) {
@@ -26,7 +29,7 @@ function DrawCommand(options) {
   this._modelMatrix = options.modelMatrix;
   this._primitiveType = defaultValue(
     options.primitiveType,
-    PrimitiveType.TRIANGLES
+    PrimitiveType.TRIANGLES,
   );
   this._vertexArray = options.vertexArray;
   this._count = options.count;
@@ -40,6 +43,8 @@ function DrawCommand(options) {
   this._owner = options.owner;
   this._debugOverlappingFrustums = 0;
   this._pickId = options.pickId;
+  this._pickMetadataAllowed = options.pickMetadataAllowed === true;
+  this._pickedMetadataInfo = undefined;
 
   // Set initial flags.
   this._flags = 0;
@@ -47,18 +52,18 @@ function DrawCommand(options) {
   this.occlude = defaultValue(options.occlude, true);
   this.executeInClosestFrustum = defaultValue(
     options.executeInClosestFrustum,
-    false
+    false,
   );
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
   this.castShadows = defaultValue(options.castShadows, false);
   this.receiveShadows = defaultValue(options.receiveShadows, false);
   this.pickOnly = defaultValue(options.pickOnly, false);
   this.depthForTranslucentClassification = defaultValue(
     options.depthForTranslucentClassification,
-    false
+    false,
   );
 
   this.dirty = true;
@@ -511,7 +516,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * during the pick pass.
    *
    * @memberof DrawCommand.prototype
-   * @type {string}
+   * @type {string|undefined}
    * @default undefined
    */
   pickId: {
@@ -525,6 +530,44 @@ Object.defineProperties(DrawCommand.prototype, {
       }
     },
   },
+
+  /**
+   * Whether metadata picking is allowed.
+   *
+   * This is essentially only set to `true` for draw commands that are
+   * part of a `ModelDrawCommand`, to check whether a derived command
+   * for metadata picking has to be created.
+   *
+   * @memberof DrawCommand.prototype
+   * @type {boolean}
+   * @default undefined
+   * @private
+   */
+  pickMetadataAllowed: {
+    get: function () {
+      return this._pickMetadataAllowed;
+    },
+  },
+
+  /**
+   * Information about picked metadata.
+   *
+   * @memberof DrawCommand.prototype
+   * @type {PickedMetadataInfo|undefined}
+   * @default undefined
+   */
+  pickedMetadataInfo: {
+    get: function () {
+      return this._pickedMetadataInfo;
+    },
+    set: function (value) {
+      if (this._pickedMetadataInfo !== value) {
+        this._pickedMetadataInfo = value;
+        this.dirty = true;
+      }
+    },
+  },
+
   /**
    * Whether this command should be executed in the pick pass only.
    *
@@ -590,6 +633,8 @@ DrawCommand.shallowClone = function (command, result) {
   result._owner = command._owner;
   result._debugOverlappingFrustums = command._debugOverlappingFrustums;
   result._pickId = command._pickId;
+  result._pickMetadataAllowed = command._pickMetadataAllowed;
+  result._pickedMetadataInfo = command._pickedMetadataInfo;
   result._flags = command._flags;
 
   result.dirty = true;

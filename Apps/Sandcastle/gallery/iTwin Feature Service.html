@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use Viewer to start building new applications or easily embed Cesium into existing applications."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>iTwin Feature Service</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div id="layers"></div>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const serviceResponse = await fetch("https://api.cesium.com/itwin/token");
+        const { access_token: token } = await serviceResponse.json();
+
+        Cesium.ITwinPlatform.defaultAccessToken = token;
+
+        const iTwinId = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          geocoder: false,
+          sceneModePicker: false,
+          homeButton: false,
+          timeline: false,
+          animation: false,
+        });
+        viewer.baseLayerPicker.viewModel.selectedImagery =
+          viewer.baseLayerPicker.viewModel.imageryProviderViewModels[2];
+
+        const birdsEyeView = {
+          destination: new Cesium.Cartesian3(
+            -1525359.4318772827,
+            6191643.528984093,
+            148851.5321709012,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.16657338935967037,
+            -0.7943050121851765,
+            6.283180723449992,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        viewer.scene.camera.flyTo(birdsEyeView);
+
+        // Load feature service geojson files
+        const points = await Cesium.ITwinData.loadGeospatialFeatures(
+          iTwinId,
+          "2380dc1b-1dac-4709-aa5c-f6cb38c4e9f5",
+        );
+        const lines = await Cesium.ITwinData.loadGeospatialFeatures(
+          iTwinId,
+          "613d2310-4d01-43b7-bc92-873a2ca4a4a0",
+        );
+        const areas = await Cesium.ITwinData.loadGeospatialFeatures(
+          iTwinId,
+          "93e7ef51-5210-49f2-92a3-c7f6685e102f",
+        );
+
+        // Add some styling to the lines and points to differentiate types
+        const pinBuilder = new Cesium.PinBuilder();
+        points.entities.values.forEach(async (entity) => {
+          const styleByType = {
+            Tree: { color: Cesium.Color.GREEN, icon: "park2" },
+            Lamp_post: { color: Cesium.Color.WHITE, icon: "lighthouse" },
+            Traffic_light: { color: Cesium.Color.CRIMSON, icon: "circle-stroked" },
+            Arrow_Marking: { color: Cesium.Color.YELLOW, icon: "car" },
+            Road_Sign: { color: Cesium.Color.ORANGE, icon: "triangle" },
+          };
+          const type = entity.properties.type?.getValue();
+          if (Cesium.defined(type) && Cesium.defined(styleByType[type])) {
+            const { color, icon } = styleByType[type];
+            const canvas = await pinBuilder.fromMakiIconId(icon, color, 48);
+            entity.billboard.image = canvas.toDataURL();
+            entity.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
+          }
+        });
+        lines.entities.values.forEach((entity) => {
+          const lineColorsByType = {
+            Contours: Cesium.Color.CRIMSON,
+            Lane_Marking: Cesium.Color.CYAN,
+            Kerb: Cesium.Color.BLUEVIOLET,
+            Chevron_marking: Cesium.Color.DARKORANGE,
+            Turning_pocket: Cesium.Color.DEEPPINK,
+            Yellow_Box: Cesium.Color.GOLD,
+          };
+          const type = entity.properties.type?.getValue();
+          if (Cesium.defined(type) && Cesium.defined(lineColorsByType[type])) {
+            entity.polyline.material = lineColorsByType[type];
+          }
+        });
+
+        // add the geojsons to the viewer
+        viewer.dataSources.add(points);
+        viewer.dataSources.add(lines);
+        viewer.dataSources.add(areas);
+
+        // Create tileset of the reality data mesh and pointcloud
+        const realityMeshId = "62e4432d-621d-489a-87ff-1fc56a2b5369";
+        const realityMesh = await Cesium.ITwinData.createTilesetForRealityDataId(
+          iTwinId,
+          realityMeshId,
+        );
+        viewer.scene.primitives.add(realityMesh);
+        const pointcloudId = "ebf2ee74-f0de-4cd6-a311-19a169c55fdc";
+        const pointcloud = await Cesium.ITwinData.createTilesetForRealityDataId(
+          iTwinId,
+          pointcloudId,
+        );
+        // increase the size of the pointcloud points and turn on attenuation to
+        // make them more visible in the viewer
+        pointcloud.maximumScreenSpaceError = 1;
+        pointcloud.pointCloudShading.attenuation = true;
+        pointcloud.style = new Cesium.Cesium3DTileStyle({
+          pointSize: 5.0,
+        });
+        pointcloud.show = false;
+        viewer.scene.primitives.add(pointcloud);
+
+        Sandcastle.addToolbarButton(
+          "Toggle Points",
+          () => (points.show = !points.show),
+          "layers",
+        );
+        Sandcastle.addToolbarButton(
+          "Toggle Lines",
+          () => (lines.show = !lines.show),
+          "layers",
+        );
+        Sandcastle.addToolbarButton(
+          "Toggle Areas",
+          () => (areas.show = !areas.show),
+          "layers",
+        );
+        Sandcastle.addToolbarButton(
+          "Toggle Reality Mesh",
+          () => (realityMesh.show = !realityMesh.show),
+          "layers",
+        );
+        Sandcastle.addToolbarButton(
+          "Toggle Pointcloud",
+          () => (pointcloud.show = !pointcloud.show),
+          "layers",
+        );
+
+        Sandcastle.addToolbarButton("Birdseye View", () => {
+          viewer.scene.camera.flyTo(birdsEyeView);
+        });
+        Sandcastle.addToolbarButton("Zoom to Pointcloud", () => {
+          pointcloud.show = true;
+          viewer.zoomTo(pointcloud);
+        });
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>

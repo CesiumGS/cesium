@@ -129,7 +129,7 @@ function Vector3DTilePrimitive(options) {
    */
   this.classificationType = defaultValue(
     options.classificationType,
-    ClassificationType.BOTH
+    ClassificationType.BOTH,
   );
 
   // Hidden options
@@ -221,7 +221,7 @@ function createVertexArray(primitive, context) {
       index: 1,
       vertexBuffer: idBuffer,
       componentDatatype: ComponentDatatype.fromTypedArray(
-        primitive._vertexBatchIds
+        primitive._vertexBatchIds,
       ),
       componentsPerAttribute: 1,
     },
@@ -259,7 +259,7 @@ function createShaders(primitive, context) {
   const batchTable = primitive._batchTable;
   const attributeLocations = defaultValue(
     primitive._attributeLocations,
-    defaultAttributeLocations
+    defaultAttributeLocations,
   );
 
   let pickId = primitive._pickId;
@@ -276,7 +276,7 @@ function createShaders(primitive, context) {
 
     fragmentShaderSource = ShaderSource.replaceMain(
       fragmentShaderSource,
-      "czm_non_pick_main"
+      "czm_non_pick_main",
     );
     fragmentShaderSource =
       `${fragmentShaderSource}void main() \n` +
@@ -296,12 +296,12 @@ function createShaders(primitive, context) {
   const vsSource = batchTable.getVertexShaderCallback(
     false,
     "a_batchId",
-    undefined
+    undefined,
   )(VectorTileVS);
   let fsSource = batchTable.getFragmentShaderCallback(
     false,
     undefined,
-    true
+    true,
   )(ShadowVolumeFS);
 
   pickId = batchTable.getPickId();
@@ -454,10 +454,10 @@ function createRenderStates(primitive) {
   }
 
   primitive._rsStencilDepthPass = RenderState.fromCache(
-    getStencilDepthRenderState(false)
+    getStencilDepthRenderState(false),
   );
   primitive._rsStencilDepthPass3DTiles = RenderState.fromCache(
-    getStencilDepthRenderState(true)
+    getStencilDepthRenderState(true),
   );
   primitive._rsColorPass = RenderState.fromCache(colorRenderState);
   primitive._rsPickPass = RenderState.fromCache(pickRenderState);
@@ -479,17 +479,17 @@ function createUniformMap(primitive, context) {
       Matrix4.multiplyByPoint(
         modifiedModelViewScratch,
         primitive._center,
-        rtcScratch
+        rtcScratch,
       );
       Matrix4.setTranslation(
         modifiedModelViewScratch,
         rtcScratch,
-        modifiedModelViewScratch
+        modifiedModelViewScratch,
       );
       Matrix4.multiply(
         projectionMatrix,
         modifiedModelViewScratch,
-        modifiedModelViewScratch
+        modifiedModelViewScratch,
       );
       return modifiedModelViewScratch;
     },
@@ -498,9 +498,8 @@ function createUniformMap(primitive, context) {
     },
   };
 
-  primitive._uniformMap = primitive._batchTable.getUniformMapCallback()(
-    uniformMap
-  );
+  primitive._uniformMap =
+    primitive._batchTable.getUniformMapCallback()(uniformMap);
 }
 
 function copyIndicesCPU(
@@ -510,7 +509,7 @@ function copyIndicesCPU(
   offsets,
   counts,
   batchIds,
-  batchIdLookUp
+  batchIdLookUp,
 ) {
   const sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
 
@@ -524,7 +523,7 @@ function copyIndicesCPU(
     const subarray = new indices.constructor(
       indices.buffer,
       sizeInBytes * offset,
-      count
+      count,
     );
     newIndices.set(subarray, currentOffset);
 
@@ -553,7 +552,7 @@ function rebatchCPU(primitive, batchedIndices) {
     indexOffsets,
     indexCounts,
     current.batchIds,
-    batchIdLookUp
+    batchIdLookUp,
   );
 
   current.offset = 0;
@@ -569,7 +568,7 @@ function rebatchCPU(primitive, batchedIndices) {
         indexOffsets,
         indexCounts,
         next.batchIds,
-        batchIdLookUp
+        batchIdLookUp,
       );
       current.batchIds = current.batchIds.concat(next.batchIds);
       current.count = currentOffset - current.offset;
@@ -582,7 +581,7 @@ function rebatchCPU(primitive, batchedIndices) {
         indexOffsets,
         indexCounts,
         next.batchIds,
-        batchIdLookUp
+        batchIdLookUp,
       );
 
       next.offset = offset;
@@ -605,7 +604,7 @@ function copyIndicesGPU(
   offsets,
   counts,
   batchIds,
-  batchIdLookUp
+  batchIdLookUp,
 ) {
   const sizeInBytes = readBuffer.bytesPerIndex;
 
@@ -620,7 +619,7 @@ function copyIndicesGPU(
       readBuffer,
       offset * sizeInBytes,
       currentOffset * sizeInBytes,
-      count * sizeInBytes
+      count * sizeInBytes,
     );
 
     offsets[index] = currentOffset;
@@ -648,7 +647,7 @@ function rebatchGPU(primitive, batchedIndices) {
     indexOffsets,
     indexCounts,
     current.batchIds,
-    batchIdLookUp
+    batchIdLookUp,
   );
 
   current.offset = 0;
@@ -664,7 +663,7 @@ function rebatchGPU(primitive, batchedIndices) {
         indexOffsets,
         indexCounts,
         next.batchIds,
-        batchIdLookUp
+        batchIdLookUp,
       );
       current.batchIds = current.batchIds.concat(next.batchIds);
       current.count = currentOffset - current.offset;
@@ -677,7 +676,7 @@ function rebatchGPU(primitive, batchedIndices) {
         indexOffsets,
         indexCounts,
         next.batchIds,
-        batchIdLookUp
+        batchIdLookUp,
       );
       next.offset = offset;
       next.count = currentOffset - offset;
@@ -798,7 +797,7 @@ function createColorCommands(primitive, context) {
 
     const stencilDepthDerivedCommand = DrawCommand.shallowClone(
       stencilDepthCommand,
-      stencilDepthCommand.derivedCommands.tileset
+      stencilDepthCommand.derivedCommands.tileset,
     );
     stencilDepthDerivedCommand.renderState =
       primitive._rsStencilDepthPass3DTiles;
@@ -825,7 +824,7 @@ function createColorCommands(primitive, context) {
 
     const colorDerivedCommand = DrawCommand.shallowClone(
       colorCommand,
-      colorCommand.derivedCommands.tileset
+      colorCommand.derivedCommands.tileset,
     );
     colorDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     colorCommand.derivedCommands.tileset = colorDerivedCommand;
@@ -854,7 +853,7 @@ function createColorCommandsIgnoreShow(primitive, frameState) {
   for (let j = 0; j < length; ++j) {
     const commandIgnoreShow = (commandsIgnoreShow[j] = DrawCommand.shallowClone(
       commands[commandIndex],
-      commandsIgnoreShow[j]
+      commandsIgnoreShow[j],
     ));
     commandIgnoreShow.shaderProgram = spStencil;
     commandIgnoreShow.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
@@ -907,7 +906,7 @@ function createPickCommands(primitive) {
 
     const stencilDepthDerivedCommand = DrawCommand.shallowClone(
       stencilDepthCommand,
-      stencilDepthCommand.derivedCommands.tileset
+      stencilDepthCommand.derivedCommands.tileset,
     );
     stencilDepthDerivedCommand.renderState =
       primitive._rsStencilDepthPass3DTiles;
@@ -934,7 +933,7 @@ function createPickCommands(primitive) {
 
     const colorDerivedCommand = DrawCommand.shallowClone(
       colorCommand,
-      colorCommand.derivedCommands.tileset
+      colorCommand.derivedCommands.tileset,
     );
     colorDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     colorCommand.derivedCommands.tileset = colorDerivedCommand;
@@ -1091,7 +1090,7 @@ Vector3DTilePrimitive.prototype.updateCommands = function (batchId, color) {
       offset: offset,
       count: count,
       batchIds: [batchId],
-    })
+    }),
   );
 
   const startIds = [];
@@ -1122,7 +1121,7 @@ Vector3DTilePrimitive.prototype.updateCommands = function (batchId, color) {
         count:
           batchedIndices[i].offset + batchedIndices[i].count - (offset + count),
         batchIds: endIds,
-      })
+      }),
     );
   }
 

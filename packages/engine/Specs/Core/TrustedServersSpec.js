@@ -26,55 +26,55 @@ describe("Core/TrustedServers", function () {
   it("http without a port", function () {
     TrustedServers.add("cesiumjs.org", 80);
     expect(TrustedServers.contains("http://cesiumjs.org/index.html")).toBe(
-      true
+      true,
     );
     expect(TrustedServers.contains("https://cesiumjs.org/index.html")).toBe(
-      false
+      false,
     );
   });
 
   it("https without a port", function () {
     TrustedServers.add("cesiumjs.org", 443);
     expect(TrustedServers.contains("https://cesiumjs.org/index.html")).toBe(
-      true
+      true,
     );
     expect(TrustedServers.contains("http://cesiumjs.org/index.html")).toBe(
-      false
+      false,
     );
   });
 
   it("add", function () {
     expect(TrustedServers.contains("http://cesiumjs.org:81/index.html")).toBe(
-      false
+      false,
     );
     TrustedServers.add("cesiumjs.org", 81);
     expect(TrustedServers.contains("http://cesiumjs.org/index.html")).toBe(
-      false
+      false,
     );
     expect(TrustedServers.contains("http://cesiumjs.org:81/index.html")).toBe(
-      true
+      true,
     );
   });
 
   it("remove", function () {
     TrustedServers.add("cesiumjs.org", 81);
     expect(TrustedServers.contains("http://cesiumjs.org:81/index.html")).toBe(
-      true
+      true,
     );
     TrustedServers.remove("cesiumjs.org", 8080);
     expect(TrustedServers.contains("http://cesiumjs.org:81/index.html")).toBe(
-      true
+      true,
     );
     TrustedServers.remove("cesiumjs.org", 81);
     expect(TrustedServers.contains("http://cesiumjs.org:81/index.html")).toBe(
-      false
+      false,
     );
   });
 
   it("handles username/password credentials", function () {
     TrustedServers.add("cesiumjs.org", 81);
     expect(
-      TrustedServers.contains("http://user:pass@cesiumjs.org:81/index.html")
+      TrustedServers.contains("http://user:pass@cesiumjs.org:81/index.html"),
     ).toBe(true);
   });
 
@@ -90,15 +90,15 @@ describe("Core/TrustedServers", function () {
   it("clear", function () {
     TrustedServers.add("cesiumjs.org", 80);
     expect(TrustedServers.contains("http://cesiumjs.org/index.html")).toBe(
-      true
+      true,
     );
     TrustedServers.clear();
     expect(TrustedServers.contains("http://cesiumjs.org/index.html")).toBe(
-      false
+      false,
     );
     TrustedServers.add("cesiumjs.org", 80);
     expect(TrustedServers.contains("http://cesiumjs.org/index.html")).toBe(
-      true
+      true,
     );
   });
 });

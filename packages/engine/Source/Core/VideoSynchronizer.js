@@ -79,7 +79,7 @@ Object.defineProperties(VideoSynchronizer.prototype, {
       if (defined(value)) {
         this._clockSubscription = value.onTick.addEventListener(
           VideoSynchronizer.prototype._onTick,
-          this
+          this,
         );
       }
 
