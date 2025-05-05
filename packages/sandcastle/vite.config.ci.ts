@@ -3,10 +3,9 @@ import { defineConfig, PluginOption, UserConfig } from "vite";
 import baseConfig from "./vite.config.ts";
 
 export default defineConfig(() => {
-  // const cesiumSource = "../../Build/CesiumUnminified";
   const cesiumBaseUrl = `${process.env.BASE_URL}Build/CesiumUnminified`;
-  console.log(process);
-  console.log({ cesiumBaseUrl });
+
+  console.log("building Sandcastle with base url:", cesiumBaseUrl);
 
   const config: UserConfig = baseConfig;
   // This will make the built files point to routes in the correct nested path
