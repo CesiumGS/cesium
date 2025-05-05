@@ -1,19 +1,26 @@
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import defined from "../Core/defined.js";
-import ModelUtility from "./ModelUtility.js";
+import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
-import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
+import GaussianSplatTextureGenerator from "./Model/GaussianSplatTextureGenerator.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Check from "../Core/Check.js";
 import ModelComponents from "./ModelComponents.js";
 import AttributeType from "./AttributeType.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Renderer/PixelFormat.js";
+import PixelFormat from "../Core/PixelFormat.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
+import GaussianSplatRenderResources from "./GaussianSplatRenderResources.js";
+import BlendingState from "../Renderer/BlendingState.js";
+import Pass from "../Renderer/Pass.js";
+import ShaderDestination from "../Renderer/ShaderDestination.js";
+import GaussianSplatVS from "../../Shaders/Model/GaussianSplatVS.js";
+import GaussianSplatFS from "../../Shaders/Model/GaussianSplatFS.js";
+import PrimitiveType from "../Core/PrimitiveType.js";
 
 const scratchSplatMatrix = new Matrix4();
 
@@ -107,6 +114,21 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   },
 });
 
+GaussianSplatPrimitive.prototype.destroy = function () {
+  return false;
+};
+
+GaussianSplatPrimitive.prototype.pushSplats = function (attributes) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("attributes", attributes);
+  //>>includeEnd('debug');
+
+  this._positions.push(attributes.positions);
+  this._rotations.push(attributes.rotations);
+  this._scales.push(attributes.scales);
+  this._colors.push(attributes.colors);
+};
+
 //texture gen
 
 GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
@@ -182,6 +204,74 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
   });
 };
 
+function buildGSplatDrawCommand(primitive, frameState) {
+  //renderResource
+  const renderResources = new GaussianSplatRenderResources(primitive);
+  const { shaderBuilder } = renderResources;
+
+  const renderStateOptions = renderResources.renderStateOptions;
+  renderStateOptions.cull.enabled = false;
+  renderStateOptions.depthMask = true;
+  renderStateOptions.depthTest.enabled = true;
+  renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
+
+  renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
+
+  shaderBuilder.addDefine(
+    "HAS_GAUSSIAN_SPLATS",
+    undefined,
+    ShaderDestination.BOTH,
+  );
+
+  shaderBuilder.addDefine(
+    "HAS_SPLAT_TEXTURE",
+    undefined,
+    ShaderDestination.BOTH,
+  );
+
+  if (renderResources.model.content.tileset.debugShowBoundingVolume) {
+    shaderBuilder.addDefine(
+      "DEBUG_BOUNDING_VOLUMES",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+  }
+
+  shaderBuilder.addAttribute("float", "a_splatIndex");
+
+  shaderBuilder.addVarying("vec4", "v_splatColor");
+  shaderBuilder.addVarying("vec2", "v_vertPos");
+
+  shaderBuilder.addUniform(
+    "highp usampler2D",
+    "u_splatAttributeTexture",
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
+  const uniformMap = renderResources.uniformMap;
+
+  uniformMap.u_splatScale = function () {
+    return renderResources.model?.style?.splatScale ?? 1.0;
+  };
+
+  uniformMap.u_splatAttributeTexture = function () {
+    return primitive.gaussianSplatTexture;
+  };
+
+  renderResources.instanceCount = renderResources.count;
+  renderResources.count = 4;
+  renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
+
+  shaderBuilder.addVertexLines(GaussianSplatVS);
+  shaderBuilder.addFragmentLines(GaussianSplatFS);
+  //build shader program
+
+  //create geometry for indices
+
+  //submit command
+  frameState.commandList.push({});
+}
+
 //update and sorting
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const primitive = frameState.gaussianSplatPrimitive;
@@ -204,7 +294,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   );
 
   if (!primitive?.hasGaussianSplatTexture) {
-    model.resetDrawCommands();
     return;
   }
 
@@ -232,7 +321,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   });
   promise.then((sortedData) => {
     idxAttr.typedArray = sortedData;
-    model.resetDrawCommands();
+
+    frameState.commandList.push(buildGSplatDrawCommand(primitive, frameState));
   });
 };
 
