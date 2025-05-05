@@ -1,29 +1,12 @@
-import { fileURLToPath } from "url";
-import { defineConfig, PluginOption, UserConfig } from "vite";
+import { defineConfig, UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import baseConfig from "./vite.config.ts";
+import baseConfig, { cesiumPathReplace } from "./vite.config.ts";
 
 export default defineConfig(() => {
   const config: UserConfig = baseConfig;
 
   const cesiumSource = "../../Build/CesiumUnminified";
   const cesiumBaseUrl = "Build/CesiumUnminified";
-
-  config.define = {
-    __base_url__: JSON.stringify(`/${cesiumBaseUrl}`),
-  };
-
-  config.build = {
-    ...config.build,
-    // "the outDir is not inside project root and will not be emptied" without this setting
-    emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        index: fileURLToPath(new URL("./index.html", import.meta.url)),
-        bucket: fileURLToPath(new URL("./bucket.html", import.meta.url)),
-      },
-    },
-  };
 
   const copyPlugin = viteStaticCopy({
     targets: [
@@ -38,17 +21,8 @@ export default defineConfig(() => {
     ],
   });
 
-  const htmlPlugin = (): PluginOption => {
-    return {
-      name: "custom-cesium-path-plugin",
-      transformIndexHtml(html) {
-        return html.replaceAll("__base_url__", `${cesiumBaseUrl}`);
-      },
-    };
-  };
-
   const plugins = config.plugins ?? [];
-  config.plugins = [...plugins, copyPlugin, htmlPlugin()];
+  config.plugins = [...plugins, copyPlugin, cesiumPathReplace(cesiumBaseUrl)];
 
   return config;
 });
