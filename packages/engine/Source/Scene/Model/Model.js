@@ -2418,12 +2418,16 @@ function getComputedScale(model, modelMatrix, frameState) {
 
     // maxScaleInPixels is always > 0
     let maxScaleInPixels = CesiumMath.EPSILON12;
-    maxScaleInPixels = Math.max(
-      maxScaleInPixels,
-      getScaleInPixels(modelMatrix),
-    );
 
     const sceneGraph = model.sceneGraph;
+    // TODO: Assumes model centered at earth origin
+    if (!sceneGraph.hasInstances) {
+      maxScaleInPixels = Math.max(
+        maxScaleInPixels,
+        getScaleInPixels(modelMatrix),
+      );
+    }
+
     if (sceneGraph.hasInstances) {
       for (const modelInstance of sceneGraph.modelInstances) {
         const transform = modelInstance.transform;
