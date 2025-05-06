@@ -1,42 +1,45 @@
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
-import defined from "../Core/defined.js";
 import ModelUtility from "./Model/ModelUtility.js";
-import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./Model/GaussianSplatTextureGenerator.js";
-import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Check from "../Core/Check.js";
-import ModelComponents from "./ModelComponents.js";
-import AttributeType from "./AttributeType.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import GaussianSplatRenderResources from "./GaussianSplatRenderResources.js";
-import BlendingState from "../Renderer/BlendingState.js";
+import BlendingState from "./BlendingState.js";
 import Pass from "../Renderer/Pass.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
-import GaussianSplatVS from "../../Shaders/Model/GaussianSplatVS.js";
-import GaussianSplatFS from "../../Shaders/Model/GaussianSplatFS.js";
+import GaussianSplatVS from "../Shaders/Model/GaussianSplatVS.js";
+import GaussianSplatFS from "../Shaders/Model/GaussianSplatFS.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
+import DrawCommand from "../Renderer/DrawCommand.js";
+import Geometry from "../Core/Geometry.js";
+import GeometryAttribute from "../Core/GeometryAttribute.js";
+import VertexArray from "../Renderer/VertexArray.js";
+import BufferUsage from "../Renderer/BufferUsage.js";
+import Cesium3DTileset from "./Cesium3DTileset.js";
+import RenderState from "../Renderer/RenderState.js";
+import clone from "../Core/clone.js";
 
 const scratchSplatMatrix = new Matrix4();
 
 function GaussianSplatPrimitive(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._positions = undefined;
-  this._rotations = undefined;
-  this._scales = undefined;
-  this._colors = undefined;
+  this._positions = new Float32Array();
+  this._rotations = new Float32Array();
+  this._scales = new Float32Array();
+  this._colors = new Uint8Array();
+  this._indexes = new Uint32Array();
+  this._numSplats = 0;
 
-  /**
-   * @type {Cesium3DTilesetStatistics}
-   * @private
-   */
-  this._statistics = new Cesium3DTilesetStatistics();
+  this._needsGaussianSplatTexture = true;
+
+  this._tileset = options.tileset;
 
   /**
    * @type {boolean}
@@ -114,6 +117,12 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   },
 });
 
+GaussianSplatPrimitive.fromIonAssetId = async function (assetId, options) {
+  return new GaussianSplatPrimitive({
+    tileset: await Cesium3DTileset.fromIonAssetId(assetId, options),
+  });
+};
+
 GaussianSplatPrimitive.prototype.destroy = function () {
   return false;
 };
@@ -135,36 +144,16 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
   primitive.gaussianSplatTexturePending = true;
   const promise = GaussianSplatTextureGenerator.generateFromAttrs({
     attributes: {
-      positions: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.POSITION,
-        ).typedArray,
-      ),
-      scales: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.SCALE,
-        ).typedArray,
-      ),
-      rotations: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.ROTATION,
-        ).typedArray,
-      ),
-      colors: new Uint8Array(
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.COLOR,
-        ).typedArray,
-      ),
+      positions: new Float32Array(primitive._positions),
+      scales: new Float32Array(primitive._scales),
+      rotations: new Float32Array(primitive._rotations),
+      colors: new Uint8Array(primitive._colors),
     },
-    count: primitive.attributes[0].count,
+    count: primitive._nmSplats,
   });
 
   if (promise === undefined) {
-    primitive.gaussianSplatTexturePending = false;
+    primitive._gaussianSplatTexturePending = false;
     return;
   }
 
@@ -183,20 +172,7 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
       flipY: false,
       sampler: Sampler.NEAREST,
     });
-    const count = Math.floor(primitive.attributes[0].count);
-    const attribute = new ModelComponents.Attribute();
 
-    //index attribute for indexing into attribute texture
-    attribute.name = "_SPLAT_INDEXES";
-    attribute.typedArray = new Uint32Array([...Array(count).keys()]);
-    attribute.componentDatatype = ComponentDatatype.UNSIGNED_INT;
-    attribute.type = AttributeType.SCALAR;
-    attribute.normalized = false;
-    attribute.count = count;
-    attribute.constant = 0;
-    attribute.instanceDivisor = 1;
-
-    primitive.attributes.push(attribute);
     primitive.gaussianSplatTexture = splatTex;
     primitive.hasGaussianSplatTexture = true;
     primitive.needsGaussianSplatTexture = false;
@@ -206,6 +182,8 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
 
 function buildGSplatDrawCommand(primitive, frameState) {
   //renderResource
+  //build shader program
+
   const renderResources = new GaussianSplatRenderResources(primitive);
   const { shaderBuilder } = renderResources;
 
@@ -229,7 +207,7 @@ function buildGSplatDrawCommand(primitive, frameState) {
     ShaderDestination.BOTH,
   );
 
-  if (renderResources.model.content.tileset.debugShowBoundingVolume) {
+  if (renderResources.debugShowBoundingVolume) {
     shaderBuilder.addDefine(
       "DEBUG_BOUNDING_VOLUMES",
       undefined,
@@ -264,25 +242,96 @@ function buildGSplatDrawCommand(primitive, frameState) {
 
   shaderBuilder.addVertexLines(GaussianSplatVS);
   shaderBuilder.addFragmentLines(GaussianSplatFS);
-  //build shader program
 
+  const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   //create geometry for indices
 
+  // const count = primitive.numSplats;
+  // const attribute = new ModelComponents.Attribute();
+
+  // //index attribute for indexing into attribute texture
+  // attribute.name = "_SPLAT_INDEXES";
+  // attribute.typedArray = new Uint32Array([...Array(count).keys()]);
+  // attribute.componentDatatype = ComponentDatatype.UNSIGNED_INT;
+  // attribute.type = AttributeType.SCALAR;
+  // attribute.normalized = false;
+  // attribute.count = count;
+  // attribute.constant = 0;
+  // attribute.instanceDivisor = 1;
+
+  // primitive.attributes.push(attribute);
+
+  let renderState = clone(
+    RenderState.fromCache(renderResources.renderStateOptions),
+    true,
+  );
+
+  renderState.cull.face = ModelUtility.getCullFace(
+    primitive._tileset.modelMatrix,
+    PrimitiveType.TRIANGLE_STRIP,
+  );
+  renderState = RenderState.fromCache(renderState);
+
+  const splatQuadAttrLocations = {
+    splatIndex: 5,
+  };
+  const geometry = new Geometry({
+    attributes: {
+      screenQuadPosition: new GeometryAttribute({
+        componentDatatype: ComponentDatatype.FLOAT,
+        componentsPerAttribute: 2,
+        values: [-1, -1, 1, -1, 1, 1, -1, 1],
+        name: "_SCREEN_QUAD_POS",
+        variableName: "screenQuadPosition",
+      }),
+      splatIndex: {
+        componentDatatype: ComponentDatatype.FLOAT,
+        componentsPerAttribute: 1,
+        values: primitive._indexes,
+        name: "_SPLAT_INDEXES",
+        variableName: "splatIndex",
+      },
+    },
+    primitiveType: PrimitiveType.TRIANGLE_STRIP,
+  });
+
+  const vertexArray = VertexArray.fromGeometry({
+    context: frameState.context,
+    geometry: geometry,
+    attributeLocations: splatQuadAttrLocations,
+    bufferUsage: BufferUsage.STATIC_DRAW,
+    interleave: false,
+  });
+
   //submit command
-  frameState.commandList.push({});
+  const command = new DrawCommand({
+    boundingVolume: primitive._tileset.boundingSphere,
+    modelMatrix: primitive._tileset.modelMatrix,
+    uniformMap: uniformMap,
+    renderState: renderState,
+    vertexArray: vertexArray,
+    shaderProgram: shaderProgram,
+    cull: renderResources.depthTest.enabled,
+    pass: Pass.GAUSSIAN_SPLATS,
+    count: renderResources.count,
+    owner: this,
+    instanceCount: renderResources.instanceCount,
+    primitiveType: PrimitiveType.TRIANGLE_STRIP,
+    debugShowBoundingVolume: model.debugShowBoundingVolume,
+    castShadows: false,
+    receiveShadows: false,
+  });
+
+  frameState.commandList.push(command);
 }
 
 //update and sorting
 GaussianSplatPrimitive.prototype.update = function (frameState) {
-  const primitive = frameState.gaussianSplatPrimitive;
+  this._tileset.update(frameState);
 
-  if (!defined(primitive)) {
-    return;
-  }
-
-  if (primitive.needsGaussianSplatTexture) {
-    if (!primitive.gaussianSplatTexturePending) {
-      this.generateSplatTexture(primitive, frameState);
+  if (this._needsGaussianSplatTexture) {
+    if (!this._gaussianSplatTexturePending) {
+      GaussianSplatPrimitive.generateSplatTexture(this, frameState);
     }
     return;
   }
@@ -293,21 +342,15 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     scratchSplatMatrix,
   );
 
-  if (!primitive?.hasGaussianSplatTexture) {
+  if (!this._hasGaussianSplatTexture) {
     return;
   }
 
-  const idxAttr = primitive.attributes.find((a) => a.name === "_SPLAT_INDEXES");
-  const posAttr = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION,
-  );
-
   const promise = GaussianSplatSorter.radixSortIndexes({
     primitive: {
-      positions: new Float32Array(posAttr.typedArray),
+      positions: new Float32Array(this._positions.typedArray),
       modelView: Float32Array.from(scratchSplatMatrix),
-      count: idxAttr.count,
+      count: this.numSplats,
     },
     sortType: "Index",
   });
@@ -320,9 +363,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     throw err;
   });
   promise.then((sortedData) => {
-    idxAttr.typedArray = sortedData;
+    this._indexes.typedArray = sortedData;
 
-    frameState.commandList.push(buildGSplatDrawCommand(primitive, frameState));
+    frameState.commandList.push(buildGSplatDrawCommand(this, frameState));
   });
 };
 
