@@ -240,21 +240,21 @@ RuntimeModelInstancingPipelineStage._createUniforms = function (
 
   const uniformMap = {
     u_instance_nodeTransform: () => {
-      let transform = Matrix4.multiplyTransformation(
+      // TODO: Assumes model centered at earth origin
+      const transform = Matrix4.multiplyByUniformScale(
+        sceneGraph.rootTransform,
+        sceneGraph._computedModelScale,
+        nodeTransformScratch,
+      );
+
+      return Matrix4.multiplyTransformation(
         // The transform for the scene graph computed by multiplying the
         // components transform by the the axisCorrectionMatrix
-        sceneGraph.rootTransform,
+        transform,
         // This transforms from the node's local space to the model's scene graph space.
         runtimeNode.computedTransform,
         nodeTransformScratch,
       );
-      // TODO: Assumes model centered at earth origin
-      transform = Matrix4.multiplyByUniformScale(
-        transform,
-        sceneGraph._computedModelScale,
-        transform,
-      );
-      return transform;
     },
   };
 
