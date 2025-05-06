@@ -43,26 +43,26 @@ const options = [
   {
     text: "Aircraft",
     onselect: function () {
-      createModel("../SampleData/models/CesiumAir/Cesium_Air.glb", 5000.0);
+      createModel("../../SampleData/models/CesiumAir/Cesium_Air.glb", 5000.0);
     },
   },
   {
     text: "Drone",
     onselect: function () {
-      createModel("../SampleData/models/CesiumDrone/CesiumDrone.glb", 150.0);
+      createModel("../../SampleData/models/CesiumDrone/CesiumDrone.glb", 150.0);
     },
   },
   {
     text: "Ground Vehicle",
     onselect: function () {
-      createModel("../SampleData/models/GroundVehicle/GroundVehicle.glb", 0);
+      createModel("../../SampleData/models/GroundVehicle/GroundVehicle.glb", 0);
     },
   },
   {
     text: "Hot Air Balloon",
     onselect: function () {
       createModel(
-        "../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
+        "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
         1000.0,
       );
     },
@@ -71,7 +71,7 @@ const options = [
     text: "Milk Truck",
     onselect: function () {
       createModel(
-        "../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+        "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
         0,
       );
     },
@@ -79,20 +79,20 @@ const options = [
   {
     text: "Skinned Character",
     onselect: function () {
-      createModel("../SampleData/models/CesiumMan/Cesium_Man.glb", 0);
+      createModel("../../SampleData/models/CesiumMan/Cesium_Man.glb", 0);
     },
   },
   {
     text: "Unlit Box",
     onselect: function () {
-      createModel("../SampleData/models/BoxUnlit/BoxUnlit.gltf", 10.0);
+      createModel("../../SampleData/models/BoxUnlit/BoxUnlit.gltf", 10.0);
     },
   },
   {
     text: "Draco Compressed Model",
     onselect: function () {
       createModel(
-        "../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
+        "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
         0,
       );
     },
@@ -106,7 +106,7 @@ const options = [
         );
       }
       createModel(
-        "../SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
+        "../../SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
         1000.0,
       );
     },
@@ -114,7 +114,7 @@ const options = [
   {
     text: "Instanced Box",
     onselect: function () {
-      createModel("../SampleData/models/BoxInstanced/BoxInstanced.gltf", 15);
+      createModel("../../SampleData/models/BoxInstanced/BoxInstanced.gltf", 15);
     },
   },
 ];
@@ -133,7 +133,7 @@ function addBillboard() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
     billboard: {
-      image: "images/Cesium_Logo_overlay.png",
+      image: "../images/Cesium_Logo_overlay.png",
     },
   });
 }
@@ -144,7 +144,7 @@ function setBillboardProperties() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
     billboard: {
-      image: "images/Cesium_Logo_overlay.png", // default: undefined
+      image: "../images/Cesium_Logo_overlay.png", // default: undefined
       show: true, // default
       pixelOffset: new Cesium.Cartesian2(0, -50), // default: (0, 0)
       eyeOffset: new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
@@ -166,7 +166,7 @@ function changeBillboardProperties() {
   const entity = viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0),
     billboard: {
-      image: "images/Cesium_Logo_overlay.png",
+      image: "../images/Cesium_Logo_overlay.png",
     },
   });
 
@@ -181,7 +181,7 @@ function sizeBillboardInMeters() {
   const entity = viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
     billboard: {
-      image: "images/Cesium_Logo_overlay.png",
+      image: "../images/Cesium_Logo_overlay.png",
       sizeInMeters: true,
     },
   });
@@ -192,8 +192,8 @@ function sizeBillboardInMeters() {
 function addMultipleBillboards() {
   Sandcastle.declare(addMultipleBillboards);
 
-  const logoUrl = "images/Cesium_Logo_overlay.png";
-  const facilityUrl = "images/facility.gif";
+  const logoUrl = "../images/Cesium_Logo_overlay.png";
+  const facilityUrl = "../images/facility.gif";
 
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -221,7 +221,7 @@ function scaleByDistance() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
     billboard: {
-      image: "images/facility.gif",
+      image: "../images/facility.gif",
       scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
     },
   });
@@ -233,7 +233,7 @@ function fadeByDistance() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
     billboard: {
-      image: "images/Cesium_Logo_overlay.png",
+      image: "../images/Cesium_Logo_overlay.png",
       translucencyByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
     },
   });
@@ -242,8 +242,8 @@ function fadeByDistance() {
 function offsetByDistance() {
   Sandcastle.declare(offsetByDistance);
   Promise.all([
-    Cesium.Resource.fetchImage("images/Cesium_Logo_overlay.png"),
-    Cesium.Resource.fetchImage("images/facility.gif"),
+    Cesium.Resource.fetchImage("../images/Cesium_Logo_overlay.png"),
+    Cesium.Resource.fetchImage("../images/facility.gif"),
   ]).then(function (images) {
     // As viewer zooms closer to facility billboard,
     // increase pixelOffset on CesiumLogo billboard to this height
@@ -284,7 +284,7 @@ function addMarkerBillboards() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
     billboard: {
-      image: "images/whiteShapes.png",
+      image: "../images/whiteShapes.png",
       imageSubRegion: new Cesium.BoundingRectangle(49, 43, 18, 18),
       color: Cesium.Color.LIME,
     },
@@ -292,7 +292,7 @@ function addMarkerBillboards() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-84.0, 39.0),
     billboard: {
-      image: "images/whiteShapes.png",
+      image: "../images/whiteShapes.png",
       imageSubRegion: new Cesium.BoundingRectangle(61, 23, 18, 18),
       color: new Cesium.Color(0, 0.5, 1.0, 1.0),
     },
@@ -300,7 +300,7 @@ function addMarkerBillboards() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-70.0, 41.0),
     billboard: {
-      image: "images/whiteShapes.png",
+      image: "../images/whiteShapes.png",
       imageSubRegion: new Cesium.BoundingRectangle(67, 80, 14, 14),
       color: new Cesium.Color(0.5, 0.9, 1.0, 1.0),
     },
@@ -308,7 +308,7 @@ function addMarkerBillboards() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-73.0, 37.0),
     billboard: {
-      image: "images/whiteShapes.png",
+      image: "../images/whiteShapes.png",
       imageSubRegion: new Cesium.BoundingRectangle(27, 103, 22, 22),
       color: Cesium.Color.RED,
     },
@@ -316,7 +316,7 @@ function addMarkerBillboards() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-79.0, 35.0),
     billboard: {
-      image: "images/whiteShapes.png",
+      image: "../images/whiteShapes.png",
       imageSubRegion: new Cesium.BoundingRectangle(105, 105, 18, 18),
       color: Cesium.Color.YELLOW,
     },
@@ -344,7 +344,7 @@ async function disableDepthTest() {
   viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
     billboard: {
-      image: "images/facility.gif",
+      image: "../images/facility.gif",
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
@@ -740,7 +740,7 @@ handler.setInputAction(() => removeRotation(), Cesium.ScreenSpaceEventType.WHEEL
 
 `,
     html: `<style>
-  @import url(bucket.css);
+  @import url(../templates/bucket.css);
   #toolbar {
     background: rgba(42, 42, 42, 0.8);
     padding: 4px;
@@ -877,7 +877,7 @@ Sandcastle.addToolbarButton("Remove Exaggeration", function () {
 });
 `,
     html: `<style>
-  @import url(bucket.css);
+  @import url(../templates/bucket.css);
   #toolbar {
     background: rgba(42, 42, 42, 0.8);
     padding: 4px;

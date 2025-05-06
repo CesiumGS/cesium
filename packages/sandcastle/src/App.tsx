@@ -726,7 +726,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
         <iframe
           ref={bucket}
           id="bucketFrame"
-          src="bucket.html"
+          src="templates/bucket.html"
           className="fullFrame"
           allowFullScreen
         ></iframe>

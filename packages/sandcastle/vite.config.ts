@@ -16,7 +16,9 @@ const baseConfig: UserConfig = {
     rollupOptions: {
       input: {
         index: fileURLToPath(new URL("./index.html", import.meta.url)),
-        bucket: fileURLToPath(new URL("./bucket.html", import.meta.url)),
+        bucket: fileURLToPath(
+          new URL("./templates/bucket.html", import.meta.url),
+        ),
       },
     },
   },

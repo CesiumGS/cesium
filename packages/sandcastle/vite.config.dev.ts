@@ -27,7 +27,11 @@ export default defineConfig(() => {
   };
 
   const plugins = config.plugins ?? [];
-  config.plugins = [...plugins, copyPlugin, cesiumPathReplace(cesiumBaseUrl)];
+  config.plugins = [
+    ...plugins,
+    copyPlugin,
+    cesiumPathReplace(`/${cesiumBaseUrl}`),
+  ];
 
   return config;
 });
