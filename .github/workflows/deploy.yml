@@ -1,7 +1,7 @@
 name: deploy
-on: 
+on:
   push:
-    branches-ignore: 
+    branches-ignore:
       - 'cesium.com'
       - production
 concurrency:
@@ -28,6 +28,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: "**/package.json"
       - name: npm install
         run: npm install
       - name: set the version in package.json
@@ -58,7 +60,7 @@ jobs:
           --exclude "node_modules/*" \
           --exclude "scripts/*" \
           --exclude "Tools/*" \
-          --delete 
+          --delete
       - name: set status
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: npm run deploy-status -- --status success --message Deployed

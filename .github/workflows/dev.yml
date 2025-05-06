@@ -1,7 +1,7 @@
 name: dev
-on: 
+on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
 concurrency:
@@ -16,6 +16,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: "**/package.json"
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -37,6 +39,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: "**/package.json"
       - name: npm install
         run: npm install
       - name: build
@@ -54,6 +58,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: "**/package.json"
       - name: npm install
         run: npm install
       - name: release build
@@ -70,6 +76,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: "**/package.json"
       - name: npm install
         run: npm install
       - name: release build
