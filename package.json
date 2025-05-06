@@ -104,7 +104,7 @@
     "yargs": "^17.0.1"
   },
   "scripts": {
-    "prepare": "gulp prepare && husky && playwright install --with-deps",
+    "prepare": "gulp prepare && husky",
     "start": "node server.js",
     "start-public": "node server.js --public",
     "build": "gulp build",
@@ -130,6 +130,7 @@
     "test-webgl-validation": "gulp test --webglValidation",
     "test-webgl-stub": "gulp test --webglStub",
     "test-release": "gulp test --release",
+    "playwright": "playwright install --with-deps",
     "test-e2e": "playwright test -c Specs/e2e/playwright.config.js --project=chromium",
     "test-e2e-all": "playwright test -c Specs/e2e/playwright.config.js",
     "test-e2e-release": "release=true playwright test -c Specs/e2e/playwright.config.js --project=chromium",
