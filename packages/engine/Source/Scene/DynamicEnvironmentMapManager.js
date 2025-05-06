@@ -81,9 +81,12 @@ function DynamicEnvironmentMapManager(options) {
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  const mipmapLevels = Math.min(
-    options.mipmapLevels ?? 7,
-    Math.log2(ContextLimits.maximumCubeMapSize),
+  const mipmapLevels = Math.max(
+    Math.min(
+      options.mipmapLevels ?? 7,
+      Math.log2(ContextLimits.maximumCubeMapSize),
+    ),
+    1,
   );
 
   this._mipmapLevels = mipmapLevels;
@@ -841,7 +844,8 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   const isSupported =
     // A FrameState type works here because the function only references the context parameter.
     // @ts-ignore
-    DynamicEnvironmentMapManager.isDynamicUpdateSupported(frameState);
+    DynamicEnvironmentMapManager.isDynamicUpdateSupported(frameState) &&
+    this._mipmapLevels > 1;
 
   if (
     !isSupported ||

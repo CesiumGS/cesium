@@ -66,25 +66,33 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
     );
   });
 
+  it("always use at least one mipmap level", () => {
+    const manager = new DynamicEnvironmentMapManager({
+      mipmapLevels: 0,
+    });
+
+    expect(manager._mipmapLevels).toBe(1);
+  });
+
   describe(
     "render tests",
     () => {
       const time = JulianDate.fromIso8601("2024-08-30T10:45:00Z");
 
-      let scene, orginalMaximumCubeMapSize;
+      let scene, originalMaximumCubeMapSize;
 
       beforeAll(() => {
         scene = createScene({
           skyBox: false,
         });
-        orginalMaximumCubeMapSize = ContextLimits.maximumCubeMapSize;
+        originalMaximumCubeMapSize = ContextLimits.maximumCubeMapSize;
         // To keep tests fast, don't throttle
         ContextLimits._maximumCubeMapSize = Number.POSITIVE_INFINITY;
       });
 
       afterAll(() => {
         scene.destroyForSpecs();
-        ContextLimits._maximumCubeMapSize = orginalMaximumCubeMapSize;
+        ContextLimits._maximumCubeMapSize = originalMaximumCubeMapSize;
       });
 
       afterEach(() => {
@@ -127,6 +135,29 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         manager.position =
           Ellipsoid.WGS84.cartographicToCartesian(cartographic);
         manager.enabled = false;
+
+        const primitive = new EnvironmentMockPrimitive(manager);
+        scene.primitives.add(primitive);
+
+        scene.renderForSpecs();
+
+        expect(manager.radianceCubeMap).toBeUndefined();
+
+        scene.renderForSpecs();
+
+        expect(manager.sphericalHarmonicCoefficients).toEqual(
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+        );
+      });
+
+      it("does not update if there is only one mipmap level", async function () {
+        const manager = new DynamicEnvironmentMapManager({
+          mipmapLevels: 1,
+        });
+
+        const cartographic = Cartographic.fromDegrees(-75.165222, 39.952583);
+        manager.position =
+          Ellipsoid.WGS84.cartographicToCartesian(cartographic);
 
         const primitive = new EnvironmentMockPrimitive(manager);
         scene.primitives.add(primitive);
