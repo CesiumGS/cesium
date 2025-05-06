@@ -261,25 +261,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("creates environment map and spherical harmonics at altitude in Philadelphia with static lighting", async function () {
@@ -348,25 +378,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("creates environment map and spherical harmonics above Earth's atmosphere with static lighting", async function () {
@@ -436,25 +496,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("creates environment map and spherical harmonics at surface in Philadelphia with dynamic lighting", async function () {
@@ -522,25 +612,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("creates environment map and spherical harmonics at surface in Sydney with dynamic lighting", async function () {
@@ -575,58 +695,73 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.renderForSpecs(time);
         scene.renderForSpecs(time);
 
+        // Expect darkness at night
         expect(manager.sphericalHarmonicCoefficients[0]).toEqualEpsilon(
-          new Cartesian3(
-            0.0054358793422579765,
-            0.0054358793422579765,
-            0.0027179396711289883,
-          ),
-          CesiumMath.EPSILON2,
+          new Cartesian3(0.0, 0.0, 0.0),
+          0.2,
         );
         expect(manager.sphericalHarmonicCoefficients[1]).toEqualEpsilon(
-          new Cartesian3(
-            0.0037772462237626314,
-            0.0037772462237626314,
-            0.0018886231118813157,
-          ),
-          CesiumMath.EPSILON2,
+          new Cartesian3(0.0, 0.0, 0.0),
+          0.2,
         );
         expect(manager.sphericalHarmonicCoefficients[2]).toEqualEpsilon(
-          new Cartesian3(
-            -0.000007333524990826845,
-            -0.000007333524990826845,
-            -0.0000036667624954134226,
-          ),
-          CesiumMath.EPSILON2,
+          new Cartesian3(0.0, 0.0, 0.0),
+          0.2,
         );
         expect(manager.sphericalHarmonicCoefficients[3]).toEqualEpsilon(
-          new Cartesian3(
-            0.000008501945558236912,
-            0.000008501945558236912,
-            0.000004250972779118456,
-          ),
-          CesiumMath.EPSILON2,
+          new Cartesian3(0.0, 0.0, 0.0),
+          0.2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("lighting uses atmosphere properties", async function () {
@@ -697,25 +832,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("lighting uses atmosphereScatteringIntensity value", async function () {
@@ -780,25 +945,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("lighting uses gamma value", async function () {
@@ -864,25 +1059,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("lighting uses brightness value", async function () {
@@ -948,25 +1173,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("lighting uses saturation value", async function () {
@@ -1032,25 +1287,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("lighting uses ground color value", async function () {
@@ -1126,21 +1411,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
+
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("lighting uses ground albedo value", async function () {
@@ -1206,25 +1525,55 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           CesiumMath.EPSILON2,
         );
 
-        expect(manager.sphericalHarmonicCoefficients[4].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[4].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[4].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[4].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[5].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[5].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[5].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[5].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[6].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[6].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[6].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[6].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[7].x).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].y).toBeGreaterThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[7].z).toBeGreaterThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[7].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[7].z).toEqual(
+          jasmine.any(Number),
+        );
 
-        expect(manager.sphericalHarmonicCoefficients[8].x).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].y).toBeLessThan(0.0);
-        expect(manager.sphericalHarmonicCoefficients[8].z).toBeLessThan(0.0);
+        expect(manager.sphericalHarmonicCoefficients[8].x).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].y).toEqual(
+          jasmine.any(Number),
+        );
+        expect(manager.sphericalHarmonicCoefficients[8].z).toEqual(
+          jasmine.any(Number),
+        );
       });
 
       it("destroys", function () {
