@@ -13,8 +13,8 @@ import RuntimeModelInstancingPipelineStageVS from "../../Shaders/Model/RuntimeMo
 const nodeTransformScratch = new Matrix4();
 
 /**
- * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
- * level for model instances specified using <code>ModelInstance</code>
+ * The runtime model instancing pipeline stage is responsible for handling GPU mesh instancing
+ * specified through the API through the <code>ModelInstance</code> class.
  *
  * @namespace RuntimeModelInstancingPipelineStage
  * @private
@@ -26,16 +26,8 @@ const RuntimeModelInstancingPipelineStage = {
 /**
  * Process a node. This modifies the following parts of the render resources:
  * <ul>
- *  <li> creates buffers for the typed arrays of each attribute, if they do not yet exist
  *  <li> adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
- *  <li> sets the instancing translation min and max to compute an accurate bounding volume</li>
- * </ul>
- *
- * If the scene is in either 2D or CV mode, this stage also:
- * <ul>
- *  <li> adds additional attributes for the transformation attributes projected to 2D
- *  <li> adds a flag to the shader to use the 2D instanced attributes
- *  <li> adds a uniform for the view model matrix in 2D
+ *  <li> creates a buffer for the typed array containing the value for each attribute</li>
  * </ul>
  *
  * @param {NodeRenderResources} renderResources The render resources for this node.
@@ -225,11 +217,6 @@ RuntimeModelInstancingPipelineStage._createUniforms = function (
   sceneGraph,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
-  //   shaderBuilder.addUniform(
-  //     "mat4",
-  //     "u_instance_modifiedModelView",
-  //     ShaderDestination.VERTEX,
-  //   );
   shaderBuilder.addUniform(
     "mat4",
     "u_instance_nodeTransform",
@@ -242,14 +229,14 @@ RuntimeModelInstancingPipelineStage._createUniforms = function (
     u_instance_nodeTransform: () => {
       // TODO: Assumes model centered at earth origin
       const transform = Matrix4.multiplyByUniformScale(
+        // The transform for the scene graph computed by multiplying the
+        // components transform by the the axisCorrectionMatrix
         sceneGraph.rootTransform,
         sceneGraph._computedModelScale,
         nodeTransformScratch,
       );
 
       return Matrix4.multiplyTransformation(
-        // The transform for the scene graph computed by multiplying the
-        // components transform by the the axisCorrectionMatrix
         transform,
         // This transforms from the node's local space to the model's scene graph space.
         runtimeNode.computedTransform,
