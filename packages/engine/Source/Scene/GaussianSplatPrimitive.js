@@ -24,6 +24,7 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import RenderState from "../Renderer/RenderState.js";
 import clone from "../Core/clone.js";
+import defined from "../Core/defined.js";
 
 const scratchSplatMatrix = new Matrix4();
 
@@ -70,32 +71,11 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
     },
   },
 
-  /**
-   * Gets the bounding sphere.
-   *
-   * @memberof GaussianSplatPrimitive.prototype
-   * @type {BoundingSphere}
-   * @readonly
-   */
   boundingSphere: {
     get: function () {
-      return this._shape.boundingSphere;
+      return this._tileset.boundingSphere;
     },
   },
-
-  /**
-   * Gets the oriented bounding box.
-   *
-   * @memberof GaussianSplatPrimitive.prototype
-   * @type {OrientedBoundingBox}
-   * @readonly
-   */
-  orientedBoundingBox: {
-    get: function () {
-      return this._shape.orientedBoundingBox;
-    },
-  },
-
   /**
    * Gets the model matrix.
    *
@@ -105,14 +85,17 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
    */
   modelMatrix: {
     get: function () {
-      return this._modelMatrix;
+      return this._tileset._modelMatrix;
     },
     set: function (modelMatrix) {
       //>>includeStart('debug', pragmas.debug);
       Check.typeOf.object("modelMatrix", modelMatrix);
       //>>includeEnd('debug');
 
-      this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
+      this._tileset._modelMatrix = Matrix4.clone(
+        modelMatrix,
+        this._tileset._modelMatrix,
+      );
     },
   },
 });
@@ -124,6 +107,18 @@ GaussianSplatPrimitive.fromIonAssetId = async function (assetId, options) {
 };
 
 GaussianSplatPrimitive.prototype.destroy = function () {
+  this._positions = undefined;
+  this._rotations = undefined;
+  this._scales = undefined;
+  this._colors = undefined;
+  this._indexes = undefined;
+  if (defined(this.gaussianSplatTexture)) {
+    this.gaussianSplatTexture.destroy();
+    this.gaussianSplatTexture = undefined;
+  }
+};
+
+GaussianSplatPrimitive.prototype.isDestroyed = function () {
   return false;
 };
 
@@ -141,7 +136,7 @@ GaussianSplatPrimitive.prototype.pushSplats = function (attributes) {
 //texture gen
 
 GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
-  primitive.gaussianSplatTexturePending = true;
+  primitive._gaussianSplatTexturePending = true;
   const promise = GaussianSplatTextureGenerator.generateFromAttrs({
     attributes: {
       positions: new Float32Array(primitive._positions),
@@ -149,7 +144,7 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
       rotations: new Float32Array(primitive._rotations),
       colors: new Uint8Array(primitive._colors),
     },
-    count: primitive._nmSplats,
+    count: primitive._numSplats,
   });
 
   if (promise === undefined) {
@@ -236,7 +231,7 @@ function buildGSplatDrawCommand(primitive, frameState) {
     return primitive.gaussianSplatTexture;
   };
 
-  renderResources.instanceCount = renderResources.count;
+  renderResources.instanceCount = this._numSplats;
   renderResources.count = 4;
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
 
@@ -322,12 +317,16 @@ function buildGSplatDrawCommand(primitive, frameState) {
     receiveShadows: false,
   });
 
-  frameState.commandList.push(command);
+  return command;
 }
 
 //update and sorting
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   this._tileset.update(frameState);
+
+  if (this._numSplats === 0) {
+    return;
+  }
 
   if (this._needsGaussianSplatTexture) {
     if (!this._gaussianSplatTexturePending) {
@@ -350,7 +349,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     primitive: {
       positions: new Float32Array(this._positions.typedArray),
       modelView: Float32Array.from(scratchSplatMatrix),
-      count: this.numSplats,
+      count: this._numSplats,
     },
     sortType: "Index",
   });
