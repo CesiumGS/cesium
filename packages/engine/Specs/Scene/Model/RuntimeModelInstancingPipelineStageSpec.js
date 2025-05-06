@@ -140,10 +140,12 @@ describe(
 
         const shaderBuilder = renderResources.shaderBuilder;
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_INSTANCE_MATRICES",
           "HAS_INSTANCING",
           "USE_API_INSTANCING",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_INSTANCE_MATRICES",
           "HAS_INSTANCING",
         ]);
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
