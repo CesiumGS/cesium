@@ -31,41 +31,6 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        const lng = -75.1652;
-        const lat = 39.9526;
-        const height = 30.0;
-
-        let position;
-        const headingPositionRoll = new Cesium.HeadingPitchRoll();
-        const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
-          "north",
-          "west",
-        );
-
-        let instanceModelMatrix;
-        let instances = [];
-        function genInstances() {
-          const instances = [];
-          let i;
-          for (i = 0; i < 10; i++) {
-            position = Cesium.Cartesian3.fromDegrees(
-              lng + i * 0.0001,
-              lat + i * 0.0001,
-              height + i,
-            );
-            instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
-              position,
-              headingPositionRoll,
-              Cesium.Ellipsoid.WGS84,
-              fixedFrameTransform,
-            );
-            instances.push(new Cesium.ModelInstance(instanceModelMatrix));
-          }
-          return instances;
-        }
-
-        instances = genInstances();
-
         let model;
         try {
           model = await Cesium.Model.fromGltfAsync({
@@ -79,13 +44,49 @@
             //url: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
             //modelMatrix: baseModelMatrix,
             minimumPixelSize: 128,
-            instances: instances,
+            //instances: instances,
           });
 
           viewer.scene.primitives.add(model);
         } catch (error) {
           console.log(`Failed to load model. ${error}`);
         }
+
+        const lng = -75.1652;
+        const lat = 39.9526;
+        const height = 30.0;
+
+        let position;
+        const headingPositionRoll = new Cesium.HeadingPitchRoll();
+        const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+          "north",
+          "west",
+        );
+
+        let instanceModelMatrix;
+        let instances = [];
+        function genInstances(count) {
+          const instances = [];
+          let i;
+          for (i = 0; i < count; i++) {
+            position = Cesium.Cartesian3.fromDegrees(
+              lng + i * Math.random() * 0.0001,
+              lat + i * 0.0001,
+              height + i,
+            );
+            instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
+              position,
+              headingPositionRoll,
+              Cesium.Ellipsoid.WGS84,
+              fixedFrameTransform,
+            );
+            instances.push(new Cesium.ModelInstance(instanceModelMatrix));
+            model.instances.add(instanceModelMatrix);
+          }
+          return instances;
+        }
+
+        instances = genInstances(6);
 
         const offset = new Cesium.Cartesian3(
           -37.048378684557974,
@@ -118,7 +119,7 @@
           });
           const rootTransform = sceneGraph.rootTransform;
 
-          for (const instance of model.instances) {
+          for (const instance of model.instances._instances) {
             const instanceTransform = instance.transform;
             const rootModelMatrix = instance.computeModelMatrix(
               model.modelMatrix,
@@ -191,6 +192,37 @@
             6.283181225638178,
           ),
         });
+
+        let modI;
+        let rot = new Cesium.Matrix3();
+        let newTransform;
+        setTimeout(() => {
+          console.log("Delayed for 6 second.");
+          //genInstances( parseInt(Math.random() * 30));
+          for (let i = 0; i < model.instances.length; i++) {
+            modI = model.instances.get(i);
+            console.log(modI);
+            rot = Cesium.Matrix4.getRotation(modI.transform, rot);
+            console.log(rot);
+            // Angle to rotate (in degrees)
+            const angleDegrees = 45;
+            const angleRadians = Cesium.Math.toRadians(angleDegrees);
+
+            // Create a rotation matrix around Z-axis
+            const rotationZ = Cesium.Matrix3.fromRotationZ(angleRadians);
+
+            // Apply the rotation: newRotation = rotationZ * originalRotation
+            const newRotation = Cesium.Matrix3.multiply(
+              rotationZ,
+              rot,
+              new Cesium.Matrix3(),
+            );
+            newTransform = Cesium.clone(modI.transform);
+            Cesium.Matrix4.setRotation(newTransform, newRotation, newTransform);
+
+            modI.transform = newTransform;
+          }
+        }, "6000");
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

@@ -317,6 +317,8 @@ function Model(options) {
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 
+  this._runtimeInstancesLength = 0;
+
   this._featureTables = [];
   this._featureTableId = undefined;
   this._featureTableIdDirty = true;
@@ -877,22 +879,6 @@ Object.defineProperties(Model.prototype, {
   instances: {
     get: function () {
       return this._sceneGraph.modelInstances;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      //Check.defined(value);
-      //>>includeEnd('debug')
-
-      this._sceneGraph.modelInstances = value;
-      for (const runtimeNode in this._sceneGraph._runtimeNodes) {
-        if (
-          defined(
-            this._sceneGraph._runtimeNodes[runtimeNode]._apiInstancesDirty,
-          )
-        ) {
-          this._sceneGraph._runtimeNodes[runtimeNode]._apiInstancesDirty = true;
-        }
-      }
     },
   },
 
@@ -1993,6 +1979,7 @@ Model.prototype.update = function (frameState) {
     }
   }
 
+  updateRuntimeModelInstances(this);
   updateFeatureTableId(this);
   updateStyle(this);
   updateFeatureTables(this, frameState);
@@ -2254,6 +2241,25 @@ function updateVerticalExaggeration(model, frameState) {
   }
 }
 
+function updateRuntimeModelInstances(model) {
+  if (
+    model.sceneGraph.modelInstances.length !== model._runtimeInstancesLength
+  ) {
+    model.resetDrawCommands();
+    model._runtimeInstancesLength = model.sceneGraph.modelInstances.length;
+  }
+  let instance;
+  for (let i = 0; i < model.sceneGraph.modelInstances.length; i++) {
+    instance = model.sceneGraph.modelInstances.get(i);
+    if (instance._dirty) {
+      if (!model.sceneGraph.modelInstances._dirty) {
+        model.sceneGraph.modelInstances._dirty = true;
+      }
+      instance._dirty = false;
+    }
+  }
+}
+
 function buildDrawCommands(model, frameState) {
   if (!model._drawCommandsBuilt) {
     model.destroyPipelineResources();
@@ -2429,7 +2435,7 @@ function getComputedScale(model, modelMatrix, frameState) {
     }
 
     if (sceneGraph.hasInstances) {
-      for (const modelInstance of sceneGraph.modelInstances) {
+      for (const modelInstance of sceneGraph.modelInstances._instances) {
         const transform = modelInstance.transform;
         maxScaleInPixels = Math.max(
           maxScaleInPixels,
