@@ -56,7 +56,7 @@ RuntimeModelInstancingPipelineStage.process = function (
   /**
    * @type {ModelInstance[]}
    */
-  const modelInstances = sceneGraph.modelInstances;
+  const modelInstances = sceneGraph.modelInstances._instances;
 
   const attributes = RuntimeModelInstancingPipelineStage._createAttributes(
     frameState,
