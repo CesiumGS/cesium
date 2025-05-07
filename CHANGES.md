@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.130 - 2025-06-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added the ability to pass `OffscreenCanvas` & `ImageBitmap` directly to `Material` uniforms. [#12558](https://github.com/CesiumGS/cesium/pull/12558)
+
 ## 1.129 - 2025-05-01
 
 ### @cesium/engine
@@ -11,7 +19,6 @@
 #### Additions :tada:
 
 - Added `Material with Custom GLSL` Sandbox Demo. [#12549](https://github.com/CesiumGS/cesium/issues/12549)
-- Added the ability to pass `OffscreenCanvas` & `ImageBitmap` directly to `Material` uniforms. [#12558](https://github.com/CesiumGS/cesium/pull/12558)
 
 #### Fixes :wrench:
 
