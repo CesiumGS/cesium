@@ -93,7 +93,9 @@ describe(
           _pipelineResources: [],
           statistics: new ModelStatistics(),
           sceneGraph: {
-            modelInstances: [sampleInstance1, sampleInstance2],
+            modelInstances: {
+              _instances: [sampleInstance1, sampleInstance2],
+            },
           },
         },
         runtimeNode: {
@@ -171,7 +173,8 @@ describe(
         const components = gltfLoader.components;
         const node = components.nodes[0];
         const renderResources = mockRenderResources(node);
-        const modelInstances = renderResources.model.sceneGraph.modelInstances;
+        const modelInstances =
+          renderResources.model.sceneGraph.modelInstances._instances;
 
         const expectedTransformsTypedArray = new Float32Array([
           -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
@@ -256,7 +259,10 @@ describe(
         const sampleInstance3 = new ModelInstance(instanceModelMatrix3);
         const sampleInstance4 = new ModelInstance(instanceModelMatrix4);
 
-        sceneGraph.modelInstances = [sampleInstance3, sampleInstance4];
+        sceneGraph.modelInstances._instances = [
+          sampleInstance3,
+          sampleInstance4,
+        ];
         runtimeNode._apiInstancesDirty = true;
 
         const frameState = {

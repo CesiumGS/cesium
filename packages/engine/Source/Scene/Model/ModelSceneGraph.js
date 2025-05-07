@@ -23,6 +23,7 @@ import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import ModelType from "./ModelType.js";
+import ModelInstanceCollection from "./ModelInstanceCollection.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
@@ -125,7 +126,9 @@ function ModelSceneGraph(options) {
    */
   this.modelPipelineStages = [];
 
-  this._modelInstances = options.modelInstances ?? [];
+  this._modelInstances = new ModelInstanceCollection({
+    instances: options.modelInstances,
+  });
 
   // An un-transformed boundingSphere in world space
   this._rootBoundingSphere = new BoundingSphere();
@@ -769,6 +772,7 @@ ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
       }
     }
   }
+  this.modelInstances._dirty = false;
 };
 
 ModelSceneGraph.prototype.updateModelMatrix = function (

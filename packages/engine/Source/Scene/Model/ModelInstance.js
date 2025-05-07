@@ -17,13 +17,15 @@ const scratchBoundingSphereTransform = new Matrix4();
  * @constructor
  *
  * @param {Matrix4} [transform] Matrix4 describing the transform of the instance
+ * @param {ModelInstanceCollection} [instance] collection this instance belongs to
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3DModelInstancing.html|Cesium Sandcastle 3D Model Instancing Demo}
  */
 
 class ModelInstance {
-  constructor(transform) {
+  constructor(transform, modelInstanceCollection) {
     this._transform = transform;
+    this._modelInstanceCollection = modelInstanceCollection;
     this._center = new Cartesian3();
     this._relativeTransform = new Matrix4();
 
