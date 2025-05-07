@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.130 - 2025-06-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed error with `DynamicEnvironmentMapManager` when `ContextLimits.maximumCubeMapSize` is zero.
+
 ## 1.129 - 2025-05-01
 
 ### @cesium/engine

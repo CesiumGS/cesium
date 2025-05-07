@@ -33,7 +33,7 @@ import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
  * @typedef {object} DynamicEnvironmentMapManager.ConstructorOptions
  * Options for the DynamicEnvironmentMapManager constructor
  * @property {boolean} [enabled=true] If true, the environment map and related properties will continue to update.
- * @property {number} [mipmapLevels=7] The number of mipmap levels to generate for specular maps. More mipmap levels will produce a higher resolution specular reflection.
+ * @property {number} [mipmapLevels=7] The maximum desired number of mipmap levels to generate for specular maps. More mipmap levels will produce a higher resolution specular reflection. The actual number of mipmaps used will be bounded by the cubemap texture size supported on the client machine. The number of mipmaps must be at least one for the environment map to be generated.
  * @property {number} [maximumSecondsDifference=3600] The maximum amount of elapsed seconds before a new environment map is created.
  * @property {number} [maximumPositionEpsilon=1000] The maximum difference in position before a new environment map is created, in meters. Small differences in position will not visibly affect results.
  * @property {number} [atmosphereScatteringIntensity=2.0] The intensity of the scattered light emitted from the atmosphere. This should be adjusted relative to the value of {@link Scene.light} intensity.
@@ -82,16 +82,20 @@ function DynamicEnvironmentMapManager(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const mipmapLevels = Math.max(
-    Math.min(
-      options.mipmapLevels ?? 7,
-      Math.log2(ContextLimits.maximumCubeMapSize),
+    Math.floor(
+      Math.min(
+        options.mipmapLevels ?? 7,
+        Math.log2(ContextLimits.maximumCubeMapSize),
+      ),
     ),
-    1,
+    0,
   );
 
   this._mipmapLevels = mipmapLevels;
+
+  const arrayLength = Math.max(mipmapLevels - 1, 0) * 6;
   this._radianceMapComputeCommands = new Array(6);
-  this._convolutionComputeCommands = new Array((mipmapLevels - 1) * 6);
+  this._convolutionComputeCommands = new Array(arrayLength);
   this._irradianceComputeCommand = undefined;
 
   this._radianceMapFS = undefined;
@@ -100,7 +104,7 @@ function DynamicEnvironmentMapManager(options) {
   this._va = undefined;
 
   this._radianceMapTextures = new Array(6);
-  this._specularMapTextures = new Array((mipmapLevels - 1) * 6);
+  this._specularMapTextures = new Array(arrayLength);
   this._radianceCubeMap = undefined;
   this._irradianceMapTexture = undefined;
 
@@ -108,7 +112,7 @@ function DynamicEnvironmentMapManager(options) {
     DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS.slice();
 
   this._lastTime = new JulianDate();
-  const width = Math.pow(2, mipmapLevels - 1);
+  const width = Math.max(Math.pow(2, mipmapLevels - 1), 1);
   this._textureDimensions = new Cartesian2(width, width);
 
   this._radiiAndDynamicAtmosphereColor = new Cartesian3();
@@ -624,6 +628,28 @@ function updateSpecularMaps(manager, frameState) {
   const context = frameState.context;
 
   let facesCopied = 0;
+  const checkComplete = () => {
+    // All faces for each mipmap level have been copied
+    const length = manager._specularMapTextures.length;
+    if (facesCopied >= length) {
+      manager._irradianceCommandDirty = true;
+
+      if (mipmapLevels > 1) {
+        radianceCubeMap.sampler = new Sampler({
+          minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+        });
+
+        manager._shouldRegenerateShaders = true;
+
+        // Cleanup shared resources
+        manager._va.destroy();
+        manager._va = undefined;
+        manager._convolveSP.destroy();
+        manager._convolveSP = undefined;
+      }
+    }
+  };
+
   const getPostExecute = (command, index, texture, face, level) => () => {
     if (manager.isDestroyed() || command.canceled) {
       DynamicEnvironmentMapManager._activeComputeCommandCount--;
@@ -641,22 +667,7 @@ function updateSpecularMaps(manager, frameState) {
     texture.destroy();
     manager._specularMapTextures[index] = undefined;
 
-    // All faces for each mipmap level have been copied
-    const length = manager._specularMapTextures.length;
-    if (facesCopied >= length) {
-      manager._irradianceCommandDirty = true;
-      radianceCubeMap.sampler = new Sampler({
-        minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-      });
-
-      manager._shouldRegenerateShaders = true;
-
-      // Cleanup shared resources
-      manager._va.destroy();
-      manager._va = undefined;
-      manager._convolveSP.destroy();
-      manager._convolveSP = undefined;
-    }
+    checkComplete();
   };
 
   let index = 0;
@@ -724,6 +735,7 @@ function updateSpecularMaps(manager, frameState) {
     width /= 2;
     height /= 2;
   }
+  checkComplete();
 }
 
 const irradianceTextureDimensions = new Cartesian2(3, 3); // 9 coefficients
@@ -845,7 +857,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
     // A FrameState type works here because the function only references the context parameter.
     // @ts-ignore
     DynamicEnvironmentMapManager.isDynamicUpdateSupported(frameState) &&
-    this._mipmapLevels > 1;
+    this._mipmapLevels >= 1;
 
   if (
     !isSupported ||

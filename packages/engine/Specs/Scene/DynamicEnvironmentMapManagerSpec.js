@@ -66,12 +66,12 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
     );
   });
 
-  it("always use at least one mipmap level", () => {
+  it("uses at a minimum of 0 mipmap levels", () => {
     const manager = new DynamicEnvironmentMapManager({
-      mipmapLevels: 0,
+      mipmapLevels: Number.NEGATIVE_INFINITY,
     });
 
-    expect(manager._mipmapLevels).toBe(1);
+    expect(manager._mipmapLevels).toBe(0);
   });
 
   describe(
@@ -140,6 +140,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeUndefined();
 
@@ -150,9 +151,9 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         );
       });
 
-      it("does not update if there is only one mipmap level", async function () {
+      it("does not update if there are zero mipmap levels", async function () {
         const manager = new DynamicEnvironmentMapManager({
-          mipmapLevels: 1,
+          mipmapLevels: 0,
         });
 
         const cartographic = Cartographic.fromDegrees(-75.165222, 39.952583);
@@ -162,6 +163,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         const primitive = new EnvironmentMockPrimitive(manager);
         scene.primitives.add(primitive);
 
+        scene.renderForSpecs();
         scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeUndefined();
@@ -189,12 +191,44 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.primitives.add(primitive);
 
         scene.renderForSpecs();
+        scene.renderForSpecs();
 
         expect(manager.radianceCubeMap).toBeUndefined();
 
         scene.renderForSpecs();
 
         expect(manager.sphericalHarmonicCoefficients).toEqual(
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+        );
+      });
+
+      it("works with only one mipmap level", async function () {
+        const manager = new DynamicEnvironmentMapManager({
+          mipmapLevels: 1,
+        });
+
+        const cartographic = Cartographic.fromDegrees(-75.165222, 39.952583);
+        manager.position =
+          Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+
+        const primitive = new EnvironmentMockPrimitive(manager);
+        scene.primitives.add(primitive);
+
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+
+        expect(manager.radianceCubeMap).toBeInstanceOf(CubeMap);
+
+        scene.renderForSpecs();
+
+        expect(manager.sphericalHarmonicCoefficients).toEqual(
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+        );
+
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+
+        expect(manager.sphericalHarmonicCoefficients).not.toEqual(
           DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
         );
       });
