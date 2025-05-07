@@ -238,7 +238,8 @@ ModelDrawCommands.createCommandBoundingSphere = function (
 
   if (sceneGraph.hasInstances) {
     const instanceBoundingSpheres = [];
-    for (const modelInstance of sceneGraph.modelInstances) {
+
+    for (const modelInstance of sceneGraph.modelInstances._instances) {
       const boundingSphere = modelInstance.getPrimitiveBoundingSphere(
         commandModelMatrix,
         sceneGraph,

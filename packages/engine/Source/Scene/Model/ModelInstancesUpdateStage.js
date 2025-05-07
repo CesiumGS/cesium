@@ -25,7 +25,7 @@ ModelInstancesUpdateStage.update = function (
   sceneGraph,
   frameState,
 ) {
-  if (!runtimeNode._apiInstancesDirty) {
+  if (!sceneGraph.modelInstances._dirty) {
     return;
   }
 
@@ -35,7 +35,6 @@ ModelInstancesUpdateStage.update = function (
   }
 
   updateRuntimeNode(runtimeNode, sceneGraph, frameState);
-  runtimeNode._apiInstancesDirty = false;
 };
 
 /**
@@ -44,7 +43,7 @@ ModelInstancesUpdateStage.update = function (
  * @private
  */
 function updateRuntimeNode(runtimeNode, sceneGraph, frameState) {
-  const modelInstances = sceneGraph.modelInstances;
+  const modelInstances = sceneGraph.modelInstances._instances;
   const buffer = runtimeNode.instancingTransformsBuffer;
 
   const transformsTypedArray =
