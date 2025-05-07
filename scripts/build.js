@@ -266,7 +266,7 @@ const workspaceSourceFiles = {
   utils: [
     "packages/utils/Build/Source/**/*.js",
     "!packages/utils/Build/Source/index.js",
-  ]
+  ],
 };
 
 /**
@@ -992,13 +992,13 @@ async function bundleSpecs(options) {
 export const buildUtils = async () => {
   await build({
     root: "./packages/utils",
-    configFile: "./packages/utils/vite.config.ts"
+    configFile: "./packages/utils/vite.config.ts",
   });
 
   const parsed = ts.getParsedCommandLineOfConfigFile(
     "./packages/utils/tsconfig.json",
     {},
-    ts.sys
+    ts.sys,
   );
 
   const program = ts.createProgram({
@@ -1007,7 +1007,7 @@ export const buildUtils = async () => {
   });
 
   program.emit();
-}
+};
 
 /**
  * Builds the engine workspace.

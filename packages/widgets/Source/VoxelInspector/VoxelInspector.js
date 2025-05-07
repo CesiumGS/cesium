@@ -1,8 +1,4 @@
-import {
-  Math as CesiumMath,
-  destroyObject,
-  getElement,
-} from "@cesium/engine";
+import { Math as CesiumMath, destroyObject, getElement } from "@cesium/engine";
 import { Check } from "@cesium/utils";
 import InspectorShared from "../InspectorShared.js";
 import knockout from "../ThirdParty/knockout.js";
