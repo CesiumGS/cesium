@@ -203,6 +203,11 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("works with only one mipmap level", async function () {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
+          return;
+        }
+
         const manager = new DynamicEnvironmentMapManager({
           mipmapLevels: 1,
         });
