@@ -13,8 +13,8 @@ import GaussianSplatRenderResources from "./GaussianSplatRenderResources.js";
 import BlendingState from "./BlendingState.js";
 import Pass from "../Renderer/Pass.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
-import GaussianSplatVS from "../Shaders/Model/GaussianSplatVS.js";
-import GaussianSplatFS from "../Shaders/Model/GaussianSplatFS.js";
+import GaussianSplatVS from "../Shaders/PrimitiveGaussianSplatVS.js";
+import GaussianSplatFS from "../Shaders/PrimitiveGaussianSplatFS.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Geometry from "../Core/Geometry.js";
@@ -41,7 +41,13 @@ function GaussianSplatPrimitive(options) {
 
   this._needsGaussianSplatTexture = true;
 
+  this._debugShowBoundingVolume = false;
+  this._splatScale = 1.0;
+
   this._tileset = options.tileset;
+
+  this._tileset.tileLoad.addEventListener(this.onTileLoaded, this);
+  this._tileset.tileUnload.addEventListener(this.onTileUnloaded, this);
 
   /**
    * @type {boolean}
@@ -50,12 +56,6 @@ function GaussianSplatPrimitive(options) {
   this._calculateStatistics = options.calculateStatistics ?? false;
 
   this._drawCommand = undefined;
-
-  /**
-   * @type {boolean}
-   * @private
-   */
-  this._depthTest = options.depthTest ?? true;
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -86,20 +86,51 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
    */
   modelMatrix: {
     get: function () {
-      return this._tileset._modelMatrix;
+      return this.modelMatrix;
     },
     set: function (modelMatrix) {
       //>>includeStart('debug', pragmas.debug);
       Check.typeOf.object("modelMatrix", modelMatrix);
       //>>includeEnd('debug');
 
-      this._tileset._modelMatrix = Matrix4.clone(
-        modelMatrix,
-        this._tileset._modelMatrix,
-      );
+      this._modelMatrix = Matrix4.clone(modelMatrix, this.modelMatrix);
+    },
+  },
+
+  debugShowBoundingVolume: {
+    get: function () {
+      return this._debugShowBoundingVolume;
+    },
+    set: function (debugShowBoundingVolume) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("debugShowBoundingVolume", debugShowBoundingVolume);
+      //>>includeEnd('debug');
+
+      this._debugShowBoundingVolume = debugShowBoundingVolume;
+    },
+  },
+
+  splatScale: {
+    get: function () {
+      return this._splatScale;
+    },
+    set: function (splatScale) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("splatScale", splatScale);
+      //>>includeEnd('debug');
+
+      this._splatScale = splatScale;
     },
   },
 });
+
+GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
+  console.log(`Tile loaded: ${tile._contentResource.url}`);
+};
+
+GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {
+  console.log(`Tile unloaded: ${tile._contentResource.url}`);
+};
 
 GaussianSplatPrimitive.fromIonAssetId = async function (assetId, options) {
   return new GaussianSplatPrimitive({
@@ -192,9 +223,9 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
       });
 
       primitive.gaussianSplatTexture = splatTex;
-      primitive.hasGaussianSplatTexture = true;
-      primitive.needsGaussianSplatTexture = false;
-      primitive.gaussianSplatTexturePending = false;
+      primitive._hasGaussianSplatTexture = true;
+      primitive._needsGaussianSplatTexture = false;
+      primitive._gaussianSplatTexturePending = false;
     })
     .catch((error) => {
       console.error("Error generating Gaussian splat texture:", error);
@@ -227,7 +258,7 @@ function buildGSplatDrawCommand(primitive, frameState) {
     ShaderDestination.BOTH,
   );
 
-  if (renderResources.debugShowBoundingVolume) {
+  if (primitive.debugShowBoundingVolume) {
     shaderBuilder.addDefine(
       "DEBUG_BOUNDING_VOLUMES",
       undefined,
@@ -249,14 +280,14 @@ function buildGSplatDrawCommand(primitive, frameState) {
   const uniformMap = renderResources.uniformMap;
 
   uniformMap.u_splatScale = function () {
-    return renderResources.model?.style?.splatScale ?? 1.0;
+    return primitive.splatScale;
   };
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
   };
 
-  renderResources.instanceCount = this._numSplats;
+  renderResources.instanceCount = primitive._numSplats;
   renderResources.count = 4;
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
 
@@ -293,7 +324,7 @@ function buildGSplatDrawCommand(primitive, frameState) {
   renderState = RenderState.fromCache(renderState);
 
   const splatQuadAttrLocations = {
-    splatIndex: 5,
+    splatIndex: 1,
   };
   const geometry = new Geometry({
     attributes: {
@@ -323,15 +354,14 @@ function buildGSplatDrawCommand(primitive, frameState) {
     interleave: false,
   });
 
-  //submit command
   const command = new DrawCommand({
     boundingVolume: tileset.boundingSphere,
-    modelMatrix: tileset.modelMatrix,
+    modelMatrix: primitive._modelMatrix,
     uniformMap: uniformMap,
     renderState: renderState,
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
-    cull: renderResources.depthTest.enabled,
+    cull: false,
     pass: Pass.GAUSSIAN_SPLATS,
     count: renderResources.count,
     owner: this,
@@ -342,7 +372,7 @@ function buildGSplatDrawCommand(primitive, frameState) {
     receiveShadows: false,
   });
 
-  return command;
+  primitive._drawCommand = command;
 }
 
 GaussianSplatPrimitive.prototype.gatherSplats = function () {
@@ -396,11 +426,18 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
   tileset.update(frameState);
 
+  if (this._drawCommand) {
+    frameState.commandList.push(this._drawCommand);
+    this._drawCommand = undefined;
+  }
+
   this.gatherSplats();
 
   if (this._numSplats === 0) {
     return;
   }
+
+  this._modelMatrix = tileset.root.content._tile.computedTransform;
 
   if (this._needsGaussianSplatTexture) {
     if (!this._gaussianSplatTexturePending) {
@@ -411,7 +448,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   Matrix4.multiply(
     frameState.camera.viewMatrix,
-    model.modelMatrix,
+    tileset.modelMatrix,
     scratchSplatMatrix,
   );
 
@@ -421,7 +458,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   const promise = GaussianSplatSorter.radixSortIndexes({
     primitive: {
-      positions: new Float32Array(this._positions.typedArray),
+      positions: new Float32Array(this._positions),
       modelView: Float32Array.from(scratchSplatMatrix),
       count: this._numSplats,
     },
@@ -436,9 +473,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     throw err;
   });
   promise.then((sortedData) => {
-    this._indexes.typedArray = sortedData;
-
-    frameState.commandList.push(buildGSplatDrawCommand(this, frameState));
+    this._indexes = sortedData;
+    buildGSplatDrawCommand(this, frameState);
+    //frameState.commandList.push(this._drawCommand);
   });
 };
 
