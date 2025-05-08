@@ -1,11 +1,10 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
+import Frozen from "../Core/Frozen.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PrimitiveType from "../Core/PrimitiveType.js";

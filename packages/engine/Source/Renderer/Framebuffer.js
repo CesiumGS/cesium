@@ -1,8 +1,6 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import Frozen from "../Core/Frozen.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import ContextLimits from "./ContextLimits.js";
 import PixelDatatype from "./PixelDatatype.js";

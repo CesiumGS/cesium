@@ -1,3 +1,4 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   Cartesian2,
   Cartesian3,
@@ -7,7 +8,6 @@ import {
   ShaderBuilder,
   _shadersImageBasedLightingStageFS,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
   const mockFrameState = {

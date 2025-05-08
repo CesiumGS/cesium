@@ -1,7 +1,6 @@
+import { Check, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * A light that gets emitted in a single direction from infinitely far away.

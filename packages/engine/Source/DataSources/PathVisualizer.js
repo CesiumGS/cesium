@@ -1,8 +1,7 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";

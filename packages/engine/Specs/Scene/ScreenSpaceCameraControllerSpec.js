@@ -1,22 +1,22 @@
+import { FeatureDetection } from "@cesium/utils";
 import {
+  Camera,
+  CameraEventType,
   Cartesian2,
   Cartesian3,
   combine,
   Ellipsoid,
-  FeatureDetection,
   GeographicProjection,
   IntersectionTests,
   KeyboardEventModifier,
+  MapMode2D,
   Math as CesiumMath,
   OrthographicFrustum,
   OrthographicOffCenterFrustum,
   Ray,
-  Transforms,
-  Camera,
-  CameraEventType,
-  MapMode2D,
   SceneMode,
   ScreenSpaceCameraController,
+  Transforms,
 } from "../../index.js";
 
 import createCamera from "../../../../Specs/createCamera.js";

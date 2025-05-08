@@ -1,4 +1,4 @@
-import { PropertyAttribute, MetadataClass } from "../../index.js";
+import { MetadataClass, PropertyAttribute } from "../../index.js";
 
 describe("Scene/PropertyAttribute", function () {
   let classDefinition;

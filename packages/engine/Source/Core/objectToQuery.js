@@ -1,5 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { defined, DeveloperError } from "@cesium/utils";
 
 /**
  * Converts an object representing a set of name/value pairs into a query string,

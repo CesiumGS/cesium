@@ -1,15 +1,14 @@
 import {
   Cartesian3,
-  Check,
-  defined,
+  CustomShader,
   destroyObject,
   HeadingPitchRoll,
   Math as CesiumMath,
   Matrix3,
   Matrix4,
-  CustomShader,
   VoxelShapeType,
 } from "@cesium/engine";
+import { Check, defined } from "@cesium/utils";
 import knockout from "../ThirdParty/knockout.js";
 
 function formatShaderString(str) {

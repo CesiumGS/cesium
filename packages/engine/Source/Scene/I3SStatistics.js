@@ -1,6 +1,6 @@
-import defined from "../Core/defined.js";
-import I3SDataProvider from "./I3SDataProvider.js";
+import { defined } from "@cesium/utils";
 import Resource from "../Core/Resource.js";
+import I3SDataProvider from "./I3SDataProvider.js";
 
 /**
  * This class implements an I3S statistics for Building Scene Layer.

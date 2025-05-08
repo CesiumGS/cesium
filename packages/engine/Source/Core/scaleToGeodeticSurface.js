@@ -1,6 +1,5 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
 const scaleToGeodeticSurfaceIntersection = new Cartesian3();

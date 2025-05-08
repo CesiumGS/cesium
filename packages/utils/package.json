@@ -1,0 +1,31 @@
+{
+  "name": "@cesium/utils",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "Build/utils.cjs.js",
+  "module": "Build/utils.es.js",
+  "browser": "Build/utils.iife.js",
+  "types": "Build/utils.d.ts",
+  "exports": {
+    ".": {
+      "types": "./Build/utils.d.ts",
+      "import": "./Build/utils.es.js",
+      "require": "./Build/utils.cjs.js",
+      "default": "./Build/utils.iife.js"
+    }
+  },
+  "files": [
+    "Build"
+  ],
+  "scripts": {
+    "build": "vite build && tsc"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.2",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.6",
+    "vite-plugin-dts": "^4.5.3"
+  }
+}

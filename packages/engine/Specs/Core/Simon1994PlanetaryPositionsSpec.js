@@ -1,10 +1,10 @@
 import {
   JulianDate,
-  Matrix3,
   Math as CesiumMath,
+  Matrix3,
+  Simon1994PlanetaryPositions as PlanetaryPositions,
   TimeStandard,
   Transforms,
-  Simon1994PlanetaryPositions as PlanetaryPositions,
 } from "../../index.js";
 
 describe("Core/Simon1994PlanetaryPositions", function () {

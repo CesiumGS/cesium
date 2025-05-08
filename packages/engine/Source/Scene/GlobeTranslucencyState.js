@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import Rectangle from "../Core/Rectangle.js";
 import DrawCommand from "../Renderer/DrawCommand.js";

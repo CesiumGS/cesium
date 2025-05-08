@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
 import ClearCommand from "../Renderer/ClearCommand.js";

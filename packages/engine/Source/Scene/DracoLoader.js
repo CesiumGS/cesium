@@ -1,6 +1,4 @@
-import defined from "../Core/defined.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import { defined, FeatureDetection, RuntimeError } from "@cesium/utils";
 import TaskProcessor from "../Core/TaskProcessor.js";
 
 /**

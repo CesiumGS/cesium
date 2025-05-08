@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { defined, DeveloperError } from "@cesium/utils";
 
 /**
  * The interface for all properties, which represent a value that can optionally vary over time.

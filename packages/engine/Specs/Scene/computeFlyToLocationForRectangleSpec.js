@@ -1,7 +1,7 @@
 import {
-  Rectangle,
   computeFlyToLocationForRectangle,
   Globe,
+  Rectangle,
   SceneMode,
 } from "../../index.js";
 

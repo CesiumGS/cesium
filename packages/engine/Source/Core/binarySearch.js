@@ -1,4 +1,4 @@
-import Check from "./Check.js";
+import { Check } from "@cesium/utils";
 
 /**
  * Finds an item in a sorted array.

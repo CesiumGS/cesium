@@ -1,7 +1,5 @@
-import Check from "./Check.js";
+import { Check, defined, FeatureDetection } from "@cesium/utils";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
 
 function hue2rgb(m1, m2, h) {

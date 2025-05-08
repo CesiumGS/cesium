@@ -1,8 +1,6 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";

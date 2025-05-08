@@ -6,8 +6,8 @@ import {
   Quaternion,
 } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/Matrix3", function () {
   it("default constructor creates values array with all zeros.", function () {

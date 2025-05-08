@@ -1,7 +1,8 @@
+import { RuntimeError } from "@cesium/utils";
 import Uri from "urijs";
 import {
-  ArcGisMapServerImageryProvider,
   ArcGisBaseMapType,
+  ArcGisMapServerImageryProvider,
   ArcGisMapService,
   Cartesian2,
   Cartesian3,
@@ -17,7 +18,6 @@ import {
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   WebMercatorProjection,
   WebMercatorTilingScheme,
 } from "../../index.js";

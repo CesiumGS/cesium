@@ -1,9 +1,7 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import GeographicProjection from "./GeographicProjection.js";
 import HeightmapEncoding from "./HeightmapEncoding.js";
 import HeightmapTessellator from "./HeightmapTessellator.js";

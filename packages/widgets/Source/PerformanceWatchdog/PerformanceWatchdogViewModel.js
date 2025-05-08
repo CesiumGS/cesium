@@ -1,11 +1,7 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  FrameRateMonitor,
-} from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
+import { destroyObject, FrameRateMonitor } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/utils";
 import createCommand from "../createCommand.js";
+import knockout from "../ThirdParty/knockout.js";
 
 /**
  * The view model for {@link PerformanceWatchdog}.

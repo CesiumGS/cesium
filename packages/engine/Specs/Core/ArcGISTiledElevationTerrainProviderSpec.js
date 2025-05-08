@@ -1,14 +1,14 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   ArcGISTiledElevationTerrainProvider,
   GeographicTilingScheme,
   HeightmapTerrainData,
+  Math as CesiumMath,
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   TerrainProvider,
   WebMercatorTilingScheme,
-  Math as CesiumMath,
 } from "../../index.js";
 
 describe("Core/ArcGISTiledElevationTerrainProvider", function () {

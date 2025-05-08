@@ -7,12 +7,12 @@ import {
   GeographicProjection,
   Intersect,
   Interval,
+  Math as CesiumMath,
   Matrix4,
   OrientedBoundingBox,
   Plane,
   Quaternion,
   Rectangle,
-  Math as CesiumMath,
 } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";

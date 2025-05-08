@@ -1,5 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { defined, DeveloperError } from "@cesium/utils";
 
 /**
  * Represents a scalar value's lower and upper bound at a near distance and far distance in eye space.

@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import { Check } from "@cesium/utils";
 
 /**
  * The state for a 3D Tiles update pass.

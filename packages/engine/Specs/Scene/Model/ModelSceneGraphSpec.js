@@ -1,11 +1,12 @@
+import createScene from "../../../../../Specs/createScene.js";
 import {
+  AtmospherePipelineStage,
   Axis,
   Cesium3DTileStyle,
   Color,
   CustomShader,
   CustomShaderPipelineStage,
   Fog,
-  AtmospherePipelineStage,
   Math as CesiumMath,
   Matrix4,
   ModelColorPipelineStage,
@@ -14,7 +15,6 @@ import {
   Pass,
   ResourceCache,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe(

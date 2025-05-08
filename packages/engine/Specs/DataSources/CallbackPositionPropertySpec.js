@@ -1,7 +1,7 @@
 import {
-  JulianDate,
   CallbackPositionProperty,
   Cartesian3,
+  JulianDate,
   PositionProperty,
   ReferenceFrame,
 } from "../../index.js";

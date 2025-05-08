@@ -1,8 +1,8 @@
 import {
   ClockRange,
   ClockStep,
-  JulianDate,
   DataSourceClock,
+  JulianDate,
 } from "../../index.js";
 
 describe("DataSources/DataSourceClock", function () {

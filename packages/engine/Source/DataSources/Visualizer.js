@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/utils";
 
 /**
  * Defines the interface for visualizers. Visualizers are plug-ins to

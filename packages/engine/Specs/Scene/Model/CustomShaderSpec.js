@@ -1,17 +1,17 @@
+import createScene from "../../../../../Specs/createScene.js";
+import pollToPromise from "../../../../../Specs/pollToPromise.js";
 import {
   Cartesian2,
   Cartesian3,
-  Matrix2,
   CustomShader,
   CustomShaderMode,
   CustomShaderTranslucencyMode,
   LightingModel,
+  Matrix2,
   TextureUniform,
   UniformType,
   VaryingType,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
 describe("Scene/Model/CustomShader", function () {
   const emptyVertexShader =

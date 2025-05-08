@@ -1,3 +1,9 @@
+import { RuntimeError } from "@cesium/utils";
+import createScene from "../../../../Specs/createScene.js";
+import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 import {
   ArticulationStageType,
   AttributeType,
@@ -8,40 +14,34 @@ import {
   combine,
   ComponentDatatype,
   Frozen,
-  GltfStructuralMetadataLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
   GltfLoader,
+  GltfStructuralMetadataLoader,
   GltfTextureLoader,
   GltfVertexBufferLoader,
   IndexDatatype,
   InstanceAttributeSemantic,
   InterpolationType,
   JobScheduler,
-  PrimitiveType,
+  Math as CesiumMath,
   Matrix2,
   Matrix4,
-  Math as CesiumMath,
   MetadataComponentType,
   MetadataType,
   ModelComponents,
+  PrimitiveType,
+  Quaternion,
   Resource,
   ResourceCache,
   ResourceLoaderState,
-  RuntimeError,
   Sampler,
   Texture,
   TextureMagnificationFilter,
   TextureMinificationFilter,
   TextureWrap,
   VertexAttributeSemantic,
-  Quaternion,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
-import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
-import loaderProcess from "../../../../Specs/loaderProcess.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
-import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfLoader",

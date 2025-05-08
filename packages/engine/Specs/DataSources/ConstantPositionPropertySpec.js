@@ -1,9 +1,9 @@
 import {
   Cartesian3,
-  JulianDate,
-  ReferenceFrame,
   ConstantPositionProperty,
+  JulianDate,
   PositionProperty,
+  ReferenceFrame,
 } from "../../index.js";
 
 describe("DataSources/ConstantPositionProperty", function () {

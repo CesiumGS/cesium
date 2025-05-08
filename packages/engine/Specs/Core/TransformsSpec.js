@@ -1,8 +1,8 @@
+import { defined, RuntimeError } from "@cesium/utils";
 import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  defined,
   EarthOrientationParameters,
   Ellipsoid,
   GeographicProjection,
@@ -14,7 +14,6 @@ import {
   Matrix4,
   Quaternion,
   Resource,
-  RuntimeError,
   TimeInterval,
   Transforms,
 } from "../../index.js";

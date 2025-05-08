@@ -1,6 +1,5 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * Encapsulates an algorithm to optimize triangles for the post

@@ -1,6 +1,6 @@
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelUtility from "./ModelUtility.js";
 import SceneMode from "../SceneMode.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * The model matrix update stage is responsible for updating the model matrices and bounding volumes of the draw commands.

@@ -1,5 +1,5 @@
-import { VoxelPrimitive, VoxelRenderResources } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
+import { VoxelPrimitive, VoxelRenderResources } from "../../index.js";
 
 describe("Scene/VoxelRenderResources", function () {
   let scene;

@@ -1,8 +1,8 @@
 import {
-  Cartesian3,
-  JulianDate,
   CallbackProperty,
+  Cartesian3,
   ConstantProperty,
+  JulianDate,
   TerrainOffsetProperty,
 } from "../../index.js";
 

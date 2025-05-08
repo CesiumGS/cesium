@@ -1,6 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import RuntimeError from "./RuntimeError.js";
+import { defined, DeveloperError, RuntimeError } from "@cesium/utils";
 
 /**
  * Reads a string from a Uint8Array.

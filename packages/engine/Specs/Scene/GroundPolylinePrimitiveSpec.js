@@ -9,17 +9,17 @@ import {
   Ellipsoid,
   GeometryInstance,
   GroundPolylineGeometry,
+  GroundPolylinePrimitive,
   HeadingPitchRange,
   Math as CesiumMath,
-  Rectangle,
-  RectangleGeometry,
-  ShowGeometryInstanceAttribute,
   Pass,
-  GroundPolylinePrimitive,
   PerInstanceColorAppearance,
   PolylineColorAppearance,
   PolylineMaterialAppearance,
   Primitive,
+  Rectangle,
+  RectangleGeometry,
+  ShowGeometryInstanceAttribute,
 } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";

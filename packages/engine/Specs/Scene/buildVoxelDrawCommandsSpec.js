@@ -1,12 +1,12 @@
+import createScene from "../../../../Specs/createScene.js";
 import {
+  buildVoxelDrawCommands,
   Cartesian3,
   Cesium3DTilesVoxelProvider,
   ClippingPlane,
   ClippingPlaneCollection,
   VoxelPrimitive,
-  buildVoxelDrawCommands,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/buildVoxelDrawCommands", function () {
   let scene;

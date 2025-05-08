@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import FrustumOutlineGeometry from "../Core/FrustumOutlineGeometry.js";
 
 function createFrustumOutlineGeometry(frustumGeometry, offset) {

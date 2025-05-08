@@ -4,17 +4,17 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  ClippingPlane,
+  ClippingPlaneCollection,
   Color,
   Intersect,
   Math as CesiumMath,
   Matrix4,
+  PixelDatatype,
   PixelFormat,
   Plane,
-  PixelDatatype,
   TextureMinificationFilter,
   TextureWrap,
-  ClippingPlane,
-  ClippingPlaneCollection,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

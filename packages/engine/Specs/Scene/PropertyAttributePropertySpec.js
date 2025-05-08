@@ -1,8 +1,8 @@
 import {
   Cartesian2,
-  PropertyAttributeProperty,
   Matrix2,
   MetadataClassProperty,
+  PropertyAttributeProperty,
 } from "../../index.js";
 
 describe("Scene/PropertyAttributeProperty", function () {

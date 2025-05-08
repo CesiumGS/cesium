@@ -1,14 +1,14 @@
 import {
   BoundingRectangle,
-  Color,
-  defined,
   ClearCommand,
-  Pass,
+  Color,
   CreditDisplay,
   FrameState,
   JobScheduler,
+  Pass,
   PickFramebuffer,
 } from "@cesium/engine";
+import { defined } from "@cesium/utils";
 
 function executeCommands(context, passState, commands) {
   const length = commands.length;

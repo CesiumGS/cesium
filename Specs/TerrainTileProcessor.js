@@ -1,7 +1,7 @@
 import {
   clone,
-  ImageryLayer,
   GlobeSurfaceTile,
+  ImageryLayer,
   TerrainState,
   Texture,
 } from "@cesium/engine";

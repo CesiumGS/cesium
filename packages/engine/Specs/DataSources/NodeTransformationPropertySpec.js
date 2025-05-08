@@ -1,10 +1,10 @@
 import {
   Cartesian3,
+  ConstantProperty,
   JulianDate,
+  NodeTransformationProperty,
   Quaternion,
   TimeInterval,
-  ConstantProperty,
-  NodeTransformationProperty,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
 

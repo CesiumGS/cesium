@@ -1,3 +1,5 @@
+import createContext from "../../../../Specs/createContext.js";
+import MetadataTester from "../../../../Specs/MetadataTester.js";
 import {
   MetadataSchema,
   parseFeatureMetadataLegacy,
@@ -5,8 +7,6 @@ import {
   PixelFormat,
   Texture,
 } from "../../index.js";
-import createContext from "../../../../Specs/createContext.js";
-import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe(
   "Scene/parseFeatureMetadataLegacy",

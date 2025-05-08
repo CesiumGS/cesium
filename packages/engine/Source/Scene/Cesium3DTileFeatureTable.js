@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 
 /**
  * @private

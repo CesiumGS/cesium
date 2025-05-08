@@ -1,3 +1,4 @@
+import { defined } from "@cesium/utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -6,7 +7,6 @@ import {
   Color,
   ComputeCommand,
   DrawCommand,
-  defined,
   Math as CesiumMath,
   PerspectiveFrustum,
 } from "../../index.js";

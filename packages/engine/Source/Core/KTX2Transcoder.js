@@ -1,7 +1,5 @@
-import Check from "./Check.js";
+import { Check, defined, RuntimeError } from "@cesium/utils";
 import CompressedTextureBuffer from "./CompressedTextureBuffer.js";
-import defined from "./defined.js";
-import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 
 /**

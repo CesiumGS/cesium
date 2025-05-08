@@ -1,9 +1,9 @@
+import { RuntimeError } from "@cesium/utils";
 import {
-  ITwinPlatform,
-  RuntimeError,
   Cesium3DTileset,
-  ITwinData,
   GeoJsonDataSource,
+  ITwinData,
+  ITwinPlatform,
   KmlDataSource,
 } from "../../index.js";
 

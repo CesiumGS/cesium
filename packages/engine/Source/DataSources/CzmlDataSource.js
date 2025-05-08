@@ -1,3 +1,5 @@
+import { defined, DeveloperError, RuntimeError } from "@cesium/utils";
+import Uri from "urijs";
 import ArcType from "../Core/ArcType.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
@@ -7,15 +9,13 @@ import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
 import Color from "../Core/Color.js";
 import CornerType from "../Core/CornerType.js";
-import Credit from "../Core/Credit.js";
 import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import Credit from "../Core/Credit.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import ExtrapolationType from "../Core/ExtrapolationType.js";
+import Frozen from "../Core/Frozen.js";
 import getFilenameFromUri from "../Core/getFilenameFromUri.js";
 import HermitePolynomialApproximation from "../Core/HermitePolynomialApproximation.js";
 import Iso8601 from "../Core/Iso8601.js";
@@ -29,7 +29,6 @@ import Quaternion from "../Core/Quaternion.js";
 import Rectangle from "../Core/Rectangle.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Spherical from "../Core/Spherical.js";
 import TimeInterval from "../Core/TimeInterval.js";
 import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
@@ -38,12 +37,13 @@ import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
+import SensorVolumePortionToDisplay from "../Scene/SensorVolumePortionToDisplay.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import Uri from "urijs";
 import BillboardGraphics from "./BillboardGraphics.js";
 import BoxGraphics from "./BoxGraphics.js";
 import CallbackProperty from "./CallbackProperty.js";
+import Cesium3DTilesetGraphics from "./Cesium3DTilesetGraphics.js";
 import CheckerboardMaterialProperty from "./CheckerboardMaterialProperty.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
 import CompositeMaterialProperty from "./CompositeMaterialProperty.js";
@@ -89,8 +89,6 @@ import TimeIntervalCollectionProperty from "./TimeIntervalCollectionProperty.js"
 import VelocityOrientationProperty from "./VelocityOrientationProperty.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";
 import WallGraphics from "./WallGraphics.js";
-import Cesium3DTilesetGraphics from "./Cesium3DTilesetGraphics.js";
-import SensorVolumePortionToDisplay from "../Scene/SensorVolumePortionToDisplay.js";
 
 // A marker type to distinguish CZML properties where we need to end up with a unit vector.
 // The data is still loaded into Cartesian3 objects but they are normalized.

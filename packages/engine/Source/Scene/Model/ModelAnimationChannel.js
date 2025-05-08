@@ -1,15 +1,14 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
 import ConstantSpline from "../../Core/ConstantSpline.js";
 import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import HermiteSpline from "../../Core/HermiteSpline.js";
 import InterpolationType from "../../Core/InterpolationType.js";
 import LinearSpline from "../../Core/LinearSpline.js";
-import ModelComponents from "../ModelComponents.js";
-import SteppedSpline from "../../Core/SteppedSpline.js";
 import Quaternion from "../../Core/Quaternion.js";
 import QuaternionSpline from "../../Core/QuaternionSpline.js";
+import SteppedSpline from "../../Core/SteppedSpline.js";
+import ModelComponents from "../ModelComponents.js";
 
 const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 

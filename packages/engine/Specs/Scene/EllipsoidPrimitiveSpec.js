@@ -1,9 +1,9 @@
+import { defined } from "@cesium/utils";
 import {
   Cartesian3,
-  defined,
-  Matrix4,
   EllipsoidPrimitive,
   Material,
+  Matrix4,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

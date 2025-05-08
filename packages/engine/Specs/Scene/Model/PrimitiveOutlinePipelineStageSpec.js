@@ -1,18 +1,18 @@
+import createScene from "../../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   Color,
   combine,
   ComponentDatatype,
   GltfLoader,
   PrimitiveOutlinePipelineStage,
-  ShaderBuilder,
-  _shadersPrimitiveOutlineStageVS,
-  _shadersPrimitiveOutlineStageFS,
   Resource,
   ResourceCache,
+  ShaderBuilder,
+  _shadersPrimitiveOutlineStageFS,
+  _shadersPrimitiveOutlineStageVS,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/Model/PrimitiveOutlinePipelineStage",

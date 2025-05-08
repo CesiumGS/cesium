@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/utils";
 
 /**
  * The content of a tile in a {@link Cesium3DTileset}.

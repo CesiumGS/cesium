@@ -1,10 +1,10 @@
 import {
   BoundingSphere,
-  JulianDate,
   BoundingSphereState,
   EllipsoidGeometryUpdater,
-  PrimitiveCollection,
+  JulianDate,
   Math as CesiumMath,
+  PrimitiveCollection,
 } from "@cesium/engine";
 
 import createDynamicProperty from "./createDynamicProperty.js";

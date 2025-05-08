@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, defined, DeveloperError } from "@cesium/utils";
 
 /**
  * Utilities for parsing bounding volume semantics from 3D Tiles 1.1 metadata.

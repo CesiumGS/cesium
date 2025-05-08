@@ -1,3 +1,5 @@
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
 import {
   Cartesian3,
   Cartesian4,
@@ -7,8 +9,6 @@ import {
   Math as CesiumMath,
   Rectangle,
 } from "../../index.js";
-import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/Cesium3DTileFeature",

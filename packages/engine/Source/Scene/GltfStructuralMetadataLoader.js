@@ -1,9 +1,7 @@
-import Check from "../Core/Check.js";
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import parseStructuralMetadata from "./parseStructuralMetadata.js";
 import parseFeatureMetadataLegacy from "./parseFeatureMetadataLegacy.js";
+import parseStructuralMetadata from "./parseStructuralMetadata.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";

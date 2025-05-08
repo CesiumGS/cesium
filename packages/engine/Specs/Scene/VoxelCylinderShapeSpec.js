@@ -7,8 +7,8 @@ import {
   OrientedBoundingBox,
   Quaternion,
   SpatialNode,
-  VoxelShape,
   VoxelCylinderShape,
+  VoxelShape,
 } from "../../index.js";
 
 describe("Scene/VoxelCylinderShape", function () {

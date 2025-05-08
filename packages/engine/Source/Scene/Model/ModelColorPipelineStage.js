@@ -1,8 +1,8 @@
-import ColorBlendMode from "../ColorBlendMode.js";
 import combine from "../../Core/combine.js";
-import ModelColorStageFS from "../../Shaders/Model/ModelColorStageFS.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import ModelColorStageFS from "../../Shaders/Model/ModelColorStageFS.js";
+import ColorBlendMode from "../ColorBlendMode.js";
 
 /**
  * The model color pipeline stage is responsible for handling the application of a static color to the model.

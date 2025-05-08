@@ -1,4 +1,5 @@
-import { defined, Resource, SceneMode, SkyBox } from "../../index.js";
+import { defined } from "@cesium/utils";
+import { Resource, SceneMode, SkyBox } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

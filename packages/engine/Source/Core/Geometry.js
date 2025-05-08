@@ -1,10 +1,8 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import GeometryType from "./GeometryType.js";
 import Matrix2 from "./Matrix2.js";
 import Matrix3 from "./Matrix3.js";

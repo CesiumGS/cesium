@@ -1,3 +1,6 @@
+import createScene from "../../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   combine,
   ComponentDatatype,
@@ -10,9 +13,6 @@ import {
   ShaderBuilder,
   _shadersMorphTargetsStageVS,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/MorphTargetsPipelineStage",

@@ -1,13 +1,13 @@
-import {
-  _shadersAtmosphereStageFS,
-  _shadersAtmosphereStageVS,
-  Cartesian3,
-  AtmospherePipelineStage,
-  ModelRenderResources,
-  Transforms,
-} from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import {
+  AtmospherePipelineStage,
+  Cartesian3,
+  ModelRenderResources,
+  Transforms,
+  _shadersAtmosphereStageFS,
+  _shadersAtmosphereStageVS,
+} from "../../../index.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe(

@@ -1,10 +1,5 @@
-import {
-  Clock,
-  ClockRange,
-  ClockStep,
-  defined,
-  JulianDate,
-} from "../../index.js";
+import { defined } from "@cesium/utils";
+import { Clock, ClockRange, ClockStep, JulianDate } from "../../index.js";
 
 describe("Core/Clock", function () {
   it("sets default parameters when constructed", function () {

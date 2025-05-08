@@ -1,11 +1,11 @@
 import {
   Atmosphere,
-  GeographicProjection,
-  JulianDate,
   Camera,
   CreditDisplay,
   FrameState,
+  GeographicProjection,
   JobScheduler,
+  JulianDate,
 } from "@cesium/engine";
 
 function createFrameState(context, camera, frameNumber, time) {

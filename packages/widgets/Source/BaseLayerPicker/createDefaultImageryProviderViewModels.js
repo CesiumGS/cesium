@@ -1,4 +1,5 @@
 import {
+  ArcGisBaseMapType,
   ArcGisMapServerImageryProvider,
   buildModuleUrl,
   createWorldImageryAsync,
@@ -6,7 +7,6 @@ import {
   IonWorldImageryStyle,
   OpenStreetMapImageryProvider,
   TileMapServiceImageryProvider,
-  ArcGisBaseMapType,
 } from "@cesium/engine";
 import ProviderViewModel from "./ProviderViewModel.js";
 

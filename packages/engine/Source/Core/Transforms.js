@@ -1,10 +1,8 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import EarthOrientationParameters from "./EarthOrientationParameters.js";
 import EarthOrientationParametersSample from "./EarthOrientationParametersSample.js";
 import Ellipsoid from "./Ellipsoid.js";

@@ -1,6 +1,6 @@
+import { defined } from "@cesium/utils";
 import {
   Cartesian3,
-  defined,
   ComputeEngine,
   Pass,
   SpecularEnvironmentCubeMap,

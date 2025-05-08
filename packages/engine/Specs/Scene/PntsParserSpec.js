@@ -1,5 +1,6 @@
-import { PntsParser, RuntimeError } from "../../index.js";
+import { RuntimeError } from "@cesium/utils";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import { PntsParser } from "../../index.js";
 
 describe("Scene/PntsParser", function () {
   it("throws without arrayBuffer", function () {

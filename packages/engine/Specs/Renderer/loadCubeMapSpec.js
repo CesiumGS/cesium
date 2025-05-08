@@ -1,10 +1,10 @@
 import {
-  Cartesian3,
-  PrimitiveType,
   Buffer,
   BufferUsage,
+  Cartesian3,
   DrawCommand,
   loadCubeMap,
+  PrimitiveType,
   ShaderProgram,
   VertexArray,
 } from "../../index.js";

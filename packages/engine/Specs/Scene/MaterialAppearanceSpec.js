@@ -1,13 +1,13 @@
 import {
+  Appearance,
   Color,
   ColorGeometryInstanceAttribute,
   GeometryInstance,
-  Rectangle,
-  RectangleGeometry,
-  Appearance,
   Material,
   MaterialAppearance,
   Primitive,
+  Rectangle,
+  RectangleGeometry,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 
 /**
  * A priority queue of tiles to be replaced, if necessary, to make room for new tiles.  The queue

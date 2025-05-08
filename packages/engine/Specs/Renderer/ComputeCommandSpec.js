@@ -1,13 +1,13 @@
 import {
   BoundingRectangle,
-  PixelFormat,
   Buffer,
   BufferUsage,
   ComputeCommand,
+  Material,
+  PixelFormat,
   ShaderProgram,
   Texture,
   VertexArray,
-  Material,
   ViewportQuad,
 } from "../../index.js";
 

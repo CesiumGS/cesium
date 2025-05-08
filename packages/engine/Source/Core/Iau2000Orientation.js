@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/utils";
 import IauOrientationParameters from "./IauOrientationParameters.js";
 import JulianDate from "./JulianDate.js";
 import CesiumMath from "./Math.js";

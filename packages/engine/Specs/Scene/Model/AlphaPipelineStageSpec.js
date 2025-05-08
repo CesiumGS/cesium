@@ -1,3 +1,4 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   AlphaPipelineStage,
   BlendingState,
@@ -6,7 +7,6 @@ import {
   RenderState,
   ShaderBuilder,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/AlphaPipelineStage",

@@ -1,9 +1,9 @@
+import { defined, RuntimeError } from "@cesium/utils";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -20,7 +20,9 @@ import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import Pass from "../Renderer/Pass.js";
+import BoundingVolumeSemantics from "./BoundingVolumeSemantics.js";
 import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
@@ -34,15 +36,12 @@ import findGroupMetadata from "./findGroupMetadata.js";
 import findTileMetadata from "./findTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
-import BoundingVolumeSemantics from "./BoundingVolumeSemantics.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
-import Pass from "../Renderer/Pass.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -122,7 +121,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._verticalExaggeration = 1.0;
   this._verticalExaggerationRelativeHeight = 0.0;
 
-  // Important: tile metadata must be parsed before this line so that the
+  // important: tile metadata must be parsed before this line so that the
   // metadata semantics TILE_BOUNDING_BOX, TILE_BOUNDING_REGION, or TILE_BOUNDING_SPHERE
   // can override header.boundingVolume (if necessary)
   this._boundingVolume = this.createBoundingVolume(

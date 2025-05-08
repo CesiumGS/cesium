@@ -1,12 +1,7 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  EventHelper,
-  SceneMode,
-} from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
+import { destroyObject, EventHelper, SceneMode } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/utils";
 import createCommand from "../createCommand.js";
+import knockout from "../ThirdParty/knockout.js";
 
 /**
  * The view model for {@link SceneModePicker}.

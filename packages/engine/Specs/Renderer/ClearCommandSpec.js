@@ -1,4 +1,4 @@
-import { Color, ClearCommand } from "../../index.js";
+import { ClearCommand, Color } from "../../index.js";
 
 describe("Renderer/ClearCommand", function () {
   it("constructs with defaults", function () {

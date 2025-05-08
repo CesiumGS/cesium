@@ -1,9 +1,9 @@
+import { defined } from "@cesium/utils";
+import Frozen from "../../Core/Frozen.js";
+import WebGLConstants from "../../Core/WebGLConstants.js";
 import addToArray from "./addToArray.js";
 import ForEach from "./ForEach.js";
 import getAccessorByteStride from "./getAccessorByteStride.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import WebGLConstants from "../../Core/WebGLConstants.js";
 
 /**
  * Adds default glTF values if they don't exist.

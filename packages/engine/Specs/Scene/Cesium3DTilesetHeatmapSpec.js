@@ -1,10 +1,10 @@
 import {
-  Color,
-  JulianDate,
-  Matrix4,
   Cesium3DTile,
   Cesium3DTileContentState,
   Cesium3DTilesetHeatmap,
+  Color,
+  JulianDate,
+  Matrix4,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

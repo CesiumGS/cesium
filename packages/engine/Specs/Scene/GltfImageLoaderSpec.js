@@ -1,16 +1,15 @@
+import { FeatureDetection, RuntimeError } from "@cesium/utils";
+import createContext from "../../../../Specs/createContext.js";
+import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";
 import {
   BufferLoader,
   clone,
   CompressedTextureBuffer,
   GltfBufferViewLoader,
   GltfImageLoader,
-  FeatureDetection,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
-import createContext from "../../../../Specs/createContext.js";
-import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";
 
 describe(
   "Scene/GltfImageLoader",

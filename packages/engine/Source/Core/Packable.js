@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/utils";
 
 /**
  * Static interface for types which can store their values as packed

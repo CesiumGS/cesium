@@ -1,12 +1,14 @@
 /* eslint-disable new-cap */
+import {
+  Check,
+  defined,
+  DeveloperError,
+  FeatureDetection,
+  RuntimeError,
+} from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
-import FeatureDetection from "./FeatureDetection.js";
-import RuntimeError from "./RuntimeError.js";
 
 /**
  * S2

@@ -1,19 +1,19 @@
 import {
   Ellipsoid,
   GeographicTilingScheme,
-  Math as CesiumMath,
-  Rectangle,
-  Request,
-  RequestScheduler,
-  Resource,
-  WebMercatorProjection,
-  WebMercatorTilingScheme,
   GetFeatureInfoFormat,
   Imagery,
   ImageryLayer,
   ImageryProvider,
   ImageryState,
+  Math as CesiumMath,
+  Rectangle,
+  Request,
+  RequestScheduler,
+  Resource,
   UrlTemplateImageryProvider,
+  WebMercatorProjection,
+  WebMercatorTilingScheme,
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";

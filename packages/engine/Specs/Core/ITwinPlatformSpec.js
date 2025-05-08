@@ -1,9 +1,5 @@
-import {
-  ITwinPlatform,
-  RequestErrorEvent,
-  Resource,
-  RuntimeError,
-} from "../../index.js";
+import { RuntimeError } from "@cesium/utils";
+import { ITwinPlatform, RequestErrorEvent, Resource } from "../../index.js";
 
 describe("ITwinPlatform", () => {
   let previousAccessToken;

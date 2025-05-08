@@ -1,21 +1,21 @@
+import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
+import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 import {
+  Camera,
   Cartesian2,
   Cartesian3,
   GeographicProjection,
+  GlobeSurfaceTileProvider,
   HeightmapTerrainData,
+  ImageryLayerCollection,
   Intersect,
   Math as CesiumMath,
-  Camera,
-  GlobeSurfaceTileProvider,
-  ImageryLayerCollection,
   QuadtreePrimitive,
   SceneMode,
   TerrainFillMesh,
   TileBoundingRegion,
   TileSelectionResult,
 } from "../../index.js";
-import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
-import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 
 describe("Scene/TerrainFillMesh", function () {
   let processor;

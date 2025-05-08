@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import { Check } from "@cesium/utils";
 
 /**
  * An enum describing the built-in instance attribute semantics.

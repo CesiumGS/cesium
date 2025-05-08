@@ -2,10 +2,10 @@ import {
   Cartesian3,
   Cartographic,
   GeographicTilingScheme,
-  Rectangle,
   Math as CesiumMath,
-  WebMercatorTilingScheme,
   QuadtreeTile,
+  Rectangle,
+  WebMercatorTilingScheme,
 } from "../../index.js";
 
 describe("Scene/QuadtreeTile", function () {

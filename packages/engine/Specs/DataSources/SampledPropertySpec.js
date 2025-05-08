@@ -1,6 +1,6 @@
+import { defined } from "@cesium/utils";
 import {
   Cartesian3,
-  defined,
   ExtrapolationType,
   HermitePolynomialApproximation,
   JulianDate,
@@ -8,8 +8,8 @@ import {
   LinearApproximation,
   Math as CesiumMath,
   Quaternion,
-  TimeInterval,
   SampledProperty,
+  TimeInterval,
 } from "../../index.js";
 
 describe("DataSources/SampledProperty", function () {

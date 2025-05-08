@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import CylinderGeometry from "../Core/CylinderGeometry.js";
-import defined from "../Core/defined.js";
 
 function createCylinderGeometry(cylinderGeometry, offset) {
   if (defined(offset)) {

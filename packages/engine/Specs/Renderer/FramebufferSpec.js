@@ -1,22 +1,22 @@
 import {
-  Color,
-  PixelFormat,
-  PrimitiveType,
-  WebGLConstants,
   Buffer,
   BufferUsage,
   ClearCommand,
+  Color,
   ContextLimits,
   CubeMap,
   DrawCommand,
   Framebuffer,
   PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
   Renderbuffer,
   RenderbufferFormat,
   RenderState,
   ShaderProgram,
   Texture,
   VertexArray,
+  WebGLConstants,
 } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";

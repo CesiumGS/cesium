@@ -1,10 +1,10 @@
 import {
-  Color,
-  IndexDatatype,
   Buffer,
   BufferUsage,
+  Color,
   Context,
   ContextLimits,
+  IndexDatatype,
 } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";

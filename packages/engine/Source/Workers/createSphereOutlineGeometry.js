@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
 
 function createSphereOutlineGeometry(sphereGeometry, offset) {

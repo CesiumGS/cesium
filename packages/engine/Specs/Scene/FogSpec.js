@@ -1,5 +1,5 @@
-import { Fog, Math as CesiumMath, SceneMode } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
+import { Fog, Math as CesiumMath, SceneMode } from "../../index.js";
 
 describe("Fog", () => {
   describe("update", () => {

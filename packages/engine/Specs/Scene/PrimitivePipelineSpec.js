@@ -6,8 +6,8 @@ import {
   Geometry,
   GeometryAttribute,
   GeometryAttributes,
-  PrimitiveType,
   PrimitivePipeline,
+  PrimitiveType,
 } from "../../index.js";
 
 describe(

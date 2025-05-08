@@ -1,4 +1,5 @@
-import { Cartesian2, clone, defined, Scene } from "@cesium/engine";
+import { Cartesian2, clone, Scene } from "@cesium/engine";
+import { defined } from "@cesium/utils";
 
 import createCanvas from "./createCanvas.js";
 import getWebGLStub from "./getWebGLStub.js";

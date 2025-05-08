@@ -1,11 +1,9 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CylinderGeometry from "../Core/CylinderGeometry.js";
 import CylinderOutlineGeometry from "../Core/CylinderOutlineGeometry.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";

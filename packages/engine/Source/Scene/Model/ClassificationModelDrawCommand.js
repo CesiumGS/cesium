@@ -1,5 +1,5 @@
+import { Check } from "@cesium/utils";
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import Check from "../../Core/Check.js";
 import Frozen from "../../Core/Frozen.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";

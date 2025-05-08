@@ -1,15 +1,15 @@
 import {
+  BillboardGraphics,
   Cartesian2,
   Cartesian3,
   Color,
-  DistanceDisplayCondition,
-  NearFarScalar,
-  BillboardGraphics,
   ConstantProperty,
+  DistanceDisplayCondition,
   HeightReference,
   HorizontalOrigin,
-  VerticalOrigin,
+  NearFarScalar,
   SplitDirection,
+  VerticalOrigin,
 } from "../../index.js";
 
 describe("DataSources/BillboardGraphics", function () {

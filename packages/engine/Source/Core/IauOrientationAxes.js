@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
 import Iau2000Orientation from "./Iau2000Orientation.js";
 import JulianDate from "./JulianDate.js";
 import CesiumMath from "./Math.js";

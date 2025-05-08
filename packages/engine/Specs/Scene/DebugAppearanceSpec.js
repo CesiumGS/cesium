@@ -1,13 +1,13 @@
 import {
+  Appearance,
   ComponentDatatype,
+  DebugAppearance,
   GeometryInstance,
   GeometryInstanceAttribute,
+  Primitive,
   Rectangle,
   RectangleGeometry,
   VertexFormat,
-  Appearance,
-  DebugAppearance,
-  Primitive,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

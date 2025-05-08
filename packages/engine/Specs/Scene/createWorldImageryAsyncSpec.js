@@ -1,6 +1,6 @@
 import {
-  createWorldImageryAsync,
   BingMapsStyle,
+  createWorldImageryAsync,
   IonImageryProvider,
   Resource,
 } from "../../index.js";

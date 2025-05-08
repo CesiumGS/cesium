@@ -1,7 +1,7 @@
-import defined from "../../Core/defined.js";
+import { defined } from "@cesium/utils";
+import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import BlendingState from "../BlendingState.js";
-import Pass from "../../Renderer/Pass.js";
 
 /**
  * A pipeline stage for configuring the alpha options for handling translucency.

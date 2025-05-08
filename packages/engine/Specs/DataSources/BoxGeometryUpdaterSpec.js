@@ -1,16 +1,16 @@
 import {
-  Cartesian3,
-  Color,
-  GeometryOffsetAttribute,
-  JulianDate,
-  TimeIntervalCollection,
   BoxGeometryUpdater,
   BoxGraphics,
+  Cartesian3,
+  Color,
   ConstantPositionProperty,
   ConstantProperty,
   Entity,
+  GeometryOffsetAttribute,
   HeightReference,
+  JulianDate,
   PrimitiveCollection,
+  TimeIntervalCollection,
 } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";

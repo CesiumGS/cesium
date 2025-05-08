@@ -1,3 +1,4 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   Cesium3DTileset,
   GeographicTilingScheme,
@@ -7,7 +8,6 @@ import {
   Math as CesiumMath,
   Rectangle,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/I3SDataProvider", function () {

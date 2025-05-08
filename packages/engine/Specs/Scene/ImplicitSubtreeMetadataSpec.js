@@ -1,4 +1,4 @@
-import { MetadataClass, ImplicitSubtreeMetadata } from "../../index.js";
+import { ImplicitSubtreeMetadata, MetadataClass } from "../../index.js";
 
 describe("Scene/ImplicitSubtreeMetadata", function () {
   it("creates subtree metadata with default values", function () {

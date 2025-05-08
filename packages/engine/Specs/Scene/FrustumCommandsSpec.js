@@ -1,4 +1,4 @@
-import { Pass, FrustumCommands } from "../../index.js";
+import { FrustumCommands, Pass } from "../../index.js";
 
 describe("Scene/FrustumCommands", function () {
   it("constructs without arguments", function () {

@@ -1,3 +1,6 @@
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
+import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
 import {
   Cartesian3,
   Cesium3DContentGroup,
@@ -20,12 +23,9 @@ import {
   Multiple3DTileContent,
   Resource,
   ResourceCache,
-  TileBoundingSphere,
   TileBoundingS2Cell,
+  TileBoundingSphere,
 } from "../../index.js";
-import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
-import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/Implicit3DTileContent",

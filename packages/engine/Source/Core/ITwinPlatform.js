@@ -1,8 +1,5 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 
 /**
  * Default settings for accessing the iTwin platform.

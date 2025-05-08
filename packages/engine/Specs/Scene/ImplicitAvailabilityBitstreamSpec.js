@@ -1,4 +1,5 @@
-import { ImplicitAvailabilityBitstream, RuntimeError } from "../../index.js";
+import { RuntimeError } from "@cesium/utils";
+import { ImplicitAvailabilityBitstream } from "../../index.js";
 
 describe("Scene/ImplicitAvailabilityBitstream", function () {
   it("throws on missing lengthBits", function () {

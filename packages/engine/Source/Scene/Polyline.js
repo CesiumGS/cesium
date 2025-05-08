@@ -1,11 +1,10 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import arrayRemoveDuplicates from "../Core/arrayRemoveDuplicates.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
+import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PolylinePipeline from "../Core/PolylinePipeline.js";
 import Material from "./Material.js";

@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
 
 /**

@@ -1,4 +1,5 @@
-import { defined, getTimestamp, FrameRateMonitor } from "../../index.js";
+import { defined } from "@cesium/utils";
+import { FrameRateMonitor, getTimestamp } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

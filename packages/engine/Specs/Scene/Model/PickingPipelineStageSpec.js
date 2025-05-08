@@ -4,11 +4,11 @@ import {
   ModelStatistics,
   ModelType,
   PickingPipelineStage,
-  ShaderBuilder,
   Resource,
   ResourceCache,
-  defined,
-} from "../../../index.js";
+  ShaderBuilder,
+} from "@cesium/engine";
+import { defined } from "@cesium/utils";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";

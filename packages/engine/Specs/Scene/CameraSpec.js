@@ -1,5 +1,7 @@
 import {
   BoundingSphere,
+  Camera,
+  CameraFlightPath,
   Cartesian2,
   Cartesian3,
   Cartesian4,
@@ -7,6 +9,7 @@ import {
   Ellipsoid,
   GeographicProjection,
   HeadingPitchRange,
+  MapMode2D,
   Math as CesiumMath,
   Matrix3,
   Matrix4,
@@ -14,13 +17,10 @@ import {
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
   Rectangle,
-  Transforms,
-  WebMercatorProjection,
-  Camera,
-  CameraFlightPath,
-  MapMode2D,
   SceneMode,
+  Transforms,
   TweenCollection,
+  WebMercatorProjection,
 } from "../../index.js";
 
 describe("Scene/Camera", function () {

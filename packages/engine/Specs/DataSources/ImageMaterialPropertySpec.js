@@ -1,10 +1,10 @@
 import {
   Cartesian2,
   Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   ImageMaterialProperty,
+  JulianDate,
+  TimeInterval,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
 

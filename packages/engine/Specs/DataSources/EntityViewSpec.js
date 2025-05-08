@@ -1,11 +1,11 @@
 import {
   BoundingSphere,
   Cartesian3,
-  Ellipsoid,
-  JulianDate,
   ConstantPositionProperty,
+  Ellipsoid,
   Entity,
   EntityView,
+  JulianDate,
   TrackingReferenceFrame,
 } from "../../index.js";
 

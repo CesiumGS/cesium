@@ -1,4 +1,4 @@
-import { FeatureDetection, Fullscreen } from "../../index.js";
+import { FeatureDetection, Fullscreen } from "../Source/index";
 
 describe("Core/Fullscreen", function () {
   it("can tell if fullscreen is supported", function () {
@@ -33,16 +33,17 @@ describe("Core/Fullscreen", function () {
 
   it("can request fullscreen", function () {
     if (Fullscreen.supportsFullscreen()) {
-      spyOn(document.body, Fullscreen._names.requestFullscreen);
-      spyOn(document, Fullscreen._names.exitFullscreen);
+      const request = Fullscreen._names.requestFullscreen as keyof HTMLElement;
+      const exit = Fullscreen._names.exitFullscreen as keyof Document;
+
+      spyOn(document.body, request);
+      spyOn(document, exit);
 
       Fullscreen.requestFullscreen(document.body);
-      expect(
-        document.body[Fullscreen._names.requestFullscreen],
-      ).toHaveBeenCalled();
+      expect(document.body[request]).toHaveBeenCalled();
 
       Fullscreen.exitFullscreen();
-      expect(document[Fullscreen._names.exitFullscreen]).toHaveBeenCalled();
+      expect(document[exit]).toHaveBeenCalled();
     } else {
       // These are no-ops if supportsFullscreen is false.
       Fullscreen.requestFullscreen(document.body);
@@ -54,7 +55,8 @@ describe("Core/Fullscreen", function () {
     it("can get the fullscreen change event name", function () {
       if (Fullscreen.supportsFullscreen()) {
         // the property on the document is the event name, prefixed with 'on'.
-        expect(document[`on${Fullscreen.changeEventName}`]).toBeDefined();
+        const eventName = `on${Fullscreen.changeEventName as string}`;
+        expect((document as any)[eventName]).toBeDefined();
       } else {
         expect(Fullscreen.changeEventName).toBeUndefined();
       }
@@ -63,7 +65,8 @@ describe("Core/Fullscreen", function () {
     it("can get the fullscreen error event name", function () {
       if (Fullscreen.supportsFullscreen()) {
         // the property on the document is the event name, prefixed with 'on'.
-        expect(document[`on${Fullscreen.errorEventName}`]).toBeDefined();
+        const eventName = `on${Fullscreen.errorEventName as string}`;
+        expect((document as any)[eventName]).toBeDefined();
       } else {
         expect(Fullscreen.errorEventName).toBeUndefined();
       }

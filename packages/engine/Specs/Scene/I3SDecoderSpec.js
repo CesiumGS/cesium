@@ -1,4 +1,5 @@
-import { I3SDecoder, RuntimeError, TaskProcessor } from "../../index.js";
+import { RuntimeError } from "@cesium/utils";
+import { I3SDecoder, TaskProcessor } from "../../index.js";
 
 describe("Scene/I3SDecoder", function () {
   const defaultGeometrySchema = {

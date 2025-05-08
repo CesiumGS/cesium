@@ -1,3 +1,4 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   CesiumTerrainProvider,
   Ellipsoid,
@@ -10,7 +11,6 @@ import {
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   TerrainProvider,
 } from "../../index.js";
 

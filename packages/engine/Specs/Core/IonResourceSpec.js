@@ -1,11 +1,5 @@
-import {
-  defer,
-  Ion,
-  IonResource,
-  RequestErrorEvent,
-  Resource,
-  RuntimeError,
-} from "../../index.js";
+import { defer, RuntimeError } from "@cesium/utils";
+import { Ion, IonResource, RequestErrorEvent, Resource } from "../../index.js";
 
 describe("Core/IonResource", function () {
   const assetId = 123890213;

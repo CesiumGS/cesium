@@ -1,15 +1,15 @@
+import { RuntimeError } from "@cesium/utils";
 import {
+  BufferUsage,
+  ClearCommand,
   ComponentDatatype,
+  DrawCommand,
   Geometry,
   GeometryAttribute,
   GeometryPipeline,
   IndexDatatype,
   PrimitiveType,
-  BufferUsage,
-  ClearCommand,
-  DrawCommand,
   ShaderProgram,
-  RuntimeError,
   VertexArray,
 } from "../../index.js";
 
