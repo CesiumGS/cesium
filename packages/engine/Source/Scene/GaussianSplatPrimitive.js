@@ -45,6 +45,7 @@ function GaussianSplatPrimitive(options) {
   this._splatScale = 1.0;
 
   this._tileset = options.tileset;
+  this._tileset._hasSpzContent = true;
 
   this._tileset.tileLoad.addEventListener(this.onTileLoaded, this);
   this._tileset.tileUnload.addEventListener(this.onTileUnloaded, this);
@@ -452,6 +453,7 @@ GaussianSplatPrimitive.prototype.gatherSplats = function () {
 
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
+
   tileset.update(frameState);
 
   if (this._drawCommand) {
