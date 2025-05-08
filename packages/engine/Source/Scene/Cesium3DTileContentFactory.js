@@ -96,7 +96,7 @@ const Cesium3DTileContentFactory = {
     if (tileset._hasSpzContent) {
       return GaussianSplat3DTilesContent.fromGltf(tileset, tile, resource, glb);
     }
-    return GaussianSplat3DTilesContent.fromGltf(tileset, tile, resource, glb);
+    return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
