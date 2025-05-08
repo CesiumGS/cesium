@@ -1707,7 +1707,7 @@ async function buildSandcastle() {
     streams.push(dataStream);
   }
 
-  const standaloneStream = gulp
+  let standaloneStream = gulp
     .src(["Apps/Sandcastle/standalone.html"])
     .pipe(gulpReplace("../../../", "."))
     .pipe(
@@ -1717,8 +1717,14 @@ async function buildSandcastle() {
           '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>',
       ),
     )
-    .pipe(gulpReplace("../../Build", "."))
-    .pipe(gulp.dest("Build/Sandcastle"));
+    .pipe(gulpReplace("../../Build", "."));
+  if (isProduction) {
+    standaloneStream = standaloneStream.pipe(gulp.dest("Build/Sandcastle"));
+  } else {
+    standaloneStream = standaloneStream.pipe(
+      gulp.dest("Build/Apps/Sandcastle"),
+    );
+  }
   streams.push(standaloneStream);
 
   return Promise.all(streams.map((s) => finished(s)));
