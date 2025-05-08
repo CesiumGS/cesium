@@ -1,12 +1,9 @@
-import Cartesian4 from "../../Core/Cartesian4.js";
+import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
-import PixelFormat from "../../Core/PixelFormat.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
 import Rectangle from "../../Core/Rectangle.js";
 
-import Texture from "../../Renderer/Texture.js";
-
 import ModelImageryMapping from "./ModelImageryMapping.js";
-import Check from "../../Core/Check.js";
 import ImageryInput from "./ImageryInput.js";
 
 const nativeBoundingRectangleScratch = new Rectangle();
@@ -89,7 +86,9 @@ class ImageryPipelineStageProcessing {
           cartographicBoundingRectangle,
           imageryTexCoordAttributeSetIndex,
         );
-        imageryInputs.push(imageryInput);
+        if (defined(imageryInput)) {
+          imageryInputs.push(imageryInput);
+        }
       }
     }
     return imageryInputs;
@@ -114,7 +113,8 @@ class ImageryPipelineStageProcessing {
    * This is the value that will be used to access the texture coordinate
    * attribute <code>a_imagery_texCoord_${imageryTexCoordAttributeSetIndex}</code>
    * in the shader.
-   * @returns {ImageryInput} The imagery input
+   * @returns {ImageryInput|undefined} The imagery input, or undefined if
+   * something goes wrong...
    * @private
    */
   static _createImageryInput(
@@ -143,10 +143,19 @@ class ImageryPipelineStageProcessing {
       coverage.level,
     );
 
-    // TODO_DRAPING See how to handle this. Just fall back to "imagery.texture"?
-    const texture = imagery.textureWebMercator;
+    // TODO_DRAPING It looks like it is OK to use either texture
+    // here. The texture coordinates are computed for the respective
+    // imagery. Still: Verify that this is the right approach!
+    let texture = imagery.textureWebMercator;
     if (!defined(texture)) {
-      console.log("XXX_DRAPING: Imagery does not have textureWebMercator");
+      texture = imagery.texture;
+      if (!defined(texture)) {
+        // TODO_DRAPING Check which kind of error handling should happen here.
+        console.log(
+          `Imagery at ${coverage.x}, ${coverage.y} (level ${coverage.level}) does not have any texture`,
+        );
+        return undefined;
+      }
     }
 
     // XXX_DRAPING Debug log
@@ -387,7 +396,7 @@ class ImageryPipelineStageProcessing {
   /**
    * Returns the projection of the given imagery layer.
    *
-   * XXX_DRAPING This only exists to hide a train wreck
+   * This only exists to hide a train wreck
    *
    * @param {ImageryLayer} imageryLayer The imagery layer
    * @returns {MapProjection} The projection
@@ -399,23 +408,6 @@ class ImageryPipelineStageProcessing {
     //>>includeEnd('debug');
     const projection = imageryLayer.imageryProvider.tilingScheme.projection;
     return projection;
-  }
-
-  // XXX_DRAPING Currently unused
-  static createDummyTexture(context) {
-    const DUMMY_TEXTURE = new Texture({
-      context: context,
-      pixelFormat: PixelFormat.RGB,
-      source: {
-        width: 2,
-        height: 2,
-        arrayBufferView: new Uint8Array([
-          255, 0, 0, 0, 255, 0, 255, 255, 0, 0, 0, 255,
-        ]),
-      },
-      flipY: false,
-    });
-    return DUMMY_TEXTURE;
   }
 }
 

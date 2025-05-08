@@ -1068,28 +1068,13 @@ ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
 
   const scaleX = terrainWidth / imageryRectangle.width;
   const scaleY = terrainHeight / imageryRectangle.height;
-  const result = new Cartesian4(
+  return new Cartesian4(
     (scaleX * (terrainRectangle.west - imageryRectangle.west)) / terrainWidth,
     (scaleY * (terrainRectangle.south - imageryRectangle.south)) /
       terrainHeight,
     scaleX,
     scaleY,
   );
-
-  /*
-  // XXX_DRAPING: The above is just a convoluted way of writing this:
-  const invImageryWidth = 1.0 / imageryRectangle.width;
-  const invImageryHeight = 1.0 / imageryRectangle.height;
-  const deltaWest = terrainRectangle.west - imageryRectangle.west;
-  const deltaSouth = terrainRectangle.south - imageryRectangle.south;
-  const offsetX = deltaWest * invImageryWidth;
-  const offsetY = deltaSouth * invImageryHeight;
-  const scaleX = terrainRectangle.width * invImageryWidth;
-  const scaleY = terrainRectangle.height * invImageryHeight;
-  // which, in turn, could be a generic "Rectangle.relativize" function
-  */
-
-  return result;
 };
 
 /**

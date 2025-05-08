@@ -141,7 +141,7 @@ class ImageryCoverageComputations {
     const maximumLevel =
       imageryProvider.maximumLevel ?? Number.POSITIVE_INFINITY;
     const clampedImageryLevel = Math.min(
-      maximumLevel,
+      maximumLevel - 1,
       Math.max(minimumLevel, imageryLevel),
     );
     const validImageryLevel = Math.floor(clampedImageryLevel);

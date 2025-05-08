@@ -101,6 +101,12 @@ class ImageryPipelineStage {
       imageryTexCoordAttributeSetIndices,
     );
 
+    // XXX_DRAPING Can happen, shouldn't happen, just bail out here...
+    if (imageryInputs.length === 0) {
+      console.log(`XXX_DRAPING Found no valid textures`);
+      return;
+    }
+
     // XXX_DRAPING Limit to single input for debugging
     /*/
     if (imageryInputs.length > 1) {
@@ -110,10 +116,11 @@ class ImageryPipelineStage {
       imageryInputs[0] = temp;
     }
     //*/
-    // XXX_DRAPING See how to handle that limit..
+    // XXX_DRAPING This will have to be handled with upsampling.
+    // For now, just truncate the textures to prevent crashes.
     if (imageryInputs.length > 10) {
       console.log(
-        `XXX_DRAPING Found ${imageryInputs.length} texture units, truncating`,
+        `Warning: Found ${imageryInputs.length} texture units, truncating`,
       );
       imageryInputs.length = 10;
     }
@@ -165,7 +172,6 @@ class ImageryPipelineStage {
 
     // Set the global defines indicating the presence and number of
     // imagery textures.
-    // TODO_DRAPING Check maxTextures to not be exceeded
     shaderBuilder.addDefine(`HAS_IMAGERY`);
     shaderBuilder.addDefine(`IMAGERY_TEXTURE_UNITS ${numTextures}`);
 

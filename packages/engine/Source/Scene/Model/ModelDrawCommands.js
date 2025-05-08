@@ -189,16 +189,6 @@ function buildDrawCommandForModel(
     castShadows: castShadows,
     receiveShadows: receiveShadows,
   });
-
-  /* XXX_DRAPING Debug log...
-  console.log("=".repeat(80));
-  console.log("Fragment:");
-  console.log(shaderProgram.fragmentShaderSource.createCombinedFragmentShader(frameState.context));
-  console.log("=".repeat(80));
-  console.log("Vertex:");
-  console.log(shaderProgram.vertexShaderSource.createCombinedVertexShader(frameState.context));
-  */
-
   return command;
 }
 

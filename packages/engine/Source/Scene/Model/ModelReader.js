@@ -8,6 +8,9 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import AttributeCompression from "../../Core/AttributeCompression.js";
 
 import AttributeType from "../AttributeType.js";
+import IndexDatatype from "../../Core/IndexDatatype.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * A class for reading the data from a <code>ModelComponents.Attribute</code>.
@@ -23,8 +26,14 @@ import AttributeType from "../AttributeType.js";
  * values from an 'accessor' OR from an 'attribute'. The tl;dr: Large parts of
  * this could be "nicer", or "more generic", and "better" along all dimensions
  * of this term. Just give me time...
+ *
+ * NOTE: The fact that all this has to operate on TypedArray is unfortunate.
+ * Most of the subsequent processing could operate on some abstraction of
+ * that. The fact that that TypedArrays can be read/written as "bulk", and
+ * then offer access that is "as efficient as it can be" could be a
+ * justification, as part of the performance-genericity trade-off
  */
-class ModelAttributeReader {
+class ModelReader {
   /**
    * Reads the data of the given atttribute into a typed array.
    *
@@ -47,47 +56,48 @@ class ModelAttributeReader {
     //>>includeEnd('debug');
 
     // Obtain a compact (non-interleaved) typed array that contains
-    // the components. If the data is quantized, this will contain
-    // the quantized values with the quantized data type. Otherwise,
-    // it will be the actual values.
+    // the components.
     const compactTypedArray =
-      ModelAttributeReader.readAsRawCompactTypedArray(attribute);
+      ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+    // If the attribute is not normalized and the data is not quantized
+    // and not normalized, then this can be returned directly
+    const normalized = attribute.normalized;
     const quantization = attribute.quantization;
-    if (!defined(quantization)) {
+    if (!defined(quantization) && !normalized) {
       return compactTypedArray;
     }
 
     const elementType = attribute.type;
     const elementCount = attribute.count;
 
-    const componentsPerElement =
-      AttributeType.getNumberOfComponents(elementType);
-    const totalComponentCount = elementCount * componentsPerElement;
-
     // If the attribute is normalized, normalize the data from
     // the typed array
-    let quantizedTypedArray = compactTypedArray;
-    if (attribute.normalized) {
+    let normalizedTypedArray = compactTypedArray;
+    if (normalized) {
       // Note that although this is called "dequantize", it does
       // not really "dequantize" based on the quantization. It only
       // performs the conversion from the (normalized) integer
       // component types into floating point.
-      quantizedTypedArray = AttributeCompression.dequantize(
+      normalizedTypedArray = AttributeCompression.dequantize(
         compactTypedArray,
-        quantization.componentDatatype,
+        attribute.componentDatatype,
         elementType,
-        totalComponentCount,
+        elementCount,
       );
     }
 
+    if (!defined(quantization)) {
+      return normalizedTypedArray;
+    }
     // Now, this one actually DOES dequantize...
-    const typedArray = ModelAttributeReader.dequantize(
-      quantizedTypedArray,
+    const dequantizedTypedArray = ModelReader.dequantize(
+      normalizedTypedArray,
       elementCount,
       elementType,
       quantization,
     );
-    return typedArray;
+    return dequantizedTypedArray;
   }
 
   /**
@@ -101,7 +111,7 @@ class ModelAttributeReader {
    * @param {ModelComponents.Attribute} attribute The attribute
    * @returns The raw attribute data
    */
-  static readAsRawCompactTypedArray(attribute) {
+  static readAttributeAsRawCompactTypedArray(attribute) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("attribute", attribute);
     //>>includeEnd('debug');
@@ -149,10 +159,13 @@ class ModelAttributeReader {
     );
     const byteOffset = attribute.byteOffset;
     const elementByteStride = byteStride ?? defaultByteStride;
-    const dataView = new DataView(fullTypedArray);
+    const dataView = new DataView(
+      fullTypedArray.buffer,
+      fullTypedArray.byteOffset,
+      fullTypedArray.byteLength,
+    );
     const components = new Array(componentsPerElement);
-    const componentsReader =
-      ModelAttributeReader.createComponentsReader(componentType);
+    const componentsReader = ModelReader.createComponentsReader(componentType);
     for (let i = 0; i < elementCount; ++i) {
       const elementByteOffset = byteOffset + i * elementByteStride;
       componentsReader(
@@ -199,14 +212,14 @@ class ModelAttributeReader {
     //>>includeEnd('debug');
 
     if (quantization.octEncoded) {
-      const dequantizedTypedArray = ModelAttributeReader.octDecode(
+      const dequantizedTypedArray = ModelReader.octDecode(
         quantizedTypedArray,
         elementCount,
         quantization.normalizationRange,
         undefined,
       );
       if (quantization.octEncodedZXY) {
-        ModelAttributeReader.convertZxyToXyz(
+        ModelReader.convertZxyToXyz(
           dequantizedTypedArray,
           dequantizedTypedArray,
         );
@@ -219,7 +232,7 @@ class ModelAttributeReader {
     const stepSize = quantization.quantizedVolumeStepSize;
     const offset = quantization.quantizedVolumeOffset;
     if (elementType === AttributeType.SCALAR) {
-      return ModelAttributeReader.dequantize1D(
+      return ModelReader.dequantize1D(
         quantizedTypedArray,
         elementCount,
         stepSize,
@@ -228,7 +241,7 @@ class ModelAttributeReader {
       );
     }
     if (elementType === AttributeType.VEC2) {
-      return ModelAttributeReader.dequantize2D(
+      return ModelReader.dequantize2D(
         quantizedTypedArray,
         elementCount,
         stepSize,
@@ -237,7 +250,7 @@ class ModelAttributeReader {
       );
     }
     if (elementType === AttributeType.VEC3) {
-      return ModelAttributeReader.dequantize3D(
+      return ModelReader.dequantize3D(
         quantizedTypedArray,
         elementCount,
         stepSize,
@@ -246,7 +259,7 @@ class ModelAttributeReader {
       );
     }
     if (elementType === AttributeType.VEC4) {
-      return ModelAttributeReader.dequantize4D(
+      return ModelReader.dequantize4D(
         quantizedTypedArray,
         elementCount,
         stepSize,
@@ -526,8 +539,7 @@ class ModelAttributeReader {
    * @returns The reader
    */
   static createComponentsReader(componentType) {
-    const componentReader =
-      ModelAttributeReader.createComponentReader(componentType);
+    const componentReader = ModelReader.createComponentReader(componentType);
     const sizeInBytes = ComponentDatatype.getSizeInBytes(componentType);
     return function (dataView, byteOffset, numberOfComponents, result) {
       let offset = byteOffset;
@@ -594,6 +606,147 @@ class ModelAttributeReader {
       `The componentType must be a valid ComponentDatatype, but is ${componentType}`,
     );
   }
+
+  static computeMinMax(values, componentsPerElement) {
+    const min = Array(componentsPerElement).fill(Number.POSITIVE_INFINITY);
+    const max = Array(componentsPerElement).fill(Number.NEGATIVE_INFINITY);
+    const elementCount = values.length / componentsPerElement;
+    for (let i = 0; i < elementCount; ++i) {
+      const offset = i * componentsPerElement;
+      for (let j = 0; j < componentsPerElement; ++j) {
+        min[j] = Math.min(min[j], values[offset + j]);
+        max[j] = Math.max(max[j], values[offset + j]);
+      }
+    }
+    return {
+      min: min,
+      max: max,
+    };
+  }
+
+  /**
+   * Transform the elements of the given array with the given 4x4 matrix,
+   * interpreting each 3 consecutive elements as a 3D point, and write
+   * the result into the given result array, creating the result array
+   * if it was undefined.
+   *
+   * @param {TypedArray} input The input array
+   * @param {Matrix4} matrix The matrix
+   * @param {TypedArray} [result] The result
+   * @returns The result
+   */
+  static transform3D(input, matrix, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("input", input);
+    Check.defined("matrix", matrix);
+    //>>includeEnd('debug');
+
+    if (!defined(result)) {
+      result = new Float32Array(input.length);
+    }
+    const c = new Cartesian3();
+    const elementCount = input.length / 3;
+    for (let i = 0; i < elementCount; i++) {
+      Cartesian3.unpack(input, i * 3, c);
+      Matrix4.multiplyByPoint(matrix, c, c);
+      Cartesian3.pack(c, result, i * 3);
+    }
+    return result;
+  }
+
+  /**
+   * @param {ModelComponents.Indices} primitiveIndices
+   * @returns
+   */
+  static readIndicesAsTypedArray(primitiveIndices) {
+    const existingIndices = primitiveIndices.typedArray;
+    if (defined(existingIndices)) {
+      return existingIndices;
+    }
+    const indicesBuffer = primitiveIndices.buffer;
+    const indicesCount = primitiveIndices.count;
+    const indexDatatype = primitiveIndices.indexDatatype;
+    const indices = ModelReader.createIndexTypedArray(
+      indexDatatype,
+      indicesCount,
+    );
+    indicesBuffer.getBufferData(indices);
+    return indices;
+  }
+
+  /**
+   * @param {ModelComponents.Primitive} primitive
+   * @returns
+   */
+  static readIndicesAsTriangleIndicesTypedArray(primitive) {
+    const indices = primitive.indices;
+    const primitiveType = primitive.primitiveType;
+    const originalIndices = ModelReader.readIndicesAsTypedArray(indices);
+    if (primitiveType === PrimitiveType.TRIANGLES) {
+      return originalIndices;
+    }
+    if (primitiveType === PrimitiveType.TRIANGLE_STRIP) {
+      const triangleIndices =
+        ModelReader.convertTriangleStripToTriangleIndices(originalIndices);
+      return triangleIndices;
+    }
+    if (primitiveType === PrimitiveType.TRIANGLE_FAN) {
+      const triangleIndices =
+        ModelReader.convertTriangleFanToTriangleIndices(originalIndices);
+      return triangleIndices;
+    }
+    throw new DeveloperError(
+      `The primitive.primitiveType must be TRIANGLES (${PrimitiveType.TRIANGLES}, ` +
+        `TRIANGLE_STRIP (${PrimitiveType.TRIANGLE_STRIP}, or ` +
+        `TRIANGLE_FAN (${PrimitiveType.TRIANGLE_FAN}, but is ${primitiveType}`,
+    );
+  }
+
+  static convertTriangleStripToTriangleIndices(indices) {
+    const triangleIndices = indices.constructor((indices.length - 2) * 3);
+    for (let i = 0; i < indices.length - 2; i++) {
+      if (i % 2 === 1) {
+        triangleIndices[i * 3 + 0] = indices[i + 0];
+        triangleIndices[i * 3 + 1] = indices[i + 2];
+        triangleIndices[i * 3 + 2] = indices[i + 1];
+      } else {
+        triangleIndices[i * 3 + 0] = indices[i + 0];
+        triangleIndices[i * 3 + 1] = indices[i + 1];
+        triangleIndices[i * 3 + 2] = indices[i + 2];
+      }
+    }
+    return triangleIndices;
+  }
+
+  static convertTriangleFanToTriangleIndices(indices) {
+    const triangleIndices = indices.constructor((indices.length - 2) * 3);
+    for (let i = 0; i < indices.length - 2; i++) {
+      triangleIndices[i * 3 + 0] = indices[i + 0];
+      triangleIndices[i * 3 + 1] = indices[i + 1];
+      triangleIndices[i * 3 + 2] = indices[i + 2];
+    }
+    return triangleIndices;
+  }
+
+  static createIndexTypedArray(indexDatatype, size) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("size", size, 0);
+    //>>includeEnd('debug');
+
+    switch (indexDatatype) {
+      case IndexDatatype.UNSIGNED_BYTE:
+        return new Uint8Array(size);
+      case IndexDatatype.UNSIGNED_SHORT:
+        return new Uint16Array(size);
+      case IndexDatatype.UNSIGNED_INT:
+        return new Uint32Array(size);
+    }
+    throw new DeveloperError(
+      `The indexDatatype must be UNSIGNED_BYTE (${IndexDatatype.UNSIGNED_BYTE}, ` +
+        `UNSIGNED_SHORT (${IndexDatatype.UNSIGNED_SHORT}, or ` +
+        `UNSIGNED_INT (${IndexDatatype.UNSIGNED_INT}, but is ${indexDatatype}`,
+    );
+  }
 }
 
-export default ModelAttributeReader;
+export default ModelReader;

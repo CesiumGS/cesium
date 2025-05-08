@@ -2830,8 +2830,7 @@ function addTileDebugLabel(tile, tileset, position) {
   let attributes = 0;
 
   if (tileset.debugShowGeometricError) {
-    // XXX_DRAPING Show SSE as well....
-    labelString += `\nGeometric error: ${tile.geometricError} SSE ${tile._screenSpaceError}`;
+    labelString += `\nGeometric error: ${tile.geometricError}`;
     attributes++;
   }
 

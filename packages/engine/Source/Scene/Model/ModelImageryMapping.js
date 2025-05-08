@@ -13,7 +13,7 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
-import ModelAttributeReader from "./ModelAttributeReader.js";
+import ModelReader from "./ModelReader.js";
 
 /**
  * A class for computing the texture coordinates of imagery that is
@@ -223,8 +223,7 @@ class ModelImageryMapping {
     //>>includeEnd('debug');
 
     // Extract the positions as a typed array
-    // TODO_DRAPING Use AttributeReader here...
-    const typedArray = ModelAttributeReader.readAttributeAsTypedArray(
+    const typedArray = ModelReader.readAttributeAsTypedArray(
       primitivePositionAttribute,
     );
 

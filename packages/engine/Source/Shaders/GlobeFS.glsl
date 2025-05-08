@@ -186,7 +186,6 @@ bool inTranslucencyRectangle()
 }
 #endif
 
-// Crazy idea: How about writing a COMMENT here?
 vec4 sampleAndBlend(
     vec4 previousColor,
     sampler2D textureToSample,

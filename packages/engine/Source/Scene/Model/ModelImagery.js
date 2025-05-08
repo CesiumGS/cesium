@@ -104,9 +104,6 @@ class ModelImagery {
       return;
     }
     if (!defined(this._modelPrimitiveImageries)) {
-      // XXX_DRAPING Debug log
-      //console.log("Creating modelPrimitiveImageries");
-
       this._modelPrimitiveImageries = this._createModelPrimitiveImageries();
     }
     this._updateModelPrimitiveImageries(frameState);
@@ -136,7 +133,6 @@ class ModelImagery {
         runtimeNode,
         runtimePrimitive,
       );
-      // XXX_DRAPING Is this the right way of passing this on...?
       runtimePrimitive.primitive.modelPrimitiveImagery = modelPrimitiveImagery;
       modelPrimitiveImageries.push(modelPrimitiveImagery);
     }

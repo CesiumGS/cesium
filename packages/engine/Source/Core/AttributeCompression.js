@@ -465,8 +465,6 @@ AttributeCompression.dequantize = function (
     count * componentsPerAttribute,
   );
 
-  // XXX_DRAPING Why is this happening here?
-  // And why only with max(-1, ...) and not min(1, ...) ?
   for (let i = 0; i < count; i++) {
     for (let j = 0; j < componentsPerAttribute; j++) {
       const index = i * componentsPerAttribute + j;

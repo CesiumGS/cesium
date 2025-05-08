@@ -206,7 +206,6 @@ export default function pickModel(
         continue;
       }
 
-      // XXX_DRAPING See ModelPrimitives.getIndices
       let indices = primitive.indices.typedArray;
       if (!defined(indices)) {
         const indicesBuffer = primitive.indices.buffer;

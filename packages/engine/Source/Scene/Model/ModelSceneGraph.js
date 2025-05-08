@@ -168,8 +168,6 @@ function ModelSceneGraph(options) {
   initialize(this);
 }
 
-//ModelSceneGraph.XXX_DRAPING_UPSAMPLING_EXPERIMENTS = false;
-
 Object.defineProperties(ModelSceneGraph.prototype, {
   /**
    * The model components this scene graph represents.
@@ -414,32 +412,6 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
     children: childrenIndices,
     sceneGraph: sceneGraph,
   });
-
-  /*/ XXX_DRAPING Upsampling experiments omitted for now
-  const originalPrimitives = node.primitives;
-  let actualPrimitives = originalPrimitives;
-
-  if (ModelSceneGraph.XXX_DRAPING_UPSAMPLING_EXPERIMENTS) {
-    const allUpsampledPrimitives = [];
-    for (let i = 0; i < originalPrimitives.length; i++) {
-      const primitive = node.primitives[i];
-      if (defined(primitive.modelPrimitiveImagery)) {
-        console.log("Maybe create multiple runtime primitives");
-        const upsampledPrimitives =
-          primitive.modelPrimitiveImagery._upsampledPrimitives;
-        if (defined(upsampledPrimitives)) {
-          console.log("Actually create multiple runtime primitives");
-          allUpsampledPrimitives.push(...upsampledPrimitives);
-        }
-      }
-    }
-    actualPrimitives =
-      allUpsampledPrimitives.length === 0
-        ? originalPrimitives
-        : allUpsampledPrimitives;
-    node.primitives = actualPrimitives;
-  }
-  //*/
 
   const primitivesLength = node.primitives.length;
   for (let i = 0; i < primitivesLength; i++) {

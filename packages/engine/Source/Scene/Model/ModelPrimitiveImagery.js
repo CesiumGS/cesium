@@ -205,7 +205,7 @@ class ModelPrimitiveImagery {
     }
 
     if (!defined(this._coveragesPerLayer)) {
-      this._coveragesPerLayer = this._computeCoveragesPerLayer();
+      this._coveragesPerLayer = this._computeCoveragesPerLayer(frameState);
       this._allImageriesReady = false;
     }
     if (!this._allImageriesReady) {
@@ -457,15 +457,12 @@ class ModelPrimitiveImagery {
     );
 
     // Clamp the level to a valid range, and an integer value
-    const minimumLevel = imageryProvider.minimumLevel ?? 0;
-    const maximumLevel =
-      imageryProvider.maximumLevel ?? Number.POSITIVE_INFINITY;
-    const validImageryLevel = Math.min(
-      maximumLevel,
-      Math.max(minimumLevel, desiredLevel),
+    const imageryLevel = ImageryCoverageComputations._validateImageryLevel(
+      imageryProvider,
+      desiredLevel,
     );
-    const imageryLevel = Math.floor(validImageryLevel);
 
+    // XXX_DRAPING return the selectable level for tests
     //if (defined(Model.XXX_DRAPING_LEVEL)) {
     //  return Model.XXX_DRAPING_LEVEL;
     //}
@@ -513,7 +510,12 @@ class ModelPrimitiveImagery {
           coverage.y,
           coverage.level,
         );
-        if (imagery.state !== ImageryState.READY) {
+
+        const countsAsReadyInThatObscureStateMachine =
+          imagery.state === ImageryState.READY ||
+          imagery.state === ImageryState.FAILED ||
+          imagery.state === ImageryState.INVALID;
+        if (!countsAsReadyInThatObscureStateMachine) {
           allImageriesReady = false;
           imagery.processStateMachine(frameState, false, false);
         }
