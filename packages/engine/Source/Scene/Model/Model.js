@@ -865,11 +865,16 @@ Object.defineProperties(Model.prototype, {
     },
   },
 
-  // TODO: Docs
-  // TODO: For ease-of-use, this should probably be a collection, so that the user can call things like
-  // const modelInstance = model.instances.add(transfrom);
-  // const boundingSphere = modelInstance.getBoundingSphere(model);
-  // viewer.camera.flyToBoundingSphere(boundingSphere);
+  /**
+   * Gets the runtime instances for the model
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ModelInstanceCollection}
+   *
+   * @default undefined
+   *
+   */
   instances: {
     get: function () {
       return this._sceneGraph.modelInstances;
