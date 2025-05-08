@@ -1098,6 +1098,25 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * The {@link ImageryLayerCollection} that should be draped on the contents of this tileset.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {ImageryLayerCollection}
+   */
+  imageryLayers: {
+    // TODO_DRAPING Attach a listener that will set some
+    // `tileset._imageryLayersDirty` flag that is passed to the
+    // models, so that the models can be updated for new imagery
+    get: function () {
+      return this._imageryLayers;
+    },
+    set: function (value) {
+      this._imageryLayers = value;
+    },
+  },
+
+  /**
    * Gets the tileset's properties dictionary object, which contains metadata about per-feature properties.
    * <p>
    * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#reference-properties|properties schema reference}
