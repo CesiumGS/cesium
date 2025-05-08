@@ -34,19 +34,9 @@
         let model;
         try {
           model = await Cesium.Model.fromGltfAsync({
-            //url: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
-            //url: "../../SampleData/models/storm_trooper/scene.gltf",
-            //url : "../../SampleData/models/CesiumAir/Cesium_Air.glb",
             url: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
-            //url: "../../SampleData/models/BoomBox.glb",
-            //url: "../../SampleData/models/coffeeMug.glb",
-            //url: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
-            //url: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
-            //modelMatrix: baseModelMatrix,
-            minimumPixelSize: 128,
-            //instances: instances,
+            minimumPixelSize: 64,
           });
-
           viewer.scene.primitives.add(model);
         } catch (error) {
           console.log(`Failed to load model. ${error}`);
@@ -54,7 +44,6 @@
 
         const lng = -75.1652;
         const lat = 39.9526;
-        const height = 30.0;
 
         let position;
         const headingPositionRoll = new Cesium.HeadingPitchRoll();
@@ -63,122 +52,20 @@
           "west",
         );
 
-        let instanceModelMatrix;
-        let instances = [];
-        function genInstances(count) {
-          const instances = [];
-          let i;
-          for (i = 0; i < count; i++) {
-            position = Cesium.Cartesian3.fromDegrees(
-              lng + i * Math.random() * 0.0001,
-              lat + i * 0.0001,
-              height + i,
-            );
-            instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
-              position,
-              headingPositionRoll,
-              Cesium.Ellipsoid.WGS84,
-              fixedFrameTransform,
-            );
-            instances.push(new Cesium.ModelInstance(instanceModelMatrix));
-            model.instances.add(instanceModelMatrix);
-          }
-          return instances;
+        let instanceTransform;
+        for (let i = 0; i < 10; i++) {
+          position = Cesium.Cartesian3.fromDegrees(
+            lng + i * Math.random() * 0.0001,
+            lat + i * 0.0001,
+          );
+          instanceTransform = new Cesium.Transforms.headingPitchRollToFixedFrame(
+            position,
+            headingPositionRoll,
+            Cesium.Ellipsoid.WGS84,
+            fixedFrameTransform,
+          );
+          model.instances.add(instanceTransform);
         }
-
-        instances = genInstances(6);
-
-        const offset = new Cesium.Cartesian3(
-          -37.048378684557974,
-          -24.852967044804245,
-          4.352023653686047,
-        );
-
-        const { Matrix4, BoundingSphere, Color } = Cesium;
-
-        const removeListener = model.readyEvent.addEventListener(() => {
-          const boundingSphere = model.boundingSphere;
-          const modelSphere = viewer.entities.add({
-            position: boundingSphere.center,
-            ellipsoid: {
-              radii: new Cesium.Cartesian3(
-                boundingSphere.radius,
-                boundingSphere.radius,
-                boundingSphere.radius,
-              ),
-              material: Cesium.Color.WHITE.withAlpha(0.0),
-              outline: true,
-              outlineColor: Cesium.Color.WHITE,
-            },
-          });
-
-          const sceneGraph = model.sceneGraph;
-          const axisCorrectionMatrix = sceneGraph.axisCorrectionMatrix;
-          const rootNodes = sceneGraph._rootNodes.map((i) => {
-            return sceneGraph._runtimeNodes[i];
-          });
-          const rootTransform = sceneGraph.rootTransform;
-
-          for (const instance of model.instances._instances) {
-            const instanceTransform = instance.transform;
-            const rootModelMatrix = instance.computeModelMatrix(
-              model.modelMatrix,
-              rootTransform,
-              new Matrix4(),
-            );
-
-            const boundingSphere = instance.getBoundingSphere(model);
-            const sphere = viewer.entities.add({
-              position: boundingSphere.center,
-              ellipsoid: {
-                radii: new Cesium.Cartesian3(
-                  boundingSphere.radius,
-                  boundingSphere.radius,
-                  boundingSphere.radius,
-                ),
-                material: Cesium.Color.GREEN.withAlpha(0.1),
-                outline: true,
-                outlineColor: Cesium.Color.GREEN,
-              },
-            });
-
-            viewer.camera.flyToBoundingSphere(boundingSphere);
-
-            const createDebugBoundingSpheres = (nodes, color) => {
-              for (const runtimeNode of nodes) {
-                for (const primitive of runtimeNode.runtimePrimitives) {
-                  const primitiveBoundingSphere = primitive.boundingSphere;
-                  const boundingSphere = BoundingSphere.transform(
-                    primitiveBoundingSphere,
-                    rootModelMatrix,
-                  );
-                  const sphere = viewer.entities.add({
-                    position: boundingSphere.center,
-                    ellipsoid: {
-                      radii: new Cesium.Cartesian3(
-                        boundingSphere.radius,
-                        boundingSphere.radius,
-                        boundingSphere.radius,
-                      ),
-                      material: color.withAlpha(0.1),
-                      outline: true,
-                      outlineColor: color,
-                    },
-                  });
-                }
-
-                const childrenNodes = runtimeNode.children.map((i) => {
-                  return sceneGraph._runtimeNodes[i];
-                });
-                createDebugBoundingSpheres(childrenNodes, Color.PURPLE);
-              }
-            };
-
-            createDebugBoundingSpheres(rootNodes, Color.BLUE);
-          }
-
-          removeListener();
-        });
 
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
@@ -193,34 +80,27 @@
           ),
         });
 
-        let modI;
-        let rot = new Cesium.Matrix3();
+        let instance;
+        let rotation = new Cesium.Matrix3();
         let newTransform;
+        // modify the instance transform by supplying a new rotations after a delay
         setTimeout(() => {
-          console.log("Delayed for 6 second.");
-          //genInstances( parseInt(Math.random() * 30));
           for (let i = 0; i < model.instances.length; i++) {
-            modI = model.instances.get(i);
-            console.log(modI);
-            rot = Cesium.Matrix4.getRotation(modI.transform, rot);
-            console.log(rot);
-            // Angle to rotate (in degrees)
-            const angleDegrees = 45;
+            instance = model.instances.get(i);
+            rotation = Cesium.Matrix4.getRotation(instance.transform, rotation);
+            newTransform = Cesium.clone(instance.transform);
+
+            const angleDegrees = Math.random() * 180;
             const angleRadians = Cesium.Math.toRadians(angleDegrees);
-
-            // Create a rotation matrix around Z-axis
             const rotationZ = Cesium.Matrix3.fromRotationZ(angleRadians);
-
-            // Apply the rotation: newRotation = rotationZ * originalRotation
             const newRotation = Cesium.Matrix3.multiply(
               rotationZ,
-              rot,
+              rotation,
               new Cesium.Matrix3(),
             );
-            newTransform = Cesium.clone(modI.transform);
+            newTransform = Cesium.clone(instance.transform);
             Cesium.Matrix4.setRotation(newTransform, newRotation, newTransform);
-
-            modI.transform = newTransform;
+            instance.transform = newTransform;
           }
         }, "6000");
         //Sandcastle_End
