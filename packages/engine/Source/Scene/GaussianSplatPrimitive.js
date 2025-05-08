@@ -173,18 +173,48 @@ GaussianSplatPrimitive.prototype.pushSplats = function (attributes) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("attributes", attributes);
   //>>includeEnd('debug');
-
   if (this._positions === undefined) {
     this._positions = attributes.positions;
+  } else {
+    const newPositions = new Float32Array(
+      this._positions.length + attributes.positions.length,
+    );
+    newPositions.set(this._positions);
+    newPositions.set(attributes.positions, this._positions.length);
+    this._positions = newPositions;
   }
+
   if (this._scales === undefined) {
     this._scales = attributes.scales;
+  } else {
+    const newScales = new Float32Array(
+      this._scales.length + attributes.scales.length,
+    );
+    newScales.set(this._scales);
+    newScales.set(attributes.scales, this._scales.length);
+    this._scales = newScales;
   }
+
   if (this._rotations === undefined) {
     this._rotations = attributes.rotations;
+  } else {
+    const newRotations = new Float32Array(
+      this._rotations.length + attributes.rotations.length,
+    );
+    newRotations.set(this._rotations);
+    newRotations.set(attributes.rotations, this._rotations.length);
+    this._rotations = newRotations;
   }
+
   if (this._colors === undefined) {
     this._colors = attributes.colors;
+  } else {
+    const newColors = new Uint8Array(
+      this._colors.length + attributes.colors.length,
+    );
+    newColors.set(this._colors);
+    newColors.set(attributes.colors, this._colors.length);
+    this._colors = newColors;
   }
 };
 
@@ -233,7 +263,10 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
     });
 };
 
-function buildGSplatDrawCommand(primitive, frameState) {
+GaussianSplatPrimitive.buildGSplatDrawCommand = function (
+  primitive,
+  frameState,
+) {
   const tileset = primitive._tileset;
   const renderResources = new GaussianSplatRenderResources(primitive);
   const { shaderBuilder } = renderResources;
@@ -295,23 +328,6 @@ function buildGSplatDrawCommand(primitive, frameState) {
   shaderBuilder.addFragmentLines(GaussianSplatFS);
 
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
-  //create geometry for indices
-
-  // const count = primitive.numSplats;
-  // const attribute = new ModelComponents.Attribute();
-
-  // //index attribute for indexing into attribute texture
-  // attribute.name = "_SPLAT_INDEXES";
-  // attribute.typedArray = new Uint32Array([...Array(count).keys()]);
-  // attribute.componentDatatype = ComponentDatatype.UNSIGNED_INT;
-  // attribute.type = AttributeType.SCALAR;
-  // attribute.normalized = false;
-  // attribute.count = count;
-  // attribute.constant = 0;
-  // attribute.instanceDivisor = 1;
-
-  // primitive.attributes.push(attribute);
-
   let renderState = clone(
     RenderState.fromCache(renderResources.renderStateOptions),
     true,
@@ -373,9 +389,10 @@ function buildGSplatDrawCommand(primitive, frameState) {
   });
 
   primitive._drawCommand = command;
-}
+};
 
 GaussianSplatPrimitive.prototype.gatherSplats = function () {
+  this._numSplats = 0;
   const tileset = this._tileset;
   if (
     tileset.root === undefined ||
@@ -384,42 +401,53 @@ GaussianSplatPrimitive.prototype.gatherSplats = function () {
   ) {
     return;
   }
+  function gatherChildSplats(node) {
+    if (!defined(node) || !defined(node.content)) {
+      return;
+    }
 
-  const content = tileset.root.content;
-  if (!defined(content._gsplatData)) {
-    return;
+    const content = node.content;
+    if (defined(content._gsplatData)) {
+      const gsplatData = content._gsplatData;
+
+      this.pushSplats({
+        positions: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            gsplatData,
+            VertexAttributeSemantic.POSITION,
+          ).typedArray,
+        ),
+        scales: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            gsplatData,
+            VertexAttributeSemantic.SCALE,
+          ).typedArray,
+        ),
+        rotations: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            gsplatData,
+            VertexAttributeSemantic.ROTATION,
+          ).typedArray,
+        ),
+        colors: new Uint8Array(
+          ModelUtility.getAttributeBySemantic(
+            gsplatData,
+            VertexAttributeSemantic.COLOR,
+          ).typedArray,
+        ),
+      });
+
+      this._numSplats += gsplatData.attributes[0].count;
+    }
+
+    if (defined(node.children)) {
+      for (let i = 0; i < node.children.length; i++) {
+        gatherChildSplats.call(this, node.children[i]);
+      }
+    }
   }
 
-  const gsplatData = content._gsplatData;
-
-  this.pushSplats({
-    positions: new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        gsplatData,
-        VertexAttributeSemantic.POSITION,
-      ).typedArray,
-    ),
-    scales: new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        gsplatData,
-        VertexAttributeSemantic.SCALE,
-      ).typedArray,
-    ),
-    rotations: new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        gsplatData,
-        VertexAttributeSemantic.ROTATION,
-      ).typedArray,
-    ),
-    colors: new Uint8Array(
-      ModelUtility.getAttributeBySemantic(
-        gsplatData,
-        VertexAttributeSemantic.COLOR,
-      ).typedArray,
-    ),
-  });
-
-  this._numSplats = gsplatData.attributes[0].count;
+  gatherChildSplats.call(this, tileset.root);
 };
 
 GaussianSplatPrimitive.prototype.update = function (frameState) {
@@ -474,7 +502,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   });
   promise.then((sortedData) => {
     this._indexes = sortedData;
-    buildGSplatDrawCommand(this, frameState);
+    GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
     //frameState.commandList.push(this._drawCommand);
   });
 };
