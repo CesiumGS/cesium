@@ -466,6 +466,7 @@ function deriveChildTile(
     const boundingVolumeSemantics =
       BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(tileMetadata);
     tileBounds = boundingVolumeSemantics.tile;
+    // TODO TEMPORAL_TILES: needs to be adapted for CONTENT_COUNTS. Though looking closer, it might not even be looking at the CONTENT_ semantic.
     contentBounds = boundingVolumeSemantics.content;
   }
 
@@ -504,10 +505,20 @@ function deriveChildTile(
       }
     }
 
+    // TODO: also gather content metadata here?
+
     const childContentTemplate = implicitTileset.contentUriTemplates[i];
     const childContentUri = childContentTemplate.getDerivedResource({
       templateValues: templateValues,
     }).url;
+
+    const contentCountSemantic = "CONTENT_COUNT";
+    if (tileMetadata.hasPropertyBySemantic(contentCountSemantic)) {
+      const contentCount =
+        tileMetadata.getPropertyBySemantic(contentCountSemantic);
+      
+    }
+
     const contentJson = {
       uri: childContentUri,
     };
