@@ -43,6 +43,16 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
+function getWorkspaces(onlyDependencies = false) {
+  const dependencies = Object.keys(packageJson.dependencies);
+  return onlyDependencies
+    ? packageJson.workspaces.filter((workspace) => {
+        return dependencies.includes(
+          workspace.replace("packages", `@${scope}`),
+        );
+      })
+    : packageJson.workspaces;
+}
 
 const devDeployUrl = process.env.DEPLOYED_URL;
 const isProduction = process.env.PROD;
@@ -247,13 +257,8 @@ export async function buildTs() {
   } else if (argv.workspace) {
     workspaces = argv.workspace;
   } else {
-    workspaces = packageJson.workspaces;
+    workspaces = getWorkspaces(true);
   }
-
-  // TODO: we probably need to manage workspaces better now
-  workspaces = workspaces.filter(
-    (workspace) => !workspace.includes("sandcastle"),
-  );
 
   // Generate types for passed packages in order.
   const importModules = {};
@@ -401,7 +406,7 @@ export async function buildDocs() {
       stdio: "inherit",
       env: Object.assign({}, process.env, {
         CESIUM_VERSION: version,
-        CESIUM_PACKAGES: packageJson.workspaces,
+        CESIUM_PACKAGES: getWorkspaces(true),
       }),
     },
   );
@@ -1487,8 +1492,8 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
           return result;
         }
 
-        // Resursively check the workspaces
-        for (const workspace of packageJson.workspaces) {
+        // Recursively check the workspaces
+        for (const workspace of getWorkspaces(true)) {
           const workspacePackageJson = require(`./${workspace}/package.json`);
           result = await getLicenseDataFromPackage(
             workspacePackageJson,
