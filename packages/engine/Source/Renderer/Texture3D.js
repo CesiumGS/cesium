@@ -62,7 +62,7 @@ function Texture3D(options) {
 
   if (!context.webgl2) {
     throw new DeveloperError(
-      "WebGL1 does not support texture3D. Use WebGL2 instead.",
+      "WebGL1 does not support texture3D. Please use a WebGL2 context.",
     );
   }
 

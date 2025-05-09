@@ -40,7 +40,9 @@ describe("Renderer/Texture3D", function () {
     });
 
     afterAll(function () {
-      context.destroyForSpecs();
+      if (context) {
+        context.destroyForSpecs();
+      }
     });
 
     beforeEach(function () {
@@ -57,6 +59,10 @@ describe("Renderer/Texture3D", function () {
     });
 
     it("has expected default values for pixel format and datatype", function () {
+      if (!context.webgl2) {
+        console.warn("Skipping Texture3D tests: WebGL2 is not supported.");
+        return;
+      }
       texture = new Texture3D({
         context: context,
         source: source,
@@ -69,6 +75,10 @@ describe("Renderer/Texture3D", function () {
     });
 
     it("can create a texture from the arrayBuffer", function () {
+      if (!context.webgl2) {
+        console.warn("Skipping Texture3D tests: WebGL2 is not supported.");
+        return;
+      }
       const command = new ClearCommand({
         color: Color.RED,
       });
@@ -119,6 +129,10 @@ describe("Renderer/Texture3D", function () {
     }
 
     it("can get the size in bytes of a texture", function () {
+      if (!context.webgl2) {
+        console.warn("Skipping Texture3D tests: WebGL2 is not supported.");
+        return;
+      }
       // Depth textures
       if (context.depthTexture) {
         expectTextureByteSize(
@@ -191,6 +205,10 @@ describe("Renderer/Texture3D", function () {
     });
 
     it("can be destroyed", function () {
+      if (!context.webgl2) {
+        console.warn("Skipping Texture3D tests: WebGL2 is not supported.");
+        return;
+      }
       const t = new Texture3D({
         context: context,
         source: source,
@@ -203,6 +221,10 @@ describe("Renderer/Texture3D", function () {
     });
 
     it("throws when creating a texture without a options", function () {
+      if (!context.webgl2) {
+        console.warn("Skipping Texture3D tests: WebGL2 is not supported.");
+        return;
+      }
       expect(function () {
         texture = new Texture3D();
       }).toThrowDeveloperError();
