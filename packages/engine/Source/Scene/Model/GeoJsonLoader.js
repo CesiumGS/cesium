@@ -19,6 +19,7 @@ import StructuralMetadata from "../StructuralMetadata.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import addAllToArray from "../../Core/addAllToArray.js";
 
 /**
  * Loads a GeoJson model as part of the <code>MAXAR_content_geojson</code> extension with the following constraints:
@@ -166,7 +167,8 @@ function parseMultiPolygon(coordinates) {
   const polygonsLength = coordinates.length;
   const lines = [];
   for (let i = 0; i < polygonsLength; i++) {
-    Array.prototype.push.apply(lines, parsePolygon(coordinates[i]));
+    const polygon = parsePolygon(coordinates[i]);
+    addAllToArray(lines, polygon);
   }
   return lines;
 }
