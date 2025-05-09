@@ -19,6 +19,7 @@
 !**/*.html
 !**/*.md
 !**/*.ts
+!**/*.tsx
 
 # Re-ignore a few things caught above
 
@@ -33,6 +34,9 @@ packages/engine/Source/ThirdParty/**
 packages/widgets/Build/**
 packages/widgets/index.js
 packages/widgets/Source/ThirdParty/**
+
+packages/sandcastle/node_modules/**
+Apps/Sandcastle2/**
 
 Specs/jasmine/**
 

@@ -1,6 +1,9 @@
 import globals from "globals";
 import html from "eslint-plugin-html";
 import configCesium from "@cesium/eslint-config";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
 
 export default [
   {
@@ -15,6 +18,8 @@ export default [
       "Apps/HelloWorld.html",
       "Apps/Sandcastle/jsHintOptions.js",
       "Apps/Sandcastle/gallery/gallery-index.js",
+      "Apps/Sandcastle2/",
+      "packages/sandcastle/public/",
       "packages/engine/Source/Scene/GltfPipeline/**/*",
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",
@@ -72,6 +77,31 @@ export default [
     files: ["Apps/Sandcastle/load-cesium-es6.js"],
     languageOptions: {
       sourceType: "module",
+    },
+  },
+  ...[...tseslint.configs.recommended].map((config) => ({
+    // This is needed to restrict to a specific path unless using the tseslint.config function
+    // https://typescript-eslint.io/packages/typescript-eslint#config
+    ...config,
+    files: ["packages/sandcastle/**/*.{ts,tsx}"],
+  })),
+  {
+    // This config came from the vite project generation
+    files: ["packages/sandcastle/**/*.{ts,tsx}"],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
     },
   },
   {
