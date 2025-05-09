@@ -70,14 +70,14 @@ function Texture3D(options) {
   if (defined(source)) {
     // Make sure we are using the element's intrinsic width and height where available
     if (!defined(width)) {
-      width = source.videoWidth ?? source.naturalWidth ?? source.width;
+      width = source.width;
     }
     if (!defined(height)) {
-      height = source.videoHeight ?? source.naturalHeight ?? source.height;
+      height = source.height;
     }
     // depth is not used for 2D textures, but is required for 3D textures
     if (!defined(depth)) {
-      depth = 1;
+      depth = source.depth;
     }
   }
 
