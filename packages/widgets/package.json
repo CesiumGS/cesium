@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@cesium/engine": "^17.0.0",
+    "@cesium/widgets": "file:",
     "nosleep.js": "^0.12.0"
   },
   "type": "module",

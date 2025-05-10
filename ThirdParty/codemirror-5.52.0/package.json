@@ -42,5 +42,8 @@
     "directories": {},
     "dependencies": {},
     "devDependencies": {}
+  },
+  "dependencies": {
+    "codemirror": "file:"
   }
 }
