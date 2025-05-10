@@ -536,6 +536,121 @@
         );
         viewer.camera.lookAt(camState.destination, hpr);
 
+        // create params control UI
+        function createSlider(
+          toolbar,
+          { labelText, min, max, step, defaultValue, callback },
+        ) {
+          const container = document.createElement("div");
+          container.style.cssText = `
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 8px;
+        `;
+
+          const label = document.createElement("label");
+          label.textContent = labelText;
+          label.style.cssText = `
+          color: #ffffff;
+          font-family: Arial, sans-serif;
+          min-width: 60px;
+          font-size: 14px;
+        `;
+
+          const slider = document.createElement("input");
+          slider.type = "range";
+          slider.min = min;
+          slider.max = max;
+          slider.step = step;
+          slider.value = defaultValue;
+          slider.style.cssText = `
+          width: 100px;
+          cursor: pointer;
+          accent-color: #4CAF50;
+        `;
+          slider.addEventListener("input", (e) => callback(e.target.value));
+
+          const valueDisplay = document.createElement("span");
+          valueDisplay.textContent = defaultValue;
+          valueDisplay.style.cssText = `
+          color: #ffffff;
+          font-family: monospace;
+          width: 30px;
+          text-align: right;
+        `;
+          slider.addEventListener("input", (e) => {
+            valueDisplay.textContent = parseFloat(e.target.value).toFixed(2);
+          });
+
+          container.appendChild(label);
+          container.appendChild(slider);
+          container.appendChild(valueDisplay);
+          toolbar.appendChild(container);
+
+          return slider;
+        }
+
+        function createUi() {
+          const toolbar = document.getElementById("toolbar");
+
+          toolbar.style.cssText = `
+          position: fixed;
+          top: 10px;
+          left: 10px;
+          padding: 15px 20px 5px 20px;
+          background: rgba(40, 40, 40, 0.85);
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(5px);
+          z-index: 1000;
+        `;
+
+          createSlider(toolbar, {
+            labelText: "opacity",
+            min: 0,
+            max: 1,
+            step: 0.01,
+            defaultValue: uniforms.opacity,
+            callback: (val) => {
+              uniforms.opacity = parseFloat(val);
+            },
+          });
+
+          createSlider(toolbar, {
+            labelText: "range",
+            min: 0,
+            max: 1,
+            step: 0.01,
+            defaultValue: uniforms.range,
+            callback: (val) => {
+              uniforms.range = parseFloat(val);
+            },
+          });
+          createSlider(toolbar, {
+            labelText: "steps",
+            min: 20,
+            max: 200,
+            step: 1,
+            defaultValue: uniforms.steps,
+            callback: (val) => {
+              uniforms.steps = parseFloat(val);
+            },
+          });
+          createSlider(toolbar, {
+            labelText: "threshold",
+            min: 0,
+            max: 1,
+            step: 0.01,
+            defaultValue: uniforms.threshold,
+            callback: (val) => {
+              uniforms.threshold = parseFloat(val);
+            },
+          });
+        }
+
+        createUi();
+
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
