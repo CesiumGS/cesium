@@ -309,10 +309,6 @@
       in vec2 st;
       in float batchId;
 
-      out vec3 v_positionEC;
-      out vec3 v_normalEC;
-      out vec2 v_st;
-    
       out vec3 vOrigin;
       out vec3 vDirection;
       out vec3 vPosition;
@@ -336,10 +332,6 @@
           vPosition = modelPosition;
 
           vDirection = modelPosition - vOrigin;
-
-          v_positionEC = (czm_modelViewRelativeToEye * p).xyz;
-          v_normalEC = czm_normal * normal;                   
-          v_st = st;
  
           gl_Position = czm_modelViewProjectionRelativeToEye * p;
       }`;
@@ -348,9 +340,6 @@
       precision highp float;
       precision highp sampler3D;
 
-      in vec3 v_positionEC;
-      in vec3 v_normalEC;
-      in vec2 v_st;
       in vec3 vOrigin;
       in vec3 vDirection;
 
@@ -430,15 +419,16 @@
 						if ( ac.a >= 0.95 ) break;
 						p += rayDir * delta;
 					}
-					if ( ac.a == 0.0 ) discard;
-          ac.rgb = max(ac.rgb, vec3(0.01));
 					vec4 color = linearToSRGB( ac );
           color = czm_gammaCorrect( color );
+					if ( color.a == 0.0 ) discard;
           out_FragColor = color;
       }
       `;
 
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          orderIndependentTranslucency: true,
+        });
         const texture3D = makeTexture3D(viewer.scene.context);
 
         const boxSideLength = 1.0;
@@ -498,7 +488,7 @@
         });
 
         const uniforms = {
-          base: Cesium.Color.fromCssColorString("#000000"),
+          base: new Cesium.Color(0.1912, 0.2542, 0.3515, 0),
           map: texture3D,
           opacity: 0.25,
           range: 0.1,
