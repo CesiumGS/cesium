@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.app.json",
+  "files": ["./Sandcastle.ts"],
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false
+  }
+}
