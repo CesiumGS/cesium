@@ -158,6 +158,7 @@ void main()
         setStatistics(fragmentInput.metadata.statistics);
     #endif
 
+    czm_modelMaterial materialOutput;
     vec4 colorAccum = vec4(0.0);
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
@@ -178,7 +179,6 @@ void main()
         fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0]);
 
         // Run the custom shader
-        czm_modelMaterial materialOutput;
         fragmentMain(fragmentInput, materialOutput);
 
         // Sanitize the custom shader output
