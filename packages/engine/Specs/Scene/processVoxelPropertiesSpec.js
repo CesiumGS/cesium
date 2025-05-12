@@ -95,6 +95,7 @@ describe("Scene/processVoxelProperties", function () {
       "    int stepCount;",
       "    int sampleIndex;",
       "    int tileIndex;",
+      "    float distanceToDepthBuffer;",
     ];
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,

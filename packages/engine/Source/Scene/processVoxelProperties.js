@@ -151,6 +151,7 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStructField(voxelStructId, "int", "stepCount");
   shaderBuilder.addStructField(voxelStructId, "int", "tileIndex");
   shaderBuilder.addStructField(voxelStructId, "int", "sampleIndex");
+  shaderBuilder.addStructField(voxelStructId, "float", "distanceToDepthBuffer");
 
   // FragmentInput struct
   const fragmentInputStructId = "FragmentInput";

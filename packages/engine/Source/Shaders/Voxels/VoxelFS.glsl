@@ -177,6 +177,7 @@ void main()
         fragmentInput.voxel.stepCount = stepCount;
         fragmentInput.voxel.tileIndex = sampleDatas[0].megatextureIndex;
         fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0]);
+        fragmentInput.voxel.distanceToDepthBuffer = ix.distanceToDepthBuffer;
 
         // Run the custom shader
         fragmentMain(fragmentInput, materialOutput);
