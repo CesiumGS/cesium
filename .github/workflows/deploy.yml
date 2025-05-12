@@ -1,7 +1,7 @@
 name: deploy
-on: 
+on:
   push:
-    branches-ignore: 
+    branches-ignore:
       - 'cesium.com'
       - production
 concurrency:
@@ -51,7 +51,6 @@ jobs:
           aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
           --cache-control "no-cache" \
           --exclude ".git/*" \
-          --exclude ".concierge/*" \
           --exclude ".github/*" \
           --exclude ".husky/*" \
           --exclude ".vscode/*" \
@@ -62,7 +61,7 @@ jobs:
           --exclude "node_modules/*" \
           --exclude "scripts/*" \
           --exclude "Tools/*" \
-          --delete 
+          --delete
       - name: set status
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: npm run deploy-status -- --status success --message Deployed
