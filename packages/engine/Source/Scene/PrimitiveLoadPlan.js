@@ -313,6 +313,7 @@ function prepareSpzData(loadPlan, context) {
   );
 
   //180* rotation around X.
+  //Temporary until we can get SPZ supporting Z-up assets natively
   const rots = rotations.typedArray;
   for (let q = 0; q < rots.length; q += 4) {
     const w = rots[q];
