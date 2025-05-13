@@ -433,7 +433,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     owner: this,
     instanceCount: renderResources.instanceCount,
     primitiveType: PrimitiveType.TRIANGLE_STRIP,
-    //executeInClosestFrustum: true,
     debugShowBoundingVolume: tileset.debugShowBoundingVolume,
     castShadows: false,
     receiveShadows: false,
@@ -564,7 +563,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   promise.then((sortedData) => {
     this._indexes = sortedData;
     GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
-    //frameState.commandList.push(this._drawCommand);
   });
 };
 
