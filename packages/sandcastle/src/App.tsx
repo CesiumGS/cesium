@@ -513,7 +513,7 @@ function App() {
   }
 
   useEffect(() => {
-    window.addEventListener("message", function (e) {
+    const messageHandler = function (e: MessageEvent) {
       // The iframe (bucket.html) sends this message on load.
       // This triggers the code to be injected into the iframe.
       if (e.data === "reload") {
@@ -571,7 +571,9 @@ function App() {
           // }
         }
       }
-    });
+    };
+    window.addEventListener("message", messageHandler);
+    return () => window.removeEventListener("message", messageHandler);
   }, []);
 
   function formatJs() {
