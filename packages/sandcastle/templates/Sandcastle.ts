@@ -1,7 +1,7 @@
 // TODO: remove these and figure out the correct types
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-let defaultAction: Function | undefined;
+let defaultAction: (() => void) | undefined;
 let bucket = window.location.href;
 const pos = bucket.lastIndexOf("/");
 if (pos > 0 && pos < bucket.length - 1) {
@@ -11,7 +11,7 @@ if (pos > 0 && pos < bucket.length - 1) {
 type SelectOption = {
   text: string;
   value: string;
-  onselect: Function;
+  onselect: () => void;
 };
 
 /**
@@ -19,11 +19,13 @@ type SelectOption = {
  */
 class Sandcastle {
   static bucket = bucket;
-  static registered: { obj: object; lineNumber: number }[] = [];
+  static registered = new Map<object, number>();
+  // static registered: { obj: object; lineNumber: number }[] = new Map<object, number>();
   static reset = () => {};
 
   /**
    * Create a "bookmark" of sorts in the code that will be highlighted when run
+   *
    * @param obj
    */
   static declare(obj: any) {
@@ -33,8 +35,10 @@ class Sandcastle {
       let stack = "";
       try {
         throw new Error();
-      } catch (ex: any) {
-        stack = ex.stack.toString();
+      } catch (error) {
+        if (error instanceof Error && error.stack !== undefined) {
+          stack = error.stack.toString();
+        }
       }
       let needle = `${Sandcastle.bucket}:`; // Firefox
       let pos = stack.indexOf(needle);
@@ -49,43 +53,36 @@ class Sandcastle {
       if (pos >= 0) {
         pos += needle.length;
         const lineNumber = parseInt(stack.substring(pos), 10);
-        Sandcastle.registered.push({
-          obj: obj,
-          lineNumber: lineNumber,
-        });
+        Sandcastle.registered.set(obj, lineNumber);
       }
     } catch {}
   }
+
   /**
    * Highlight the given "bookmark" in the code
    * @param obj
    * @returns
    */
-
   static highlight(obj: any) {
-    if (typeof obj !== "undefined") {
-      for (let i = 0, len = Sandcastle.registered.length; i < len; ++i) {
-        if (
-          obj === Sandcastle.registered[i].obj ||
-          obj.primitive === Sandcastle.registered[i].obj
-        ) {
-          window.parent.postMessage(
-            {
-              highlight: Sandcastle.registered[i].lineNumber,
-            },
-            "*",
-          );
-          return;
-        }
+    if (obj !== undefined) {
+      const lineNumber =
+        Sandcastle.registered.get(obj) ??
+        Sandcastle.registered.get(obj.primitive);
+      if (lineNumber !== undefined) {
+        window.parent.postMessage({ highlight: lineNumber }, "*");
+        return;
       }
     }
-    window.parent.postMessage(
-      {
-        highlight: 0,
-      },
-      "*",
-    );
+
+    window.parent.postMessage({ highlight: 0 }, "*");
   }
+
+  /**
+   * Signals to the page that Sandcastle has finished loading and calls the default
+   * action if it has been set.
+   * This is called automatically as part of the loading process, you should NOT need
+   * to call this yourself.
+   */
   static finishedLoading() {
     console.log("finishedLoading");
 
@@ -105,15 +102,15 @@ class Sandcastle {
   /**
    * Create a toggle button with a checkbox
    *
-   * @param text Name on the button
+   * @param text Button label
    * @param checked Default checked state
-   * @param onchange Event when the button in clicked
+   * @param onchange Callback for when the button is clicked
    * @param toolbarId Element to append this to, defaults to the default toolbar
    */
   static addToggleButton(
     text: string,
     checked: boolean,
-    onchange: Function,
+    onchange: (newValue: boolean) => void,
     toolbarId?: string,
   ) {
     Sandcastle.declare(onchange);
@@ -143,7 +140,19 @@ class Sandcastle {
     }
     toolbar.appendChild(button);
   }
-  static addToolbarButton(text: string, onclick: Function, toolbarId?: string) {
+
+  /**
+   * Create a button
+   *
+   * @param text Button label
+   * @param onclick Callback for when the button is clicked
+   * @param toolbarId Element to append this to, defaults to the default toolbar
+   */
+  static addToolbarButton(
+    text: string,
+    onclick: () => void,
+    toolbarId?: string,
+  ) {
     Sandcastle.declare(onclick);
     const button = document.createElement("button");
     button.type = "button";
@@ -160,19 +169,29 @@ class Sandcastle {
     }
     toolbar.appendChild(button);
   }
+
+  /**
+   * Create a button and set the default action for this sandcastle to the click handler
+   *
+   * @param text Button label
+   * @param onclick Callback for when the button is clicked
+   * @param toolbarId Element to append this to, defaults to the default toolbar
+   */
   static addDefaultToolbarButton(
     text: string,
-    onclick: Function,
+    onclick: () => void,
     toolbarId?: string,
   ) {
     Sandcastle.addToolbarButton(text, onclick, toolbarId);
     defaultAction = onclick;
   }
-  static addDefaultToolbarMenu(options: SelectOption[], toolbarId?: string) {
-    Sandcastle.addToolbarMenu(options, toolbarId);
-    defaultAction = options[0].onselect;
-  }
 
+  /**
+   * Create a dropdown menu with the given options
+   *
+   * @param options Options in the select dropdown
+   * @param toolbarId Element to append this to, defaults to the default toolbar
+   */
   static addToolbarMenu(options: SelectOption[], toolbarId?: string) {
     const menu = document.createElement("select");
     menu.className = "cesium-button";
@@ -199,6 +218,18 @@ class Sandcastle {
       option.value = options[i].value;
       menu.appendChild(option);
     }
+  }
+
+  /**
+   * Create a dropdown menu with the given options and set the default action for this
+   * sandcastle to the first item's selection handler
+   *
+   * @param options Options in the select dropdown
+   * @param toolbarId Element to append this to, defaults to the default toolbar
+   */
+  static addDefaultToolbarMenu(options: SelectOption[], toolbarId?: string) {
+    Sandcastle.addToolbarMenu(options, toolbarId);
+    defaultAction = options[0].onselect;
   }
 }
 

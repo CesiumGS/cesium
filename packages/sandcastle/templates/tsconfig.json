@@ -1,9 +1,11 @@
 {
   "extends": "../tsconfig.app.json",
-  "files": ["./Sandcastle.ts"],
+  "include": ["./Sandcastle.ts"],
   "compilerOptions": {
     "declaration": true,
     "emitDeclarationOnly": true,
-    "noEmit": false
+    "noEmit": false,
+    "isolatedModules": false,
+    "outFile": "../public/templates/Sandcastle.d.ts"
   }
 }
