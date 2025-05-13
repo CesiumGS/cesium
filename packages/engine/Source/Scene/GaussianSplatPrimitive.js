@@ -26,6 +26,8 @@ import RenderState from "../Renderer/RenderState.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import AttributeType from "./AttributeType.js";
+import ModelComponents from "./ModelComponents.js";
 
 const scratchSplatMatrix = new Matrix4();
 
@@ -57,6 +59,10 @@ function GaussianSplatPrimitive(options) {
   this._calculateStatistics = options.calculateStatistics ?? false;
 
   this._drawCommand = undefined;
+
+  this._useLogDepth = undefined;
+
+  this._modelMatrix = new Matrix4();
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -127,6 +133,36 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 
 GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
   console.log(`Tile loaded: ${tile._contentResource.url}`);
+  const gsplatData = tile.content._gsplatData;
+
+  this.pushSplats({
+    positions: new Float32Array(
+      ModelUtility.getAttributeBySemantic(
+        gsplatData,
+        VertexAttributeSemantic.POSITION,
+      ).typedArray,
+    ),
+    scales: new Float32Array(
+      ModelUtility.getAttributeBySemantic(
+        gsplatData,
+        VertexAttributeSemantic.SCALE,
+      ).typedArray,
+    ),
+    rotations: new Float32Array(
+      ModelUtility.getAttributeBySemantic(
+        gsplatData,
+        VertexAttributeSemantic.ROTATION,
+      ).typedArray,
+    ),
+    colors: new Uint8Array(
+      ModelUtility.getAttributeBySemantic(
+        gsplatData,
+        VertexAttributeSemantic.COLOR,
+      ).typedArray,
+    ),
+  });
+
+  this._numSplats += gsplatData.attributes[0].count;
 };
 
 GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {
@@ -253,10 +289,14 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
         sampler: Sampler.NEAREST,
       });
 
-      primitive.gaussianSplatTexture = splatTex;
+      primitive._gaussianSplatTexture = splatTex;
       primitive._hasGaussianSplatTexture = true;
       primitive._needsGaussianSplatTexture = false;
       primitive._gaussianSplatTexturePending = false;
+
+      primitive._indexes = new Uint32Array([
+        ...Array(primitive._numSplats).keys(),
+      ]);
     })
     .catch((error) => {
       console.error("Error generating Gaussian splat texture:", error);
@@ -274,8 +314,8 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   const renderStateOptions = renderResources.renderStateOptions;
   renderStateOptions.cull.enabled = false;
-  renderStateOptions.depthMask = true;
-  renderStateOptions.depthTest.enabled = true;
+  renderStateOptions.depthMask = false;
+  renderStateOptions.depthTest.enabled = false;
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
 
   renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
@@ -300,6 +340,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     );
   }
 
+  shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("float", "a_splatIndex");
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
@@ -318,7 +359,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
 
   uniformMap.u_splatAttributeTexture = function () {
-    return primitive.gaussianSplatTexture;
+    return primitive._gaussianSplatTexture;
   };
 
   renderResources.instanceCount = primitive._numSplats;
@@ -341,8 +382,22 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   renderState = RenderState.fromCache(renderState);
 
   const splatQuadAttrLocations = {
-    splatIndex: 1,
+    screenQuadPosition: 0,
+    splatIndex: 2,
   };
+
+  const idxAttr = new ModelComponents.Attribute();
+
+  //index attribute for indexing into attribute texture
+  idxAttr.name = "_SPLAT_INDEXES";
+  idxAttr.typedArray = primitive._indexes;
+  idxAttr.componentDatatype = ComponentDatatype.UNSIGNED_INT;
+  idxAttr.type = AttributeType.SCALAR;
+  idxAttr.normalized = false;
+  idxAttr.count = renderResources.instanceCount;
+  idxAttr.constant = 0;
+  idxAttr.instanceDivisor = 1;
+
   const geometry = new Geometry({
     attributes: {
       screenQuadPosition: new GeometryAttribute({
@@ -352,13 +407,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
         name: "_SCREEN_QUAD_POS",
         variableName: "screenQuadPosition",
       }),
-      splatIndex: {
-        componentDatatype: ComponentDatatype.FLOAT,
-        componentsPerAttribute: 1,
-        values: primitive._indexes,
-        name: "_SPLAT_INDEXES",
-        variableName: "splatIndex",
-      },
+      splatIndex: { ...idxAttr, variableName: "splatIndex" },
     },
     primitiveType: PrimitiveType.TRIANGLE_STRIP,
   });
@@ -378,12 +427,13 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     renderState: renderState,
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
-    cull: false,
+    cull: renderStateOptions.cull.enabled,
     pass: Pass.GAUSSIAN_SPLATS,
     count: renderResources.count,
     owner: this,
     instanceCount: renderResources.instanceCount,
     primitiveType: PrimitiveType.TRIANGLE_STRIP,
+    //executeInClosestFrustum: true,
     debugShowBoundingVolume: tileset.debugShowBoundingVolume,
     castShadows: false,
     receiveShadows: false,
@@ -454,6 +504,10 @@ GaussianSplatPrimitive.prototype.gatherSplats = function () {
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
+  if (this._useLogDepth !== frameState.useLogDepth) {
+    this._useLogDepth = frameState.useLogDepth;
+  }
+
   tileset.update(frameState);
 
   if (this._drawCommand) {
@@ -461,13 +515,18 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._drawCommand = undefined;
   }
 
-  this.gatherSplats();
+  //this.gatherSplats();
 
   if (this._numSplats === 0) {
     return;
   }
 
-  this._modelMatrix = tileset.root.content._tile.computedTransform;
+  const rootTransform = tileset.root.content._tile.computedTransform;
+  const transform =
+    tileset._root._content._tile._content._loader._components.scene.nodes[0]
+      .matrix;
+
+  Matrix4.multiply(rootTransform, transform, this._modelMatrix);
 
   if (this._needsGaussianSplatTexture) {
     if (!this._gaussianSplatTexturePending) {
@@ -478,7 +537,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   Matrix4.multiply(
     frameState.camera.viewMatrix,
-    tileset.modelMatrix,
+    this._modelMatrix,
     scratchSplatMatrix,
   );
 
