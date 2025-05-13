@@ -28,7 +28,7 @@
         "use strict";
         //Sandcastle_Begin
         Cesium.Ion.defaultAccessToken =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3OWY0ZjVhMC1iYmYxLTQzMGUtOWI3OS0wYTI0MjJhMDJmZTQiLCJpZCI6MTQwNTg1LCJpYXQiOjE3NDU2MDEyMTN9.yw_EY6q9nCkLJMBZPqDQmA9-b-6A_H--PSSisAe6v3E";
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTA3MDg3OC0xMmVjLTRhYmYtOGFjYy1kNTdhZmVkN2Q2NTgiLCJpZCI6MTQwNTg1LCJpYXQiOjE3NDcxNTI0Nzd9.fUjTRAtTYZHuza3V5vAfXr8Y0Ja_zihC9KQtO9szX_8";
         const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.scene.debugShowFramesPerSecond = true;
 
@@ -36,7 +36,7 @@
         const ORBIT_PITCH_DIVIDEND = 8;
 
         let cellTowerTileset;
-        Cesium.Cesium3DTileset.fromIonAssetId(3332163, {
+        Cesium.Cesium3DTileset.fromIonAssetId(3332167, {
           maximumScreenSpaceError: 1,
         }).then((tileset) => {
           cellTowerTileset = tileset;
