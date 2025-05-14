@@ -48,7 +48,7 @@ class ModelReader {
    * The result will be THE actual attribute data.
    *
    * @param {ModelComponents.Attribute} attribute The attribute
-   * @returns The attribute data
+   * @returns {TypedArray} The attribute data
    */
   static readAttributeAsTypedArray(attribute) {
     //>>includeStart('debug', pragmas.debug);
@@ -109,7 +109,7 @@ class ModelReader {
    * without applying normalization or dequantization.
    *
    * @param {ModelComponents.Attribute} attribute The attribute
-   * @returns The raw attribute data
+   * @returns {TypedArray} The raw attribute data
    */
   static readAttributeAsRawCompactTypedArray(attribute) {
     //>>includeStart('debug', pragmas.debug);
@@ -194,7 +194,7 @@ class ModelReader {
    * @param {number} elementCount The number of elements
    * @param {AttributeType} elementType The element type
    * @param {ModelComponents.Quantization} quantization The quantization
-   * @returns The dequantized data
+   * @returns {TypedArray} The result
    * @throws DeveloperError When the element type is not SCALAR, VEC2,
    * VEC3, or VEC4
    */
@@ -284,7 +284,7 @@ class ModelReader {
    * @param {number} elementCount The number of elements
    * @param {number} normalizationRange The normalization range
    * @param {TypedArray} [dequantizedTypedArray] The result
-   * @returns The result
+   * @returns {TypedArray} The result
    */
   static octDecode(
     quantizedTypedArray,
@@ -323,7 +323,7 @@ class ModelReader {
    * @param {TypedArray} input The input
    * @param {number} elementCount The number of elements
    * @param {TypedArray} [output] The result
-   * @returns The result
+   * @returns {TypedArray} The result
    */
   static convertZxyToXyz(input, elementCount, output) {
     //>>includeStart('debug', pragmas.debug);
@@ -359,7 +359,7 @@ class ModelReader {
    * @param {number} stepSize The quantization step size
    * @param {number} offset The quantization offset
    * @param {TypedArray} [dequantizedTypedArray] The result
-   * @returns The result
+   * @returns {TypedArray} The result
    */
   static dequantize1D(
     quantizedTypedArray,
@@ -400,7 +400,7 @@ class ModelReader {
    * @param {Cartesian2} stepSize The quantization step size
    * @param {Cartesian2} offset The quantization offset
    * @param {TypedArray} [dequantizedTypedArray] The result
-   * @returns The result
+   * @returns {TypedArray} The result
    */
   static dequantize2D(
     quantizedTypedArray,
@@ -443,7 +443,7 @@ class ModelReader {
    * @param {Cartesian3} stepSize The quantization step size
    * @param {Cartesian3} offset The quantization offset
    * @param {TypedArray} [dequantizedTypedArray] The result
-   * @returns The result
+   * @returns {TypedArray} The result
    */
   static dequantize3D(
     quantizedTypedArray,
@@ -486,7 +486,7 @@ class ModelReader {
    * @param {Cartesian4} stepSize The quantization step size
    * @param {Cartesian4} offset The quantization offset
    * @param {TypedArray} [dequantizedTypedArray] The result
-   * @returns The result
+   * @returns {TypedArray} The result
    */
   static dequantize4D(
     quantizedTypedArray,
@@ -536,7 +536,7 @@ class ModelReader {
    * order, and writes them into the given result array.
    *
    * @param {ComponentDatatype} componentType The component type
-   * @returns The reader
+   * @returns {object} The reader
    */
   static createComponentsReader(componentType) {
     const componentReader = ModelReader.createComponentReader(componentType);
@@ -565,7 +565,7 @@ class ModelReader {
    * order
    *
    * @param {ComponentDatatype} componentType The component type
-   * @returns The reader
+   * @returns {object} The reader
    */
   static createComponentReader(componentType) {
     switch (componentType) {
@@ -633,7 +633,7 @@ class ModelReader {
    * @param {TypedArray} input The input array
    * @param {Matrix4} matrix The matrix
    * @param {TypedArray} [result] The result
-   * @returns The result
+   * @returns {TypedArray} The result
    */
   static transform3D(input, matrix, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -656,7 +656,7 @@ class ModelReader {
 
   /**
    * @param {ModelComponents.Indices} primitiveIndices
-   * @returns
+   * @returns {TypedArray} TODO
    */
   static readIndicesAsTypedArray(primitiveIndices) {
     const existingIndices = primitiveIndices.typedArray;
@@ -676,7 +676,7 @@ class ModelReader {
 
   /**
    * @param {ModelComponents.Primitive} primitive
-   * @returns
+   * @returns {TypedArray} TODO
    */
   static readIndicesAsTriangleIndicesTypedArray(primitive) {
     const indices = primitive.indices;
