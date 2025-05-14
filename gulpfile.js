@@ -632,7 +632,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "packages/engine/README.md",
           "packages/engine/Source/**",
           "packages/widgets/index.js",
-          "packages/widgets/index.d.ts",
+          //"packages/widgets/index.d.ts",
           "packages/widgets/LICENSE.md",
           "packages/widgets/README.md",
           "packages/widgets/Source/**",
