@@ -1,9 +1,9 @@
-import defined from "../../Core/defined";
-import Rectangle from "../../Core/Rectangle";
-import Cartesian4 from "../../Core/Cartesian4";
+import defined from "../../Core/defined.js";
+import Rectangle from "../../Core/Rectangle.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
 
-import ImageryCoverage from "./ImageryCoverage";
-import CartesianRectangle from "./CartesianRectangle";
+import ImageryCoverage from "./ImageryCoverage.js";
+import CartesianRectangle from "./CartesianRectangle.js";
 
 // TODO_DRAPING: Some of this was extracted from ImageryLayer.prototype._createTileImagerySkeletons
 // See https://github.com/CesiumGS/cesium/blob/5eaa2280f495d8f300d9e1f0497118c97aec54c8/packages/engine/Source/Scene/ImageryLayer.js#L700
