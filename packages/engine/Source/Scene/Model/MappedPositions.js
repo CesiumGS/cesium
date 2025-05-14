@@ -1,4 +1,4 @@
-import Check from "../../Core/Check";
+import Check from "../../Core/Check.js";
 
 /**
  * A collection of cartographic positions (and their bounding rectangle) that
