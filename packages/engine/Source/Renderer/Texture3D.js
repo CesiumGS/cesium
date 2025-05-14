@@ -280,22 +280,27 @@ function loadBufferSource(texture3D, source) {
     console.warn("texture3D.flipY is not supported.");
   }
 
-  // gl.texStorage3D( textureTarget, 1, 33321, width, height, depth );
+  let levels = 1;
+  if (source.mipLevels && source.mipLevels.length) {
+    levels = source.mipLevels.length + 1;
+  }
+  gl.texStorage3D(textureTarget, levels, internalFormat, width, height, depth);
 
-  gl.texImage3D(
+  gl.texSubImage3D(
     textureTarget,
     0,
-    internalFormat,
+    0,
+    0,
+    0,
     width,
     height,
     depth,
-    0,
     pixelFormat,
     PixelDatatype.toWebGLConstant(pixelDatatype, context),
     arrayBufferView,
   );
 
-  if (defined(source.mipLevels)) {
+  if (levels > 1) {
     let mipWidth = width;
     let mipHeight = height;
     let mipDepth = depth;
@@ -303,14 +308,15 @@ function loadBufferSource(texture3D, source) {
       mipWidth = nextMipSize(mipWidth);
       mipHeight = nextMipSize(mipHeight);
       mipDepth = nextMipSize(mipDepth);
-      gl.texImage2D(
+      gl.texSubImage3D(
         textureTarget,
         i + 1,
-        internalFormat,
+        0,
+        0,
+        0,
         mipWidth,
         mipHeight,
         mipDepth,
-        0,
         pixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, context),
         source.mipLevels[i],
@@ -440,7 +446,7 @@ Object.defineProperties(Texture3D.prototype, {
   sizeInBytes: {
     get: function () {
       if (this._hasMipmap) {
-        return Math.floor((this._sizeInBytes * 4) / 3);
+        return Math.floor((this._sizeInBytes * 8) / 7);
       }
       return this._sizeInBytes;
     },
@@ -486,11 +492,9 @@ function setupSampler(texture3D, sampler) {
   }
 
   // WebGL 2 depth texture3D only support nearest filtering. See section 3.8.13 OpenGL ES 3 spec
-  if (context.webgl2) {
-    if (PixelFormat.isDepthFormat(pixelFormat)) {
-      minificationFilter = TextureMinificationFilter.NEAREST;
-      magnificationFilter = TextureMagnificationFilter.NEAREST;
-    }
+  if (PixelFormat.isDepthFormat(pixelFormat)) {
+    minificationFilter = TextureMinificationFilter.NEAREST;
+    magnificationFilter = TextureMagnificationFilter.NEAREST;
   }
 
   const gl = context._gl;
@@ -538,18 +542,18 @@ Texture3D.prototype.generateMipmap = function (hint) {
   }
 
   if (this._width > 1 && !CesiumMath.isPowerOfTwo(this._width)) {
-    throw new DeveloperError(
-      "width must be a power of two to call generateMipmap().",
+    console.warn(
+      "It is recommended to generate Mipmaps when the width is a power of 2 to achieve better performance and results.",
     );
   }
   if (this._height > 1 && !CesiumMath.isPowerOfTwo(this._height)) {
-    throw new DeveloperError(
-      "height must be a power of two to call generateMipmap().",
+    console.warn(
+      "It is recommended to generate Mipmaps when the height is a power of 2 to achieve better performance and results.",
     );
   }
   if (this._depth > 1 && !CesiumMath.isPowerOfTwo(this._depth)) {
-    throw new DeveloperError(
-      "depth must be a power of two to call generateMipmap().",
+    console.warn(
+      "It is recommended to generate Mipmaps when the depth is a power of 2 to achieve better performance and results.",
     );
   }
 

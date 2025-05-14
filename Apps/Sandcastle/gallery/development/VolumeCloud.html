@@ -37,19 +37,9 @@
         //Sandcastle_Begin
 
         //ImprovedNoise from Three.js
+        // https://github.com/mrdoob/three.js/blob/dev/examples/jsm/math/ImprovedNoise.js
 
-        /**
-         * Returns a value linearly interpolated from two known points based on the given interval -
-         * `t = 0` will return `x` and `t = 1` will return `y`.
-         *
-         * @param {number} x - The start point
-         * @param {number} y - The end point.
-         * @param {number} t - The interpolation factor in the closed interval `[0, 1]`.
-         * @return {number} The interpolated value.
-         */
-        function lerp(x, y, t) {
-          return (1 - t) * x + t * y;
-        }
+        const lerp = Cesium.Math.lerp;
 
         const _p = [
           151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36,
@@ -343,6 +333,7 @@
       in vec3 vOrigin;
       in vec3 vDirection;
 
+      // https://github.com/mrdoob/three.js/blob/dev/examples/webgl_volume_cloud.html
       uniform vec3 base;
       uniform sampler3D map;
 			uniform float threshold;
