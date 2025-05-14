@@ -1,6 +1,3 @@
-// TODO: remove these and figure out the correct types
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 let defaultAction: (() => void) | undefined;
 let bucket = window.location.href;
 const pos = bucket.lastIndexOf("/");
@@ -14,6 +11,7 @@ type SelectOption = {
   onselect: () => void;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- we don't care what the keys are
 const registered = new Map<any, number>();
 
 /**
@@ -29,9 +27,10 @@ const Sandcastle = {
   /**
    * Create a "bookmark" of sorts in the code that will be highlighted when run
    *
-   * @param obj
+   * @param key
    */
-  declare(obj: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- we don't care what the keys are
+  declare(key: any) {
     /*eslint-disable no-empty*/
     try {
       //Browsers such as IE don't have a stack property until you actually throw the error.
@@ -56,22 +55,23 @@ const Sandcastle = {
       if (pos >= 0) {
         pos += needle.length;
         const lineNumber = parseInt(stack.substring(pos), 10);
-        registered.set(obj, lineNumber);
-        console.log("registered", obj, "to", lineNumber);
+        registered.set(key, lineNumber);
+        console.log("registered", key, "to", lineNumber);
       }
     } catch {}
   },
 
   /**
    * Highlight the given "bookmark" in the code
-   * @param obj
-   * @returns
+   *
+   * @param key
    */
-  highlight(obj: any) {
-    console.log("highlight", obj);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- we don't care what the keys are
+  highlight(key: any) {
+    console.log("highlight", key);
     console.log("registered", registered);
-    if (obj !== undefined) {
-      const lineNumber = registered.get(obj) ?? registered.get(obj.primitive);
+    if (key !== undefined) {
+      const lineNumber = registered.get(key) ?? registered.get(key.primitive);
       if (lineNumber !== undefined) {
         window.parent.postMessage({ highlight: lineNumber }, "*");
         return;
