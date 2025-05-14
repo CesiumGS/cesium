@@ -627,7 +627,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "Apps/**",
           "Apps/Sandcastle/.jshintrc",
           "packages/engine/index.js",
-          "packages/engine/index.d.ts",
+          //"packages/engine/index.d.ts",
           "packages/engine/LICENSE.md",
           "packages/engine/README.md",
           "packages/engine/Source/**",
