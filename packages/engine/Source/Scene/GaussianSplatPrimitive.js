@@ -471,7 +471,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   if (this._drawCommand) {
     frameState.commandList.push(this._drawCommand);
-    this._drawCommand = undefined;
+    //  this._drawCommand = undefined;
   }
 
   if (this._numSplats === 0) {
