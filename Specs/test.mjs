@@ -1,11 +1,9 @@
 import { Cartographic, createWorldTerrainAsync, sampleTerrain } from "cesium";
 import assert from "node:assert";
-import console from "node:console";
-import process from "node:process";
+
 // NodeJS smoke screen test
 
 async function test() {
-  try {
     const provider = await createWorldTerrainAsync();
     const results = await sampleTerrain(provider, 11, [
       Cartographic.fromDegrees(86.925145, 27.988257),
@@ -15,12 +13,6 @@ async function test() {
     assert(results[0].height < 10000);
     assert(results[1].height > 5000);
     assert(results[1].height < 10000);
-  } catch(error) {
-    console.error(`Error: ${error}`);
-    process.exit(1);
-  }
-
 }
 
 test()
-
