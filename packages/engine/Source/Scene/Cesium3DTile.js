@@ -352,6 +352,36 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasImplicitContentMetadata = false;
 
   /**
+   * The index of the content in the implicit tiling `contents` array. This value is set
+   * for tiles transcoded by <code>Implicit3DTileContent</code>.
+   * <p>
+   * This is <code>0</code> until the tile's content is loaded.
+   * </p>
+   *
+   * @type {number}
+   * @readonly
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.implicitContentIndex = 0;
+
+  /**
+   * The index of the content when using the implicit tiling <code>CONTENT_COUNT</code> semantic. This value is set
+   * for tiles transcoded by <code>Implicit3DTileContent</code>.
+   * <p>
+   * This is <code>0</code> until the tile's content is loaded.
+   * </p>
+   *
+   * @type {number}
+   * @readonly
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.implicitInnerContentIndex = 0;
+
+  /**
    * When <code>true</code>, the tile has multiple contents, either in the tile JSON (3D Tiles 1.1)
    * or via the <code>3DTILES_multiple_contents</code> extension.
    *
@@ -533,6 +563,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._colorDirty = false;
 
   this._request = undefined;
+
+  this._contenteMetadata = undefined;
 }
 
 // This can be overridden for testing purposes
@@ -1378,16 +1410,13 @@ async function makeContent(tile, arrayBuffer) {
     );
   }
 
-  const contentHeader = tile._contentHeader;
+  const contentMetadata = tile.getContentMetadata();
 
-  if (tile.hasImplicitContentMetadata) {
-    const subtree = tile.implicitSubtree;
-    const coordinates = tile.implicitCoordinates;
-    content.metadata = subtree.getContentMetadataView(coordinates, 0);
-  } else if (!tile.hasImplicitContent) {
-    content.metadata = findContentMetadata(tileset, contentHeader);
+  if (defined(contentMetadata)) {
+    content.metadata = contentMetadata;
   }
 
+  const contentHeader = tile._contentHeader;
   const groupMetadata = findGroupMetadata(tileset, contentHeader);
   if (defined(groupMetadata)) {
     content.group = new Cesium3DContentGroup({
@@ -1397,6 +1426,40 @@ async function makeContent(tile, arrayBuffer) {
 
   return content;
 }
+
+Cesium3DTile.prototype.getContentMetadata = function () {
+  // TODO: it would be nice if we could call this in the Cesium3DTile constructor, but we can't because
+  // the implicit tiling properties aren't set right away
+
+  if (defined(this._contentMetadata)) {
+    return this._contentMetadata;
+  }
+
+  const tileset = this._tileset;
+
+  let contentMetadata;
+
+  if (this.hasImplicitContentMetadata) {
+    const subtree = this.implicitSubtree;
+    const coordinates = this.implicitCoordinates;
+    const contentIndex = this.implicitContentIndex;
+    const innerContentIndex = this.implicitInnerContentIndex;
+
+    contentMetadata = subtree.getContentMetadataView(
+      coordinates,
+      contentIndex,
+      innerContentIndex,
+    );
+  } else if (!this.hasImplicitContent) {
+    const contentHeader = this._contentHeader;
+    contentMetadata = findContentMetadata(tileset, contentHeader);
+  }
+
+  // Cache the result
+  this._contentMetadata = contentMetadata;
+
+  return contentMetadata;
+};
 
 /**
  * Cancel requests for the tile's contents. This is called when the tile
