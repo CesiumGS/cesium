@@ -1,4 +1,4 @@
-import ShaderBuilder from "../Renderer/ShaderBuilder";
+import ShaderBuilder from "../Renderer/ShaderBuilder.js";
 import RenderState from "../Renderer/RenderState.js";
 import DepthFunction from "../Scene/DepthFunction.js";
 import ModelAlphaOptions from "./Model/ModelAlphaOptions.js";
