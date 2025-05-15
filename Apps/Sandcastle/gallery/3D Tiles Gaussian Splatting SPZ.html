@@ -35,14 +35,16 @@
         const ORBIT_RANGE_FACTOR = 3;
         const ORBIT_PITCH_DIVIDEND = 8;
 
-        let cellTowerTileset;
-        Cesium.Cesium3DTileset.fromIonAssetId(3332167, {
-          maximumScreenSpaceError: 1,
-        }).then((tileset) => {
-          cellTowerTileset = tileset;
-          viewer.scene.primitives.add(cellTowerTileset);
-          setupCamera();
-        });
+        const cellTowerTileset = await Cesium.GaussianSplatPrimitive.fromIonAssetId(
+          3381816,
+          {
+            maximumScreenSpaceError: 1,
+          },
+        );
+
+        viewer.scene.primitives.add(cellTowerTileset);
+        setupCamera();
+
         let startTime;
         let isRunning = false;
 
