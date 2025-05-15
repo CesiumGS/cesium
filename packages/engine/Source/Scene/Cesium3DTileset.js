@@ -2380,6 +2380,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     defined(tileHeader.implicitTiling) ||
     hasExtension(tileHeader, "3DTILES_implicit_tiling");
 
+  // TODO: hack: convert multiple contents to separate tiles (for explicit tiling)
   if (defined(tileHeader.contents) && tileHeader.contents.length > 1) {
     const deepCopy = true;
     const tileJson = clone(tileHeader, deepCopy);

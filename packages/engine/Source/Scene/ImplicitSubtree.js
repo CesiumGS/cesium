@@ -66,6 +66,9 @@ function ImplicitSubtree(resource, implicitTileset, implicitCoordinates) {
   this._tileJumpBuffer = undefined;
   this._contentJumpBuffers = [];
 
+  // Offsets for the content metadata when using the CONTENT_COUNT semantic
+  this._innerContentJumpBuffer = undefined;
+
   this._ready = false;
 }
 
@@ -435,6 +438,10 @@ ImplicitSubtree.fromSubtreeJson = async function (
   if (defined(tilePropertyTableJson)) {
     parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8);
     makeTileJumpBuffer(subtree);
+
+    if (subtree._tileMetadataTable.hasPropertyBySemantic("CONTENT_COUNT")) {
+      makeInnerContentJumpBuffer(subtree);
+    }
   }
 
   parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8);
@@ -878,7 +885,7 @@ function parseAvailabilityBitstream(
  */
 function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
   const tilePropertyTableJson = subtree._tilePropertyTableJson;
-  const tileCount = subtree._tileAvailability.availableCount;
+  const tileCount = tilePropertyTableJson.count;
   const metadataSchema = implicitTileset.metadataSchema;
 
   const tileMetadataClassName = tilePropertyTableJson.class;
@@ -903,15 +910,12 @@ function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
  */
 function parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8) {
   const contentPropertyTableJsons = subtree._contentPropertyTableJsons;
-  const contentAvailabilityBitstreams = subtree._contentAvailabilityBitstreams;
   const metadataSchema = implicitTileset.metadataSchema;
 
   const contentMetadataTables = subtree._contentMetadataTables;
   for (let i = 0; i < contentPropertyTableJsons.length; i++) {
     const contentPropertyTableJson = contentPropertyTableJsons[i];
-    const contentAvailabilityBitsteam = contentAvailabilityBitstreams[i];
-
-    const contentCount = contentAvailabilityBitsteam.availableCount;
+    const contentCount = contentPropertyTableJson.count;
     const contentMetadataClassName = contentPropertyTableJson.class;
     const contentMetadataClass =
       metadataSchema.classes[contentMetadataClassName];
@@ -991,6 +995,38 @@ function makeContentJumpBuffers(subtree) {
   }
 }
 
+function makeInnerContentJumpBuffer(subtree) {
+  const tileMetadataTable = subtree._tileMetadataTable;
+  const tileMetadataCount = tileMetadataTable.count;
+
+  let totalContentCount = 0;
+
+  for (let i = 0; i < tileMetadataCount; ++i) {
+    totalContentCount += tileMetadataTable.getPropertyBySemantic(
+      i,
+      "CONTENT_COUNT",
+    );
+  }
+
+  let jumpBuffer;
+  if (totalContentCount < 256) {
+    jumpBuffer = new Uint8Array(tileMetadataCount);
+  } else if (totalContentCount < 65536) {
+    jumpBuffer = new Uint16Array(tileMetadataCount);
+  } else {
+    jumpBuffer = new Uint32Array(tileMetadataCount);
+  }
+
+  let contentIndex = 0;
+
+  for (let i = 0; i < tileMetadataCount; ++i) {
+    jumpBuffer[i] = contentIndex;
+    contentIndex += tileMetadataTable.getPropertyBySemantic(i, "CONTENT_COUNT");
+  }
+
+  subtree._innerContentJumpBuffer = jumpBuffer;
+}
+
 /**
  * Given the implicit tiling coordinates for a tile, get the index within the
  * subtree's tile availability bitstream.
@@ -1065,11 +1101,17 @@ function getTileEntityId(subtree, implicitCoordinates) {
  * @param {ImplicitSubtree} subtree The subtree
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a content
  * @param {number} contentIndex The content index, for distinguishing between multiple contents.
+ * @param {number} innerContentIndex The inner content index, when using the CONTENT_COUNT semantic.
  * @return {number} The entity ID for this content for accessing content metadata, or <code>undefined</code> if not applicable.
  *
  * @private
  */
-function getContentEntityId(subtree, implicitCoordinates, contentIndex) {
+function getContentEntityId(
+  subtree,
+  implicitCoordinates,
+  contentIndex,
+  innerContentIndex,
+) {
   const metadataTables = subtree._contentMetadataTables;
   if (!defined(metadataTables)) {
     return undefined;
@@ -1078,6 +1120,12 @@ function getContentEntityId(subtree, implicitCoordinates, contentIndex) {
   const metadataTable = metadataTables[contentIndex];
   if (!defined(metadataTable)) {
     return undefined;
+  }
+
+  const tileMetadataView = subtree.getTileMetadataView(implicitCoordinates);
+  if (tileMetadataView.hasPropertyBySemantic("CONTENT_COUNT")) {
+    const tileEntityId = getTileEntityId(subtree, implicitCoordinates);
+    return subtree._innerContentJumpBuffer[tileEntityId] + innerContentIndex;
   }
 
   const availability = subtree._contentAvailabilityBitstreams[contentIndex];
@@ -1116,6 +1164,7 @@ ImplicitSubtree.prototype.getTileMetadataView = function (implicitCoordinates) {
  * Create and return a metadata table view for a content within this subtree.
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a content
  * @param {number} contentIndex The index of the content used to distinguish between multiple contents
+ * @param {number} innerContentIndex The inner content index, when using the CONTENT_COUNT semantic.
  * @return {ImplicitMetadataView} The metadata view for this content, or <code>undefined</code> if not applicable.
  *
  * @private
@@ -1123,8 +1172,14 @@ ImplicitSubtree.prototype.getTileMetadataView = function (implicitCoordinates) {
 ImplicitSubtree.prototype.getContentMetadataView = function (
   implicitCoordinates,
   contentIndex,
+  innerContentIndex,
 ) {
-  const entityId = getContentEntityId(this, implicitCoordinates, contentIndex);
+  const entityId = getContentEntityId(
+    this,
+    implicitCoordinates,
+    contentIndex,
+    innerContentIndex,
+  );
   if (!defined(entityId)) {
     return undefined;
   }

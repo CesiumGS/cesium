@@ -1,6 +1,5 @@
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import Frozen from "../Core/Frozen.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
@@ -72,19 +71,29 @@ Cesium3DTilesetTraversal.canTraverse = function (tile) {
 const startTime = JulianDate.fromIso8601("2024-11-01");
 
 function timestampInRange(tile, frameState) {
-  const tileContentHeader = tile._contentHeader ?? Frozen.EMPTY_OBJECT;
-  const tileMetadata = tileContentHeader.metadata ?? Frozen.EMPTY_OBJECT;
-  const tileProperties = tileMetadata.properties ?? Frozen.EMPTY_OBJECT;
-  const timestampStart = tileProperties.timestampStart;
-  const timestampStop = tileProperties.timestampStop;
+  const contentMetadata = tile.getContentMetadata();
 
-  if (defined(timestampStart) && defined(timestampStop)) {
-    const time = Math.floor(
-      JulianDate.daysDifference(frameState.time, startTime),
-    );
-    if (time < timestampStart || time >= timestampStop) {
-      return false;
-    }
+  if (!defined(contentMetadata)) {
+    return true;
+  }
+
+  if (
+    !contentMetadata.hasPropertyBySemantic("_TIMESTAMP_START") ||
+    !contentMetadata.hasPropertyBySemantic("_TIMESTAMP_STOP")
+  ) {
+    return true;
+  }
+
+  const timestampStart =
+    contentMetadata.getPropertyBySemantic("_TIMESTAMP_START");
+  const timestampStop =
+    contentMetadata.getPropertyBySemantic("_TIMESTAMP_STOP");
+
+  const time = Math.floor(
+    JulianDate.daysDifference(frameState.time, startTime),
+  );
+  if (time < timestampStart || time >= timestampStop) {
+    return false;
   }
 
   return true;

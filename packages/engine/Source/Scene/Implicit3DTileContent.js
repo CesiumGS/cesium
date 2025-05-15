@@ -494,61 +494,75 @@ function deriveChildTile(
       continue;
     }
 
-    const templateValues = implicitCoordinates.getTemplateValues();
+    let innerContentCount = 1;
 
-    if (defined(tileMetadata)) {
-      const propertyIds = tileMetadata.getPropertyIds();
-      for (const propertyId of propertyIds) {
-        templateValues[propertyId] = tileMetadata.getProperty(propertyId);
+    if (
+      defined(tileMetadata) &&
+      tileMetadata.hasPropertyBySemantic("CONTENT_COUNT")
+    ) {
+      innerContentCount = tileMetadata.getPropertyBySemantic("CONTENT_COUNT");
+    }
+
+    for (let j = 0; j < innerContentCount; ++j) {
+      const templateValues = implicitCoordinates.getTemplateValues();
+
+      if (defined(tileMetadata)) {
+        const propertyIds = tileMetadata.getPropertyIds();
+        for (const propertyId of propertyIds) {
+          templateValues[propertyId] = tileMetadata.getProperty(propertyId);
+        }
       }
-    }
 
-    if (hasImplicitContentMetadata) {
-      const contentMetadata = subtree.getContentMetadataView(
-        implicitCoordinates,
-        i,
-      );
+      if (hasImplicitContentMetadata) {
+        const contentMetadata = subtree.getContentMetadataView(
+          implicitCoordinates,
+          i,
+          j,
+        );
 
-      const propertyIds = contentMetadata.getPropertyIds();
-      for (const propertyId of propertyIds) {
-        templateValues[propertyId] = contentMetadata.getProperty(propertyId);
+        const propertyIds = contentMetadata.getPropertyIds();
+        for (const propertyId of propertyIds) {
+          templateValues[propertyId] = contentMetadata.getProperty(propertyId);
+        }
       }
-    }
 
-    const childContentTemplate = implicitTileset.contentUriTemplates[i];
-    const childContentUri = childContentTemplate.getDerivedResource({
-      templateValues: templateValues,
-    }).url;
-    const contentJson = {
-      uri: childContentUri,
-    };
+      const childContentTemplate = implicitTileset.contentUriTemplates[i];
+      const childContentUri = childContentTemplate.getDerivedResource({
+        templateValues: templateValues,
+      }).url;
+      const contentJson = {
+        uri: childContentUri,
+      };
 
-    let contentBounds;
+      let contentBounds;
 
-    if (subtree.contentPropertyTableJsons.length > 0) {
-      const contentMetadata = subtree.getContentMetadataView(
-        implicitCoordinates,
-        i,
+      if (subtree.contentPropertyTableJsons.length > 0) {
+        const contentMetadata = subtree.getContentMetadataView(
+          implicitCoordinates,
+          i,
+        );
+
+        contentBounds = BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
+          "CONTENT",
+          contentMetadata,
+        );
+      }
+
+      const contentBoundingVolume = getContentBoundingVolume(
+        boundingVolume,
+        contentBounds,
       );
 
-      contentBounds = BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
-        "CONTENT",
-        contentMetadata,
+      if (defined(contentBoundingVolume)) {
+        contentJson.boundingVolume = contentBoundingVolume;
+      }
+
+      // combine() is used to pass through any additional properties the
+      // user specified such as extras or extensions
+      contentJsons.push(
+        combine(contentJson, implicitTileset.contentHeaders[i]),
       );
     }
-
-    const contentBoundingVolume = getContentBoundingVolume(
-      boundingVolume,
-      contentBounds,
-    );
-
-    if (defined(contentBoundingVolume)) {
-      contentJson.boundingVolume = contentBoundingVolume;
-    }
-
-    // combine() is used to pass through any additional properties the
-    // user specified such as extras or extensions
-    contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
   }
 
   const childGeometricError = getGeometricError(
@@ -585,19 +599,30 @@ function deriveChildTile(
   delete rootHeader.metadata;
   const combinedTileJson = combine(tileJson, rootHeader, deep);
 
-  const childTile = makeTile(
+  if (combinedTileJson.contents.length <= 1) {
+    return makeTileSingleContent(
+      implicitContent,
+      implicitTileset.baseResource,
+      combinedTileJson,
+      parentTile,
+      implicitCoordinates,
+      subtree,
+      tileMetadata,
+      hasImplicitContentMetadata,
+    );
+  }
+
+  return makeTileMultipleContents(
     implicitContent,
     implicitTileset.baseResource,
     combinedTileJson,
     parentTile,
+    implicitCoordinates,
+    subtree,
+    tileMetadata,
+    hasImplicitContentMetadata,
+    implicitTileset.contentCount,
   );
-
-  childTile.implicitCoordinates = implicitCoordinates;
-  childTile.implicitSubtree = subtree;
-  childTile.metadata = tileMetadata;
-  childTile.hasImplicitContentMetadata = hasImplicitContentMetadata;
-
-  return childTile;
 }
 
 /**
@@ -1177,6 +1202,74 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
 function makeTile(content, baseResource, tileJson, parentTile) {
   const Cesium3DTile = content._tile.constructor;
   return new Cesium3DTile(content._tileset, baseResource, tileJson, parentTile);
+}
+
+function makeTileSingleContent(
+  content,
+  baseResource,
+  tileHeader,
+  parentTile,
+  implicitCoordinates,
+  subtree,
+  tileMetadata,
+  hasImplicitContentMetadata,
+) {
+  const tile = makeTile(content, baseResource, tileHeader, parentTile);
+
+  tile.implicitCoordinates = implicitCoordinates;
+  tile.implicitSubtree = subtree;
+  tile.metadata = tileMetadata;
+  tile.hasImplicitContentMetadata = hasImplicitContentMetadata;
+
+  return tile;
+}
+
+function makeTileMultipleContents(
+  content,
+  baseResource,
+  tileHeader,
+  parentTile,
+  implicitCoordinates,
+  subtree,
+  tileMetadata,
+  hasImplicitContentMetadata,
+  contentCount,
+) {
+  // TODO: Need to update statistics.numberOfTilesTotal?
+  const deepCopy = true;
+  const baseTileJson = clone(tileHeader, deepCopy);
+  delete baseTileJson.children;
+  delete baseTileJson.contents;
+
+  const tileJson = clone(baseTileJson, deepCopy);
+  tileJson.refine = "ADD";
+  tileJson.geometricError = parentTile._geometricError;
+
+  const tile = makeTile(content, baseResource, tileJson, parentTile);
+  tile.implicitCoordinates = implicitCoordinates;
+  tile.implicitSubtree = subtree;
+  tile.metadata = tileMetadata;
+
+  const innerContentCount = tileHeader.contents.length / contentCount;
+
+  for (let i = 0; i < tileHeader.contents.length; ++i) {
+    const contentHeader = tileHeader.contents[i];
+    const childTileJson = clone(baseTileJson, deepCopy);
+    childTileJson.geometricError = 0.0;
+    childTileJson.content = clone(contentHeader, deepCopy);
+
+    const childTile = makeTile(content, baseResource, childTileJson, tile);
+    childTile.implicitCoordinates = implicitCoordinates;
+    childTile.implicitSubtree = subtree;
+    childTile.metadata = tileMetadata;
+    childTile.hasImplicitContentMetadata = hasImplicitContentMetadata;
+    childTile.implicitContentIndex = Math.floor(i / innerContentCount);
+    childTile.implicitInnerContentIndex = i % innerContentCount;
+
+    tile.children.push(childTile);
+  }
+
+  return tile;
 }
 
 /**
