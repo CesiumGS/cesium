@@ -1,6 +1,5 @@
 /node_modules
 /ThirdParty
 /Tools/**
-temp_wasm/*
 
 LICENSE.md
