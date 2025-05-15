@@ -21,26 +21,6 @@
             "type": "chrome",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Run Tests",
-            "cwd": "${workspaceFolder}",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run-script", "test"],
-            "noDebug": true
-        },
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Attach Karma Chrome",
-            "sourceMaps": true,
-            "webRoot":"${workspaceRoot}/../Build/CesiumUnminified/Specs",
-            "url": "http://localhost:9876/debug.html",
-            "runtimeArgs": [
-                "--headless"
-            ]
         }
     ]
 }
