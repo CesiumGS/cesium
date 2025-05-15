@@ -28,6 +28,7 @@ import defined from "../Core/defined.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
+import Axis from "./Axis.js";
 
 const scratchSplatMatrix = new Matrix4();
 
@@ -63,6 +64,12 @@ function GaussianSplatPrimitive(options) {
   this._useLogDepth = undefined;
 
   this._modelMatrix = new Matrix4();
+
+  this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
+    Axis.Y,
+    Axis.X,
+    new Matrix4(),
+  );
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -163,6 +170,7 @@ GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
   });
 
   this._numSplats += gsplatData.attributes[0].count;
+  this._modelMatrix = tile.computedTransform;
 };
 
 GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {
@@ -171,7 +179,7 @@ GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {
 
 GaussianSplatPrimitive.fromIonAssetId = async function (assetId, options) {
   return new GaussianSplatPrimitive({
-    tileset: await Cesium3DTileset.fromIonAssetId(assetId, options),
+    tileset: await Cesium3DTileset.fromIonAssetId(assetId, options), // {...options, modelUpAxis: Axis.Z}),
   });
 };
 
@@ -420,9 +428,23 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     interleave: false,
   });
 
+  let modelMatrix = Matrix4.multiply(
+    primitive._modelMatrix,
+    primitive._axisCorrectionMatrix,
+    new Matrix4(),
+  );
+  const transform =
+    tileset._root._content._tile._content._loader._components.scene.nodes[0]
+      .matrix;
+  modelMatrix = Matrix4.multiplyTransformation(
+    modelMatrix,
+    transform,
+    new Matrix4(),
+  );
+
   const command = new DrawCommand({
     boundingVolume: tileset.boundingSphere,
-    modelMatrix: primitive._modelMatrix,
+    modelMatrix: modelMatrix,
     uniformMap: uniformMap,
     renderState: renderState,
     vertexArray: vertexArray,
@@ -441,65 +463,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   primitive._drawCommand = command;
 };
 
-GaussianSplatPrimitive.prototype.gatherSplats = function () {
-  this._numSplats = 0;
-  const tileset = this._tileset;
-  if (
-    tileset.root === undefined ||
-    tileset.ready === false ||
-    tileset.root.content === undefined
-  ) {
-    return;
-  }
-  function gatherChildSplats(node) {
-    if (!defined(node) || !defined(node.content)) {
-      return;
-    }
-
-    const content = node.content;
-    if (defined(content._gsplatData)) {
-      const gsplatData = content._gsplatData;
-
-      this.pushSplats({
-        positions: new Float32Array(
-          ModelUtility.getAttributeBySemantic(
-            gsplatData,
-            VertexAttributeSemantic.POSITION,
-          ).typedArray,
-        ),
-        scales: new Float32Array(
-          ModelUtility.getAttributeBySemantic(
-            gsplatData,
-            VertexAttributeSemantic.SCALE,
-          ).typedArray,
-        ),
-        rotations: new Float32Array(
-          ModelUtility.getAttributeBySemantic(
-            gsplatData,
-            VertexAttributeSemantic.ROTATION,
-          ).typedArray,
-        ),
-        colors: new Uint8Array(
-          ModelUtility.getAttributeBySemantic(
-            gsplatData,
-            VertexAttributeSemantic.COLOR,
-          ).typedArray,
-        ),
-      });
-
-      this._numSplats += gsplatData.attributes[0].count;
-    }
-
-    if (defined(node.children)) {
-      for (let i = 0; i < node.children.length; i++) {
-        gatherChildSplats.call(this, node.children[i]);
-      }
-    }
-  }
-
-  gatherChildSplats.call(this, tileset.root);
-};
-
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
@@ -514,18 +477,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._drawCommand = undefined;
   }
 
-  //this.gatherSplats();
-
   if (this._numSplats === 0) {
     return;
   }
-
-  const rootTransform = tileset.root.content._tile.computedTransform;
-  const transform =
-    tileset._root._content._tile._content._loader._components.scene.nodes[0]
-      .matrix;
-
-  Matrix4.multiply(rootTransform, transform, this._modelMatrix);
 
   if (this._needsGaussianSplatTexture) {
     if (!this._gaussianSplatTexturePending) {
@@ -534,15 +488,13 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     return;
   }
 
+  const rootTransform = tileset.root.content._tile.computedTransform;
+
   Matrix4.multiply(
     frameState.camera.viewMatrix,
-    this._modelMatrix,
+    rootTransform,
     scratchSplatMatrix,
   );
-
-  if (!this._hasGaussianSplatTexture) {
-    return;
-  }
 
   const promise = GaussianSplatSorter.radixSortIndexes({
     primitive: {
