@@ -570,7 +570,8 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
     if (tile.hasImplicitContentMetadata) {
       const subtree = tile.implicitSubtree;
       const coordinates = tile.implicitCoordinates;
-      content.metadata = subtree.getContentMetadataView(coordinates, index);
+      // TODO: fix this eventually, doesn't matter for now
+      content.metadata = subtree.getContentMetadataView(coordinates, 0, 0);
     } else if (!tile.hasImplicitContent) {
       content.metadata = findContentMetadata(tileset, contentHeader);
     }
