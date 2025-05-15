@@ -271,10 +271,7 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
 }
 
 function prepareSpzData(loadPlan, context) {
-  const rgb = ModelUtility.getAttributeBySemantic(
-    loadPlan.primitive,
-    VertexAttributeSemantic.COLOR,
-  );
+  const rgb = ModelUtility.getAttributeByName(loadPlan.primitive, "COLOR_0");
   const alpha = ModelUtility.getAttributeBySemantic(
     loadPlan.primitive,
     VertexAttributeSemantic.OPACITY,

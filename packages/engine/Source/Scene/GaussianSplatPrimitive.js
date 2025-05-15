@@ -162,10 +162,7 @@ GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
       ).typedArray,
     ),
     colors: new Uint8Array(
-      ModelUtility.getAttributeBySemantic(
-        gsplatData,
-        VertexAttributeSemantic.COLOR,
-      ).typedArray,
+      ModelUtility.getAttributeByName(gsplatData, "COLOR_0").typedArray,
     ),
   });
 

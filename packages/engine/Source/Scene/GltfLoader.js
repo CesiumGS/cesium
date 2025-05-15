@@ -1145,7 +1145,7 @@ function finalizeSpzAttribute(
     attribute.buffer = vertexBufferLoader.buffer;
   }
 
-  if (loadTypedArray) {
+  if (loadTypedArray && defined(vertexBufferLoader.typedArray)) {
     attribute.typedArray = ComponentDatatype.createArrayBufferView(
       attribute.componentDatatype,
       vertexBufferLoader.typedArray.buffer,
