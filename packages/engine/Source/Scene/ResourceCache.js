@@ -10,6 +10,7 @@ import GltfIndexBufferLoader from "./GltfIndexBufferLoader.js";
 import GltfJsonLoader from "./GltfJsonLoader.js";
 import GltfTextureLoader from "./GltfTextureLoader.js";
 import GltfVertexBufferLoader from "./GltfVertexBufferLoader.js";
+import GltfSpzLoader from "./GltfSpzLoader.js";
 import MetadataSchemaLoader from "./MetadataSchemaLoader.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
 import ResourceCacheStatistics from "./ResourceCacheStatistics.js";
@@ -390,6 +391,43 @@ ResourceCache.getDracoLoader = function (options) {
   return ResourceCache.add(dracoLoader);
 };
 
+ResourceCache.getSpzLoader = function (options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltf, primitive, spz, gltfResource, baseResource } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.spz", spz);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
+  const cacheKey = ResourceCacheKey.getSpzCacheKey({
+    gltf: gltf,
+    primitive: primitive,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+  });
+
+  let spzLoader = ResourceCache.get(cacheKey);
+  if (defined(spzLoader)) {
+    return spzLoader;
+  }
+
+  spzLoader = new GltfSpzLoader({
+    resourceCache: ResourceCache,
+    gltf: gltf,
+    primitive: primitive,
+    spz: spz,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    cacheKey: cacheKey,
+  });
+
+  return ResourceCache.add(spzLoader);
+};
+
 /**
  * Gets an existing glTF vertex buffer from the cache, or creates a new loader if one does not already exist.
  *
@@ -424,6 +462,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
     bufferViewId,
     primitive,
     draco,
+    spz,
     attributeSemantic,
     accessorId,
     asynchronous = true,
@@ -448,36 +487,40 @@ ResourceCache.getVertexBufferLoader = function (options) {
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
+  const hasSpz = defined(spz);
 
-  if (hasBufferViewId === hasDraco) {
-    throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined.",
-    );
+  if (!hasSpz) {
+    if (hasBufferViewId === hasDraco) {
+      throw new DeveloperError(
+        "One of options.bufferViewId and options.draco must be defined.",
+      );
+    }
+
+    if (hasDraco && !hasAttributeSemantic) {
+      throw new DeveloperError(
+        "When options.draco is defined options.attributeSemantic must also be defined.",
+      );
+    }
+
+    if (hasDraco && !hasAccessorId) {
+      throw new DeveloperError(
+        "When options.draco is defined options.hasAccessorId must also be defined.",
+      );
+    }
+
+    if (hasDraco && !hasPrimitive) {
+      throw new DeveloperError(
+        "When options.draco is defined options.primitive must also be defined.",
+      );
+    }
+
+    if (hasDraco) {
+      Check.typeOf.object("options.draco", draco);
+      Check.typeOf.string("options.attributeSemantic", attributeSemantic);
+      Check.typeOf.number("options.accessorId", accessorId);
+    }
   }
 
-  if (hasDraco && !hasAttributeSemantic) {
-    throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined.",
-    );
-  }
-
-  if (hasDraco && !hasAccessorId) {
-    throw new DeveloperError(
-      "When options.draco is defined options.haAccessorId must also be defined.",
-    );
-  }
-
-  if (hasDraco && !hasPrimitive) {
-    throw new DeveloperError(
-      "When options.draco is defined options.primitive must also be defined.",
-    );
-  }
-
-  if (hasDraco) {
-    Check.typeOf.object("options.draco", draco);
-    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
-    Check.typeOf.number("options.accessorId", accessorId);
-  }
   //>>includeEnd('debug');
 
   const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -487,6 +530,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
     frameState: frameState,
     bufferViewId: bufferViewId,
     draco: draco,
+    spz: spz,
     attributeSemantic: attributeSemantic,
     dequantize: dequantize,
     loadBuffer: loadBuffer,
@@ -506,6 +550,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
     bufferViewId: bufferViewId,
     primitive: primitive,
     draco: draco,
+    spz: spz,
     attributeSemantic: attributeSemantic,
     accessorId: accessorId,
     cacheKey: cacheKey,

@@ -7,7 +7,11 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
-
+import AttributeCompression from "../Core/AttributeCompression.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import ModelUtility from "./Model/ModelUtility.js";
+import CesiumMath from "../Core/Math.js";
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -157,6 +161,23 @@ function PrimitiveLoadPlan(primitive) {
    * @private
    */
   this.outlineIndices = undefined;
+
+  /**
+   * Set this true to indicate that the primitive has the
+   * KHR_gaussian_splatting extension and needs to be post-processed
+   *
+   * @type {boolean}
+   * @private
+   */
+  this.needsGaussianSplats = false;
+
+  /**
+   * Set this to true if generating textures for Gaussian Splat rendering
+   *
+   * @type {boolean}
+   * @private
+   */
+  this.generateGaussianSplatTexture = false;
 }
 
 /**
@@ -173,6 +194,29 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
   if (this.needsOutlines) {
     generateOutlines(this);
     generateBuffers(this, context);
+  }
+
+  if (this.needsSpzAttributes) {
+    this.primitive.isGaussianSplatPrimitive = true;
+    prepareSpzData(this, context);
+    setupGaussianSplatBuffers(this, context);
+    if (this.generateGaussianSplatTexture) {
+      this.attributePlans.forEach((attr) => {
+        this.primitive.needsGaussianSplatTexture = true;
+      });
+    }
+  }
+
+  //handle splat post-processing for point primitives
+  if (this.needsGaussianSplats) {
+    this.primitive.isGaussianSplatPrimitive = true;
+    setupGaussianSplatBuffers(this, context);
+    if (this.generateGaussianSplatTexture) {
+      this.attributePlans.forEach((attr) => {
+        dequantizeSplatMeshopt(attr);
+        this.primitive.needsGaussianSplatTexture = true;
+      });
+    }
   }
 };
 
@@ -224,6 +268,137 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   attribute.count = outlineCoordinatesTypedArray.length / 3;
 
   return attribute;
+}
+
+function prepareSpzData(loadPlan, context) {
+  const rgb = ModelUtility.getAttributeByName(loadPlan.primitive, "COLOR_0");
+  const alpha = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.OPACITY,
+  );
+  const rgbVals = rgb.typedArray;
+  const rgba = new Uint8Array((rgbVals.length / 3) * 4);
+  for (let i = 0; i < rgbVals.length / 3; i++) {
+    rgba[i * 4] = rgbVals[i * 3];
+    rgba[i * 4 + 1] = rgbVals[i * 3 + 1];
+    rgba[i * 4 + 2] = rgbVals[i * 3 + 2];
+    rgba[i * 4 + 3] = CesiumMath.clamp(alpha.typedArray[i] * 255.0, 0.0, 255.0);
+  }
+
+  rgb.type = AttributeType.VEC4;
+  rgb.typedArray = rgba;
+  rgb.componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
+  rgb.normalized = false;
+
+  loadPlan.primitive.attributes = loadPlan.primitive.attributes.filter(
+    (attr) => attr.name !== "_OPACITY",
+  );
+
+  const position = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.POSITION,
+  );
+
+  for (let i = 0; i < position.typedArray.length; i += 3) {
+    position.typedArray[i + 1] = -position.typedArray[i + 1];
+    position.typedArray[i + 2] = -position.typedArray[i + 2];
+  }
+
+  const rotations = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.ROTATION,
+  );
+
+  //180* rotation around X.
+  //Temporary until we can get SPZ supporting Z-up assets natively
+  const rots = rotations.typedArray;
+  for (let q = 0; q < rots.length; q += 4) {
+    const w = rots[q];
+    const x = -rots[q + 3];
+    const y = rots[q + 2];
+    const z = -rots[q + 1];
+
+    rots[q] = y;
+    rots[q + 1] = -x;
+    rots[q + 2] = w;
+    rots[q + 3] = -z;
+  }
+  rotations.typedArray = rots;
+}
+
+/**
+ * Do our dequantizing here. When using meshopt, our positions are quantized,
+ * as well as our quaternions. decodeFilterQuat returns quantized shorts
+ */
+function dequantizeSplatMeshopt(attribute) {
+  if (
+    attribute.name === "_ROTATION" &&
+    attribute.componentDatatype === ComponentDatatype.SHORT
+  ) {
+    attribute.typedArray = AttributeCompression.dequantize(
+      attribute.typedArray,
+      ComponentDatatype.SHORT,
+      AttributeType.VEC4,
+      attribute.count,
+    );
+    attribute.componentDatatype = ComponentDatatype.FLOAT;
+  }
+
+  if (
+    attribute.name === "POSITION" &&
+    attribute.componentDatatype === ComponentDatatype.UNSIGNED_SHORT
+  ) {
+    const fa = Float32Array.from(
+      attribute.typedArray,
+      (n) => n / attribute.max.x,
+    );
+    attribute.typedArray = fa;
+    attribute.componentDatatype = ComponentDatatype.FLOAT;
+    attribute.normalized = false;
+    attribute.constant = new Cartesian3(0, 0, 0);
+
+    const findMinMaxXY = (flatArray) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+
+      for (let i = 0; i < flatArray.length; i += 3) {
+        const x = flatArray[i];
+        const y = flatArray[i + 1];
+        const z = flatArray[i + 2];
+
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+      }
+
+      return [
+        new Cartesian3(minX, minY, minZ),
+        new Cartesian3(maxX, maxY, maxZ),
+      ];
+    };
+    [attribute.min, attribute.max] = findMinMaxXY(attribute.typedArray);
+  }
+}
+
+function setupGaussianSplatBuffers(loadPlan, context) {
+  const attributePlans = loadPlan.attributePlans;
+  const attrLen = attributePlans.length;
+  for (let i = 0; i < attrLen; i++) {
+    const attributePlan = attributePlans[i];
+    //defer til much later into the pipeline
+    attributePlan.loadBuffer = false;
+    attributePlan.loadTypedArray = true;
+
+    const attribute = attributePlan.attribute;
+    dequantizeSplatMeshopt(attribute);
+  }
 }
 
 function generateBuffers(loadPlan, context) {

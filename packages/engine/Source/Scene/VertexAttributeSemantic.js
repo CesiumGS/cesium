@@ -73,6 +73,27 @@ const VertexAttributeSemantic = {
    * @constant
    */
   FEATURE_ID: "_FEATURE_ID",
+  /**
+   * Gaussian Splat Scale
+   *
+   * @type {string}
+   * @constant
+   */
+  SCALE: "_SCALE",
+  /**
+   * Gaussian Splat Rotation
+   *
+   * @type {string}
+   * @constant
+   */
+  ROTATION: "_ROTATION",
+  /**
+   * Gaussian Splat Opacity. Optional to keep separate or combine with color.
+   *
+   * @type {string}
+   * @constant
+   */
+  OPACITY: "_OPACITY",
 };
 
 function semanticToVariableName(semantic) {
@@ -93,6 +114,12 @@ function semanticToVariableName(semantic) {
       return "weights";
     case VertexAttributeSemantic.FEATURE_ID:
       return "featureId";
+    case VertexAttributeSemantic.SCALE:
+      return "scale";
+    case VertexAttributeSemantic.ROTATION:
+      return "rotation";
+    case VertexAttributeSemantic.OPACITY:
+      return "opacity";
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("semantic is not a valid value.");
@@ -124,6 +151,9 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
     case VertexAttributeSemantic.JOINTS:
     case VertexAttributeSemantic.WEIGHTS:
     case VertexAttributeSemantic.FEATURE_ID:
+    case VertexAttributeSemantic.SCALE:
+    case VertexAttributeSemantic.ROTATION:
+    case VertexAttributeSemantic.OPACITY:
       return true;
     //>>includeStart('debug', pragmas.debug);
     default:
@@ -172,6 +202,12 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
       return VertexAttributeSemantic.WEIGHTS;
     case "_FEATURE_ID":
       return VertexAttributeSemantic.FEATURE_ID;
+    case "_SCALE":
+      return VertexAttributeSemantic.SCALE;
+    case "_ROTATION":
+      return VertexAttributeSemantic.ROTATION;
+    case "_OPACITY":
+      return VertexAttributeSemantic.OPACITY;
   }
 
   return undefined;
@@ -241,6 +277,12 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
       return "vec4";
     case VertexAttributeSemantic.FEATURE_ID:
       return "int";
+    case VertexAttributeSemantic.SCALE:
+      return "vec3";
+    case VertexAttributeSemantic.ROTATION:
+      return "vec4";
+    case VertexAttributeSemantic.OPACITY:
+      return "float";
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("semantic is not a valid value.");
