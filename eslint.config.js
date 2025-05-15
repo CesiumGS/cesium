@@ -19,7 +19,6 @@ export default [
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",
       "**/*/SpecList.js",
-      "temp_wasm/*",
     ],
   },
   {
