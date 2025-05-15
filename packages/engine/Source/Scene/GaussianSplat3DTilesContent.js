@@ -1,8 +1,8 @@
-import DeveloperError from "../Core/DeveloperError";
+import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import GltfLoader from "./GltfLoader.js";
-import RuntimeError from "../Core/RuntimeError";
+import RuntimeError from "../Core/RuntimeError.js";
 import Axis from "./Axis.js";
 
 /**
