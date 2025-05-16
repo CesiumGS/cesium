@@ -9,6 +9,10 @@
  * Each flag indicates that at least one of the <code>ImageryLayer</code> objects
  * that are part of the input did <b>not</b> have the default value that
  * was defined via the corresponding <code>ImageryLayer.DEFAULT_...</code>>.
+ *
+ * Note that the type of the flags can be <code>boolean</code> or
+ * <code>number</code>. Users should check for these flags having
+ * a 'truthy' or 'falsy' value.
  */
 class ImageryFlags {
   constructor() {

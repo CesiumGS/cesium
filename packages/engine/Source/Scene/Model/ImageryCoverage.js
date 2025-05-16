@@ -9,13 +9,15 @@
  * represent the imagery tiles that are covered by the cartographic
  * bounding rectangle of the primitive positions.
  *
- * TODO_DRAPING: Implementation note for ImageryCoverage:
+ * Implementation note for ImageryCoverage:
+ *
  * This roughly corresponds to the <code>TileImagery</code> that is
- * created in my favorite draping-related time sink, namely in
- * <code>ImageryLayer._createTileImagerySkeletons</code>.
+ * created in <code>ImageryLayer._createTileImagerySkeletons</code>.
  * But in contrast to the <code>TileImagery</code>, this describes
- * <i>which</i> imagery tile is used, does not store the ("loading"
- * and "ready"...) imagery <i>itself</i>.
+ * the imagery tile (in terms of its coordinates), and does not
+ * store the imagery itself.
+ *
+ * @private
  */
 class ImageryCoverage {
   /**
@@ -24,9 +26,8 @@ class ImageryCoverage {
    * @param {number} x x-coordinate of the imagery tile
    * @param {number} y y-coordinate of the imagery tile
    * @param {number} level level of the imagery tile
-   * @param {Cartesian4} textureCoordinateRectangle The texture coordinate
-   * rectangle from the imagery tile that is covered, i.e. the
-   * (minU, minV, maxU, maxV) coordinate range.
+   * @param {CartesianRectangle} textureCoordinateRectangle The texture coordinate
+   * rectangle from the imagery tile that is covered
    */
   constructor(x, y, level, textureCoordinateRectangle) {
     /**
@@ -57,10 +58,10 @@ class ImageryCoverage {
      * The texture coordinate range that is covered from the
      * imagery tile.
      *
-     * This is a <code>Cartesian4</code> that contains the
+     * This is a <code>CartesianRectangle</code> that contains the
      * (minU, minV, maxU, maxV) coordinate range.
      *
-     * @type {Cartesian4}
+     * @type {CartesianRectangle}
      * @readonly
      */
     this.textureCoordinateRectangle = textureCoordinateRectangle;

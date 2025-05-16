@@ -15,9 +15,10 @@ import MappedPositions from "./MappedPositions.js";
  * The <code>ModelImagery</code> class creates one instance of this
  * class for each primitive that appears in the model.
  *
- * It is responsible for computing the mapped (cartographic) positions
- * of the primitive, and computing the imagery tiles that are covered
- * by these mapped positions.
+ * It is responsible for computing
+ * - the mapped (cartographic) positions of the primitive
+ * - the imagery tiles that are covered by these mapped positions
+ * - the texture coordinates (attributes) that correspond to these mapped positions
  */
 class ModelPrimitiveImagery {
   /**
@@ -102,6 +103,16 @@ class ModelPrimitiveImagery {
     this._mappedPositionsModelMatrix = new Matrix4();
 
     /**
+     * The texture coordinate attributes, one for each projection.
+     *
+     * This contains one <code>ModelComponents.Attribute</code> for each
+     * unique projection that is used in the imagery layers. These
+     * texture coordinate attributes are computed based on the mapped
+     * positions for the respective ellipsoid of that projection.
+     */
+    this._imageryTexCoordAttributesPerProjection = undefined;
+
+    /**
      * Information about the imagery tiles that are covered by the positions
      * of the primitive.
      *
@@ -124,9 +135,9 @@ class ModelPrimitiveImagery {
      * <code>update</code> function (which are triggered from the
      * <code>Model.update</code> function, each frame), the
      * <code>_updateImageries</code> function will be called, and
-     * process the imagery tiles, until all them them are in the
-     * <code>ImageryState.READY</code> state, at which point this
-     * flag is set to <code>true</code>.
+     * process the imagery tiles, until all them them are in a
+     * state like <code>ImageryState.READY</code>, at which point
+     * this flag is set to <code>true</code>.
      *
      * @type {boolean}
      * @private
@@ -185,6 +196,11 @@ class ModelPrimitiveImagery {
    *     by the mapped positions
    *   </li>
    *   <li>
+   *     Compute the texture coordinate attributes for the imagery, one
+   *     for each projection, and store them as the
+   *     <code>_imageryTexCoordAttributesPerProjection</code>
+   *   </li>
+   *   <li>
    *     Update the imageries (i.e. processing their state machine by
    *     calling <code>Imagery.processStateMachine</code>) until they
    *     are in the <code>ImageryState.READY</code> state
@@ -202,15 +218,51 @@ class ModelPrimitiveImagery {
       this._mappedPositionsPerEllipsoid =
         this._computeMappedPositionsPerEllipsoid();
       this._coveragesPerLayer = undefined;
+      this.destroyImageryTexCoordAttributes();
+    }
+
+    if (!defined(this._imageryTexCoordAttributesPerProjection)) {
+      this._imageryTexCoordAttributesPerProjection =
+        this._computeImageryTexCoordsAttributesPerProjection(
+          frameState.context,
+        );
     }
 
     if (!defined(this._coveragesPerLayer)) {
-      this._coveragesPerLayer = this._computeCoveragesPerLayer(frameState);
+      this._coveragesPerLayer = this._computeCoveragesPerLayer();
       this._allImageriesReady = false;
     }
     if (!this._allImageriesReady) {
       this._updateImageries(frameState);
     }
+  }
+
+  /**
+   * Destroy the <code>_imageryTexCoordAttributesPerProjection</code>
+   * array.
+   *
+   * This is called for cleaning up the allocated GPU resources, before
+   * they are supposed to be re-computed with
+   * <code>_computeImageryTexCoordsAttributesPerProjection</code>
+   */
+  destroyImageryTexCoordAttributes() {
+    const attributes = this._imageryTexCoordAttributesPerProjection;
+    if (!defined(attributes)) {
+      return;
+    }
+    const n = attributes.length;
+    for (let i = 0; i < n; i++) {
+      const attribute = attributes[i];
+      if (defined(attribute)) {
+        if (defined(attribute.buffer)) {
+          if (!attribute.buffer.isDestroyed()) {
+            attribute.buffer.destroy();
+          }
+        }
+        attributes[i] = undefined;
+      }
+    }
+    delete this._imageryTexCoordAttributesPerProjection;
   }
 
   /**
@@ -231,7 +283,6 @@ class ModelPrimitiveImagery {
     const model = this._model;
     const lastModelMatrix = this._mappedPositionsModelMatrix;
     if (!Matrix4.equals(model.modelMatrix, lastModelMatrix)) {
-      // XXX_DRAPING Check whether this should be done here...
       model.resetDrawCommands();
       return true;
     }
@@ -327,6 +378,125 @@ class ModelPrimitiveImagery {
   }
 
   /**
+   * Computes one coordinate attribute for each unique projection
+   * that is used in the imagery layers.
+   *
+   * This is taking the mapped positions, projecting them with
+   * the respective projection, and creating a texture coordinate
+   * attribute that describes the texture coordinates of these
+   * positions, relative to the cartographic bounding rectangle
+   * of the mapped positions.
+   *
+   * @param {Context} context The GL context
+   * @returns {ModelComponents.Attribute[]} The attributes
+   */
+  _computeImageryTexCoordsAttributesPerProjection(context) {
+    const model = this._model;
+    const imageryLayers = model.imageryLayers;
+
+    // Compute the arrays containing ALL projections and the array
+    // containing the UNIQUE projections from the imagery layers.
+    // Texture coordinate attributes only have to be created once
+    // for each projection.
+    const allProjections =
+      ModelPrimitiveImagery._extractProjections(imageryLayers);
+    const uniqueProjections = [...new Set(allProjections)];
+
+    // Create one texture coordinate attribute for each distinct
+    // projection that is used in the imagery layers
+    const attributes = this._createImageryTexCoordAttributes(
+      uniqueProjections,
+      context,
+    );
+    return attributes;
+  }
+
+  /**
+   * Computes an array containing the projections that are used in
+   * the given imagery layers.
+   *
+   * (Note that this array may contain duplicates)
+   *
+   * @param {ImageryLayerCollection} imageryLayers The imagery layers
+   * @returns {MapProjection[]} The projections
+   * @private
+   */
+  static _extractProjections(imageryLayers) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayers", imageryLayers);
+    //>>includeEnd('debug');
+
+    const projections = [];
+    const length = imageryLayers.length;
+    for (let i = 0; i < length; i++) {
+      const imageryLayer = imageryLayers.get(i);
+      const projection = ModelPrimitiveImagery._getProjection(imageryLayer);
+      projections.push(projection);
+    }
+    return projections;
+  }
+
+  /**
+   * Returns the projection of the given imagery layer.
+   *
+   * This only exists to hide a train wreck
+   *
+   * @param {ImageryLayer} imageryLayer The imagery layer
+   * @returns {MapProjection} The projection
+   * @private
+   */
+  static _getProjection(imageryLayer) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayer", imageryLayer);
+    //>>includeEnd('debug');
+    const projection = imageryLayer.imageryProvider.tilingScheme.projection;
+    return projection;
+  }
+
+  /**
+   * Create texture coordinates, one for each projection.
+   *
+   * This will create a texture coordinate attribute for each of the given projections,
+   * using <code>ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions</code>,
+   *
+   * (This means that the given projections should indeed be unique,
+   * i.e. contain no duplicates)
+   *
+   * @param {MapProjection[]} uniqueProjections The projections
+   * @param {Context} context The GL context
+   * @returns {ModelComponents.Attribute[]} The attributes
+   */
+  _createImageryTexCoordAttributes(uniqueProjections, context) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("uniqueProjections", uniqueProjections);
+    Check.defined("context", context);
+    //>>includeEnd('debug');
+
+    const imageryTexCoordAttributePerUniqueProjection = [];
+    const length = uniqueProjections.length;
+    for (let i = 0; i < length; i++) {
+      // Obtain the mapped positions for the ellipsoid that is used
+      // in the projection (i.e. the cartographic positions of the
+      // primitive, for the respective ellipsoid)
+      const projection = uniqueProjections[i];
+      const ellipsoid = projection.ellipsoid;
+      const mappedPositions = this.mappedPositionsForEllipsoid(ellipsoid);
+
+      // Create the actual attribute
+      const imageryTexCoordAttribute =
+        ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions(
+          mappedPositions,
+          projection,
+          context,
+        );
+      imageryTexCoordAttributePerUniqueProjection.push(
+        imageryTexCoordAttribute,
+      );
+    }
+    return imageryTexCoordAttributePerUniqueProjection;
+  }
+
+  /**
    * Compute the coverage information for the primitive, based on the
    * imagery layers that are associated with the model.
    *
@@ -385,18 +555,12 @@ class ModelPrimitiveImagery {
       imageryLevel,
     );
 
-    // XXX_DRAPING Debug log
-    /*/
-    {
-      console.log("Computed coverages for imageryLayer ", imageryLayer);
-      console.log("Coverages: ", coverages.length);
-      for (const coverage of coverages) {
-        console.log(coverage);
-      }
-    }
-    //*/
-
     // XXX_DRAPING Adding references here? Where will they be removed?
+    // There will likely have to be a "removeReferencesOfCoverages"
+    // function that goes through the this._coveragesPerLayer and
+    // (in the context of deleting them and setting them to undefined),
+    // and decreases the reference count of all imageries that are
+    // referred to from that
     //*
     for (const coverage of coverages) {
       const imagery = imageryLayer.getImageryFromCache(
@@ -416,8 +580,6 @@ class ModelPrimitiveImagery {
    * imagery layer that is suitable for a primitive with the given bounding
    * rectangle.
    *
-   * TODO_DRAPING Preliminary...
-   *
    * @param {ImageryLayer} imageryLayer The imagery layer
    * @param {Rectangle} cartographicBoundingRectangle The cartographic
    * bounding rectangle, as obtained from the MappedPositions for
@@ -435,10 +597,9 @@ class ModelPrimitiveImagery {
     // Solving for "level" yields
     // level = log2( numberOfTilesCovered * r / b)
 
-    // TODO_DRAPING This may have to be configurable, eventually.
-    // Right now, it implies to goal to drape approximately (!)
-    // one imagery tile on each primitive. In practice, it may
-    // be more (up to 9 in theory)
+    // The goal here is to drape approximately (!) one imagery
+    // tile on each primitive. In practice, it may be more
+    // (up to 9 in theory)
     const desiredNumberOfTilesCovered = 1;
 
     // Perform the computation of the desired level, based on the
@@ -469,6 +630,7 @@ class ModelPrimitiveImagery {
     //console.log(
     //  `To cover ${desiredNumberOfTilesCovered} tiles need level ${desiredLevel}, clamped to ${validImageryLevel}, as int ${imageryLevel}`,
     //);
+
     return imageryLevel;
   }
 
@@ -484,13 +646,14 @@ class ModelPrimitiveImagery {
    * have been computed by calling <code>_computeCoverages</code>).
    *
    * For each covered imagery tile, this will call
-   * <code>Imagery.processStateMachine</code> until they are in the
-   * "ready" state.
+   * <code>Imagery.processStateMachine</code> until they are either
+   * READY, FAILED, or INVALID.
    *
-   * Once they all are in the "ready" state, will set the
+   * Once they all are in one of these final states, it will set the
    * <code>_allImageriesReady</code> flag to <code>true</code>.
    *
-   * @param {FrameState} frameState The frame state
+   * @param {FrameState} frameState The frame state, to be passed to
+   * <code>imagery.processStateMachine</code>
    * @private
    */
   _updateImageries(frameState) {
@@ -511,22 +674,28 @@ class ModelPrimitiveImagery {
           coverage.level,
         );
 
-        const countsAsReadyInThatObscureStateMachine =
+        // In the context of loading the imagery for draping
+        // it over the primitive, the imagery counts as "ready"
+        // when it is really ready, but also when it failed
+        // or was invalid (otherwise, the primitive would
+        // never turn "ready"
+        const countsAsReady =
           imagery.state === ImageryState.READY ||
           imagery.state === ImageryState.FAILED ||
           imagery.state === ImageryState.INVALID;
-        if (!countsAsReadyInThatObscureStateMachine) {
+        if (!countsAsReady) {
           allImageriesReady = false;
           imagery.processStateMachine(frameState, false, false);
         }
       }
     }
 
+    // When the imageries turned ready, reset the draw commands
+    // to trigger a rendering with the updated draw commands
+    // that include the imagery now.
     if (allImageriesReady) {
-      // XXX_DRAPING Debug log
-      //console.log("All imageries are ready now in ModelPrimitiveImagery");
+      model.resetDrawCommands();
     }
-
     this._allImageriesReady = allImageriesReady;
   }
 
@@ -579,6 +748,27 @@ class ModelPrimitiveImagery {
     throw new DeveloperError(
       `Could not find mapped positions for ellipsoid ${ellipsoid}`,
     );
+  }
+
+  /**
+   * Returns the texture coordinate attributes for the primitive that
+   * are used for draping the imagery.
+   *
+   * This will be available when this object is <code>ready</code>, and
+   * will contain one attribute for each unique projection that appears
+   * in the imagery layers.
+   *
+   * @returns {ModelComponents.Attribute[]} The attributes
+   */
+  imageryTexCoordAttributesPerProjection() {
+    const imageryTexCoordAttributesPerProjection =
+      this._imageryTexCoordAttributesPerProjection;
+    if (!defined(imageryTexCoordAttributesPerProjection)) {
+      throw new DeveloperError(
+        `The imagery texture coordinate attributes have not been computed yet`,
+      );
+    }
+    return this._imageryTexCoordAttributesPerProjection;
   }
 
   /**
@@ -667,7 +857,7 @@ class ModelPrimitiveImagery {
   /**
    * Returns the ellipsoid of the given imagery layer.
    *
-   * XXX_DRAPING This only exists to hide a train wreck
+   * This only exists to hide a train wreck
    *
    * @param {ImageryLayer} imageryLayer The imagery layer
    * @returns {Ellipsoid} The ellipsoid

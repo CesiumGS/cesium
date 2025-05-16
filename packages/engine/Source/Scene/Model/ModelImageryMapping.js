@@ -11,9 +11,9 @@ import Check from "../../Core/Check.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
 import ModelReader from "./ModelReader.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * A class for computing the texture coordinates of imagery that is
@@ -104,34 +104,6 @@ class ModelImageryMapping {
       projection,
     );
 
-    // XXX_DRAPING DEBUG LOG
-    /*//
-    {
-      console.log("Cartographic:");
-      for (const cp of cartographicPositions) {
-        const minX = CesiumMath.toDegrees(cartographicBoundingRectangle.west);
-        const maxX = CesiumMath.toDegrees(cartographicBoundingRectangle.east);
-        const minY = CesiumMath.toDegrees(cartographicBoundingRectangle.south);
-        const maxY = CesiumMath.toDegrees(cartographicBoundingRectangle.north);
-        const x = CesiumMath.toDegrees(cp.longitude);
-        const y = CesiumMath.toDegrees(cp.latitude);
-        const inside = (x >= minX && x <= maxX && y >= minY && y <= maxY);
-        console.log(` ${x} in ${minX} ${maxX} and ${y} in ${minY} ${maxY} : ${inside}`);
-      }
-      console.log("Projected:");
-      for (const cp of projectedPositions) {
-        const minX = boundingRectangle.x;
-        const maxX = boundingRectangle.x + boundingRectangle.width;
-        const minY = boundingRectangle.y;
-        const maxY = boundingRectangle.y + boundingRectangle.height;
-        const x = cp.x;
-        const y = cp.y;
-        const inside = (x >= minX && x <= maxX && y >= minY && y <= maxY);
-        console.log(` ${x} in ${minX} ${maxX} and ${y} in ${minY} ${maxY} : ${inside}`);
-      }
-    }
-    //*/
-
     // Relativize the projected positions into the bounding rectangle
     // to obtain texture coordinates
     const texCoords = ModelImageryMapping.computeTexCoords(
@@ -160,10 +132,6 @@ class ModelImageryMapping {
    * that contains the texture coordinates for the given vertex positions,
    * after they are projected using the given projection, normalized to
    * their bounding rectangle.
-   *
-   * NOTE: The `index` of the resulting attribute will be set to -1.
-   * The receiver/caller is responsible for knowing which index this
-   * attribute will have.
    *
    * @param {Iterable<Cartographic>} cartographicPositions The
    * cartographic positions
@@ -306,6 +274,33 @@ class ModelImageryMapping {
   }
 
   /**
+   * Creates a new iterable that filters the given one, based on
+   * the given inclusion predicate
+   *
+   * @param {Iterable} iterable The input iterable
+   * @param {Function} inclusionPredicate The inclusion predicate
+   * @returns {Iterable} The filtered iterable
+   */
+  static filter(iterable, inclusionPredicate) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("iterable", iterable);
+    Check.defined("inclusionPredicate", inclusionPredicate);
+    //>>includeEnd('debug');
+
+    const result = {
+      [Symbol.iterator]: function* () {
+        for (const element of iterable) {
+          const included = inclusionPredicate(element);
+          if (included) {
+            yield element;
+          }
+        }
+      },
+    };
+    return result;
+  }
+
+  /**
    * Computes the bounding rectangle of the given cartographic positions,
    * stores it in the given result, and returns it.
    *
@@ -388,11 +383,14 @@ class ModelImageryMapping {
     //>>includeEnd('debug');
 
     const cartographicPosition = new Cartographic();
-    const cartographicPositions = ModelImageryMapping.map(positions, (p) => {
-      // TODO_DRAPING Handle (0,0,0)...
+    const allCartographicPositions = ModelImageryMapping.map(positions, (p) => {
       ellipsoid.cartesianToCartographic(p, cartographicPosition);
       return cartographicPosition;
     });
+    const cartographicPositions = ModelImageryMapping.filter(
+      allCartographicPositions,
+      defined,
+    );
     return cartographicPositions;
   }
 
@@ -504,17 +502,27 @@ class ModelImageryMapping {
       typedArray: texCoordsTypedArray,
       usage: BufferUsage.STATIC_DRAW,
     });
+
+    // TODO_DRAPING Review this. Probably, some cleanup
+    // has to happen somewhere else after setting this:
+    texCoordsBuffer.vertexArrayDestroyable = false;
+
     const texCoordAttribute = {
-      index: -1, // This has to be determined by the user!
+      name: "Imagery Texture Coordinates",
       semantic: VertexAttributeSemantic.TEXCOORD,
-      enabled: true,
-      vertexBuffer: texCoordsBuffer,
-      componentsPerAttribute: 2,
+      setIndex: 0,
       componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-      offsetInBytes: 0,
-      strideInBytes: 0,
-      instanceDivisor: 0,
+      type: AttributeType.VEC2,
+      normalized: false,
+      count: texCoordsTypedArray.length / 2,
+      min: undefined,
+      max: undefined,
+      constant: new Cartesian2(0, 0),
+      quantization: undefined,
+      typedArray: texCoordsTypedArray,
+      buffer: texCoordsBuffer,
+      byteOffset: 0,
+      byteStride: undefined,
     };
     return texCoordAttribute;
   }

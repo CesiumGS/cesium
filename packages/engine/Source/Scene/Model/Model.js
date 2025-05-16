@@ -1379,8 +1379,8 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * If this model is part of a <code>Model3DTileContent</code> of a tileset that
-   * has imagery layers, then this will return the <code>ImageryLayerCollection</code>
+   * If this model is part of a <code>Model3DTileContent</code> of a tileset,
+   * then this will return the <code>ImageryLayerCollection</code>
    * of that tileset. Otherwise, <code>undefined</code> is returned.
    *
    * @memberof Model.prototype
@@ -1390,11 +1390,6 @@ Object.defineProperties(Model.prototype, {
    */
   imageryLayers: {
     get: function () {
-      // TODO_DRAPING: Currently, this implies that a Model only can have
-      // imagery when it is part of a tileset. One could make that case
-      // that it should be possible to assign imagery to a standalone
-      // model. This could probably be implemented here, with reasonable
-      // effort.
       if (defined(this._content)) {
         const tileset = this._content.tileset;
         if (defined(tileset)) {
@@ -1958,12 +1953,19 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
-  // XXX_DRAPING Check whether this is the right place, time, and state...
   const modelImagery = this._modelImagery;
   modelImagery.update(frameState);
   if (!modelImagery.ready) {
-    return;
+    // XXX_DRAPING A compile-time flag to wait for the imagery
+    // to be ready before considering the model to be ready:
+    const waitForImagery = false;
+    if (waitForImagery) {
+      return;
+    }
   }
+
+  // XXX_DRAPING_UPSAMPLING Experiments
+  //ModelImageryUpsampling.handle(this, frameState);
 
   updateFeatureTableId(this);
   updateStyle(this);

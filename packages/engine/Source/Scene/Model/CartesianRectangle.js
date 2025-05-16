@@ -1,9 +1,17 @@
-// TODO_DRAPING Preliminary, internal class for texture
-// coordinate and index range computations. This could
-// be emulated with a "BoundingRectangle", but min/max
-// is often more convenient than min/size, and the
-// "BoundingRectangle" does not offer containment checks
+/**
+ * Internal class for texture coordinate and index range computations.
+ *
+ * @private
+ */
 class CartesianRectangle {
+  /**
+   * Creates a new instance
+   *
+   * @param {number} [minX=0] The minimum x-coordinate
+   * @param {number} [minY=0] The minimum y-coordinate
+   * @param {number} [maxX=0] The maximum x-coordinate
+   * @param {number} [maxY=0] The maximum y-coordinate
+   */
   constructor(minX, minY, maxX, maxY) {
     this._minX = minX ?? 0.0;
     this._minY = minY ?? 0.0;
@@ -11,6 +19,11 @@ class CartesianRectangle {
     this._maxY = maxY ?? 0.0;
   }
 
+  /**
+   * Returns the minimum x-coordinate
+   *
+   * @returns {number} The coordinate
+   */
   get minX() {
     return this._minX;
   }
@@ -18,6 +31,11 @@ class CartesianRectangle {
     this._minX = value;
   }
 
+  /**
+   * Returns the minimum y-coordinate
+   *
+   * @returns {number} The coordinate
+   */
   get minY() {
     return this._minY;
   }
@@ -25,6 +43,11 @@ class CartesianRectangle {
     this._minY = value;
   }
 
+  /**
+   * Returns the maximum x-coordinate
+   *
+   * @returns {number} The coordinate
+   */
   get maxX() {
     return this._maxX;
   }
@@ -32,6 +55,11 @@ class CartesianRectangle {
     this._maxX = value;
   }
 
+  /**
+   * Returns the maximum y-coordinate
+   *
+   * @returns {number} The coordinate
+   */
   get maxY() {
     return this._maxY;
   }
@@ -39,9 +67,39 @@ class CartesianRectangle {
     this._maxY = value;
   }
 
+  /**
+   * Returns whether this rectangle contains the given coordinates,
+   * using the default containment check, which includes the
+   * minimum point, but excludes the maximum point
+   *
+   * @param {number} x The x-coordinate
+   * @param {number} y The y-coordinate
+   * @returns The result
+   */
+  contains(x, y) {
+    return x >= this.minX && x < this.maxX && y >= this.minY && y < this.maxY;
+  }
+
+  /**
+   * Returns whether this rectangle contains the given coordinates,
+   * excluding the border
+   *
+   * @param {number} x The x-coordinate
+   * @param {number} y The y-coordinate
+   * @returns The result
+   */
   containsExclusive(x, y) {
     return x > this.minX && x < this.maxX && y > this.minY && y < this.maxY;
   }
+
+  /**
+   * Returns whether this rectangle contains the given coordinates,
+   * including the border
+   *
+   * @param {number} x The x-coordinate
+   * @param {number} y The y-coordinate
+   * @returns The result
+   */
   containsInclusive(x, y) {
     return x >= this.minX && x <= this.maxX && y >= this.minY && y <= this.maxY;
   }

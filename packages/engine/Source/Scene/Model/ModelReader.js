@@ -6,11 +6,11 @@ import Cartesian4 from "../../Core/Cartesian4.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import AttributeCompression from "../../Core/AttributeCompression.js";
-
-import AttributeType from "../AttributeType.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix4 from "../../Core/Matrix4.js";
+
+import AttributeType from "../AttributeType.js";
 
 /**
  * A class for reading the data from a <code>ModelComponents.Attribute</code>.
@@ -32,6 +32,10 @@ import Matrix4 from "../../Core/Matrix4.js";
  * that. The fact that that TypedArrays can be read/written as "bulk", and
  * then offer access that is "as efficient as it can be" could be a
  * justification, as part of the performance-genericity trade-off
+ *
+ * NOTE: All this does not properly handle MATn types. There should be SOME
+ * abstraction for element- and component-wise access of the data. See
+ * https://github.com/javagl/JglTF/blob/84ce6d019fec3b75b6af1649bbe834005b2c620f/jgltf-model/src/main/java/de/javagl/jgltf/model/AbstractAccessorData.java#L149
  */
 class ModelReader {
   /**
@@ -134,6 +138,7 @@ class ModelReader {
     // If the byte stride is the default (i.e. the total element size),
     // then just fetch the whole buffer data into a typed array of the
     // desired target type, and return it
+    const byteOffset = attribute.byteOffset;
     const byteStride = attribute.byteStride;
     const bytesPerComponent = ComponentDatatype.getSizeInBytes(componentType);
     const defaultByteStride = componentsPerElement * bytesPerComponent;
@@ -142,7 +147,7 @@ class ModelReader {
         componentType,
         totalComponentCount,
       );
-      buffer.getBufferData(typedArray);
+      buffer.getBufferData(typedArray, byteOffset);
       return typedArray;
     }
 
@@ -157,7 +162,6 @@ class ModelReader {
       componentType,
       totalComponentCount,
     );
-    const byteOffset = attribute.byteOffset;
     const elementByteStride = byteStride ?? defaultByteStride;
     const dataView = new DataView(
       fullTypedArray.buffer,
@@ -678,9 +682,7 @@ class ModelReader {
    * @param {ModelComponents.Primitive} primitive
    * @returns {TypedArray} TODO
    */
-  static readIndicesAsTriangleIndicesTypedArray(primitive) {
-    const indices = primitive.indices;
-    const primitiveType = primitive.primitiveType;
+  static readIndicesAsTriangleIndicesTypedArray(indices, primitiveType) {
     const originalIndices = ModelReader.readIndicesAsTypedArray(indices);
     if (primitiveType === PrimitiveType.TRIANGLES) {
       return originalIndices;

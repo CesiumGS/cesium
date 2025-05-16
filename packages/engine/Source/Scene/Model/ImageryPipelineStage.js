@@ -1,13 +1,17 @@
 import defined from "../../Core/defined.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Check from "../../Core/Check.js";
+import Rectangle from "../../Core/Rectangle.js";
 
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 import ImageryLayer from "../ImageryLayer.js";
+import AttributeType from "../AttributeType.js";
 
-import ImageryPipelineStageProcessing from "./ImageryPipelineStageProcessing.js";
 import ImageryFlags from "./ImageryFlags.js";
+import ModelPrimitiveImagery from "./ModelPrimitiveImagery.js";
+import ImageryInput from "./ImageryInput.js";
+import ImageryState from "../ImageryState.js";
 
 /**
  * TODO_DRAPING: A debugging flag to draw the boundaries of imagery tiles
@@ -15,15 +19,21 @@ import ImageryFlags from "./ImageryFlags.js";
  */
 const debugDrawImageryBoundaries = false;
 
+// Scratch variable for _computeTextureTranslationAndScale
+const nativeBoundingRectangleScratch = new Rectangle();
+
+// Scratch variable for _computeTextureTranslationAndScale
+const nativeImageryRectangleScratch = new Rectangle();
+
 /**
  * A pipeline stage that modifies the model shader to take into account
  * imagery textures that are draped over a primitive of the model, when it
  * is part a <code>Model3DTileContent</code> of a <code>Cesium3DTileset</code>
  * that has <code>imageryLayers</code> associated with it.
  *
- * TODO_DRAPING: Add more details as they become clearer. Most of what is done here tries to emulate the parts from
+ * Most of what is done here tries to emulate the parts from
  * https://github.com/CesiumGS/cesium/blob/6cc004aaff586bb59f07f199216ae511014cf5a9/packages/engine/Source/Shaders/GlobeFS.glsl#L166
- * that are relevant for imagery.
+ * that are relevant for imagery, using the more modern ShaderBuilder structures.
  *
  * @namespace ImageryPipelineStage
  *
@@ -33,56 +43,56 @@ class ImageryPipelineStage {
   /**
    * Process a primitive.
    *
-   * TODO_DRAPING: Comments...
+   * This will update the render resources of the given primitive,
+   * depending on the imagery that is covered by the given primitive.
+   *
+   * This will obtain the <code>ModelPrimitiveImagery</code> from
+   * the given primitive, and use that to compute the actual
+   * <code>ImageryInput</code> objects that describe the information
+   * that has to be passed to the shader for draping the imagery over
+   * the primitive.
+   *
+   * After the <code>ImageryInput</code> has been computed, it will
+   * extend the render resources with the texture coordinate
+   * attribute that has to be used for the imagery, and augment
+   * the <code>primitiveRenderResources.shaderBuilder</code> with
+   * the information hat is required for the draping.
    *
    * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for the primitive
    * @param {ModelComponents.Primitive} primitive The primitive to be rendered
    * @param {FrameState} frameState The frame state.
    */
   static process(primitiveRenderResources, primitive, frameState) {
-    //console.log("Running ImageryPipelineStage");
-
     const model = primitiveRenderResources.model;
     const modelPrimitiveImagery = primitive.modelPrimitiveImagery;
 
-    // XXX_DRAPING
-    //if (!defined(modelPrimitiveImagery)) {
-    //  console.log("Or rather not, because there is no modelPrimitiveImagery");
-    //  return;
-    //}
-
-    // This pipeline stage should not be executed for a primitive that
-    // does not have a ModelPrimitiveImagery or when it is not 'ready',
-    // but check it anyhow:
-
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("modelPrimitiveImagery", modelPrimitiveImagery);
-    if (!modelPrimitiveImagery.ready) {
-      // XXX_DRAPING Throw here in the future...
-      //throw new DeveloperError("The modelPrimitiveImagery is not ready")
-      console.error("The modelPrimitiveImagery is not ready");
+    // When the creation of the model primitive imagery is happening
+    // asynchronously, then the primitive may not yet contain it.
+    // Return early in this case
+    if (!defined(modelPrimitiveImagery)) {
       return;
     }
-    //>>includeEnd('debug');
 
-    const imageryLayers = model.imageryLayers;
+    // Similarly, when the model primitive imagery is not yet ready,
+    // then nothing can be done here
+    if (!modelPrimitiveImagery.ready) {
+      return;
+    }
 
     // Compute the arrays containing ALL projections and the array
-    // containing the UNIQUE projections from the imagery layers.
-    // A texture coordinate attribute only have to be created only
-    // once for each projection.
+    // containing the UNIQUE projections from the imagery layers,
+    // to establish the mapping between the imagery index and the
+    // imagery texture coordinate attribute set index.
+    // (This should be implemented and/or document better...)
+    const imageryLayers = model.imageryLayers;
     const allProjections =
-      ImageryPipelineStageProcessing._extractProjections(imageryLayers);
+      ModelPrimitiveImagery._extractProjections(imageryLayers);
     const uniqueProjections = [...new Set(allProjections)];
-
-    // Create one texture coordinate attribute for each distinct
-    // projection that is used in the imagery layers
-    ImageryPipelineStageProcessing._createImageryTexCoordAttributes(
-      uniqueProjections,
-      modelPrimitiveImagery,
-      primitiveRenderResources,
-      frameState.context,
-    );
+    const imageryTexCoordAttributeSetIndices =
+      ImageryPipelineStage._computeIndexMapping(
+        allProjections,
+        uniqueProjections,
+      );
 
     // Create the `ImageryInput` objects that describe
     // - the texture
@@ -90,34 +100,22 @@ class ImageryPipelineStage {
     // - translation and scale
     // - index of the imagery texture coordinate attribute
     // to be passed to the actual imagery pipeline stage execution
-    const imageryTexCoordAttributeSetIndices =
-      ImageryPipelineStageProcessing._computeIndexMapping(
-        allProjections,
-        uniqueProjections,
-      );
-    const imageryInputs = ImageryPipelineStageProcessing._createImageryInputs(
+    const imageryInputs = ImageryPipelineStage._createImageryInputs(
       imageryLayers,
       modelPrimitiveImagery,
       imageryTexCoordAttributeSetIndices,
     );
 
-    // XXX_DRAPING Can happen, shouldn't happen, just bail out here...
+    // This can happen when none of the imagery textures could
+    // be obtained, because they had all been INVALID/FAILED.
+    // Bail out in this case
     if (imageryInputs.length === 0) {
-      console.log(`XXX_DRAPING Found no valid textures`);
       return;
     }
 
-    // XXX_DRAPING Limit to single input for debugging
-    /*/
-    if (imageryInputs.length > 1) {
-      console.log("XXX_DRAPING Using only a single input!");
-      const temp = imageryInputs[1];
-      imageryInputs.length = 1;
-      imageryInputs[0] = temp;
-    }
-    //*/
     // XXX_DRAPING This will have to be handled with upsampling.
-    // For now, just truncate the textures to prevent crashes.
+    // For now, just truncate the textures to not exceed the
+    // number of texture units
     if (imageryInputs.length > 10) {
       console.log(
         `Warning: Found ${imageryInputs.length} texture units, truncating`,
@@ -125,11 +123,13 @@ class ImageryPipelineStage {
       imageryInputs.length = 10;
     }
 
-    // TODO_DRAPING: This receives ALL imagery layers right now.
-    // If there is no ImageryInput for one of them, then the
-    // parts that are specific for that could be omitted, and
-    // imageryLayers = imageryInputs.map((e) => e.imageryLayer);
-    // could be used.
+    // Add the imagery texture coordinate attributes to the render
+    // resources
+    ImageryPipelineStage._addImageryTexCoordAttributesToRenderResources(
+      modelPrimitiveImagery,
+      primitiveRenderResources,
+    );
+
     const imageryLayersArray = [];
     for (let i = 0; i < imageryLayers.length; i++) {
       imageryLayersArray.push(imageryLayers.get(i));
@@ -141,6 +141,60 @@ class ImageryPipelineStage {
       imageryInputs,
       uniqueProjections.length,
     );
+  }
+
+  /**
+   * Add one attribute to the render resources, for each imagery texture
+   * coordinate that was computed in the given model primitive imagery
+   * (one for each projection)
+   *
+   * @param {ModelPrimitiveImagery} modelPrimitiveImagery The model primitive imagery
+   * @param {PrimitiveRenderResources} primitiveRenderResources The render resources
+   */
+  static _addImageryTexCoordAttributesToRenderResources(
+    modelPrimitiveImagery,
+    primitiveRenderResources,
+  ) {
+    const imageryTexCoordAttributes =
+      modelPrimitiveImagery.imageryTexCoordAttributesPerProjection();
+    for (const imageryTexCoordAttribute of imageryTexCoordAttributes) {
+      ImageryPipelineStage._addImageryTexCoordAttributeToRenderResources(
+        imageryTexCoordAttribute,
+        primitiveRenderResources,
+      );
+    }
+  }
+
+  /**
+   * Add the given attribute to the render resources
+   *
+   * @param {ModelComponents.Attribute} imageryTexCoordAttribute The attribute
+   * @param {PrimitiveRenderResources} primitiveRenderResources The render resources
+   */
+  static _addImageryTexCoordAttributeToRenderResources(
+    imageryTexCoordAttribute,
+    primitiveRenderResources,
+  ) {
+    const componentsPerAttribute = AttributeType.getNumberOfComponents(
+      imageryTexCoordAttribute.type,
+    );
+    // Convert the given object into another object that essentially
+    // contains the same information, but not exactly, and with most
+    // properties having slightly different names. Shrug.
+    const renderResourcesAttribute = {
+      index: primitiveRenderResources.attributeIndex++,
+      value: defined(imageryTexCoordAttribute.buffer)
+        ? undefined
+        : imageryTexCoordAttribute.constant,
+      vertexBuffer: imageryTexCoordAttribute.buffer,
+      count: imageryTexCoordAttribute.count,
+      componentsPerAttribute: componentsPerAttribute,
+      componentDatatype: imageryTexCoordAttribute.componentDatatype,
+      offsetInBytes: imageryTexCoordAttribute.byteOffset,
+      strideInBytes: imageryTexCoordAttribute.byteStride,
+      normalize: imageryTexCoordAttribute.normalized,
+    };
+    primitiveRenderResources.attributes.push(renderResourcesAttribute);
   }
 
   /**
@@ -240,9 +294,10 @@ class ImageryPipelineStage {
     for (let i = 0; i < imageryLayers.length; i++) {
       const imageryLayer = imageryLayers[i];
 
-      // TODO_DRAPING These are short-circuiting to `number` instead
-      // of `boolean` here. Ignore that or do that clumsy `x = x && y`
-      // or some `!!x` trickery...?
+      // These are short-circuiting to `number` instead
+      // of `boolean` here. With "ecmaVersion: 2021", we
+      // could use "||=" here. Otherwise, there is no
+      // nice shortcut for this.
       imageryFlags.alpha |= imageryLayer.alpha !== 1.0;
       imageryFlags.brightness |=
         imageryLayer.brightness !== ImageryLayer.DEFAULT_BRIGHTNESS;
@@ -388,9 +443,6 @@ class ImageryPipelineStage {
     }
     const parametersString = parameters.join(", ");
 
-    // XXX_DRAPING Debug log
-    //console.log("sampleAndBlend parameters ", parameters);
-
     const signature = `vec4 ${functionId}(${parametersString})`;
     return signature;
   }
@@ -427,14 +479,8 @@ class ImageryPipelineStage {
       ]);
     }
     shaderBuilder.addFunctionLines(functionId, [
-      // XXX_DRAPING This is the part that is documented as "This crazy step stuff"
-      // in GlobeFS.glsl. It's talking about performance. Show me a benchmark!!!
-      //`vec2 alphaMultiplier = step(textureCoordinateRectangle.st, textureCoordinates);`,
-      //`effectiveAlpha = effectiveAlpha * alphaMultiplier.x * alphaMultiplier.y;`,
-      //`alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - textureCoordinates);`,
-      //`effectiveAlpha = effectiveAlpha * alphaMultiplier.x * alphaMultiplier.y;`,
-
-      // Trying the if-approach here...
+      // This is the part that is documented as "This crazy step stuff"
+      // in GlobeFS.glsl. Using the if-approach here...
       `if (textureCoordinates.x < textureCoordinateRectangle.x) effectiveAlpha = 0.0;`,
       `if (textureCoordinates.x > textureCoordinateRectangle.z) effectiveAlpha = 0.0;`,
       `if (textureCoordinates.y < textureCoordinateRectangle.y) effectiveAlpha = 0.0;`,
@@ -563,9 +609,6 @@ class ImageryPipelineStage {
       args.push(`u_imageryTextureColorToAlpha[${i}]`);
     }
 
-    // XXX_DRAPING Debug log
-    //console.log("sampleAndBlend args ", args);
-
     const argsString = args.join(", ");
     return argsString;
   }
@@ -627,7 +670,6 @@ class ImageryPipelineStage {
    * @returns {object} The uniforms
    */
   static _createImageryUniforms(imageryInputs) {
-    // TODO_DRAPING Consider some scratch here, if people think that it matters
     const length = imageryInputs.length;
     const uniforms = {};
     uniforms.imageryTextures = Array(length);
@@ -700,15 +742,296 @@ class ImageryPipelineStage {
     for (const key in uniforms) {
       if (uniforms.hasOwnProperty(key)) {
         const name = `u_${key}`;
-
-        // XXX_DRAPING Debug log
-        //console.log("Adding uniform ", name);
-
         uniformMap[name] = function () {
           return uniforms[key];
         };
       }
     }
+  }
+
+  /**
+   * Create the <code>ImageryInput</code> objects that have to be fed to the imagery
+   * pipeline stage for draping the given imagery layers over the primitive
+   * that is described by the given model primitive imagery.
+   *
+   * This will obtain the <code>ImageryCoverage</code> objects that are provided by
+   * the given model primitive imagery (and that describe the imagery tiles
+   * that are covered by the primitive), and create one <code>ImageryInput</code> for
+   * each of them.
+   *
+   * @param {ImageryLayerCollection} imageryLayers The imagery layers
+   * @param {ModelPrimitiveImagery} modelPrimitiveImagery The model primitive imagery
+   * @param {number[]} imageryTexCoordAttributeSetIndices The array that contains,
+   * for each imagery layer index, the set index of the texture coordinate
+   * attribute that should be used for this imagery. This is the value that
+   * will be used to access the texture coordinate attribute
+   * <code>a_imagery_texCoord_${imageryTexCoordAttributeSetIndex}</code>
+   * in the shader.
+   * @returns {ImageryInput[]} The imagery inputs
+   */
+  static _createImageryInputs(
+    imageryLayers,
+    modelPrimitiveImagery,
+    imageryTexCoordAttributeSetIndices,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayers", imageryLayers);
+    Check.defined("modelPrimitiveImagery", modelPrimitiveImagery);
+    Check.defined(
+      "imageryTexCoordAttributeSetIndices",
+      imageryTexCoordAttributeSetIndices,
+    );
+    //>>includeEnd('debug');
+
+    const imageryInputs = [];
+
+    for (let i = 0; i < imageryLayers.length; i++) {
+      const imageryLayer = imageryLayers.get(i);
+      const imageryTexCoordAttributeSetIndex =
+        imageryTexCoordAttributeSetIndices[i];
+      const mappedPositions =
+        modelPrimitiveImagery.mappedPositionsForImageryLayer(imageryLayer);
+      const cartographicBoundingRectangle =
+        mappedPositions.cartographicBoundingRectangle;
+      const coverages =
+        modelPrimitiveImagery.coveragesForImageryLayer(imageryLayer);
+
+      for (let j = 0; j < coverages.length; j++) {
+        const coverage = coverages[j];
+        const imageryInput = ImageryPipelineStage._createImageryInput(
+          imageryLayer,
+          coverage,
+          cartographicBoundingRectangle,
+          imageryTexCoordAttributeSetIndex,
+        );
+        if (defined(imageryInput)) {
+          imageryInputs.push(imageryInput);
+        }
+      }
+    }
+    return imageryInputs;
+  }
+
+  /**
+   * Create the `ImageryInput` that has to be passed to the imagery pipeline
+   * stage, for the given `ImageryCoverage`.
+   *
+   * The `ImageryCoverage` describes on imagery tile that is covered by the
+   * cartographic bounding rectangle of the primitive positions. This function
+   * obtains the actual `Imagery` object and its texture, computes the
+   * required texture coordinate and scale, and assembles this information
+   * into an `ImageryInput`.
+   *
+   * @param {ImageryLayer} imageryLayer The imagery layer
+   * @param {ImageryCoverage} coverage The imagery coverage
+   * @param {Rectangle} cartographicBoundingRectangle The bounding rectangle
+   * of the cartographic primitive positions
+   * @param {number} imageryTexCoordAttributeSetIndex The set index of the
+   * texture coordinate attribute that should be used for this imagery.
+   * This is the value that will be used to access the texture coordinate
+   * attribute <code>a_imagery_texCoord_${imageryTexCoordAttributeSetIndex}</code>
+   * in the shader.
+   * @returns {ImageryInput|undefined} The imagery input, or undefined if
+   * the imagery for the given coverage turned out to be in the
+   * <code>ImageryState.INVALID/FAILED<code> state, or did not have
+   * a valid texture.
+   * @private
+   */
+  static _createImageryInput(
+    imageryLayer,
+    coverage,
+    cartographicBoundingRectangle,
+    imageryTexCoordAttributeSetIndex,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayer", imageryLayer);
+    Check.defined("coverage", coverage);
+    Check.defined(
+      "cartographicBoundingRectangle",
+      cartographicBoundingRectangle,
+    );
+    Check.typeOf.number.greaterThanOrEquals(
+      "imageryTexCoordAttributeSetIndex",
+      imageryTexCoordAttributeSetIndex,
+      0,
+    );
+    //>>includeEnd('debug');
+
+    const imagery = imageryLayer.getImageryFromCache(
+      coverage.x,
+      coverage.y,
+      coverage.level,
+    );
+
+    // Bail out early if something went wrong in the imagery
+    // loading state machine
+    if (
+      imagery.state === ImageryState.FAILED ||
+      imagery.state === ImageryState.INVALID
+    ) {
+      return undefined;
+    }
+
+    // The texture coordinates are computed for the respective
+    // imagery, so pick either the textureWebMercator or the
+    // texture here
+    let texture = imagery.textureWebMercator;
+    if (!defined(texture)) {
+      texture = imagery.texture;
+      if (!defined(texture)) {
+        // Print an error message only when the imagery
+        // SHOULD actually have a texture
+        if (imagery.state === ImageryState.READY) {
+          console.log(
+            `Imagery at ${coverage.x}, ${coverage.y} (level ${coverage.level}) does not have any texture - state ${imagery.state}`,
+          );
+        }
+        return undefined;
+      }
+    }
+
+    const textureTranslationAndScale =
+      ImageryPipelineStage._computeTextureTranslationAndScale(
+        imageryLayer,
+        cartographicBoundingRectangle,
+        imagery.rectangle,
+      );
+
+    // Convert the texture coordinate rectangle into a Cartesian4
+    // for the consumption as a uniform in the shader
+    const textureCoordinateCartesianRectangle =
+      coverage.textureCoordinateRectangle;
+    const textureCoordinateRectangle = new Cartesian4(
+      textureCoordinateCartesianRectangle.minX,
+      textureCoordinateCartesianRectangle.minY,
+      textureCoordinateCartesianRectangle.maxX,
+      textureCoordinateCartesianRectangle.maxY,
+    );
+
+    const imageryInput = new ImageryInput(
+      imageryLayer,
+      texture,
+      textureTranslationAndScale,
+      textureCoordinateRectangle,
+      imageryTexCoordAttributeSetIndex,
+    );
+    return imageryInput;
+  }
+
+  /**
+   * Compute the translation and scale that has to be applied to
+   * the texture coordinates for mapping the given imagery to
+   * the geometry.
+   *
+   * The given rectangles will be converted into their "native" representation,
+   * using the tiling scheme of the given imagery layer, and passed
+   * to `_computeTextureTranslationAndScaleFromNative` (see that for details).
+   *
+   * @param {ImageryLayer} imageryLayer The imagery layer
+   * @param {Rectangle} nonNativeBoundingRectangle The bounding
+   * rectangle of the geometry
+   * @param {Rectangle} nonNativeImageryRectangle The bounding
+   * rectangle of the imagery
+   * @returns {Cartesian4} The translation and scale
+   * @private
+   */
+  static _computeTextureTranslationAndScale(
+    imageryLayer,
+    nonNativeBoundingRectangle,
+    nonNativeImageryRectangle,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayer", imageryLayer);
+    Check.defined("nonNativeBoundingRectangle", nonNativeBoundingRectangle);
+    Check.defined("nonNativeImageryRectangle", nonNativeImageryRectangle);
+    //>>includeEnd('debug');
+
+    const tilingScheme = imageryLayer.imageryProvider.tilingScheme;
+
+    const nativeBoundingRectangle = tilingScheme.rectangleToNativeRectangle(
+      nonNativeBoundingRectangle,
+      nativeBoundingRectangleScratch,
+    );
+    const nativeImageryRectangle = tilingScheme.rectangleToNativeRectangle(
+      nonNativeImageryRectangle,
+      nativeImageryRectangleScratch,
+    );
+
+    const translationAndScale =
+      ImageryPipelineStage._computeTextureTranslationAndScaleFromNative(
+        nativeBoundingRectangle,
+        nativeImageryRectangle,
+      );
+    return translationAndScale;
+  }
+
+  /**
+   * Compute the translation and scale that has to be applied to
+   * the texture coordinates for mapping the given imagery rectangle
+   * to the geometry rectangle.
+   *
+   * This will compute a Cartesian4 containing the
+   * (offsetX, offsetY, scaleX, scaleY) that have to be applied to
+   * the texture coordinates that that have been computed with
+   * `ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions`.
+   * In the shader, this offset and scale will map the given imagery rectangle
+   * to the geometry * rectangle.
+   *
+   * @param {Imagery} imagery The imagery
+   * @param {Rectangle} nonNativeBoundingRectangle The bounding
+   * rectangle of the geometry
+   * @param {Rectangle} nonNativeImageryRectangle The bounding
+   * rectangle of the imagery
+   * @returns {Cartesian4} The translation and scale
+   * @private
+   */
+  static _computeTextureTranslationAndScaleFromNative(
+    nativeBoundingRectangle,
+    nativeImageryRectangle,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("nativeBoundingRectangle", nativeBoundingRectangle);
+    Check.defined("nativeImageryRectangle", nativeImageryRectangle);
+    //>>includeEnd('debug');
+
+    const invImageryWidth = 1.0 / nativeImageryRectangle.width;
+    const invImageryHeight = 1.0 / nativeImageryRectangle.height;
+    const deltaWest =
+      nativeBoundingRectangle.west - nativeImageryRectangle.west;
+    const deltaSouth =
+      nativeBoundingRectangle.south - nativeImageryRectangle.south;
+    const offsetX = deltaWest * invImageryWidth;
+    const offsetY = deltaSouth * invImageryHeight;
+    const scaleX = nativeBoundingRectangle.width * invImageryWidth;
+    const scaleY = nativeBoundingRectangle.height * invImageryHeight;
+    return new Cartesian4(offsetX, offsetY, scaleX, scaleY);
+  }
+
+  /**
+   * Computes the index mapping from the given source to the given target.
+   *
+   * The result will be an array that has the same length as the source,
+   * and contains the indices that the source elements have in the
+   * target array.
+   *
+   * @param {object[]} source The source array
+   * @param {object[]} target The target array
+   * @returns {number[]} The result
+   */
+  static _computeIndexMapping(source, target) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("source", source);
+    Check.defined("target", target);
+    //>>includeEnd('debug');
+
+    const result = [];
+    const length = source.length;
+    for (let i = 0; i < length; i++) {
+      const element = source[i];
+      const index = target.indexOf(element);
+      result.push(index);
+    }
+    return result;
   }
 }
 

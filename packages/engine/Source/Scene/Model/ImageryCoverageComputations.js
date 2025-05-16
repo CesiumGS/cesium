@@ -1,17 +1,8 @@
 import defined from "../../Core/defined.js";
 import Rectangle from "../../Core/Rectangle.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
 
 import ImageryCoverage from "./ImageryCoverage.js";
 import CartesianRectangle from "./CartesianRectangle.js";
-
-// TODO_DRAPING: Some of this was extracted from ImageryLayer.prototype._createTileImagerySkeletons
-// See https://github.com/CesiumGS/cesium/blob/5eaa2280f495d8f300d9e1f0497118c97aec54c8/packages/engine/Source/Scene/ImageryLayer.js#L700
-// Some of this makes assumptions about the projection. This was originally
-// handled with the `useWebMercatorT` flag that was passed along and ended
-// up in certain differences in the shaders. The hope is that this can either
-// be abstracted away using a `MapProjection` and/or computing only the
-// right texture coordinates for the respective projection to begin with.
 
 const imageryBoundsScratch = new Rectangle();
 const overlappedRectangleScratch = new Rectangle();
@@ -19,15 +10,15 @@ const clippedRectangleScratch = new Rectangle();
 const nativeInputRectangleScratch = new Rectangle();
 const nativeImageryBoundsScratch = new Rectangle();
 const nativeClippedImageryBoundsScratch = new Rectangle();
-const textureCoordinateCartesianRectangleScratch = new CartesianRectangle();
 
 /**
  * A class that can compute the parts of imagery that are covered
  * by a rectangle.
  *
  * This was extracted from ImageryLayer.prototype._createTileImagerySkeletons
- * Fun and easy, just like extracting eggs from an omelette.
- * Now there are many functions, so we need more unit tests.
+ * See https://github.com/CesiumGS/cesium/blob/5eaa2280f495d8f300d9e1f0497118c97aec54c8/packages/engine/Source/Scene/ImageryLayer.js#L700
+ *
+ * @private
  */
 class ImageryCoverageComputations {
   /**
@@ -71,10 +62,6 @@ class ImageryCoverageComputations {
       imageryLevel,
     );
 
-    // TODO_DRAPING debug log
-    //console.log("imageryRange ", imageryRange);
-
-    // TODO_DRAPING Extracted from _createTileImagerySkeletons:
     // Convert the input rectangle and the imagery bounds into
     // the native coordinate system of the tiling scheme
     const nativeInputRectangle = nativeInputRectangleScratch;
@@ -152,11 +139,11 @@ class ImageryCoverageComputations {
    * Compute the rectangle describing the range of imagery that is covered
    * with the given rectangle.
    *
-   * TODO_DRAPING Extracted from _createTileImagerySkeletons.
-   *
    * This will compute a rectangle with integer coordinates that describe
    * the X/Y coordinates of the imagery that is overlapped by the given
    * input rectangle, based on the given imagery rectangle.
+   *
+   * Extracted from _createTileImagerySkeletons.
    *
    * @param {Rectangle} inputRectangle The input rectangle
    * @param {Rectangle} imageryBounds The imagery bounds
@@ -190,12 +177,7 @@ class ImageryCoverageComputations {
     result.maxX = southeastTileCoordinates.x;
     result.maxY = southeastTileCoordinates.y;
 
-    // XXX_DRAPING Debug log
-    //console.log("  northwestTileCoordinates ", northwestTileCoordinates);
-    //console.log("  southeastTileCoordinates ", southeastTileCoordinates);
-    //console.log("  result before veryClose  ", result);
-
-    // TODO_DRAPING Extracted from _createTileImagerySkeletons:
+    // As extracted from _createTileImagerySkeletons:
     // If the southeast corner of the rectangle lies very close to the north or west side
     // of the southeast tile, we don't actually need the southernmost or easternmost
     // tiles.
@@ -241,16 +223,11 @@ class ImageryCoverageComputations {
       --result.maxX;
     }
 
-    // XXX_DRAPING Debug log
-    //console.log("  result after  veryClose  ", result);
-
     return result;
   }
 
   /**
    * Clamp the given input rectangle to the given clamp rectangle.
-   *
-   * TODO_DRAPING Extracted from _createTileImagerySkeletons.
    *
    * If the input rectangle is completely above/below or left/right
    * of the clamp rectangle, then the north/south or east/east
@@ -286,10 +263,8 @@ class ImageryCoverageComputations {
   }
 
   /**
-   * Compute the rectangle of the imagery from the imageryProvider that overlaps
-   * the input.
-   *
-   * TODO_DRAPING Extracted from _createTileImagerySkeletons.
+   * Compute overlap between the given input rectangle, and the given
+   * bounds that have been obtained from the imagery provider.
    *
    * @param {Rectangle} inputRectangle The input
    * @param {Rectangle} imageryBounds The imagery bounds
@@ -312,11 +287,9 @@ class ImageryCoverageComputations {
   }
 
   /**
-   * Computes the `ImageryCoverage` objects that describe the imagery and
+   * Computes the <code>ImageryCoverage</code> objects that describe the imagery and
    * the texture coordinates that are contained in the given range of
    * imagery tile coordinates, referring to the given input rectangle.
-   *
-   * TODO_DRAPING Extracted from _createTileImagerySkeletons.
    *
    * @param {CartesianRectangle} imageryRange The range of imagery tile coordinates
    * @param {number} imageryLevel The imagery level
@@ -359,20 +332,12 @@ class ImageryCoverageComputations {
           continue;
         }
 
-        const textureCoordinateCartesianRectangle =
+        const textureCoordinateRectangle =
           ImageryCoverageComputations._localizeToCartesianRectangle(
             clippedImageryRectangleV,
             nativeInputRectangle,
-            textureCoordinateCartesianRectangleScratch,
+            undefined,
           );
-
-        const textureCoordinateRectangle = new Cartesian4(
-          textureCoordinateCartesianRectangle.minX,
-          textureCoordinateCartesianRectangle.minY,
-          textureCoordinateCartesianRectangle.maxX,
-          textureCoordinateCartesianRectangle.maxY,
-        );
-
         const imageryCoverage = new ImageryCoverage(
           i,
           j,
