@@ -325,6 +325,12 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
   model.update(frameState);
 
   if (!this._ready && model.ready) {
+    // XXX_DRAPING_UPSAMPING
+    //console.log(
+    //  "The model in Model3DTileContent just turned ready. Maybe upsample here?",
+    //);
+    //ModelImageryUpsampling.execute(this, frameState);
+
     // Animation can only be added once the model is ready
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,

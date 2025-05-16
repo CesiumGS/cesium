@@ -467,7 +467,8 @@ export const buildRelease = gulp.series(
 
 export const release = gulp.series(
   buildRelease,
-  gulp.parallel(buildTs, buildDocs),
+  buildDocs,
+  //gulp.parallel(buildTs, buildDocs),
 );
 
 export const postversion = async function () {
@@ -626,12 +627,12 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "Apps/**",
           "Apps/Sandcastle/.jshintrc",
           "packages/engine/index.js",
-          "packages/engine/index.d.ts",
+          //"packages/engine/index.d.ts",
           "packages/engine/LICENSE.md",
           "packages/engine/README.md",
           "packages/engine/Source/**",
           "packages/widgets/index.js",
-          "packages/widgets/index.d.ts",
+          //"packages/widgets/index.d.ts",
           "packages/widgets/LICENSE.md",
           "packages/widgets/README.md",
           "packages/widgets/Source/**",

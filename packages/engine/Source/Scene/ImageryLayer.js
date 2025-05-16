@@ -663,7 +663,7 @@ ImageryLayer.prototype.getImageryRectangle = function () {
  *
  * @private
  *
- * @param {Tile} tile The terrain tile.
+ * @param {QuadtreeTile} tile The terrain tile.
  * @param {TerrainProvider|undefined} terrainProvider The terrain provider associated with the terrain tile.
  * @param {number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
  * @returns {boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
