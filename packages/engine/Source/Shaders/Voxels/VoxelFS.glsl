@@ -17,6 +17,7 @@
 
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
+uniform vec3 u_cameraDirectionUv;
 uniform float u_stepSize;
 
 #if defined(PICKING)
@@ -111,26 +112,36 @@ int getSampleIndex(in SampleData sampleData) {
     return sampleIndex.x + u_inputDimensions.x * (sampleIndex.y + u_inputDimensions.y * sampleIndex.z);
 }
 
-void main()
-{
-    vec4 fragCoord = gl_FragCoord;
-    vec2 screenCoord = (fragCoord.xy - czm_viewport.xy) / czm_viewport.zw; // [0,1]
-    vec3 eyeDirection = normalize(czm_windowToEyeCoordinates(fragCoord).xyz);
-    vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
-    vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
-    vec3 viewPosUv = u_cameraPositionUv;
+Ray getViewRayUv() {
+    vec4 eyeCoordinates = czm_windowToEyeCoordinates(gl_FragCoord);
+    // TODO: use orthographicIn3D define to avoid branching
+    vec3 viewDirUv;
+    vec3 viewPosUv;
+    if (czm_orthographicIn3D == 1.0) {
+        eyeCoordinates.z = -czm_currentFrustum.x;
+        viewPosUv = u_cameraPositionUv + (u_transformPositionViewToUv * eyeCoordinates).xyz;
+        viewDirUv = u_cameraDirectionUv;
+    } else {
+        viewPosUv = u_cameraPositionUv;
+        viewDirUv = normalize(u_transformDirectionViewToLocal * eyeCoordinates.xyz);
+    }
     #if defined(SHAPE_ELLIPSOID)
         // viewDirUv has been scaled to a space where the ellipsoid is a sphere.
         // Undo this scaling to get the raw direction.
         vec3 rawDir = viewDirUv * u_ellipsoidRadiiUv;
-        Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir);
+        return Ray(viewPosUv, viewDirUv, rawDir);
     #else
-        Ray viewRayUv = Ray(viewPosUv, viewDirUv, viewDirUv);
+        return Ray(viewPosUv, viewDirUv, viewDirUv);
     #endif
+}
+
+void main()
+{
+    Ray viewRayUv = getViewRayUv();
 
     Intersections ix;
+    vec2 screenCoord = (gl_FragCoord.xy - czm_viewport.xy) / czm_viewport.zw; // [0,1]
     RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayUv, ix);
-
     // Exit early if the scene was completely missed.
     if (shapeIntersection.entry.w == NO_HIT) {
         discard;
@@ -138,7 +149,7 @@ void main()
 
     float currentT = shapeIntersection.entry.w;
     float endT = shapeIntersection.exit.w;
-    vec3 positionUv = viewPosUv + currentT * viewDirUv;
+    vec3 positionUv = viewRayUv.pos + currentT * viewRayUv.dir;
     PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
 
     // Traverse the tree from the start position
@@ -150,7 +161,7 @@ void main()
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
         currentT += noise * step.w;
-        positionUv += noise * step.w * viewDirUv;
+        positionUv += noise * step.w * viewRayUv.dir;
     #endif
 
     FragmentInput fragmentInput;
@@ -169,8 +180,7 @@ void main()
         fragmentInput.voxel.positionUv = positionUv;
         fragmentInput.voxel.positionShapeUv = pointJacobian.point;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
-        fragmentInput.voxel.viewDirUv = viewDirUv;
-        fragmentInput.voxel.viewDirWorld = viewDirWorld;
+        fragmentInput.voxel.viewDirUv = viewRayUv.dir;
         fragmentInput.voxel.surfaceNormal = step.xyz;
         fragmentInput.voxel.travelDistance = step.w;
         fragmentInput.voxel.stepCount = stepCount;
@@ -203,8 +213,6 @@ void main()
 
         // Keep raymarching
         currentT += step.w;
-        positionUv = viewPosUv + currentT * viewDirUv;
-
         // Check if there's more intersections.
         if (currentT > endT) {
             #if (INTERSECTION_COUNT == 1)
@@ -217,10 +225,10 @@ void main()
                     // Found another intersection. Resume raymarching there
                     currentT = shapeIntersection.entry.w;
                     endT = shapeIntersection.exit.w;
-                    positionUv = viewPosUv + currentT * viewDirUv;
                 }
             #endif
         }
+        positionUv = viewRayUv.pos + currentT * viewRayUv.dir;
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
