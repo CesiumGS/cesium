@@ -18,8 +18,8 @@ GaussianSplatTexturePipelineStage.process = function (
 
   const renderStateOptions = renderResources.renderStateOptions;
   renderStateOptions.cull.enabled = false;
-  renderStateOptions.depthMask = false;
-  renderStateOptions.depthTest.enabled = false;
+  renderStateOptions.depthMask = true;
+  renderStateOptions.depthTest.enabled = true;
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
 
   renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
