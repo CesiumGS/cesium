@@ -4315,8 +4315,6 @@ Scene.prototype.triggerArbitraryRender = function (
 ) {
   const time = JulianDate.now();
 
-  console.log("AAA triggerArbitraryRender", arbRen, arbRen.preUpdate);
-
   arbRen.preUpdate.raiseEvent(this, time);
 
   tryAndCatchError(this, prePassesUpdate);
