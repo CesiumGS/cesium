@@ -4311,15 +4311,18 @@ Scene.prototype.render = function (time) {
 
 Scene.prototype.triggerArbitraryRender = function (
   renderFunction, // function(scene) -> renderOutput
+  arbRen, // Arbitrary render instance
 ) {
   const time = JulianDate.now();
 
-  this._preUpdate.raiseEvent(this, time);
+  console.log("AAA triggerArbitraryRender", arbRen, arbRen.preUpdate);
+
+  arbRen.preUpdate.raiseEvent(this, time);
 
   tryAndCatchError(this, prePassesUpdate);
 
-  this._postUpdate.raiseEvent(this, time);
-  this._preRender.raiseEvent(this, time);
+  arbRen.postUpdate.raiseEvent(this, time);
+  arbRen.preRender.raiseEvent(this, time);
 
   // Render fuction
   let output;
@@ -4332,7 +4335,7 @@ Scene.prototype.triggerArbitraryRender = function (
   // Do we need this?
   callAfterRenderFunctions(this);
 
-  this._postRender.raiseEvent(this, time);
+  arbRen.postRender.raiseEvent(this, time);
 
   return output;
 };
@@ -4674,6 +4677,10 @@ Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
   return this._picking.pickFromRay(this, ray, objectsToExclude, width);
 };
 
+Scene.prototype.getArbitraryRenderInstance = function (key) {
+  return this._arbitraryRenders[key];
+};
+
 Scene.prototype.setupArbitraryRenderInstance = function (key) {
   if (this._arbitraryRenders[key]) {
     this._arbitraryRenders[key].destroy();
@@ -4705,7 +4712,11 @@ Scene.prototype.generateArbitraryRenderFromRay = function (
   // Generate render output
   const renderFunction = (scn) =>
     ArbitraryRenders.getSnapshotFromRay(arbRen, scn, ray, overrideUp);
-  return this._generateArbitraryRender(key, snapshotTransforms, renderFunction);
+  return this._generateArbitraryRender(
+    arbRen,
+    snapshotTransforms,
+    renderFunction,
+  );
 };
 
 Scene.prototype.generateArbitraryRenderFromCamera = function (
@@ -4721,11 +4732,15 @@ Scene.prototype.generateArbitraryRenderFromCamera = function (
   // Generate render output
   const renderFunction = (scn) =>
     ArbitraryRenders.getSnapshotFromCamera(arbRen, scn, camera);
-  return this._generateArbitraryRender(key, snapshotTransforms, renderFunction);
+  return this._generateArbitraryRender(
+    arbRen,
+    snapshotTransforms,
+    renderFunction,
+  );
 };
 
 Scene.prototype._generateArbitraryRender = function (
-  key,
+  arbRen,
   snapshotTransforms,
   renderFunction,
 ) {
@@ -4741,7 +4756,7 @@ Scene.prototype._generateArbitraryRender = function (
     }
   }
 
-  const renderOutput = this.triggerArbitraryRender(renderFunction);
+  const renderOutput = this.triggerArbitraryRender(renderFunction, arbRen);
 
   // Restore any transformed cesium objects
   for (const restoreFunc of transformRestoreFunctions) {

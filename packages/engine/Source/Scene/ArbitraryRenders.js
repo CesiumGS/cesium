@@ -9,6 +9,7 @@ import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
 import View from "./View.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
+import Event from "../Core/Event.js";
 
 const defaultOrthoFrustumWidth = 10;
 
@@ -27,7 +28,35 @@ function ArbitraryRenders(scene) {
   this._scene = scene;
   this._arView = undefined;
   this.pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+
+  this._preUpdate = new Event();
+  this._postUpdate = new Event();
+  this._preRender = new Event();
+  this._postRender = new Event();
 }
+
+Object.defineProperties(ArbitraryRenders.prototype, {
+  preUpdate: {
+    get: function () {
+      return this._preUpdate;
+    },
+  },
+  postUpdate: {
+    get: function () {
+      return this._postUpdate;
+    },
+  },
+  preRender: {
+    get: function () {
+      return this._preRender;
+    },
+  },
+  postRender: {
+    get: function () {
+      return this._postRender;
+    },
+  },
+});
 
 ArbitraryRenders.prototype.destroy = function () {
   this._arView = this._arView && this._arView.destroy();
