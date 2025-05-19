@@ -241,10 +241,6 @@ export function reset() {}
  * @module Sandcastle
  */
 export default {
-  /**
-   * Called on first load and every time the options set up by other helpers are changed.
-   * No-op function by default, override with custom reset logic when needed
-   */
   reset,
   declare,
   highlight,
