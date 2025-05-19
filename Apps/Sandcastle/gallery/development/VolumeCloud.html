@@ -36,7 +36,7 @@
         "use strict";
         //Sandcastle_Begin
 
-        //ImprovedNoise from Three.js
+        // ImprovedNoise from Three.js
         // https://github.com/mrdoob/three.js/blob/dev/examples/jsm/math/ImprovedNoise.js
 
         const lerp = Cesium.Math.lerp;
@@ -143,7 +143,7 @@
           }
         }
 
-        //ImprovedNoise from Three.js end
+        // End ImprovedNoise from Three.js
 
         // GeometryPrimitive
         const {
@@ -179,51 +179,51 @@
            * @param {*} frameState
            */
           update(frameState) {
-            if (!this._drawCommand) {
-              if (this.geometry.constructor.createGeometry) {
-                this.geometry = this.geometry.constructor.createGeometry(this.geometry);
-              }
-
-              const context = frameState.context;
-
-              const attributeLocations = GeometryPipeline.createAttributeLocations(
-                this.geometry,
-              );
-              const vertexArray = VertexArray.fromGeometry({
-                context: context,
-                geometry: this.geometry,
-                attributeLocations,
-              });
-
-              // calc boundingSphere
-              const bs = this.geometry.boundingSphere;
-              bs.center = Matrix4.multiplyByPoint(
-                this.options.modelMatrix,
-                bs.center,
-                new Cartesian3(),
-              );
-              bs.radius = 1000000;
-
-              this._boundingSphereWC = [bs];
-
-              const shaderProgram = Cesium.ShaderProgram.fromCache({
-                context: context,
-                attributeLocations,
-                vertexShaderSource: this.options.vertexShaderSource,
-                fragmentShaderSource: this.options.fragmentShaderSource,
-              });
-
-              this._drawCommand = new DrawCommand({
-                owner: this,
-                boundingVolume: bs,
-                primitiveType: this.geometry.primitiveType,
-                vertexArray: vertexArray,
-                shaderProgram,
-                ...this.options,
-              });
-            } else {
+            if (Cesium.defined(this._drawCommand)) {
               frameState.commandList.push(this._drawCommand);
+              return;
             }
+            if (this.geometry.constructor.createGeometry) {
+              this.geometry = this.geometry.constructor.createGeometry(this.geometry);
+            }
+
+            const context = frameState.context;
+
+            const attributeLocations = GeometryPipeline.createAttributeLocations(
+              this.geometry,
+            );
+            const vertexArray = VertexArray.fromGeometry({
+              context: context,
+              geometry: this.geometry,
+              attributeLocations,
+            });
+
+            // calculate boundingSphere
+            const boundingSphere = this.geometry.boundingSphere;
+            boundingSphere.center = Matrix4.multiplyByPoint(
+              this.options.modelMatrix,
+              boundingSphere.center,
+              new Cartesian3(),
+            );
+            boundingSphere.radius = 1000000;
+
+            this._boundingSphereWC = [boundingSphere];
+
+            const shaderProgram = Cesium.ShaderProgram.fromCache({
+              context: context,
+              attributeLocations,
+              vertexShaderSource: this.options.vertexShaderSource,
+              fragmentShaderSource: this.options.fragmentShaderSource,
+            });
+
+            this._drawCommand = new DrawCommand({
+              owner: this,
+              boundingVolume: boundingSphere,
+              primitiveType: this.geometry.primitiveType,
+              vertexArray: vertexArray,
+              shaderProgram,
+              ...this.options,
+            });
           }
 
           destroy() {
@@ -510,7 +510,7 @@
 
         viewer.scene.primitives.add(primitive);
 
-        const camState = {
+        const cameraState = {
           destination: centerPoint,
           orientation: {
             heading: 4.159717744111784,
@@ -521,11 +521,11 @@
         };
         // viewer.camera.flyTo(camState);
         const hpr = new Cesium.HeadingPitchRange(
-          camState.orientation.heading,
-          camState.orientation.pitch,
+          cameraState.orientation.heading,
+          cameraState.orientation.pitch,
           boxSideLength * zoomScale * 2,
         );
-        viewer.camera.lookAt(camState.destination, hpr);
+        viewer.camera.lookAt(cameraState.destination, hpr);
 
         // create params control UI
         function createSlider(
