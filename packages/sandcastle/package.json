@@ -3,11 +3,15 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "module": "./public/lib/index.js",
+  "types": "./public/lib/index.d.ts",
   "scripts": {
     "dev": "vite --config vite.config.dev.ts",
-    "build": "npm run build-app",
+    "build": "npm run build-lib && npm run build-app && npm run build-docs",
     "build-app": "tsc -b && vite build --config vite.config.app.ts",
-    "build-ci": "tsc -b && vite build --config vite.config.ci.ts"
+    "build-ci": "tsc -b && vite build --config vite.config.ci.ts",
+    "build-lib": "pkgroll --src=lib --dist=public/lib --tsconfig=lib/tsconfig.json",
+    "build-docs": "typedoc --options lib/typedoc.json --tsconfig lib/tsconfig.json"
   },
   "dependencies": {
     "@itwin/itwinui-react": "^5.0.0-alpha.14",
@@ -18,11 +22,14 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@tsconfig/recommended": "^1.0.8",
     "@types/pako": "^2.0.3",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "cesium": "^1.129.0",
     "globals": "^15.15.0",
+    "pkgroll": "^2.12.2",
     "typescript": "~5.7.2",
     "vite": "^6.2.0",
     "vite-plugin-static-copy": "^2.3.1"

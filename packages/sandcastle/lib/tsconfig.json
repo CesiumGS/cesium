@@ -1,0 +1,16 @@
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "include": ["**/*.ts"],
+  "compilerOptions": {
+    "module": "es2015",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "declaration": true,
+    "paths": {
+      "cesium": ["../../../"],
+      "@cesium/engine": ["../../../packages/engine"],
+      "@cesium/widgets": ["../../../packages/widegts"]
+    },
+    "outDir": "../public/lib"
+  }
+}

@@ -11,5 +11,4 @@ node_modules
 dist
 dist-ssr
 *.local
-
-public/templates/Sandcastle.d.ts
+public/lib

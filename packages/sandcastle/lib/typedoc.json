@@ -1,0 +1,7 @@
+{
+    "entryPoints": ["./Sandcastle.ts"],
+    "out": "../../../Apps/Sandcastle2/docs",
+    "compilerOptions": {
+        "skipLibCheck": true,
+    }
+}

@@ -116,7 +116,7 @@
     "build-ts": "gulp buildTs",
     "build-third-party": "gulp buildThirdParty",
     "build-apps": "gulp buildApps",
-    "build-sandcastle": "npm run build-app --workspace packages/sandcastle",
+    "build-sandcastle": "npm run build -w packages/sandcastle",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
     "coverage": "gulp coverage",

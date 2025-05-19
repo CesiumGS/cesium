@@ -298,9 +298,6 @@ function applyBucket(
 //   true,
 // );
 
-const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
-const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
-
 // function appendCode(code, run = true) {
 //   const codeMirror = getJsCodeMirror();
 //   codeMirror.setValue(`${codeMirror.getValue()}\n${code}`);
@@ -486,19 +483,12 @@ function App() {
   }
 
   async function setTypes(monaco: Monaco) {
-    console.log("setTypes");
-    // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
-
-    const cesiumTypes = await (await fetch(TYPES_URL)).text();
-    const sandcastleTypes = await (await fetch(SANDCASTLE_TYPES_URL)).text();
-
-    const typesSource = [
-      cesiumTypes,
-      sandcastleTypes,
-      "var Cesium: typeof import('cesium');",
-      "var Sandcastle: typeof import('Sandcastle').default;",
-    ].join("\n");
-    const typesUri = "ts:filename/types.d.ts";
+    const typesUrl = "./lib/index.d.ts";
+    let typesSource = await (await fetch(typesUrl)).text();
+    typesSource += `
+      var Cesium: typeof import('cesium');
+    `;
+    const typesUri = `ts:filename/index.d.ts`;
 
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
       typesSource,
