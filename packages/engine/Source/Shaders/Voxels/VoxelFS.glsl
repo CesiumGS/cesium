@@ -118,9 +118,9 @@ Ray getViewRayUv() {
     vec3 viewDirUv;
     vec3 viewPosUv;
     if (czm_orthographicIn3D == 1.0) {
-        eyeCoordinates.z = -czm_currentFrustum.x;
-        viewPosUv = u_cameraPositionUv + (u_transformPositionViewToUv * eyeCoordinates).xyz;
-        viewDirUv = u_cameraDirectionUv;
+        eyeCoordinates.z = 0.0;
+        viewPosUv = (u_transformPositionViewToUv * eyeCoordinates).xyz;
+        viewDirUv = normalize(u_cameraDirectionUv);
     } else {
         viewPosUv = u_cameraPositionUv;
         viewDirUv = normalize(u_transformDirectionViewToLocal * eyeCoordinates.xyz);

@@ -1327,6 +1327,10 @@ VoxelPrimitive.prototype.update = function (frameState) {
     frameState.camera.directionWC,
     uniforms.cameraDirectionUv,
   );
+  uniforms.cameraDirectionUv = Cartesian3.normalize(
+    uniforms.cameraDirectionUv,
+    uniforms.cameraDirectionUv,
+  );
   uniforms.stepSize = this._stepSizeMultiplier;
 
   // Render the primitive
