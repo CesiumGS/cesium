@@ -2832,9 +2832,6 @@ function addTileDebugLabel(tile, tileset, position) {
   if (tileset.debugShowGeometricError) {
     labelString += `\nGeometric error: ${tile.geometricError}`;
     attributes++;
-    // XXX_DRAPING Also show SSE (again), using private variables...
-    labelString += `\nSSE: ${tile._screenSpaceError}`;
-    attributes++;
   }
 
   if (tileset.debugShowRenderingStatistics) {
