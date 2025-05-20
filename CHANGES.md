@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - `QuadtreePrimitive.updateHeights` now converts position to Cartographic before invoking the callback, ensuring compatibility with change introduced by [commit 53889cb](https://github.com/CesiumGS/cesium/commit/53889cb) and preventing unnecessary computation. [#12555](https://github.com/CesiumGS/cesium/pull/12555)
+- `Check.typeOf.object` now asserts `Record<string|number|symbol, any>` intead of `object` to allow property checks after assertion. [#12572](https://github.com/CesiumGS/cesium/issues/12572)
 
 ## 1.128 - 2025-04-01
 
