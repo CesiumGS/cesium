@@ -237,7 +237,7 @@
         // GeometryPrimitive end
 
         function makeTexture3D(context) {
-          const size = 128;
+          const size = 100;
           const dataLength = size * size * size;
           const data = new Uint8Array(dataLength);
           let i = 0;
@@ -414,6 +414,9 @@
           color = czm_gammaCorrect( color );
 					if ( color.a == 0.0 ) discard;
           out_FragColor = color;
+
+          ivec3 ts = textureSize(map, 3);
+          out_FragColor = vec4(vec3(ts) / 255.0, 1.0);
       }
       `;
 
@@ -421,6 +424,7 @@
           orderIndependentTranslucency: true,
         });
         const texture3D = makeTexture3D(viewer.scene.context);
+        texture3D.generateMipmap();
 
         const boxSideLength = 1.0;
         const zoomScale = 10000;
