@@ -321,14 +321,32 @@ function processSpz(vertexBufferLoader) {
     vertexBufferLoader._typedArray = gcloudData.scales;
   } else if (vertexBufferLoader._attributeSemantic === "_ROTATION") {
     vertexBufferLoader._typedArray = gcloudData.rotations;
-  } else if (vertexBufferLoader._attributeSemantic === "_OPACITY") {
-    vertexBufferLoader._typedArray = gcloudData.alphas;
   } else if (vertexBufferLoader._attributeSemantic === "COLOR_0") {
-    vertexBufferLoader._typedArray = Uint8Array.from(
-      gcloudData.colors.map((color) =>
-        CesiumMath.clamp(color * 255.0, 0.0, 255.0),
-      ),
-    );
+    const colors = gcloudData.colors;
+    const alpha = gcloudData.alphas;
+    vertexBufferLoader._typedArray = new Uint8Array((colors.length / 3) * 4);
+    for (let i = 0; i < colors.length / 3; i++) {
+      vertexBufferLoader._typedArray[i * 4] = CesiumMath.clamp(
+        colors[i * 3] * 255.0,
+        0.0,
+        255.0,
+      );
+      vertexBufferLoader._typedArray[i * 4 + 1] = CesiumMath.clamp(
+        colors[i * 3 + 1] * 255.0,
+        0.0,
+        255.0,
+      );
+      vertexBufferLoader._typedArray[i * 4 + 2] = CesiumMath.clamp(
+        colors[i * 3 + 2] * 255.0,
+        0.0,
+        255.0,
+      );
+      vertexBufferLoader._typedArray[i * 4 + 3] = CesiumMath.clamp(
+        alpha.typedArray[i] * 255.0,
+        0.0,
+        255.0,
+      );
+    }
   }
 }
 

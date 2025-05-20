@@ -11,7 +11,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import ModelUtility from "./Model/ModelUtility.js";
-import CesiumMath from "../Core/Math.js";
+
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -271,29 +271,6 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
 }
 
 function prepareSpzData(loadPlan, context) {
-  const rgb = ModelUtility.getAttributeByName(loadPlan.primitive, "COLOR_0");
-  const alpha = ModelUtility.getAttributeBySemantic(
-    loadPlan.primitive,
-    VertexAttributeSemantic.OPACITY,
-  );
-  const rgbVals = rgb.typedArray;
-  const rgba = new Uint8Array((rgbVals.length / 3) * 4);
-  for (let i = 0; i < rgbVals.length / 3; i++) {
-    rgba[i * 4] = rgbVals[i * 3];
-    rgba[i * 4 + 1] = rgbVals[i * 3 + 1];
-    rgba[i * 4 + 2] = rgbVals[i * 3 + 2];
-    rgba[i * 4 + 3] = CesiumMath.clamp(alpha.typedArray[i] * 255.0, 0.0, 255.0);
-  }
-
-  rgb.type = AttributeType.VEC4;
-  rgb.typedArray = rgba;
-  rgb.componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
-  rgb.normalized = false;
-
-  loadPlan.primitive.attributes = loadPlan.primitive.attributes.filter(
-    (attr) => attr.name !== "_OPACITY",
-  );
-
   const position = ModelUtility.getAttributeBySemantic(
     loadPlan.primitive,
     VertexAttributeSemantic.POSITION,

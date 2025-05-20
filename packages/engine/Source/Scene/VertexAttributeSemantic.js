@@ -87,13 +87,6 @@ const VertexAttributeSemantic = {
    * @constant
    */
   ROTATION: "_ROTATION",
-  /**
-   * Gaussian Splat Opacity. Optional to keep separate or combine with color.
-   *
-   * @type {string}
-   * @constant
-   */
-  OPACITY: "_OPACITY",
 };
 
 function semanticToVariableName(semantic) {
@@ -118,8 +111,6 @@ function semanticToVariableName(semantic) {
       return "scale";
     case VertexAttributeSemantic.ROTATION:
       return "rotation";
-    case VertexAttributeSemantic.OPACITY:
-      return "opacity";
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("semantic is not a valid value.");
@@ -153,7 +144,6 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
     case VertexAttributeSemantic.FEATURE_ID:
     case VertexAttributeSemantic.SCALE:
     case VertexAttributeSemantic.ROTATION:
-    case VertexAttributeSemantic.OPACITY:
       return true;
     //>>includeStart('debug', pragmas.debug);
     default:
@@ -206,8 +196,6 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
       return VertexAttributeSemantic.SCALE;
     case "_ROTATION":
       return VertexAttributeSemantic.ROTATION;
-    case "_OPACITY":
-      return VertexAttributeSemantic.OPACITY;
   }
 
   return undefined;

@@ -2022,7 +2022,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   }
 
   const gaussianSplattingExtension = extensions.KHR_gaussian_splatting;
-  const spzExtension = extensions.KHR_spz_compression;
+  const spzExtension = extensions.KHR_spz_gaussian_splats_compression;
 
   if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
     needsPostProcessing = true;
