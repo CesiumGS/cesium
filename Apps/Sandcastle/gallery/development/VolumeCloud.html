@@ -415,8 +415,9 @@
 					if ( color.a == 0.0 ) discard;
           out_FragColor = color;
 
-          ivec3 ts = textureSize(map, 3);
-          out_FragColor = vec4(vec3(ts) / 255.0, 1.0);
+          // // test 3D Texture Mipmap size
+          // ivec3 ts = textureSize(map, 3);
+          // out_FragColor = vec4(vec3(ts) / 255.0, 1.0);
       }
       `;
 

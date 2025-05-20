@@ -5,7 +5,6 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import ContextLimits from "./ContextLimits.js";
 import MipmapHint from "./MipmapHint.js";
@@ -538,22 +537,6 @@ Texture3D.prototype.generateMipmap = function (hint) {
   if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
     throw new DeveloperError(
       "Cannot call generateMipmap with a compressed pixel format.",
-    );
-  }
-
-  if (this._width > 1 && !CesiumMath.isPowerOfTwo(this._width)) {
-    console.warn(
-      "It is recommended to generate Mipmaps when the width is a power of 2 to achieve better performance and results.",
-    );
-  }
-  if (this._height > 1 && !CesiumMath.isPowerOfTwo(this._height)) {
-    console.warn(
-      "It is recommended to generate Mipmaps when the height is a power of 2 to achieve better performance and results.",
-    );
-  }
-  if (this._depth > 1 && !CesiumMath.isPowerOfTwo(this._depth)) {
-    console.warn(
-      "It is recommended to generate Mipmaps when the depth is a power of 2 to achieve better performance and results.",
     );
   }
 
