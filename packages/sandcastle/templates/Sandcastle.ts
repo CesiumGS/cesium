@@ -1,6 +1,3 @@
-// TODO: remove these and figure out the correct types
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 let defaultAction: (() => void) | undefined;
 let bucket = window.location.href;
 const pos = bucket.lastIndexOf("/");
@@ -14,21 +11,26 @@ type SelectOption = {
   onselect: () => void;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- we don't care what the keys are
+const registered = new Map<any, number>();
+
 /**
  * Helpers for constructing UI inside a Sandcastle and interacting with the code editor
  */
-class Sandcastle {
-  static bucket = bucket;
-  static registered = new Map<object, number>();
-  // static registered: { obj: object; lineNumber: number }[] = new Map<object, number>();
-  static reset = () => {};
+const Sandcastle = {
+  /**
+   * Called on first load and every time the options set up by other helpers are changed.
+   * No-op function by default, override with custom reset logic when needed
+   */
+  reset() {},
 
   /**
    * Create a "bookmark" of sorts in the code that will be highlighted when run
    *
-   * @param obj
+   * @param key
    */
-  static declare(obj: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- we don't care what the keys are
+  declare(key: any) {
     /*eslint-disable no-empty*/
     try {
       //Browsers such as IE don't have a stack property until you actually throw the error.
@@ -40,7 +42,7 @@ class Sandcastle {
           stack = error.stack.toString();
         }
       }
-      let needle = `${Sandcastle.bucket}:`; // Firefox
+      let needle = `${bucket}:`; // Firefox
       let pos = stack.indexOf(needle);
       if (pos < 0) {
         needle = " (<anonymous>:"; // Chrome
@@ -53,21 +55,23 @@ class Sandcastle {
       if (pos >= 0) {
         pos += needle.length;
         const lineNumber = parseInt(stack.substring(pos), 10);
-        Sandcastle.registered.set(obj, lineNumber);
+        registered.set(key, lineNumber);
+        console.log("registered", key, "to", lineNumber);
       }
     } catch {}
-  }
+  },
 
   /**
    * Highlight the given "bookmark" in the code
-   * @param obj
-   * @returns
+   *
+   * @param key
    */
-  static highlight(obj: any) {
-    if (obj !== undefined) {
-      const lineNumber =
-        Sandcastle.registered.get(obj) ??
-        Sandcastle.registered.get(obj.primitive);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- we don't care what the keys are
+  highlight(key: any) {
+    console.log("highlight", key);
+    console.log("registered", registered);
+    if (key !== undefined) {
+      const lineNumber = registered.get(key) ?? registered.get(key.primitive);
       if (lineNumber !== undefined) {
         window.parent.postMessage({ highlight: lineNumber }, "*");
         return;
@@ -75,7 +79,7 @@ class Sandcastle {
     }
 
     window.parent.postMessage({ highlight: 0 }, "*");
-  }
+  },
 
   /**
    * Signals to the page that Sandcastle has finished loading and calls the default
@@ -83,7 +87,7 @@ class Sandcastle {
    * This is called automatically as part of the loading process, you should NOT need
    * to call this yourself.
    */
-  static finishedLoading() {
+  finishedLoading() {
     console.log("finishedLoading");
 
     Sandcastle.reset();
@@ -98,7 +102,8 @@ class Sandcastle {
       /(?:\s|^)sandcastle-loading(?:\s|$)/,
       " ",
     );
-  }
+  },
+
   /**
    * Create a toggle button with a checkbox
    *
@@ -107,7 +112,7 @@ class Sandcastle {
    * @param onchange Callback for when the button is clicked
    * @param toolbarId Element to append this to, defaults to the default toolbar
    */
-  static addToggleButton(
+  addToggleButton(
     text: string,
     checked: boolean,
     onchange: (newValue: boolean) => void,
@@ -139,7 +144,7 @@ class Sandcastle {
       throw new Error(`Toolbar not found: ${toolbarId}`);
     }
     toolbar.appendChild(button);
-  }
+  },
 
   /**
    * Create a button
@@ -148,11 +153,7 @@ class Sandcastle {
    * @param onclick Callback for when the button is clicked
    * @param toolbarId Element to append this to, defaults to the default toolbar
    */
-  static addToolbarButton(
-    text: string,
-    onclick: () => void,
-    toolbarId?: string,
-  ) {
+  addToolbarButton(text: string, onclick: () => void, toolbarId?: string) {
     Sandcastle.declare(onclick);
     const button = document.createElement("button");
     button.type = "button";
@@ -168,7 +169,7 @@ class Sandcastle {
       throw new Error(`Toolbar not found: ${toolbarId}`);
     }
     toolbar.appendChild(button);
-  }
+  },
 
   /**
    * Create a button and set the default action for this sandcastle to the click handler
@@ -177,14 +178,14 @@ class Sandcastle {
    * @param onclick Callback for when the button is clicked
    * @param toolbarId Element to append this to, defaults to the default toolbar
    */
-  static addDefaultToolbarButton(
+  addDefaultToolbarButton(
     text: string,
     onclick: () => void,
     toolbarId?: string,
   ) {
     Sandcastle.addToolbarButton(text, onclick, toolbarId);
     defaultAction = onclick;
-  }
+  },
 
   /**
    * Create a dropdown menu with the given options
@@ -192,7 +193,7 @@ class Sandcastle {
    * @param options Options in the select dropdown
    * @param toolbarId Element to append this to, defaults to the default toolbar
    */
-  static addToolbarMenu(options: SelectOption[], toolbarId?: string) {
+  addToolbarMenu(options: SelectOption[], toolbarId?: string) {
     const menu = document.createElement("select");
     menu.className = "cesium-button";
     menu.onchange = function () {
@@ -218,7 +219,7 @@ class Sandcastle {
       option.value = options[i].value;
       menu.appendChild(option);
     }
-  }
+  },
 
   /**
    * Create a dropdown menu with the given options and set the default action for this
@@ -227,11 +228,10 @@ class Sandcastle {
    * @param options Options in the select dropdown
    * @param toolbarId Element to append this to, defaults to the default toolbar
    */
-  static addDefaultToolbarMenu(options: SelectOption[], toolbarId?: string) {
+  addDefaultToolbarMenu(options: SelectOption[], toolbarId?: string) {
     Sandcastle.addToolbarMenu(options, toolbarId);
     defaultAction = options[0].onselect;
-  }
-}
+  },
+};
 
-// window.Sandcastle = Sandcastle;
 export default Sandcastle;
