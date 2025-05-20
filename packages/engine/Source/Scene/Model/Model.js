@@ -1956,16 +1956,13 @@ Model.prototype.update = function (frameState) {
   const modelImagery = this._modelImagery;
   modelImagery.update(frameState);
   if (!modelImagery.ready) {
-    // XXX_DRAPING A compile-time flag to wait for the imagery
+    // TODO_DRAPING A compile-time flag to wait for the imagery
     // to be ready before considering the model to be ready:
     const waitForImagery = false;
     if (waitForImagery) {
       return;
     }
   }
-
-  // XXX_DRAPING_UPSAMPLING Experiments
-  //ModelImageryUpsampling.handle(this, frameState);
 
   updateFeatureTableId(this);
   updateStyle(this);

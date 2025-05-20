@@ -279,7 +279,7 @@ class ModelImagery {
   get _hasImagery() {
     const model = this._model;
     const imageryLayers = model.imageryLayers;
-    return defined(imageryLayers);
+    return defined(imageryLayers) && imageryLayers.length > 0;
   }
 
   /**

@@ -9,6 +9,9 @@ import ModelImageryMapping from "./ModelImageryMapping.js";
 import ModelUtility from "./ModelUtility.js";
 import MappedPositions from "./MappedPositions.js";
 
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+
 /**
  * A class managing the draping of imagery on a single model primitive.
  *
@@ -19,6 +22,8 @@ import MappedPositions from "./MappedPositions.js";
  * - the mapped (cartographic) positions of the primitive
  * - the imagery tiles that are covered by these mapped positions
  * - the texture coordinates (attributes) that correspond to these mapped positions
+ *
+ * @private
  */
 class ModelPrimitiveImagery {
   /**
@@ -63,18 +68,6 @@ class ModelPrimitiveImagery {
      * @private
      */
     this._runtimePrimitive = runtimePrimitive;
-
-    /**
-     * The <code>"POSITION"</code> attribute of the primitive.
-     *
-     * @type {ModelComponents.Attribute}
-     * @readonly
-     * @private
-     */
-    this._primitivePositionAttribute =
-      ModelPrimitiveImagery._obtainPrimitivePositionAttribute(
-        runtimePrimitive.primitive,
-      );
 
     /**
      * The <code>MappedPositions</code> objects, one for each ellipsoid
@@ -223,9 +216,8 @@ class ModelPrimitiveImagery {
 
     if (!defined(this._imageryTexCoordAttributesPerProjection)) {
       this._imageryTexCoordAttributesPerProjection =
-        this._computeImageryTexCoordsAttributesPerProjection(
-          frameState.context,
-        );
+        this._computeImageryTexCoordsAttributesPerProjection();
+      this.uploadImageryTexCoordAttributes(frameState.context);
     }
 
     if (!defined(this._coveragesPerLayer)) {
@@ -234,6 +226,36 @@ class ModelPrimitiveImagery {
     }
     if (!this._allImageriesReady) {
       this._updateImageries(frameState);
+    }
+  }
+
+  /**
+   * Create the GPU buffers for the typed arrays that are contained
+   * in the <code>_imageryTexCoordAttributesPerProjection</code>
+   *
+   * @param {Context} context The GL context
+   */
+  uploadImageryTexCoordAttributes(context) {
+    const attributes = this._imageryTexCoordAttributesPerProjection;
+    if (!defined(attributes)) {
+      return;
+    }
+    const n = attributes.length;
+    for (let i = 0; i < n; i++) {
+      const attribute = attributes[i];
+
+      // Allocate the GL resources for the new attribute
+      const imageryTexCoordBuffer = Buffer.createVertexBuffer({
+        context: context,
+        typedArray: attribute.typedArray,
+        usage: BufferUsage.STATIC_DRAW,
+      });
+
+      // TODO_DRAPING Review this. Probably, some cleanup
+      // has to happen somewhere else after setting this:
+      imageryTexCoordBuffer.vertexArrayDestroyable = false;
+
+      attribute.buffer = imageryTexCoordBuffer;
     }
   }
 
@@ -311,9 +333,12 @@ class ModelPrimitiveImagery {
   _computeMappedPositionsPerEllipsoid() {
     const model = this._model;
     const runtimeNode = this._runtimeNode;
+    const runtimePrimitive = this._runtimePrimitive;
 
-    // The _primitivePositionAttribute is ensured to be defined in the constructor
-    const primitivePositionAttribute = this._primitivePositionAttribute;
+    const primitivePositionAttribute =
+      ModelPrimitiveImagery._obtainPrimitivePositionAttribute(
+        runtimePrimitive.primitive,
+      );
     const numPositions = primitivePositionAttribute.count;
 
     const primitivePositionTransform =
@@ -387,10 +412,9 @@ class ModelPrimitiveImagery {
    * positions, relative to the cartographic bounding rectangle
    * of the mapped positions.
    *
-   * @param {Context} context The GL context
    * @returns {ModelComponents.Attribute[]} The attributes
    */
-  _computeImageryTexCoordsAttributesPerProjection(context) {
+  _computeImageryTexCoordsAttributesPerProjection() {
     const model = this._model;
     const imageryLayers = model.imageryLayers;
 
@@ -404,10 +428,7 @@ class ModelPrimitiveImagery {
 
     // Create one texture coordinate attribute for each distinct
     // projection that is used in the imagery layers
-    const attributes = this._createImageryTexCoordAttributes(
-      uniqueProjections,
-      context,
-    );
+    const attributes = this._createImageryTexCoordAttributes(uniqueProjections);
     return attributes;
   }
 
@@ -463,13 +484,11 @@ class ModelPrimitiveImagery {
    * i.e. contain no duplicates)
    *
    * @param {MapProjection[]} uniqueProjections The projections
-   * @param {Context} context The GL context
    * @returns {ModelComponents.Attribute[]} The attributes
    */
   _createImageryTexCoordAttributes(uniqueProjections, context) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("uniqueProjections", uniqueProjections);
-    Check.defined("context", context);
     //>>includeEnd('debug');
 
     const imageryTexCoordAttributePerUniqueProjection = [];
@@ -487,7 +506,6 @@ class ModelPrimitiveImagery {
         ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions(
           mappedPositions,
           projection,
-          context,
         );
       imageryTexCoordAttributePerUniqueProjection.push(
         imageryTexCoordAttribute,
@@ -622,15 +640,6 @@ class ModelPrimitiveImagery {
       imageryProvider,
       desiredLevel,
     );
-
-    // XXX_DRAPING return the selectable level for tests
-    //if (defined(Model.XXX_DRAPING_LEVEL)) {
-    //  return Model.XXX_DRAPING_LEVEL;
-    //}
-    //console.log(
-    //  `To cover ${desiredNumberOfTilesCovered} tiles need level ${desiredLevel}, clamped to ${validImageryLevel}, as int ${imageryLevel}`,
-    //);
-
     return imageryLevel;
   }
 

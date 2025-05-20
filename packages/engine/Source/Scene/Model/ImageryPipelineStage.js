@@ -12,9 +12,10 @@ import ImageryFlags from "./ImageryFlags.js";
 import ModelPrimitiveImagery from "./ModelPrimitiveImagery.js";
 import ImageryInput from "./ImageryInput.js";
 import ImageryState from "../ImageryState.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
- * TODO_DRAPING: A debugging flag to draw the boundaries of imagery tiles
+ * A compile-time debugging flag to draw the boundaries of imagery tiles
  * (Similar to "SHOW_TILE_BOUNDARIES" in GlobeFS.glsl)
  */
 const debugDrawImageryBoundaries = false;
@@ -83,7 +84,7 @@ class ImageryPipelineStage {
     // containing the UNIQUE projections from the imagery layers,
     // to establish the mapping between the imagery index and the
     // imagery texture coordinate attribute set index.
-    // (This should be implemented and/or document better...)
+    // (This should be implemented and/or documented better...)
     const imageryLayers = model.imageryLayers;
     const allProjections =
       ModelPrimitiveImagery._extractProjections(imageryLayers);
@@ -113,11 +114,12 @@ class ImageryPipelineStage {
       return;
     }
 
-    // XXX_DRAPING This will have to be handled with upsampling.
+    // TODO_DRAPING This will have to be handled with upsampling.
     // For now, just truncate the textures to not exceed the
     // number of texture units
     if (imageryInputs.length > 10) {
-      console.log(
+      oneTimeWarning(
+        "imagery-texture-units",
         `Warning: Found ${imageryInputs.length} texture units, truncating`,
       );
       imageryInputs.length = 10;

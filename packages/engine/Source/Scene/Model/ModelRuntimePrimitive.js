@@ -28,6 +28,7 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -278,7 +279,14 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   }
 
   if (hasImageryLayers) {
-    pipelineStages.push(ImageryPipelineStage);
+    if (hasOutlines) {
+      oneTimeWarning(
+        "outlines-and-draping",
+        "Primitive outlines disable imagery draping",
+      );
+    } else {
+      pipelineStages.push(ImageryPipelineStage);
+    }
   }
 
   if (materialsEnabled) {

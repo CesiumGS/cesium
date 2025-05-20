@@ -8,9 +8,6 @@ import BoundingRectangle from "../../Core/BoundingRectangle.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import Check from "../../Core/Check.js";
 
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
-
 import AttributeType from "../AttributeType.js";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -139,18 +136,15 @@ class ModelImageryMapping {
    * @param {Rectangle} cartographicBoundingRectangle The bounding
    * rectangle of the cartographic positions
    * @param {MapProjection} projection The projection that should be used
-   * @param {Context} context The context for allocating GL resources
    * @returns {ModelComponents.Attribute} The new attribute
    */
   static createTextureCoordinatesAttributeForMappedPositions(
     mappedPositions,
     projection,
-    context,
   ) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("mappedPositions", mappedPositions);
     Check.defined("projection", projection);
-    Check.defined("context", context);
     //>>includeEnd('debug');
 
     // Create the typed array that contains the texture coordinates
@@ -161,10 +155,8 @@ class ModelImageryMapping {
       );
 
     // Create an attribute from the texture coordinates typed array
-    const texCoordAttribute = ModelImageryMapping.createTexCoordAttribute(
-      texCoordsTypedArray,
-      context,
-    );
+    const texCoordAttribute =
+      ModelImageryMapping.createTexCoordAttribute(texCoordsTypedArray);
 
     return texCoordAttribute;
   }
@@ -274,33 +266,6 @@ class ModelImageryMapping {
   }
 
   /**
-   * Creates a new iterable that filters the given one, based on
-   * the given inclusion predicate
-   *
-   * @param {Iterable} iterable The input iterable
-   * @param {Function} inclusionPredicate The inclusion predicate
-   * @returns {Iterable} The filtered iterable
-   */
-  static filter(iterable, inclusionPredicate) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("iterable", iterable);
-    Check.defined("inclusionPredicate", inclusionPredicate);
-    //>>includeEnd('debug');
-
-    const result = {
-      [Symbol.iterator]: function* () {
-        for (const element of iterable) {
-          const included = inclusionPredicate(element);
-          if (included) {
-            yield element;
-          }
-        }
-      },
-    };
-    return result;
-  }
-
-  /**
    * Computes the bounding rectangle of the given cartographic positions,
    * stores it in the given result, and returns it.
    *
@@ -369,7 +334,7 @@ class ModelImageryMapping {
    * are created by converting the given `Cartesian3` objects to
    * cartographics, based on the given ellipsoid.
    *
-   * The resulting iterable will always return the same `Cartesian3`
+   * The resulting iterable will always return the same `Cartographic`
    * object. Clients should not store and modify this object.
    *
    * @param {Iterable<Cartesian3>} positions The positions
@@ -383,18 +348,22 @@ class ModelImageryMapping {
     //>>includeEnd('debug');
 
     const cartographicPosition = new Cartographic();
-    const allCartographicPositions = ModelImageryMapping.map(positions, (p) => {
+    const cartographicPositions = ModelImageryMapping.map(positions, (p) => {
+      // Note: This will not yield valid results for p=(0,0,0).
+      // But there is no sensible cartographic position for
+      // that, so simply accept the unspecified output here.
       ellipsoid.cartesianToCartographic(p, cartographicPosition);
       return cartographicPosition;
     });
-    const cartographicPositions = ModelImageryMapping.filter(
-      allCartographicPositions,
-      defined,
-    );
     return cartographicPositions;
   }
 
   /**
+   * Creates an iterable over the results of applying the given projection
+   * to the given cartographic positions.
+   *
+   * The resulting iterable will always return the same `Cartesian3`
+   * object. Clients should not store and modify this object.
    *
    * @param {Iterable<Cartographic>} cartographicPositions The cartographic
    * positions
@@ -488,24 +457,12 @@ class ModelImageryMapping {
    * that contains the data from the given typed array.
    *
    * @param {TypedArray} texCoordsTypedArray The typed array
-   * @param {Context} context The GL context
    * @returns {ModelComponents.Attribute} The attribute
    */
-  static createTexCoordAttribute(texCoordsTypedArray, context) {
+  static createTexCoordAttribute(texCoordsTypedArray) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("texCoordsTypedArray", texCoordsTypedArray);
-    Check.defined("context", context);
     //>>includeEnd('debug');
-
-    const texCoordsBuffer = Buffer.createVertexBuffer({
-      context: context,
-      typedArray: texCoordsTypedArray,
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    // TODO_DRAPING Review this. Probably, some cleanup
-    // has to happen somewhere else after setting this:
-    texCoordsBuffer.vertexArrayDestroyable = false;
 
     const texCoordAttribute = {
       name: "Imagery Texture Coordinates",
@@ -520,7 +477,6 @@ class ModelImageryMapping {
       constant: new Cartesian2(0, 0),
       quantization: undefined,
       typedArray: texCoordsTypedArray,
-      buffer: texCoordsBuffer,
       byteOffset: 0,
       byteStride: undefined,
     };
