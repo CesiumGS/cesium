@@ -1956,10 +1956,12 @@ Model.prototype.update = function (frameState) {
   const modelImagery = this._modelImagery;
   modelImagery.update(frameState);
   if (!modelImagery.ready) {
-    // TODO_DRAPING A compile-time flag to wait for the imagery
-    // to be ready before considering the model to be ready:
-    const waitForImagery = false;
-    if (waitForImagery) {
+    // If the imagery loading should not happen asynchronously,
+    // then do not let the model count as 'ready' until the
+    // modelImagery is 'ready'
+    const asynchronouslyLoadImagery =
+      this._content?.tileset?._asynchronouslyLoadImagery ?? false;
+    if (!asynchronouslyLoadImagery) {
       return;
     }
   }

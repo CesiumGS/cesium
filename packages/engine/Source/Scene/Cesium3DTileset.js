@@ -119,6 +119,7 @@ import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
  * @property {boolean} [enableCollision=false] When <code>true</code>, enables collisions for camera or CPU picking. While this is <code>true</code> the camera will be prevented from going below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
  * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has been created.
  * @property {boolean} [enablePick=false] Whether to allow collision and CPU picking with <code>pick</code> when using WebGL 1. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
+ * @property {boolean} [asynchronouslyLoadImagery=false] Whether loading imagery that is draped over the tileset should be done asynchronously. If this is <code>true</code>, then tile content will be displayed with its original texture until the imagery texture is loaded. If this is <code>false</code>, then the tile content will not be displayed until the imagery is ready.
  * @property {string} [debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @property {boolean} [debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -346,6 +347,8 @@ function Cesium3DTileset(options) {
 
   this._vectorKeepDecodedPositions =
     options.vectorKeepDecodedPositions ?? false;
+
+  this._asynchronouslyLoadImagery = options.asynchronouslyLoadImagery ?? false;
 
   /**
    * Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
