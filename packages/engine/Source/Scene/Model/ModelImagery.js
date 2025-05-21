@@ -1,5 +1,6 @@
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
+import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Rectangle from "../../Core/Rectangle.js";
 
@@ -104,6 +105,7 @@ class ModelImagery {
     if (!this._allImageryLayersReady) {
       return;
     }
+
     if (!defined(this._modelPrimitiveImageries)) {
       this._modelPrimitiveImageries = this._createModelPrimitiveImageries();
     }
@@ -200,6 +202,23 @@ class ModelImagery {
       const modelPrimitiveImagery = modelPrimitiveImageries[i];
       modelPrimitiveImagery.update(frameState);
     }
+  }
+
+  /**
+   * Destroy and delete all <code>ModelPrimitiveImagery</code> instances
+   * if they already have been created.
+   */
+  _deleteModelPrimitiveImageries() {
+    const modelPrimitiveImageries = this._modelPrimitiveImageries;
+    if (!defined(modelPrimitiveImageries)) {
+      return;
+    }
+    const length = modelPrimitiveImageries.length;
+    for (let i = 0; i < length; i++) {
+      const modelPrimitiveImagery = modelPrimitiveImageries[i];
+      modelPrimitiveImagery.destroy();
+    }
+    delete this._modelPrimitiveImageries;
   }
 
   /**
@@ -399,6 +418,29 @@ class ModelImagery {
       const imageryLayer = imageryLayers.get(i);
       imageryConfigurations[i] = new ImageryConfiguration(imageryLayer);
     }
+  }
+
+  /**
+   * Returns whether this object was destroyed.
+   *
+   * If this object was destroyed, calling any function other than
+   * <code>isDestroyed</code> will result in a {@link DeveloperError}.
+   *
+   * @returns {boolean} Whether this object was destroyed
+   */
+  isDestroyed() {
+    return false;
+  }
+
+  /**
+   * Destroys this object and all its resources.
+   */
+  destroy() {
+    if (this.isDestroyed()) {
+      return;
+    }
+    this._deleteModelPrimitiveImageries();
+    return destroyObject(this);
   }
 }
 

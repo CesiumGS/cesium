@@ -2,6 +2,7 @@ import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Check from "../../Core/Check.js";
+import destroyObject from "../../Core/destroyObject.js";
 
 import ImageryState from "../ImageryState.js";
 import ImageryCoverageComputations from "./ImageryCoverageComputations.js";
@@ -96,6 +97,13 @@ class ModelPrimitiveImagery {
     this._mappedPositionsModelMatrix = new Matrix4();
 
     /**
+     * The value that the <code>Cesium3DTileset.imageryLayersModificationCounter</code>
+     * had during the last update call. This is used for triggering updates when the
+     * imagery layer collection in the tileset changes.
+     */
+    this._lastImageryLayersModificationCounter = 0;
+
+    /**
      * The texture coordinate attributes, one for each projection.
      *
      * This contains one <code>ModelComponents.Attribute</code> for each
@@ -104,6 +112,18 @@ class ModelPrimitiveImagery {
      * positions for the respective ellipsoid of that projection.
      */
     this._imageryTexCoordAttributesPerProjection = undefined;
+
+    /**
+     * The current imagery layers.
+     *
+     * This is initialized when the _coveragesPerLayer are computed,
+     * and tracked to that the reference counters of the imageries
+     * can be decreased when the coverages per layer are deleted.
+     *
+     * @type {ImageryLayer[]|undefined}
+     * @private
+     */
+    this._currentImageryLayers = undefined;
 
     /**
      * Information about the imagery tiles that are covered by the positions
@@ -207,25 +227,89 @@ class ModelPrimitiveImagery {
     Check.defined("frameState", frameState);
     //>>includeEnd('debug');
 
+    // If the imagery layers have been modified since the last call
+    // to this function, then re-build everything
+    const model = this._model;
+    const content = model.content;
+    const tileset = content.tileset;
+    const modificationCounter = tileset.imageryLayersModificationCounter;
+    if (this._lastImageryLayersModificationCounter !== modificationCounter) {
+      delete this._mappedPositionsPerEllipsoid;
+      this._lastImageryLayersModificationCounter = modificationCounter;
+    }
+
     if (this._mappedPositionsNeedUpdate) {
+      model.resetDrawCommands();
       this._mappedPositionsPerEllipsoid =
         this._computeMappedPositionsPerEllipsoid();
-      this._coveragesPerLayer = undefined;
-      this.destroyImageryTexCoordAttributes();
+      this._deleteCoveragesPerLayer();
+      this._destroyImageryTexCoordAttributes();
     }
 
     if (!defined(this._imageryTexCoordAttributesPerProjection)) {
       this._imageryTexCoordAttributesPerProjection =
         this._computeImageryTexCoordsAttributesPerProjection();
-      this.uploadImageryTexCoordAttributes(frameState.context);
+      this._uploadImageryTexCoordAttributes(frameState.context);
     }
 
     if (!defined(this._coveragesPerLayer)) {
-      this._coveragesPerLayer = this._computeCoveragesPerLayer();
+      this._computeCoveragesPerLayer();
       this._allImageriesReady = false;
     }
     if (!this._allImageriesReady) {
       this._updateImageries(frameState);
+    }
+  }
+
+  /**
+   * Delete the <code>_coveragesPerLayer</code> if they are defined.
+   *
+   * This will call <code>deleteCoverages</code> for each set of coverages,
+   * and eventually delete the <code>_coveragesPerLayer</code>.
+   *
+   * This will cause the reference counters of the imageries to be
+   * decreased.
+   */
+  _deleteCoveragesPerLayer() {
+    const coveragesPerLayer = this._coveragesPerLayer;
+    if (!defined(coveragesPerLayer)) {
+      return;
+    }
+    const imageryLayers = this._currentImageryLayers;
+    const length = coveragesPerLayer.length;
+    for (let i = 0; i < length; i++) {
+      const imageryLayer = imageryLayers[i];
+      const coverages = coveragesPerLayer[i];
+      this._deleteCoverages(imageryLayer, coverages);
+    }
+    delete this._currentImageryLayers;
+    delete this._coveragesPerLayer;
+  }
+
+  /**
+   * Delete the given imagery coverage objects for the given imagery
+   * layer, meaning that it will cause the reference counters of the
+   * imageries to be decreased.
+   *
+   * If the imagery layer already has been destroyed, then nothing
+   * will be done.
+   *
+   * @param {ImageryLayer} imageryLayer The imagery layer
+   * @param {ImageryCoverage[]} coverages The coverages
+   */
+  _deleteCoverages(imageryLayer, coverages) {
+    if (imageryLayer.isDestroyed()) {
+      return;
+    }
+    const length = coverages.length;
+    for (let i = 0; i < length; i++) {
+      const coverage = coverages[i];
+      const imagery = imageryLayer.getImageryFromCache(
+        coverage.x,
+        coverage.y,
+        coverage.level,
+      );
+      imagery.releaseReference();
     }
   }
 
@@ -235,7 +319,7 @@ class ModelPrimitiveImagery {
    *
    * @param {Context} context The GL context
    */
-  uploadImageryTexCoordAttributes(context) {
+  _uploadImageryTexCoordAttributes(context) {
     const attributes = this._imageryTexCoordAttributesPerProjection;
     if (!defined(attributes)) {
       return;
@@ -252,7 +336,10 @@ class ModelPrimitiveImagery {
       });
 
       // TODO_DRAPING Review this. Probably, some cleanup
-      // has to happen somewhere else after setting this:
+      // has to happen somewhere else after setting this.
+      // Check that the call to "destroy" in
+      // _destroyImageryTexCoordAttributes is the right
+      // thing to do here.
       imageryTexCoordBuffer.vertexArrayDestroyable = false;
 
       attribute.buffer = imageryTexCoordBuffer;
@@ -267,7 +354,7 @@ class ModelPrimitiveImagery {
    * they are supposed to be re-computed with
    * <code>_computeImageryTexCoordsAttributesPerProjection</code>
    */
-  destroyImageryTexCoordAttributes() {
+  _destroyImageryTexCoordAttributes() {
     const attributes = this._imageryTexCoordAttributesPerProjection;
     if (!defined(attributes)) {
       return;
@@ -292,7 +379,7 @@ class ModelPrimitiveImagery {
    * re-computed with <code>_computeMappedPositionsPerEllipsoid</code>.
    *
    * This is <code>true</code> when the positions have not yet been
-   * computed, or when the <code>modelMatrix/code> of the model
+   * computed, or when the <code>modelMatrix</code> of the model
    * changed since the previous call.
    *
    * @returns {boolean} Whether the mapped positions need an update
@@ -305,7 +392,6 @@ class ModelPrimitiveImagery {
     const model = this._model;
     const lastModelMatrix = this._mappedPositionsModelMatrix;
     if (!Matrix4.equals(model.modelMatrix, lastModelMatrix)) {
-      model.resetDrawCommands();
       return true;
     }
     return false;
@@ -518,7 +604,7 @@ class ModelPrimitiveImagery {
    * Compute the coverage information for the primitive, based on the
    * imagery layers that are associated with the model.
    *
-   * This returns an array where <code>coveragesPerLayer[layerIndex]</code>
+   * This updates the <code>_coveragesPerLayer[layerIndex]</code>, which
    * is an array that contains the <code>ImageryCoverage</code> objects that
    * describe the imagery tiles that are covered by the primitive, including
    * their texture coordinate rectangle.
@@ -526,20 +612,40 @@ class ModelPrimitiveImagery {
    * This has to be called after the mapped positions for the primitive
    * have been computed with <code>_computeMappedPositionsPerEllipsoid</code>.
    *
-   * @returns {ImageryCoverage[][]} The coverage information
    * @private
    */
   _computeCoveragesPerLayer() {
+    const coveragesPerLayer = [];
+    const currentImageryLayers = [];
+
     const model = this._model;
     const imageryLayers = model.imageryLayers;
-    const coveragesPerLayer = [];
     const length = imageryLayers.length;
     for (let i = 0; i < length; i++) {
       const imageryLayer = imageryLayers.get(i);
       const coverages = this._computeCoverage(imageryLayer);
       coveragesPerLayer.push(coverages);
+      currentImageryLayers.push(imageryLayer);
     }
-    return coveragesPerLayer;
+
+    // TODO_DRAPING Review this: Is this the right place to add
+    // the references? The reference counters will be decreased
+    // in _deleteCoveragesPerLayer
+    for (let i = 0; i < length; i++) {
+      const imageryLayer = imageryLayers.get(i);
+      const coverages = coveragesPerLayer[i];
+      for (const coverage of coverages) {
+        const imagery = imageryLayer.getImageryFromCache(
+          coverage.x,
+          coverage.y,
+          coverage.level,
+        );
+        imagery.addReference();
+      }
+    }
+
+    this._coveragesPerLayer = coveragesPerLayer;
+    this._currentImageryLayers = currentImageryLayers;
   }
 
   /**
@@ -572,24 +678,6 @@ class ModelPrimitiveImagery {
       imageryLayer,
       imageryLevel,
     );
-
-    // XXX_DRAPING Adding references here? Where will they be removed?
-    // There will likely have to be a "removeReferencesOfCoverages"
-    // function that goes through the this._coveragesPerLayer and
-    // (in the context of deleting them and setting them to undefined),
-    // and decreases the reference count of all imageries that are
-    // referred to from that
-    //*
-    for (const coverage of coverages) {
-      const imagery = imageryLayer.getImageryFromCache(
-        coverage.x,
-        coverage.y,
-        coverage.level,
-      );
-      imagery.addReference();
-    }
-    //*/
-
     return coverages;
   }
 
@@ -797,6 +885,30 @@ class ModelPrimitiveImagery {
       return false;
     }
     return this._allImageriesReady;
+  }
+
+  /**
+   * Returns whether this object was destroyed.
+   *
+   * If this object was destroyed, calling any function other than
+   * <code>isDestroyed</code> will result in a {@link DeveloperError}.
+   *
+   * @returns {boolean} Whether this object was destroyed
+   */
+  isDestroyed() {
+    return false;
+  }
+
+  /**
+   * Destroys this object and all its resources.
+   */
+  destroy() {
+    if (this.isDestroyed()) {
+      return;
+    }
+    this._deleteCoveragesPerLayer();
+    this._destroyImageryTexCoordAttributes();
+    return destroyObject(this);
   }
 
   /**

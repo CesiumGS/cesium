@@ -62,6 +62,7 @@ import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
 import Ray from "../Core/Ray.js";
 import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
+import ImageryLayerCollection from "./ImageryLayerCollection.js";
 
 /**
  * @typedef {Object} Cesium3DTileset.ConstructorOptions
@@ -348,6 +349,32 @@ function Cesium3DTileset(options) {
   this._vectorKeepDecodedPositions =
     options.vectorKeepDecodedPositions ?? false;
 
+  /**
+   * The collection of <code>ImageryLayer</code> objects providing the
+   * imagery that should be draped over the (model-based) contents
+   * of this tileset.
+   *
+   * @type {ImageryLayerCollection}
+   * @readonly
+   */
+  this._imageryLayers = initializeImageryLayerCollection(this);
+
+  /**
+   * A counter that will be increased for each modification of the
+   * imagery layers (i.e. for each layerAdded, layerRemoved,
+   * layerMoved, or layerShownOrHidden event). This can be used
+   * by the <code>ModelImagery</code> class to detect changes in
+   * the imagery, and trigger the appropriate updates.
+   */
+  this._imageryLayersModificationCounter = 0;
+
+  /**
+   * Whether loading imagery that is draped over the tileset should be
+   * done asynchronously. If this is <code>true</code>, then tile content
+   * will be displayed with its original texture until the imagery texture
+   * is loaded. If this is <code>false</code>, then the tile content will
+   * not be displayed until the imagery is ready.
+   */
   this._asynchronouslyLoadImagery = options.asynchronouslyLoadImagery ?? false;
 
   /**
@@ -1023,6 +1050,29 @@ function Cesium3DTileset(options) {
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 }
 
+/**
+ * Initialize the <code>ImageryLayerCollection</code> for the given
+ * tileset.
+ *
+ * This will create and return an imagery layer collection that has
+ * listeners for all modifications, that will increase the
+ * imageryLayersModificationCounter of the given tileset.
+ *
+ * @param {Cesium3DTileset} tileset The tileset
+ * @returns {ImageryLayerCollection} The imagery layers
+ */
+function initializeImageryLayerCollection(tileset) {
+  const imageryLayers = new ImageryLayerCollection();
+  const imageryLayersListener = function () {
+    tileset._imageryLayersModificationCounter++;
+  };
+  imageryLayers.layerAdded.addEventListener(imageryLayersListener);
+  imageryLayers.layerRemoved.addEventListener(imageryLayersListener);
+  imageryLayers.layerMoved.addEventListener(imageryLayersListener);
+  imageryLayers.layerShownOrHidden.addEventListener(imageryLayersListener);
+  return imageryLayers;
+}
+
 Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * NOTE: This getter exists so that `Picking.js` can differentiate between
@@ -1108,14 +1158,43 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @type {ImageryLayerCollection}
    */
   imageryLayers: {
-    // TODO_DRAPING Attach a listener that will set some
-    // `tileset._imageryLayersDirty` flag that is passed to the
-    // models, so that the models can be updated for new imagery
     get: function () {
       return this._imageryLayers;
     },
-    set: function (value) {
-      this._imageryLayers = value;
+  },
+
+  /**
+   * The modification counter of the imagery layers.
+   *
+   * This is incremented for each modification (layerAdded, layerMoved,
+   * layerRemoved, layerShownOrHidden) of the imagery layers, and can
+   * be used <b>internally</b> (by <code>ModelPrimitiveImagery</code>)
+   * to trigger updates whenever the collection of imagery layers
+   * changes.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {number}
+   * @private
+   */
+  imageryLayersModificationCounter: {
+    get: function () {
+      return this._imageryLayersModificationCounter;
+    },
+  },
+
+  /**
+   * Whether loading imagery that is draped over the tileset should be
+   * done asynchronously.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {boolean}
+   * @private
+   */
+  asynchronouslyLoadImagery: {
+    get: function () {
+      return this._asynchronouslyLoadImagery;
     },
   },
 
@@ -3505,6 +3584,11 @@ Cesium3DTileset.prototype.destroy = function () {
     this._environmentMapManager.destroy();
   }
   this._environmentMapManager = undefined;
+
+  if (!this._imageryLayers.isDestroyed()) {
+    this._imageryLayers.destroy();
+  }
+  this._imageryLayers = undefined;
 
   return destroyObject(this);
 };
