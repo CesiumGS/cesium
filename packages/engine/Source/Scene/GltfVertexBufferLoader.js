@@ -323,7 +323,7 @@ function processSpz(vertexBufferLoader) {
     vertexBufferLoader._typedArray = gcloudData.rotations;
   } else if (vertexBufferLoader._attributeSemantic === "COLOR_0") {
     const colors = gcloudData.colors;
-    const alpha = gcloudData.alphas;
+    const alphas = gcloudData.alphas;
     vertexBufferLoader._typedArray = new Uint8Array((colors.length / 3) * 4);
     for (let i = 0; i < colors.length / 3; i++) {
       vertexBufferLoader._typedArray[i * 4] = CesiumMath.clamp(
@@ -342,7 +342,7 @@ function processSpz(vertexBufferLoader) {
         255.0,
       );
       vertexBufferLoader._typedArray[i * 4 + 3] = CesiumMath.clamp(
-        alpha.typedArray[i] * 255.0,
+        alphas[i] * 255.0,
         0.0,
         255.0,
       );
