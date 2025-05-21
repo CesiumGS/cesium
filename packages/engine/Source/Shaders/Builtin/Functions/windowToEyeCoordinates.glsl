@@ -76,7 +76,6 @@ vec4 czm_screenToEyeCoordinates(vec2 screenCoordinateXY, float depthOrLogDepth)
     vec4 screenCoord = vec4(screenCoordinateXY, far * (1.0 - near / depthFromCamera) / (far - near), 1.0);
     vec4 eyeCoordinate = czm_screenToEyeCoordinates(screenCoord);
     eyeCoordinate.w = 1.0 / depthFromCamera; // Better precision
-    return eyeCoordinate;
 #else
     vec4 screenCoord = vec4(screenCoordinateXY, depthOrLogDepth, 1.0);
     vec4 eyeCoordinate = czm_screenToEyeCoordinates(screenCoord);

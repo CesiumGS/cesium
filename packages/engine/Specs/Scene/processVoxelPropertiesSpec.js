@@ -90,7 +90,6 @@ describe("Scene/processVoxelProperties", function () {
       "    vec3 positionUvLocal;",
       "    vec3 surfaceNormal;",
       "    vec3 viewDirUv;",
-      "    vec3 viewDirWorld;",
       "    float travelDistance;",
       "    int stepCount;",
       "    int sampleIndex;",
