@@ -36,6 +36,8 @@ import AttributeType from "../AttributeType.js";
  * NOTE: All this does not properly handle MATn types. There should be SOME
  * abstraction for element- and component-wise access of the data. See
  * https://github.com/javagl/JglTF/blob/84ce6d019fec3b75b6af1649bbe834005b2c620f/jgltf-model/src/main/java/de/javagl/jgltf/model/AbstractAccessorData.java#L149
+ *
+ * @private
  */
 class ModelReader {
   /**

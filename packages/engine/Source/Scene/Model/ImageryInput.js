@@ -14,6 +14,8 @@
  *
  * This information is summarized in an instance of this class, to later
  * be passed to the shader via uniforms.
+ *
+ * @private
  */
 class ImageryInput {
   /**

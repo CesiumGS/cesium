@@ -9,6 +9,8 @@ import Check from "../../Core/Check.js";
  * on one of the imagery layers. This avoids recomputing the transform
  * of the primitive POSITION attribute values into ECEF, and the subsequent
  * conversion of these positions into cartographic positions.
+ *
+ * @private
  */
 class MappedPositions {
   /**

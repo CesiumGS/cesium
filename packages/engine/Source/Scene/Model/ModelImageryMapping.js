@@ -14,7 +14,9 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * A class for computing the texture coordinates of imagery that is
- * supposed to be mapped on a `Model`/`ModelComponents.Primitive`.
+ * supposed to be mapped on a <code>ModelComponents.Primitive</code>.
+ *
+ * @private
  */
 class ModelImageryMapping {
   /**

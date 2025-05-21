@@ -27,6 +27,8 @@ import ModelPrimitiveImagery from "./ModelPrimitiveImagery.js";
  * become <code>true</code>. The model imagery counts as "ready" when all
  * the imagery layers of the model are <code>ready</code>, and all the
  * <code>ModelPrimitiveImagery</code> instances are <code>ready</code>.
+ *
+ * @private
  */
 class ModelImagery {
   /**
