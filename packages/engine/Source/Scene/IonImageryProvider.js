@@ -18,8 +18,8 @@ import WebMapTileServiceImageryProvider from "./WebMapTileServiceImageryProvider
 // assets in the Cesium ion beta. They are subject to change.
 const ImageryProviderAsyncMapping = {
   ARCGIS_MAPSERVER: ArcGisMapServerImageryProvider.fromUrl,
-  BING: async (url, options) => {
-    return BingMapsImageryProvider.fromUrl(url, options);
+  BING: async (ionResource, options) => {
+    return BingMapsImageryProvider.fromUrl(ionResource, options);
   },
   GOOGLE_EARTH: async (url, options) => {
     const channel = options.channel;
@@ -53,6 +53,8 @@ const ImageryProviderAsyncMapping = {
     });
   },
 };
+
+const ProxiedProviders = ["BING"];
 
 /**
  * @typedef {object} IonImageryProvider.ConstructorOptions
@@ -292,10 +294,9 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
 
   let imageryProvider;
   const externalType = endpoint.externalType;
+  const ionResource = new IonResource(endpoint, endpointResource);
   if (!defined(externalType)) {
-    imageryProvider = await TileMapServiceImageryProvider.fromUrl(
-      new IonResource(endpoint, endpointResource),
-    );
+    imageryProvider = await TileMapServiceImageryProvider.fromUrl(ionResource);
   } else {
     const factory = ImageryProviderAsyncMapping[externalType];
 
@@ -304,11 +305,17 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
         `Unrecognized Cesium ion imagery type: ${externalType}`,
       );
     }
+
     // Make a copy before editing since this object reference is cached;
-    const options = { ...endpoint.options };
-    const url = options.url;
-    delete options.url;
-    imageryProvider = await factory(url, options);
+    const endPointOptions = { ...endpoint.options };
+    const url = endPointOptions.url;
+    delete endPointOptions.url;
+
+    if (ProxiedProviders.includes(externalType)) {
+      imageryProvider = await factory(ionResource, endPointOptions);
+    } else {
+      imageryProvider = await factory(url, endPointOptions);
+    }
   }
 
   const provider = new IonImageryProvider(options);
