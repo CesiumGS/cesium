@@ -1,23 +1,23 @@
-import addExtensionsUsed from "./addExtensionsUsed.js";
-import addToArray from "./addToArray.js";
-import findAccessorMinMax from "./findAccessorMinMax.js";
-import ForEach from "./ForEach.js";
-import getAccessorByteStride from "./getAccessorByteStride.js";
-import numberOfComponentsForType from "./numberOfComponentsForType.js";
-import moveTechniqueRenderStates from "./moveTechniqueRenderStates.js";
-import moveTechniquesToExtension from "./moveTechniquesToExtension.js";
-import removeUnusedElements from "./removeUnusedElements.js";
-import updateAccessorComponentTypes from "./updateAccessorComponentTypes.js";
-import removeExtension from "./removeExtension.js";
+import { defined } from "@cesium/utils";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
+import addExtensionsUsed from "./addExtensionsUsed.js";
+import addToArray from "./addToArray.js";
+import findAccessorMinMax from "./findAccessorMinMax.js";
+import ForEach from "./ForEach.js";
+import getAccessorByteStride from "./getAccessorByteStride.js";
+import moveTechniqueRenderStates from "./moveTechniqueRenderStates.js";
+import moveTechniquesToExtension from "./moveTechniquesToExtension.js";
+import numberOfComponentsForType from "./numberOfComponentsForType.js";
+import removeExtension from "./removeExtension.js";
+import removeUnusedElements from "./removeUnusedElements.js";
+import updateAccessorComponentTypes from "./updateAccessorComponentTypes.js";
 
 const updateFunctions = {
   0.8: glTF08to10,

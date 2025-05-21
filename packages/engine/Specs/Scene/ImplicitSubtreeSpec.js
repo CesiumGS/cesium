@@ -1,3 +1,6 @@
+import { RuntimeError } from "@cesium/utils";
+import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
+import MetadataTester from "../../../../Specs/MetadataTester.js";
 import {
   Cartesian3,
   clone,
@@ -7,10 +10,7 @@ import {
   MetadataSchema,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
-import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
-import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe("Scene/ImplicitSubtree", function () {
   function availabilityToBooleanArray(availability) {

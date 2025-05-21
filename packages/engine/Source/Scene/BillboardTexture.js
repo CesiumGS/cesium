@@ -1,5 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
+import { Check, defined } from "@cesium/utils";
 import BillboardLoadState from "./BillboardLoadState.js";
 
 /**

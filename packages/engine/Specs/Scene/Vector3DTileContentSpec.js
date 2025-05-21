@@ -1,5 +1,6 @@
-import createScene from "../../../../Specs/createScene.js";
+import { RuntimeError } from "@cesium/utils";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
 import {
   Cartesian3,
   Cesium3DTileFeature,
@@ -19,7 +20,6 @@ import {
   Rectangle,
   RectangleGeometry,
   RenderState,
-  RuntimeError,
   StencilConstants,
 } from "../../index.js";
 

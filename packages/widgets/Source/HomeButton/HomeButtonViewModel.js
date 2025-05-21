@@ -1,6 +1,6 @@
-import { defined, DeveloperError } from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
+import { defined, DeveloperError } from "@cesium/utils";
 import createCommand from "../createCommand.js";
+import knockout from "../ThirdParty/knockout.js";
 
 /**
  * The view model for {@link HomeButton}.

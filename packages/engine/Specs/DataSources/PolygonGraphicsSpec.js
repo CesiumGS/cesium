@@ -1,13 +1,13 @@
 import {
   ArcType,
   Cartesian3,
+  ClassificationType,
   Color,
-  DistanceDisplayCondition,
-  PolygonHierarchy,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
   PolygonGraphics,
-  ClassificationType,
+  PolygonHierarchy,
   ShadowMode,
 } from "../../index.js";
 

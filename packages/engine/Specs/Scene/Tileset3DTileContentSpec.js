@@ -1,13 +1,13 @@
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
 import {
   Cartesian3,
   Cesium3DContentGroup,
-  HeadingPitchRange,
-  MetadataClass,
   ContentMetadata,
   GroupMetadata,
+  HeadingPitchRange,
+  MetadataClass,
 } from "../../index.js";
-import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/Tileset3DTileContent",

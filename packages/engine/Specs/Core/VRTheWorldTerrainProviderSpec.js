@@ -1,3 +1,4 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   GeographicTilingScheme,
   HeightmapTerrainData,
@@ -5,7 +6,6 @@ import {
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   TerrainProvider,
   VRTheWorldTerrainProvider,
 } from "../../index.js";

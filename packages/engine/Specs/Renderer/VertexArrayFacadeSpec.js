@@ -1,6 +1,6 @@
 import {
-  ComponentDatatype,
   BufferUsage,
+  ComponentDatatype,
   VertexArrayFacade,
 } from "../../index.js";
 

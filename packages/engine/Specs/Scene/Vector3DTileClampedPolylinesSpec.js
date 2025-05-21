@@ -6,11 +6,11 @@ import {
   destroyObject,
   Ellipsoid,
   GeometryInstance,
-  Rectangle,
-  RectangleGeometry,
   Pass,
   PerInstanceColorAppearance,
   Primitive,
+  Rectangle,
+  RectangleGeometry,
   Vector3DTileClampedPolylines,
 } from "../../index.js";
 

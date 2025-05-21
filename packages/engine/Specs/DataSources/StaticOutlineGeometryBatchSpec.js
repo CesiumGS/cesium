@@ -1,17 +1,17 @@
 import {
+  CallbackProperty,
   Cartesian3,
   Color,
   DistanceDisplayCondition,
-  JulianDate,
-  Math as CesiumMath,
-  TimeInterval,
-  TimeIntervalCollection,
-  CallbackProperty,
   EllipseGeometryUpdater,
   Entity,
-  StaticOutlineGeometryBatch,
-  TimeIntervalCollectionProperty,
+  JulianDate,
+  Math as CesiumMath,
   ShadowMode,
+  StaticOutlineGeometryBatch,
+  TimeInterval,
+  TimeIntervalCollection,
+  TimeIntervalCollectionProperty,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

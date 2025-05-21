@@ -1,3 +1,4 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   Cartesian3,
   Cartesian4,
@@ -6,11 +7,10 @@ import {
   Matrix4,
   Quaternion,
   TranslationRotationScale,
-  RuntimeError,
 } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/Matrix4", function () {
   it("default constructor creates values array with all zeros.", function () {

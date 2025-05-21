@@ -4,8 +4,8 @@ import {
   Math as CesiumMath,
   Matrix3,
   OrientedBoundingBox,
-  VoxelPrimitive,
   VoxelCell,
+  VoxelPrimitive,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

@@ -1,7 +1,5 @@
 import {
   computeFlyToLocationForRectangle,
-  defined,
-  DeveloperError,
   destroyObject,
   Event,
   GeocoderService,
@@ -13,8 +11,9 @@ import {
   Rectangle,
   sampleTerrainMostDetailed,
 } from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
+import { defined, DeveloperError } from "@cesium/utils";
 import createCommand from "../createCommand.js";
+import knockout from "../ThirdParty/knockout.js";
 
 // The height we use if geocoding to a specific point instead of an rectangle.
 const DEFAULT_HEIGHT = 1000;

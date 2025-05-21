@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import CallbackProperty from "./CallbackProperty.js";
 import GeometryUpdater from "./GeometryUpdater.js";
 import TerrainOffsetProperty from "./TerrainOffsetProperty.js";

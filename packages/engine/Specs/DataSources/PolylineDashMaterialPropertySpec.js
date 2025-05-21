@@ -1,9 +1,9 @@
 import {
   Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
+  JulianDate,
   PolylineDashMaterialProperty,
+  TimeInterval,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
 

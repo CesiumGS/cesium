@@ -1,12 +1,11 @@
-import Check from "../Core/Check.js";
+import { Check, defined } from "@cesium/utils";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
-import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
+import ModelComponents from "./ModelComponents.js";
 
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer

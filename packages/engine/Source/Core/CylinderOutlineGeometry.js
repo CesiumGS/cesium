@@ -1,12 +1,10 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CylinderGeometryLibrary from "./CylinderGeometryLibrary.js";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";

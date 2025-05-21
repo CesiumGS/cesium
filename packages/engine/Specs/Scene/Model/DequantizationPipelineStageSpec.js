@@ -1,3 +1,6 @@
+import createScene from "../../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   Cartesian2,
   Cartesian3,
@@ -11,9 +14,6 @@ import {
   ResourceCache,
   ShaderBuilder,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/DequantizationPipelineStage",

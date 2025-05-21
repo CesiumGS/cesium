@@ -1,3 +1,5 @@
+import createContext from "../../../../../Specs/createContext.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   Cartesian3,
   ClippingPolygon,
@@ -9,8 +11,6 @@ import {
   _shadersModelClippingPolygonsStageFS,
   _shadersModelClippingPolygonsStageVS,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
-import createContext from "../../../../../Specs/createContext.js";
 
 describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
   const positions = Cartesian3.fromRadiansArray([

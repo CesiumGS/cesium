@@ -1,4 +1,5 @@
-import { Color, defined, JulianDate } from "@cesium/engine";
+import { Color, JulianDate } from "@cesium/engine";
+import { defined } from "@cesium/utils";
 
 /**
  * @private

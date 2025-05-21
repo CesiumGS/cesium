@@ -1,20 +1,20 @@
 import {
+  BlendingState,
   BoundingRectangle,
-  Color,
-  ComponentDatatype,
-  IndexDatatype,
-  PrimitiveType,
-  WebGLConstants,
-  WindingOrder,
   Buffer,
   BufferUsage,
   ClearCommand,
+  Color,
+  ComponentDatatype,
   ContextLimits,
   DrawCommand,
+  IndexDatatype,
+  PrimitiveType,
   RenderState,
   ShaderProgram,
   VertexArray,
-  BlendingState,
+  WebGLConstants,
+  WindingOrder,
 } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";

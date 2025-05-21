@@ -1,12 +1,10 @@
+import { Check, defined, RuntimeError } from "@cesium/utils";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import ImageryProvider from "./ImageryProvider.js";

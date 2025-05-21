@@ -1,11 +1,11 @@
 import {
   Color,
-  JulianDate,
-  TimeInterval,
-  TimeIntervalCollection,
   ColorMaterialProperty,
   CompositeMaterialProperty,
   GridMaterialProperty,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
 } from "../../index.js";
 
 describe("DataSources/CompositeMaterialProperty", function () {

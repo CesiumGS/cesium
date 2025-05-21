@@ -1,3 +1,4 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   Color,
   ColorBlendMode,
@@ -7,7 +8,6 @@ import {
   RenderState,
   ShaderBuilder,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/ModelColorPipelineStage",

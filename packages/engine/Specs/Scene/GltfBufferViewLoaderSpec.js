@@ -1,9 +1,9 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   BufferLoader,
   GltfBufferViewLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/GltfBufferViewLoader", function () {

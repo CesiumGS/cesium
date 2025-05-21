@@ -1,10 +1,10 @@
+import MetadataTester from "../../../../../Specs/MetadataTester.js";
 import {
   Color,
-  ModelType,
   ModelFeature,
   ModelFeatureTable,
+  ModelType,
 } from "../../../index.js";
-import MetadataTester from "../../../../../Specs/MetadataTester.js";
 
 describe("Scene/Model/ModelFeature", function () {
   const mockModel = {

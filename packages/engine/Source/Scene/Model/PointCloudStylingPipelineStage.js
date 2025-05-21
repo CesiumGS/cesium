@@ -1,19 +1,18 @@
+import { defined, RuntimeError } from "@cesium/utils";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
-import CesiumMath from "../../Core/Math.js";
-import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
 import clone from "../../Core/clone.js";
-import defined from "../../Core/defined.js";
+import CesiumMath from "../../Core/Math.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelType from "./ModelType.js";
-import ModelUtility from "./ModelUtility.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
 import Pass from "../../Renderer/Pass.js";
-import PointCloudStylingStageVS from "../../Shaders/Model/PointCloudStylingStageVS.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import SceneMode from "../SceneMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import PointCloudStylingStageVS from "../../Shaders/Model/PointCloudStylingStageVS.js";
+import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
+import SceneMode from "../SceneMode.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelType from "./ModelType.js";
+import ModelUtility from "./ModelUtility.js";
 
 const scratchUniform = new Cartesian4();
 

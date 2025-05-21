@@ -1,9 +1,9 @@
 import {
-  Cartesian3,
-  Cartesian2,
   BoundingRectangle,
-  PolylineVolumeGeometry,
+  Cartesian2,
+  Cartesian3,
   Ellipsoid,
+  PolylineVolumeGeometry,
   PolylineVolumeGeometryLibrary,
 } from "../../index.js";
 

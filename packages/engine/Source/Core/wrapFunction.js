@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/utils";
 
 /**
  * Wraps a function on the provided objects with another function called in the

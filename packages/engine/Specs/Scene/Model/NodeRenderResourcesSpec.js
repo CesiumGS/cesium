@@ -1,14 +1,14 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   Axis,
   Cartesian3,
   DepthFunction,
   Matrix4,
-  ModelRuntimeNode,
   ModelRenderResources,
+  ModelRuntimeNode,
   NodeRenderResources,
   RenderState,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/NodeRenderResources",

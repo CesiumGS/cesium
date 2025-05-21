@@ -1,8 +1,8 @@
 import {
-  WebGLConstants,
   Appearance,
   BlendingState,
   Material,
+  WebGLConstants,
 } from "../../index.js";
 
 describe("Scene/Appearance", function () {

@@ -1,11 +1,11 @@
+import MetadataTester from "../../../../Specs/MetadataTester.js";
 import {
   BatchTableHierarchy,
-  PropertyTable,
+  JsonMetadataTable,
   MetadataSchema,
   MetadataTable,
-  JsonMetadataTable,
+  PropertyTable,
 } from "../../index.js";
-import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe("Scene/PropertyTable", function () {
   if (!MetadataTester.isSupported()) {

@@ -1,12 +1,11 @@
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import { defined, DeveloperError } from "@cesium/utils";
 import Event from "../../Core/Event.js";
+import Frozen from "../../Core/Frozen.js";
 import JulianDate from "../../Core/JulianDate.js";
 import CesiumMath from "../../Core/Math.js";
-import ModelAnimation from "./ModelAnimation.js";
 import ModelAnimationLoop from ".././ModelAnimationLoop.js";
 import ModelAnimationState from ".././ModelAnimationState.js";
+import ModelAnimation from "./ModelAnimation.js";
 
 /**
  * <div class="notice">

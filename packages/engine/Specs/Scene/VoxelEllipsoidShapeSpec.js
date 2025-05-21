@@ -2,13 +2,13 @@ import {
   BoundingSphere,
   Cartesian3,
   Math as CesiumMath,
-  OrientedBoundingBox,
   Matrix3,
   Matrix4,
+  OrientedBoundingBox,
   Quaternion,
   SpatialNode,
-  VoxelShape,
   VoxelEllipsoidShape,
+  VoxelShape,
 } from "../../index.js";
 
 describe("Scene/VoxelEllipsoidShape", function () {

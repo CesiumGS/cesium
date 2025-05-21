@@ -1,9 +1,9 @@
+import { defined, RuntimeError } from "@cesium/utils";
 import Uri from "urijs";
 import {
   appendForwardSlash,
   BingMapsImageryProvider,
   BingMapsStyle,
-  defined,
   DiscardEmptyTileImagePolicy,
   Imagery,
   ImageryLayer,
@@ -12,7 +12,6 @@ import {
   queryToObject,
   RequestScheduler,
   Resource,
-  RuntimeError,
   WebMercatorTilingScheme,
 } from "../../index.js";
 

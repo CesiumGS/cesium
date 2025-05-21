@@ -1,4 +1,4 @@
-import { defined, DeveloperError } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/utils";
 
 function createTileKey(xOrTile, y, level) {
   if (!defined(xOrTile)) {

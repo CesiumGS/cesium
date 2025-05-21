@@ -1,7 +1,7 @@
 import {
   findGroupMetadata,
-  MetadataClass,
   GroupMetadata,
+  MetadataClass,
 } from "../../index.js";
 
 describe("Scene/findGroupMetadata", function () {

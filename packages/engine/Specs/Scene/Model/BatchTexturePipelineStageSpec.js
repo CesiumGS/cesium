@@ -1,5 +1,5 @@
-import { BatchTexturePipelineStage, ShaderBuilder } from "../../../index.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import { BatchTexturePipelineStage, ShaderBuilder } from "../../../index.js";
 
 describe("Scene/Model/BatchTexturePipelineStage", function () {
   function expectUniformMap(uniformMap, expected) {

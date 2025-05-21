@@ -1,10 +1,10 @@
 import {
+  Appearance,
   ArcType,
   Cartesian3,
   GeometryInstance,
-  PolylineGeometry,
-  Appearance,
   Material,
+  PolylineGeometry,
   PolylineMaterialAppearance,
   Primitive,
 } from "../../index.js";

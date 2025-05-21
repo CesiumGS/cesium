@@ -1,8 +1,8 @@
 import {
   ImplicitSubtree,
   ImplicitSubtreeCache,
-  ImplicitTileset,
   ImplicitTileCoordinates,
+  ImplicitTileset,
   Resource,
 } from "../../index.js";
 

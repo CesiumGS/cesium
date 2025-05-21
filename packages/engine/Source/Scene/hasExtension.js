@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 
 /**
  * Check if a specific extension is present on a JSON object. This can be used

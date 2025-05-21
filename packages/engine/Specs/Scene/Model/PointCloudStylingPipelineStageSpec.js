@@ -1,3 +1,6 @@
+import { RuntimeError } from "@cesium/utils";
+import createScene from "../../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   Camera,
   Cartesian3,
@@ -8,15 +11,12 @@ import {
   ModelType,
   OrthographicFrustum,
   Pass,
-  PointCloudStylingPipelineStage,
   PointCloudShading,
-  RuntimeError,
+  PointCloudStylingPipelineStage,
   ShaderBuilder,
-  _shadersPointCloudStylingStageVS,
   VertexAttributeSemantic,
+  _shadersPointCloudStylingStageVS,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/PointCloudStylingPipelineStage",

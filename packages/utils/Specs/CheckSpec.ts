@@ -1,9 +1,9 @@
-import { Check, FeatureDetection } from "../../index.js";
+import { Check, FeatureDetection } from "../Source/index";
 
 describe("Core/Check", function () {
   describe("type checks", function () {
     it("Check.typeOf.bool does not throw when passed a boolean", function () {
-      expect(function () {
+      expect(() => {
         Check.typeOf.bool("bool", true);
       }).not.toThrowDeveloperError();
     });
@@ -34,7 +34,7 @@ describe("Core/Check", function () {
       }
 
       expect(function () {
-        Check.typeOf.bigint("bigint", BigInt()); // eslint-disable-line
+        Check.typeOf.bigint("bigint", BigInt(0));
       }).not.toThrowDeveloperError();
     });
 
@@ -256,7 +256,7 @@ describe("Core/Check", function () {
 
     it("does not throw if both values are a number and are equal", function () {
       expect(function () {
-        Check.typeOf.number.equal("mockName1", "mockName2", 3, 3);
+        Check.typeOf.number.equals("mockName1", "mockName2", 3, 3);
       }).not.toThrowDeveloperError();
     });
   });

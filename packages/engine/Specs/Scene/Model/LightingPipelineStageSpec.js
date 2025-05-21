@@ -1,12 +1,12 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
-  _shadersLightingStageFS,
+  Cartesian3,
   LightingModel,
   LightingPipelineStage,
   ModelLightingOptions,
   ShaderBuilder,
-  Cartesian3,
+  _shadersLightingStageFS,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/LightingPipelineStage", function () {
   const mockPrimitive = {};

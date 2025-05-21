@@ -1,8 +1,6 @@
 import { destroyObject } from "@cesium/engine";
-import Check from "../Core/Check.js";
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import defined from "../Core/defined.js";
 import GltfLoader from "./GltfLoader.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";

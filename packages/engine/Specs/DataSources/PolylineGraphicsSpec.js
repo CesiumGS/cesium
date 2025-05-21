@@ -1,11 +1,11 @@
 import {
   ArcType,
+  ClassificationType,
   Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
   PolylineGraphics,
-  ClassificationType,
   ShadowMode,
 } from "../../index.js";
 

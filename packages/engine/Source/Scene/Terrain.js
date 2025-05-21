@@ -1,7 +1,7 @@
-import Check from "../Core/Check.js";
-import Event from "../Core/Event.js";
+import { Check } from "@cesium/utils";
 import createWorldBathymetryAsync from "../Core/createWorldBathymetryAsync.js";
 import createWorldTerrainAsync from "../Core/createWorldTerrainAsync.js";
+import Event from "../Core/Event.js";
 
 /**
  * A helper to manage async operations of a terrain provider.

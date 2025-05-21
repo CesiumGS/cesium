@@ -5,8 +5,8 @@ import {
   Request,
   RequestScheduler,
   RequestType,
-  TimeIntervalCollection,
   TimeDynamicImagery,
+  TimeIntervalCollection,
 } from "../../index.js";
 
 describe("Scene/TimeDynamicImagery", function () {

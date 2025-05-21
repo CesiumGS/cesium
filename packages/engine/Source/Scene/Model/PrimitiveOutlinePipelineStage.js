@@ -1,8 +1,8 @@
-import AttributeType from "../AttributeType.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import PrimitiveOutlineGenerator from "./PrimitiveOutlineGenerator.js";
-import PrimitiveOutlineStageVS from "../../Shaders/Model/PrimitiveOutlineStageVS.js";
 import PrimitiveOutlineStageFS from "../../Shaders/Model/PrimitiveOutlineStageFS.js";
+import PrimitiveOutlineStageVS from "../../Shaders/Model/PrimitiveOutlineStageVS.js";
+import AttributeType from "../AttributeType.js";
+import PrimitiveOutlineGenerator from "./PrimitiveOutlineGenerator.js";
 
 /**
  * The primitive outline pipeline stage configures the shader to render outlines

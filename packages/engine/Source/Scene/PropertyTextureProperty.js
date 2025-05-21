@@ -1,10 +1,9 @@
-import Check from "../Core/Check.js";
+import { Check, defined } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import GltfLoaderUtil from "./GltfLoaderUtil.js";
-import MetadataType from "./MetadataType.js";
-import MetadataComponentType from "./MetadataComponentType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataType from "./MetadataType.js";
 
 /**
  * A property in a property texture.

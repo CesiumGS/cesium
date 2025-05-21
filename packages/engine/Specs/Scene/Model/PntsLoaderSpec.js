@@ -1,9 +1,14 @@
+import { RuntimeError } from "@cesium/utils";
+import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../../Specs/createScene.js";
+import pollToPromise from "../../../../../Specs/pollToPromise.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   AttributeType,
   Color,
   ComponentDatatype,
-  Frozen,
   DracoLoader,
+  Frozen,
   Matrix4,
   MetadataClass,
   MetadataComponentType,
@@ -11,13 +16,8 @@ import {
   PntsLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
   VertexAttributeSemantic,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import pollToPromise from "../../../../../Specs/pollToPromise.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
-import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 
 describe(
   "Scene/Model/PntsLoader",

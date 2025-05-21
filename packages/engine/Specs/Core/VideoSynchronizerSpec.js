@@ -1,6 +1,6 @@
+import { FeatureDetection } from "@cesium/utils";
 import {
   Clock,
-  FeatureDetection,
   Iso8601,
   JulianDate,
   Math as CesiumMath,

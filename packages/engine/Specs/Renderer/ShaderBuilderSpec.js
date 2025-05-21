@@ -1,5 +1,5 @@
-import { ShaderBuilder, ShaderDestination, ShaderSource } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
+import { ShaderBuilder, ShaderDestination, ShaderSource } from "../../index.js";
 
 describe(
   "Renderer/ShaderBuilder",

@@ -1,10 +1,8 @@
-import Check from "./Check.js";
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import Credit from "./Credit.js";
 import Frozen from "./Frozen.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 const url = "https://dev.virtualearth.net/REST/v1/Locations";
 

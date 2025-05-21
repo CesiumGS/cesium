@@ -52,9 +52,12 @@
   ],
   "dependencies": {
     "@cesium/engine": "^17.0.0",
+    "@cesium/utils": "^1.0.0",
     "@cesium/widgets": "^12.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-typescript": "^7.27.0",
     "@cesium/eslint-config": "^12.0.0",
     "@playwright/test": "^1.41.1",
     "chokidar": "^4.0.1",
@@ -78,6 +81,7 @@
     "istanbul-lib-instrument": "^6.0.0",
     "jasmine-core": "^5.0.1",
     "jsdoc": "^3.6.7",
+    "jsdoc-babel": "^0.5.0",
     "karma": "^6.3.20",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^2.0.3",
@@ -101,6 +105,7 @@
     "rimraf": "^5.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^5.3.2",
+    "vite": "^6.3.2",
     "yargs": "^17.0.1"
   },
   "scripts": {
@@ -157,6 +162,7 @@
   },
   "workspaces": [
     "packages/engine",
-    "packages/widgets"
+    "packages/widgets",
+    "packages/utils"
   ]
 }

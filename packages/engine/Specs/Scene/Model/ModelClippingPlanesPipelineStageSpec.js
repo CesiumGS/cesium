@@ -1,3 +1,4 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   Cartesian3,
   ClippingPlane,
@@ -8,7 +9,6 @@ import {
   ShaderBuilder,
   _shadersModelClippingPlanesStageFS,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
   let plane;

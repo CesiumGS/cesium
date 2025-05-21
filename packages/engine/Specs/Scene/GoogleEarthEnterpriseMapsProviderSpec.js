@@ -1,12 +1,12 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   GeographicTilingScheme,
+  GoogleEarthEnterpriseMapsProvider,
+  ImageryProvider,
   Rectangle,
   Request,
   Resource,
-  RuntimeError,
   WebMercatorTilingScheme,
-  GoogleEarthEnterpriseMapsProvider,
-  ImageryProvider,
 } from "../../index.js";
 
 describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {

@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/utils";
 
 /**
  * The interface for interpolation algorithms.

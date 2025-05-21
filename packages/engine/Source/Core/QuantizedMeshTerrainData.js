@@ -1,10 +1,8 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import IndexDatatype from "./IndexDatatype.js";
 import Intersections2D from "./Intersections2D.js";
 import CesiumMath from "./Math.js";

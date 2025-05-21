@@ -1,10 +1,10 @@
 import {
+  Entity,
+  EntityCollection,
   Iso8601,
   JulianDate,
   TimeInterval,
   TimeIntervalCollection,
-  Entity,
-  EntityCollection,
 } from "../../index.js";
 
 describe("DataSources/EntityCollection", function () {

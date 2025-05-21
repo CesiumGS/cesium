@@ -1,11 +1,10 @@
+import { Check, defined } from "@cesium/utils";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CoplanarPolygonGeometryLibrary from "./CoplanarPolygonGeometryLibrary.js";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";

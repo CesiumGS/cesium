@@ -3,9 +3,9 @@ import {
   InterpolationType,
   JulianDate,
   Matrix4,
+  ModelAnimation,
   ModelAnimationLoop,
   ModelComponents,
-  ModelAnimation,
   ModelRuntimeNode,
   Quaternion,
 } from "../../../index.js";

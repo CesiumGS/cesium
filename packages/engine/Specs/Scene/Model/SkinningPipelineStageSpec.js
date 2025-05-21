@@ -1,3 +1,6 @@
+import createScene from "../../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   combine,
   GltfLoader,
@@ -6,12 +9,9 @@ import {
   Resource,
   ResourceCache,
   ShaderBuilder,
-  _shadersSkinningStageVS,
   SkinningPipelineStage,
+  _shadersSkinningStageVS,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/SkinningPipelineStage",

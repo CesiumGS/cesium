@@ -1,3 +1,4 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   AttributeType,
   Axis,
@@ -8,17 +9,16 @@ import {
   LightingModel,
   Math as CesiumMath,
   Matrix4,
+  ModelRenderResources,
   ModelRuntimeNode,
   ModelRuntimePrimitive,
   ModelType,
-  PrimitiveType,
-  ModelRenderResources,
   NodeRenderResources,
   PrimitiveRenderResources,
+  PrimitiveType,
   RenderState,
   VertexAttributeSemantic,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/PrimitiveRenderResources",

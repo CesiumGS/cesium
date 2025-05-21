@@ -1,10 +1,10 @@
+import MetadataTester from "../../../../../Specs/MetadataTester.js";
 import {
   Cesium3DTileFeature,
-  ModelType,
-  ModelFeatureTable,
   ModelFeature,
+  ModelFeatureTable,
+  ModelType,
 } from "../../../index.js";
-import MetadataTester from "../../../../../Specs/MetadataTester.js";
 
 describe("Scene/Model/ModelFeatureTable", function () {
   let mockPropertyTable;

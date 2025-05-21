@@ -1,6 +1,5 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * A vertex format defines what attributes make up a vertex.  A VertexFormat can be provided

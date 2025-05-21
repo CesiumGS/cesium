@@ -2,8 +2,8 @@ import {
   createGuid,
   GeocoderService,
   GoogleGeocoderService,
-  Resource,
   Rectangle,
+  Resource,
 } from "../../index.js";
 
 describe("Core/GoogleGeocoderService", function () {

@@ -1,9 +1,6 @@
-import {
-  getStringFromTypedArray,
-  I3dmParser,
-  RuntimeError,
-} from "../../index.js";
+import { RuntimeError } from "@cesium/utils";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import { getStringFromTypedArray, I3dmParser } from "../../index.js";
 
 describe(
   "Scene/I3dmParser",

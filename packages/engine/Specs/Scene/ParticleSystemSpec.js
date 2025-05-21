@@ -1,12 +1,12 @@
 import {
   Cartesian2,
   Cartesian3,
+  CircleEmitter,
   Color,
   Matrix4,
-  Resource,
-  CircleEmitter,
   ParticleBurst,
   ParticleSystem,
+  Resource,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

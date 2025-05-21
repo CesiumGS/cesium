@@ -1,9 +1,9 @@
 import {
-  Cartesian3,
   Cartesian2,
+  Cartesian3,
   CoplanarPolygonGeometry,
-  Math as CesiumMath,
   Ellipsoid,
+  Math as CesiumMath,
   VertexFormat,
 } from "../../index.js";
 

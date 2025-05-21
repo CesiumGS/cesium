@@ -1,15 +1,15 @@
 import {
   Cartesian2,
   Cartesian3,
-  JulianDate,
-  Plane,
-  TimeIntervalCollection,
   ConstantPositionProperty,
   ConstantProperty,
   Entity,
+  JulianDate,
+  Plane,
   PlaneGeometryUpdater,
   PlaneGraphics,
   PrimitiveCollection,
+  TimeIntervalCollection,
 } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";

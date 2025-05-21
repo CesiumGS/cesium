@@ -1,4 +1,4 @@
-import { Event, EntityCluster, EntityCollection } from "@cesium/engine";
+import { EntityCluster, EntityCollection, Event } from "@cesium/engine";
 
 function MockDataSource() {
   //Values to be fiddled with by the test

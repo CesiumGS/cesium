@@ -1,9 +1,8 @@
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import { defined, RuntimeError } from "@cesium/utils";
 import dracoModule from "draco3d/draco_decoder_nodejs.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
+import IndexDatatype from "../Core/IndexDatatype.js";
+import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 let draco;
 

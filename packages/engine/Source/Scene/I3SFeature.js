@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import I3SDataProvider from "./I3SDataProvider.js";
 
 /**

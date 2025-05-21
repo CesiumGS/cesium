@@ -1,8 +1,8 @@
 import {
   Color,
-  Event,
   ColorMaterialProperty,
   createMaterialPropertyDescriptor,
+  Event,
   ImageMaterialProperty,
 } from "../../index.js";
 

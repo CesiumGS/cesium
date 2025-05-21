@@ -1,19 +1,19 @@
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
+import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import {
   Cartesian3,
   Cesium3DContentGroup,
   Cesium3DTileset,
   Color,
   Event,
-  HeadingPitchRange,
-  Multiple3DTileContent,
-  MetadataClass,
   GroupMetadata,
+  HeadingPitchRange,
+  MetadataClass,
+  Multiple3DTileContent,
   RequestScheduler,
   Resource,
 } from "../../index.js";
-import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";
-import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 
 describe(
   "Scene/Multiple3DTileContent",

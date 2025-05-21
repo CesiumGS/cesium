@@ -1,3 +1,5 @@
+import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 import {
   Cartesian3,
   Cesium3DTilesVoxelProvider,
@@ -8,11 +10,9 @@ import {
   MetadataType,
   OrientedBoundingBox,
   VoxelEllipsoidShape,
-  VoxelTraversal,
   VoxelPrimitive,
+  VoxelTraversal,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 const towardPrimitive = Cartesian3.fromElements(1.0, 1.0, 1.0);
 

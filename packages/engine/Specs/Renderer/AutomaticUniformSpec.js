@@ -12,8 +12,8 @@ import {
   OrthographicFrustum,
   OrthographicOffCenterFrustum,
   Pass,
-  Texture,
   SceneMode,
+  Texture,
 } from "../../index.js";
 
 import createCamera from "../../../../Specs/createCamera.js";

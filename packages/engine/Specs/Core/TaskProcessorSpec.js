@@ -1,9 +1,5 @@
-import {
-  buildModuleUrl,
-  FeatureDetection,
-  RuntimeError,
-  TaskProcessor,
-} from "../../index.js";
+import { FeatureDetection, RuntimeError } from "@cesium/utils";
+import { buildModuleUrl, TaskProcessor } from "../../index.js";
 
 import absolutize from "../../../../Specs/absolutize.js";
 

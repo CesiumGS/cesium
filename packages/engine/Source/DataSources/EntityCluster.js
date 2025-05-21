@@ -1,10 +1,11 @@
+import { defined } from "@cesium/utils";
+import KDBush from "kdbush";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
 import Event from "../Core/Event.js";
+import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Billboard from "../Scene/Billboard.js";
 import BillboardCollection from "../Scene/BillboardCollection.js";
@@ -13,7 +14,6 @@ import LabelCollection from "../Scene/LabelCollection.js";
 import PointPrimitive from "../Scene/PointPrimitive.js";
 import PointPrimitiveCollection from "../Scene/PointPrimitiveCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
-import KDBush from "kdbush";
 
 /**
  * Defines how screen space objects (billboards, points, labels) are clustered.

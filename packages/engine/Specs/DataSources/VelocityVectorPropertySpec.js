@@ -1,11 +1,11 @@
 import {
+  CallbackProperty,
   Cartesian3,
+  ConstantPositionProperty,
   Event,
   ExtrapolationType,
   JulianDate,
   Math as CesiumMath,
-  CallbackProperty,
-  ConstantPositionProperty,
   SampledPositionProperty,
   VelocityVectorProperty,
 } from "../../index.js";

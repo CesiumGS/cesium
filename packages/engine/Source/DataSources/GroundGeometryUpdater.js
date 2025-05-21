@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";

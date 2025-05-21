@@ -1,9 +1,9 @@
 import {
   Cartesian3,
-  JulianDate,
-  ReferenceFrame,
   ConstantPositionProperty,
+  JulianDate,
   PositionPropertyArray,
+  ReferenceFrame,
   SampledPositionProperty,
 } from "../../index.js";
 

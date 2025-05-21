@@ -1,4 +1,4 @@
-import { JulianDate, CallbackProperty } from "../../index.js";
+import { CallbackProperty, JulianDate } from "../../index.js";
 
 describe("DataSources/CallbackProperty", function () {
   let time;

@@ -2,12 +2,12 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  DistanceDisplayCondition,
-  NearFarScalar,
   ConstantProperty,
-  LabelGraphics,
+  DistanceDisplayCondition,
   HorizontalOrigin,
+  LabelGraphics,
   LabelStyle,
+  NearFarScalar,
   VerticalOrigin,
 } from "../../index.js";
 

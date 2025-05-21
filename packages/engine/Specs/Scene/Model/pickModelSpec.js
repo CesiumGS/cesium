@@ -1,17 +1,17 @@
 import {
-  pickModel,
   Cartesian2,
   Cartesian3,
   Ellipsoid,
   HeadingPitchRange,
   Math as CesiumMath,
   Model,
+  pickModel,
   Ray,
   SceneMode,
 } from "../../../index.js";
 
-import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 import createScene from "../../../../../Specs/createScene.js";
+import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe("Scene/Model/pickModel", function () {
   const boxTexturedGltfUrl =

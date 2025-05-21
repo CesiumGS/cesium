@@ -1,6 +1,5 @@
-import Check from "../../Core/Check.js";
+import { Check, defined } from "@cesium/utils";
 import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelArticulationStage from "./ModelArticulationStage.js";
 

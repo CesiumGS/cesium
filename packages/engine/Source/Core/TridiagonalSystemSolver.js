@@ -1,6 +1,5 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * Uses the Tridiagonal Matrix Algorithm, also known as the Thomas Algorithm, to solve

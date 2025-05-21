@@ -1,19 +1,19 @@
 import {
   Axis,
   Cartesian3,
-  HermiteSpline,
   ConstantSpline,
+  HermiteSpline,
   InterpolationType,
   LinearSpline,
   Math as CesiumMath,
   Matrix3,
   Matrix4,
-  ModelComponents,
   ModelAnimationChannel,
+  ModelComponents,
   ModelRuntimeNode,
-  SteppedSpline,
   Quaternion,
   QuaternionSpline,
+  SteppedSpline,
 } from "../../../index.js";
 
 describe("Scene/Model/ModelAnimationChannel", function () {

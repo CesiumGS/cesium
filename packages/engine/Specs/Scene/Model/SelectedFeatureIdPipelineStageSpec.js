@@ -1,16 +1,16 @@
-import {
-  combine,
-  GltfLoader,
-  SelectedFeatureIdPipelineStage,
-  ShaderBuilder,
-  ShaderDestination,
-  Resource,
-  ResourceCache,
-  _shadersSelectedFeatureIdStageCommon,
-} from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
+import {
+  combine,
+  GltfLoader,
+  Resource,
+  ResourceCache,
+  SelectedFeatureIdPipelineStage,
+  ShaderBuilder,
+  ShaderDestination,
+  _shadersSelectedFeatureIdStageCommon,
+} from "../../../index.js";
 
 describe(
   "Scene/Model/SelectedFeatureIdPipelineStage",

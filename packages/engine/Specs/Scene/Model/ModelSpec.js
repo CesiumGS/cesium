@@ -14,16 +14,14 @@ import {
   ColorBlendMode,
   Credit,
   CustomShader,
-  Frozen,
-  defined,
   DirectionalLight,
   DistanceDisplayCondition,
-  DynamicAtmosphereLightingType,
   DracoLoader,
+  DynamicAtmosphereLightingType,
   Ellipsoid,
-  FeatureDetection,
-  Globe,
   Fog,
+  Frozen,
+  Globe,
   HeadingPitchRange,
   HeadingPitchRoll,
   HeightReference,
@@ -41,7 +39,6 @@ import {
   PrimitiveType,
   Resource,
   ResourceCache,
-  RuntimeError,
   ShaderProgram,
   ShadowMode,
   SpecularEnvironmentCubeMap,
@@ -50,7 +47,8 @@ import {
   SunLight,
   Transforms,
   WireframeIndexGenerator,
-} from "../../../index.js";
+} from "@cesium/engine";
+import { defined, FeatureDetection, RuntimeError } from "@cesium/utils";
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";

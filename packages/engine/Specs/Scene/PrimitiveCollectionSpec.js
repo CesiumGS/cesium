@@ -1,14 +1,14 @@
+import { defined } from "@cesium/utils";
 import {
   ColorGeometryInstanceAttribute,
-  defined,
   GeometryInstance,
-  Rectangle,
-  RectangleGeometry,
   HorizontalOrigin,
   LabelCollection,
   PerInstanceColorAppearance,
   Primitive,
   PrimitiveCollection,
+  Rectangle,
+  RectangleGeometry,
   VerticalOrigin,
 } from "../../index.js";
 

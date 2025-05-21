@@ -1,14 +1,13 @@
+import { defined, RuntimeError } from "@cesium/utils";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Quaternion from "../../Core/Quaternion.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import Axis from "../Axis.js";
-import AttributeType from "../AttributeType.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import CullFace from "../CullFace.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix3 from "../../Core/Matrix3.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import Quaternion from "../../Core/Quaternion.js";
+import AttributeType from "../AttributeType.js";
+import Axis from "../Axis.js";
+import CullFace from "../CullFace.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * Utility functions for {@link Model}.

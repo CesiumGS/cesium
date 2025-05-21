@@ -1,4 +1,5 @@
 import {
+  BlendOption,
   BoundingRectangle,
   BoundingSphere,
   Cartesian2,
@@ -7,10 +8,9 @@ import {
   DistanceDisplayCondition,
   Math as CesiumMath,
   NearFarScalar,
-  Rectangle,
-  BlendOption,
   PointPrimitive,
   PointPrimitiveCollection,
+  Rectangle,
   SplitDirection,
 } from "../../index.js";
 

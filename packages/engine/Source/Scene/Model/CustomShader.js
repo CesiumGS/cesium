@@ -1,12 +1,10 @@
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import Frozen from "../../Core/Frozen.js";
 import CustomShaderMode from "./CustomShaderMode.js";
-import UniformType from "./UniformType.js";
-import TextureManager from "./TextureManager.js";
 import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
+import TextureManager from "./TextureManager.js";
+import UniformType from "./UniformType.js";
 
 /**
  * An object describing a uniform, its type, and an initial value

@@ -1,18 +1,18 @@
 import {
-  ClearCommand,
-  Color,
-  PrimitiveType,
   Buffer,
   BufferUsage,
+  ClearCommand,
+  Color,
   DrawCommand,
   MultisampleFramebuffer,
   PixelDatatype,
   PixelFormat,
-  Texture,
+  PrimitiveType,
   Renderbuffer,
   RenderbufferFormat,
   RenderState,
   ShaderProgram,
+  Texture,
   VertexArray,
 } from "../../index.js";
 

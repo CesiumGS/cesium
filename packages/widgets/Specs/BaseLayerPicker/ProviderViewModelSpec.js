@@ -1,4 +1,4 @@
-import { knockout, ProviderViewModel, createCommand } from "../../index.js";
+import { createCommand, knockout, ProviderViewModel } from "../../index.js";
 
 describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
   let spyCreationFunction;

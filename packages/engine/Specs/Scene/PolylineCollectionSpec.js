@@ -1,13 +1,13 @@
 import {
   BoundingSphere,
+  Camera,
   Cartesian3,
   Color,
   DistanceDisplayCondition,
   HeadingPitchRange,
+  Material,
   Math as CesiumMath,
   Matrix4,
-  Camera,
-  Material,
   PolylineCollection,
   SceneMode,
 } from "../../index.js";

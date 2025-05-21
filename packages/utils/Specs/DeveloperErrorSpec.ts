@@ -1,12 +1,12 @@
-import { RuntimeError } from "../../index.js";
+import { DeveloperError } from "../Source/index";
 
-describe("Core/RuntimeError", function () {
-  const name = "RuntimeError";
+describe("Core/DeveloperError", function () {
+  const name = "DeveloperError";
   const testMessage = "Testing";
 
-  let e;
+  let e: DeveloperError;
   beforeEach(function () {
-    e = new RuntimeError(testMessage);
+    e = new DeveloperError(testMessage);
   });
 
   it("has a name property", function () {
@@ -20,19 +20,19 @@ describe("Core/RuntimeError", function () {
   it("has a stack property", function () {
     // Since we are using source maps, we won't be able to map to a specific file without help from the browser developer tools.
     // However, we should know the class if not minified
-    if (!window.specsUsingRelease) {
+    if (!(window as any).specsUsingRelease) {
       expect(e.stack).toContain(name);
     }
   });
 
   it("has a working toString", function () {
-    const str = new RuntimeError(testMessage).toString();
+    const str = new DeveloperError(testMessage).toString();
 
-    if (!window.specsUsingRelease) {
-      expect(e.stack).toContain(name);
+    if (!(window as any).specsUsingRelease) {
+      expect(str).toContain(`${name}: ${testMessage}`);
+    } else {
+      // Since source maps are used, there will not be exact filenames
+      expect(str).toContain(testMessage);
     }
-
-    // Since source maps are used, there will not be exact filenames
-    expect(str).toContain(testMessage);
   });
 });

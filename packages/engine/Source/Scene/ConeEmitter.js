@@ -1,5 +1,5 @@
+import { Check } from "@cesium/utils";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
 
 const defaultAngle = CesiumMath.toRadians(30.0);

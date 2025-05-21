@@ -1,28 +1,26 @@
+import { Check, defined, RuntimeError } from "@cesium/utils";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
+import Frozen from "../Core/Frozen.js";
+import CesiumMath from "../Core/Math.js";
+import Matrix3 from "../Core/Matrix3.js";
+import Matrix4 from "../Core/Matrix4.js";
+import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
+import Quaternion from "../Core/Quaternion.js";
+import Resource from "../Core/Resource.js";
+import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitSubtreeCache from "./ImplicitSubtreeCache.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import ImplicitTileset from "./ImplicitTileset.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import MetadataSemantic from "./MetadataSemantic.js";
 import MetadataType from "./MetadataType.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
-import Resource from "../Core/Resource.js";
 import ResourceCache from "./ResourceCache.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import VoxelContent from "./VoxelContent.js";
 import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 import VoxelShapeType from "./VoxelShapeType.js";
-import CesiumMath from "../Core/Math.js";
-import Quaternion from "../Core/Quaternion.js";
 
 /**
  * @typedef {Object} Cesium3DTilesVoxelProvider.ConstructorOptions

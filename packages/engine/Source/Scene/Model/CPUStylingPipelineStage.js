@@ -1,10 +1,10 @@
-import ColorBlendMode from "../ColorBlendMode.js";
-import CPUStylingStageVS from "../../Shaders/Model/CPUStylingStageVS.js";
-import CPUStylingStageFS from "../../Shaders/Model/CPUStylingStageFS.js";
-import defined from "../../Core/defined.js";
-import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
+import { defined } from "@cesium/utils";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import CPUStylingStageFS from "../../Shaders/Model/CPUStylingStageFS.js";
+import CPUStylingStageVS from "../../Shaders/Model/CPUStylingStageVS.js";
+import ColorBlendMode from "../ColorBlendMode.js";
+import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 
 /**
  * The CPU styling stage is responsible for ensuring that the feature's color

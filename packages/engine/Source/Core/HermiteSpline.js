@@ -1,8 +1,7 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import LinearSpline from "./LinearSpline.js";
 import Matrix4 from "./Matrix4.js";
 import Spline from "./Spline.js";

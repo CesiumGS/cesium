@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import { Check } from "@cesium/utils";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 

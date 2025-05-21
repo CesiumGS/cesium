@@ -1,11 +1,11 @@
-import {
-  Cesium3DTilesVoxelProvider,
-  VoxelPrimitive,
-  VoxelRenderResources,
-  processVoxelProperties,
-} from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../Specs/ShaderBuilderTester.js";
+import {
+  Cesium3DTilesVoxelProvider,
+  processVoxelProperties,
+  VoxelPrimitive,
+  VoxelRenderResources,
+} from "../../index.js";
 
 describe("Scene/processVoxelProperties", function () {
   let scene;

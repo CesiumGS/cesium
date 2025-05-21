@@ -1,14 +1,14 @@
+import { Check, defined, RuntimeError } from "@cesium/utils";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
+import Frozen from "../../Core/Frozen.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import Transforms from "../../Core/Transforms.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
 import AttributeType from "../AttributeType.js";
 import JsonMetadataTable from "../JsonMetadataTable.js";
 import MetadataSchema from "../MetadataSchema.js";
@@ -17,8 +17,6 @@ import PropertyTable from "../PropertyTable.js";
 import ResourceLoader from "../ResourceLoader.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
 
 /**
  * Loads a GeoJson model as part of the <code>MAXAR_content_geojson</code> extension with the following constraints:

@@ -1,4 +1,4 @@
-import { ConstantProperty, Cesium3DTilesetGraphics } from "../../index.js";
+import { Cesium3DTilesetGraphics, ConstantProperty } from "../../index.js";
 
 describe("DataSources/Cesium3DTilesetGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

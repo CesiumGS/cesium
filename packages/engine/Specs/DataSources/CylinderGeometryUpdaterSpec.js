@@ -1,19 +1,19 @@
 import {
   Cartesian3,
   Color,
-  GeometryOffsetAttribute,
-  JulianDate,
-  Quaternion,
-  TimeIntervalCollection,
   ConstantPositionProperty,
   ConstantProperty,
   CylinderGeometryUpdater,
   CylinderGraphics,
   Entity,
+  GeometryOffsetAttribute,
+  HeightReference,
+  JulianDate,
+  PrimitiveCollection,
+  Quaternion,
   SampledPositionProperty,
   SampledProperty,
-  HeightReference,
-  PrimitiveCollection,
+  TimeIntervalCollection,
 } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";

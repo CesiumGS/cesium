@@ -1,7 +1,7 @@
 import {
+  Camera,
   Cartesian3,
   Color,
-  Camera,
   DebugCameraPrimitive,
 } from "../../index.js";
 

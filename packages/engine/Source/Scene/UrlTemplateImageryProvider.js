@@ -1,12 +1,11 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
+import Frozen from "../Core/Frozen.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";

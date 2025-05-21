@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/utils";
 
 /**
  * Merges two objects, copying their properties onto a new combined object. When two objects have the same

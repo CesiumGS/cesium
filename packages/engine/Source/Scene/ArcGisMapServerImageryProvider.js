@@ -1,25 +1,22 @@
+import { Check, defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
+import Frozen from "../Core/Frozen.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
+import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
 import ArcGisMapService from "./ArcGisMapService.js";
 import DiscardMissingTileImagePolicy from "./DiscardMissingTileImagePolicy.js";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
-import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
-import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * @typedef {object} ArcGisMapServerImageryProvider.ConstructorOptions

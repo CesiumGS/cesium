@@ -1,27 +1,27 @@
+import createScene from "../../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
-  _shadersMaterialStageFS,
   AlphaMode,
-  Cartesian4,
   Cartesian3,
+  Cartesian4,
   ClassificationType,
   combine,
   GltfLoader,
   LightingModel,
-  Matrix3,
   MaterialPipelineStage,
+  Matrix3,
   ModelAlphaOptions,
-  ModelStatistics,
-  ModelLightingOptions,
   ModelComponents,
+  ModelLightingOptions,
+  ModelStatistics,
   Pass,
   RenderState,
   Resource,
   ResourceCache,
   ShaderBuilder,
+  _shadersMaterialStageFS,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/Model/MaterialPipelineStage",

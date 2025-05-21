@@ -1,11 +1,9 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";

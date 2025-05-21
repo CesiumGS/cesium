@@ -1,15 +1,14 @@
-import Check from "../../../../Core/Check.js";
+import { Check, defined } from "@cesium/utils";
 import Frozen from "../../../../Core/Frozen.js";
-import defined from "../../../../Core/defined.js";
+import MetadataSchema from "../../../MetadataSchema.js";
+import PropertyTexture from "../../../PropertyTexture.js";
 import ResourceCache from "../../../ResourceCache.js";
 import ResourceLoader from "../../../ResourceLoader.js";
 import ResourceLoaderState from "../../../ResourceLoaderState.js";
-import PropertyTexture from "../../../PropertyTexture.js";
 import StructuralMetadata from "../../../StructuralMetadata.js";
-import MetadataSchema from "../../../MetadataSchema.js";
-import PpeTexture from "./PpeTexture.js";
-import PpeMetadata from "./PpeMetadata.js";
 import MeshPrimitiveGpmLocal from "./MeshPrimitiveGpmLocal.js";
+import PpeMetadata from "./PpeMetadata.js";
+import PpeTexture from "./PpeTexture.js";
 
 /**
  * Loads glTF NGA_gpm_local from a glTF mesh primitive.

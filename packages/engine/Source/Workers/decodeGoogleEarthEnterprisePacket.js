@@ -1,7 +1,7 @@
+import { RuntimeError } from "@cesium/utils";
+import pako from "pako/lib/inflate.js";
 import decodeGoogleEarthEnterpriseData from "../Core/decodeGoogleEarthEnterpriseData.js";
 import GoogleEarthEnterpriseTileInformation from "../Core/GoogleEarthEnterpriseTileInformation.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import pako from "pako/lib/inflate.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 // Datatype sizes

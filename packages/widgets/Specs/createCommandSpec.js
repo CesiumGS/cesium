@@ -1,5 +1,5 @@
-import { createCommand, knockout } from "../index.js";
 import getArguments from "../../../Specs/getArguments.js";
+import { createCommand, knockout } from "../index.js";
 
 describe("Widgets/createCommand", function () {
   let spyFunction;

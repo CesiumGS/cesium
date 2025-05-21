@@ -1,3 +1,8 @@
+import { defer, defined, RuntimeError } from "@cesium/utils";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
+import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 import {
   Axis,
   Camera,
@@ -23,10 +28,8 @@ import {
   Credit,
   CullFace,
   CullingVolume,
-  defer,
-  defined,
-  findTileMetadata,
   findContentMetadata,
+  findTileMetadata,
   getAbsoluteUri,
   getJsonFromTypedArray,
   HeadingPitchRange,
@@ -42,15 +45,10 @@ import {
   RequestScheduler,
   Resource,
   ResourceCache,
-  RuntimeError,
   TileBoundingRegion,
   TileOrientedBoundingBox,
   Transforms,
 } from "../../index.js";
-import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";
-import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 import Ellipsoid from "../../Source/Core/Ellipsoid.js";
 
 describe(

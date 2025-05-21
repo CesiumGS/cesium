@@ -1,11 +1,11 @@
 import {
+  ClassificationType,
   Color,
-  CornerType,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
+  CornerType,
   CorridorGraphics,
-  ClassificationType,
+  DistanceDisplayCondition,
   ShadowMode,
 } from "../../index.js";
 

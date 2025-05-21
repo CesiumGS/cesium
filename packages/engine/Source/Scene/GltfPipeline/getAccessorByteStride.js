@@ -1,6 +1,6 @@
-import numberOfComponentsForType from "./numberOfComponentsForType.js";
+import { defined } from "@cesium/utils";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
+import numberOfComponentsForType from "./numberOfComponentsForType.js";
 
 /**
  * Returns the byte stride of the provided accessor.

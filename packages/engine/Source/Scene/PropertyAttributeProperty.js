@@ -1,6 +1,5 @@
-import Check from "../Core/Check.js";
+import { Check, defined } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 
 /**
  * A property in a property attribute from EXT_structural_metadata.

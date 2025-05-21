@@ -1,3 +1,7 @@
+import { RuntimeError } from "@cesium/utils";
+import createScene from "../../../../Specs/createScene.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 import {
   ComponentDatatype,
   DracoLoader,
@@ -5,11 +9,7 @@ import {
   GltfDracoLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
-import loaderProcess from "../../../../Specs/loaderProcess.js";
-import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfDracoLoader",

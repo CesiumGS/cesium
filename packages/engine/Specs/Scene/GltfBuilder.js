@@ -1,4 +1,4 @@
-import { defined, RuntimeError } from "../../index.js";
+import { defined, RuntimeError } from "@cesium/utils";
 import findAccessorMinMax from "../../Source/Scene/GltfPipeline/findAccessorMinMax.js";
 
 /**

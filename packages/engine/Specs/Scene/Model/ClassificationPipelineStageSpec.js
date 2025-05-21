@@ -1,11 +1,11 @@
+import { RuntimeError } from "@cesium/utils";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   ClassificationPipelineStage,
   PrimitiveType,
-  RuntimeError,
   ShaderBuilder,
   VertexAttributeSemantic,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/ClassificationPipelineStage", function () {
   const mockFrameState = {};

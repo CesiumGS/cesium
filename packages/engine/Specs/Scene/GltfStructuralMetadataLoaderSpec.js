@@ -1,3 +1,8 @@
+import { RuntimeError } from "@cesium/utils";
+import createScene from "../../../../Specs/createScene.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
+import MetadataTester from "../../../../Specs/MetadataTester.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 import {
   clone,
   GltfBufferViewLoader,
@@ -6,13 +11,8 @@ import {
   MetadataSchemaLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
   SupportedImageFormats,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
-import loaderProcess from "../../../../Specs/loaderProcess.js";
-import MetadataTester from "../../../../Specs/MetadataTester.js";
-import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfStructuralMetadataLoader",

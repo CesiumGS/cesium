@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeometry.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 
 function createCoplanarPolygonOutlineGeometry(polygonGeometry, offset) {

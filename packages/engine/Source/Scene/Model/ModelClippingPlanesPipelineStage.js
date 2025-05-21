@@ -1,9 +1,9 @@
 import Cartesian2 from "../../Core/Cartesian2.js";
-import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
-import combine from "../../Core/combine.js";
 import Color from "../../Core/Color.js";
-import ModelClippingPlanesStageFS from "../../Shaders/Model/ModelClippingPlanesStageFS.js";
+import combine from "../../Core/combine.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import ModelClippingPlanesStageFS from "../../Shaders/Model/ModelClippingPlanesStageFS.js";
+import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 
 /**
  * The model clipping planes stage is responsible for applying clipping planes to the model.

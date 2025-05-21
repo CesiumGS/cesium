@@ -1,8 +1,8 @@
-import Check from "../Core/Check.js";
+import { Check } from "@cesium/utils";
 import clone from "../Core/clone.js";
 import Frozen from "../Core/Frozen.js";
-import MetadataEnumValue from "./MetadataEnumValue.js";
 import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataEnumValue from "./MetadataEnumValue.js";
 
 /**
  * A metadata enum.

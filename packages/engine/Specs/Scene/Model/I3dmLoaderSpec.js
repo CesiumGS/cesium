@@ -1,3 +1,7 @@
+import { RuntimeError } from "@cesium/utils";
+import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../../Specs/createScene.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   I3dmLoader,
   I3dmParser,
@@ -6,11 +10,7 @@ import {
   Matrix4,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../../index.js";
-import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../../Specs/createScene.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/Model/I3dmLoader",

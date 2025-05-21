@@ -1,17 +1,15 @@
 import {
-  Cartesian2,
-  defined,
-  DeveloperError,
-  FeatureDetection,
-  PrimitiveType,
   Buffer,
   BufferUsage,
+  Cartesian2,
   ClearCommand,
   DrawCommand,
+  Math as CesiumMath,
+  PrimitiveType,
   ShaderProgram,
   VertexArray,
-  Math as CesiumMath,
 } from "@cesium/engine";
+import { defined, DeveloperError, FeatureDetection } from "@cesium/utils";
 import equals from "./equals.js";
 
 function createMissingFunctionMessageFunction(

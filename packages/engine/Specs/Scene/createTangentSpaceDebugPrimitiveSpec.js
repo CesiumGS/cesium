@@ -1,10 +1,10 @@
 import {
   Cartesian3,
+  createTangentSpaceDebugPrimitive,
   EllipsoidGeometry,
   Matrix4,
   PrimitiveType,
   VertexFormat,
-  createTangentSpaceDebugPrimitive,
 } from "../../index.js";
 
 describe("Scene/createTangentSpaceDebugPrimitive", function () {
