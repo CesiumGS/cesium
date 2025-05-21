@@ -23,7 +23,6 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
 }
 
 Object.defineProperties(GaussianSplat3DTilesContent.prototype, {
-  //we'll see about this later
   featuresLength: {
     get: function () {
       return 0;
