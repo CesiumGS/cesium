@@ -467,8 +467,7 @@ export const buildRelease = gulp.series(
 
 export const release = gulp.series(
   buildRelease,
-  buildDocs,
-  //gulp.parallel(buildTs, buildDocs),
+  gulp.parallel(buildTs, buildDocs),
 );
 
 export const postversion = async function () {
