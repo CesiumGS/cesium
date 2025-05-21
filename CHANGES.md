@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.130 - 2025-06-02
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Support Texture3D and add Volume Cloud SandBox Sample. [#12550](https://github.com/CesiumGS/cesium/issues/12550)
+
 ## 1.129 - 2025-05-01
 
 ### @cesium/engine
