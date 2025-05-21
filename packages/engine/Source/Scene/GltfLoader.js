@@ -1432,6 +1432,7 @@ function loadInstancedAttribute(
     semanticInfo,
     undefined,
     undefined,
+    undefined,
     loadBuffer,
     loadTypedArray,
     frameState,
