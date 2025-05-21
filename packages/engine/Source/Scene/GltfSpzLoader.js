@@ -110,6 +110,8 @@ async function processDecode(loader, decodePromise) {
       return;
     }
 
+    loader.unload();
+
     loader._decodedData = {
       gcloud: gcloud,
     };
@@ -163,7 +165,7 @@ GltfSpzLoader.prototype.unload = function () {
     this._resourceCache.unload(this._bufferViewLoader);
   }
 
-  this._bufferviewLoader = undefined;
+  this._bufferViewLoader = undefined;
   this._bufferViewTypedArray = undefined;
   this._decodedData = undefined;
   this._gltf = undefined;
