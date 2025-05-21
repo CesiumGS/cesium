@@ -120,7 +120,7 @@ class ImageryPipelineStage {
     if (imageryInputs.length > 10) {
       oneTimeWarning(
         "imagery-texture-units",
-        `Warning: Found ${imageryInputs.length} texture units, truncating`,
+        `Warning: Draped imagery requires ${imageryInputs.length} texture units, truncating`,
       );
       imageryInputs.length = 10;
     }
