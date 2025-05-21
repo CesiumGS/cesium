@@ -110,9 +110,6 @@ async function processDecode(loader, decodePromise) {
       return;
     }
 
-    //we will unload later once all our accessors have been created
-    // loader.unload();
-
     loader._decodedData = {
       gcloud: gcloud,
     };
