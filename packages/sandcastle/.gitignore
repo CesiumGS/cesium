@@ -12,3 +12,4 @@ dist
 dist-ssr
 *.local
 
+public/templates/Sandcastle.d.ts

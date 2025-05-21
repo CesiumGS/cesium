@@ -26,22 +26,21 @@ const defaultHtmlCode = `<style>
 
 function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
   console.log("embedSandcastle");
-  return (
-    `${
-      "window.startup = async function (Cesium) {\n" +
-      "    'use strict';\n" +
-      "//Sandcastle_Begin\n"
-    }${addExtraLine ? "\n" : ""}${code}//Sandcastle_End\n` +
-    `    Sandcastle.finishedLoading();\n` +
-    `};\n` +
-    `if (typeof Cesium !== 'undefined') {\n` +
-    `    window.startupCalled = true;\n` +
-    `    window.startup(Cesium).catch((error) => {\n` +
-    `      "use strict";\n` +
-    `      console.error(error);\n` +
-    `    });\n` +
-    `}\n`
-  );
+  return `window.startup = async function (Cesium, Sandcastle) {
+  'use strict';
+  //Sandcastle_Begin
+  ${addExtraLine ? "\n" : ""}${code}
+  //Sandcastle_End
+  Sandcastle.finishedLoading();
+  };
+  if (typeof Cesium !== 'undefined' && typeof Sandcastle !== 'undefined') {
+      window.startupCalled = true;
+    window.startup(Cesium, Sandcastle).catch((error) => {
+        "use strict";
+      console.error(error);
+    });
+}
+`;
 }
 
 function activateBucketScripts(
@@ -300,6 +299,7 @@ function applyBucket(
 // );
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
+const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
 
 // function appendCode(code, run = true) {
 //   const codeMirror = getJsCodeMirror();
@@ -488,25 +488,32 @@ function App() {
   async function setTypes(monaco: Monaco) {
     console.log("setTypes");
     // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
+
     const cesiumTypes = await (await fetch(TYPES_URL)).text();
-    // TODO: I don't know 100% why this declaration works for global module variable but it "does"
-    const cesiumTypesSource = `${cesiumTypes}\nvar Cesium: typeof import('cesium');`;
-    const cesiumTypesUri = "ts:filename/cesium.d.ts";
+    const sandcastleTypes = await (await fetch(SANDCASTLE_TYPES_URL)).text();
+
+    const typesSource = [
+      cesiumTypes,
+      sandcastleTypes,
+      "var Cesium: typeof import('cesium');",
+      "var Sandcastle: typeof import('Sandcastle').default;",
+    ].join("\n");
+    const typesUri = "ts:filename/types.d.ts";
 
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      cesiumTypesSource,
-      cesiumTypesUri,
+      typesSource,
+      typesUri,
     );
 
     monaco.editor.createModel(
-      cesiumTypesSource,
+      typesSource,
       "typescript",
-      monaco.Uri.parse(cesiumTypesUri),
+      monaco.Uri.parse(typesUri),
     );
   }
 
   useEffect(() => {
-    window.addEventListener("message", function (e) {
+    const messageHandler = function (e: MessageEvent) {
       // The iframe (bucket.html) sends this message on load.
       // This triggers the code to be injected into the iframe.
       if (e.data === "reload") {
@@ -564,7 +571,9 @@ function App() {
           // }
         }
       }
-    });
+    };
+    window.addEventListener("message", messageHandler);
+    return () => window.removeEventListener("message", messageHandler);
   }, []);
 
   function formatJs() {

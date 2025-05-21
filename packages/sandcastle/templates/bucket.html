@@ -8,12 +8,38 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <title>Cesium Demo</title>
-    <script
-      type="text/javascript"
-      src="../Sandcastle-header.js"
-      vite-ignore
-    ></script>
+    <script>
+      if (window.location.protocol === "file:") {
+        if (
+          // eslint-disable-next-line no-alert
+          window.confirm(
+            "You must host this app on a web server.\nSee contributor's guide for more info?",
+          )
+        ) {
+          window.location =
+            "https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#quickstart";
+        }
+      }
+    </script>
+    <!-- <script type="module" src="./Sandcastle.js"></script> -->
     <script src="__CESIUM_BASE_URL__/Cesium.js" vite-ignore></script>
+    <script type="module">
+      import Sandcastle from "./Sandcastle.js";
+      window.Sandcastle = Sandcastle;
+
+      // Since ES6 modules have no guaranteed load order,
+      // only call startup if it's already defined but hasn't been called yet
+      if (
+        !window.startupCalled &&
+        typeof window.startup === "function" &&
+        typeof window.Cesium !== "undefined"
+      ) {
+        console.log("call startup for sandcastle loaded");
+        window.startup(window.Cesium, Sandcastle).catch((error) => {
+          console.error(error);
+        });
+      }
+    </script>
     <link
       rel="stylesheet"
       href="__CESIUM_BASE_URL__/Widgets/widgets.css"
