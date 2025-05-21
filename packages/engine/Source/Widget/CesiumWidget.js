@@ -33,6 +33,7 @@ import SkyBox from "../Scene/SkyBox.js";
 import Sun from "../Scene/Sun.js";
 import TimeDynamicPointCloud from "../Scene/TimeDynamicPointCloud.js";
 import VoxelPrimitive from "../Scene/VoxelPrimitive.js";
+import GaussianSplatPrimitive from "../Scene/GaussianSplatPrimitive.js";
 
 function trackDataSourceClock(clock, dataSource) {
   if (defined(dataSource)) {
@@ -1336,7 +1337,8 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
     if (
       zoomTarget instanceof Cesium3DTileset ||
       zoomTarget instanceof TimeDynamicPointCloud ||
-      zoomTarget instanceof VoxelPrimitive
+      zoomTarget instanceof VoxelPrimitive ||
+      zoomTarget instanceof GaussianSplatPrimitive
     ) {
       that._zoomTarget = zoomTarget;
       return;
@@ -1467,7 +1469,11 @@ function updateZoomTarget(widget) {
     return;
   }
 
-  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
+  if (
+    target instanceof Cesium3DTileset ||
+    target instanceof VoxelPrimitive ||
+    target instanceof GaussianSplatPrimitive
+  ) {
     zoomToBoundingSphere(target.boundingSphere);
     return;
   }
