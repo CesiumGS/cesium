@@ -152,7 +152,13 @@ class ModelReader {
     }
 
     // Fetch the whole buffer in its raw form, to pick out the
-    // interleaved values
+    // interleaved values.
+    // Note: When ALL attributes have to be fetched from an
+    // interleaved buffer, then this getBufferData call will
+    // be performed multiple times. It would be preferable to
+    // have ONE "TypedArray[] getThemFrom(buffer)" call that
+    // returns all of the (interleaved) attributes at once,
+    // but this requires abstractions that we don't have.
     const fullTypedArray = new Uint8Array(buffer.sizeInBytes);
     buffer.getBufferData(fullTypedArray);
 
