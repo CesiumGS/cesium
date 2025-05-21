@@ -42,6 +42,9 @@ async function loadAsModel(scene, gltf) {
   return model;
 }
 
+// A simple representation of a 'Vertex' in an indexed triangle
+// set, only consisting of a Cartesian3 position and a
+// Cartesian2 texture coordinate
 class SpecVertex {
   constructor(p, t) {
     this.p = p;
@@ -59,6 +62,8 @@ class SpecVertex {
   }
 }
 
+// A simple representation of a 'Triangle' in an indexed triangle
+// set, simply storing 3 vertices
 class SpecTriangle {
   constructor(v0, v1, v2) {
     this.v0 = v0;
@@ -92,6 +97,10 @@ class SpecTriangle {
   }
 }
 
+// A simple representation of an indexed triangle set,
+// consisting of SpecTriangle and SpecVertex instances,
+// created from flat arrays of triangle indices,
+// positions, and texture coordinates
 class SpecIndexedTriangleSet {
   constructor(indices, positions, texCoords) {
     const specVertices = [];
@@ -128,11 +137,9 @@ class SpecIndexedTriangleSet {
     for (let i = 0; i < n; i++) {
       const t = this.specTriangles[i];
       if (t.equalsEpsilon(specTriangle, epsilon)) {
-        console.log("Found matching for ", specTriangle);
         return true;
       }
     }
-    console.log("Found NO matching for ", specTriangle);
     return false;
   }
 
@@ -151,6 +158,10 @@ class SpecIndexedTriangleSet {
   }
 }
 
+// Returns a Matrix4 that describes the transform of the given
+// glTF node, either obtained from the node 'matrix' or from
+// the node 'translation', 'rotation', 'scale', defaulting
+// to the identity matrix if no information was given.
 function getNodeMatrix(node) {
   if (node.matrix) {
     return Matrix4.fromArray(node.matrix, 0, new Matrix4());
@@ -163,6 +174,10 @@ function getNodeMatrix(node) {
   return Matrix4.fromTranslationRotationScale(trs, new Matrix4());
 }
 
+// Loads the glTF from the given URL as a 'Model' and adds it to
+// the given scene, then obtains the indices, positions, and
+// texture coordinates from this model using the 'ModelReader',
+// and creates a SpecIndexedTriangleSet from the result.
 async function loadPrimitiveAsIndexedTriangleSet(scene, url) {
   const model = await loadAsModel(scene, url);
 
@@ -187,15 +202,14 @@ async function loadPrimitiveAsIndexedTriangleSet(scene, url) {
   const positions = ModelReader.transform3D(rawPositions, matrix, undefined);
   const texCoords = ModelReader.readAttributeAsTypedArray(texCoordAttribute);
 
-  console.log("Creating ITS");
-  console.log("indices:\n", indices);
-  console.log("positions:\n", positions);
-  console.log("texCoords:\n", texCoords);
-
   const its = new SpecIndexedTriangleSet(indices, positions, texCoords);
   return its;
 }
 
+// A spec for the 'ModelReader' class. It reads the same geometry from
+// different flavors of glTF assets (e.g. interleaved or compressed),
+// and checks whether the resulting geometry is epsilon-equal to the
+// geometry that was read from the "plain" glTF asset
 describe(
   "Scene/Model/ModelReader",
   function () {
@@ -215,6 +229,10 @@ describe(
     });
 
     it("reads interleaved data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       const expectedName = "unitSquare11x11_plain.glb";
       const actualName = "unitSquare11x11_plain_interleaved.glb";
 
@@ -237,6 +255,10 @@ describe(
     });
 
     it("reads draco data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       const expectedName = "unitSquare11x11_plain.glb";
       const actualName = "unitSquare11x11_draco.glb";
 
@@ -259,6 +281,10 @@ describe(
     });
 
     it("reads meshopt data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       const expectedName = "unitSquare11x11_plain.glb";
       const actualName = "unitSquare11x11_meshopt.glb";
 
@@ -281,6 +307,10 @@ describe(
     });
 
     it("reads quantized_interleaved data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       const expectedName = "unitSquare11x11_plain.glb";
       const actualName = "unitSquare11x11_quantized_interleaved.glb";
 
@@ -303,6 +333,10 @@ describe(
     });
 
     it("reads unsignedShortTexCoords data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       const expectedName = "unitSquare11x11_plain.glb";
       const actualName = "unitSquare11x11_unsignedShortTexCoords.glb";
 
@@ -325,6 +359,10 @@ describe(
     });
 
     it("reads unsignedShortTexCoords_interleaved data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       const expectedName = "unitSquare11x11_plain.glb";
       const actualName =
         "unitSquare11x11_unsignedShortTexCoords_interleaved.glb";
@@ -348,6 +386,10 @@ describe(
     });
 
     it("reads unsignedShortTexCoords_quantized data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       const expectedName = "unitSquare11x11_plain.glb";
       const actualName = "unitSquare11x11_unsignedShortTexCoords_quantized.glb";
 
@@ -370,6 +412,10 @@ describe(
     });
 
     it("reads unsignedShortTexCoords_quantized_interleaved data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       const expectedName = "unitSquare11x11_plain.glb";
       const actualName =
         "unitSquare11x11_unsignedShortTexCoords_quantized_interleaved.glb";
