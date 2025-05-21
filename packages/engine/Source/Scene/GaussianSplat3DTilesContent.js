@@ -1,4 +1,3 @@
-import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import GltfLoader from "./GltfLoader.js";
@@ -22,17 +21,6 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
   this._group = undefined;
   this._ready = false;
 }
-
-GaussianSplat3DTilesContent.prototype.fromGltf = function (
-  tileset,
-  tile,
-  resource,
-  json,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  DeveloperError.throwInstantiationError("GaussianSplat3DTilesContent");
-  //>>includeEnd('debug');
-};
 
 Object.defineProperties(GaussianSplat3DTilesContent.prototype, {
   //we'll see about this later
@@ -181,12 +169,26 @@ GaussianSplat3DTilesContent.prototype.update = function (
   if (!defined(loader) || this._resourcesLoaded) {
     this._gsplatData = loader.components.scene.nodes[0].primitives[0];
     this._ready = true;
+    this._tileset._worldTransform = loader.components.scene.nodes[0].matrix;
     return;
   }
 
   this._resourcesLoaded = loader.process(frameState);
 };
 
-GaussianSplat3DTilesContent.prototype.destroy = function () {};
+GaussianSplat3DTilesContent.prototype.destroy = function () {
+  this._gsplatData = undefined;
+  this._tile.destroy();
+  this._tileset.destroy();
+  this._tile = undefined;
+  this._tileset = undefined;
+  this._resource = undefined;
+  this._loader.destroy();
+  this._loader = undefined;
+  this._ready = false;
+  this._group = undefined;
+  this._metadata = undefined;
+  this._resourcesLoaded = false;
+};
 
 export default GaussianSplat3DTilesContent;
