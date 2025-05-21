@@ -112,9 +112,11 @@ int getSampleIndex(in SampleData sampleData) {
     return sampleIndex.x + u_inputDimensions.x * (sampleIndex.y + u_inputDimensions.y * sampleIndex.z);
 }
 
+/**
+ * Compute the view ray at the current fragment, in the local UV coordinates of the shape.
+ */
 Ray getViewRayUv() {
     vec4 eyeCoordinates = czm_windowToEyeCoordinates(gl_FragCoord);
-    // TODO: use orthographicIn3D define to avoid branching
     vec3 viewDirUv;
     vec3 viewPosUv;
     if (czm_orthographicIn3D == 1.0) {
