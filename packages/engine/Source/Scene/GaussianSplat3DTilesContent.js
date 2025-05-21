@@ -175,6 +175,14 @@ GaussianSplat3DTilesContent.prototype.update = function (
   this._resourcesLoaded = loader.process(frameState);
 };
 
+GaussianSplat3DTilesContent.prototype.pick = function (
+  ray,
+  frameState,
+  result,
+) {
+  return undefined;
+};
+
 GaussianSplat3DTilesContent.prototype.destroy = function () {
   this._gsplatData = undefined;
   this._tile.destroy();
