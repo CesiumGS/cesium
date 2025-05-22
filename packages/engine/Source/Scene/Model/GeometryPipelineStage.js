@@ -12,9 +12,6 @@ import ModelUtility from "./ModelUtility.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
-
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
  *
@@ -54,9 +51,6 @@ const GeometryPipelineStage = {
  *  <li> adds a struct field for the 2D positions
  *  <li> adds an additional attribute object and declaration if the node containing this primitive is not instanced
  * </ul>
- *
- * If the primitive has Gaussian splats, this stage also toggles their rendering (points or splats)
- * and sets the appropriat buffers for instanced rendering.
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
@@ -138,62 +132,6 @@ GeometryPipelineStage.process = function (
     );
   }
 
-  if (primitive.primitiveType === PrimitiveType.POINTS) {
-    const gaussianSplatsEnabled =
-      (primitive?.isGaussianSplatPrimitive ?? false) &&
-      model.enableShowGaussianSplatting;
-    const showSplats =
-      model?.style?.showGaussianSplatting ?? model.showGaussianSplatting;
-
-    if (gaussianSplatsEnabled === true) {
-      ModelUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.POSITION,
-      ).instanceDivisor = showSplats ? 1 : 0;
-      ModelUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.SCALE,
-      ).instanceDivisor = showSplats ? 1 : 0;
-      ModelUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.ROTATION,
-      ).instanceDivisor = showSplats ? 1 : 0;
-      ModelUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.COLOR,
-      ).instanceDivisor = showSplats ? 1 : 0;
-
-      if (primitive.hasGaussianSplatTexture) {
-        primitive.attributes.find(
-          (a) => a.name === "_SPLAT_INDEXES",
-        ).instanceDivisor = showSplats ? 1 : 0;
-      }
-
-      if (showSplats === false) {
-        for (const name in primitive.attributes) {
-          if (
-            primitive.attributes.hasOwnProperty(name) &&
-            defined(primitive.attributes[name])
-          ) {
-            const attribute = primitive.attributes[name];
-            const vertexBuffer = Buffer.createVertexBuffer({
-              context: frameState.context,
-              typedArray: attribute.typedArray,
-              usage: BufferUsage.DYNAMIC_DRAW,
-            });
-
-            vertexBuffer.vertexArrayDestroyable = false;
-            attribute.buffer = vertexBuffer;
-          }
-        }
-      }
-    }
-
-    if (gaussianSplatsEnabled === false || showSplats === false) {
-      shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
-    }
-  }
-
   // Attributes, structs, and functions will need to be modified for 2D / CV.
   const use2D =
     frameState.mode !== SceneMode.SCENE3D &&
@@ -247,6 +185,10 @@ GeometryPipelineStage.process = function (
   }
 
   handleBitangents(shaderBuilder, primitive.attributes);
+
+  if (primitive.primitiveType === PrimitiveType.POINTS) {
+    shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
+  }
 
   shaderBuilder.addVertexLines(GeometryStageVS);
   shaderBuilder.addFragmentLines(GeometryStageFS);
