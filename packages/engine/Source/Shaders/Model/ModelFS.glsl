@@ -119,10 +119,6 @@ void main()
     atmosphereStage(color, attributes);
     #endif
 
-    #ifdef HAS_GAUSSIAN_SPLATS
-    gaussianSplatStage(color, attributes);
-    #endif
-
     #endif
     // When not picking metadata END
     //========================================================================

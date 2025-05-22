@@ -145,10 +145,6 @@ void main()
         gl_PointSize *= show;
     #endif
 
-    #ifdef HAS_GAUSSIAN_SPLATS
-    gaussianSplatStage(attributes, positionClip);
-    #endif
-
     // Important NOT to compute gl_Position = show * positionClip or we hit:
     // https://github.com/CesiumGS/cesium/issues/11270
     //
