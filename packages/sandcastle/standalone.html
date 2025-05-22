@@ -1,0 +1,97 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>Cesium Demo</title>
+    <script src="__CESIUM_BASE_URL__/Cesium.js" vite-ignore></script>
+    <script>
+      window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
+    </script>
+    <link
+      rel="stylesheet"
+      href="__CESIUM_BASE_URL__/Widgets/widgets.css"
+      vite-ignore
+    />
+    <link
+      rel="stylesheet"
+      href="__CESIUM_BASE_URL__/Widgets/lighter.css"
+      vite-ignore
+    />
+    <style>
+      .fullSize {
+        display: none;
+      }
+      .sandcastle-loading::after {
+        font: 24px sans-serif;
+        content: "Loading...";
+      }
+    </style>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <script type="module">
+      import {
+        embedInSandcastleTemplate,
+        decodeBase64Data,
+      } from "/src/Helpers.ts";
+
+      import Sandcastle from "/templates/Sandcastle.js";
+      window.Sandcastle = Sandcastle;
+
+      let base64String;
+      let data;
+
+      // Since we are setting the HTML base href below, we need to get the getCesiumBaseUrl
+      // upfront so that the value is correct. It gets cached for future calls.
+      // This is only a problem when using combined Cesium, which is the only time Cesium
+      // will be defined below.
+      if (typeof window.Cesium !== "undefined") {
+        window.Cesium.buildModuleUrl.getCesiumBaseUrl();
+      }
+
+      if (window.location.hash.indexOf("#c=") === 0) {
+        base64String = window.location.hash.substr(3);
+        data = decodeBase64Data(base64String);
+        //Handle case where demo is in a sub-directory by modifying
+        //the HTML to add a base href.
+        document.head.innerHTML = `${document.head.innerHTML}<base href="${data.baseHref}" />`;
+        window.sandcastleData = data;
+      }
+
+      let code;
+      if (window.sandcastleData) {
+        base64String = window.location.hash.substr(3);
+        data = window.sandcastleData;
+        let html = data.html;
+        code = data.code;
+        const isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
+        if (isIE11) {
+          html = html.replace("../templates", "templates");
+        }
+
+        // Add the HTML content
+        const htmlElement = document.createElement("div");
+        htmlElement.innerHTML = html;
+        document.body.appendChild(htmlElement);
+
+        // Add the JavaScript
+        const scriptElement = document.createElement("script");
+        const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
+        document.head.appendChild(scriptElement);
+        scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);
+      }
+    </script>
+    <script
+      type="text/javascript"
+      src="Sandcastle-client.js"
+      vite-ignore
+    ></script>
+  </body>
+</html>

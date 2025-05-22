@@ -3,10 +3,14 @@ import "./App.css";
 
 import Editor, { Monaco } from "@monaco-editor/react";
 import { editor, KeyCode } from "monaco-editor";
-import pako from "pako";
 import Gallery, { GalleryDemo } from "./Gallery.js";
 import gallery_demos from "./gallery-index.ts";
 import { Button, Root } from "@itwin/itwinui-react/bricks";
+import {
+  decodeBase64Data,
+  embedInSandcastleTemplate,
+  makeCompressedBase64String,
+} from "./Helpers.ts";
 
 const local = {
   docTypes: [],
@@ -17,30 +21,16 @@ const local = {
 
 const defaultJsCode = 'const viewer = new Cesium.Viewer("cesiumContainer");\n';
 const defaultHtmlCode = `<style>
-  @import url(bucket.css);
+  @import url(../templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 `;
 
-function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
-  console.log("embedSandcastle");
-  return `window.startup = async function (Cesium, Sandcastle) {
-  'use strict';
-  //Sandcastle_Begin
-  ${addExtraLine ? "\n" : ""}${code}
-  //Sandcastle_End
-  Sandcastle.finishedLoading();
-  };
-  if (typeof Cesium !== 'undefined' && typeof Sandcastle !== 'undefined') {
-      window.startupCalled = true;
-    window.startup(Cesium, Sandcastle).catch((error) => {
-        "use strict";
-      console.error(error);
-    });
-}
-`;
+function getBaseUrl() {
+  // omits query string and hash
+  return `${location.protocol}//${location.host}${location.pathname}`;
 }
 
 function activateBucketScripts(
@@ -331,65 +321,6 @@ const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
 //   }
 // }
 
-type SandcastleSaveData = {
-  code: string;
-  html: string;
-  baseHref?: string;
-};
-
-function makeCompressedBase64String(data: [code: string, html: string]) {
-  // data stored in the hash as:
-  // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-  let jsonString = JSON.stringify(data);
-  // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
-  jsonString = jsonString.slice(2, 2 + jsonString.length - 4);
-  const pakoString = pako.deflate(jsonString, {
-    raw: true,
-    level: 9,
-  });
-  let base64String = btoa(
-    // TODO: not 100% sure why I have to do this conversion manually anymore but it works
-    // https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
-    String.fromCharCode(...new Uint8Array(pakoString)),
-  );
-  base64String = base64String.replace(/=+$/, ""); // remove padding
-
-  return base64String;
-}
-
-function decodeBase64Data(base64String: string): SandcastleSaveData {
-  // data stored in the hash as:
-  // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-  // restore padding
-  while (base64String.length % 4 !== 0) {
-    base64String += "=";
-  }
-  // https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
-  const dataArray = new Uint8Array(
-    atob(base64String)
-      .split("")
-      .map(function (c) {
-        return c.charCodeAt(0);
-      }),
-  );
-  let jsonString = pako.inflate(dataArray, {
-    raw: true,
-    to: "string",
-  });
-  // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
-  jsonString = `["${jsonString}"]`;
-  const json = JSON.parse(jsonString);
-  // index 0 is code, index 1 is html
-  const code = json[0];
-  const html = json[1];
-  const baseHref = json[2];
-  return {
-    code: code,
-    html: html,
-    baseHref: baseHref,
-  };
-}
-
 function App() {
   const jsEditorRef = useRef<editor.IStandaloneCodeEditor>(null);
   const htmlEditorRef = useRef<editor.IStandaloneCodeEditor>(null);
@@ -678,11 +609,34 @@ Sandcastle.addToolbarMenu(${variableName});`,
     const html = htmlEditorRef.current.getValue();
     console.log([code, html]);
 
-    const base64String = makeCompressedBase64String([code, html]);
+    const base64String = makeCompressedBase64String({ code, html });
 
     // const shareUrl = `${getBaseUrl()}#c=${base64String}`;
     const shareUrl = `#c=${base64String}`;
     window.history.replaceState({}, "", shareUrl);
+  }
+
+  function openStandalone() {
+    if (!jsEditorRef.current || !htmlEditorRef.current) {
+      // can't find next highest if there's no code yet
+      return;
+    }
+    const code = jsEditorRef.current.getValue();
+    const html = htmlEditorRef.current.getValue();
+
+    let baseHref = getBaseUrl();
+    const pos = baseHref.lastIndexOf("/");
+    baseHref = `${baseHref.substring(0, pos)}/gallery/`;
+
+    console.log([code, html]);
+    const base64String = makeCompressedBase64String({ code, html, baseHref });
+
+    let url = getBaseUrl();
+    url =
+      `${url.replace("index.html", "")}standalone.html` + `#c=${base64String}`;
+
+    window.open(url, "_blank");
+    window.focus();
   }
 
   function loadDemo(demo: GalleryDemo) {
@@ -708,6 +662,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
         <Button onClick={addToggle}>Add toggle</Button>
         <Button onClick={addMenu}>Add menu</Button>
         <Button onClick={share}>Share</Button>
+        <Button onClick={openStandalone}>Standalone</Button>
         <div className="spacer"></div>
         <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
       </div>

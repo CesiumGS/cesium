@@ -19,6 +19,9 @@ const baseConfig: UserConfig = {
         bucket: fileURLToPath(
           new URL("./templates/bucket.html", import.meta.url),
         ),
+        standalone: fileURLToPath(
+          new URL("./standalone.html", import.meta.url),
+        ),
       },
     },
   },
