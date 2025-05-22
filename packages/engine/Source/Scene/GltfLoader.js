@@ -211,8 +211,6 @@ function GltfLoader(options) {
     loadPrimitiveOutline = true,
     loadForClassification = false,
     renameBatchIdSemantic = false,
-    loadGaussianSplatting = true,
-    generateGaussianSplatTexture = true,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -237,8 +235,6 @@ function GltfLoader(options) {
   this._loadPrimitiveOutline = loadPrimitiveOutline;
   this._loadForClassification = loadForClassification;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
-  this._loadGaussianSplatting = loadGaussianSplatting;
-  this._generateGaussianSplatTexture = generateGaussianSplatTexture;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -2022,21 +2018,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  const gaussianSplattingExtension = extensions.KHR_gaussian_splatting;
   const spzExtension = extensions.KHR_spz_gaussian_splats_compression;
-
-  if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
+  if (defined(spzExtension)) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;
-    primitivePlan.generateGaussianSplatTexture =
-      loader._generateGaussianSplatTexture;
-  }
-
-  if (spzExtension) {
-    needsPostProcessing = true;
-    primitivePlan.needsSpzAttributes = true;
-    primitivePlan.generateGaussianSplatTexture =
-      loader._generateGaussianSplatTexture;
   }
 
   const loadForClassification = loader._loadForClassification;
