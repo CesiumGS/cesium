@@ -115,6 +115,7 @@ function DataSourceDisplay(options) {
   this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
 
   this._ready = false;
+  this._prevResult = this._ready;
 }
 
 const ExtraVisualizers = [];
@@ -322,9 +323,12 @@ DataSourceDisplay.prototype.update = function (time) {
     result = visualizers[x].update(time) && result;
   }
 
-  if (!result) {
+  // Request a rendering of the scene when all of the data sources
+  // switch from false to true
+  if (!this._prevResult && result) {
     this._scene.requestRender();
   }
+  this._prevResult = result;
 
   // once the DataSourceDisplay is ready it should stay ready to prevent
   // entities from breaking updates when they become "un-ready"
