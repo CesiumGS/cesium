@@ -38,6 +38,9 @@ function PrimitiveCollection(options) {
   // Used by the OrderedGroundPrimitiveCollection
   this._zIndex = undefined;
 
+  // List of primitives you can pass in to only render a limited subset for arbitrary renders
+  this.primitivesToRenderOverride = undefined;
+
   /**
    * Determines if primitives in this collection will be shown.
    *
@@ -408,7 +411,7 @@ PrimitiveCollection.prototype.update = function (frameState) {
     return;
   }
 
-  const primitives = this._primitives;
+  const primitives = this.primitivesToRenderOverride || this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
@@ -421,7 +424,7 @@ PrimitiveCollection.prototype.update = function (frameState) {
  * @private
  */
 PrimitiveCollection.prototype.prePassesUpdate = function (frameState) {
-  const primitives = this._primitives;
+  const primitives = this.primitivesToRenderOverride || this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
@@ -437,7 +440,7 @@ PrimitiveCollection.prototype.prePassesUpdate = function (frameState) {
  * @private
  */
 PrimitiveCollection.prototype.updateForPass = function (frameState, passState) {
-  const primitives = this._primitives;
+  const primitives = this.primitivesToRenderOverride || this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
@@ -453,7 +456,7 @@ PrimitiveCollection.prototype.updateForPass = function (frameState, passState) {
  * @private
  */
 PrimitiveCollection.prototype.postPassesUpdate = function (frameState) {
-  const primitives = this._primitives;
+  const primitives = this.primitivesToRenderOverride || this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
