@@ -28,14 +28,7 @@ function generateGaussianSortWorker(parameters, transferableObjects) {
       primitive.modelView,
       primitive.count,
     );
-  } /* else if (sortType === "SIMD Index") {
-    return radix_sort_gaussians_indexes(
-      primitive.positions,
-      primitive.modelView,
-      TEXTURE_WIDTH,
-      primitive.count,
-    );
-  }*/
+  }
 }
 
 export default createTaskProcessorWorker(generateGaussianSortWorker);
