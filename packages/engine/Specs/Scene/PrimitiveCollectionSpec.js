@@ -687,6 +687,42 @@ describe(
       p1.destroy();
       p2.destroy();
     });
+
+    it("initializes reference-counting", function () {
+      expect(primitives.destroyPrimitives).toEqual(true);
+      expect(primitives._countReferences).toEqual(false);
+
+      let collection = new PrimitiveCollection({
+        destroyPrimitives: "reference-counted",
+      });
+      expect(collection.destroyPrimitives).toEqual(true);
+      expect(collection._countReferences).toEqual(true);
+
+      collection = new PrimitiveCollection({ destroyPrimitives: false });
+      expect(collection.destroyPrimitives).toEqual(false);
+      expect(collection._countReferences).toEqual(false);
+    });
+
+    it("does not change reference-counting behavior after construction", function () {
+      const collection = new PrimitiveCollection({
+        destroyPrimitives: "reference-counted",
+      });
+      expect(collection._countReferences).toEqual(true);
+
+      collection.destroyPrimitives = false;
+      expect(collection._countReferences).toEqual(true);
+
+      collection.destroyPrimitives = true;
+      expect(collection._countReferences).toEqual(true);
+    });
+
+    it("maintains primitive reference counts IFF enabled", function () {});
+
+    it("maintains primitive reference counts regardless of destroyPrimitives", function () {});
+
+    it("destroys primitives on removal IFF reference count is zero and destroyPrimitives is true", function () {});
+
+    it("maintains reference count across multiple collections", function () {});
   },
   "WebGL",
 );

@@ -70,7 +70,9 @@ function PrimitiveCollection(options) {
    * const b = labels.isDestroyed(); // false
    * labels = labels.destroy();    // explicitly destroy
    */
-  this.destroyPrimitives = options.destroyPrimitives ?? true;
+  this.destroyPrimitives = false !== options.destroyPrimitives;
+
+  this._countReferences = "reference-counted" === options.destroyPrimitives;
 }
 
 Object.defineProperties(PrimitiveCollection.prototype, {
