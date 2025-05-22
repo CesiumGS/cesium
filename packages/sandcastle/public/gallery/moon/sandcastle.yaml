@@ -1,0 +1,9 @@
+id: moon
+legacy-id: Moon.html
+title: Moon
+description: Moon terrain visualized using 3D Tiles, tiled and hosted by Cesium ion, and shown with points of interest and additional data layers.
+labels:
+  - Showcases
+  - ion Assets
+  - 3D Tiles
+thumbnail: Moon.jpg
