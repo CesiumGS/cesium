@@ -3,9 +3,10 @@
   "include": ["./Sandcastle.ts"],
   "compilerOptions": {
     "declaration": true,
-    "emitDeclarationOnly": true,
+    "emitDeclarationOnly": false,
+    "allowImportingTsExtensions": false,
     "noEmit": false,
     "isolatedModules": false,
-    "outFile": "../public/templates/Sandcastle.d.ts"
+    "outDir": "../public/templates"
   }
 }
