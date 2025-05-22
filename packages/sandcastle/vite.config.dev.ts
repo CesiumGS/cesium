@@ -14,7 +14,7 @@ export default defineConfig(() => {
       { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
       { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
       { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
-      { src: `${cesiumSource}/Cesium.js`, dest: cesiumBaseUrl },
+      { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
       { src: `../../Source/Cesium.d.ts`, dest: "Source" },
       { src: "../../Apps/SampleData", dest: "Apps" },
       { src: "../../Apps/SampleData", dest: "" },

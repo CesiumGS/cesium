@@ -4,6 +4,11 @@ import { globbySync } from "globby";
 import { basename, dirname, join } from "path";
 import { exit } from "process";
 
+// TODO: probably need to find a way to integrate this into the vite process to make sure it's
+// built during build
+// May also want to move this out of the sandcastle project so we don't have to duplicate
+// files for the local build, need to think about deploying too...
+
 const galleryDirectory = "./public/gallery";
 
 const yamlFiles = globbySync([

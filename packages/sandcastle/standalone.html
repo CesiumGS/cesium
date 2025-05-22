@@ -8,6 +8,14 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <title>Cesium Demo</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "cesium": "__CESIUM_BASE_URL__/index.js",
+          "Sandcastle": "./templates/Sandcastle.js"
+        }
+      }
+    </script>
     <script src="__CESIUM_BASE_URL__/Cesium.js" vite-ignore></script>
     <script>
       window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
@@ -83,6 +91,7 @@
 
         // Add the JavaScript
         const scriptElement = document.createElement("script");
+        scriptElement.type = "module";
         const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
         document.head.appendChild(scriptElement);
         scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);

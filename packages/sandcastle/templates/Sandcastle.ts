@@ -45,7 +45,7 @@ const Sandcastle = {
       let needle = `${bucket}:`; // Firefox
       let pos = stack.indexOf(needle);
       if (pos < 0) {
-        needle = " (<anonymous>:"; // Chrome
+        needle = "<anonymous>:"; // Chrome
         pos = stack.indexOf(needle);
       }
       if (pos < 0) {

@@ -3,8 +3,7 @@ import "./App.css";
 
 import Editor, { Monaco } from "@monaco-editor/react";
 import { editor, KeyCode } from "monaco-editor";
-import Gallery, { GalleryDemo } from "./Gallery.js";
-import gallery_demos from "./gallery-index.ts";
+import Gallery, { GalleryItem } from "./Gallery.js";
 import { Button, Root } from "@itwin/itwinui-react/bricks";
 import {
   decodeBase64Data,
@@ -114,6 +113,7 @@ function activateBucketScripts(
     } else {
       // Apply user JS to bucket
       const element = bucketDoc.createElement("script");
+      element.type = "module";
 
       // Firefox line numbers are zero-based, not one-based.
       const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
@@ -326,13 +326,24 @@ function App() {
   const htmlEditorRef = useRef<editor.IStandaloneCodeEditor>(null);
   const bucket = useRef<HTMLIFrameElement>(null);
 
+  const [legacyIdMap, setLegacyIdMap] = useState<Record<string, string>>({});
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [galleryLoaded, setGalleryLoaded] = useState(false);
+
   function loadFromUrl() {
+    if (!jsEditorRef.current || !htmlEditorRef.current) {
+      console.log("loadFromUrl too early", {
+        js: !!jsEditorRef.current,
+        html: !!htmlEditorRef.current,
+        galleryLoaded,
+      });
+      return;
+    }
+
+    const searchParams = new URLSearchParams(window.location.search);
+
     // TODO: I don't think this is the "correct" way to do on mount/load logic but it's working
-    if (
-      window.location.hash.indexOf("#c=") === 0 &&
-      jsEditorRef.current &&
-      htmlEditorRef.current
-    ) {
+    if (window.location.hash.indexOf("#c=") === 0) {
       const base64String = window.location.hash.substr(3);
       const data = decodeBase64Data(base64String);
 
@@ -340,6 +351,34 @@ function App() {
       htmlEditorRef.current.setValue(data.html);
       // applyLoadedDemo(code, html);
       console.log("loadFromUrl", data);
+    } else if (searchParams.has("src")) {
+      const legacyId = searchParams.get("src");
+      console.log("load legacy", legacyId);
+      if (!legacyId) {
+        return;
+      }
+      const galleryId = legacyIdMap[legacyId];
+      if (!galleryId) {
+        console.log("no mapping");
+        return;
+      }
+      const galleryItem = galleryItems.find((item) => item.id === galleryId);
+      if (!galleryItem) {
+        console.error("Unable to find gallery item with id:", galleryId);
+        return;
+      }
+      loadGalleryItem(galleryItem);
+    } else if (searchParams.has("id")) {
+      const galleryId = searchParams.get("id");
+      console.log("load id", galleryId);
+      // TODO: there's probably a race condition here where the list might not be loaded yet
+      // I need to switch this to the more React declarative style
+      const galleryItem = galleryItems.find((item) => item.id === galleryId);
+      if (!galleryItem) {
+        console.error("Unable to find gallery item with id:", galleryId);
+        return;
+      }
+      loadGalleryItem(galleryItem);
     }
   }
 
@@ -421,25 +460,24 @@ function App() {
     // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
 
     const cesiumTypes = await (await fetch(TYPES_URL)).text();
-    const sandcastleTypes = await (await fetch(SANDCASTLE_TYPES_URL)).text();
-
-    const typesSource = [
-      cesiumTypes,
-      sandcastleTypes,
-      "var Cesium: typeof import('cesium');",
-      "var Sandcastle: typeof import('Sandcastle').default;",
-    ].join("\n");
-    const typesUri = "ts:filename/types.d.ts";
-
+    // define a "global" variable so types work even with out the import statement
+    const cesiumTypesWithGlobal = `${cesiumTypes}\nvar Cesium: typeof import('cesium');`;
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      typesSource,
-      typesUri,
+      cesiumTypesWithGlobal,
+      "ts:cesium.d.ts",
     );
 
-    monaco.editor.createModel(
-      typesSource,
-      "typescript",
-      monaco.Uri.parse(typesUri),
+    const sandcastleTypes = await (await fetch(SANDCASTLE_TYPES_URL)).text();
+    // surround in a module so the import statement works nicely
+    // also define a "global" so types show even if you don't have the import
+    const sandcastleModuleTypes = `declare module 'Sandcastle' {
+      ${sandcastleTypes}
+    }
+      var Sandcastle: typeof import('Sandcastle').default;`;
+
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      sandcastleModuleTypes,
+      "ts:sandcastle.d.ts",
     );
   }
 
@@ -611,8 +649,8 @@ Sandcastle.addToolbarMenu(${variableName});`,
 
     const base64String = makeCompressedBase64String({ code, html });
 
-    // const shareUrl = `${getBaseUrl()}#c=${base64String}`;
-    const shareUrl = `#c=${base64String}`;
+    const shareUrl = `${getBaseUrl()}#c=${base64String}`;
+    // const shareUrl = `#c=${base64String}`;
     window.history.replaceState({}, "", shareUrl);
   }
 
@@ -639,9 +677,19 @@ Sandcastle.addToolbarMenu(${variableName});`,
     window.focus();
   }
 
-  function loadDemo(demo: GalleryDemo) {
-    // do stuff
-    setCode(demo.js ?? defaultJsCode, demo.html ?? defaultHtmlCode);
+  const GALLERY_BASE = "/gallery";
+  async function loadGalleryItem(galleryItem: GalleryItem) {
+    const itemBaseUrl = `${GALLERY_BASE}/${galleryItem.id}`;
+
+    const codeReq = fetch(`${itemBaseUrl}/main.js`);
+    const htmlReq = fetch(`${itemBaseUrl}/index.html`);
+
+    const code = await (await codeReq).text();
+    const html = await (await htmlReq).text();
+
+    console.log("loaded", { code, html });
+
+    setCode(code, html);
 
     // format to account for any bad template strings, not ideal but better than not doing it
     formatJs();
@@ -651,6 +699,31 @@ Sandcastle.addToolbarMenu(${variableName});`,
   }
 
   const [darkTheme, setDarkTheme] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    async function fetchGallery() {
+      const req = await fetch(`${GALLERY_BASE}/list.json`);
+      const resp = await req.json();
+
+      if (!ignore) {
+        setGalleryItems(resp.entries);
+        setLegacyIdMap(resp.legacyIdMap);
+        setGalleryLoaded(true);
+      }
+    }
+    fetchGallery();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (galleryLoaded) {
+      console.log("gallery loaded, try loading from url");
+      loadFromUrl();
+    }
+  }, [galleryLoaded]);
 
   return (
     <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
@@ -696,7 +769,10 @@ Sandcastle.addToolbarMenu(${variableName});`,
         ></iframe>
       </div>
       <div className="gallery">
-        <Gallery demos={gallery_demos} loadDemo={(demo) => loadDemo(demo)} />
+        <Gallery
+          demos={galleryItems}
+          loadDemo={(item) => loadGalleryItem(item)}
+        />
       </div>
     </Root>
   );
