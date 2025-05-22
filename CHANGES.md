@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Support Texture3D and add Volume Cloud SandBox Sample. [#12550](https://github.com/CesiumGS/cesium/issues/12550)
+- Fix render issues when updating entities with `requestRenderMode=true`. [#12543](https://github.com/CesiumGS/cesium/issues/12543)
 
 ## 1.129 - 2025-05-01
 
