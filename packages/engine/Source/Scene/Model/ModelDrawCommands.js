@@ -24,11 +24,6 @@ import DeveloperError from "../../Core/DeveloperError.js";
  */
 function ModelDrawCommands() {}
 
-import Geometry from "../../Core/Geometry.js";
-import GeometryAttribute from "../../Core/GeometryAttribute.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
 /**
  * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
  * using its render resources. If the model classifies another asset, it
@@ -50,22 +45,14 @@ ModelDrawCommands.buildModelDrawCommand = function (
     shaderBuilder,
     frameState,
   );
-  const model = primitiveRenderResources.model;
-  const command =
-    primitiveRenderResources.runtimePrimitive.primitive
-      .isGaussianSplatPrimitive &&
-    (model?.style?.showGaussianSplatting ?? model.showGaussianSplatting)
-      ? buildDrawCommandForGaussianSplatPrimitive(
-          primitiveRenderResources,
-          shaderProgram,
-          frameState,
-        )
-      : buildDrawCommandForModel(
-          primitiveRenderResources,
-          shaderProgram,
-          frameState,
-        );
 
+  const command = buildDrawCommandForModel(
+    primitiveRenderResources,
+    shaderProgram,
+    frameState,
+  );
+
+  const model = primitiveRenderResources.model;
   const hasClassification = defined(model.classificationType);
   if (hasClassification) {
     return new ClassificationModelDrawCommand({
@@ -116,7 +103,6 @@ function buildDrawCommandForModel(
   frameState,
 ) {
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
-  const model = primitiveRenderResources.model;
 
   const vertexArray = new VertexArray({
     context: frameState.context,
@@ -124,192 +110,7 @@ function buildDrawCommandForModel(
     attributes: primitiveRenderResources.attributes,
   });
 
-  model._pipelineResources.push(vertexArray);
-
-  const pass = primitiveRenderResources.alphaOptions.pass;
-  const sceneGraph = model.sceneGraph;
-
-  const is3D = frameState.mode === SceneMode.SCENE3D;
-  let modelMatrix, boundingSphere;
-
-  if (!is3D && !frameState.scene3DOnly && model._projectTo2D) {
-    modelMatrix = Matrix4.multiplyTransformation(
-      sceneGraph._computedModelMatrix,
-      primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4(),
-    );
-
-    const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
-    boundingSphere = runtimePrimitive.boundingSphere2D;
-  } else {
-    const computedModelMatrix = is3D
-      ? sceneGraph._computedModelMatrix
-      : sceneGraph._computedModelMatrix2D;
-
-    modelMatrix = Matrix4.multiplyTransformation(
-      computedModelMatrix,
-      primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4(),
-    );
-
-    boundingSphere = BoundingSphere.transform(
-      primitiveRenderResources.boundingSphere,
-      modelMatrix,
-    );
-  }
-
-  // Initialize render state with default values
-  let renderState = clone(
-    RenderState.fromCache(primitiveRenderResources.renderStateOptions),
-    true,
-  );
-
-  renderState.cull.face = ModelUtility.getCullFace(
-    modelMatrix,
-    primitiveRenderResources.primitiveType,
-  );
-  renderState = RenderState.fromCache(renderState);
-
-  const hasClassification = defined(model.classificationType);
-  const castShadows = hasClassification
-    ? false
-    : ShadowMode.castShadows(model.shadows);
-  const receiveShadows = hasClassification
-    ? false
-    : ShadowMode.receiveShadows(model.shadows);
-  // Pick IDs are only added to specific draw commands for classification.
-  // This behavior is handled by ClassificationModelDrawCommand.
-  const pickId = hasClassification
-    ? undefined
-    : primitiveRenderResources.pickId;
-
-  const command = new DrawCommand({
-    boundingVolume: boundingSphere,
-    modelMatrix: modelMatrix,
-    uniformMap: primitiveRenderResources.uniformMap,
-    renderState: renderState,
-    vertexArray: vertexArray,
-    shaderProgram: shaderProgram,
-    cull: model.cull,
-    pass: pass,
-    count: primitiveRenderResources.count,
-    owner: model,
-    pickId: pickId,
-    pickMetadataAllowed: true,
-    instanceCount: primitiveRenderResources.instanceCount,
-    primitiveType: primitiveRenderResources.primitiveType,
-    debugShowBoundingVolume: model.debugShowBoundingVolume,
-    castShadows: castShadows,
-    receiveShadows: receiveShadows,
-  });
-  return command;
-}
-
-/**
- * Builds the {@link DrawCommand} that serves as the basis for either creating
- * a {@link ModelDrawCommand} or a {@link ModelRuntimePrimitive} that has Gaussian splats
- *
- * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
- * @param {ShaderProgram} shaderProgram The shader program
- * @param {FrameState} frameState The frame state for creating GPU resources.
- *
- * @returns {DrawCommand} The generated DrawCommand, to be passed to
- * the ModelDrawCommand or ClassificationModelDrawCommand
- *
- * @private
- */
-function buildDrawCommandForGaussianSplatPrimitive(
-  primitiveRenderResources,
-  shaderProgram,
-  frameState,
-) {
-  const indexBuffer = getIndexBuffer(primitiveRenderResources);
   const model = primitiveRenderResources.model;
-
-  const vertexArray = (() => {
-    if (
-      !(
-        primitiveRenderResources.runtimePrimitive.primitive
-          ?.hasGaussianSplatTexture ?? false
-      )
-    ) {
-      const splatQuadAttrLocations = {
-        0: 4,
-        1: 1,
-        2: 2,
-        3: 3,
-        screenQuadPosition: 0,
-        splatPosition: 5,
-        splatColor: 6,
-      };
-      const geometry = new Geometry({
-        attributes: {
-          screenQuadPosition: new GeometryAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 2,
-            values: [-2.0, -2.0, 2.0, -2.0, 2.0, 2.0, -2.0, 2.0],
-            name: "_SCREEN_QUAD_POS",
-            variableName: "screenQuadPos",
-          }),
-          ...primitiveRenderResources.runtimePrimitive.primitive.attributes,
-          splatPosition: {
-            ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-              (a) => a.name === "POSITION",
-            ),
-            name: "_SPLAT_POSITION",
-            variableName: "splatPosition",
-          },
-          splatColor: {
-            ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-              (a) => a.name === "COLOR_0",
-            ),
-            name: "_SPLAT_COLOR",
-            variableName: "splatColor",
-          },
-        },
-        indices: indexBuffer,
-        primitiveType: PrimitiveType.TRIANGLE_STRIP,
-      });
-
-      return VertexArray.fromGeometry({
-        context: frameState.context,
-        geometry: geometry,
-        attributeLocations: splatQuadAttrLocations,
-        bufferUsage: BufferUsage.STATIC_DRAW,
-        interleave: false,
-      });
-    }
-    const splatQuadAttrLocations = {
-      splatIndex: 5,
-    };
-    const geometry = new Geometry({
-      attributes: {
-        screenQuadPosition: new GeometryAttribute({
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 2,
-          values: [-1, -1, 1, -1, 1, 1, -1, 1],
-          name: "_SCREEN_QUAD_POS",
-          variableName: "screenQuadPosition",
-        }),
-        splatIndex: {
-          ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-            (a) => a.name === "_SPLAT_INDEXES",
-          ),
-        },
-      },
-      indices: indexBuffer,
-      primitiveType: PrimitiveType.TRIANGLE_STRIP,
-    });
-
-    return VertexArray.fromGeometry({
-      context: frameState.context,
-      geometry: geometry,
-      attributeLocations: splatQuadAttrLocations,
-      bufferUsage: BufferUsage.STATIC_DRAW,
-      interleave: false,
-    });
-  })();
-
   model._pipelineResources.push(vertexArray);
 
   const pass = primitiveRenderResources.alphaOptions.pass;

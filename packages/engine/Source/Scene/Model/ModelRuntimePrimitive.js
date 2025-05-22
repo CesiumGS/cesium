@@ -27,8 +27,6 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
-import GaussianSplatPipelineStage from "./GaussianSplatPipelineStage.js";
-import GaussianSplatTexturePipelineStage from "./GaussianSplatTexturePipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -242,9 +240,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   const hasClassification = defined(model.classificationType);
 
-  const hasGaussianSplats =
-    (model?.style?.showGaussianSplatting ?? model.showGaussianSplatting) &&
-    (primitive?.isGaussianSplatPrimitive ?? false);
   // Start of pipeline -----------------------------------------------------
   if (use2D) {
     pipelineStages.push(SceneMode2DPipelineStage);
@@ -313,17 +308,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   pipelineStages.push(AlphaPipelineStage);
 
   pipelineStages.push(PrimitiveStatisticsPipelineStage);
-
-  if (hasGaussianSplats) {
-    if (!defined(primitive.needsGaussianSplatTexture)) {
-      pipelineStages.push(GaussianSplatPipelineStage);
-    } else if (
-      primitive.needsGaussianSplatTexture === false &&
-      (primitive?.hasGaussianSplatTexture ?? false)
-    ) {
-      pipelineStages.push(GaussianSplatTexturePipelineStage);
-    }
-  }
 
   return;
 };

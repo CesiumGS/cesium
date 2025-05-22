@@ -43,18 +43,6 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
-import GaussianSplatSorter from "../GaussianSplatSorter.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-
-import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
-
-import Texture from "../../Renderer/Texture.js";
-import PixelFormat from "../../Core/PixelFormat.js";
-import PixelDatatype from "../../Renderer/PixelDatatype.js";
-import Sampler from "../../Renderer/Sampler.js";
-import AttributeType from "../AttributeType.js";
-import ModelComponents from "../ModelComponents.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
 
 /**
  * <div class="notice">
@@ -469,16 +457,6 @@ function Model(options) {
    */
   this.showOutline = options.showOutline ?? true;
 
-  this._enableShowGaussianSplatting =
-    options.enableShowGaussianSplatting ?? true;
-
-  /**
-   * Whether to display Gaussian Splatting (will fall back to point cloud rendering if false)
-   *
-   * @type {boolean}
-   */
-  this.showGaussianSplatting = options.showGaussianSplatting ?? true;
-
   /**
    * The color to use when rendering outlines.
    *
@@ -807,37 +785,6 @@ Object.defineProperties(Model.prototype, {
         this.resetDrawCommands();
       }
       this._pointCloudShading = value;
-    },
-  },
-
-  /**
-   *
-   * {@link Cesium3DTileset}.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {PointCloudShading}
-   */
-  enableShowGaussianSplatting: {
-    get: function () {
-      return this._enableShowGaussianSplatting;
-    },
-    set: function (value) {
-      if (value !== this._enableShowGaussianSplatting) {
-        this.resetDrawCommands();
-      }
-      this._enableShowGaussianSplatting = value;
-      // Warning for improper setup of gaussian splatting
-      if (
-        value &&
-        this.type !== ModelType.GLTF &&
-        this.type !== ModelType.TILE_GLTF
-      ) {
-        oneTimeWarning(
-          "model-enable-show-gaussian-splatting-ignored",
-          "enableShowGaussian splatting must be used with a glTF model that has the KHR_gaussian_splatting extension",
-        );
-      }
     },
   },
 
@@ -1992,7 +1939,6 @@ Model.prototype.update = function (frameState) {
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
-  updateGaussianSplatting(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -2156,147 +2102,6 @@ function updatePointCloudShading(model) {
     model.resetDrawCommands();
     model._pointCloudBackFaceCulling = pointCloudShading.backFaceCulling;
   }
-}
-
-const scratchSplatMatrix = new Matrix4();
-
-function generateSplatTexture(primitive, frameState) {
-  primitive.gaussianSplatTexturePending = true;
-  const promise = GaussianSplatTextureGenerator.generateFromAttrs({
-    attributes: {
-      positions: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.POSITION,
-        ).typedArray,
-      ),
-      scales: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.SCALE,
-        ).typedArray,
-      ),
-      rotations: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.ROTATION,
-        ).typedArray,
-      ),
-      colors: new Uint8Array(
-        ModelUtility.getAttributeBySemantic(
-          primitive,
-          VertexAttributeSemantic.COLOR,
-        ).typedArray,
-      ),
-    },
-    count: primitive.attributes[0].count,
-  });
-
-  if (promise === undefined) {
-    primitive.gaussianSplatTexturePending = false;
-    return;
-  }
-
-  promise.then((splatTextureData) => {
-    const splatTex = new Texture({
-      context: frameState.context,
-      source: {
-        width: splatTextureData.width,
-        height: splatTextureData.height,
-        arrayBufferView: splatTextureData.data,
-      },
-      preMultiplyAlpha: false,
-      skipColorSpaceConversion: true,
-      pixelFormat: PixelFormat.RGBA_INTEGER,
-      pixelDatatype: PixelDatatype.UNSIGNED_INT,
-      flipY: false,
-      sampler: Sampler.NEAREST,
-    });
-    const count = Math.floor(primitive.attributes[0].count);
-    const attribute = new ModelComponents.Attribute();
-
-    //index attribute for indexing into attribute texture
-    attribute.name = "_SPLAT_INDEXES";
-    attribute.typedArray = new Uint32Array([...Array(count).keys()]);
-    attribute.componentDatatype = ComponentDatatype.UNSIGNED_INT;
-    attribute.type = AttributeType.SCALAR;
-    attribute.normalized = false;
-    attribute.count = count;
-    attribute.constant = 0;
-    attribute.instanceDivisor = 1;
-
-    primitive.attributes.push(attribute);
-    primitive.gaussianSplatTexture = splatTex;
-    primitive.hasGaussianSplatTexture = true;
-    primitive.needsGaussianSplatTexture = false;
-    primitive.gaussianSplatTexturePending = false;
-  });
-}
-
-function updateGaussianSplatting(model, frameState) {
-  let prim;
-  for (let i = 0; i < model.sceneGraph.components.nodes.length; i++) {
-    for (
-      let j = 0;
-      j < model.sceneGraph.components.nodes[i].primitives.length;
-      j++
-    ) {
-      const primitive = model.sceneGraph.components.nodes[i].primitives[j];
-      if (primitive.isGaussianSplatPrimitive) {
-        prim = primitive;
-        break;
-      }
-    }
-  }
-
-  if (!defined(prim)) {
-    return;
-  }
-
-  if (prim.needsGaussianSplatTexture) {
-    if (!prim.gaussianSplatTexturePending) {
-      generateSplatTexture(prim, frameState);
-    }
-    return;
-  }
-
-  Matrix4.multiply(
-    frameState.camera.viewMatrix,
-    model.modelMatrix,
-    scratchSplatMatrix,
-  );
-
-  if (!prim?.hasGaussianSplatTexture) {
-    model.resetDrawCommands();
-    return;
-  }
-
-  const idxAttr = prim.attributes.find((a) => a.name === "_SPLAT_INDEXES");
-  const posAttr = ModelUtility.getAttributeBySemantic(
-    prim,
-    VertexAttributeSemantic.POSITION,
-  );
-
-  const promise = GaussianSplatSorter.radixSortIndexes({
-    primitive: {
-      positions: new Float32Array(posAttr.typedArray),
-      modelView: Float32Array.from(scratchSplatMatrix),
-      count: idxAttr.count,
-    },
-    sortType: "Index",
-  });
-
-  if (promise === undefined) {
-    return;
-  }
-
-  promise.catch((err) => {
-    throw err;
-  });
-  promise.then((sortedData) => {
-    idxAttr.typedArray = sortedData;
-    model.resetDrawCommands();
-  });
 }
 
 function updateSilhouette(model, frameState) {
@@ -3209,7 +3014,6 @@ Model.fromGltfAsync = async function (options) {
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
-    loadGaussianSplatting: options.enableShowGaussianSplatting,
   };
 
   const basePath = options.basePath ?? "";
@@ -3482,7 +3286,6 @@ function makeModelOptions(loader, modelType, options) {
     pointCloudShading: options.pointCloudShading,
     classificationType: options.classificationType,
     pickObject: options.pickObject,
-    showGaussianSplatting: options.showGaussianSplatting,
   };
 }
 
