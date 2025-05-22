@@ -31,8 +31,6 @@ import {
   WireframePipelineStage,
   ClassificationType,
   MetadataPickingPipelineStage,
-  GaussianSplatPipelineStage,
-  GaussianSplatTexturePipelineStage,
 } from "../../../index.js";
 
 import createFrameState from "../../../../../Specs/createFrameState.js";
@@ -1049,72 +1047,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
     ];
 
     primitive.configurePipeline(frameState);
-    verifyExpectedStages(primitive.pipelineStages, expectedStages);
-  });
-
-  it("configures Gaussian splat stage for gltf using texture", function () {
-    const primitive = new ModelRuntimePrimitive({
-      primitive: {
-        featureIds: [],
-        featureIdTextures: [],
-        attributes: [],
-        primitiveType: PrimitiveType.POINTS,
-        isGaussianSplatPrimitive: true,
-        hasGaussianSplatTexture: true,
-        needsGaussianSplatTexture: false,
-      },
-      node: mockNode,
-      model: {
-        type: ModelType.TILE_GLTF,
-        showGaussianSplatting: true,
-      },
-    });
-
-    const expectedStages = [
-      GeometryPipelineStage,
-      MaterialPipelineStage,
-      FeatureIdPipelineStage,
-      MetadataPipelineStage,
-      MetadataPickingPipelineStage,
-      LightingPipelineStage,
-      AlphaPipelineStage,
-      PrimitiveStatisticsPipelineStage,
-      GaussianSplatTexturePipelineStage,
-    ];
-
-    primitive.configurePipeline(mockFrameState);
-    verifyExpectedStages(primitive.pipelineStages, expectedStages);
-  });
-
-  it("configures Gaussian splat stage for gltf without texture", function () {
-    const primitive = new ModelRuntimePrimitive({
-      primitive: {
-        featureIds: [],
-        featureIdTextures: [],
-        attributes: [],
-        primitiveType: PrimitiveType.POINTS,
-        isGaussianSplatPrimitive: false,
-      },
-      node: mockNode,
-      model: {
-        type: ModelType.TILE_GLTF,
-        showGaussianSplatting: true,
-      },
-    });
-
-    const expectedStages = [
-      GeometryPipelineStage,
-      MaterialPipelineStage,
-      FeatureIdPipelineStage,
-      MetadataPipelineStage,
-      MetadataPickingPipelineStage,
-      LightingPipelineStage,
-      AlphaPipelineStage,
-      PrimitiveStatisticsPipelineStage,
-      GaussianSplatPipelineStage,
-    ];
-
-    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 });
