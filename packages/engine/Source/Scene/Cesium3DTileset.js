@@ -365,6 +365,8 @@ function Cesium3DTileset(options) {
    * layerMoved, or layerShownOrHidden event). This can be used
    * by the <code>ModelImagery</code> class to detect changes in
    * the imagery, and trigger the appropriate updates.
+   *
+   * @private
    */
   this._imageryLayersModificationCounter = 0;
 
@@ -374,6 +376,8 @@ function Cesium3DTileset(options) {
    * will be displayed with its original texture until the imagery texture
    * is loaded. If this is <code>false</code>, then the tile content will
    * not be displayed until the imagery is ready.
+   *
+   * @private
    */
   this._asynchronouslyLoadImagery = options.asynchronouslyLoadImagery ?? false;
 
