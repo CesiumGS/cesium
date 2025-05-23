@@ -563,21 +563,21 @@ class ModelReader {
   }
 
   /**
-   * Creates a function that receives...
-   * <ul>
-   *   <li>
-   *     <code>{DataView} dataView</code>
-   *   </li>
-   *   <li>
-   *     <code>{number} byteOffset</code>
-   *   </li>
-   * </ul>
-   * This function reads and returns a value with the given type
+   * Reads and returns a value with the given type
    * at the given byte offset from the data view, in little-endian
    * order
-   *
+   * @callback ComponentReaderCallback
+   * @param {DataView} dataView Typed data view into a binary buffer
+   * @param {number} byteOffset The offset, in bytes, from the start of the view to read the data from
+   * @returns {number|BigInt} The value read from the dataView
+   */
+   
+  /**
+   * Creates a function that reads and returns a value with the given type
+   * at the given byte offset from the data view, in little-endian
+   * order
    * @param {ComponentDatatype} componentType The component type
-   * @returns {object} The reader
+   * @returns {ComponentReaderCallback} The reader
    */
   static createComponentReader(componentType) {
     switch (componentType) {

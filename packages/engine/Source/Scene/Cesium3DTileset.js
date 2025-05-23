@@ -350,9 +350,9 @@ function Cesium3DTileset(options) {
     options.vectorKeepDecodedPositions ?? false;
 
   /**
-   * The collection of <code>ImageryLayer</code> objects providing the
-   * imagery that should be draped over the (model-based) contents
-   * of this tileset.
+   * The collection of <code>ImageryLayer</code> objects providing 2D georeferenced
+   * image data that will be rendered over the tileset.
+   * @private
    *
    * @type {ImageryLayerCollection}
    * @readonly
