@@ -1205,7 +1205,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * done asynchronously.
    *
    * @memberof Cesium3DTileset.prototype
-   *
+   * @readonly
    * @type {boolean}
    * @private
    */
