@@ -492,6 +492,7 @@ class ImageryPipelineStage {
       `vec2 scale = textureCoordinateTranslationAndScale.zw;`,
       `vec2 effectiveTextureCoordinates = textureCoordinates * scale + translation;`,
       `vec4 value = texture(textureToSample, effectiveTextureCoordinates);`,
+      `value = czm_srgbToLinear(value);`,
 
       `vec3 color = value.rgb;`,
       `float alpha = value.a;`,
