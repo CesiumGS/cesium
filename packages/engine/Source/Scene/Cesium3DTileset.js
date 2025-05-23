@@ -1154,7 +1154,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * The {@link ImageryLayerCollection} that should be draped on the contents of this tileset.
+   * The collection of <code>ImageryLayer</code> objects providing 2D georeferenced
+   * image data that will be rendered over the tileset.
+   * @see ImageryLayer
    *
    * @memberof Cesium3DTileset.prototype
    *
