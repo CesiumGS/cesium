@@ -95,7 +95,6 @@ uniform float u_minimumBrightness;
 // - The applyFog depends on enableFog, and some tile distance from the viewer
 // - The showGroundAtmosphere is a flag that is passed through from the Globe,
 //   and is true by default when the ellipsoid is WGS84
-// (Maybe all this is because the "Globe" is not available in the tile provider...)
 #ifdef COLOR_CORRECT
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
