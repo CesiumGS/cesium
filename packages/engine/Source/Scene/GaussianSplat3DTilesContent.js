@@ -167,8 +167,9 @@ GaussianSplat3DTilesContent.prototype.update = function (
 
   if (!defined(loader) || this._resourcesLoaded) {
     this._gsplatData = loader.components.scene.nodes[0].primitives[0];
+    this._worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
-    this._tileset._worldTransform = loader.components.scene.nodes[0].matrix;
+
     return;
   }
 

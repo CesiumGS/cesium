@@ -29,42 +29,38 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import Axis from "./Axis.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import GaussianSplat3DTilesContent from "./GaussianSplat3DTilesContent.js";
 
 const scratchSplatMatrix = new Matrix4();
 
 function GaussianSplatPrimitive(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-
   this._positions = undefined;
   this._rotations = undefined;
   this._scales = undefined;
   this._colors = undefined;
   this._indexes = undefined;
   this._numSplats = 0;
-
-  this._needsGaussianSplatTexture = true;
-
   this._debugShowBoundingVolume = false;
+  this._needsGaussianSplatTexture = true;
   this._splatScale = 1.0;
-
   this._tileset = options.tileset;
   this._tileset._hasSpzContent = true;
-
   this._tileset.tileLoad.addEventListener(this.onTileLoaded, this);
   this._tileset.tileUnload.addEventListener(this.onTileUnloaded, this);
+  this._selectedTileLen = 0;
 
-  /**
-   * @type {boolean}
-   * @private
+  /**@type {boolean}
+@private
    */
   this._calculateStatistics = options.calculateStatistics ?? false;
 
   this._drawCommand = undefined;
-
   this._useLogDepth = undefined;
-
+  this._rootTransform = undefined;
   this._modelMatrix = new Matrix4();
-
+  this._inverseRootTransform = new Matrix4();
   this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
     Axis.Y,
     Axis.X,
@@ -73,12 +69,11 @@ function GaussianSplatPrimitive(options) {
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
-  /**
-   * Gets a value indicating whether or not the primitive is ready for use.
-   *
-   * @memberof GaussianSplatPrimitive.prototype
-   * @type {boolean}
-   * @readonly
+  /**Gets a value indicating whether or not the primitive is ready for use.
+
+  @memberof GaussianSplatPrimitive.prototype
+  @type {boolean}
+  @readonly
    */
   ready: {
     get: function () {
@@ -91,12 +86,11 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
       return this._tileset.boundingSphere;
     },
   },
-  /**
-   * Gets the model matrix.
-   *
-   * @memberof GaussianSplatPrimitive.prototype
-   * @type {Matrix4}
-   * @readonly
+  /**Gets the model matrix.
+
+@memberof GaussianSplatPrimitive.prototype
+@type {Matrix4}
+@readonly
    */
   modelMatrix: {
     get: function () {
@@ -105,12 +99,9 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
     set: function (modelMatrix) {
       //>>includeStart('debug', pragmas.debug);
       Check.typeOf.object("modelMatrix", modelMatrix);
-      //>>includeEnd('debug');
-
-      this._modelMatrix = Matrix4.clone(modelMatrix, this.modelMatrix);
+      //>>includeEnd('debug'); this._modelMatrix = Matrix4.clone(modelMatrix, this.modelMatrix);
     },
   },
-
   debugShowBoundingVolume: {
     get: function () {
       return this._debugShowBoundingVolume;
@@ -123,7 +114,6 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
       this._debugShowBoundingVolume = debugShowBoundingVolume;
     },
   },
-
   splatScale: {
     get: function () {
       return this._splatScale;
@@ -140,34 +130,18 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 
 GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
   console.log(`Tile loaded: ${tile._contentResource.url}`);
-  const gsplatData = tile.content._gsplatData;
 
-  this.pushSplats({
-    positions: new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        gsplatData,
-        VertexAttributeSemantic.POSITION,
-      ).typedArray,
-    ),
-    scales: new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        gsplatData,
-        VertexAttributeSemantic.SCALE,
-      ).typedArray,
-    ),
-    rotations: new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        gsplatData,
-        VertexAttributeSemantic.ROTATION,
-      ).typedArray,
-    ),
-    colors: new Uint8Array(
-      ModelUtility.getAttributeByName(gsplatData, "COLOR_0").typedArray,
-    ),
-  });
+  if (tile._spzVisited) {
+    return;
+  }
 
-  this._numSplats += gsplatData.attributes[0].count;
-  this._modelMatrix = tile.computedTransform;
+  if (this._rootTransform === undefined) {
+    this._rootTransform = tile.content._tile.computedTransform;
+  } else {
+    this.transformTile(tile);
+  }
+
+  tile._spzVisited = true;
 };
 
 GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {
@@ -211,10 +185,48 @@ GaussianSplatPrimitive.prototype.isDestroyed = function () {
   return false;
 };
 
+GaussianSplatPrimitive.prototype.transformTile = function (tile) {
+  const transform = tile.computedTransform;
+  const gsplatData = tile.content._gsplatData;
+
+  let modelMatrix = Matrix4.multiply(
+    transform,
+    this._axisCorrectionMatrix,
+    new Matrix4(),
+  );
+
+  modelMatrix = Matrix4.multiplyTransformation(
+    modelMatrix,
+    tile._content._worldTransform,
+    new Matrix4(),
+  );
+
+  const inverseRoot = Matrix4.inverse(transform, new Matrix4());
+
+  const positions = ModelUtility.getAttributeBySemantic(
+    gsplatData,
+    VertexAttributeSemantic.POSITION,
+  ).typedArray;
+
+  for (let i = 0; i < positions.length; i += 3) {
+    const wpos = Matrix4.multiplyByPoint(
+      modelMatrix,
+      new Cartesian3(positions[i], positions[i + 1], positions[i + 2]),
+      new Cartesian3(),
+    );
+
+    const position = Matrix4.multiplyByPoint(
+      inverseRoot,
+      wpos,
+      new Cartesian3(),
+    );
+    positions[i] = position.x;
+    positions[i + 1] = position.y;
+    positions[i + 2] = position.z;
+  }
+};
+
 GaussianSplatPrimitive.prototype.pushSplats = function (attributes) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("attributes", attributes);
-  //>>includeEnd('debug');
   if (this._positions === undefined) {
     this._positions = attributes.positions;
   } else {
@@ -271,12 +283,10 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
     },
     count: primitive._numSplats,
   });
-
   if (promise === undefined) {
     primitive._gaussianSplatTexturePending = false;
     return;
   }
-
   promise
     .then((splatTextureData) => {
       const splatTex = new Texture({
@@ -316,13 +326,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const tileset = primitive._tileset;
   const renderResources = new GaussianSplatRenderResources(primitive);
   const { shaderBuilder } = renderResources;
-
   const renderStateOptions = renderResources.renderStateOptions;
   renderStateOptions.cull.enabled = false;
   renderStateOptions.depthMask = false;
   renderStateOptions.depthTest.enabled = false;
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
-
   renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
 
   shaderBuilder.addDefine(
@@ -347,16 +355,16 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("float", "a_splatIndex");
-
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
-
   shaderBuilder.addUniform(
     "highp usampler2D",
     "u_splatAttributeTexture",
     ShaderDestination.VERTEX,
   );
+
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
+
   const uniformMap = renderResources.uniformMap;
 
   uniformMap.u_splatScale = function () {
@@ -370,10 +378,8 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   renderResources.instanceCount = primitive._numSplats;
   renderResources.count = 4;
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
-
   shaderBuilder.addVertexLines(GaussianSplatVS);
   shaderBuilder.addFragmentLines(GaussianSplatFS);
-
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   let renderState = clone(
     RenderState.fromCache(renderResources.renderStateOptions),
@@ -384,16 +390,14 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     tileset.modelMatrix,
     PrimitiveType.TRIANGLE_STRIP,
   );
-  renderState = RenderState.fromCache(renderState);
 
+  renderState = RenderState.fromCache(renderState);
   const splatQuadAttrLocations = {
     screenQuadPosition: 0,
     splatIndex: 2,
   };
 
   const idxAttr = new ModelComponents.Attribute();
-
-  //index attribute for indexing into attribute texture
   idxAttr.name = "_SPLAT_INDEXES";
   idxAttr.typedArray = primitive._indexes;
   idxAttr.componentDatatype = ComponentDatatype.UNSIGNED_INT;
@@ -426,18 +430,18 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   });
 
   let modelMatrix = Matrix4.multiply(
-    primitive._modelMatrix,
+    tileset._root.computedTransform,
     primitive._axisCorrectionMatrix,
     new Matrix4(),
   );
-  const transform =
-    tileset._root._content._tile._content._loader._components.scene.nodes[0]
-      .matrix;
-  modelMatrix = Matrix4.multiplyTransformation(
-    modelMatrix,
-    transform,
-    new Matrix4(),
-  );
+
+  if (tileset._root._content instanceof GaussianSplat3DTilesContent) {
+    modelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix,
+      tileset._root._content._worldTransform,
+      new Matrix4(),
+    );
+  }
 
   const command = new DrawCommand({
     boundingVolume: tileset.boundingSphere,
@@ -463,15 +467,51 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
-  if (this._useLogDepth !== frameState.useLogDepth) {
-    this._useLogDepth = frameState.useLogDepth;
-  }
-
   tileset.update(frameState);
 
-  if (this._drawCommand) {
-    frameState.commandList.push(this._drawCommand);
-    //  this._drawCommand = undefined;
+  if (
+    tileset._selectedTiles.length > 0 &&
+    tileset._selectedTiles.length !== this._selectedTileLen
+  ) {
+    this._numSplats = 0;
+    this._positions = undefined;
+    this._rotations = undefined;
+    this._scales = undefined;
+    this._colors = undefined;
+    this._indexes = undefined;
+    this._needsGaussianSplatTexture = true;
+    this._gaussianSplatTexturePending = false;
+
+    tileset._selectedTiles.forEach((tile) => {
+      const gsplatData = tile.content._gsplatData;
+      this.pushSplats({
+        positions: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            gsplatData,
+            VertexAttributeSemantic.POSITION,
+          ).typedArray,
+        ),
+        scales: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            gsplatData,
+            VertexAttributeSemantic.SCALE,
+          ).typedArray,
+        ),
+        rotations: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            gsplatData,
+            VertexAttributeSemantic.ROTATION,
+          ).typedArray,
+        ),
+        colors: new Uint8Array(
+          ModelUtility.getAttributeByName(gsplatData, "COLOR_0").typedArray,
+        ),
+      });
+
+      this._numSplats += gsplatData.attributes[0].count;
+    });
+
+    this._selectedTileLen = tileset._selectedTiles.length;
   }
 
   if (this._numSplats === 0) {
@@ -484,12 +524,17 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
     return;
   }
+  if (this._useLogDepth !== frameState.useLogDepth) {
+    this._useLogDepth = frameState.useLogDepth;
+  }
 
-  const rootTransform = tileset.root.content._tile.computedTransform;
+  if (this._drawCommand) {
+    frameState.commandList.push(this._drawCommand);
+  }
 
   Matrix4.multiply(
     frameState.camera.viewMatrix,
-    rootTransform,
+    this._rootTransform,
     scratchSplatMatrix,
   );
 
@@ -505,7 +550,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   if (promise === undefined) {
     return;
   }
-
   promise.catch((err) => {
     throw err;
   });
