@@ -1169,7 +1169,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @see ImageryLayer
    *
    * @memberof Cesium3DTileset.prototype
-   *
+   * @readonly
    * @type {ImageryLayerCollection}
    *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
