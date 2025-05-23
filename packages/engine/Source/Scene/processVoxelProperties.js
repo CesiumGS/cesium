@@ -38,7 +38,7 @@ function processVoxelProperties(renderResources, primitive) {
   // PropertyStatistics structs
   for (let i = 0; i < attributeLength; i++) {
     const name = names[i];
-    const type = types[i];
+    const glslType = getGlslType(types[i]);
     const propertyStatisticsStructId = `PropertyStatistics_${name}`;
     const propertyStatisticsStructName = `PropertyStatistics_${name}`;
     shaderBuilder.addStruct(
@@ -46,18 +46,17 @@ function processVoxelProperties(renderResources, primitive) {
       propertyStatisticsStructName,
       ShaderDestination.FRAGMENT,
     );
-    const glslType = getGlslType(type);
     shaderBuilder.addStructField(propertyStatisticsStructId, glslType, "min");
     shaderBuilder.addStructField(propertyStatisticsStructId, glslType, "max");
   }
 
-  // Statistics struct
-  const statisticsStructId = "Statistics";
-  const statisticsStructName = "Statistics";
-  const statisticsFieldName = "statistics";
+  // MetadataStatistics struct
+  const metadataStatisticsStructId = "MetadataStatistics";
+  const metadataStatisticsStructName = "MetadataStatistics";
+  const metadataStatisticsFieldName = "metadataStatistics";
   shaderBuilder.addStruct(
-    statisticsStructId,
-    statisticsStructName,
+    metadataStatisticsStructId,
+    metadataStatisticsStructName,
     ShaderDestination.FRAGMENT,
   );
   for (let i = 0; i < attributeLength; i++) {
@@ -65,7 +64,7 @@ function processVoxelProperties(renderResources, primitive) {
     const propertyStructName = `PropertyStatistics_${name}`;
     const propertyFieldName = name;
     shaderBuilder.addStructField(
-      statisticsStructId,
+      metadataStatisticsStructId,
       propertyStructName,
       propertyFieldName,
     );
@@ -80,16 +79,9 @@ function processVoxelProperties(renderResources, primitive) {
     metadataStructName,
     ShaderDestination.FRAGMENT,
   );
-  shaderBuilder.addStructField(
-    metadataStructId,
-    statisticsStructName,
-    statisticsFieldName,
-  );
   for (let i = 0; i < attributeLength; i++) {
-    const name = names[i];
-    const type = types[i];
-    const glslType = getGlslType(type);
-    shaderBuilder.addStructField(metadataStructId, glslType, name);
+    const glslType = getGlslType(types[i]);
+    shaderBuilder.addStructField(metadataStructId, glslType, names[i]);
   }
 
   // Voxel struct
@@ -126,6 +118,11 @@ function processVoxelProperties(renderResources, primitive) {
     fragmentInputStructId,
     fragmentInputStructName,
     ShaderDestination.FRAGMENT,
+  );
+  shaderBuilder.addStructField(
+    fragmentInputStructId,
+    metadataStatisticsStructName,
+    metadataStatisticsFieldName,
   );
   shaderBuilder.addStructField(
     fragmentInputStructId,
@@ -266,7 +263,7 @@ function processVoxelProperties(renderResources, primitive) {
     const functionId = "setStatistics";
     shaderBuilder.addFunction(
       functionId,
-      `void setStatistics(inout ${statisticsStructName} ${statisticsFieldName})`,
+      `void setStatistics(inout ${metadataStatisticsStructName} ${metadataStatisticsFieldName})`,
       ShaderDestination.FRAGMENT,
     );
     for (let i = 0; i < attributeLength; i++) {
@@ -281,10 +278,10 @@ function processVoxelProperties(renderResources, primitive) {
           continue;
         }
         shaderBuilder.addFunctionLines(functionId, [
-          `${statisticsFieldName}.${name}.min${glslField} = ${getGlslNumberAsFloat(
+          `${metadataStatisticsFieldName}.${name}.min${glslField} = ${getGlslNumberAsFloat(
             minimumValue,
           )};`,
-          `${statisticsFieldName}.${name}.max${glslField} = ${getGlslNumberAsFloat(
+          `${metadataStatisticsFieldName}.${name}.max${glslField} = ${getGlslNumberAsFloat(
             maximumValue,
           )};`,
         ]);
