@@ -1190,7 +1190,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * changes.
    *
    * @memberof Cesium3DTileset.prototype
-   *
+   * @readonly
    * @type {number}
    * @private
    */
