@@ -5,7 +5,7 @@ import Check from "../../Core/Check.js";
 import destroyObject from "../../Core/destroyObject.js";
 
 import ImageryState from "../ImageryState.js";
-import ImageryCoverageComputations from "./ImageryCoverageComputations.js";
+import ImageryCoverage from "./ImageryCoverage.js";
 import ModelImageryMapping from "./ModelImageryMapping.js";
 import ModelUtility from "./ModelUtility.js";
 import MappedPositions from "./MappedPositions.js";
@@ -673,7 +673,7 @@ class ModelPrimitiveImagery {
       cartographicBoundingRectangle,
     );
 
-    const coverages = ImageryCoverageComputations.createImageryCoverages(
+    const coverages = ImageryCoverage.createImageryCoverages(
       cartographicBoundingRectangle,
       imageryLayer,
       imageryLevel,
@@ -724,7 +724,7 @@ class ModelPrimitiveImagery {
     );
 
     // Clamp the level to a valid range, and an integer value
-    const imageryLevel = ImageryCoverageComputations._validateImageryLevel(
+    const imageryLevel = ImageryCoverage._validateImageryLevel(
       imageryProvider,
       desiredLevel,
     );
