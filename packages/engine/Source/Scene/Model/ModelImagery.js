@@ -116,11 +116,6 @@ class ModelImagery {
     this._checkForModifiedImageryConfigurations();
   }
 
-  // XXX_DRAPING_UPSAMPLING Reset after new scene graph was built
-  resetModelPrimitiveImageries() {
-    this._modelPrimitiveImageries = undefined;
-  }
-
   /**
    * Creates the <code>ModelPrimitiveImagery</code> array that contains
    * one <code>ModelPrimitiveImagery</code> for each primitive that is
