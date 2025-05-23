@@ -92,40 +92,6 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addStructField(metadataStructId, glslType, name);
   }
 
-  // VoxelProperty structs
-  for (let i = 0; i < attributeLength; i++) {
-    const name = names[i];
-    const type = types[i];
-    const glslType = getGlslPartialDerivativeType(type);
-    const voxelPropertyStructId = `VoxelProperty_${name}`;
-    const voxelPropertyStructName = `VoxelProperty_${name}`;
-    shaderBuilder.addStruct(
-      voxelPropertyStructId,
-      voxelPropertyStructName,
-      ShaderDestination.FRAGMENT,
-    );
-    shaderBuilder.addStructField(
-      voxelPropertyStructId,
-      glslType,
-      "partialDerivativeLocal",
-    );
-    shaderBuilder.addStructField(
-      voxelPropertyStructId,
-      glslType,
-      "partialDerivativeWorld",
-    );
-    shaderBuilder.addStructField(
-      voxelPropertyStructId,
-      glslType,
-      "partialDerivativeView",
-    );
-    shaderBuilder.addStructField(
-      voxelPropertyStructId,
-      glslType,
-      "partialDerivativeValid",
-    );
-  }
-
   // Voxel struct
   const voxelStructId = "Voxel";
   const voxelStructName = "Voxel";
@@ -393,28 +359,6 @@ function getGlslTextureSwizzle(type) {
     return ".rgb";
   } else if (type === MetadataType.VEC4) {
     return "";
-  }
-}
-
-/**
- * Gets the GLSL type of the partial derivative of {@link MetadataType}.
- *
- * @function
- *
- * @param {MetadataType} type The {@link MetadataType}.
- * @returns {string} The GLSL type.
- *
- * @private
- */
-function getGlslPartialDerivativeType(type) {
-  if (type === MetadataType.SCALAR) {
-    return "vec3";
-  } else if (type === MetadataType.VEC2) {
-    return "mat2";
-  } else if (type === MetadataType.VEC3) {
-    return "mat3";
-  } else if (type === MetadataType.VEC4) {
-    return "mat4";
   }
 }
 

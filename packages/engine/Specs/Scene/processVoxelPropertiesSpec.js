@@ -67,20 +67,6 @@ describe("Scene/processVoxelProperties", function () {
       metadataFields,
     );
 
-    // Check for VoxelProperty structs
-    const voxelPropertyFields = [
-      "    vec3 partialDerivativeLocal;",
-      "    vec3 partialDerivativeWorld;",
-      "    vec3 partialDerivativeView;",
-      "    vec3 partialDerivativeValid;",
-    ];
-    ShaderBuilderTester.expectHasFragmentStruct(
-      shaderBuilder,
-      "VoxelProperty_a",
-      "VoxelProperty_a",
-      voxelPropertyFields,
-    );
-
     // Check for Voxel struct
     const voxelFields = [
       "    VoxelProperty_a a;",
