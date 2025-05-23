@@ -74,7 +74,7 @@ class CartesianRectangle {
    *
    * @param {number} x The x-coordinate
    * @param {number} y The y-coordinate
-   * @returns The result
+   * @returns {boolean} The result
    */
   contains(x, y) {
     return x >= this.minX && x < this.maxX && y >= this.minY && y < this.maxY;
@@ -86,7 +86,7 @@ class CartesianRectangle {
    *
    * @param {number} x The x-coordinate
    * @param {number} y The y-coordinate
-   * @returns The result
+   * @returns {boolean} The result
    */
   containsExclusive(x, y) {
     return x > this.minX && x < this.maxX && y > this.minY && y < this.maxY;
@@ -98,7 +98,7 @@ class CartesianRectangle {
    *
    * @param {number} x The x-coordinate
    * @param {number} y The y-coordinate
-   * @returns The result
+   * @returns {boolean} The result
    */
   containsInclusive(x, y) {
     return x >= this.minX && x <= this.maxX && y >= this.minY && y <= this.maxY;
