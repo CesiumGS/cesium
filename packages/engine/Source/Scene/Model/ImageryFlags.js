@@ -13,6 +13,8 @@
  * Note that the type of the flags can be <code>boolean</code> or
  * <code>number</code>. Users should check for these flags having
  * a 'truthy' or 'falsy' value.
+ *
+ * @private
  */
 class ImageryFlags {
   constructor() {
