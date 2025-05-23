@@ -1,7 +1,7 @@
-import defined from "../../Core/defined";
-import Rectangle from "../../Core/Rectangle";
+import defined from "../../Core/defined.js";
+import Rectangle from "../../Core/Rectangle.js";
 
-import CartesianRectangle from "./CartesianRectangle";
+import CartesianRectangle from "./CartesianRectangle.js";
 
 const imageryBoundsScratch = new Rectangle();
 const overlappedRectangleScratch = new Rectangle();
