@@ -121,7 +121,7 @@ class ImageryCoverage {
     inputImageryLevel,
   ) {
     const imageryProvider = imageryLayer.imageryProvider;
-    const imageryLevel = ImageryCoverage._validateImageryLevel(
+    const imageryLevel = ImageryCoverage._clampImageryLevel(
       imageryProvider,
       inputImageryLevel,
     );
@@ -201,7 +201,7 @@ class ImageryCoverage {
    * @param {number} imageryLevel The imagery level
    * @returns {number} The validated level
    */
-  static _validateImageryLevel(imageryProvider, imageryLevel) {
+  static _clampImageryLevel(imageryProvider, imageryLevel) {
     const minimumLevel = imageryProvider.minimumLevel ?? 0;
     const maximumLevel =
       imageryProvider.maximumLevel ?? Number.POSITIVE_INFINITY;

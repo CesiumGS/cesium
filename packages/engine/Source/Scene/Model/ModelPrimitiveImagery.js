@@ -690,7 +690,7 @@ class ModelPrimitiveImagery {
    * @param {Rectangle} cartographicBoundingRectangle The cartographic
    * bounding rectangle, as obtained from the MappedPositions for
    * the given imagery layer
-   * @returns The imagery level
+   * @returns {number} The imagery level
    */
   _computeImageryLevel(imageryLayer, cartographicBoundingRectangle) {
     const imageryProvider = imageryLayer.imageryProvider;
@@ -724,7 +724,7 @@ class ModelPrimitiveImagery {
     );
 
     // Clamp the level to a valid range, and an integer value
-    const imageryLevel = ImageryCoverage._validateImageryLevel(
+    const imageryLevel = ImageryCoverage._clampImageryLevel(
       imageryProvider,
       desiredLevel,
     );
