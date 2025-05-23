@@ -357,7 +357,7 @@ function Cesium3DTileset(options) {
    * @type {ImageryLayerCollection}
    * @readonly
    */
-  this._imageryLayers = initializeImageryLayerCollection(this);
+  this._imageryLayers = new ImageryLayerCollection(this);
 
   /**
    * A counter that will be increased for each modification of the
@@ -369,6 +369,28 @@ function Cesium3DTileset(options) {
    * @private
    */
   this._imageryLayersModificationCounter = 0;
+
+  /**
+   * A listener that will be attached to the layerAdded, layerRemoved,
+   * layerMoved, and layerShownOrHidden events of the imagery layers,
+   * and increment the imagery layers modification counter for each
+   * event.
+   *
+   * @private
+   * @readonly
+   */
+  this._imageryLayersListener = () => {
+    this._imageryLayersModificationCounter++;
+  };
+
+  // Attach the imagery layers listener to all events of
+  // the imagery layers collection
+  this.imageryLayers.layerAdded.addEventListener(this._imageryLayersListener);
+  this.imageryLayers.layerRemoved.addEventListener(this._imageryLayersListener);
+  this.imageryLayers.layerMoved.addEventListener(this._imageryLayersListener);
+  this.imageryLayers.layerShownOrHidden.addEventListener(
+    this._imageryLayersListener,
+  );
 
   /**
    * Whether loading imagery that is draped over the tileset should be
@@ -1052,29 +1074,6 @@ function Cesium3DTileset(options) {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
-}
-
-/**
- * Initialize the <code>ImageryLayerCollection</code> for the given
- * tileset.
- *
- * This will create and return an imagery layer collection that has
- * listeners for all modifications, that will increase the
- * imageryLayersModificationCounter of the given tileset.
- *
- * @param {Cesium3DTileset} tileset The tileset
- * @returns {ImageryLayerCollection} The imagery layers
- */
-function initializeImageryLayerCollection(tileset) {
-  const imageryLayers = new ImageryLayerCollection();
-  const imageryLayersListener = function () {
-    tileset._imageryLayersModificationCounter++;
-  };
-  imageryLayers.layerAdded.addEventListener(imageryLayersListener);
-  imageryLayers.layerRemoved.addEventListener(imageryLayersListener);
-  imageryLayers.layerMoved.addEventListener(imageryLayersListener);
-  imageryLayers.layerShownOrHidden.addEventListener(imageryLayersListener);
-  return imageryLayers;
 }
 
 Object.defineProperties(Cesium3DTileset.prototype, {
@@ -3592,6 +3591,18 @@ Cesium3DTileset.prototype.destroy = function () {
   this._environmentMapManager = undefined;
 
   if (!this._imageryLayers.isDestroyed()) {
+    this.imageryLayers.layerAdded.removeEventListener(
+      this._imageryLayersListener,
+    );
+    this.imageryLayers.layerRemoved.removeEventListener(
+      this._imageryLayersListener,
+    );
+    this.imageryLayers.layerMoved.removeEventListener(
+      this._imageryLayersListener,
+    );
+    this.imageryLayers.layerShownOrHidden.removeEventListener(
+      this._imageryLayersListener,
+    );
     this._imageryLayers.destroy();
   }
   this._imageryLayers = undefined;
