@@ -352,10 +352,20 @@ function Cesium3DTileset(options) {
   /**
    * The collection of <code>ImageryLayer</code> objects providing 2D georeferenced
    * image data that will be rendered over the tileset.
+   *
+   * The imagery will be draped over glTF, B3DM, PNTS, or GeoJSON tile content.
+   *
    * @private
    *
    * @type {ImageryLayerCollection}
    * @readonly
+   *
+   * @example
+   * const imageryProvider = await Cesium.createWorldImageryAsync({
+   *   style: Cesium.IonWorldImageryStyle.AERIAL,
+   * });
+   * const imageryLayer = new ImageryLayer(imageryProvider);
+   * tileset.imageryLayers.add(imageryLayer);
    */
   this._imageryLayers = new ImageryLayerCollection(this);
 
