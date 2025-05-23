@@ -48,41 +48,56 @@ class ImageryCoverage {
    * rectangle from the imagery tile that is covered
    */
   constructor(x, y, level, textureCoordinateRectangle) {
-    /**
-     * The x-coordinate of the imagery tile, typically correlated with longitude
-     *
-     * @type {number}
-     * @readonly
-     */
-    this.x = x;
+    this._x = x;
+    this._y = y;
+    this._level = level;
+    this._textureCoordinateRectangle = textureCoordinateRectangle;
+  }
 
-    /**
-     * The y-coordinate of the imagery tile, typically correlated with latitude
-     *
-     * @type {number}
-     * @readonly
-     */
-    this.y = y;
+  /**
+   * The x-coordinate of the imagery tile, typically correlated with longitude
+   *
+   * @type {number}
+   * @readonly
+   */
+  get x() {
+    return this._x;
+  }
 
-    /**
-     * The level of the imagery tile
-     *
-     * @type {number}
-     * @readonly
-     */
-    this.level = level;
+  /**
+   * The y-coordinate of the imagery tile, typically correlated with latitude
+   *
+   * @type {number}
+   * @readonly
+   */
+  get y() {
+    return this._y;
+  }
 
-    /**
-     * The texture coordinate range that is covered from the
-     * imagery tile.
-     *
-     * This is a <code>CartesianRectangle</code> that contains the
-     * (minU, minV, maxU, maxV) coordinate range.
-     *
-     * @type {CartesianRectangle}
-     * @readonly
-     */
-    this.textureCoordinateRectangle = textureCoordinateRectangle;
+  /**
+   * The level of the imagery tile
+   *
+   * @type {number}
+   * @readonly
+   */
+  get level() {
+    return this._level;
+  }
+
+  /**
+   * The texture coordinate range that is covered from the
+   * imagery tile.
+   *
+   * This is a <code>CartesianRectangle</code> that contains the
+   * (minU, minV, maxU, maxV) coordinate range.
+   *
+   * Clients may not modify the returned instance.
+   *
+   * @type {CartesianRectangle}
+   * @readonly
+   */
+  get textureCoordinateRectangle() {
+    return this._textureCoordinateRectangle;
   }
 
   /**
