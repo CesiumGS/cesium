@@ -7,6 +7,8 @@
  * instance per imagery layer. During the <code>update</code>
  * call, it checks whether any of the settings was changed.
  * If this is the case, the draw commands of the model are reset.
+ *
+ * @private
  */
 class ImageryConfiguration {
   constructor(imageryLayer) {
