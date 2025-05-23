@@ -33,8 +33,7 @@ class ModelPrimitiveImagery {
    * @param {Model} model The model
    * @param {ModelRuntimeNode} runtimeNode The node that the primitive is attached to
    * @param {ModelRuntimePrimitive} runtimePrimitive The primitive
-   * @throws {DeveloperError} If any argument is not defined, or the
-   * given primitive does not have a <code>"POSITION"</code> attribute.
+   * @throws {DeveloperError} If any argument is not defined
    */
   constructor(model, runtimeNode, runtimePrimitive) {
     //>>includeStart('debug', pragmas.debug);
