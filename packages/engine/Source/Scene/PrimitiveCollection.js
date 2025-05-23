@@ -162,6 +162,14 @@ PrimitiveCollection.prototype.add = function (primitive, index) {
     this._primitives.splice(index, 0, primitive);
   }
 
+  if (this._countReferences) {
+    if (!defined(external._referenceCount)) {
+      external._referenceCount = 1;
+    } else {
+      ++external._referenceCount;
+    }
+  }
+
   this._primitiveAdded.raiseEvent(primitive);
 
   return primitive;
@@ -190,8 +198,14 @@ PrimitiveCollection.prototype.remove = function (primitive) {
       this._primitives.splice(index, 1);
 
       delete primitive._external._composites[this._guid];
+      if (this._countReferences) {
+        primitive._external._referenceCount--;
+      }
 
-      if (this.destroyPrimitives) {
+      if (
+        this.destroyPrimitives &&
+        (!this._countReferences || primitive._external._referenceCount <= 0)
+      ) {
         primitive.destroy();
       }
 
@@ -228,13 +242,20 @@ PrimitiveCollection.prototype.removeAll = function () {
   const primitives = this._primitives;
   const length = primitives.length;
   for (let i = 0; i < length; ++i) {
-    delete primitives[i]._external._composites[this._guid];
-
-    if (this.destroyPrimitives) {
-      primitives[i].destroy();
+    const primitive = primitives[i];
+    delete primitive._external._composites[this._guid];
+    if (this._countReferences) {
+      primitive._external._referenceCount--;
     }
 
-    this._primitiveRemoved.raiseEvent(primitives[i]);
+    if (
+      this.destroyPrimitives &&
+      (!this._countReferences || primitive._external._referenceCount <= 0)
+    ) {
+      primitive.destroy();
+    }
+
+    this._primitiveRemoved.raiseEvent(primitive);
   }
   this._primitives = [];
 };
