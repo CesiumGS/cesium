@@ -22,6 +22,8 @@ const scratchRectangle = new Rectangle();
  * These functions have been extracted from Implicit3DTileContent.
  * They should preferably be offered for objects, and not only for
  * their JSON representation
+ *
+ * @private
  */
 class BoundingVolumeDerivation {
   /**
