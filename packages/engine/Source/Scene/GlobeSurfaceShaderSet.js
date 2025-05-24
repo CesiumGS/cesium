@@ -409,17 +409,16 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
             u_dayTextureTexCoordsRectangle[${i}],\n\
             u_dayTextureTranslationAndScale[${i}],\n\
             ${applyAlpha ? `u_dayTextureAlpha[${i}]` : "1.0"},\n\
-            ${applyDayNightAlpha ? `u_dayTextureNightAlpha[${i}]` : "1.0"},\n${
-              applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"
-            },\n${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\
+            ${applyDayNightAlpha ? `u_dayTextureNightAlpha[${i}]` : "1.0"},\n\
+            ${applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"},\n\
+            ${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\
             ${applyContrast ? `u_dayTextureContrast[${i}]` : "0.0"},\n\
             ${applyHue ? `u_dayTextureHue[${i}]` : "0.0"},\n\
             ${applySaturation ? `u_dayTextureSaturation[${i}]` : "0.0"},\n\
             ${applyGamma ? `u_dayTextureOneOverGamma[${i}]` : "0.0"},\n\
             ${applySplit ? `u_dayTextureSplit[${i}]` : "0.0"},\n\
             ${colorToAlpha ? `u_colorsToAlpha[${i}]` : "vec4(0.0)"},\n\
-        nightBlend\
-        );\n`;
+            nightBlend\);\n`;
       if (hasImageryLayerCutout) {
         computeDayColor +=
           "\

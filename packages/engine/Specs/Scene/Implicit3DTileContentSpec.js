@@ -26,6 +26,7 @@ import {
 import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
+import BoundingVolumeDerivation from "../../Source/Scene/BoundingVolumeDerivation.js";
 
 describe(
   "Scene/Implicit3DTileContent",
@@ -283,13 +284,13 @@ describe(
       const childGeometricError = implicitTileset.geometricError / 8;
 
       const rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
-      const parentBox = Implicit3DTileContent._deriveBoundingBox(
+      const parentBox = BoundingVolumeDerivation.deriveBoundingBox(
         rootBoundingVolume,
         parentCoordinates.level,
         parentCoordinates.x,
         parentCoordinates.y,
       );
-      const childBox = Implicit3DTileContent._deriveBoundingBox(
+      const childBox = BoundingVolumeDerivation.deriveBoundingBox(
         rootBoundingVolume,
         childCoordinates.level,
         childCoordinates.x,
@@ -620,7 +621,7 @@ describe(
         Cartesian3.pack(boundingBox.center, childBox);
         Matrix3.pack(boundingBox.halfAxes, childBox, 3);
 
-        const expectedBounds = Implicit3DTileContent._deriveBoundingBox(
+        const expectedBounds = BoundingVolumeDerivation.deriveBoundingBox(
           rootBoundingVolume,
           coordinates[0],
           coordinates[1],
@@ -647,7 +648,7 @@ describe(
 
     describe("_deriveBoundingVolumeS2", function () {
       const deriveBoundingVolumeS2 =
-        Implicit3DTileContent._deriveBoundingVolumeS2;
+        BoundingVolumeDerivation.deriveBoundingVolumeS2;
       const simpleBoundingVolumeS2 = {
         token: "1",
         minimumHeight: 0,
@@ -805,7 +806,7 @@ describe(
     });
 
     describe("_deriveBoundingBox", function () {
-      const deriveBoundingBox = Implicit3DTileContent._deriveBoundingBox;
+      const deriveBoundingBox = BoundingVolumeDerivation.deriveBoundingBox;
       const simpleBoundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
       it("throws if rootBox is undefined", function () {
         expect(function () {
@@ -854,7 +855,8 @@ describe(
     });
 
     describe("_deriveBoundingRegion", function () {
-      const deriveBoundingRegion = Implicit3DTileContent._deriveBoundingRegion;
+      const deriveBoundingRegion =
+        BoundingVolumeDerivation.deriveBoundingRegion;
       const simpleRegion = [
         0,
         0,
