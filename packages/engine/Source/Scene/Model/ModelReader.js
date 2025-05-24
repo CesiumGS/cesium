@@ -615,23 +615,6 @@ class ModelReader {
     );
   }
 
-  static computeMinMax(values, componentsPerElement) {
-    const min = Array(componentsPerElement).fill(Number.POSITIVE_INFINITY);
-    const max = Array(componentsPerElement).fill(Number.NEGATIVE_INFINITY);
-    const elementCount = values.length / componentsPerElement;
-    for (let i = 0; i < elementCount; ++i) {
-      const offset = i * componentsPerElement;
-      for (let j = 0; j < componentsPerElement; ++j) {
-        min[j] = Math.min(min[j], values[offset + j]);
-        max[j] = Math.max(max[j], values[offset + j]);
-      }
-    }
-    return {
-      min: min,
-      max: max,
-    };
-  }
-
   /**
    * Transform the elements of the given array with the given 4x4 matrix,
    * interpreting each 3 consecutive elements as a 3D point, and write
@@ -663,8 +646,23 @@ class ModelReader {
   }
 
   /**
-   * @param {ModelComponents.Indices} primitiveIndices
-   * @returns {TypedArray} TODO
+   * Read the indices values from the given primitive indices, and
+   * return them as a typed array.
+   *
+   * If the given object already has a <code>typedArray/code> property, then it
+   * is assumed that this contains the proper indices, and they are returned.
+   *
+   * Otherwise, this reads the data from the <code>buffer</code> of the given
+   * primitive indices object, into a typed array with a type that matches the
+   * <code>indexDataType</code>, and returns it.
+   *
+   * Clients may not modify the returned typed array.
+   *
+   * @param {ModelComponents.Indices} primitiveIndices The primitive indices
+   * @returns {TypedArray} The indices values
+   * @throws {DeveloperError} If the <code>indexDataType</code> of the given
+   * object is neither <code>UNSIGNED_BYTE</code>, nor <code>UNSIGNED_SHORT</code>,
+   * nor <code>UNSIGNED_INT</code>
    */
   static readIndicesAsTypedArray(primitiveIndices) {
     const existingIndices = primitiveIndices.typedArray;
@@ -683,11 +681,36 @@ class ModelReader {
   }
 
   /**
-   * @param {ModelComponents.Primitive} primitive
-   * @returns {TypedArray} TODO
+   * Read the indices values from the given primitive indices object, and return
+   * them as a typed array of triangle vertex indices.
+   *
+   * If the given primitive type is <code>TRIANGLES</code>, then the indices
+   * values will be read from the given object, and returned.
+   *
+   * If the primitive type is <code>TRIANGLE_STRIP</code> or <code>TRIANGLE_FAN</code>,
+   * then the original indices values, will be read, converted into triangle indices
+   * (i.e. their equivalent <code>TRIANGLES</code> representation), and the result
+   * will be returned.
+   *
+   * The type of the returned array will match the <code>indexDataType</code>
+   * of the given object.
+   *
+   * Clients may not modify the returned typed array.
+   *
+   * @param {ModelComponents.Indices} primitiveIndices The primitive indices
+   * @returns {TypedArray} The indices, converted to triangle indices if necessary
+   * @throws {DeveloperError} If the <code>indexDataType</code> of the given
+   * object is neither <code>UNSIGNED_BYTE</code>, nor <code>UNSIGNED_SHORT</code>,
+   * nor <code>UNSIGNED_INT</code>, or the given <code>primitiveType</code>
+   * is neither <code>TRIANGLES</code>, nor <code>TRIANGLE_STRIP</code>,
+   * nor <code>TRIANGLE_FAN</code>
    */
-  static readIndicesAsTriangleIndicesTypedArray(indices, primitiveType) {
-    const originalIndices = ModelReader.readIndicesAsTypedArray(indices);
+  static readIndicesAsTriangleIndicesTypedArray(
+    primitiveIndices,
+    primitiveType,
+  ) {
+    const originalIndices =
+      ModelReader.readIndicesAsTypedArray(primitiveIndices);
     if (primitiveType === PrimitiveType.TRIANGLES) {
       return originalIndices;
     }
@@ -702,12 +725,21 @@ class ModelReader {
       return triangleIndices;
     }
     throw new DeveloperError(
-      `The primitive.primitiveType must be TRIANGLES (${PrimitiveType.TRIANGLES}, ` +
+      `The primitiveType must be TRIANGLES (${PrimitiveType.TRIANGLES}, ` +
         `TRIANGLE_STRIP (${PrimitiveType.TRIANGLE_STRIP}, or ` +
         `TRIANGLE_FAN (${PrimitiveType.TRIANGLE_FAN}, but is ${primitiveType}`,
     );
   }
 
+  /**
+   * Converts the given indices from a <code>TRIANGLE_STRIP</code> representation
+   * into a <code>TRIANGLES</code> representation, and returns the result.
+   *
+   * The type of the result will be the same as the type of the input array.
+   *
+   * @param {TypedArray} indices The input indices
+   * @returns {TypedArray} The resulting triangle indices
+   */
   static convertTriangleStripToTriangleIndices(indices) {
     const triangleIndices = indices.constructor((indices.length - 2) * 3);
     for (let i = 0; i < indices.length - 2; i++) {
@@ -724,6 +756,15 @@ class ModelReader {
     return triangleIndices;
   }
 
+  /**
+   * Converts the given indices from a <code>TRIANGLE_FAN</code> representation
+   * into a <code>TRIANGLES</code> representation, and returns the result.
+   *
+   * The type of the result will be the same as the type of the input array.
+   *
+   * @param {TypedArray} indices The input indices
+   * @returns {TypedArray} The resulting triangle indices
+   */
   static convertTriangleFanToTriangleIndices(indices) {
     const triangleIndices = indices.constructor((indices.length - 2) * 3);
     for (let i = 0; i < indices.length - 2; i++) {
@@ -734,6 +775,17 @@ class ModelReader {
     return triangleIndices;
   }
 
+  /**
+   * Create a typed array with a type that matches the given index data type,
+   * and the given size.
+   *
+   * @param {number} indexDatatype The <code>IndexDataType</code>
+   * @param {number} size The size of the array that will be created
+   * @returns {TypedArray} The typed array
+   * @throws {DeveloperError} If the <code>indexDataType</code> is neither
+   * <code>UNSIGNED_BYTE</code>, nor <code>UNSIGNED_SHORT</code>,
+   * nor <code>UNSIGNED_INT</code>, or the size is negative.
+   */
   static createIndexTypedArray(indexDatatype, size) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.greaterThanOrEquals("size", size, 0);
