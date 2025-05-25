@@ -141,7 +141,7 @@ function Scene(options) {
 
   let destroyPrimitives;
   if (options.contextOptions instanceof SharedContext) {
-    this._context = options.contextOptions.createSceneContext(canvas);
+    this._context = options.contextOptions._createSceneContext(canvas);
     destroyPrimitives = "reference-counted";
   } else {
     const contextOptions = clone(options.contextOptions);
@@ -181,8 +181,8 @@ function Scene(options) {
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
-  this._primitives = new PrimitiveCollection(destroyPrimitives);
-  this._groundPrimitives = new PrimitiveCollection(destroyPrimitives);
+  this._primitives = new PrimitiveCollection({ destroyPrimitives });
+  this._groundPrimitives = new PrimitiveCollection({ destroyPrimitives });
 
   this._globeHeight = undefined;
   this._globeHeightDirty = true;
