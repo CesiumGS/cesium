@@ -36,9 +36,7 @@ import TaskProcessor from "../Core/TaskProcessor.js";
 import Transforms from "../Core/Transforms.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import ComputeEngine from "../Renderer/ComputeEngine.js";
-import Context, {
-  createContextFromSharedContext,
-} from "../Renderer/Context.js";
+import Context from "../Renderer/Context.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -70,7 +68,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
-import SharedSceneContext from "../Renderer/SharedSceneContext.js";
+import SharedContext from "../Renderer/SharedContext.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
@@ -141,11 +139,10 @@ function Scene(options) {
   }
   //>>includeEnd('debug');
 
-  if (options.contextOptions instanceof SharedSceneContext) {
-    this._context = createContextFromSharedContext(
-      options.contextOptions._context,
-      canvas,
-    );
+  let destroyPrimitives;
+  if (options.contextOptions instanceof SharedContext) {
+    this._context = options.contextOptions.createSceneContext(canvas);
+    destroyPrimitives = "reference-counted";
   } else {
     const contextOptions = clone(options.contextOptions);
     this._context = new Context(canvas, contextOptions);
@@ -184,8 +181,8 @@ function Scene(options) {
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
-  this._primitives = new PrimitiveCollection();
-  this._groundPrimitives = new PrimitiveCollection();
+  this._primitives = new PrimitiveCollection(destroyPrimitives);
+  this._groundPrimitives = new PrimitiveCollection(destroyPrimitives);
 
   this._globeHeight = undefined;
   this._globeHeightDirty = true;

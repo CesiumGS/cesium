@@ -1660,17 +1660,3 @@ Context.prototype.destroy = function () {
 };
 
 export default Context;
-
-export function createContextFromSharedContext(sharedContext, canvas) {
-  const proxy = new Proxy(sharedContext, {
-    get(target, prop, receiver) {
-      if (prop === "canvas") {
-        return canvas;
-      }
-
-      return Reflect.get(target, prop, receiver);
-    },
-  });
-
-  return proxy;
-}
