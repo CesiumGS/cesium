@@ -1,3 +1,4 @@
+import createCanvas from "../../../../Specs/createCanvas";
 import SharedContext from "../../Source/Renderer/SharedContext";
 
 describe("Renderer/SharedContext", function () {
@@ -12,25 +13,48 @@ describe("Renderer/SharedContext", function () {
     }
   });
 
-  it("scene context forwards to shared Context", function () {
-    const sceneContext = sharedContext._createSceneContext(
-      document.createElement("canvas"),
-    );
-    expect(sceneContext.gl).toEqual(sharedContext._context.gl);
-    expect(sceneContext._shaderCache).toEqual(
-      sharedContext._context.shaderCache,
-    );
-    expect(sceneContext.uniformState).toEqual(
-      sharedContext._context.uniformState,
-    );
-    expect(sceneContext.clear).toEqual(sharedContext._context.clear);
-  });
+  describe("scene context", function () {
+    it("forwards to shared Context", function () {
+      const sceneContext = sharedContext._createSceneContext(
+        document.createElement("canvas"),
+      );
+      expect(sceneContext.gl).toEqual(sharedContext._context.gl);
+      expect(sceneContext._shaderCache).toEqual(
+        sharedContext._context.shaderCache,
+      );
+      expect(sceneContext.uniformState).toEqual(
+        sharedContext._context.uniformState,
+      );
+      expect(sceneContext.clear).toEqual(sharedContext._context.clear);
+    });
 
-  it("canvas returns scene canvas", function () {
-    const sceneCanvas = document.createElement("canvas");
-    const sceneContext = sharedContext._createSceneContext(sceneCanvas);
-    expect(sceneContext.canvas).toBe(sceneCanvas);
-    expect(sharedContext._context.canvas).not.toBe(sceneCanvas);
+    it("canvas returns scene canvas", function () {
+      const sceneCanvas = document.createElement("canvas");
+      const sceneContext = sharedContext._createSceneContext(sceneCanvas);
+      expect(sceneContext.canvas).toBe(sceneCanvas);
+      expect(sharedContext._context.canvas).not.toBe(sceneCanvas);
+    });
+
+    it("throws if attempting to create multiple scene contexts for same canvas", function () {
+      const canvas = document.createElement("canvas");
+      sharedContext._createSceneContext(canvas);
+      expect(function () {
+        sharedContext._createSceneContext(canvas);
+      }).toThrowDeveloperError();
+    });
+
+    it("obtains drawing buffer width+height from scene canvas", function () {
+      const c = createCanvas(5, 10);
+      const sc = sharedContext._createSceneContext(c);
+      expect(sc.drawingBufferWidth).toEqual(c.width);
+      expect(sc.drawingBufferHeight).toEqual(c.height);
+      expect(sc.drawingBufferWidth).not.toEqual(
+        sharedContext._context.drawingBufferWidth,
+      );
+      expect(sc.drawingBufferHeight).not.toEqual(
+        sharedContext._context.drawingBufferHeight,
+      );
+    });
   });
 
   it("destroys shared Context after all scene contexts are destroyed", function () {
@@ -71,13 +95,5 @@ describe("Renderer/SharedContext", function () {
 
     sc.destroy();
     expect(sc.isDestroyed()).toBe(true);
-  });
-
-  it("throws if attempting to create multiple scene contexts for same canvas", function () {
-    const canvas = document.createElement("canvas");
-    sharedContext._createSceneContext(canvas);
-    expect(function () {
-      sharedContext._createSceneContext(canvas);
-    }).toThrowDeveloperError();
   });
 });
