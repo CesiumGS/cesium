@@ -36,7 +36,9 @@ import TaskProcessor from "../Core/TaskProcessor.js";
 import Transforms from "../Core/Transforms.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import ComputeEngine from "../Renderer/ComputeEngine.js";
-import Context from "../Renderer/Context.js";
+import Context, {
+  createContextFromSharedContext,
+} from "../Renderer/Context.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -68,6 +70,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SharedSceneContext from "../Renderer/SharedSceneContext.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
@@ -132,15 +135,24 @@ function Scene(options) {
   let creditContainer = options.creditContainer;
   let creditViewport = options.creditViewport;
 
-  const contextOptions = clone(options.contextOptions);
-
   //>>includeStart('debug', pragmas.debug);
   if (!defined(canvas)) {
     throw new DeveloperError("options and options.canvas are required.");
   }
   //>>includeEnd('debug');
+
+  if (options.contextOptions instanceof SharedSceneContext) {
+    this._context = createContextFromSharedContext(
+      options.contextOptions._context,
+      canvas,
+    );
+  } else {
+    const contextOptions = clone(options.contextOptions);
+    this._context = new Context(canvas, contextOptions);
+  }
+  const context = this._context;
+
   const hasCreditContainer = defined(creditContainer);
-  const context = new Context(canvas, contextOptions);
   if (!hasCreditContainer) {
     creditContainer = document.createElement("div");
     creditContainer.style.position = "absolute";
@@ -167,7 +179,6 @@ function Scene(options) {
   this._creditContainer = creditContainer;
 
   this._canvas = canvas;
-  this._context = context;
   this._computeEngine = new ComputeEngine(context);
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
