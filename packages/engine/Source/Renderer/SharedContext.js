@@ -4,6 +4,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Context from "./Context";
 
 function SharedContext(options) {
+  this._autoDestroy = options?.autoDestroy ?? true;
   this._canvas = document.createElement("canvas");
   this._context = new Context(this._canvas, clone(options?.contextOptions));
   this._canvases = [];
@@ -25,7 +26,7 @@ SharedContext.prototype._createSceneContext = function (canvas) {
     const index = sharedContext._canvases.indexOf(canvas);
     if (-1 !== index) {
       sharedContext._canvases.splice(index, 1);
-      if (sharedContext._canvases.length === 0) {
+      if (sharedContext._autoDestroy && sharedContext._canvases.length === 0) {
         sharedContext.destroy();
       }
     }

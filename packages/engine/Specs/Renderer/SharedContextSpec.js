@@ -61,6 +61,18 @@ describe("Renderer/SharedContext", function () {
     expect(sc.isDestroyed()).toEqual(true);
   });
 
+  it("does not auto-destroy after all scene context are destroyed if so specified", function () {
+    const sc = new SharedContext({ autoDestroy: false });
+    const ctxt = sc._createSceneContext(document.createElement("canvas"));
+    ctxt.destroy();
+    expect(sc._canvases).toEqual([]);
+    expect(ctxt.isDestroyed()).toBe(true);
+    expect(sc.isDestroyed()).toBe(false);
+
+    sc.destroy();
+    expect(sc.isDestroyed()).toBe(true);
+  });
+
   it("throws if attempting to create multiple scene contexts for same canvas", function () {
     const canvas = document.createElement("canvas");
     sharedContext._createSceneContext(canvas);
