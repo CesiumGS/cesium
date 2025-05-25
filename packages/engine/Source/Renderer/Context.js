@@ -1440,8 +1440,8 @@ Context.prototype.endFrame = function () {
  * @param {object} readState An object with the following properties:
  * @param {number} [readState.x=0] The x offset of the rectangle to read from.
  * @param {number} [readState.y=0] The y offset of the rectangle to read from.
- * @param {number} [readState.width=gl.drawingBufferWidth] The width of the rectangle to read from.
- * @param {number} [readState.height=gl.drawingBufferHeight] The height of the rectangle to read from.
+ * @param {number} [readState.width=this.drawingBufferWidth] The width of the rectangle to read from.
+ * @param {number} [readState.height=this.drawingBufferHeight] The height of the rectangle to read from.
  * @param {Framebuffer} [readState.framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
  * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
  */
@@ -1451,8 +1451,8 @@ Context.prototype.readPixels = function (readState) {
   readState = readState ?? Frozen.EMPTY_OBJECT;
   const x = Math.max(readState.x ?? 0, 0);
   const y = Math.max(readState.y ?? 0, 0);
-  const width = readState.width ?? gl.drawingBufferWidth;
-  const height = readState.height ?? gl.drawingBufferHeight;
+  const width = readState.width ?? this.drawingBufferWidth;
+  const height = readState.height ?? this.drawingBufferHeight;
   const framebuffer = readState.framebuffer;
 
   //>>includeStart('debug', pragmas.debug);
