@@ -5,7 +5,7 @@ import Context from "./Context";
 
 /**
  * Enables a single WebGL context to be used by any number of {@link Scene}s.
- * You can pass a SharedContext in place of a {@link ContextOptions} to the constructors of {@link Scene} and {@link CesiumWidget}.
+ * You can pass a SharedContext in place of a {@link ContextOptions} to the constructors of {@link Scene}, {@link CesiumWidget}, and {@link Viewer}.
  * {@link Primitive}s associated with the shared WebGL context can be displayed in any Scene that uses the same context.
  * The context renders each Scene to an off-screen canvas, then blits the result to that Scene's on-screen canvas.
  *
