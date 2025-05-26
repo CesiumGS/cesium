@@ -15,7 +15,9 @@ import Event from "../Core/Event.js";
  *
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.show=true] Determines if the primitives in the collection will be shown.
- * @param {boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
+ * @param {boolean | "reference-counted"} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed. If "reference-counted" is specified, then
+ * the adding a primitive to this collection increments its reference count. Removing the primitive decrements the reference count and, if the reference count is zero, destroys the primitive.
+ * This permits primitives to be shared between multiple collections.
  *
  * @example
  * const billboards = new Cesium.BillboardCollection();
@@ -50,6 +52,8 @@ function PrimitiveCollection(options) {
    * Determines if primitives in the collection are destroyed when they are removed by
    * {@link PrimitiveCollection#destroy} or  {@link PrimitiveCollection#remove} or implicitly
    * by {@link PrimitiveCollection#removeAll}.
+   * If `options.destroyPrimitives` was specified as "reference-counted" in the constructor, then this defaults to `true`. If it is subsequently changed to `false`,
+   * adding and removing primitives will still update their reference counts, but removal will not destroy the primitive.
    *
    * @type {boolean}
    * @default true
