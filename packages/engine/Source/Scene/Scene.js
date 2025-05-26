@@ -4179,6 +4179,8 @@ function render(scene) {
   passState.scissorTest = undefined;
   passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
+  context.beginFrame();
+
   if (defined(scene.globe)) {
     scene.globe.beginFrame(frameState);
   }

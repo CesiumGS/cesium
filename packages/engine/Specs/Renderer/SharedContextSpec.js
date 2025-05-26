@@ -43,6 +43,15 @@ describe("Renderer/SharedContext", function () {
       }).toThrowDeveloperError();
     });
 
+    it("throws upon failure to obtain 2d context", function () {
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl");
+      expect(gl).not.toBeNull();
+      expect(function () {
+        sharedContext._createSceneContext(canvas);
+      }).toThrowDeveloperError();
+    });
+
     it("obtains drawing buffer width+height from scene canvas", function () {
       const c = createCanvas(5, 10);
       const sc = sharedContext._createSceneContext(c);
@@ -54,6 +63,37 @@ describe("Renderer/SharedContext", function () {
       expect(sc.drawingBufferHeight).not.toEqual(
         sharedContext._context.drawingBufferHeight,
       );
+    });
+
+    it("resizes off-screen canvas to be at least as large as on-screen canvas", function () {
+      const c = createCanvas(5, 10);
+      const ctx = sharedContext._createSceneContext(c);
+      const sharedCanvas = sharedContext._context.canvas;
+      const startWidth = sharedCanvas.width;
+      const startHeight = sharedCanvas.height;
+      expect(startWidth).toBeGreaterThan(c.width);
+      expect(startHeight).toBeGreaterThan(c.height);
+
+      ctx.beginFrame();
+      expect(sharedCanvas.width).toEqual(startWidth);
+      expect(sharedCanvas.height).toEqual(startHeight);
+
+      c.width = startWidth + 5;
+      expect(sharedCanvas.width).toEqual(startWidth);
+
+      ctx.beginFrame();
+      expect(sharedCanvas.width).toEqual(c.width);
+      expect(sharedCanvas.height).toEqual(startHeight);
+
+      c.height = startHeight + 10;
+      ctx.beginFrame();
+      expect(sharedCanvas.width).toEqual(c.width);
+      expect(sharedCanvas.height).toEqual(c.height);
+
+      c.width = 5;
+      c.height = 10;
+      expect(sharedCanvas.width).toEqual(startWidth + 5);
+      expect(sharedCanvas.height).toEqual(startHeight + 10);
     });
   });
 

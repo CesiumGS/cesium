@@ -1413,6 +1413,10 @@ Context.prototype.draw = function (
   continueDraw(this, drawCommand, shaderProgram, uniformMap);
 };
 
+Context.prototype.beginFrame = function () {
+  // A no-op. Overridden when drawing to a SharedContext.
+};
+
 Context.prototype.endFrame = function () {
   const gl = this._gl;
   gl.useProgram(null);

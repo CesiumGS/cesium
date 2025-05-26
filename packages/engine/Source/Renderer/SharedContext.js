@@ -39,7 +39,15 @@ function SharedContext(options) {
 
 /** @private */
 SharedContext.prototype._createSceneContext = function (canvas) {
+  const context2d = canvas.getContext("2d", { alpha: true });
+
   //>>includeStart('debug', pragmas.debug);
+  if (!context2d) {
+    throw new DeveloperError(
+      "canvas used with SharedContext must provide a 2d context",
+    );
+  }
+
   if (this._canvases.includes(canvas)) {
     throw new DeveloperError("canvas is already associated with a scene");
   }
@@ -58,6 +66,42 @@ SharedContext.prototype._createSceneContext = function (canvas) {
         sharedContext.destroy();
       }
     }
+  };
+
+  const beginFrame = function () {
+    // Ensure the off-screen canvas is at least as large as the on-screen canvas.
+    const sharedCanvas = sharedContext._context.canvas;
+
+    const width = this.drawingBufferWidth;
+    if (sharedCanvas.width < width) {
+      sharedCanvas.width = width;
+    }
+
+    const height = this.drawingBufferHeight;
+    if (sharedCanvas.height < height) {
+      sharedCanvas.height = height;
+    }
+  };
+
+  const endFrame = function () {
+    // Blit the image from the off-screen canvas to the on-screen canvas.
+    const w = this.drawingBufferWidth;
+    const h = this.drawingBufferHeight;
+    const yOffset = sharedContext._context.canvas.height - h; // drawImage has top as Y=0, GL has bottom as Y=0
+    context2d.drawImage(
+      sharedContext._context.canvas,
+      0,
+      yOffset,
+      w,
+      h,
+      0,
+      0,
+      w,
+      h,
+    );
+
+    // Do normal post-frame cleanup.
+    sharedContext._context.endFrame();
   };
 
   const proxy = new Proxy(this._context, {
@@ -84,6 +128,10 @@ SharedContext.prototype._createSceneContext = function (canvas) {
           return canvas.width;
         case "drawingBufferHeight":
           return canvas.height;
+        case "beginFrame":
+          return beginFrame;
+        case "endFrame":
+          return endFrame;
         default:
           return Reflect.get(target, prop, receiver);
       }
