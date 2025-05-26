@@ -68,6 +68,26 @@
         const view3D = new Cesium.Viewer("view3D", options3D);
         const view2D = new Cesium.Viewer("view2D", options2D);
 
+        // Add the same entities to both views.
+        const greenCylinder = {
+          name: "Green cylinder with black outline",
+          position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 200000.0),
+          cylinder: {
+            length: 400000.0,
+            topRadius: 200000.0,
+            bottomRadius: 200000.0,
+            material: Cesium.Color.GREEN.withAlpha(0.5),
+            outline: true,
+            outlineColor: Cesium.Color.BLACK,
+          },
+        };
+        view3D.entities.add(greenCylinder);
+        view2D.entities.add(greenCylinder);
+
+        const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
+        view3D.scene.primitives.add(tileset);
+        view2D.scene.primitives.add(tileset);
+
         let worldPosition;
         let distance;
 
@@ -110,6 +130,12 @@
         view2D.scene.screenSpaceCameraController.enableZoom = false;
         view2D.scene.screenSpaceCameraController.enableTilt = false;
         view2D.scene.screenSpaceCameraController.enableLook = false;
+
+        view3D.zoomTo(
+          tileset,
+          new Cesium.HeadingPitchRange(0.5, -0.2, tileset.boundingSphere.radius * 4.0),
+        );
+
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };
