@@ -71,8 +71,11 @@ function DataSourceDisplay(options) {
     options.visualizersCallback ?? DataSourceDisplay.defaultVisualizersCallback;
 
   let primitivesAdded = false;
-  const primitives = new PrimitiveCollection();
-  const groundPrimitives = new PrimitiveCollection();
+  const destroyPrimitives = scene.primitives._countReferences
+    ? "reference-counted"
+    : true;
+  const primitives = new PrimitiveCollection({ destroyPrimitives });
+  const groundPrimitives = new PrimitiveCollection({ destroyPrimitives });
 
   if (dataSourceCollection.length > 0) {
     scene.primitives.add(primitives);
