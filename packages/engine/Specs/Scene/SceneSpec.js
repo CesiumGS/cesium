@@ -811,6 +811,26 @@ describe(
         s.destroy();
       });
 
+      it("draws background color with SharedContext", function () {
+        const sharedContext = new SharedContext();
+        const s1 = new Scene({
+          canvas: createCanvas(1, 1),
+          contextOptions: sharedContext,
+        });
+        const s2 = new Scene({
+          canvas: createCanvas(1, 1),
+          contextOptions: sharedContext,
+        });
+
+        expect(s1).toRender([0, 0, 0, 255]);
+        expect(s2).toRender([0, 0, 0, 255]);
+
+        s1.backgroundColor = Color.BLUE;
+        s2.backgroundColor = Color.RED;
+        expect(s1).toRender([0, 0, 255, 255]);
+        expect(s2).toRender([255, 0, 0, 255]);
+      });
+
       it("reference-counts primitives IFF using a SharedContext", function () {
         expect(scene.primitives._countReferences).toBe(false);
         const s = new Scene({
