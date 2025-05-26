@@ -67,13 +67,48 @@
         view1.entities.add(greenCylinder);
         view2.entities.add(greenCylinder);
 
-        const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
-        for (const view of [/*view1,*/ view2]) {
-          view.scene.primitives.add(tileset);
-          view.zoomTo(
-            tileset,
-            new Cesium.HeadingPitchRange(0.5, -0.2, tileset.boundingSphere.radius * 4.0),
-          );
+        const cylinder = new Cesium.CylinderGeometry({
+          length: 400000.0,
+          topRadius: 200000.0,
+          bottomRadius: 200000.0,
+        });
+        const geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
+        const primitive = new Cesium.Primitive({
+          geometryInstances: new Cesium.GeometryInstance({
+            geometry,
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+              Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883),
+              ),
+              new Cesium.Cartesian3(0.0, 0.0, 500000.0),
+              new Cesium.Matrix4(),
+            ),
+            id: "red cylinder",
+            attributes: {
+              color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED),
+            },
+          }),
+          appearance: new Cesium.PerInstanceColorAppearance(),
+          asynchronous: false,
+        });
+
+        view1.scene.primitives.add(primitive);
+        view2.scene.primitives.add(primitive);
+
+        const addTileset = false;
+        if (addTileset) {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
+          for (const view of [view1, view2]) {
+            view.scene.primitives.add(tileset);
+            view.zoomTo(
+              tileset,
+              new Cesium.HeadingPitchRange(
+                0.5,
+                -0.2,
+                tileset.boundingSphere.radius * 4.0,
+              ),
+            );
+          }
         }
         //Sandcastle_End
         Sandcastle.finishedLoading();
