@@ -139,6 +139,10 @@ describe("Scene/Model/ModelImagery", function () {
   });
 
   it("properly handles modifications of the imageryConfigurations", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
     const url = tileset_unitSquare_fourPrimitives_plain_url;
     const tileset = await Cesium3DTileset.fromUrl(url);
 
@@ -199,6 +203,10 @@ describe("Scene/Model/ModelImagery", function () {
 
   // XXX_DRAPING Work in progress
   it("works", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
     // XXX_DRAPING http://localhost:8080/Specs/SpecRunner.html?category=none&spec=Scene%2FModel%2FModelImagery%20works&debugCanvasWidth=400&debugCanvasHeight=400
     const url = tileset_unitSquare_fourPrimitives_plain_url;
     const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
