@@ -17,7 +17,7 @@ import pollToPromise from "../../../../../Specs/pollToPromise.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 
 const tileset_unitSquare_fourPrimitives_plain_url =
-  "./Data/Models/gltF-2.0/unitSquare/tileset_unitSquare_fourPrimitives_plain.json";
+  "./Data/Models/glTF-2.0/unitSquare/tileset_unitSquare_fourPrimitives_plain.json";
 
 /**
  * Fit the camera to show a tileset where the tile content
