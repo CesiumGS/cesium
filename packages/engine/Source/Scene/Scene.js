@@ -4317,7 +4317,7 @@ Scene.prototype.triggerArbitraryRender = function (
 
   arbRen.preUpdate.raiseEvent(this, time);
 
-  // tryAndCatchError(this, prePassesUpdate);
+  tryAndCatchError(this, prePassesUpdate);
 
   arbRen.postUpdate.raiseEvent(this, time);
   arbRen.preRender.raiseEvent(this, time);
@@ -4328,7 +4328,7 @@ Scene.prototype.triggerArbitraryRender = function (
     output = renderFunction(scene);
   });
 
-  // tryAndCatchError(this, postPassesUpdate);
+  tryAndCatchError(this, postPassesUpdate);
 
   // Do we need this?
   callAfterRenderFunctions(this);
