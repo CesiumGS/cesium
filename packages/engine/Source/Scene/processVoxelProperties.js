@@ -84,6 +84,18 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addStructField(metadataStructId, glslType, names[i]);
   }
 
+  // Attributes struct
+  const attributesStructId = "Attributes";
+  const attributesStructName = "Attributes";
+  const attributesFieldName = "attributes";
+  shaderBuilder.addStruct(
+    attributesStructId,
+    attributesStructName,
+    ShaderDestination.FRAGMENT,
+  );
+  shaderBuilder.addStructField(attributesStructId, "vec3", "positionEC");
+  shaderBuilder.addStructField(attributesStructId, "vec3", "normalEC");
+
   // Voxel struct
   const voxelStructId = "Voxel";
   const voxelStructName = "Voxel";
@@ -93,18 +105,7 @@ function processVoxelProperties(renderResources, primitive) {
     voxelStructName,
     ShaderDestination.FRAGMENT,
   );
-  for (let i = 0; i < attributeLength; i++) {
-    const name = names[i];
-    const voxelPropertyStructName = `VoxelProperty_${name}`;
-    shaderBuilder.addStructField(voxelStructId, voxelPropertyStructName, name);
-  }
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionEC");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUv");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionShapeUv");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvLocal");
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirUv");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirWorld");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "surfaceNormal");
   shaderBuilder.addStructField(voxelStructId, "float", "travelDistance");
   shaderBuilder.addStructField(voxelStructId, "int", "stepCount");
   shaderBuilder.addStructField(voxelStructId, "int", "tileIndex");
@@ -131,6 +132,11 @@ function processVoxelProperties(renderResources, primitive) {
   );
   shaderBuilder.addStructField(
     fragmentInputStructId,
+    attributesStructName,
+    attributesFieldName,
+  );
+  shaderBuilder.addStructField(
+    fragmentInputStructId,
     voxelStructName,
     voxelFieldName,
   );
@@ -145,10 +151,8 @@ function processVoxelProperties(renderResources, primitive) {
     ShaderDestination.FRAGMENT,
   );
   for (let i = 0; i < attributeLength; i++) {
-    const name = names[i];
-    const type = types[i];
-    const glslType = getGlslType(type);
-    shaderBuilder.addStructField(propertiesStructId, glslType, name);
+    const glslType = getGlslType(types[i]);
+    shaderBuilder.addStructField(propertiesStructId, glslType, names[i]);
   }
 
   // Fragment shader functions
@@ -165,12 +169,9 @@ function processVoxelProperties(renderResources, primitive) {
       `${propertiesStructName} ${propertiesFieldName};`,
     ]);
     for (let i = 0; i < attributeLength; i++) {
-      const name = names[i];
-      const type = types[i];
-      const componentType = componentTypes[i];
-      const glslType = getGlslType(type, componentType);
+      const glslType = getGlslType(types[i], componentTypes[i]);
       shaderBuilder.addFunctionLines(functionId, [
-        `${propertiesFieldName}.${name} = ${glslType}(0.0);`,
+        `${propertiesFieldName}.${names[i]} = ${glslType}(0.0);`,
       ]);
     }
     shaderBuilder.addFunctionLines(functionId, [
@@ -212,9 +213,8 @@ function processVoxelProperties(renderResources, primitive) {
       `${propertiesStructName} scaledProperties = ${propertiesFieldName};`,
     ]);
     for (let i = 0; i < attributeLength; i++) {
-      const name = names[i];
       shaderBuilder.addFunctionLines(functionId, [
-        `scaledProperties.${name} *= scale;`,
+        `scaledProperties.${names[i]} *= scale;`,
       ]);
     }
     shaderBuilder.addFunctionLines(functionId, [`return scaledProperties;`]);
@@ -301,12 +301,11 @@ function processVoxelProperties(renderResources, primitive) {
       `${propertiesStructName} ${propertiesFieldName};`,
     ]);
     for (let i = 0; i < attributeLength; i++) {
-      const name = names[i];
       const type = types[i];
       const componentType = componentTypes[i];
       const glslTextureSwizzle = getGlslTextureSwizzle(type, componentType);
       shaderBuilder.addFunctionLines(functionId, [
-        `properties.${name} = texture(u_megatextureTextures[${i}], texcoord)${glslTextureSwizzle};`,
+        `properties.${names[i]} = texture(u_megatextureTextures[${i}], texcoord)${glslTextureSwizzle};`,
       ]);
     }
     shaderBuilder.addFunctionLines(functionId, [

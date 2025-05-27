@@ -15,6 +15,7 @@
     #define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
 #endif
 
+uniform mat4 u_transformPositionUvToView;
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
 uniform float u_stepSize;
@@ -167,12 +168,11 @@ void main()
 
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
-        fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionShapeUv = pointJacobian.point;
-        fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
+
+        fragmentInput.attributes.positionEC = vec3(u_transformPositionUvToView * vec4(positionUv, 1.0));
+        fragmentInput.attributes.normalEC = normalize(czm_normal * step.xyz);
+
         fragmentInput.voxel.viewDirUv = viewDirUv;
-        fragmentInput.voxel.viewDirWorld = viewDirWorld;
-        fragmentInput.voxel.surfaceNormal = step.xyz;
         fragmentInput.voxel.travelDistance = step.w;
         fragmentInput.voxel.stepCount = stepCount;
         fragmentInput.voxel.tileIndex = sampleDatas[0].megatextureIndex;
