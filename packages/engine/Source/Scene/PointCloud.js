@@ -1105,7 +1105,7 @@ function createShaders(pointCloud, frameState, style) {
 
   if (hasClippedContent) {
     fs +=
-      "uniform highp sampler2D u_clippingPlanes; \nff" +
+      "uniform highp sampler2D u_clippingPlanes; \n" +
       "uniform mat4 u_clippingPlanesMatrix; \n" +
       "uniform vec4 u_clippingPlanesEdgeStyle; \n";
     fs += "\n";
