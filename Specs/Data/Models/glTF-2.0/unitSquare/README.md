@@ -44,6 +44,11 @@ The other representations aim at different primitive modes:
   one at each corner of the unit square, representing the triangles in
   `mode=GL_TRIANGLE_FAN`
 
+Other representations aim at further structural tests
+
+- `unitSquare_fourPrimitives_plain.glb`: A unit square given as a single mesh
+  that consists of four primitives, each with 3x3 vertices.
+
 Most basic versions of the files have been created with a custom snippet
 based on JglTF. The compressed, interleaved, and quantized versions have
 been created with `glTF-Transform` (via https://gltf.report/).

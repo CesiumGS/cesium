@@ -4,6 +4,13 @@
   },
   "geometricError": 4096,
   "root": {
+    "refine": "REPLACE",
+    "transform": [
+      1, 0, 0, 0,
+      0, 0,-1, 0,
+      0, 1, 0, 0,
+      0, 0, 0, 1
+    ],
     "boundingVolume": {
       "box": [
         3.5,
@@ -358,7 +365,6 @@
           "uri": "unitSquare5_triangleFan.glb"
         }
       }
-    ],
-    "refine": "ADD"
+    ]
   }
 }
