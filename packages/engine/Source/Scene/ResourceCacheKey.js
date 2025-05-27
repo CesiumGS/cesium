@@ -72,7 +72,6 @@ function getDracoCacheKey(gltf, draco, gltfResource, baseResource) {
 }
 
 function getSpzCacheKey(gltf, primitive, gltfResource, baseResource) {
-  //const attr = primitive.attributes[0];
   const bufferViewId = 0;
   const bufferView = gltf.bufferViews[bufferViewId];
   const bufferId = bufferView.buffer;
