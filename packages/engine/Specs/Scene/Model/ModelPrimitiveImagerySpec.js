@@ -15,7 +15,7 @@ import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 const unitSquare_fourPrimitives_plain_url =
-  "Data/Models/gltF-2.0/unitSquare/unitSquare_fourPrimitives_plain.glb";
+  "./Data/Models/gltF-2.0/unitSquare/unitSquare_fourPrimitives_plain.glb";
 
 describe("Scene/Model/ModelPrimitiveImagery", function () {
   let scene;
