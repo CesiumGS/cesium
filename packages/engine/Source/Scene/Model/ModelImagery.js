@@ -2,7 +2,6 @@ import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
-import Rectangle from "../../Core/Rectangle.js";
 
 import ImageryConfiguration from "./ImageryConfiguration.js";
 import ModelPrimitiveImagery from "./ModelPrimitiveImagery.js";
@@ -247,47 +246,6 @@ class ModelImagery {
   }
 
   /**
-   * Compute the cartographic bounding rectangle of the model, for
-   * the given ellipsoid.
-   *
-   * This is computed based on the cartographic bounding rectangles
-   * of the model primitive imageries, and may therefore only be
-   * called when this object is <code>ready</code>.
-   *
-   * @param {Ellipsoid} ellipsoid The ellipsoid
-   * @returns The cartographic bounding rectangle
-   */
-  computeCartographicBoundingRectangle(ellipsoid) {
-    const modelPrimitiveImageries = this._modelPrimitiveImageries;
-    if (!defined(modelPrimitiveImageries)) {
-      throw new DeveloperError(
-        "They may only be called when the ModelImagery is ready",
-      );
-    }
-    let modelCartographicBoundingRectangle;
-    const length = modelPrimitiveImageries.length;
-    for (let i = 0; i < length; i++) {
-      const modelPrimitiveImagery = modelPrimitiveImageries[i];
-      const mappedPositions =
-        modelPrimitiveImagery.mappedPositionsForEllipsoid(ellipsoid);
-      const primitiveCartographicBoundingRectangle =
-        mappedPositions.cartographicBoundingRectangle;
-      if (!defined(modelCartographicBoundingRectangle)) {
-        modelCartographicBoundingRectangle = Rectangle.clone(
-          primitiveCartographicBoundingRectangle,
-        );
-      } else {
-        Rectangle.union(
-          modelCartographicBoundingRectangle,
-          primitiveCartographicBoundingRectangle,
-          modelCartographicBoundingRectangle,
-        );
-      }
-    }
-    return modelCartographicBoundingRectangle;
-  }
-
-  /**
    * Returns whether the model has imagery layers associated with it.
    *
    * @private
@@ -399,6 +357,7 @@ class ModelImagery {
         return true;
       }
     }
+    return false;
   }
 
   /**

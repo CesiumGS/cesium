@@ -571,7 +571,7 @@ class ModelPrimitiveImagery {
    * @param {MapProjection[]} uniqueProjections The projections
    * @returns {ModelComponents.Attribute[]} The attributes
    */
-  _createImageryTexCoordAttributes(uniqueProjections, context) {
+  _createImageryTexCoordAttributes(uniqueProjections) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("uniqueProjections", uniqueProjections);
     //>>includeEnd('debug');
@@ -873,8 +873,9 @@ class ModelPrimitiveImagery {
    * This means that the <code>coveragesPerLayer</code> information
    * has been computed, which describes the set of imagery tiles
    * that are covered by the primitive, <b>and</b> that all the
-   * covered imagery tiles are in the <code>ImageryState.READY</code>
-   * state.
+   * covered imagery tiles are in a state that counts as "ready"
+   * (i.e. <code>ImageryState.READY</code>, <code>FAILED</code>,
+   * or <code>INVALID</code>).
    *
    * @returns {boolean} Whether the draping computations are ready
    */

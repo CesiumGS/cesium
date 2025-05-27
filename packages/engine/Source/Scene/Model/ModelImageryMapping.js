@@ -226,6 +226,7 @@ class ModelImageryMapping {
    */
   static createIterableCartesian3FromTypedArray(typedArray, stride) {
     //>>includeStart('debug', pragmas.debug);
+    Check.defined("typedArray", typedArray);
     Check.typeOf.number.greaterThanOrEquals("stride", stride, 3);
     //>>includeEnd('debug');
 
