@@ -93,7 +93,7 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
-    if (tileset._hasSpzContent) {
+    if (tileset.loadGltfWithGaussianSplatContent) {
       return GaussianSplat3DTilesContent.fromGltf(tileset, tile, resource, glb);
     }
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);

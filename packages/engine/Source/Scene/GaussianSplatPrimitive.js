@@ -21,7 +21,6 @@ import Geometry from "../Core/Geometry.js";
 import GeometryAttribute from "../Core/GeometryAttribute.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import Cesium3DTileset from "./Cesium3DTileset.js";
 import RenderState from "../Renderer/RenderState.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
@@ -46,15 +45,9 @@ function GaussianSplatPrimitive(options) {
   this._needsGaussianSplatTexture = true;
   this._splatScale = 1.0;
   this._tileset = options.tileset;
-  this._tileset._hasSpzContent = true;
   this._tileset.tileLoad.addEventListener(this.onTileLoaded, this);
   this._tileset.tileUnload.addEventListener(this.onTileUnloaded, this);
   this._selectedTileLen = 0;
-
-  /**@type {boolean}
-@private
-   */
-  this._calculateStatistics = options.calculateStatistics ?? false;
 
   this._drawCommand = undefined;
   this._useLogDepth = undefined;
@@ -146,12 +139,6 @@ GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
 
 GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {
   console.log(`Tile unloaded: ${tile._contentResource.url}`);
-};
-
-GaussianSplatPrimitive.fromIonAssetId = async function (assetId, options) {
-  return new GaussianSplatPrimitive({
-    tileset: await Cesium3DTileset.fromIonAssetId(assetId, options), // {...options, modelUpAxis: Axis.Z}),
-  });
 };
 
 GaussianSplatPrimitive.prototype.prePassesUpdate = function (frameState) {
@@ -425,7 +412,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     context: frameState.context,
     geometry: geometry,
     attributeLocations: splatQuadAttrLocations,
-    bufferUsage: BufferUsage.STATIC_DRAW,
+    bufferUsage: BufferUsage.DYNAMIC_DRAW,
     interleave: false,
   });
 
@@ -466,9 +453,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
-
-  tileset.update(frameState);
-
   if (
     tileset._selectedTiles.length > 0 &&
     tileset._selectedTiles.length !== this._selectedTileLen

@@ -3,11 +3,11 @@ import Resource from "../Core/Resource.js";
 import GltfLoader from "./GltfLoader.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Axis from "./Axis.js";
+import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
 
 /**
  * <p>
- * Implements the {@link Cesium3DTileContent} interface for the Gaussian splat 3D Tiles extension.
- * </p>
+ * Implements the {@link Cesium3DTileContent} interface for the KHR_spz_gaussian_splats_compression glTF extension.
  */
 
 function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
@@ -16,6 +16,9 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
   this._resource = resource;
   this._loader = loader;
 
+  this._gaussianSplatPrimitive = new GaussianSplatPrimitive({
+    tileset: tileset,
+  });
   this._gsplatData = undefined;
   this._metadata = undefined;
   this._group = undefined;
@@ -157,12 +160,12 @@ GaussianSplat3DTilesContent.prototype.update = function (
   primitive,
   frameState,
 ) {
-  const loader = this._loader;
-
   if (this._ready) {
+    this._gaussianSplatPrimitive.update(frameState);
     return;
   }
 
+  const loader = this._loader;
   frameState.afterRender.push(() => true);
 
   if (!defined(loader) || this._resourcesLoaded) {

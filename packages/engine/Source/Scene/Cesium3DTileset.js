@@ -512,6 +512,14 @@ function Cesium3DTileset(options) {
   this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
 
   /**
+   * Normally glTF content is loaded with the Model pipeline. This flag tells it to use the Gaussian Splat primitive pipeline instead.
+   * @type {boolean}
+   * @default false
+   */
+  this.loadGltfWithGaussianSplatContent =
+    options.loadGltfWithGaussianSplatContent ?? false;
+
+  /**
    * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
    * is requested, when a requested tile is finished downloading, and when a downloaded tile has been
    * processed and is ready to render.
