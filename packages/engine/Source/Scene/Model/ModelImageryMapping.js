@@ -455,8 +455,8 @@ class ModelImageryMapping {
    *
    * This will create an attribute with
    * - semantic: VertexAttributeSemantic.TEXCOORD
-   * - componentsPerAttribute: 2
-   * - componentDatatype: ComponentDatatype.FLOAT
+   * - type: AttributeType.VEC2
+   * - count: texCoordsTypedArray.length / 2
    * that contains the data from the given typed array.
    *
    * @param {TypedArray} texCoordsTypedArray The typed array
