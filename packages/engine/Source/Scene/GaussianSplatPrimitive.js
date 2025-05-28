@@ -41,7 +41,7 @@ function GaussianSplatPrimitive(options) {
   this._colors = undefined;
   this._indexes = undefined;
   this._numSplats = 0;
-  this._debugShowBoundingVolume = false;
+  this._debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
   this._needsGaussianSplatTexture = true;
   this._splatScale = 1.0;
   this._tileset = options.tileset;
