@@ -67,16 +67,18 @@ describe("Scene/processVoxelProperties", function () {
       metadataFields,
     );
 
+    // Check for Attributes struct
+    const attributesFields = ["    vec3 positionEC;", "    vec3 normalEC;"];
+    ShaderBuilderTester.expectHasFragmentStruct(
+      shaderBuilder,
+      "Attributes",
+      "Attributes",
+      attributesFields,
+    );
+
     // Check for Voxel struct
     const voxelFields = [
-      "    VoxelProperty_a a;",
-      "    vec3 positionEC;",
-      "    vec3 positionUv;",
-      "    vec3 positionShapeUv;",
-      "    vec3 positionUvLocal;",
-      "    vec3 surfaceNormal;",
       "    vec3 viewDirUv;",
-      "    vec3 viewDirWorld;",
       "    float travelDistance;",
       "    int stepCount;",
       "    int sampleIndex;",
@@ -94,6 +96,7 @@ describe("Scene/processVoxelProperties", function () {
     const fragmentInputFields = [
       "    MetadataStatistics metadataStatistics;",
       "    Metadata metadata;",
+      "    Attributes attributes;",
       "    Voxel voxel;",
     ];
     ShaderBuilderTester.expectHasFragmentStruct(
