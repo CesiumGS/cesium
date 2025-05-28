@@ -41,7 +41,7 @@ GaussianSplatTextureGenerator._getTextureTaskProcessor = function () {
   return GaussianSplatTextureGenerator._textureTaskProcessor;
 };
 
-GaussianSplatTextureGenerator.generateFromAttrs = function (parameters) {
+GaussianSplatTextureGenerator.generateFromAttributes = function (parameters) {
   const textureTaskProcessor =
     GaussianSplatTextureGenerator._getTextureTaskProcessor();
   if (defined(GaussianSplatTextureGenerator._error)) {

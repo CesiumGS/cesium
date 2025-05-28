@@ -261,7 +261,7 @@ GaussianSplatPrimitive.prototype.pushSplats = function (attributes) {
 
 GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
   primitive._gaussianSplatTexturePending = true;
-  const promise = GaussianSplatTextureGenerator.generateFromAttrs({
+  const promise = GaussianSplatTextureGenerator.generateFromAttributes({
     attributes: {
       positions: new Float32Array(primitive._positions),
       scales: new Float32Array(primitive._scales),
