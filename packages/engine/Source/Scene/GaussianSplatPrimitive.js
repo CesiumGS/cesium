@@ -453,6 +453,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
+
+  if (this._rootTransform === undefined) {
+    return;
+  }
+
   if (
     tileset._selectedTiles.length > 0 &&
     tileset._selectedTiles.length !== this._selectedTileLen
