@@ -9,13 +9,82 @@ import {
   TileCoordinatesImageryProvider,
   WebMercatorTilingScheme,
   ModelPrimitiveImagery,
+  Cartesian3,
+  Transforms,
+  HeadingPitchRoll,
+  WebMercatorProjection,
 } from "../../../index.js";
 
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
+import pollToPromise from "../../../../../Specs/pollToPromise.js";
+import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 
 const unitSquare_fourPrimitives_plain_url =
   "./Data/Models/glTF-2.0/unitSquare/unitSquare_fourPrimitives_plain.glb";
+
+const tileset_unitSquare_fourPrimitives_plain_url =
+  "./Data/Models/glTF-2.0/unitSquare/tileset_unitSquare_fourPrimitives_plain.json";
+
+/**
+ * Wait until the root tile of the given tileset is loaded
+ *
+ * @param {Cesium3DTileset} tileset The tileset
+ * @param {Scene} scene The scene
+ */
+async function waitForRootLoaded(tileset, scene) {
+  scene.renderForSpecs();
+  const root = tileset.root;
+  await pollToPromise(() => {
+    scene.renderForSpecs();
+    return root.contentFailed || root.contentReady;
+  });
+}
+
+/**
+ * Load and return a test tileset that defines an imagery layer,
+ * waiting until the root of that tileset is loaded.
+ *
+ * This means that the resulting <code>tileset.root.content._model._modelImagery</code>
+ * (including the <code>ModelPrimitiveImagery</code> instances) will be defined and ready.
+ *
+ * @param {Scene} scene The scene
+ * @returns {Cesium3DTileset} The tileset
+ */
+async function loadTestTilesetWithImagery(scene) {
+  const url = tileset_unitSquare_fourPrimitives_plain_url;
+  const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
+
+  // Create a non-trivial transform for the tileset
+  const transform = Transforms.eastNorthUpToFixedFrame(
+    Cartesian3.fromDegrees(-120.0, 40.0, 1.0),
+  );
+  tileset.modelMatrix = transform;
+
+  // Set a view that fully shows the tile content
+  // (a unit square at the position given above)
+  scene.camera.setView({
+    destination: new Cartesian3(
+      -2446354.452726738,
+      -4237211.248955036,
+      4077988.0921552004,
+    ),
+    orientation: new HeadingPitchRoll(Math.PI * 2, -Math.PI / 2, 0),
+  });
+
+  const imageryProvider = new TileCoordinatesImageryProvider({
+    tilingScheme: new WebMercatorTilingScheme(),
+  });
+  const imageryLayer = new ImageryLayer(imageryProvider);
+  tileset.imageryLayers.add(imageryLayer);
+
+  await waitForRootLoaded(tileset, scene);
+  return tileset;
+}
+
+// Missing:
+// _uploadImageryTexCoordAttributes
+// _destroyImageryTexCoordAttributes
 
 describe("Scene/Model/ModelPrimitiveImagery", function () {
   let scene;
@@ -220,5 +289,170 @@ describe("Scene/Model/ModelPrimitiveImagery", function () {
       ModelPrimitiveImagery._obtainPrimitivePositionAttribute(primitive);
     expect(actualAttribute.semantic).toEqual("POSITION");
     expect(actualAttribute).toEqual(expectedAttribute);
+  });
+
+  it("properly reports _mappedPositionsNeedUpdate", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    // Initially, the mapped positions don't need an update
+    expect(modelPrimitiveImagery._mappedPositionsNeedUpdate).toBeFalse();
+
+    // For spec: Brutally set the model matrix to a new value
+    model.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+
+    // Now, the mapped positions need an update
+    expect(modelPrimitiveImagery._mappedPositionsNeedUpdate).toBeTrue();
+  });
+
+  it("_computeMappedPositionsPerEllipsoid computes the mapped positions", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    const actualMappedPositions =
+      modelPrimitiveImagery._computeMappedPositionsPerEllipsoid();
+
+    // Not checking the exact values here. The correctness
+    // of these should be covered with other tests. This test
+    // only checks that the MappedPositions are created.
+
+    // One ellipsoid, therefore, one MappedPositions object
+    expect(actualMappedPositions.length).toBe(1);
+
+    // The primitives consist of 3x3 vertices
+    expect(actualMappedPositions[0].numPositions).toBe(9);
+  });
+
+  it("_computeImageryTexCoordsAttributesPerProjection computes the attributes", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    const actualTexCoordAttributes =
+      modelPrimitiveImagery._computeImageryTexCoordsAttributesPerProjection();
+
+    // Not checking the exact values here. The correctness
+    // of these should be covered with other tests. This test
+    // only checks that the Attributes are created.
+
+    // One projection, therefore, one attribute
+    expect(actualTexCoordAttributes.length).toBe(1);
+
+    // The primitives consist of 3x3 vertices
+    expect(actualTexCoordAttributes[0].count).toBe(9);
+  });
+
+  it("_createImageryTexCoordAttributes computes the attributes", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    const uniqueProjections = [new WebMercatorProjection()];
+    const actualTexCoordAttributes =
+      modelPrimitiveImagery._createImageryTexCoordAttributes(uniqueProjections);
+
+    // Not checking the exact values here. The correctness
+    // of these should be covered with other tests. This test
+    // only checks that the Attributes are created.
+
+    // One projection, therefore, one attribute
+    expect(actualTexCoordAttributes.length).toBe(1);
+
+    // The primitives consist of 3x3 vertices
+    expect(actualTexCoordAttributes[0].count).toBe(9);
+  });
+
+  it("coveragesForImageryLayer throws for unknown imagery layer", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    // Create a new imageryLayer that does not appear in the tileset
+    const imageryProvider = new TileCoordinatesImageryProvider({
+      tilingScheme: new WebMercatorTilingScheme(),
+    });
+    const imageryLayer = new ImageryLayer(imageryProvider);
+
+    expect(function () {
+      modelPrimitiveImagery.coveragesForImageryLayer(imageryLayer);
+    }).toThrowDeveloperError();
+  });
+
+  it("coveragesForImageryLayer provides the proper coverages", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    const imageryLayer = tileset.imageryLayers.get(0);
+    const actualImageryCoverages =
+      modelPrimitiveImagery.coveragesForImageryLayer(imageryLayer);
+
+    // Note: The "correctness" has been verified visually for this
+    // configuration, and the proper numbers have been extracted
+    // from a debugger run. This may be overly specific, and may
+    // have to be adjusted in the future. Right now, it may only
+    // prevent certain regressions.
+    expect(actualImageryCoverages.length).toBe(1);
+
+    const actualImageryCoverage = actualImageryCoverages[0];
+    expect(actualImageryCoverage.x).toBe(5592405);
+    expect(actualImageryCoverage.y).toBe(12703008);
+    expect(actualImageryCoverage.level).toBe(25);
   });
 });

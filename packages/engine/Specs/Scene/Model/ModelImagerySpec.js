@@ -208,6 +208,11 @@ describe("Scene/Model/ModelImagery", function () {
     }
 
     // XXX_DRAPING http://localhost:8080/Specs/SpecRunner.html?category=none&spec=Scene%2FModel%2FModelImagery%20works&debugCanvasWidth=400&debugCanvasHeight=400
+    // Missing:
+    //  ModelImageryMapping
+    //   createTextureCoordinatesAttributeForMappedPositions
+    //   createCartographicPositions
+
     const url = tileset_unitSquare_fourPrimitives_plain_url;
     const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
 

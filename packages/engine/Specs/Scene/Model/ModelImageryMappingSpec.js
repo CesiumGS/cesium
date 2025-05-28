@@ -10,6 +10,8 @@ import {
   Math as CesiumMath,
   Cartesian2,
   WebMercatorProjection,
+  AttributeType,
+  VertexAttributeSemantic,
 } from "../../../index.js";
 
 describe("Scene/Model/ModelImageryMapping", function () {
@@ -47,6 +49,124 @@ describe("Scene/Model/ModelImageryMapping", function () {
         projection,
       );
     }).toThrowDeveloperError();
+  });
+
+  it("_createTextureCoordinates throws without cartographicPositions", function () {
+    const cartographicPositions = undefined;
+    const numPositions = 4;
+    const cartographicBoundingRectangle = new Rectangle(0.0, 0.0, 0.1, 0.1);
+    const projection = new WebMercatorProjection();
+    expect(function () {
+      ModelImageryMapping._createTextureCoordinates(
+        cartographicPositions,
+        numPositions,
+        cartographicBoundingRectangle,
+        projection,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("_createTextureCoordinates throws with invalid numPositions", function () {
+    const cartographicPositions = [
+      new Cartographic(0.0, 0.0),
+      new Cartographic(0.1, 0.0),
+      new Cartographic(0.0, 0.1),
+      new Cartographic(0.1, 0.1),
+    ];
+    const numPositions = -1;
+    const cartographicBoundingRectangle = new Rectangle(0.0, 0.0, 0.1, 0.1);
+    const projection = new WebMercatorProjection();
+    expect(function () {
+      ModelImageryMapping._createTextureCoordinates(
+        cartographicPositions,
+        numPositions,
+        cartographicBoundingRectangle,
+        projection,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("_createTextureCoordinates throws without cartographicBoundingRectangle", function () {
+    const cartographicPositions = [
+      new Cartographic(0.0, 0.0),
+      new Cartographic(0.1, 0.0),
+      new Cartographic(0.0, 0.1),
+      new Cartographic(0.1, 0.1),
+    ];
+    const numPositions = 4;
+    const cartographicBoundingRectangle = undefined;
+    const projection = new WebMercatorProjection();
+    expect(function () {
+      ModelImageryMapping._createTextureCoordinates(
+        cartographicPositions,
+        numPositions,
+        cartographicBoundingRectangle,
+        projection,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("_createTextureCoordinates throws without projection", function () {
+    const cartographicPositions = [
+      new Cartographic(0.0, 0.0),
+      new Cartographic(0.1, 0.0),
+      new Cartographic(0.0, 0.1),
+      new Cartographic(0.1, 0.1),
+    ];
+    const numPositions = 4;
+    const cartographicBoundingRectangle = new Rectangle(0.0, 0.0, 0.1, 0.1);
+    const projection = undefined;
+    expect(function () {
+      ModelImageryMapping._createTextureCoordinates(
+        cartographicPositions,
+        numPositions,
+        cartographicBoundingRectangle,
+        projection,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("_createTextureCoordinates creates texture coordinates", function () {
+    const cartographicPositions = [
+      new Cartographic(0.0, 0.0),
+      new Cartographic(0.1, 0.0),
+      new Cartographic(0.0, 0.1),
+      new Cartographic(0.1, 0.1),
+    ];
+    const numPositions = 4;
+    const cartographicBoundingRectangle = new Rectangle(0.0, 0.0, 0.1, 0.1);
+    const projection = new WebMercatorProjection();
+    const actualTextureCoordinates =
+      ModelImageryMapping._createTextureCoordinates(
+        cartographicPositions,
+        numPositions,
+        cartographicBoundingRectangle,
+        projection,
+      );
+    const expectedTextureCoordinates = new Float32Array([
+      0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+    ]);
+    expect(actualTextureCoordinates).toEqual(expectedTextureCoordinates);
+  });
+
+  it("createTexCoordAttribute throws without texCoordsTypedArray", function () {
+    const texCoordsTypedArray = undefined;
+    expect(function () {
+      ModelImageryMapping.createTexCoordAttribute(texCoordsTypedArray);
+    }).toThrowDeveloperError();
+  });
+
+  it("createTexCoordAttribute creates a texture coordinate attribute", function () {
+    const texCoordsTypedArray = new Float32Array([
+      0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+    ]);
+
+    const texCoordAttribute =
+      ModelImageryMapping.createTexCoordAttribute(texCoordsTypedArray);
+    expect(texCoordAttribute.semantic).toBe(VertexAttributeSemantic.TEXCOORD);
+    expect(texCoordAttribute.type).toBe(AttributeType.VEC2);
+    expect(texCoordAttribute.count).toBe(4);
+    expect(texCoordAttribute.typedArray).toBeDefined();
   });
 
   it("createIterableCartesian3FromTypedArray throws with undefined typedArray", function () {
