@@ -122,8 +122,6 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 });
 
 GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
-  console.log(`Tile loaded: ${tile._contentResource.url}`);
-
   if (tile._spzVisited) {
     return;
   }
@@ -137,9 +135,7 @@ GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
   tile._spzVisited = true;
 };
 
-GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {
-  console.log(`Tile unloaded: ${tile._contentResource.url}`);
-};
+GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {};
 
 GaussianSplatPrimitive.prototype.prePassesUpdate = function (frameState) {
   this._tileset.prePassesUpdate(frameState);
