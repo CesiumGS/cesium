@@ -339,6 +339,12 @@ function VoxelPrimitive(options) {
   this._transformPositionWorldToUv = new Matrix4();
 
   /**
+   * @type {Matrix3}
+   * @private
+   */
+  this._transformDirectionWorldToUv = new Matrix3();
+
+  /**
    * @type {Matrix4}
    * @private
    */
@@ -437,6 +443,7 @@ function VoxelPrimitive(options) {
     transformPositionUvToView: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
+    cameraDirectionUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
@@ -1295,11 +1302,19 @@ VoxelPrimitive.prototype.update = function (frameState) {
     transformDirectionViewToWorld,
     uniforms.transformDirectionViewToLocal,
   );
-  const cameraPositionWorld = frameState.camera.positionWC;
   uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
     this._transformPositionWorldToUv,
-    cameraPositionWorld,
+    frameState.camera.positionWC,
     uniforms.cameraPositionUv,
+  );
+  uniforms.cameraDirectionUv = Matrix3.multiplyByVector(
+    this._transformDirectionWorldToUv,
+    frameState.camera.directionWC,
+    uniforms.cameraDirectionUv,
+  );
+  uniforms.cameraDirectionUv = Cartesian3.normalize(
+    uniforms.cameraDirectionUv,
+    uniforms.cameraDirectionUv,
   );
   uniforms.stepSize = this._stepSizeMultiplier;
 
@@ -1597,6 +1612,10 @@ function updateShapeAndTransforms(primitive, shape, provider) {
     transformPositionLocalToUv,
     transformPositionWorldToLocal,
     primitive._transformPositionWorldToUv,
+  );
+  primitive._transformDirectionWorldToUv = Matrix4.getMatrix3(
+    primitive._transformPositionWorldToUv,
+    primitive._transformDirectionWorldToUv,
   );
   primitive._transformPositionUvToWorld = Matrix4.multiplyTransformation(
     transformPositionLocalToWorld,
