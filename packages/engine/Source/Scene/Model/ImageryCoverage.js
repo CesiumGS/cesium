@@ -31,9 +31,7 @@ const nativeClippedImageryBoundsScratch = new Rectangle();
  * <code>ImageryLayer.prototype._createTileImagerySkeletons</code>
  * See https://github.com/CesiumGS/cesium/blob/5eaa2280f495d8f300d9e1f0497118c97aec54c8/packages/engine/Source/Scene/ImageryLayer.js#L700
  * An instance of this class roughly corresponds to the <code>TileImagery</code>
- * that is created there. But in contrast to the <code>TileImagery</code>, this
- * describes the imagery tile (in terms of its coordinates), and does not
- * store the <code>Imagery</code> object itself.
+ * that is created there.
  *
  * @private
  */
@@ -46,12 +44,14 @@ class ImageryCoverage {
    * @param {number} level level of the imagery tile
    * @param {CartesianRectangle} textureCoordinateRectangle The texture coordinate
    * rectangle from the imagery tile that is covered
+   * @param {Imagery} imagery The imagery
    */
-  constructor(x, y, level, textureCoordinateRectangle) {
+  constructor(x, y, level, textureCoordinateRectangle, imagery) {
     this._x = x;
     this._y = y;
     this._level = level;
     this._textureCoordinateRectangle = textureCoordinateRectangle;
+    this._imagery = imagery;
   }
 
   /**
@@ -98,6 +98,16 @@ class ImageryCoverage {
    */
   get textureCoordinateRectangle() {
     return this._textureCoordinateRectangle;
+  }
+
+  /**
+   * Returns the imagery
+   *
+   * @type {Imagery}
+   * @readonly
+   */
+  get imagery() {
+    return this._imagery;
   }
 
   /**
@@ -180,6 +190,7 @@ class ImageryCoverage {
     };
 
     const imageryCoverages = ImageryCoverage._computeImageryCoverages(
+      imageryLayer,
       imageryRange,
       imageryLevel,
       nativeInputRectangle,
@@ -368,6 +379,7 @@ class ImageryCoverage {
    * the texture coordinates that are contained in the given range of
    * imagery tile coordinates, referring to the given input rectangle.
    *
+   * @param {ImageryLayer} imageryLayer The imagery layer
    * @param {CartesianRectangle} imageryRange The range of imagery tile coordinates
    * @param {number} imageryLevel The imagery level
    * @param {Rectangle} nativeInputRectangle The input rectangle, in coordinates
@@ -380,6 +392,7 @@ class ImageryCoverage {
    * and the respective texture coordinates
    */
   static _computeImageryCoverages(
+    imageryLayer,
     imageryRange,
     imageryLevel,
     nativeInputRectangle,
@@ -415,11 +428,20 @@ class ImageryCoverage {
             nativeInputRectangle,
             undefined,
           );
+
+        // Note: The getImageryFromCache function will create the whole "chain"
+        // of ancestor imageries, up to the root, and increases the reference
+        // counter for each of them, even though it is not called
+        // getImageryFromCacheAndCreateAllAncestorsAndAddReferences.
+        // There is currently no way to have a single imagery, because
+        // somewhere in TileImagery, the parent is assumed to be present.
+        const imagery = imageryLayer.getImageryFromCache(i, j, imageryLevel);
         const imageryCoverage = new ImageryCoverage(
           i,
           j,
           imageryLevel,
           textureCoordinateRectangle,
+          imagery,
         );
         imageryCoverages.push(imageryCoverage);
       }

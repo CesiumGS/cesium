@@ -860,14 +860,9 @@ class ImageryPipelineStage {
     );
     //>>includeEnd('debug');
 
-    const imagery = imageryLayer.getImageryFromCache(
-      coverage.x,
-      coverage.y,
-      coverage.level,
-    );
-
     // Bail out early if something went wrong in the imagery
     // loading state machine
+    const imagery = coverage.imagery;
     if (
       imagery.state === ImageryState.FAILED ||
       imagery.state === ImageryState.INVALID

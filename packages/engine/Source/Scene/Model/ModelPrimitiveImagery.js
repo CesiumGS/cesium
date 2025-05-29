@@ -303,11 +303,7 @@ class ModelPrimitiveImagery {
     const length = coverages.length;
     for (let i = 0; i < length; i++) {
       const coverage = coverages[i];
-      const imagery = imageryLayer.getImageryFromCache(
-        coverage.x,
-        coverage.y,
-        coverage.level,
-      );
+      const imagery = coverage.imagery;
       imagery.releaseReference();
     }
   }
@@ -319,6 +315,10 @@ class ModelPrimitiveImagery {
    * @param {Context} context The GL context
    */
   _uploadImageryTexCoordAttributes(context) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("context", context);
+    //>>includeEnd('debug');
+
     const attributes = this._imageryTexCoordAttributesPerProjection;
     if (!defined(attributes)) {
       return;
@@ -627,22 +627,6 @@ class ModelPrimitiveImagery {
       currentImageryLayers.push(imageryLayer);
     }
 
-    // TODO_DRAPING Review this: Is this the right place to add
-    // the references? The reference counters will be decreased
-    // in _deleteCoveragesPerLayer
-    for (let i = 0; i < length; i++) {
-      const imageryLayer = imageryLayers.get(i);
-      const coverages = coveragesPerLayer[i];
-      for (const coverage of coverages) {
-        const imagery = imageryLayer.getImageryFromCache(
-          coverage.x,
-          coverage.y,
-          coverage.level,
-        );
-        imagery.addReference();
-      }
-    }
-
     this._coveragesPerLayer = coveragesPerLayer;
     this._currentImageryLayers = currentImageryLayers;
   }
@@ -754,21 +738,15 @@ class ModelPrimitiveImagery {
    */
   _updateImageries(frameState) {
     const model = this._model;
-    const imageryLayers = model.imageryLayers;
     const coveragesPerLayer = this._coveragesPerLayer;
     const length = coveragesPerLayer.length;
     let allImageriesReady = true;
     for (let i = 0; i < length; i++) {
-      const imageryLayer = imageryLayers.get(i);
       const coverages = coveragesPerLayer[i];
       const n = coverages.length;
       for (let j = 0; j < n; j++) {
         const coverage = coverages[j];
-        const imagery = imageryLayer.getImageryFromCache(
-          coverage.x,
-          coverage.y,
-          coverage.level,
-        );
+        const imagery = coverage.imagery;
 
         // In the context of loading the imagery for draping
         // it over the primitive, the imagery counts as "ready"
