@@ -47,13 +47,27 @@ function GaussianSplatPrimitive(options) {
   this._tileset = options.tileset;
   this._tileset.tileLoad.addEventListener(this.onTileLoaded, this);
   this._tileset.tileUnload.addEventListener(this.onTileUnloaded, this);
+  this._tileset.loadProgress.addEventListener(this.onLoadProgress, this);
+  this._tileset.allTilesLoaded.addEventListener(this.onAllTilesLoaded, this);
+  this._tileset.initialTilesLoaded.addEventListener(
+    this.onInitialTilesLoaded,
+    this,
+  );
+  this._tileset.tileFailed.addEventListener(this.onTileFailed, this);
+  this._tileset.tileVisible.addEventListener(this.onTileVisible, this);
+
+  this._baseTilesetUpdate = this._tileset.update.bind(this._tileset);
+  this._tileset.update = (frameState) => {
+    this._baseTilesetUpdate(frameState);
+    this.update(frameState);
+  };
+
   this._selectedTileLen = 0;
 
   this._drawCommand = undefined;
   this._useLogDepth = undefined;
   this._rootTransform = undefined;
   this._modelMatrix = new Matrix4();
-  this._inverseRootTransform = new Matrix4();
   this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
     Axis.Y,
     Axis.X,
@@ -141,16 +155,17 @@ GaussianSplatPrimitive.prototype.prePassesUpdate = function (frameState) {
   this._tileset.prePassesUpdate(frameState);
 };
 
-GaussianSplatPrimitive.prototype.updateForPass = function (
-  frameState,
-  passState,
-) {
-  this._tileset.updateForPass(frameState, passState);
-};
+GaussianSplatPrimitive.prototype.onLoadProgress = function (
+  numberOfPendingRequests,
+  numberOfTilesProcessing,
+) {};
 
-GaussianSplatPrimitive.prototype.postPassesUpdate = function (frameState) {
-  this._tileset.postPassesUpdate(frameState);
-};
+GaussianSplatPrimitive.prototype.onAllTilesLoaded = function () {};
+
+GaussianSplatPrimitive.prototype.onInitialTilesLoaded = function () {};
+GaussianSplatPrimitive.prototype.onTileFailed = function (error) {};
+
+GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
 
 GaussianSplatPrimitive.prototype.destroy = function () {
   this._positions = undefined;
@@ -162,6 +177,18 @@ GaussianSplatPrimitive.prototype.destroy = function () {
     this.gaussianSplatTexture.destroy();
     this.gaussianSplatTexture = undefined;
   }
+
+  this._tileset.update = this._baseTilesetUpdate;
+  this._tileset.tileLoad.removeEventListener(this.onTileLoaded, this);
+  this._tileset.tileUnload.removeEventListener(this.onTileUnloaded, this);
+  this._tileset.loadProgress.removeEventListener(this.onLoadProgress, this);
+  this._tileset.allTilesLoaded.removeEventListener(this.onAllTilesLoaded, this);
+  this._tileset.initialTilesLoaded.removeEventListener(
+    this.onInitialTilesLoaded,
+    this,
+  );
+  this._tileset.tileFailed.removeEventListener(this.onTileFailed, this);
+  this._tileset.tileVisible.removeEventListener(this.onTileVisible, this);
 };
 
 GaussianSplatPrimitive.prototype.isDestroyed = function () {
