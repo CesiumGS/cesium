@@ -51,6 +51,69 @@ describe("Scene/Model/ModelImageryMapping", function () {
     }).toThrowDeveloperError();
   });
 
+  it("createTextureCoordinatesAttributeForMappedPositions throws without mappedPositions", function () {
+    const mappedPositions = undefined;
+    const projection = new WebMercatorProjection();
+    expect(function () {
+      ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions(
+        mappedPositions,
+        projection,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("createTextureCoordinatesAttributeForMappedPositions throws without projection", function () {
+    const cartographicPositions = [
+      new Cartographic(0.0, 0.0),
+      new Cartographic(0.1, 0.0),
+      new Cartographic(0.0, 0.1),
+      new Cartographic(0.1, 0.1),
+    ];
+    const numPositions = 4;
+    const cartographicBoundingRectangle = new Rectangle(0.0, 0.0, 0.1, 0.1);
+    const ellipsoid = Ellipsoid.WGS84;
+    const mappedPositions = new MappedPositions(
+      cartographicPositions,
+      numPositions,
+      cartographicBoundingRectangle,
+      ellipsoid,
+    );
+    const projection = undefined;
+    expect(function () {
+      ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions(
+        mappedPositions,
+        projection,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("createTextureCoordinatesAttributeForMappedPositions throws without projection", function () {
+    const cartographicPositions = [
+      new Cartographic(0.0, 0.0),
+      new Cartographic(0.1, 0.0),
+      new Cartographic(0.0, 0.1),
+      new Cartographic(0.1, 0.1),
+    ];
+    const numPositions = 4;
+    const cartographicBoundingRectangle = new Rectangle(0.0, 0.0, 0.1, 0.1);
+    const ellipsoid = Ellipsoid.WGS84;
+    const mappedPositions = new MappedPositions(
+      cartographicPositions,
+      numPositions,
+      cartographicBoundingRectangle,
+      ellipsoid,
+    );
+    const projection = new WebMercatorProjection();
+    const attribute =
+      ModelImageryMapping.createTextureCoordinatesAttributeForMappedPositions(
+        mappedPositions,
+        projection,
+      );
+    expect(attribute.semantic).toBe(VertexAttributeSemantic.TEXCOORD);
+    expect(attribute.type).toBe(AttributeType.VEC2);
+    expect(attribute.count).toBe(4);
+  });
+
   it("_createTextureCoordinates throws without cartographicPositions", function () {
     const cartographicPositions = undefined;
     const numPositions = 4;

@@ -19,6 +19,8 @@ import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
+import ModelImageryMapping from "../../../Source/Scene/Model/ModelImageryMapping.js";
+import Cartographic from "../../../Source/Core/Cartographic.js";
 
 const unitSquare_fourPrimitives_plain_url =
   "./Data/Models/glTF-2.0/unitSquare/unitSquare_fourPrimitives_plain.glb";
@@ -81,10 +83,6 @@ async function loadTestTilesetWithImagery(scene) {
   await waitForRootLoaded(tileset, scene);
   return tileset;
 }
-
-// Missing:
-// _uploadImageryTexCoordAttributes
-// _destroyImageryTexCoordAttributes
 
 describe("Scene/Model/ModelPrimitiveImagery", function () {
   let scene;
@@ -454,5 +452,227 @@ describe("Scene/Model/ModelPrimitiveImagery", function () {
     expect(actualImageryCoverage.x).toBe(5592405);
     expect(actualImageryCoverage.y).toBe(12703008);
     expect(actualImageryCoverage.level).toBe(25);
+  });
+
+  it("reference counting for imagery works", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+
+    const imageryLayer = tileset.imageryLayers.get(0);
+
+    // Obtain the imageries that should be covered.
+    // Note that this will increase their reference
+    // count by default...
+    const imagery0 = imageryLayer.getImageryFromCache(5592405, 12703007, 25);
+    const imagery1 = imageryLayer.getImageryFromCache(5592405, 12703008, 25);
+    const imagery2 = imageryLayer.getImageryFromCache(5592406, 12703007, 25);
+    const imagery3 = imageryLayer.getImageryFromCache(5592406, 12703008, 25);
+
+    // ... so decrease it here immediately
+    imagery0.releaseReference();
+    imagery1.releaseReference();
+    imagery2.releaseReference();
+    imagery3.releaseReference();
+
+    // Check the reference counts that have been found via reverse engineering
+    expect(imagery0.referenceCount).toBe(2);
+    expect(imagery1.referenceCount).toBe(4);
+    expect(imagery2.referenceCount).toBe(1);
+    expect(imagery3.referenceCount).toBe(2);
+
+    // Set a model matrix that causes the previous imageries to no longer
+    // be covered, and trigger an update
+    model.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+    model.update(scene.frameState);
+
+    // The new reference counters should be all 0 now
+    expect(imagery0.referenceCount).toBe(0);
+    expect(imagery1.referenceCount).toBe(0);
+    expect(imagery2.referenceCount).toBe(0);
+    expect(imagery3.referenceCount).toBe(0);
+  });
+
+  it("_uploadImageryTexCoordAttributes throws without context", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    expect(function () {
+      modelPrimitiveImagery._uploadImageryTexCoordAttributes(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("_uploadImageryTexCoordAttributes uploads attribute data into buffers", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    // For specs: Delete the buffers that already exist
+    const attributes =
+      modelPrimitiveImagery._imageryTexCoordAttributesPerProjection;
+    for (const attribute of attributes) {
+      delete attribute.buffer;
+    }
+
+    modelPrimitiveImagery._uploadImageryTexCoordAttributes(scene.context);
+
+    // Expect the new buffers to be present now
+    for (const attribute of attributes) {
+      expect(attribute.buffer).toBeDefined();
+    }
+  });
+
+  it("_destroyImageryTexCoordAttributes destroys the attributes and their buffers", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    const modelPrimitiveImagery = modelPrimitiveImageries[0];
+
+    // Prepare the "buffer.destroy" call expectations for all attributes
+    const attributes =
+      modelPrimitiveImagery._imageryTexCoordAttributesPerProjection;
+    const bufferDestroyCalls = [];
+    for (const attribute of attributes) {
+      const buffer = attribute.buffer;
+      const bufferDestroyCall = spyOn(buffer, "destroy").and.callThrough();
+      bufferDestroyCalls.push(bufferDestroyCall);
+    }
+
+    modelPrimitiveImagery._destroyImageryTexCoordAttributes();
+
+    // Expect the destroy function of all buffers to have been called
+    for (const bufferDestroyCall of bufferDestroyCalls) {
+      expect(bufferDestroyCall).toHaveBeenCalled();
+    }
+    expect(
+      modelPrimitiveImagery._imageryTexCoordAttributesPerProjection,
+    ).toBeUndefined();
+  });
+
+  // Note: The following tests would rather belong into ModelImageryMappingSpec,
+  // but require primitive attributes that are only available after loading the
+  // tileset in a scene, so they are added here
+
+  it("ModelImageryMapping createCartographicPositions throws without primitivePositionAttribute", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+    const primitivePositionAttribute = undefined;
+    const primitivePositionTransform = Matrix4.IDENTITY;
+    const ellipsoid = Ellipsoid.WGS84;
+
+    expect(function () {
+      ModelImageryMapping.createCartographicPositions(
+        primitivePositionAttribute,
+        primitivePositionTransform,
+        ellipsoid,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("ModelImageryMapping createCartographicPositions throws without primitivePositionTransform", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+
+    const primitivePositionAttribute =
+      model.sceneGraph.components.nodes[0].primitives[0].attributes[0];
+    const primitivePositionTransform = undefined;
+    const ellipsoid = Ellipsoid.WGS84;
+
+    expect(function () {
+      ModelImageryMapping.createCartographicPositions(
+        primitivePositionAttribute,
+        primitivePositionTransform,
+        ellipsoid,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("ModelImageryMapping createCartographicPositions throws without ellipsoid", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+
+    const primitivePositionAttribute =
+      model.sceneGraph.components.nodes[0].primitives[0].attributes[0];
+    const primitivePositionTransform = Matrix4.IDENTITY;
+    const ellipsoid = undefined;
+
+    expect(function () {
+      ModelImageryMapping.createCartographicPositions(
+        primitivePositionAttribute,
+        primitivePositionTransform,
+        ellipsoid,
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("ModelImageryMapping createCartographicPositions creates cartographic positions", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTestTilesetWithImagery(scene);
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+
+    const primitivePositionAttribute =
+      model.sceneGraph.components.nodes[0].primitives[0].attributes[0];
+    const primitivePositionTransform = Matrix4.IDENTITY;
+    const ellipsoid = Ellipsoid.WGS84;
+
+    const cartographicPositions =
+      ModelImageryMapping.createCartographicPositions(
+        primitivePositionAttribute,
+        primitivePositionTransform,
+        ellipsoid,
+      );
+    const actualCartographicPositions = [
+      ...ModelImageryMapping.map(cartographicPositions, (c) =>
+        Cartographic.clone(c),
+      ),
+    ];
+    expect(actualCartographicPositions.length).toBe(9);
   });
 });
