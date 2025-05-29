@@ -1,5 +1,6 @@
 import BoundingSphere from "../../Core/BoundingSphere";
 import Cartesian3 from "../../Core/Cartesian3";
+import Check from "../../Core/Check.js";
 import Matrix3 from "../../Core/Matrix3";
 import Matrix4 from "../../Core/Matrix4";
 import TranslationRotationScale from "../../Core/TranslationRotationScale";
@@ -10,22 +11,39 @@ const scratchRotation = new Matrix3();
 const scratchBoundingSphereTransform = new Matrix4();
 
 /**
- * An instance of a Cesium {@link Model}, based on {@link https://github.com/KhronosGroup/glTF|glTF}, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
- * The position and orientation of the instance is determined by the containing {@link Matrix4}.
- *
- * @alias ModelInstance
- * @constructor
- *
- * @param {Matrix4} [transform] Matrix4 describing the transform of the instance
- * @param {ModelInstanceCollection} [instance] collection this instance belongs to
- *
+ * A copy of a {@link Model} mesh, known as an instance, used for rendering multiple copies with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
+ * @see {@link ModelInstanceCollection} for a collection of instances.
+ * @see {@link Model#instances} for a collection of instances as applied to a model.
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3DModelInstancing.html|Cesium Sandcastle 3D Model Instancing Demo}
  */
-
 class ModelInstance {
-  constructor(transform, modelInstanceCollection) {
+  /**
+   * Constructs a {@link ModelInstance}, a copy of a {@link Model} mesh, for efficiently rendering a large number of copies the same model using GPU mesh instancing.
+   * The position, orientation, and scale of the instance is determined by the specified {@link Matrix4}.
+   * @constructor
+   * @param {Matrix4} transform Matrix4 describing the transform of the instance
+   * @example
+   * const position = Cesium.Cartesian3.fromDegrees(-75.1652, 39.9526);
+   *
+   * const headingPositionRoll = new Cesium.HeadingPitchRoll();
+   * const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+   *   "north",
+   *   "west",
+   * );
+   * const instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
+   *   position,
+   *   headingPositionRoll,
+   *   Cesium.Ellipsoid.WGS84,
+   *   fixedFrameTransform,
+   * );
+   * const modelInstance = new Cesium.ModelInstance(instanceModelMatrix);
+   */
+  constructor(transform) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("transform", transform);
+    //>>includeEnd('debug');
+
     this._transform = transform;
-    this._modelInstanceCollection = modelInstanceCollection;
     this._center = new Cartesian3();
     this._relativeTransform = new Matrix4();
 
@@ -38,8 +56,11 @@ class ModelInstance {
   }
 
   set transform(value) {
-    // TODO: Matrix4.equals
-    if (this._transform === value) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("transform", value);
+    //>>includeEnd('debug');
+
+    if (this._transform.equals(value)) {
       return;
     }
 
@@ -48,10 +69,20 @@ class ModelInstance {
     this._updateTransform(value);
   }
 
+  /**
+   * The center of the model instance in world space.
+   * @type {Cartesian3}
+   * @readonly
+   */
   get center() {
     return this._center;
   }
 
+  /**
+   * The relative transform of the model instance relative to the instance's center.
+   * @type {Matrix4}
+   * @readonly
+   */
   get relativeTransform() {
     return this._relativeTransform;
   }
@@ -109,9 +140,14 @@ class ModelInstance {
    * @param {BoundingSphere} [result] If provided, the instance in which to store the result.
    * @returns {BoundingSphere} The model instance bounding sphere.
    * @example
-   * const modelInstance = new Cesium.ModelInstance(instanceModelMatrix);
+   * // Fly to a specific model instance
+   * const model = await Cesium.Model.fromGltfAsync({
+   *   url: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+   *   minimumPixelSize: 64,
+   * });
+   * viewer.scene.primitives.add(model);
    *
-   * // TODO: Model
+   * const modelInstance = model.instances.add(instanceModelMatrix);
    *
    * const boundingSphere = modelInstance.getBoundingSphere(model);
    * viewer.camera.flyToBoundingSphere(boundingSphere);
