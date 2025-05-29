@@ -126,8 +126,8 @@ class ModelImageryMapping {
    *
    * This will create an attribute with
    * - semantic: VertexAttributeSemantic.TEXCOORD
-   * - componentsPerAttribute: 2
-   * - componentDatatype: ComponentDatatype.FLOAT
+   * - type: AttributeType.VEC2
+   * - count: mappedPositions.numPositions
    * that contains the texture coordinates for the given vertex positions,
    * after they are projected using the given projection, normalized to
    * their bounding rectangle.
