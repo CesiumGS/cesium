@@ -76,49 +76,15 @@ function GaussianSplatPrimitive(options) {
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
-  /**Gets a value indicating whether or not the primitive is ready for use.
-
-  @memberof GaussianSplatPrimitive.prototype
-  @type {boolean}
-  @readonly
-   */
+  /**
+    * Gets a value indicating whether or not the primitive is ready for use.
+    @memberof GaussianSplatPrimitive.prototype
+    @type {boolean}
+    @readonly
+    */
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  boundingSphere: {
-    get: function () {
-      return this._tileset.boundingSphere;
-    },
-  },
-  /**Gets the model matrix.
-
-@memberof GaussianSplatPrimitive.prototype
-@type {Matrix4}
-@readonly
-   */
-  modelMatrix: {
-    get: function () {
-      return this.modelMatrix;
-    },
-    set: function (modelMatrix) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.object("modelMatrix", modelMatrix);
-      //>>includeEnd('debug'); this._modelMatrix = Matrix4.clone(modelMatrix, this.modelMatrix);
-    },
-  },
-  debugShowBoundingVolume: {
-    get: function () {
-      return this._debugShowBoundingVolume;
-    },
-    set: function (debugShowBoundingVolume) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.number("debugShowBoundingVolume", debugShowBoundingVolume);
-      //>>includeEnd('debug');
-
-      this._debugShowBoundingVolume = debugShowBoundingVolume;
     },
   },
   splatScale: {
@@ -155,6 +121,12 @@ GaussianSplatPrimitive.prototype.prePassesUpdate = function (frameState) {
   this._tileset.prePassesUpdate(frameState);
 };
 
+GaussianSplatPrimitive.prototype.updateForPass = function (
+  frameState,
+  passState,
+) {
+  this._tileset.updateForPass(frameState, passState);
+};
 GaussianSplatPrimitive.prototype.onLoadProgress = function (
   numberOfPendingRequests,
   numberOfTilesProcessing,
@@ -219,7 +191,7 @@ GaussianSplatPrimitive.prototype.transformTile = function (tile) {
   ).typedArray;
 
   for (let i = 0; i < positions.length; i += 3) {
-    const wpos = Matrix4.multiplyByPoint(
+    const worldPosition = Matrix4.multiplyByPoint(
       modelMatrix,
       new Cartesian3(positions[i], positions[i + 1], positions[i + 2]),
       new Cartesian3(),
@@ -227,7 +199,7 @@ GaussianSplatPrimitive.prototype.transformTile = function (tile) {
 
     const position = Matrix4.multiplyByPoint(
       inverseRoot,
-      wpos,
+      worldPosition,
       new Cartesian3(),
     );
     positions[i] = position.x;
