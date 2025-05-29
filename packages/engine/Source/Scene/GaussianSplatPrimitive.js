@@ -109,7 +109,7 @@ GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
   }
 
   if (this._rootTransform === undefined) {
-    this._rootTransform = tile.content._tile.computedTransform;
+    this._rootTransform = tile.computedTransform;
   } //else {
   this._transformTile(tile);
   // }
