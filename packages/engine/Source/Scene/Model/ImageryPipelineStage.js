@@ -17,6 +17,7 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
 /**
  * A compile-time debugging flag to draw the boundaries of imagery tiles
  * (Similar to "SHOW_TILE_BOUNDARIES" in GlobeFS.glsl)
+ * @private
  */
 const debugDrawImageryBoundaries = false;
 

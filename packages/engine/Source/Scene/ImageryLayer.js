@@ -127,7 +127,7 @@ import TileImagery from "./TileImagery.js";
 
 /**
  * An imagery layer that displays tiled image data from a single imagery provider
- * on a {@link Globe}.
+ * on a {@link Globe} or {@link Cesium3DTileset}.
  *
  * @alias ImageryLayer
  * @constructor
@@ -135,8 +135,10 @@ import TileImagery from "./TileImagery.js";
  * @param {ImageryProvider} [imageryProvider] The imagery provider to use.
  * @param {ImageryLayer.ConstructorOptions} [options] An object describing initialization options
  *
- * @see ImageryLayer.fromProviderAsync
- * @see ImageryLayer.fromWorldImagery
+ * @see {@link ImageryLayer.fromProviderAsync} for creating an imagery layer from an asynchronous imagery provider.
+ * @see {@link ImageryLayer.fromWorldImagery} for creating an imagery layer for Cesium ion's default global base imagery layer.
+ * @see {@link Scene#imageryLayers} for adding an imagery layer to the globe.
+ * @see {@link Cesium3DTileset#imageryLayers} for adding an imagery layer to a 3D tileset.
  *
  * @example
  * // Add an OpenStreetMaps layer
@@ -155,6 +157,19 @@ import TileImagery from "./TileImagery.js";
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
  * imageryLayer.alpha = 0.5;
  * scene.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * // Drape Bing Maps Aerial imagery over a 3D tileset
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl(
+ *   "http://localhost:8002/tilesets/Seattle/tileset.json"
+ * );
+ * scene.primitives.add(tileset);
+ *
+ * const imageryProvider = await Cesium.createWorldImageryAsync({
+ *   style: Cesium.IonWorldImageryStyle.AERIAL,
+ * });
+ * const imageryLayer = new ImageryLayer(imageryProvider);
+ * tileset.imageryLayers.add(imageryLayer);
  */
 function ImageryLayer(imageryProvider, options) {
   this._imageryProvider = imageryProvider;
