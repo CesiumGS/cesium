@@ -16,12 +16,12 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
   this._resource = resource;
   this._loader = loader;
 
-  if (this._tileset._gaussianSplatPrimitive === undefined) {
-    this._tileset._gaussianSplatPrimitive = new GaussianSplatPrimitive({
+  if (this._tileset.gaussianSplatPrimitive === undefined) {
+    this._tileset.gaussianSplatPrimitive = new GaussianSplatPrimitive({
       tileset: this._tileset,
     });
   }
-  this._gsplatData = undefined;
+  this.splatPrimitive = undefined;
   this._attributeTextureData = undefined;
   this._gaussianSplatTextureDataPending = false;
 
@@ -39,7 +39,7 @@ Object.defineProperties(GaussianSplat3DTilesContent.prototype, {
 
   pointsLength: {
     get: function () {
-      return this._gsplatData.attributes[0].count;
+      return this.splatPrimitive.attributes[0].count;
     },
   },
 
@@ -167,7 +167,7 @@ GaussianSplat3DTilesContent.prototype.update = function (
   }
 
   if (this._resourcesLoaded) {
-    this._gsplatData = loader.components.scene.nodes[0].primitives[0];
+    this.splatPrimitive = loader.components.scene.nodes[0].primitives[0];
     this._worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
@@ -186,10 +186,10 @@ GaussianSplat3DTilesContent.prototype.pick = function (
 };
 
 GaussianSplat3DTilesContent.prototype.destroy = function () {
-  this._gsplatData.destroy();
-  this._gsplatData = undefined;
-  this._tileset._gaussianSplatPrimitive.destroy();
-  this._tileset._gaussianSplatPrimitive = undefined;
+  this.splatPrimitive.destroy();
+  this.splatPrimitive = undefined;
+  this._tileset.gaussianSplatPrimitive.destroy();
+  this._tileset.gaussianSplatPrimitive = undefined;
   this._tile = undefined;
   this._tileset = undefined;
   this._resource = undefined;

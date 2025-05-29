@@ -110,9 +110,9 @@ GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
 
   if (this._rootTransform === undefined) {
     this._rootTransform = tile.content._tile.computedTransform;
-  } else {
-    this._transformTile(tile);
-  }
+  } //else {
+  this._transformTile(tile);
+  // }
 
   tile._spzVisited = true;
 };
@@ -163,7 +163,7 @@ GaussianSplatPrimitive.prototype.isDestroyed = function () {
 
 GaussianSplatPrimitive.prototype._transformTile = function (tile) {
   const transform = tile.computedTransform;
-  const gsplatData = tile.content._gsplatData;
+  const splatPrimitive = tile.content.splatPrimitive;
 
   let modelMatrix = Matrix4.multiply(
     transform,
@@ -180,7 +180,7 @@ GaussianSplatPrimitive.prototype._transformTile = function (tile) {
   const inverseRoot = Matrix4.inverse(transform, new Matrix4());
 
   const positions = ModelUtility.getAttributeBySemantic(
-    gsplatData,
+    splatPrimitive,
     VertexAttributeSemantic.POSITION,
   ).typedArray;
 
@@ -461,32 +461,32 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._gaussianSplatTexturePending = false;
 
     tileset._selectedTiles.forEach((tile) => {
-      const gsplatData = tile.content._gsplatData;
+      const splatPrimitive = tile.content.splatPrimitive;
       this._pushSplats({
         positions: new Float32Array(
           ModelUtility.getAttributeBySemantic(
-            gsplatData,
+            splatPrimitive,
             VertexAttributeSemantic.POSITION,
           ).typedArray,
         ),
         scales: new Float32Array(
           ModelUtility.getAttributeBySemantic(
-            gsplatData,
+            splatPrimitive,
             VertexAttributeSemantic.SCALE,
           ).typedArray,
         ),
         rotations: new Float32Array(
           ModelUtility.getAttributeBySemantic(
-            gsplatData,
+            splatPrimitive,
             VertexAttributeSemantic.ROTATION,
           ).typedArray,
         ),
         colors: new Uint8Array(
-          ModelUtility.getAttributeByName(gsplatData, "COLOR_0").typedArray,
+          ModelUtility.getAttributeByName(splatPrimitive, "COLOR_0").typedArray,
         ),
       });
 
-      this._numSplats += gsplatData.attributes[0].count;
+      this._numSplats += splatPrimitive.attributes[0].count;
     });
 
     this._selectedTileLen = tileset._selectedTiles.length;
