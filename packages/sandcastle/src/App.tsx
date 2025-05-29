@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import "./App.css";
 
 import Editor, { Monaco } from "@monaco-editor/react";
@@ -31,28 +31,79 @@ function App() {
 
   const editorRef = useRef<editor.IStandaloneCodeEditor>(null);
 
-  const [jsCode, setJsCode] = useState(defaultJsCode);
-  const [htmlCode, setHtmlCode] = useState(defaultHtmlCode);
-  const [committedCode, commitCode] = useState(defaultJsCode);
-  const [committedHtml, commitHtml] = useState(defaultHtmlCode);
-  const [runNumber, setRunNumber] = useState(0);
+  type Action =
+    | { type: "reset" }
+    | { type: "setCode"; code: string }
+    | { type: "setHtml"; html: string }
+    | { type: "commitCode" }
+    | { type: "setAndCommit"; code?: string; html?: string };
+  type CodeState = {
+    code: string;
+    html: string;
+    committedCode: string;
+    committedHtml: string;
+    runNumber: number;
+  };
+
+  const [codeState, dispatch] = useReducer(
+    function reducer(state: CodeState, action: Action): CodeState {
+      switch (action.type) {
+        case "reset": {
+          return {
+            code: defaultJsCode,
+            html: defaultHtmlCode,
+            committedCode: defaultJsCode,
+            committedHtml: defaultHtmlCode,
+            runNumber: 0,
+          };
+        }
+        case "setCode": {
+          return {
+            ...state,
+            code: action.code,
+          };
+        }
+        case "setHtml": {
+          return {
+            ...state,
+            html: action.html,
+          };
+        }
+        case "commitCode": {
+          return {
+            ...state,
+            committedCode: state.code,
+            committedHtml: state.html,
+            runNumber: state.runNumber + 1,
+          };
+        }
+        case "setAndCommit": {
+          return {
+            code: action.code ?? state.code,
+            html: action.html ?? state.html,
+            committedCode: action.code ?? state.code,
+            committedHtml: action.html ?? state.html,
+            runNumber: state.runNumber + 1,
+          };
+        }
+      }
+    },
+    {
+      code: defaultJsCode,
+      html: defaultHtmlCode,
+      committedCode: defaultJsCode,
+      committedHtml: defaultHtmlCode,
+      runNumber: 0,
+    } as CodeState,
+  );
 
   const [legacyIdMap, setLegacyIdMap] = useState<Record<string, string>>({});
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [galleryLoaded, setGalleryLoaded] = useState(false);
 
-  const runSandcastle = useCallback(() => {
-    commitCode(jsCode);
-    commitHtml(htmlCode);
-    setRunNumber((runNumber) => runNumber + 1);
-  }, [jsCode, htmlCode]);
-
-  // The monaco command handler needs a reference to a function that's updated/replaced when state
-  // changes so that triggering the Run Command (F8) will use the latest version of the code
-  const monacoRunner = useRef(() => {});
-  useEffect(() => {
-    monacoRunner.current = runSandcastle;
-  }, [runSandcastle]);
+  function runSandcastle() {
+    dispatch({ type: "commitCode" });
+  }
 
   function handleEditorDidMount(
     editor: editor.IStandaloneCodeEditor,
@@ -63,7 +114,7 @@ function App() {
     monaco.editor.addCommand({
       id: "run-cesium",
       run: () => {
-        monacoRunner.current();
+        dispatch({ type: "commitCode" });
       },
     });
 
@@ -98,9 +149,9 @@ function App() {
 
   function handleChange(value: string = "") {
     if (jsIsActive) {
-      setJsCode(value);
+      dispatch({ type: "setCode", code: value });
     } else {
-      setHtmlCode(value);
+      dispatch({ type: "setHtml", html: value });
     }
   }
 
@@ -144,14 +195,14 @@ function App() {
 
   function appendCode(snippet: string, run = false) {
     let spacerNewline = "\n";
-    if (jsCode.endsWith("\n")) {
+    if (codeState.code.endsWith("\n")) {
       spacerNewline = "";
     }
-    const newCode = `${jsCode}${spacerNewline}\n${snippet.trim()}\n`;
-    setJsCode(newCode);
-    if (run) {
-      commitCode(newCode);
-    }
+    const newCode = `${codeState.code}${spacerNewline}\n${snippet.trim()}\n`;
+    dispatch({
+      type: run ? "setCode" : "setAndCommit",
+      code: newCode,
+    });
   }
 
   function addButton() {
@@ -165,7 +216,7 @@ Sandcastle.addToolbarButton("New Button", function () {
   }
 
   function addToggle() {
-    const variableName = nextHighestVariableName(jsCode, "toggleValue");
+    const variableName = nextHighestVariableName(codeState.code, "toggleValue");
 
     appendCode(
       `
@@ -178,7 +229,7 @@ Sandcastle.addToggleButton("Toggle", ${variableName}, function (checked) {
   }
 
   function addMenu() {
-    const variableName = nextHighestVariableName(jsCode, "options");
+    const variableName = nextHighestVariableName(codeState.code, "options");
 
     appendCode(
       `
@@ -196,29 +247,23 @@ Sandcastle.addToolbarMenu(${variableName});`,
   }
 
   function setCodeAndRun(code: string, html: string) {
-    setJsCode(code);
-    setHtmlCode(html);
-
-    commitCode(code);
-    commitHtml(html);
-    setRunNumber((runNumber) => runNumber + 1);
+    dispatch({
+      type: "setAndCommit",
+      code: code,
+      html: html,
+    });
   }
 
   function resetSandcastle() {
-    setJsCode(defaultJsCode);
-    setHtmlCode(defaultHtmlCode);
-
-    commitCode(defaultJsCode);
-    commitHtml(defaultHtmlCode);
-    setRunNumber(runNumber + 1);
+    dispatch({ type: "reset" });
 
     window.history.replaceState({}, "", "/");
   }
 
   function share() {
     const base64String = makeCompressedBase64String({
-      code: jsCode,
-      html: htmlCode,
+      code: codeState.code,
+      html: codeState.html,
     });
 
     const shareUrl = `${getBaseUrl()}#c=${base64String}`;
@@ -232,8 +277,8 @@ Sandcastle.addToolbarMenu(${variableName});`,
     baseHref = `${baseHref.substring(0, pos)}/gallery/`;
 
     const base64String = makeCompressedBase64String({
-      code: jsCode,
-      html: htmlCode,
+      code: codeState.code,
+      html: codeState.html,
       baseHref,
     });
 
@@ -367,19 +412,18 @@ Sandcastle.addToolbarMenu(${variableName});`,
           theme={darkTheme ? "vs-dark" : "light"}
           path={jsIsActive ? "script.js" : "index.html"}
           language={jsIsActive ? "javascript" : "html"}
-          value={jsIsActive ? jsCode : htmlCode}
+          value={jsIsActive ? codeState.code : codeState.html}
           defaultValue={defaultJsCode}
           onMount={handleEditorDidMount}
           beforeMount={handleEditorWillMount}
-          onMount={handleEditorDidMount}
           onChange={handleChange}
         />
       </div>
       <div className="viewer-bucket">
         <Bucket
-          code={committedCode}
-          html={committedHtml}
-          runNumber={runNumber}
+          code={codeState.committedCode}
+          html={codeState.committedHtml}
+          runNumber={codeState.runNumber}
         />
       </div>
       <div className="gallery">
