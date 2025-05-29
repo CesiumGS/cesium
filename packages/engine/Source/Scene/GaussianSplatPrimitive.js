@@ -44,6 +44,7 @@ function GaussianSplatPrimitive(options) {
   this._debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
   this._needsGaussianSplatTexture = true;
   this._splatScale = 1.0;
+
   this._tileset = options.tileset;
   this._tileset.tileLoad.addEventListener(this.onTileLoaded, this);
   this._tileset.tileUnload.addEventListener(this.onTileUnloaded, this);
@@ -65,14 +66,15 @@ function GaussianSplatPrimitive(options) {
   this._selectedTileLen = 0;
 
   this._drawCommand = undefined;
-  this._useLogDepth = undefined;
+
   this._rootTransform = undefined;
-  this._modelMatrix = new Matrix4();
   this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
     Axis.Y,
     Axis.X,
     new Matrix4(),
   );
+
+  this._isDestroyed = false;
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -109,7 +111,7 @@ GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
   if (this._rootTransform === undefined) {
     this._rootTransform = tile.content._tile.computedTransform;
   } else {
-    this.transformTile(tile);
+    this._transformTile(tile);
   }
 
   tile._spzVisited = true;
@@ -117,16 +119,6 @@ GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
 
 GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {};
 
-GaussianSplatPrimitive.prototype.prePassesUpdate = function (frameState) {
-  this._tileset.prePassesUpdate(frameState);
-};
-
-GaussianSplatPrimitive.prototype.updateForPass = function (
-  frameState,
-  passState,
-) {
-  this._tileset.updateForPass(frameState, passState);
-};
 GaussianSplatPrimitive.prototype.onLoadProgress = function (
   numberOfPendingRequests,
   numberOfTilesProcessing,
@@ -161,13 +153,15 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   );
   this._tileset.tileFailed.removeEventListener(this.onTileFailed, this);
   this._tileset.tileVisible.removeEventListener(this.onTileVisible, this);
+
+  this._isDestroyed = true;
 };
 
 GaussianSplatPrimitive.prototype.isDestroyed = function () {
-  return false;
+  return this._isDestroyed;
 };
 
-GaussianSplatPrimitive.prototype.transformTile = function (tile) {
+GaussianSplatPrimitive.prototype._transformTile = function (tile) {
   const transform = tile.computedTransform;
   const gsplatData = tile.content._gsplatData;
 
@@ -208,7 +202,7 @@ GaussianSplatPrimitive.prototype.transformTile = function (tile) {
   }
 };
 
-GaussianSplatPrimitive.prototype.pushSplats = function (attributes) {
+GaussianSplatPrimitive.prototype._pushSplats = function (attributes) {
   if (this._positions === undefined) {
     this._positions = attributes.positions;
   } else {
@@ -468,7 +462,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
     tileset._selectedTiles.forEach((tile) => {
       const gsplatData = tile.content._gsplatData;
-      this.pushSplats({
+      this._pushSplats({
         positions: new Float32Array(
           ModelUtility.getAttributeBySemantic(
             gsplatData,
@@ -507,9 +501,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       GaussianSplatPrimitive.generateSplatTexture(this, frameState);
     }
     return;
-  }
-  if (this._useLogDepth !== frameState.useLogDepth) {
-    this._useLogDepth = frameState.useLogDepth;
   }
 
   if (this._drawCommand) {
