@@ -153,14 +153,20 @@ GaussianSplat3DTilesContent.prototype.update = function (
   primitive,
   frameState,
 ) {
+  const loader = this._loader;
+
   if (this._ready) {
     return;
   }
 
-  const loader = this._loader;
   frameState.afterRender.push(() => true);
 
-  if (!defined(loader) || this._resourcesLoaded) {
+  if (!defined(loader)) {
+    this._ready = true;
+    return;
+  }
+
+  if (this._resourcesLoaded) {
     this._gsplatData = loader.components.scene.nodes[0].primitives[0];
     this._worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
