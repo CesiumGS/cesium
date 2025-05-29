@@ -76,38 +76,35 @@ function GltfVertexBufferLoader(options) {
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
   const hasSpz = defined(spz);
+  if (hasBufferViewId === hasDraco && hasBufferViewId === hasSpz) {
+    throw new DeveloperError(
+      "One of options.bufferViewId, options.draco, or options.spz must be defined.",
+    );
+  }
 
-  if (!hasSpz) {
-    if (hasBufferViewId === hasDraco) {
-      throw new DeveloperError(
-        "One of options.bufferViewId and options.draco must be defined.",
-      );
-    }
+  if (hasDraco && !hasAttributeSemantic) {
+    throw new DeveloperError(
+      "When options.draco is defined options.attributeSemantic must also be defined.",
+    );
+  }
 
-    if (hasDraco && !hasAttributeSemantic) {
-      throw new DeveloperError(
-        "When options.draco is defined options.attributeSemantic must also be defined.",
-      );
-    }
+  if (hasDraco && !hasAccessorId) {
+    throw new DeveloperError(
+      "When options.draco is defined options.accessorId must also be defined.",
+    );
+  }
 
-    if (hasDraco && !hasAccessorId) {
-      throw new DeveloperError(
-        "When options.draco is defined options.accessorId must also be defined.",
-      );
-    }
+  if (hasDraco && !hasPrimitive) {
+    throw new DeveloperError(
+      "When options.draco is defined options.primitive must also be defined.",
+    );
+  }
 
-    if (hasDraco && !hasPrimitive) {
-      throw new DeveloperError(
-        "When options.draco is defined options.primitive must also be defined.",
-      );
-    }
-
-    if (hasDraco) {
-      Check.typeOf.object("options.primitive", primitive);
-      Check.typeOf.object("options.draco", draco);
-      Check.typeOf.string("options.attributeSemantic", attributeSemantic);
-      Check.typeOf.number("options.accessorId", accessorId);
-    }
+  if (hasDraco) {
+    Check.typeOf.object("options.primitive", primitive);
+    Check.typeOf.object("options.draco", draco);
+    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
+    Check.typeOf.number("options.accessorId", accessorId);
   }
 
   //>>includeEnd('debug');
