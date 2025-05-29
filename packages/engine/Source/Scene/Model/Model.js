@@ -872,14 +872,27 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Gets the runtime instances for the model
-   *
+   * Gets the collection of {@link ModelInstance} used for rendering multiple copies of a {@link Model} mesh with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
    * @memberof Model.prototype
-   *
    * @type {ModelInstanceCollection}
+   * @readonly
+   * @demo {@link https://sandcastle.cesium.com/index.html?src=3DModelInstancing.html|Cesium Sandcastle 3D Model Instancing Demo}
+   * @example
+   * // Add an instance to a model
+   * const position = Cesium.Cartesian3.fromDegrees(-75.1652, 39.9526);
+   * const headingPositionRoll = new Cesium.HeadingPitchRoll();
+   * const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+   *   "north",
+   *   "west",
+   * );
+   * const instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
+   *   position,
+   *   headingPositionRoll,
+   *   Cesium.Ellipsoid.WGS84,
+   *   fixedFrameTransform,
+   * );
    *
-   * @default undefined
-   *
+   * model.instances.add(instanceModelMatrix);
    */
   instances: {
     get: function () {
