@@ -21,6 +21,13 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
       tileset: this._tileset,
     });
   }
+
+  /**
+   * glTF primitive data that contains the Gaussian splat data needed for rendering.
+   * @type{ModelComponents.Primitive}
+   * @private
+   *
+   */
   this.splatPrimitive = undefined;
   this._attributeTextureData = undefined;
   this._gaussianSplatTextureDataPending = false;
