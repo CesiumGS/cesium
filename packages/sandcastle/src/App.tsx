@@ -200,7 +200,7 @@ function App() {
     }
     const newCode = `${codeState.code}${spacerNewline}\n${snippet.trim()}\n`;
     dispatch({
-      type: run ? "setCode" : "setAndCommit",
+      type: run ? "setAndCommit" : "setCode",
       code: newCode,
     });
   }
@@ -249,7 +249,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
   function resetSandcastle() {
     dispatch({ type: "reset" });
 
-    window.history.pushState({}, "", "/");
+    window.history.pushState({}, "", getBaseUrl());
   }
 
   function share() {
