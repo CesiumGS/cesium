@@ -163,10 +163,10 @@ GaussianSplat3DTilesContent.prototype.update = function (
   const loader = this._loader;
 
   if (this._ready) {
-    // if (!this._transformed) {
-    //   GaussianSplatPrimitive.transformTile(this._tile);
-    //   this._transformed = true;
-    // }
+    if (!this._transformed) {
+      GaussianSplatPrimitive.transformTile(this._tile);
+      this._transformed = true;
+    }
 
     return;
   }

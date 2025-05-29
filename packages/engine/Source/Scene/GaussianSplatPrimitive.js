@@ -46,17 +46,6 @@ function GaussianSplatPrimitive(options) {
   this._splatScale = 1.0;
 
   this._tileset = options.tileset;
-  this._tileset.tileLoad.addEventListener(this.onTileLoaded, this);
-  this._tileset.tileUnload.addEventListener(this.onTileUnloaded, this);
-  this._tileset.loadProgress.addEventListener(this.onLoadProgress, this);
-  this._tileset.allTilesLoaded.addEventListener(this.onAllTilesLoaded, this);
-  this._tileset.initialTilesLoaded.addEventListener(
-    this.onInitialTilesLoaded,
-    this,
-  );
-  this._tileset.tileFailed.addEventListener(this.onTileFailed, this);
-  this._tileset.tileVisible.addEventListener(this.onTileVisible, this);
-
   this._baseTilesetUpdate = this._tileset.update.bind(this._tileset);
   this._tileset.update = (frameState) => {
     this._baseTilesetUpdate(frameState);
@@ -103,19 +92,7 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   },
 });
 
-GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {
-  if (tile._spzVisited) {
-    return;
-  }
-
-  if (this._rootTransform === undefined) {
-    this._rootTransform = tile.computedTransform;
-  } //else {
-  this._transformTile(tile);
-  // }
-
-  tile._spzVisited = true;
-};
+GaussianSplatPrimitive.prototype.onTileLoaded = function (tile) {};
 
 GaussianSplatPrimitive.prototype.onTileUnloaded = function (tile) {};
 
@@ -142,18 +119,6 @@ GaussianSplatPrimitive.prototype.destroy = function () {
     this.gaussianSplatTexture = undefined;
   }
 
-  this._tileset.update = this._baseTilesetUpdate;
-  this._tileset.tileLoad.removeEventListener(this.onTileLoaded, this);
-  this._tileset.tileUnload.removeEventListener(this.onTileUnloaded, this);
-  this._tileset.loadProgress.removeEventListener(this.onLoadProgress, this);
-  this._tileset.allTilesLoaded.removeEventListener(this.onAllTilesLoaded, this);
-  this._tileset.initialTilesLoaded.removeEventListener(
-    this.onInitialTilesLoaded,
-    this,
-  );
-  this._tileset.tileFailed.removeEventListener(this.onTileFailed, this);
-  this._tileset.tileVisible.removeEventListener(this.onTileVisible, this);
-
   this._isDestroyed = true;
 };
 
@@ -161,13 +126,14 @@ GaussianSplatPrimitive.prototype.isDestroyed = function () {
   return this._isDestroyed;
 };
 
-GaussianSplatPrimitive.prototype._transformTile = function (tile) {
+GaussianSplatPrimitive.transformTile = function (tile) {
   const transform = tile.computedTransform;
   const splatPrimitive = tile.content.splatPrimitive;
+  const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
   let modelMatrix = Matrix4.multiply(
     transform,
-    this._axisCorrectionMatrix,
+    gaussianSplatPrimitive._axisCorrectionMatrix,
     new Matrix4(),
   );
 
@@ -444,7 +410,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
   if (this._rootTransform === undefined) {
-    return;
+    this._rootTransform = tileset.root.computedTransform;
   }
 
   if (
