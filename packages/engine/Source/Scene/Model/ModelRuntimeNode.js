@@ -57,8 +57,6 @@ function ModelRuntimeNode(options) {
   this._computedTransform = new Matrix4();
   this._isComputedTransformDirty = false;
 
-  this._apiInstancesDirty = false;
-
   this.updateComputedTransform(transformToRoot);
 
   // Used for animation

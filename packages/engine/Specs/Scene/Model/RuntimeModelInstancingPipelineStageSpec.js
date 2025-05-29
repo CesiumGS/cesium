@@ -263,8 +263,6 @@ describe(
           sampleInstance3,
           sampleInstance4,
         ];
-        runtimeNode._apiInstancesDirty = true;
-
         const frameState = {
           mode: SceneMode.SCENE3D,
         };
@@ -286,7 +284,6 @@ describe(
           typedArray: newExpectedTransformsTypedArray,
         });
 
-        expect(runtimeNode._apiInstancesDirty).toBeFalse();
         expect(runtimeNode.instancingTransformsBuffer._buffer).toEqual(
           newExpectedTransformsBuffer._buffer,
         );

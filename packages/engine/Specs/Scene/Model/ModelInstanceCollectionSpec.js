@@ -1,4 +1,4 @@
-import { Matrix4, ModelInstanceCollection } from "../../index.js";
+import { Matrix4, ModelInstanceCollection } from "../../../index.js";
 
 describe("Scene/Model/ModelInstanceCollection", function () {
   let collection;

@@ -1,27 +1,46 @@
+import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import ModelInstance from "./ModelInstance.js";
 
 /**
- * A collection of {@link ModelInstance} class objects to support gpu mesh instancing
- * for a {@link Model}.
+ * A collection of {@link ModelInstance} used for rendering multiple copies of a {@link Model} mesh with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
  * Instances are added and removed from the collection using {@link ModelInstanceCollection#add}
  * and {@link ModelInstanceCollection#remove}.
- *
  * @alias ModelInstanceCollection
  * @constructor
  *
  * @see ModelInstanceCollection#add
  * @see ModelInstanceCollection#remove
- * @see ModelInstance
- *
+ * @see {@link Model#instances} for a collection of instances on a model.
+ * @see {@link ModelInstance} for individual instances.
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=3DModelInstancing.html|Cesium Sandcastle 3D Model Instancing Demo}
  * @example
- * // Add instance transforms to a model
- * const collection = new ModelInstanceCollection();
- * const modelInstance = new ModelInstance(transform);
- * collection.add(modelInstance);
+ * const position = Cesium.Cartesian3.fromDegrees(-75.1652, 39.9526);
+ * const headingPositionRoll = new Cesium.HeadingPitchRoll();
+ * const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+ *   "north",
+ *   "west",
+ * );
+ * const instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
+ *   position,
+ *   headingPositionRoll,
+ *   Cesium.Ellipsoid.WGS84,
+ *   fixedFrameTransform,
+ * );
+ *
+ * // Add an instance at the specified transform to a collection
+ * const collection = new Cesium.ModelInstanceCollection();
+ * collection.add(instanceModelMatrix);
+ *
+ * // Add an instance to a model
+ * const model = await Cesium.Model.fromGltfAsync({
+ *   url: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+ *   minimumPixelSize: 64,
+ * });
+ * viewer.scene.primitives.add(model);
+ * model.instances.add(instanceModelMatrix);
  */
-
 function ModelInstanceCollection() {
   this._instances = [];
   this._dirty = false;
@@ -29,7 +48,7 @@ function ModelInstanceCollection() {
 
 Object.defineProperties(ModelInstanceCollection.prototype, {
   /**
-   * Returns the number of model instances in this collection.  This is commonly used with
+   * Returns the number of model instances in this collection. This is commonly used with
    * {@link ModelInstanceCollection#get} to iterate over all the instances in the collection.
    * @memberof ModelInstanceCollection.prototype
    * @type {number}
@@ -53,22 +72,17 @@ Object.defineProperties(ModelInstanceCollection.prototype, {
  * is rewritten at the next render cycle; this operations is <code>O(n)</code> and also incurs
  * CPU to GPU overhead.
  *
- * @exception {DeveloperError} No transform was provided.
- *
  * @example
  * // Example:  Provide a transform to add a model instance to the collection
  * const collection = new ModelInstanceCollection()
  * const instance = collection.add(transform)
- *
  *
  * @see ModelInstanceCollection#remove
  * @see ModelInstanceCollection#removeAll
  */
 ModelInstanceCollection.prototype.add = function (transform) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(transform)) {
-    throw new DeveloperError("transform is required.");
-  }
+  Check.typeOf.object("transform", transform);
   //>>includeEnd('debug');
   const instance = new ModelInstance(transform, this);
   this._instances.push(instance);
