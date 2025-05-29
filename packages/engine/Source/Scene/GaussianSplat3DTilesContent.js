@@ -24,7 +24,6 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
 
   /**
    * glTF primitive data that contains the Gaussian splat data needed for rendering.
-   * @type{ModelComponents.Primitive}
    * @private
    *
    */
@@ -35,6 +34,7 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
   this._metadata = undefined;
   this._group = undefined;
   this._ready = false;
+  this._transformed = false;
 }
 
 Object.defineProperties(GaussianSplat3DTilesContent.prototype, {
@@ -163,6 +163,11 @@ GaussianSplat3DTilesContent.prototype.update = function (
   const loader = this._loader;
 
   if (this._ready) {
+    // if (!this._transformed) {
+    //   GaussianSplatPrimitive.transformTile(this._tile);
+    //   this._transformed = true;
+    // }
+
     return;
   }
 
