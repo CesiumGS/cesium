@@ -168,52 +168,6 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   }
 };
 
-GaussianSplatPrimitive.prototype._pushSplats = function (attributes) {
-  if (this._positions === undefined) {
-    this._positions = attributes.positions;
-  } else {
-    const newPositions = new Float32Array(
-      this._positions.length + attributes.positions.length,
-    );
-    newPositions.set(this._positions);
-    newPositions.set(attributes.positions, this._positions.length);
-    this._positions = newPositions;
-  }
-
-  if (this._scales === undefined) {
-    this._scales = attributes.scales;
-  } else {
-    const newScales = new Float32Array(
-      this._scales.length + attributes.scales.length,
-    );
-    newScales.set(this._scales);
-    newScales.set(attributes.scales, this._scales.length);
-    this._scales = newScales;
-  }
-
-  if (this._rotations === undefined) {
-    this._rotations = attributes.rotations;
-  } else {
-    const newRotations = new Float32Array(
-      this._rotations.length + attributes.rotations.length,
-    );
-    newRotations.set(this._rotations);
-    newRotations.set(attributes.rotations, this._rotations.length);
-    this._rotations = newRotations;
-  }
-
-  if (this._colors === undefined) {
-    this._colors = attributes.colors;
-  } else {
-    const newColors = new Uint8Array(
-      this._colors.length + attributes.colors.length,
-    );
-    newColors.set(this._colors);
-    newColors.set(attributes.colors, this._colors.length);
-    this._colors = newColors;
-  }
-};
-
 GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
   primitive._gaussianSplatTexturePending = true;
   const promise = GaussianSplatTextureGenerator.generateFromAttributes({
@@ -426,35 +380,69 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._needsGaussianSplatTexture = true;
     this._gaussianSplatTexturePending = false;
 
-    tileset._selectedTiles.forEach((tile) => {
-      const splatPrimitive = tile.content.splatPrimitive;
-      this._pushSplats({
-        positions: new Float32Array(
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.POSITION,
-          ).typedArray,
-        ),
-        scales: new Float32Array(
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.SCALE,
-          ).typedArray,
-        ),
-        rotations: new Float32Array(
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.ROTATION,
-          ).typedArray,
-        ),
-        colors: new Uint8Array(
-          ModelUtility.getAttributeByName(splatPrimitive, "COLOR_0").typedArray,
-        ),
-      });
+    const tiles = tileset._selectedTiles;
+    const totalElements = tiles.reduce(
+      (total, tile) => tile.content.pointsLength,
+      0,
+    );
+    const aggregateAttributeValues = (
+      componentDatatype,
+      getAttributeCallback,
+    ) => {
+      let aggregate;
+      let offset = 0;
+      for (const tile of tiles) {
+        const primitive = tile.content.splatPrimitive;
+        const attribute = getAttributeCallback(primitive);
+        if (aggregate === undefined) {
+          aggregate = ComponentDatatype.createTypedArray(
+            componentDatatype,
+            totalElements * AttributeType.getNumberOfComponents(attribute.type),
+          );
+        }
+        aggregate.set(attribute.typedArray, offset);
+        offset = aggregate.length;
+      }
+      return aggregate;
+    };
 
-      this._numSplats += splatPrimitive.attributes[0].count;
-    });
+    this._positions = aggregateAttributeValues(
+      ComponentDatatype.FLOAT,
+      (splatPrimitive) =>
+        ModelUtility.getAttributeBySemantic(
+          splatPrimitive,
+          VertexAttributeSemantic.POSITION,
+        ),
+    );
 
+    this._scales = aggregateAttributeValues(
+      ComponentDatatype.FLOAT,
+      (splatPrimitive) =>
+        ModelUtility.getAttributeBySemantic(
+          splatPrimitive,
+          VertexAttributeSemantic.SCALE,
+        ),
+    );
+
+    this._rotations = aggregateAttributeValues(
+      ComponentDatatype.FLOAT,
+      (splatPrimitive) =>
+        ModelUtility.getAttributeBySemantic(
+          splatPrimitive,
+          VertexAttributeSemantic.ROTATION,
+        ),
+    );
+
+    this._colors = aggregateAttributeValues(
+      ComponentDatatype.UNSIGNED_BYTE,
+      (splatPrimitive) =>
+        ModelUtility.getAttributeBySemantic(
+          splatPrimitive,
+          VertexAttributeSemantic.COLOR,
+        ),
+    );
+
+    this._numSplats = totalElements;
     this._selectedTileLen = tileset._selectedTiles.length;
   }
 
