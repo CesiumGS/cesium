@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import * as prettier from "prettier";
+import * as babelPlugin from "prettier/plugins/babel";
+import * as estreePlugin from "prettier/plugins/estree";
+import * as htmlPlugin from "prettier/plugins/html";
 import "./App.css";
 
 import Editor, { Monaco } from "@monaco-editor/react";
@@ -143,9 +147,37 @@ function App() {
     // do something before editor is mounted
 
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      // TODO: pick what target we want, probably newer than ES2020 but TS was upset with that
-      target: monaco.languages.typescript.ScriptTarget.ES2020,
+      target: monaco.languages.typescript.ScriptTarget.ESNext,
       allowNonTsExtensions: true,
+    });
+
+    monaco.languages.registerDocumentFormattingEditProvider("javascript", {
+      async provideDocumentFormattingEdits(model) {
+        const formatted = await prettier.format(model.getValue(), {
+          parser: "babel",
+          // need to force type because the estree plugin has no type https://github.com/prettier/prettier/issues/16501
+          plugins: [babelPlugin, estreePlugin as prettier.Plugin],
+        });
+
+        return [{ range: model.getFullModelRange(), text: formatted }];
+      },
+    });
+
+    monaco.languages.html.htmlDefaults.setModeConfiguration({
+      ...monaco.languages.html.htmlDefaults,
+      // we have to disable the defaults for html for our custom prettier formatter to be run
+      documentFormattingEdits: false,
+      documentRangeFormattingEdits: false,
+    });
+    monaco.languages.registerDocumentFormattingEditProvider("html", {
+      async provideDocumentFormattingEdits(model) {
+        const formatted = await prettier.format(model.getValue(), {
+          parser: "html",
+          plugins: [htmlPlugin],
+        });
+
+        return [{ range: model.getFullModelRange(), text: formatted }];
+      },
     });
 
     setTypes(monaco);
@@ -396,7 +428,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
           path={jsIsActive ? "script.js" : "index.html"}
           language={jsIsActive ? "javascript" : "html"}
           value={jsIsActive ? codeState.code : codeState.html}
-          defaultValue={defaultJsCode}
+          options={{ minimap: { size: "fill" }, tabSize: 2 }}
           onMount={handleEditorDidMount}
           beforeMount={handleEditorWillMount}
           onChange={handleChange}
