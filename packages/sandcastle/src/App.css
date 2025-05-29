@@ -26,9 +26,12 @@
 
 .editor-container {
   grid-area: code;
+  display: flex;
+  flex-direction: column;
 
   section {
     border-top: 1px solid grey;
+    flex-shrink: 1;
   }
 }
 

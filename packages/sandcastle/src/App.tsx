@@ -1,22 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 
 import Editor, { Monaco } from "@monaco-editor/react";
 import { editor, KeyCode } from "monaco-editor";
 import Gallery, { GalleryItem } from "./Gallery.js";
 import { Button, Root } from "@itwin/itwinui-react/bricks";
-import {
-  decodeBase64Data,
-  embedInSandcastleTemplate,
-  makeCompressedBase64String,
-} from "./Helpers.ts";
-
-const local = {
-  docTypes: [],
-  headers: "<html><head></head><body>",
-  bucketName: "starter bucket",
-  emptyBucket: "",
-};
+import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
+import Bucket from "./Bucket.tsx";
 
 const defaultJsCode = 'const viewer = new Cesium.Viewer("cesiumContainer");\n';
 const defaultHtmlCode = `<style>
@@ -32,402 +22,65 @@ function getBaseUrl() {
   return `${location.protocol}//${location.host}${location.pathname}`;
 }
 
-function activateBucketScripts(
-  bucketDoc: Document,
-  bucketFrame: HTMLIFrameElement,
-  jsEditor: editor.IStandaloneCodeEditor,
-  htmlEditor: editor.IStandaloneCodeEditor,
-) {
-  console.log("activateBucketScripts");
-  const headNodes = bucketDoc.head.childNodes;
-  let node;
-  const nodes: HTMLScriptElement[] = [];
-  let i, len;
-  for (i = 0, len = headNodes.length; i < len; ++i) {
-    node = headNodes[i];
-    // header is included in blank frame.
-    if (
-      node instanceof HTMLScriptElement &&
-      node.src.indexOf("Sandcastle-header.js") < 0 &&
-      node.src.indexOf("Cesium.js") < 0
-    ) {
-      nodes.push(node);
-    }
-  }
-
-  for (i = 0, len = nodes.length; i < len; ++i) {
-    bucketDoc.head.removeChild(nodes[i]);
-  }
-
-  // Apply user HTML to bucket.
-  const htmlElement = bucketDoc.createElement("div");
-  htmlElement.innerHTML = htmlEditor.getValue();
-  bucketDoc.body.appendChild(htmlElement);
-
-  const onScriptTagError = function () {
-    if (bucketFrame.contentDocument === bucketDoc) {
-      // @ts-expect-error this has type any because it's from anywhere inside the bucket
-      appendConsole("consoleError", `Error loading ${this.src}`, true);
-      appendConsole(
-        "consoleError",
-        "Make sure Cesium is built, see the Contributor's Guide for details.",
-        true,
-      );
-    }
-  };
-
-  console.log("nodes", nodes);
-
-  // Load each script after the previous one has loaded.
-  const loadScript = function () {
-    if (bucketFrame.contentDocument !== bucketDoc) {
-      // A newer reload has happened, abort this.
-      return;
-    }
-    if (nodes.length > 0) {
-      while (nodes.length > 0) {
-        node = nodes.shift();
-        if (!node) {
-          continue;
-        }
-        const scriptElement = bucketDoc.createElement("script");
-        let hasSrc = false;
-        for (let j = 0, numAttrs = node.attributes.length; j < numAttrs; ++j) {
-          const name = node.attributes[j].name;
-          const val = node.attributes[j].value;
-          scriptElement.setAttribute(name, val);
-          if (name === "src" && val) {
-            hasSrc = true;
-          }
-        }
-        scriptElement.innerHTML = node.innerHTML;
-        if (hasSrc) {
-          scriptElement.onload = loadScript;
-          scriptElement.onerror = onScriptTagError;
-          bucketDoc.head.appendChild(scriptElement);
-        } else {
-          bucketDoc.head.appendChild(scriptElement);
-          loadScript();
-        }
-      }
-    } else {
-      // Apply user JS to bucket
-      const element = bucketDoc.createElement("script");
-      element.type = "module";
-
-      // Firefox line numbers are zero-based, not one-based.
-      const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
-
-      element.textContent = embedInSandcastleTemplate(
-        jsEditor.getValue(),
-        isFirefox,
-      );
-      bucketDoc.body.appendChild(element);
-    }
-  };
-
-  loadScript();
-}
-
-function appendConsole(
-  type: "consoleError" | "",
-  message: string,
-  focusPanel: boolean,
-) {
-  // TODO:
-  if (type === "consoleError") {
-    console.error(message);
-    return;
-  }
-  console.log(message);
-  if (focusPanel) {
-    // TODO:
-  }
-}
-
-// let bucketWaiting = false;
-
-function applyBucket(
-  bucketFrame: HTMLIFrameElement,
-  jsEditor: editor.IStandaloneCodeEditor,
-  htmlEditor: editor.IStandaloneCodeEditor,
-) {
-  console.log("applyBucket");
-  if (
-    // local.emptyBucket &&
-    // local.bucketName &&
-    // typeof bucketTypes[local.bucketName] === "string"
-    // eslint-disable-next-line no-constant-condition
-    true
-  ) {
-    // bucketWaiting = false;
-    const bucketDoc = bucketFrame.contentDocument;
-    if (!bucketDoc) {
-      console.warn(
-        "tried to applyBucket before the bucket content document existed",
-      );
-      return;
-    }
-    if (
-      local.headers.substring(0, local.emptyBucket.length) !== local.emptyBucket
-    ) {
-      appendConsole(
-        "consoleError",
-        `Error, first part of ${local.bucketName} must match first part of bucket.html exactly.`,
-        true,
-      );
-    } else {
-      const bodyAttributes = local.headers.match(/<body([^>]*?)>/)?.[1] ?? "";
-      const attributeRegex = /([-a-z_]+)\s*="([^"]*?)"/gi;
-      //group 1 attribute name, group 2 attribute value.  Assumes double-quoted attributes.
-      let attributeMatch;
-      while ((attributeMatch = attributeRegex.exec(bodyAttributes)) !== null) {
-        const attributeName = attributeMatch[1];
-        const attributeValue = attributeMatch[2];
-        if (attributeName === "class") {
-          bucketDoc.body.className = attributeValue;
-        } else {
-          bucketDoc.body.setAttribute(attributeName, attributeValue);
-        }
-      }
-
-      const pos = local.headers.indexOf("</head>");
-      const extraHeaders = local.headers.substring(
-        local.emptyBucket.length,
-        pos,
-      );
-      bucketDoc.head.innerHTML += extraHeaders;
-      activateBucketScripts(bucketDoc, bucketFrame, jsEditor, htmlEditor);
-    }
-  } else {
-    // bucketWaiting = true;
-  }
-}
-
-// window.addEventListener(
-//   "message",
-//   function (e) {
-//     let line;
-//     // The iframe (bucket.html) sends this message on load.
-//     // This triggers the code to be injected into the iframe.
-//     if (e.data === "reload") {
-//       console.log("message reload");
-//       const bucketDoc = bucketFrame.contentDocument;
-//       if (!local.bucketName) {
-//         // Reload fired, bucket not specified yet.
-//         return;
-//       }
-//       if (bucketDoc.body.getAttribute("data-sandcastle-loaded") !== "yes") {
-//         bucketDoc.body.setAttribute("data-sandcastle-loaded", "yes");
-//         logOutput.innerHTML = "";
-//         numberOfNewConsoleMessages = 0;
-//         registry.byId("logContainer").set("title", "Console");
-//         // This happens after a Run (F8) reloads bucket.html, to inject the editor code
-//         // into the iframe, causing the demo to run there.
-//         applyBucket();
-//         // if (docError) {
-//         //   appendConsole(
-//         //     "consoleError",
-//         //     'Documentation not available.  Please run the "build-docs" build script to generate Cesium documentation.',
-//         //     true,
-//         //   );
-//         //   // showGallery();
-//         // }
-//         // if (galleryError) {
-//         //   appendConsole(
-//         //     "consoleError",
-//         //     "Error loading gallery, please run the build script.",
-//         //     true,
-//         //   );
-//         // }
-//         // if (deferredLoadError) {
-//         //   appendConsole(
-//         //     "consoleLog",
-//         //     `Unable to load demo named ${queryObject.src.replace(
-//         //       ".html",
-//         //       "",
-//         //     )}. Redirecting to HelloWorld.\n`,
-//         //     true,
-//         //   );
-//         // }
-//       }
-//       // } else if (defined(e.data.log)) {
-//       //   // Console log messages from the iframe display in Sandcastle.
-//       //   appendConsole("consoleLog", e.data.log, false);
-//       // } else if (defined(e.data.error)) {
-//       //   // Console error messages from the iframe display in Sandcastle
-//       //   let errorMsg = e.data.error;
-//       //   let lineNumber = e.data.lineNumber;
-//       //   if (defined(lineNumber)) {
-//       //     errorMsg += " (on line ";
-
-//       //     if (e.data.url) {
-//       //       errorMsg += `${lineNumber} of ${e.data.url})`;
-//       //     } else {
-//       //       lineNumber = scriptLineToEditorLine(lineNumber);
-//       //       errorMsg += `${lineNumber + 1})`;
-//       //       line = jsEditor.setGutterMarker(
-//       //         lineNumber,
-//       //         "errorGutter",
-//       //         makeLineLabel(e.data.error, "errorMarker"),
-//       //       );
-//       //       jsEditor.addLineClass(line, "text", "errorLine");
-//       //       errorLines.push(line);
-//       //       scrollToLine(lineNumber);
-//       //     }
-//       //   }
-//       //   appendConsole("consoleError", errorMsg, true);
-//       // } else if (defined(e.data.warn)) {
-//       //   // Console warning messages from the iframe display in Sandcastle.
-//       //   appendConsole("consoleWarn", e.data.warn, true);
-//       // } else if (defined(e.data.highlight)) {
-//       //   // Hovering objects in the embedded Cesium window.
-//       //   highlightLine(e.data.highlight);
-//     }
-//   },
-//   true,
-// );
-
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
 
-// function appendCode(code, run = true) {
-//   const codeMirror = getJsCodeMirror();
-//   codeMirror.setValue(`${codeMirror.getValue()}\n${code}`);
-//   if (run) {
-//     runCesium();
-//   }
-// }
-
-// function appendCodeOnce(code, run = true) {
-//   const codeMirror = getJsCodeMirror();
-//   if (!codeMirror.getValue().includes(code)) {
-//     appendCode(code, run);
-//   }
-// }
-
-// function prependCode(code, run = true) {
-//   const codeMirror = getJsCodeMirror();
-//   codeMirror.setValue(`${code}\n${codeMirror.getValue()}`);
-//   if (run) {
-//     runCesium();
-//   }
-// }
-
-// function prependCodeOnce(code, run = true) {
-//   const codeMirror = getJsCodeMirror();
-//   if (!codeMirror.getValue().includes(code)) {
-//     prependCode(code, run);
-//   }
-// }
-
 function App() {
-  const jsEditorRef = useRef<editor.IStandaloneCodeEditor>(null);
-  const htmlEditorRef = useRef<editor.IStandaloneCodeEditor>(null);
-  const bucket = useRef<HTMLIFrameElement>(null);
+  const [jsIsActive, setJsIsActive] = useState(true);
+  const [darkTheme, setDarkTheme] = useState(false);
+
+  const editorRef = useRef<editor.IStandaloneCodeEditor>(null);
+
+  const [jsCode, setJsCode] = useState(defaultJsCode);
+  const [htmlCode, setHtmlCode] = useState(defaultHtmlCode);
+  const [committedCode, commitCode] = useState(defaultJsCode);
+  const [committedHtml, commitHtml] = useState(defaultHtmlCode);
+  const [runNumber, setRunNumber] = useState(0);
 
   const [legacyIdMap, setLegacyIdMap] = useState<Record<string, string>>({});
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [galleryLoaded, setGalleryLoaded] = useState(false);
 
-  function loadFromUrl() {
-    if (!jsEditorRef.current || !htmlEditorRef.current) {
-      console.log("loadFromUrl too early", {
-        js: !!jsEditorRef.current,
-        html: !!htmlEditorRef.current,
-        galleryLoaded,
-      });
-      return;
-    }
+  const runSandcastle = useCallback(() => {
+    commitCode(jsCode);
+    commitHtml(htmlCode);
+    setRunNumber((runNumber) => runNumber + 1);
+  }, [jsCode, htmlCode]);
 
-    const searchParams = new URLSearchParams(window.location.search);
+  // The monaco command handler needs a reference to a function that's updated/replaced when state
+  // changes so that triggering the Run Command (F8) will use the latest version of the code
+  const monacoRunner = useRef(() => {});
+  useEffect(() => {
+    monacoRunner.current = runSandcastle;
+  }, [runSandcastle]);
 
-    // TODO: I don't think this is the "correct" way to do on mount/load logic but it's working
-    if (window.location.hash.indexOf("#c=") === 0) {
-      const base64String = window.location.hash.substr(3);
-      const data = decodeBase64Data(base64String);
-
-      jsEditorRef.current.setValue(data.code);
-      htmlEditorRef.current.setValue(data.html);
-      // applyLoadedDemo(code, html);
-      console.log("loadFromUrl", data);
-    } else if (searchParams.has("src")) {
-      const legacyId = searchParams.get("src");
-      console.log("load legacy", legacyId);
-      if (!legacyId) {
-        return;
-      }
-      const galleryId = legacyIdMap[legacyId];
-      if (!galleryId) {
-        console.log("no mapping");
-        return;
-      }
-      const galleryItem = galleryItems.find((item) => item.id === galleryId);
-      if (!galleryItem) {
-        console.error("Unable to find gallery item with id:", galleryId);
-        return;
-      }
-      loadGalleryItem(galleryItem);
-    } else if (searchParams.has("id")) {
-      const galleryId = searchParams.get("id");
-      console.log("load id", galleryId);
-      // TODO: there's probably a race condition here where the list might not be loaded yet
-      // I need to switch this to the more React declarative style
-      const galleryItem = galleryItems.find((item) => item.id === galleryId);
-      if (!galleryItem) {
-        console.error("Unable to find gallery item with id:", galleryId);
-        return;
-      }
-      loadGalleryItem(galleryItem);
-    }
-  }
-
-  /**
-   * @param {IStandaloneCodeEditor} editor
-   */
   function handleEditorDidMount(
     editor: editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) {
-    jsEditorRef.current = editor;
+    editorRef.current = editor;
 
     monaco.editor.addCommand({
       id: "run-cesium",
       run: () => {
-        runCode();
+        monacoRunner.current();
       },
     });
 
-    // Remove some default keybindings that get in the way
-    // https://github.com/microsoft/monaco-editor/issues/102
     monaco.editor.addKeybindingRules([
-      {
-        // disable show command center
-        keybinding: KeyCode.F1,
-        command: null,
-      },
-      {
-        // disable show error command
-        keybinding: KeyCode.F8,
-        command: null,
-      },
-      {
-        // disable toggle debugger breakpoint
-        keybinding: KeyCode.F9,
-        command: null,
-      },
-      {
-        // disable go to definition to allow opening dev console
-        keybinding: KeyCode.F12,
-        command: null,
-      },
-      {
-        keybinding: KeyCode.F8,
-        command: "run-cesium",
-      },
+      // Remove some default keybindings that get in the way
+      // https://github.com/microsoft/monaco-editor/issues/102
+      // disable show command center
+      { keybinding: KeyCode.F1, command: null },
+      // disable show error command
+      { keybinding: KeyCode.F8, command: null },
+      // disable toggle debugger breakpoint
+      { keybinding: KeyCode.F9, command: null },
+      // disable go to definition to allow opening dev console
+      { keybinding: KeyCode.F12, command: null },
+      // Set up our custom run command
+      { keybinding: KeyCode.F8, command: "run-cesium" },
     ]);
-
-    loadFromUrl();
   }
 
   function handleEditorWillMount(monaco: Monaco) {
@@ -443,16 +96,12 @@ function App() {
     setTypes(monaco);
   }
 
-  function runCode() {
-    if (!bucket.current || !bucket.current.contentWindow) {
-      return;
+  function handleChange(value: string = "") {
+    if (jsIsActive) {
+      setJsCode(value);
+    } else {
+      setHtmlCode(value);
     }
-
-    // Check for a race condition in some browsers where the iframe hasn't loaded yet.
-    if (bucket.current.contentWindow.location.href.indexOf("bucket.html") > 0) {
-      bucket.current.contentWindow.location.reload();
-    }
-    // applyBucket(bucket.current, jsEditorRef.current, htmlEditorRef.current);
   }
 
   async function setTypes(monaco: Monaco) {
@@ -481,81 +130,11 @@ function App() {
     );
   }
 
-  useEffect(() => {
-    const messageHandler = function (e: MessageEvent) {
-      // The iframe (bucket.html) sends this message on load.
-      // This triggers the code to be injected into the iframe.
-      if (e.data === "reload") {
-        console.log("message reload");
-        if (!local.bucketName || !bucket.current) {
-          // Reload fired, bucket not specified yet.
-          return;
-        }
-        const bucketDoc = bucket.current.contentDocument;
-        if (!bucketDoc) {
-          // TODO: this whole handler probably needs to be set up better for things like this
-          console.warn("bucket not set up yet");
-          return;
-        }
-        if (!jsEditorRef.current || !htmlEditorRef.current) {
-          console.warn("editors not set up yet");
-          return;
-        }
-        if (bucketDoc.body.getAttribute("data-sandcastle-loaded") !== "yes") {
-          bucketDoc.body.setAttribute("data-sandcastle-loaded", "yes");
-          // logOutput.innerHTML = "";
-          // numberOfNewConsoleMessages = 0;
-          // registry.byId("logContainer").set("title", "Console");
-          // This happens after a Run (F8) reloads bucket.html, to inject the editor code
-          // into the iframe, causing the demo to run there.
-          applyBucket(
-            bucket.current,
-            jsEditorRef.current,
-            htmlEditorRef.current,
-          );
-          // if (docError) {
-          //   appendConsole(
-          //     "consoleError",
-          //     'Documentation not available.  Please run the "build-docs" build script to generate Cesium documentation.',
-          //     true,
-          //   );
-          //   // showGallery();
-          // }
-          // if (galleryError) {
-          //   appendConsole(
-          //     "consoleError",
-          //     "Error loading gallery, please run the build script.",
-          //     true,
-          //   );
-          // }
-          // if (deferredLoadError) {
-          //   appendConsole(
-          //     "consoleLog",
-          //     `Unable to load demo named ${queryObject.src.replace(
-          //       ".html",
-          //       "",
-          //     )}. Redirecting to HelloWorld.\n`,
-          //     true,
-          //   );
-          // }
-        }
-      }
-    };
-    window.addEventListener("message", messageHandler);
-    return () => window.removeEventListener("message", messageHandler);
-  }, []);
-
   function formatJs() {
-    jsEditorRef.current?.getAction("editor.action.formatDocument")?.run();
+    editorRef.current?.getAction("editor.action.formatDocument")?.run();
   }
 
-  function nextHighestVariableName(name: string) {
-    if (!jsEditorRef.current) {
-      // can't find next highest if there's no code yet
-      return;
-    }
-    const codeMirror = jsEditorRef.current;
-    const code = codeMirror.getValue();
+  function nextHighestVariableName(code: string, name: string) {
     const otherDeclarations = [
       ...code.matchAll(new RegExp(`(const|let|var)\\s+${name}\\d*\\s=`, "g")),
     ].length;
@@ -563,14 +142,15 @@ function App() {
     return variableName;
   }
 
-  function appendCode(code: string, run = false) {
-    if (!jsEditorRef.current) {
-      // can't append if there's no editor
-      return;
+  function appendCode(snippet: string, run = false) {
+    let spacerNewline = "\n";
+    if (jsCode.endsWith("\n")) {
+      spacerNewline = "";
     }
-    jsEditorRef.current.setValue(`${jsEditorRef.current.getValue()}\n${code}`);
+    const newCode = `${jsCode}${spacerNewline}\n${snippet.trim()}\n`;
+    setJsCode(newCode);
     if (run) {
-      runCode();
+      commitCode(newCode);
     }
   }
 
@@ -585,7 +165,7 @@ Sandcastle.addToolbarButton("New Button", function () {
   }
 
   function addToggle() {
-    const variableName = nextHighestVariableName("toggleValue");
+    const variableName = nextHighestVariableName(jsCode, "toggleValue");
 
     appendCode(
       `
@@ -598,7 +178,7 @@ Sandcastle.addToggleButton("Toggle", ${variableName}, function (checked) {
   }
 
   function addMenu() {
-    const variableName = nextHighestVariableName("options");
+    const variableName = nextHighestVariableName(jsCode, "options");
 
     appendCode(
       `
@@ -615,39 +195,31 @@ Sandcastle.addToolbarMenu(${variableName});`,
     );
   }
 
-  function setCode(js: string, html: string) {
-    if (!jsEditorRef.current || !htmlEditorRef.current) {
-      // can't find next highest if there's no code yet
-      return;
-    }
-    jsEditorRef.current.setValue(js);
-    htmlEditorRef.current.setValue(html);
+  function setCodeAndRun(code: string, html: string) {
+    setJsCode(code);
+    setHtmlCode(html);
 
-    runCode();
+    commitCode(code);
+    commitHtml(html);
+    setRunNumber((runNumber) => runNumber + 1);
   }
 
-  function resetCode() {
-    if (!jsEditorRef.current || !htmlEditorRef.current) {
-      // can't find next highest if there's no code yet
-      return;
-    }
-    jsEditorRef.current.setValue(defaultJsCode);
-    htmlEditorRef.current.setValue(defaultHtmlCode);
+  function resetSandcastle() {
+    setJsCode(defaultJsCode);
+    setHtmlCode(defaultHtmlCode);
+
+    commitCode(defaultJsCode);
+    commitHtml(defaultHtmlCode);
+    setRunNumber(runNumber + 1);
 
     window.history.replaceState({}, "", "/");
-    runCode();
   }
 
   function share() {
-    if (!jsEditorRef.current || !htmlEditorRef.current) {
-      // can't find next highest if there's no code yet
-      return;
-    }
-    const code = jsEditorRef.current.getValue();
-    const html = htmlEditorRef.current.getValue();
-    console.log([code, html]);
-
-    const base64String = makeCompressedBase64String({ code, html });
+    const base64String = makeCompressedBase64String({
+      code: jsCode,
+      html: htmlCode,
+    });
 
     const shareUrl = `${getBaseUrl()}#c=${base64String}`;
     // const shareUrl = `#c=${base64String}`;
@@ -655,19 +227,15 @@ Sandcastle.addToolbarMenu(${variableName});`,
   }
 
   function openStandalone() {
-    if (!jsEditorRef.current || !htmlEditorRef.current) {
-      // can't find next highest if there's no code yet
-      return;
-    }
-    const code = jsEditorRef.current.getValue();
-    const html = htmlEditorRef.current.getValue();
-
     let baseHref = getBaseUrl();
     const pos = baseHref.lastIndexOf("/");
     baseHref = `${baseHref.substring(0, pos)}/gallery/`;
 
-    console.log([code, html]);
-    const base64String = makeCompressedBase64String({ code, html, baseHref });
+    const base64String = makeCompressedBase64String({
+      code: jsCode,
+      html: htmlCode,
+      baseHref,
+    });
 
     let url = getBaseUrl();
     url =
@@ -678,7 +246,9 @@ Sandcastle.addToolbarMenu(${variableName});`,
   }
 
   const GALLERY_BASE = "/gallery";
-  async function loadGalleryItem(galleryItem: GalleryItem) {
+  const loadGalleryItem = useCallback(async function loadGalleryItem(
+    galleryItem: GalleryItem,
+  ) {
     const itemBaseUrl = `${GALLERY_BASE}/${galleryItem.id}`;
 
     const codeReq = fetch(`${itemBaseUrl}/main.js`);
@@ -689,16 +259,14 @@ Sandcastle.addToolbarMenu(${variableName});`,
 
     console.log("loaded", { code, html });
 
-    setCode(code, html);
+    setCodeAndRun(code, html);
 
     // format to account for any bad template strings, not ideal but better than not doing it
-    formatJs();
+    // formatJs();
 
     // TODO: this is not the right way to save these, should be able to reference by name but this works for the demo
-    share();
-  }
-
-  const [darkTheme, setDarkTheme] = useState(false);
+    // share();
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -718,55 +286,101 @@ Sandcastle.addToolbarMenu(${variableName});`,
     };
   }, []);
 
-  useEffect(() => {
-    if (galleryLoaded) {
-      console.log("gallery loaded, try loading from url");
-      loadFromUrl();
-    }
-  }, [galleryLoaded]);
+  useEffect(
+    function loadFromUrl() {
+      if (galleryLoaded) {
+        console.log("gallery loaded, try loading from url");
+
+        const searchParams = new URLSearchParams(window.location.search);
+
+        // TODO: I don't think this is the "correct" way to do on mount/load logic but it's working
+        if (window.location.hash.indexOf("#c=") === 0) {
+          const base64String = window.location.hash.substr(3);
+          const data = decodeBase64Data(base64String);
+
+          setCodeAndRun(data.code, data.html);
+          // applyLoadedDemo(code, html);
+          console.log("loadFromUrl", data);
+        } else if (searchParams.has("src")) {
+          const legacyId = searchParams.get("src");
+          console.log("load legacy", legacyId);
+          if (!legacyId) {
+            return;
+          }
+          const galleryId = legacyIdMap[legacyId];
+          if (!galleryId) {
+            console.log("no mapping");
+            return;
+          }
+          const galleryItem = galleryItems.find(
+            (item) => item.id === galleryId,
+          );
+          if (!galleryItem) {
+            console.error("Unable to find gallery item with id:", galleryId);
+            return;
+          }
+          loadGalleryItem(galleryItem);
+        } else if (searchParams.has("id")) {
+          const galleryId = searchParams.get("id");
+          console.log("load id", galleryId);
+          // TODO: there's probably a race condition here where the list might not be loaded yet
+          // I need to switch this to the more React declarative style
+          const galleryItem = galleryItems.find(
+            (item) => item.id === galleryId,
+          );
+          if (!galleryItem) {
+            console.error("Unable to find gallery item with id:", galleryId);
+            return;
+          }
+          loadGalleryItem(galleryItem);
+        }
+      }
+    },
+    [galleryLoaded, galleryItems, legacyIdMap, loadGalleryItem],
+  );
 
   return (
     <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
       <div className="toolbar">
-        <Button onClick={resetCode}>New</Button>
-        <Button onClick={runCode}>Run (F8)</Button>
-        <Button onClick={formatJs}>Format</Button>
-        <Button onClick={addButton}>Add button</Button>
-        <Button onClick={addToggle}>Add toggle</Button>
-        <Button onClick={addMenu}>Add menu</Button>
-        <Button onClick={share}>Share</Button>
-        <Button onClick={openStandalone}>Standalone</Button>
+        <Button onClick={() => resetSandcastle()}>New</Button>
+        <Button onClick={() => runSandcastle()}>Run (F8)</Button>
+        <Button onClick={() => formatJs()}>Format</Button>
+        <Button onClick={() => addButton()}>Add button</Button>
+        <Button onClick={() => addToggle()}>Add toggle</Button>
+        <Button onClick={() => addMenu()}>Add menu</Button>
+        <Button onClick={() => share()}>Share</Button>
+        <Button onClick={() => openStandalone()}>Standalone</Button>
         <div className="spacer"></div>
         <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
       </div>
       <div className="editor-container">
+        <div className="tabs">
+          <Button disabled={jsIsActive} onClick={() => setJsIsActive(true)}>
+            Javascript
+          </Button>
+          <Button disabled={!jsIsActive} onClick={() => setJsIsActive(false)}>
+            HTML/CSS
+          </Button>
+        </div>
         <Editor
-          height="70%"
-          defaultLanguage="javascript"
+          height="100%"
           theme={darkTheme ? "vs-dark" : "light"}
+          path={jsIsActive ? "script.js" : "index.html"}
+          language={jsIsActive ? "javascript" : "html"}
+          value={jsIsActive ? jsCode : htmlCode}
           defaultValue={defaultJsCode}
           onMount={handleEditorDidMount}
           beforeMount={handleEditorWillMount}
-        />
-        <Editor
-          height="30%"
-          defaultLanguage="html"
-          theme={darkTheme ? "vs-dark" : "light"}
-          defaultValue={defaultHtmlCode}
-          onMount={(editor) => {
-            htmlEditorRef.current = editor;
-            loadFromUrl();
-          }}
+          onMount={handleEditorDidMount}
+          onChange={handleChange}
         />
       </div>
       <div className="viewer-bucket">
-        <iframe
-          ref={bucket}
-          id="bucketFrame"
-          src="templates/bucket.html"
-          className="fullFrame"
-          allowFullScreen
-        ></iframe>
+        <Bucket
+          code={committedCode}
+          html={committedHtml}
+          runNumber={runNumber}
+        />
       </div>
       <div className="gallery">
         <Gallery
