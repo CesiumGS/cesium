@@ -246,18 +246,10 @@ Sandcastle.addToolbarMenu(${variableName});`,
     );
   }
 
-  function setCodeAndRun(code: string, html: string) {
-    dispatch({
-      type: "setAndCommit",
-      code: code,
-      html: html,
-    });
-  }
-
   function resetSandcastle() {
     dispatch({ type: "reset" });
 
-    window.history.replaceState({}, "", "/");
+    window.history.pushState({}, "", "/");
   }
 
   function share() {
@@ -267,7 +259,6 @@ Sandcastle.addToolbarMenu(${variableName});`,
     });
 
     const shareUrl = `${getBaseUrl()}#c=${base64String}`;
-    // const shareUrl = `#c=${base64String}`;
     window.history.replaceState({}, "", shareUrl);
   }
 
@@ -291,27 +282,30 @@ Sandcastle.addToolbarMenu(${variableName});`,
   }
 
   const GALLERY_BASE = "/gallery";
-  const loadGalleryItem = useCallback(async function loadGalleryItem(
-    galleryItem: GalleryItem,
-  ) {
-    const itemBaseUrl = `${GALLERY_BASE}/${galleryItem.id}`;
+  const loadGalleryItem = useCallback(
+    async function loadGalleryItem(galleryId: string) {
+      const galleryItem = galleryItems.find((item) => item.id === galleryId);
+      if (!galleryItem) {
+        console.error("Unable to find gallery item with id:", galleryId);
+        return;
+      }
 
-    const codeReq = fetch(`${itemBaseUrl}/main.js`);
-    const htmlReq = fetch(`${itemBaseUrl}/index.html`);
+      const itemBaseUrl = `${GALLERY_BASE}/${galleryItem.id}`;
 
-    const code = await (await codeReq).text();
-    const html = await (await htmlReq).text();
+      const codeReq = fetch(`${itemBaseUrl}/main.js`);
+      const htmlReq = fetch(`${itemBaseUrl}/index.html`);
 
-    console.log("loaded", { code, html });
+      const code = await (await codeReq).text();
+      const html = await (await htmlReq).text();
 
-    setCodeAndRun(code, html);
-
-    // format to account for any bad template strings, not ideal but better than not doing it
-    // formatJs();
-
-    // TODO: this is not the right way to save these, should be able to reference by name but this works for the demo
-    // share();
-  }, []);
+      dispatch({
+        type: "setAndCommit",
+        code: code,
+        html: html,
+      });
+    },
+    [galleryItems],
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -338,46 +332,32 @@ Sandcastle.addToolbarMenu(${variableName});`,
 
         const searchParams = new URLSearchParams(window.location.search);
 
-        // TODO: I don't think this is the "correct" way to do on mount/load logic but it's working
         if (window.location.hash.indexOf("#c=") === 0) {
           const base64String = window.location.hash.substr(3);
           const data = decodeBase64Data(base64String);
 
-          setCodeAndRun(data.code, data.html);
-          // applyLoadedDemo(code, html);
-          console.log("loadFromUrl", data);
+          dispatch({
+            type: "setAndCommit",
+            code: data.code,
+            html: data.html,
+          });
         } else if (searchParams.has("src")) {
           const legacyId = searchParams.get("src");
-          console.log("load legacy", legacyId);
           if (!legacyId) {
             return;
           }
           const galleryId = legacyIdMap[legacyId];
           if (!galleryId) {
-            console.log("no mapping");
+            console.log("Unable to map legacy id to new id");
             return;
           }
-          const galleryItem = galleryItems.find(
-            (item) => item.id === galleryId,
-          );
-          if (!galleryItem) {
-            console.error("Unable to find gallery item with id:", galleryId);
-            return;
-          }
-          loadGalleryItem(galleryItem);
+          loadGalleryItem(galleryId);
         } else if (searchParams.has("id")) {
           const galleryId = searchParams.get("id");
-          console.log("load id", galleryId);
-          // TODO: there's probably a race condition here where the list might not be loaded yet
-          // I need to switch this to the more React declarative style
-          const galleryItem = galleryItems.find(
-            (item) => item.id === galleryId,
-          );
-          if (!galleryItem) {
-            console.error("Unable to find gallery item with id:", galleryId);
+          if (!galleryId) {
             return;
           }
-          loadGalleryItem(galleryItem);
+          loadGalleryItem(galleryId);
         }
       }
     },
@@ -429,7 +409,13 @@ Sandcastle.addToolbarMenu(${variableName});`,
       <div className="gallery">
         <Gallery
           demos={galleryItems}
-          loadDemo={(item) => loadGalleryItem(item)}
+          loadDemo={(item) => {
+            loadGalleryItem(item.id);
+            // TODO: I like this method for history but we need to actually react to the user
+            // hitting forward or back, right now it does nothing. Need to look into how that works
+            // Might need to involve React-Router but I'd like to try and avoid if we don't need it
+            window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+          }}
         />
       </div>
     </Root>
