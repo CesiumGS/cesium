@@ -1,3 +1,6 @@
+import SceneMode from "../Scene/SceneMode.js";
+import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester.js";
+
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
  * usually created from raw {@link TerrainData}.
@@ -26,6 +29,7 @@
  * @param {number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
  * @param {number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
  * @param {number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
+ * @param {OctreeTrianglePicking} octreeTrianglePicking An octree triangle picking instance if you have one, otherwise defaults to a iterative triangle search
  *
  * @private
  */
@@ -46,6 +50,7 @@ function TerrainMesh(
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
   northIndicesWestToEast,
+  octreeTrianglePicking,
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.
@@ -150,5 +155,50 @@ function TerrainMesh(
    * @type {number[]}
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
+
+  this._defaultPickStrategy = new TriangleSearchIntersectionTester(
+    encoding,
+    indices,
+    vertices,
+  );
+
+  this._octreeTrianglePicking = octreeTrianglePicking;
 }
+
+/**
+ * Gives the point on the mesh where the give ray intersects
+ * @param {Ray} ray
+ * @param {boolean} cullBackFaces
+ * @param {SceneMode} mode
+ * @param projection
+ * @returns {Cartesian3}
+ */
+TerrainMesh.prototype.pickRay = function (
+  ray,
+  cullBackFaces,
+  mode,
+  projection,
+) {
+  // check if we can use the faster octree path of if we fallback to using an iterative search
+  const canUseOctree =
+    // we might not have an octree that we can use
+    !!this._octreeTrianglePicking &&
+    // 3d mode only
+    mode === SceneMode.SCENE3D &&
+    // the octree is built for default terrain exaggeration, so we can only trust its result when we're
+    //  not using terrain exaggeration
+    this.encoding.exaggeration === 1;
+
+  if (canUseOctree) {
+    return this._octreeTrianglePicking.rayIntersect(ray, cullBackFaces);
+  }
+
+  return this._defaultPickStrategy.rayIntersect(
+    ray,
+    cullBackFaces,
+    mode,
+    projection,
+  );
+};
+
 export default TerrainMesh;
