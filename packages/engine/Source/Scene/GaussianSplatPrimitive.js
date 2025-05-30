@@ -127,23 +127,35 @@ GaussianSplatPrimitive.prototype.isDestroyed = function () {
 };
 
 GaussianSplatPrimitive.transformTile = function (tile) {
-  const transform = tile.computedTransform;
+  const computedTransform = tile.computedTransform;
   const splatPrimitive = tile.content.splatPrimitive;
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
-  let modelMatrix = Matrix4.multiply(
-    transform,
+  let computedModelMatrix = Matrix4.multiplyTransformation(
+    computedTransform,
     gaussianSplatPrimitive._axisCorrectionMatrix,
     new Matrix4(),
   );
 
-  modelMatrix = Matrix4.multiplyTransformation(
-    modelMatrix,
-    tile._content._worldTransform,
+  computedModelMatrix = Matrix4.multiplyTransformation(
+    computedModelMatrix,
+    tile.content.worldTransform,
     new Matrix4(),
   );
 
-  const inverseRoot = Matrix4.inverse(transform, new Matrix4());
+  let rootComputed = Matrix4.multiplyTransformation(
+    tile.tileset.root.computedTransform,
+    gaussianSplatPrimitive._axisCorrectionMatrix,
+    new Matrix4(),
+  );
+
+  rootComputed = Matrix4.multiplyTransformation(
+    rootComputed,
+    tile.tileset.root.content.worldTransform,
+    new Matrix4(),
+  );
+
+  const inverseRoot = Matrix4.inverse(rootComputed, new Matrix4());
 
   const positions = ModelUtility.getAttributeBySemantic(
     splatPrimitive,
@@ -152,7 +164,7 @@ GaussianSplatPrimitive.transformTile = function (tile) {
 
   for (let i = 0; i < positions.length; i += 3) {
     const worldPosition = Matrix4.multiplyByPoint(
-      modelMatrix,
+      computedModelMatrix,
       new Cartesian3(positions[i], positions[i + 1], positions[i + 2]),
       new Cartesian3(),
     );
@@ -162,6 +174,7 @@ GaussianSplatPrimitive.transformTile = function (tile) {
       worldPosition,
       new Cartesian3(),
     );
+
     positions[i] = position.x;
     positions[i + 1] = position.y;
     positions[i + 2] = position.z;
@@ -334,7 +347,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   if (tileset._root._content instanceof GaussianSplat3DTilesContent) {
     modelMatrix = Matrix4.multiplyTransformation(
       modelMatrix,
-      tileset._root._content._worldTransform,
+      tileset.root.content.worldTransform,
       new Matrix4(),
     );
   }
