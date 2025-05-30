@@ -163,7 +163,7 @@ GaussianSplat3DTilesContent.prototype.update = function (
   const loader = this._loader;
 
   if (this._ready) {
-    if (!this._transformed) {
+    if (!this._transformed && this._tile !== primitive.root) {
       GaussianSplatPrimitive.transformTile(this._tile);
       this._transformed = true;
     }
