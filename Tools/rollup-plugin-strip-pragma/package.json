@@ -20,6 +20,7 @@
   ],
   "dependencies": {
     "magic-string": "^0.25.3",
+    "rollup-plugin-strip-pragma": "file:",
     "rollup-pluginutils": "^2.8.2"
   }
 }
