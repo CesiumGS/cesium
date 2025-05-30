@@ -3457,6 +3457,8 @@ Cesium3DTileset.prototype.updateForPass = function (
   Check.typeOf.object("tilesetPassState", tilesetPassState);
   //>>includeEnd('debug');
 
+  this.imageryLayers._update();
+
   const pass = tilesetPassState.pass;
   if (
     (pass === Cesium3DTilePass.PRELOAD &&
