@@ -28,6 +28,7 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
    *
    */
   this.splatPrimitive = undefined;
+  this.worldTransform = undefined;
   this._attributeTextureData = undefined;
   this._gaussianSplatTextureDataPending = false;
 
@@ -163,7 +164,11 @@ GaussianSplat3DTilesContent.prototype.update = function (
   const loader = this._loader;
 
   if (this._ready) {
-    if (!this._transformed && this._tile !== primitive.root) {
+    if (
+      !this._transformed &&
+      this._tile !== primitive.root &&
+      primitive.root.content.ready
+    ) {
       GaussianSplatPrimitive.transformTile(this._tile);
       this._transformed = true;
     }
@@ -180,7 +185,7 @@ GaussianSplat3DTilesContent.prototype.update = function (
 
   if (this._resourcesLoaded) {
     this.splatPrimitive = loader.components.scene.nodes[0].primitives[0];
-    this._worldTransform = loader.components.scene.nodes[0].matrix;
+    this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
     return;
