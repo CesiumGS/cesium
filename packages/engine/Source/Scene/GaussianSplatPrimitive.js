@@ -382,7 +382,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
     const tiles = tileset._selectedTiles;
     const totalElements = tiles.reduce(
-      (total, tile) => tile.content.pointsLength,
+      (total, tile) => total + tile.content.pointsLength,
       0,
     );
     const aggregateAttributeValues = (
@@ -401,7 +401,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           );
         }
         aggregate.set(attribute.typedArray, offset);
-        offset = aggregate.length;
+        offset += attribute.typedArray.length;
       }
       return aggregate;
     };
