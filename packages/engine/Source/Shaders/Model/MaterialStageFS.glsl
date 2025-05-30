@@ -444,6 +444,10 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         baseColorWithAlpha = u_baseColorFactor;
     #endif
 
+    #ifdef HAS_IMAGERY
+    baseColorWithAlpha = blendBaseColorWithImagery(baseColorWithAlpha);
+    #endif // HAS_IMAGERY
+
     #ifdef HAS_POINT_CLOUD_COLOR_STYLE
         baseColorWithAlpha = v_pointCloudColor;
     #elif defined(HAS_COLOR_0)
