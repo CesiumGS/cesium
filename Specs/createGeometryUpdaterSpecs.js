@@ -1,19 +1,19 @@
 import {
   Color,
   ColorGeometryInstanceAttribute,
-  DistanceDisplayCondition,
-  DistanceDisplayConditionGeometryInstanceAttribute,
-  JulianDate,
-  ShowGeometryInstanceAttribute,
-  TimeInterval,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
   EllipsoidGeometryUpdater,
   Entity,
   GridMaterialProperty,
+  JulianDate,
   SampledProperty,
-  TimeIntervalCollectionProperty,
   ShadowMode,
+  ShowGeometryInstanceAttribute,
+  TimeInterval,
+  TimeIntervalCollectionProperty,
 } from "@cesium/engine";
 
 function createGeometryUpdaterSpecs(

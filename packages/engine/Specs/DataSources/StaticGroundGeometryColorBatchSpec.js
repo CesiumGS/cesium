@@ -1,19 +1,19 @@
 import {
   ApproximateTerrainHeights,
+  CallbackProperty,
   Cartesian3,
+  ClassificationType,
   Color,
   DistanceDisplayCondition,
-  JulianDate,
-  Math as CesiumMath,
-  TimeInterval,
-  TimeIntervalCollection,
-  CallbackProperty,
   EllipseGeometryUpdater,
   Entity,
-  StaticGroundGeometryColorBatch,
-  TimeIntervalCollectionProperty,
-  ClassificationType,
   GroundPrimitive,
+  JulianDate,
+  Math as CesiumMath,
+  StaticGroundGeometryColorBatch,
+  TimeInterval,
+  TimeIntervalCollection,
+  TimeIntervalCollectionProperty,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

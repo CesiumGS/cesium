@@ -1,7 +1,5 @@
+import { Check, defined, FeatureDetection } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
 

@@ -1,30 +1,30 @@
 import {
   BoundingSphere,
   Cartesian3,
+  Cesium3DTileBatchTable,
+  ClassificationType,
   Color,
+  ColorBlendMode,
   ColorGeometryInstanceAttribute,
   combine,
   destroyObject,
   Ellipsoid,
   GeometryInstance,
   Matrix4,
-  Rectangle,
-  RectangleGeometry,
-  Transforms,
   Pass,
-  RenderState,
-  Cesium3DTileBatchTable,
-  ClassificationType,
-  ColorBlendMode,
   PerInstanceColorAppearance,
   Primitive,
+  Rectangle,
+  RectangleGeometry,
+  RenderState,
   StencilConstants,
+  Transforms,
   Vector3DTileGeometry,
 } from "../../index.js";
 
-import createWebglVersionHelper from "../createWebglVersionHelper.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import createWebglVersionHelper from "../createWebglVersionHelper.js";
 
 describe(
   "Scene/Vector3DTileGeometry",

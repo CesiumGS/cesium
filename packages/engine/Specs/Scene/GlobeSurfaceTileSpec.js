@@ -1,3 +1,6 @@
+import MockImageryProvider from "../../../../Specs/MockImageryProvider.js";
+import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
+import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 import {
   Cartesian3,
   Cartesian4,
@@ -5,17 +8,14 @@ import {
   Ellipsoid,
   EllipsoidTerrainProvider,
   GeographicTilingScheme,
-  Ray,
   GlobeSurfaceTile,
   ImageryLayerCollection,
   QuadtreeTile,
   QuadtreeTileLoadState,
+  Ray,
   TerrainState,
   TileProviderError,
 } from "../../index.js";
-import MockImageryProvider from "../../../../Specs/MockImageryProvider.js";
-import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
-import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

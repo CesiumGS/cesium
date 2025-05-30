@@ -1,8 +1,8 @@
 import {
-  Matrix3,
-  Math as CesiumMath,
   Cartesian3,
   GltfGpmLoader,
+  Math as CesiumMath,
+  Matrix3,
 } from "../../../../../index.js";
 
 describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {

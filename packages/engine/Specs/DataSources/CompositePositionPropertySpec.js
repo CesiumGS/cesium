@@ -1,12 +1,12 @@
 import {
   Cartesian3,
+  CompositePositionProperty,
+  ConstantPositionProperty,
   JulianDate,
+  PositionProperty,
   ReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
-  CompositePositionProperty,
-  ConstantPositionProperty,
-  PositionProperty,
 } from "../../index.js";
 
 describe("DataSources/CompositePositionProperty", function () {

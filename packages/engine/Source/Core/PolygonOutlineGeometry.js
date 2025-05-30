@@ -1,13 +1,11 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import ArcType from "./ArcType.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
+import Frozen from "./Frozen.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";

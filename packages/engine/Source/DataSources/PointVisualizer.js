@@ -1,16 +1,15 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import createBillboardPointCallback from "../Scene/createBillboardPointCallback.js";
 import HeightReference from "../Scene/HeightReference.js";
+import SplitDirection from "../Scene/SplitDirection.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
-import SplitDirection from "../Scene/SplitDirection.js";
 
 const defaultColor = Color.WHITE;
 const defaultOutlineColor = Color.BLACK;

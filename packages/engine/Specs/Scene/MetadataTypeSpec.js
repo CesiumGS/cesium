@@ -1,11 +1,11 @@
 import {
-  MetadataType,
   Cartesian2,
   Cartesian3,
   Cartesian4,
   Matrix2,
   Matrix3,
   Matrix4,
+  MetadataType,
 } from "../../index.js";
 
 describe("Scene/MetadataType", function () {

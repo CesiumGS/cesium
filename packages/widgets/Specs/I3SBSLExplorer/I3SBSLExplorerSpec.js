@@ -1,5 +1,5 @@
-import { I3SBuildingSceneLayerExplorer } from "../../index.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
+import { I3SBuildingSceneLayerExplorer } from "../../index.js";
 
 describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorer", function () {
   const i3sProvider = {

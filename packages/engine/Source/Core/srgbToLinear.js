@@ -1,4 +1,4 @@
-import Check from "./Check.js";
+import { Check } from "@cesium/utils";
 
 /**
  * Converts the value from sRGB color space to linear color space.

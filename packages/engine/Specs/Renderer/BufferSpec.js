@@ -1,7 +1,7 @@
-import { IndexDatatype, Buffer, BufferUsage } from "../../index.js";
+import { Buffer, BufferUsage, IndexDatatype } from "../../index.js";
 
-import createWebglVersionHelper from "../createWebglVersionHelper.js";
 import createContext from "../../../../Specs/createContext.js";
+import createWebglVersionHelper from "../createWebglVersionHelper.js";
 
 describe(
   "Renderer/Buffer",

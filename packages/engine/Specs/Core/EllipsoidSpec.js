@@ -3,8 +3,8 @@ import {
   Cartesian3,
   Cartographic,
   Ellipsoid,
-  Rectangle,
   Math as CesiumMath,
+  Rectangle,
 } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";

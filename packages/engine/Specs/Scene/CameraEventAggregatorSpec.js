@@ -1,10 +1,10 @@
+import { FeatureDetection } from "@cesium/utils";
 import {
-  Cartesian2,
-  combine,
-  FeatureDetection,
-  KeyboardEventModifier,
   CameraEventAggregator,
   CameraEventType,
+  Cartesian2,
+  combine,
+  KeyboardEventModifier,
 } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";

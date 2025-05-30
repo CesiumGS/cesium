@@ -1,17 +1,16 @@
+import { defer, defined } from "@cesium/utils";
 import Uri from "urijs";
+import createCanvas from "../../../../Specs/createCanvas.js";
+import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 import {
   DefaultProxy,
-  defer,
-  defined,
   queryToObject,
   Request,
   RequestErrorEvent,
   RequestScheduler,
   Resource,
 } from "../../index.js";
-import createCanvas from "../../../../Specs/createCanvas.js";
-import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/Resource", function () {
   const dataUri =

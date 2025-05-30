@@ -1,6 +1,6 @@
+import { defined } from "@cesium/utils";
 import Color from "../Core/Color.js";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 

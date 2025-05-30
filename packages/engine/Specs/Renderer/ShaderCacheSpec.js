@@ -1,5 +1,5 @@
-import { ShaderCache, ShaderSource } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
+import { ShaderCache, ShaderSource } from "../../index.js";
 
 describe(
   "Renderer/ShaderCache",

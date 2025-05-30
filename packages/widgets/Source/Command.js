@@ -1,4 +1,4 @@
-import { DeveloperError } from "@cesium/engine";
+import { DeveloperError } from "@cesium/utils";
 
 /**
  * A Command is a function with an extra <code>canExecute</code> observable property to determine

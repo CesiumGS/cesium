@@ -1,11 +1,9 @@
+import { Check, defined, RuntimeError } from "@cesium/utils";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import AttributeType from "./AttributeType.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";

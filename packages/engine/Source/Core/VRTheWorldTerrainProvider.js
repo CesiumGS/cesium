@@ -1,16 +1,14 @@
-import Check from "./Check.js";
+import { Check, defined, RuntimeError } from "@cesium/utils";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
+import Frozen from "./Frozen.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import getImagePixels from "./getImagePixels.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileProviderError from "./TileProviderError.js";
 

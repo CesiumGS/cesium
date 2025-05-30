@@ -1,8 +1,4 @@
 import {
-  Iso8601,
-  JulianDate,
-  TimeInterval,
-  TimeIntervalCollection,
   BillboardGraphics,
   CompositeEntityCollection,
   CompositePositionProperty,
@@ -10,6 +6,10 @@ import {
   ConstantProperty,
   Entity,
   EntityCollection,
+  Iso8601,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
 } from "../../index.js";
 
 describe("DataSources/CompositeEntityCollection", function () {

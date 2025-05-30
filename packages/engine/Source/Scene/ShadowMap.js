@@ -1,3 +1,4 @@
+import { defined, DeveloperError, FeatureDetection } from "@cesium/utils";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
@@ -10,11 +11,8 @@ import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
+import Frozen from "../Core/Frozen.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Intersect from "../Core/Intersect.js";
 import CesiumMath from "../Core/Math.js";

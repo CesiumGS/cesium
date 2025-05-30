@@ -1,3 +1,5 @@
+import createScene from "../../../../../Specs/createScene.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   combine,
   GltfLoader,
@@ -7,8 +9,6 @@ import {
   Resource,
   ResourceCache,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/Model/NodeStatisticsPipelineStage",

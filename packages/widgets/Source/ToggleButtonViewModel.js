@@ -1,4 +1,5 @@
-import { Frozen, defined, DeveloperError } from "@cesium/engine";
+import { Frozen } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/utils";
 import knockout from "./ThirdParty/knockout.js";
 
 /**

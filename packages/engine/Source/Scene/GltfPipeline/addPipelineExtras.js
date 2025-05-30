@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import ForEach from "./ForEach.js";
-import defined from "../../Core/defined.js";
 
 /**
  * Adds extras._pipeline to each object that can have extras in the glTF asset.

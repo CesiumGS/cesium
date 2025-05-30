@@ -1,8 +1,7 @@
+import { Check, defined } from "@cesium/utils";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
 import FrustumGeometry from "./FrustumGeometry.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";

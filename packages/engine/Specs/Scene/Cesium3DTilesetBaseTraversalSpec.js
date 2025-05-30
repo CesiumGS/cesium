@@ -1,6 +1,6 @@
 import {
-  Cesium3DTilesetTraversal,
   Cesium3DTilesetBaseTraversal,
+  Cesium3DTilesetTraversal,
 } from "../../index.js";
 
 describe("Scene/Cesium3DTilesetBaseTraversal", function () {

@@ -1,25 +1,22 @@
+import { Check, defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import Cartesian2 from "../Core/Cartesian2.js";
-import CesiumMath from "../Core/Math.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
+import Frozen from "../Core/Frozen.js";
 import Intersect from "../Core/Intersect.js";
+import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Rectangle from "../Core/Rectangle.js";
+import ComputeCommand from "../Renderer/ComputeCommand.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import ClippingPolygon from "./ClippingPolygon.js";
-import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
+import ClippingPolygon from "./ClippingPolygon.js";
 
 /**
  * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region

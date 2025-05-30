@@ -1,33 +1,33 @@
+import { defined } from "@cesium/utils";
+import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 import {
   BoundingSphere,
+  BoundingSphereState,
   Cartesian2,
   Cartesian3,
+  Cartographic,
+  Cesium3DTileset,
+  ClippingPlane,
+  ClippingPlaneCollection,
   Color,
-  defined,
+  ConstantPositionProperty,
+  ConstantProperty,
+  CustomShader,
   DistanceDisplayCondition,
+  EntityCollection,
+  Globe,
   HeightReference,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
-  Quaternion,
-  Resource,
-  Transforms,
-  BoundingSphereState,
-  Cesium3DTileset,
-  ConstantPositionProperty,
-  ConstantProperty,
-  EntityCollection,
   ModelGraphics,
   ModelVisualizer,
   NodeTransformationProperty,
-  ClippingPlane,
-  ClippingPlaneCollection,
-  CustomShader,
-  Globe,
-  Cartographic,
+  Quaternion,
+  Resource,
+  Transforms,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "DataSources/ModelVisualizer",

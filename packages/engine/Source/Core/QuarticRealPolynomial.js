@@ -1,5 +1,5 @@
+import { DeveloperError } from "@cesium/utils";
 import CubicRealPolynomial from "./CubicRealPolynomial.js";
-import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
 

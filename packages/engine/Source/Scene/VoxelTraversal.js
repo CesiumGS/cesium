@@ -1,21 +1,21 @@
+import { defined } from "@cesium/utils";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import CesiumMath from "../Core/Math.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
 import getTimestamp from "../Core/getTimestamp.js";
-import KeyframeNode from "./KeyframeNode.js";
-import MetadataType from "./MetadataType.js";
-import Megatexture from "./Megatexture.js";
+import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
-import SpatialNode from "./SpatialNode.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
+import KeyframeNode from "./KeyframeNode.js";
+import Megatexture from "./Megatexture.js";
+import MetadataType from "./MetadataType.js";
+import SpatialNode from "./SpatialNode.js";
 import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**

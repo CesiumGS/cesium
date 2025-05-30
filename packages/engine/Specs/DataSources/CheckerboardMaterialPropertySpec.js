@@ -1,10 +1,10 @@
 import {
   Cartesian2,
+  CheckerboardMaterialProperty,
   Color,
+  ConstantProperty,
   JulianDate,
   TimeInterval,
-  CheckerboardMaterialProperty,
-  ConstantProperty,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
 

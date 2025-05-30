@@ -1,20 +1,20 @@
 import {
   ApproximateTerrainHeights,
   Cartesian3,
-  CornerType,
-  JulianDate,
-  Math as CesiumMath,
-  TimeInterval,
-  TimeIntervalCollection,
   ConstantProperty,
+  CornerType,
   CorridorGeometryUpdater,
   CorridorGraphics,
   Entity,
+  JulianDate,
+  Math as CesiumMath,
+  PrimitiveCollection,
   PropertyArray,
   SampledPositionProperty,
   SampledProperty,
+  TimeInterval,
+  TimeIntervalCollection,
   TimeIntervalCollectionProperty,
-  PrimitiveCollection,
 } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";

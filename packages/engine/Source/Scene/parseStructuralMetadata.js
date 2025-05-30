@@ -1,11 +1,10 @@
-import Check from "../Core/Check.js";
+import { Check, defined } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import MetadataTable from "./MetadataTable.js";
+import PropertyAttribute from "./PropertyAttribute.js";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
-import PropertyAttribute from "./PropertyAttribute.js";
 import StructuralMetadata from "./StructuralMetadata.js";
-import MetadataTable from "./MetadataTable.js";
 
 /**
  * Parse the <code>EXT_structural_metadata</code> glTF extension to create a

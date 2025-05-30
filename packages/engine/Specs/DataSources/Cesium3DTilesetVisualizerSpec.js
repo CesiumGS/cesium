@@ -1,18 +1,18 @@
+import { defined } from "@cesium/utils";
 import {
   BoundingSphere,
-  Cartesian3,
-  defined,
-  JulianDate,
-  Matrix4,
-  Resource,
   BoundingSphereState,
+  Cartesian3,
   Cesium3DTileset,
+  Cesium3DTilesetGraphics,
+  Cesium3DTilesetVisualizer,
   ConstantPositionProperty,
   ConstantProperty,
   EntityCollection,
-  Cesium3DTilesetGraphics,
-  Cesium3DTilesetVisualizer,
   Globe,
+  JulianDate,
+  Matrix4,
+  Resource,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

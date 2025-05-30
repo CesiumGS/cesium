@@ -1,11 +1,12 @@
+import { defined } from "@cesium/utils";
 import {
   BoundingSphere,
   BoxGeometry,
+  Camera,
   Cartesian3,
   ColorGeometryInstanceAttribute,
   ComponentDatatype,
   CylinderGeometry,
-  defined,
   DistanceDisplayConditionGeometryInstanceAttribute,
   Ellipsoid,
   Geometry,
@@ -13,20 +14,19 @@ import {
   GeometryInstance,
   GeometryInstanceAttribute,
   HeadingPitchRange,
+  MaterialAppearance,
   Math as CesiumMath,
   Matrix4,
+  PerInstanceColorAppearance,
   PerspectiveFrustum,
   PolygonGeometry,
+  Primitive,
   PrimitiveType,
   Rectangle,
   RectangleGeometry,
+  SceneMode,
   ShowGeometryInstanceAttribute,
   Transforms,
-  Camera,
-  MaterialAppearance,
-  PerInstanceColorAppearance,
-  Primitive,
-  SceneMode,
 } from "../../index.js";
 
 import BadGeometry from "../../../../Specs/BadGeometry.js";

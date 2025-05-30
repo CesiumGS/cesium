@@ -1,9 +1,8 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import CullingVolume from "./CullingVolume.js";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
 

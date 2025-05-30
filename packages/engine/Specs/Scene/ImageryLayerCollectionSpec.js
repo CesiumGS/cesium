@@ -3,16 +3,16 @@ import {
   Ellipsoid,
   Event,
   GeographicTilingScheme,
-  Matrix4,
-  Ray,
-  Rectangle,
-  WebMercatorProjection,
-  WebMercatorTilingScheme,
   Globe,
   ImageryLayer,
   ImageryLayerCollection,
   ImageryLayerFeatureInfo,
   ImageryProvider,
+  Matrix4,
+  Ray,
+  Rectangle,
+  WebMercatorProjection,
+  WebMercatorTilingScheme,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

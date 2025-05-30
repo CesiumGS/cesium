@@ -1,9 +1,8 @@
+import { defined, FeatureDetection } from "@cesium/utils";
 import {
   Cartesian2,
   clone,
   combine,
-  defined,
-  FeatureDetection,
   KeyboardEventModifier,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,

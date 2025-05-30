@@ -1,8 +1,8 @@
 import {
   Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
   PathGraphics,
 } from "../../index.js";
 

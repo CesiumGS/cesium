@@ -1,13 +1,13 @@
 import {
+  CallbackProperty,
   Cartesian3,
   Ellipsoid,
   Event,
   ExtrapolationType,
   JulianDate,
   Quaternion,
-  Transforms,
-  CallbackProperty,
   SampledPositionProperty,
+  Transforms,
   VelocityOrientationProperty,
 } from "../../index.js";
 

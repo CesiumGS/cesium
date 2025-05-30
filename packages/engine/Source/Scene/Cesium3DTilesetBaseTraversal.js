@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import ManagedArray from "../Core/ManagedArray.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";

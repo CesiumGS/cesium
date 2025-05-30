@@ -1,3 +1,6 @@
+import createScene from "../../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import {
   Axis,
   Cartesian3,
@@ -6,19 +9,16 @@ import {
   I3dmLoader,
   InstanceAttributeSemantic,
   InstancingPipelineStage,
-  Matrix4,
   Math as CesiumMath,
-  ModelUtility,
+  Matrix4,
   ModelStatistics,
+  ModelUtility,
   Resource,
   ResourceCache,
   ShaderBuilder,
   _shadersInstancingStageCommon,
   _shadersLegacyInstancingStageVS,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/InstancingPipelineStage",

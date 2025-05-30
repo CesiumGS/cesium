@@ -1,20 +1,20 @@
+import { RuntimeError } from "@cesium/utils";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
+import createScene from "../../../../Specs/createScene.js";
 import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  Cesium3DTileBatchTable,
+  Cesium3DTileStyle,
   Color,
+  ContextLimits,
   HeadingPitchRange,
   Matrix2,
   Matrix3,
   Matrix4,
-  ContextLimits,
-  Cesium3DTileBatchTable,
-  Cesium3DTileStyle,
-  RuntimeError,
 } from "../../index.js";
-import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";
-import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
 
 // Since b3dm tilesets now use ModelFeatureTable, disabling these tests until Cesium3DTileBatchTable and
 // ModelFeatureTable can be consolidated

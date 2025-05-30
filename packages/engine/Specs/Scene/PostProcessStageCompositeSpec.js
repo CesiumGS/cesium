@@ -1,6 +1,6 @@
+import { defined } from "@cesium/utils";
 import {
   Color,
-  defined,
   PostProcessStage,
   PostProcessStageComposite,
 } from "../../index.js";

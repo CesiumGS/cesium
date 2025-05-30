@@ -1,5 +1,5 @@
-import { PlaneOutlineGeometry } from "../../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+import { PlaneOutlineGeometry } from "../../index.js";
 
 describe("Core/PlaneOutlineGeometry", function () {
   it("constructor creates positions", function () {

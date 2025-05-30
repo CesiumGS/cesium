@@ -1,8 +1,7 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import MetadataType from "./MetadataType.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
+import MetadataType from "./MetadataType.js";
 
 /**
  * A cell from a {@link VoxelPrimitive}.

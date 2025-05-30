@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Rectangle from "../Core/Rectangle.js";
 import RectangleOutlineGeometry from "../Core/RectangleOutlineGeometry.js";

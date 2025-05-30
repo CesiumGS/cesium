@@ -4,10 +4,10 @@ import {
   JulianDate,
   LagrangePolynomialApproximation,
   LinearApproximation,
-  ReferenceFrame,
-  TimeInterval,
   PositionProperty,
+  ReferenceFrame,
   SampledPositionProperty,
+  TimeInterval,
 } from "../../index.js";
 
 describe("DataSources/SampledPositionProperty", function () {

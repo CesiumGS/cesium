@@ -1,19 +1,18 @@
+import { Check, defined } from "@cesium/utils";
+import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
 import Cartographic from "../Core/Cartographic.js";
+import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
+import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeometry.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
+import GeometryInstance from "../Core/GeometryInstance.js";
 import Intersect from "../Core/Intersect.js";
 import Matrix3 from "../Core/Matrix3.js";
-import Plane from "../Core/Plane.js";
-import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeometry.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
 import Matrix4 from "../Core/Matrix4.js";
+import Plane from "../Core/Plane.js";
+import S2Cell from "../Core/S2Cell.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
-import S2Cell from "../Core/S2Cell.js";
 let centerCartographicScratch = new Cartographic();
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.

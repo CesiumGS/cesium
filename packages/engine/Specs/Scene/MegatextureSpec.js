@@ -1,10 +1,6 @@
-import {
-  Cartesian3,
-  Megatexture,
-  MetadataComponentType,
-  RuntimeError,
-} from "../../index.js";
+import { RuntimeError } from "@cesium/utils";
 import createScene from "../../../../Specs/createScene.js";
+import { Cartesian3, Megatexture, MetadataComponentType } from "../../index.js";
 
 describe("Scene/Megatexture", function () {
   const scene = createScene();

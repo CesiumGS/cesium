@@ -5,8 +5,8 @@ import {
   ImageryLayerCollection,
 } from "@cesium/engine";
 
-import { BaseLayerPickerViewModel, ProviderViewModel } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import { BaseLayerPickerViewModel, ProviderViewModel } from "../../index.js";
 
 describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   function MockGlobe() {

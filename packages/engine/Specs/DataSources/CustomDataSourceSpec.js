@@ -1,8 +1,8 @@
 import {
-  Event,
   CustomDataSource,
   DataSourceClock,
   EntityCollection,
+  Event,
 } from "../../index.js";
 
 describe("DataSources/CustomDataSource", function () {

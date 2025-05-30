@@ -1,10 +1,10 @@
 import {
+  BoxGraphics,
   Cartesian3,
   Color,
-  DistanceDisplayCondition,
-  BoxGraphics,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
   ShadowMode,
 } from "../../index.js";
 

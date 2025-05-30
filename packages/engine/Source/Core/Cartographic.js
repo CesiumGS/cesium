@@ -1,6 +1,5 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
 

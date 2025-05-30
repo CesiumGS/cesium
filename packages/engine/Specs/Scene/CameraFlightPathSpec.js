@@ -1,4 +1,5 @@
 import {
+  CameraFlightPath,
   Cartesian3,
   Cartographic,
   Ellipsoid,
@@ -6,7 +7,6 @@ import {
   Globe,
   Math as CesiumMath,
   OrthographicOffCenterFrustum,
-  CameraFlightPath,
   SceneMode,
 } from "../../index.js";
 

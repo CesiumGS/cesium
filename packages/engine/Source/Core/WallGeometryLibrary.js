@@ -1,7 +1,7 @@
+import { defined } from "@cesium/utils";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 import PolylinePipeline from "./PolylinePipeline.js";
 

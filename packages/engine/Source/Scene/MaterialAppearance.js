@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import AllMaterialAppearanceFS from "../Shaders/Appearances/AllMaterialAppearanceFS.js";
 import AllMaterialAppearanceVS from "../Shaders/Appearances/AllMaterialAppearanceVS.js";

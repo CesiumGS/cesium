@@ -1,11 +1,11 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
-  _shadersVerticalExaggerationStageVS,
   Cartesian2,
   RenderState,
   ShaderBuilder,
   VerticalExaggerationPipelineStage,
+  _shadersVerticalExaggerationStageVS,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/VerticalExaggerationPipelineStage",

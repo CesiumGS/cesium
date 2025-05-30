@@ -1,5 +1,4 @@
-import Check from "./Check.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, DeveloperError } from "@cesium/utils";
 import isLeapYear from "./isLeapYear.js";
 
 const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];

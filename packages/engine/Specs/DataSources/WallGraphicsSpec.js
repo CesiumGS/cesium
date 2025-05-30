@@ -1,10 +1,10 @@
 import {
   Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
-  WallGraphics,
+  DistanceDisplayCondition,
   ShadowMode,
+  WallGraphics,
 } from "../../index.js";
 
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";

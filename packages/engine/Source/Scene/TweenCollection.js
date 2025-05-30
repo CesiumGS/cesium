@@ -1,11 +1,10 @@
+import { defined, DeveloperError } from "@cesium/utils";
+import { Tween as TweenJS } from "@tweenjs/tween.js";
 import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import EasingFunction from "../Core/EasingFunction.js";
+import Frozen from "../Core/Frozen.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import TimeConstants from "../Core/TimeConstants.js";
-import { Tween as TweenJS } from "@tweenjs/tween.js";
 
 /**
  * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create

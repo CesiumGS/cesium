@@ -1,5 +1,5 @@
-import { Model } from "../../../index.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
+import { Model } from "../../../index.js";
 
 async function loadAndZoomToModelAsync(options, scene) {
   options = {

@@ -1,13 +1,14 @@
+import { defined, DeveloperError } from "@cesium/utils";
+import bitmapSDF from "bitmap-sdf";
+import GraphemeSplitter from "grapheme-splitter";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import writeTextToCanvas from "../Core/writeTextToCanvas.js";
-import bitmapSDF from "bitmap-sdf";
+import TextureAtlas from "../Renderer/TextureAtlas.js";
 import BillboardCollection from "./BillboardCollection.js";
 import BillboardTexture from "./BillboardTexture.js";
 import BlendOption from "./BlendOption.js";
@@ -16,9 +17,7 @@ import HorizontalOrigin from "./HorizontalOrigin.js";
 import Label from "./Label.js";
 import LabelStyle from "./LabelStyle.js";
 import SDFSettings from "./SDFSettings.js";
-import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
-import GraphemeSplitter from "grapheme-splitter";
 
 /**
  * A glyph represents a single character in label.

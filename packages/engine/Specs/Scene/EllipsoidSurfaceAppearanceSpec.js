@@ -1,12 +1,12 @@
 import {
-  ColorGeometryInstanceAttribute,
-  GeometryInstance,
-  Rectangle,
-  RectangleGeometry,
   Appearance,
+  ColorGeometryInstanceAttribute,
   EllipsoidSurfaceAppearance,
+  GeometryInstance,
   Material,
   Primitive,
+  Rectangle,
+  RectangleGeometry,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

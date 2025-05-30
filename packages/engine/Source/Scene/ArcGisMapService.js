@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import Credit from "../Core/Credit.js";
-import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 
 let defaultTokenCredit;

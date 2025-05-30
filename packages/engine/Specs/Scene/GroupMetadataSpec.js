@@ -1,4 +1,4 @@
-import { Cartesian3, MetadataClass, GroupMetadata } from "../../index.js";
+import { Cartesian3, GroupMetadata, MetadataClass } from "../../index.js";
 
 describe("Scene/GroupMetadata", function () {
   const buildingClassWithNoProperties = MetadataClass.fromJson({

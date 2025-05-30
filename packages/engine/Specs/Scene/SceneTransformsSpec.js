@@ -1,11 +1,11 @@
 import {
+  Camera,
   Cartesian2,
   Cartesian3,
   Ellipsoid,
   Math as CesiumMath,
   OrthographicFrustum,
   Rectangle,
-  Camera,
   SceneMode,
   SceneTransforms,
 } from "../../index.js";

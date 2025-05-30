@@ -1,7 +1,7 @@
 import combine from "../../Core/combine.js";
-import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
-import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
+import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 
 /**
  * The model clipping planes stage is responsible for applying clipping planes to the model.

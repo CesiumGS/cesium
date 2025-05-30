@@ -1,3 +1,7 @@
+import { RuntimeError } from "@cesium/utils";
+import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
+import createCanvas from "../../../../../Specs/createCanvas.js";
+import createScene from "../../../../../Specs/createScene.js";
 import {
   Cartesian3,
   Cartographic,
@@ -29,13 +33,9 @@ import {
   Rectangle,
   RectangleGeometry,
   RenderState,
-  RuntimeError,
   StencilConstants,
   Transforms,
 } from "../../../index.js";
-import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../../Specs/createScene.js";
-import createCanvas from "../../../../../Specs/createCanvas.js";
 
 describe(
   "Scene/Model/Model3DTileContent",

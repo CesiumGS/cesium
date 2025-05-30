@@ -1,9 +1,9 @@
 import {
   Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
   CylinderGraphics,
+  DistanceDisplayCondition,
   ShadowMode,
 } from "../../index.js";
 

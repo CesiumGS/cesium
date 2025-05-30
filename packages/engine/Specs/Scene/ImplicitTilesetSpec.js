@@ -1,3 +1,4 @@
+import { RuntimeError } from "@cesium/utils";
 import {
   clone,
   combine,
@@ -5,7 +6,6 @@ import {
   ImplicitTileset,
   MetadataSchema,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/ImplicitTileset", function () {

@@ -1,3 +1,4 @@
+import { FeatureDetection } from "@cesium/utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -6,7 +7,6 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
-  FeatureDetection,
   MetadataClassProperty,
   MetadataComponentType,
   MetadataEnum,

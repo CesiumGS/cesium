@@ -1,9 +1,7 @@
+import { defined, DeveloperError, FeatureDetection } from "@cesium/utils";
 import AssociativeArray from "./AssociativeArray.js";
 import Cartesian2 from "./Cartesian2.js";
-import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
-import DeveloperError from "./DeveloperError.js";
-import FeatureDetection from "./FeatureDetection.js";
 import getTimestamp from "./getTimestamp.js";
 import KeyboardEventModifier from "./KeyboardEventModifier.js";
 import ScreenSpaceEventType from "./ScreenSpaceEventType.js";

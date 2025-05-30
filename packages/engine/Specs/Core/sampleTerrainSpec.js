@@ -1,9 +1,9 @@
+import { defined } from "@cesium/utils";
 import {
   ArcGISTiledElevationTerrainProvider,
   Cartographic,
   CesiumTerrainProvider,
   createWorldTerrainAsync,
-  defined,
   RequestScheduler,
   Resource,
   sampleTerrain,

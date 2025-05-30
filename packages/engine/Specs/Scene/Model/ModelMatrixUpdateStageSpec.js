@@ -1,16 +1,16 @@
+import createScene from "../../../../../Specs/createScene.js";
 import {
   BoundingSphere,
   Cartesian3,
   clone,
   CullFace,
-  Matrix4,
   Math as CesiumMath,
+  Matrix4,
   ModelDrawCommand,
   ModelRuntimePrimitive,
-  ResourceCache,
   Quaternion,
+  ResourceCache,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe(

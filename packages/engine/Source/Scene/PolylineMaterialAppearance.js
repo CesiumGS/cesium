@@ -1,6 +1,5 @@
+import { defined, FeatureDetection } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import PolylineMaterialAppearanceVS from "../Shaders/Appearances/PolylineMaterialAppearanceVS.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";

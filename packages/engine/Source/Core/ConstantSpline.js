@@ -1,5 +1,4 @@
-import Check from "./Check.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, DeveloperError } from "@cesium/utils";
 import Spline from "./Spline.js";
 
 /**

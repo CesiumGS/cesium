@@ -1,8 +1,7 @@
-import Check from "../Core/Check.js";
+import { Check, defined } from "@cesium/utils";
 import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import Frozen from "../Core/Frozen.js";
 
 /**
  * A collection of {@link PostProcessStage}s or other post-process composite stages that execute together logically.

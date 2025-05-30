@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/utils";
 import CesiumMath from "./Math.js";
 
 /**

@@ -1,11 +1,11 @@
 import {
+  GltfMeshPrimitiveGpmLoader,
   GltfTextureLoader,
   Resource,
   ResourceCache,
   SupportedImageFormats,
-  defined,
-  GltfMeshPrimitiveGpmLoader,
-} from "../../../../../index.js";
+} from "@cesium/engine";
+import { defined } from "@cesium/utils";
 import createScene from "../../../../../../../Specs/createScene.js";
 import loaderProcess from "../../../../../../../Specs/loaderProcess.js";
 import waitForLoaderProcess from "../../../../../../../Specs/waitForLoaderProcess.js";

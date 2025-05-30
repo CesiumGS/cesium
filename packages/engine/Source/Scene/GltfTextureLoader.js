@@ -1,8 +1,8 @@
-import Check from "../Core/Check.js";
-import CesiumMath from "../Core/Math.js";
+import { Check, defined } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
+import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
@@ -10,7 +10,6 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
-import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js";
 
 /**
  * Loads a glTF texture.

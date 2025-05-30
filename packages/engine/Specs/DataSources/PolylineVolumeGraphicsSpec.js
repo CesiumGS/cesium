@@ -1,9 +1,9 @@
 import {
   Color,
-  CornerType,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
+  CornerType,
+  DistanceDisplayCondition,
   PolylineVolumeGraphics,
   ShadowMode,
 } from "../../index.js";

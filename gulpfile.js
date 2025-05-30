@@ -23,6 +23,7 @@ import { createInstrumenter } from "istanbul-lib-instrument";
 
 import {
   buildCesium,
+  buildUtils,
   buildEngine,
   buildWidgets,
   bundleWorkers,
@@ -135,6 +136,7 @@ export async function build() {
     return buildWidgets(buildOptions);
   }
 
+  await buildUtils();
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
@@ -253,6 +255,9 @@ export async function buildTs() {
   // Generate types for passed packages in order.
   const importModules = {};
   for (const workspace of workspaces) {
+    if (workspace.includes("utils")) {
+      continue;
+    }
     const directory = workspace
       .replace(`@${scope}/`, "")
       .replace(`packages/`, "");
@@ -427,6 +432,7 @@ function combineForSandcastle() {
 }
 
 export const websiteRelease = gulp.series(
+  buildUtils,
   buildEngine,
   buildWidgets,
   function websiteReleaseBuild() {
@@ -442,6 +448,7 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
+  buildUtils,
   buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified
@@ -1196,22 +1203,6 @@ function generateTypeScriptDefinitions(
     )
     // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
-    // Replace JSDoc generation version of defined with an improved version using TS type predicates
-    .replace(
-      /\n?export function defined\(value: any\): boolean;/gm,
-      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
-        .toString()
-        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
-        .replace("export default", "export")}`,
-    )
-    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
-    .replace(
-      /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
-        .toString()
-        .replace(/export default.*\n?/, "")
-        .replace("const Check", "export const Check")}`,
-    )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
     .replace(
       "raiseEvent(...arguments: Parameters<Listener>[]): void;",
@@ -1410,27 +1401,16 @@ function createTypeScriptDefinitions() {
     )
     // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
-    // Replace JSDoc generation version of defined with an improved version using TS type predicates
-    .replace(
-      /\n?export function defined\(value: any\): boolean;/gm,
-      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
-        .toString()
-        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
-        .replace("export default", "export")}`,
-    )
-    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
-    .replace(
-      /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
-        .toString()
-        .replace(/export default.*\n?/, "")
-        .replace("const Check", "export const Check")}`,
-    )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 to have rest parameter expand tuple
     .replace(
       "raiseEvent(...arguments: Parameters<Listener>[]): void;",
       "raiseEvent(...arguments: Parameters<Listener>): void;",
     );
+
+  let utilsTypes = readFileSync("packages/utils/Build/utils.d.ts").toString();
+  utilsTypes = utilsTypes.replace(/declare /gm, "").replace("export { }", "");
+  source = `${source}
+${utilsTypes}`;
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
@@ -1731,6 +1711,7 @@ async function buildSandcastle() {
 }
 
 async function buildCesiumViewer() {
+  await buildUtils();
   const cesiumViewerOutputDirectory = isProduction
     ? "Build/CesiumViewer"
     : "Build/Apps/CesiumViewer";

@@ -1,6 +1,5 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";

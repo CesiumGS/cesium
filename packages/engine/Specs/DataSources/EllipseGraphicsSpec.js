@@ -1,10 +1,10 @@
 import {
+  ClassificationType,
   Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
   EllipseGraphics,
-  ClassificationType,
   ShadowMode,
 } from "../../index.js";
 

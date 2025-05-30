@@ -1,16 +1,16 @@
 import {
-  defined,
+  EllipsoidSurfaceAppearance,
   GeometryInstance,
+  Globe,
+  GlobeSurfaceTile,
+  Math as CesiumMath,
+  Primitive,
+  QuadtreeTile,
   Rectangle,
   RectangleGeometry,
   WebMercatorTilingScheme,
-  EllipsoidSurfaceAppearance,
-  Globe,
-  GlobeSurfaceTile,
-  Primitive,
-  QuadtreeTile,
-  Math as CesiumMath,
 } from "@cesium/engine";
+import { defined } from "@cesium/utils";
 
 import { CesiumInspectorViewModel } from "../../index.js";
 

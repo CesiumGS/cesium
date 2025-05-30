@@ -1,16 +1,15 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import GeometryStageFS from "../../Shaders/Model/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/Model/GeometryStageVS.js";
 import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.

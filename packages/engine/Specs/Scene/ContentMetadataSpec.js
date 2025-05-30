@@ -1,4 +1,4 @@
-import { MetadataClass, ContentMetadata } from "../../index.js";
+import { ContentMetadata, MetadataClass } from "../../index.js";
 
 describe("Scene/ContentMetadata", function () {
   const contentClassWithNoProperties = MetadataClass.fromJson({

@@ -1,6 +1,6 @@
 import combine from "../../Core/combine.js";
-import ModelSplitterStageFS from "../../Shaders/Model/ModelSplitterStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import ModelSplitterStageFS from "../../Shaders/Model/ModelSplitterStageFS.js";
 
 /**
  * The model splitting pipeline stage is responsible for discarding fragments on the wrong side of the splitter.

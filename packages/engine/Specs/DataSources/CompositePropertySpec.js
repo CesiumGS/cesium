@@ -1,10 +1,10 @@
 import {
   Cartesian3,
+  CompositeProperty,
+  ConstantProperty,
   JulianDate,
   TimeInterval,
   TimeIntervalCollection,
-  CompositeProperty,
-  ConstantProperty,
 } from "../../index.js";
 
 describe("DataSources/CompositeProperty", function () {

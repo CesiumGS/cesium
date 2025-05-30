@@ -1,6 +1,6 @@
-import Matrix4 from "../../Core/Matrix4.js";
-import Check from "../../Core/Check.js";
+import { Check } from "@cesium/utils";
 import Frozen from "../../Core/Frozen.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * An in-memory representation of a skin that affects nodes in the {@link ModelSceneGraph}.

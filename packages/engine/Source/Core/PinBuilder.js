@@ -1,7 +1,6 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import buildModuleUrl from "./buildModuleUrl.js";
 import Color from "./Color.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Resource from "./Resource.js";
 import writeTextToCanvas from "./writeTextToCanvas.js";
 

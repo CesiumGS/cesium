@@ -4,15 +4,15 @@ import {
   ComponentDatatype,
   Ellipsoid,
   EncodedCartesian3,
-  Math as CesiumMath,
-  Matrix4,
-  Rectangle,
-  Transforms,
-  WebMercatorProjection,
   Material,
   MaterialAppearance,
+  Math as CesiumMath,
+  Matrix4,
   PerInstanceColorAppearance,
+  Rectangle,
   ShadowVolumeAppearance,
+  Transforms,
+  WebMercatorProjection,
 } from "../../index.js";
 
 describe("Scene/ShadowVolumeAppearance", function () {

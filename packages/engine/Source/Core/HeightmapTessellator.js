@@ -1,9 +1,8 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidalOccluder from "./EllipsoidalOccluder.js";
 import CesiumMath from "./Math.js";

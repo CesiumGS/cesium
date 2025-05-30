@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/utils";
 
 /**
  * The subdivision scheme for an implicit tileset.

@@ -2,11 +2,11 @@ import {
   BoundingSphere,
   Cartesian3,
   Cartographic,
+  Cesium3DTileBatchTable,
+  ColorBlendMode,
   Ellipsoid,
   Math as CesiumMath,
   Rectangle,
-  Cesium3DTileBatchTable,
-  ColorBlendMode,
   Vector3DTilePolylines,
 } from "../../index.js";
 

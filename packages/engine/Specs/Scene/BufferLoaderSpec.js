@@ -1,9 +1,5 @@
-import {
-  BufferLoader,
-  Resource,
-  ResourceCache,
-  RuntimeError,
-} from "../../index.js";
+import { RuntimeError } from "@cesium/utils";
+import { BufferLoader, Resource, ResourceCache } from "../../index.js";
 
 describe("Scene/BufferLoader", function () {
   const typedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);

@@ -1,9 +1,9 @@
 import {
   Ellipsoid,
   GeographicTilingScheme,
-  WebMercatorTilingScheme,
   GridImageryProvider,
   ImageryProvider,
+  WebMercatorTilingScheme,
 } from "../../index.js";
 
 describe("Scene/GridImageryProvider", function () {

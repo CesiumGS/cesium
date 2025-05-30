@@ -1,9 +1,9 @@
 import {
-  ComponentDatatype,
-  PrimitiveType,
   Buffer,
   BufferUsage,
+  ComponentDatatype,
   DrawCommand,
+  PrimitiveType,
   ShaderProgram,
   VertexArray,
 } from "../../index.js";

@@ -1,45 +1,45 @@
 import {
+  Camera,
+  CameraFlightPath,
   Cartesian3,
   CartographicGeocoderService,
   CesiumWidget,
   Clock,
-  CreditDisplay,
-  EllipsoidTerrainProvider,
-  Rectangle,
-  WebMercatorProjection,
   ConstantPositionProperty,
   ConstantProperty,
+  CreditDisplay,
   DataSourceCollection,
   DataSourceDisplay,
+  EllipsoidTerrainProvider,
   Entity,
-  Camera,
-  CameraFlightPath,
   ImageryLayer,
   ImageryLayerCollection,
-  SceneMode,
-  ShadowMode,
   IonGeocodeProviderType,
   IonGeocoderService,
+  Rectangle,
+  SceneMode,
+  ShadowMode,
+  WebMercatorProjection,
 } from "@cesium/engine";
 
 import {
   Animation,
   BaseLayerPicker,
-  ProviderViewModel,
   ClockViewModel,
   FullscreenButton,
   Geocoder,
   HomeButton,
   NavigationHelpButton,
+  ProviderViewModel,
   SceneModePicker,
   SelectionIndicator,
   Timeline,
 } from "../../index.js";
 
-import createViewer from "../createViewer.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import MockDataSource from "../../../../Specs/MockDataSource.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import createViewer from "../createViewer.js";
 
 describe(
   "Widgets/Viewer/Viewer",

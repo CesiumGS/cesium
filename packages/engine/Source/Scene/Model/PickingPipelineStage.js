@@ -1,8 +1,8 @@
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
+import { defined } from "@cesium/utils";
 import Color from "../../Core/Color.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";

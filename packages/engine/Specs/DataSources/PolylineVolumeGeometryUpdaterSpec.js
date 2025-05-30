@@ -1,16 +1,16 @@
 import {
   Cartesian2,
   Cartesian3,
-  CornerType,
-  JulianDate,
-  TimeInterval,
-  TimeIntervalCollection,
   ConstantProperty,
+  CornerType,
   Entity,
+  JulianDate,
   PolylineVolumeGeometryUpdater,
   PolylineVolumeGraphics,
-  TimeIntervalCollectionProperty,
   PrimitiveCollection,
+  TimeInterval,
+  TimeIntervalCollection,
+  TimeIntervalCollectionProperty,
 } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";

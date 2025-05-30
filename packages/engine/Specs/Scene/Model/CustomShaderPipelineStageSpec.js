@@ -1,3 +1,4 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   AttributeType,
   CustomShader,
@@ -10,10 +11,9 @@ import {
   ShaderBuilder,
   UniformType,
   VaryingType,
-  _shadersCustomShaderStageVS,
   _shadersCustomShaderStageFS,
+  _shadersCustomShaderStageVS,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/CustomShaderPipelineStage", function () {
   const primitive = {

@@ -1,9 +1,9 @@
 import {
   Cartesian3,
   Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
+  DistanceDisplayCondition,
   EllipsoidGraphics,
   ShadowMode,
 } from "../../index.js";

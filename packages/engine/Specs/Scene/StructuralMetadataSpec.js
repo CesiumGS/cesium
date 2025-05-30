@@ -1,7 +1,7 @@
 import {
-  StructuralMetadata,
   MetadataSchema,
   PropertyAttribute,
+  StructuralMetadata,
 } from "../../index.js";
 
 describe("Scene/StructuralMetadata", function () {

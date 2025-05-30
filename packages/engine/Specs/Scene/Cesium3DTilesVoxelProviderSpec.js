@@ -1,3 +1,5 @@
+import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 import {
   Cartesian3,
   Cesium3DTilesVoxelProvider,
@@ -10,8 +12,6 @@ import {
   VoxelProvider,
   VoxelShapeType,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/Cesium3DTilesVoxelProvider", function () {
   let scene;

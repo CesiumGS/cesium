@@ -1,18 +1,18 @@
 import {
   Cartesian3,
   Color,
-  JulianDate,
-  TimeInterval,
-  TimeIntervalCollection,
   ConstantProperty,
   Entity,
+  JulianDate,
+  PrimitiveCollection,
   PropertyArray,
   SampledPositionProperty,
   SampledProperty,
+  TimeInterval,
+  TimeIntervalCollection,
   TimeIntervalCollectionProperty,
   WallGeometryUpdater,
   WallGraphics,
-  PrimitiveCollection,
 } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";

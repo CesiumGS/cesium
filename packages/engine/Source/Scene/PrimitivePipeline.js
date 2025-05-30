@@ -1,7 +1,6 @@
+import { defined, DeveloperError } from "@cesium/utils";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import Geometry from "../Core/Geometry.js";

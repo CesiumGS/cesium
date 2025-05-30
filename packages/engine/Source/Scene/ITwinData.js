@@ -1,12 +1,9 @@
-import Cesium3DTileset from "./Cesium3DTileset.js";
-import defined from "../Core/defined.js";
-import Resource from "../Core/Resource.js";
+import { Check, defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import ITwinPlatform from "../Core/ITwinPlatform.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import Check from "../Core/Check.js";
-import KmlDataSource from "../DataSources/KmlDataSource.js";
+import Resource from "../Core/Resource.js";
 import GeoJsonDataSource from "../DataSources/GeoJsonDataSource.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import KmlDataSource from "../DataSources/KmlDataSource.js";
+import Cesium3DTileset from "./Cesium3DTileset.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS

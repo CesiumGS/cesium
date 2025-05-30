@@ -1,3 +1,8 @@
+import { RuntimeError } from "@cesium/utils";
+import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
+import createScene from "../../../../Specs/createScene.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 import {
   Buffer,
   Cartesian3,
@@ -9,12 +14,7 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
-import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
-import createScene from "../../../../Specs/createScene.js";
-import loaderProcess from "../../../../Specs/loaderProcess.js";
-import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfVertexBufferLoader",

@@ -1,4 +1,5 @@
 import {
+  BlendOption,
   BoundingRectangle,
   BoundingSphere,
   Cartesian2,
@@ -6,16 +7,15 @@ import {
   Cartographic,
   Color,
   DistanceDisplayCondition,
-  Math as CesiumMath,
-  NearFarScalar,
-  Rectangle,
-  BlendOption,
   Globe,
   HeightReference,
   HorizontalOrigin,
   Label,
   LabelCollection,
   LabelStyle,
+  Math as CesiumMath,
+  NearFarScalar,
+  Rectangle,
   VerticalOrigin,
 } from "../../index.js";
 

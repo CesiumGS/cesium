@@ -1,7 +1,7 @@
+import { DeveloperError, RuntimeError } from "@cesium/utils";
 import {
   Cartesian3,
   Color,
-  DeveloperError,
   EntityCollection,
   Event,
   GpxDataSource,
@@ -9,7 +9,6 @@ import {
   Iso8601,
   JulianDate,
   RequestErrorEvent,
-  RuntimeError,
   VerticalOrigin,
 } from "../../index.js";
 

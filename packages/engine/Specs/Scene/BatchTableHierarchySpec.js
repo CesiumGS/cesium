@@ -1,9 +1,5 @@
-import {
-  BatchTableHierarchy,
-  Cartesian2,
-  clone,
-  RuntimeError,
-} from "../../index.js";
+import { RuntimeError } from "@cesium/utils";
+import { BatchTableHierarchy, Cartesian2, clone } from "../../index.js";
 
 describe("Scene/BatchTableHierarchy", function () {
   const hierarchyExtension = {

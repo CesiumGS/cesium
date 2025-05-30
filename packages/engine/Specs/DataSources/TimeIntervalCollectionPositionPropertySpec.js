@@ -1,10 +1,10 @@
 import {
   Cartesian3,
   JulianDate,
+  PositionProperty,
   ReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
-  PositionProperty,
   TimeIntervalCollectionPositionProperty,
 } from "../../index.js";
 

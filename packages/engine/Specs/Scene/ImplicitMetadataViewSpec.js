@@ -1,14 +1,14 @@
+import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
 import {
   Cartesian3,
+  ImplicitMetadataView,
   ImplicitSubtree,
   ImplicitTileCoordinates,
   ImplicitTileset,
-  ImplicitMetadataView,
   MetadataClass,
   MetadataSchema,
   Resource,
 } from "../../index.js";
-import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
 
 describe("Scene/ImplicitMetadataView", function () {
   const highlightColors = [

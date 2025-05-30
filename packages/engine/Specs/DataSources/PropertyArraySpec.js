@@ -1,6 +1,6 @@
 import {
-  JulianDate,
   ConstantProperty,
+  JulianDate,
   PropertyArray,
   SampledProperty,
 } from "../../index.js";

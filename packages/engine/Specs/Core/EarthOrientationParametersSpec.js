@@ -1,9 +1,8 @@
+import { defined, RuntimeError } from "@cesium/utils";
 import {
-  defined,
   EarthOrientationParameters,
   JulianDate,
   TimeStandard,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Core/EarthOrientationParameters", function () {

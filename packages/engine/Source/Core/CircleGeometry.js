@@ -1,9 +1,8 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import EllipseGeometry from "./EllipseGeometry.js";
 import Ellipsoid from "./Ellipsoid.js";
+import Frozen from "./Frozen.js";
 import VertexFormat from "./VertexFormat.js";
 
 /**

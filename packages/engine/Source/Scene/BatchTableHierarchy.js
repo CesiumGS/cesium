@@ -1,12 +1,9 @@
-import AttributeType from "./AttributeType.js";
-import Check from "../Core/Check.js";
+import { Check, defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import AttributeType from "./AttributeType.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
-import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * Object for handling the <code>3DTILES_batch_table_hierarchy</code> extension

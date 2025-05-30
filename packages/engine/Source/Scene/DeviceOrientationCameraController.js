@@ -1,6 +1,5 @@
-import defined from "../Core/defined.js";
+import { defined, DeveloperError } from "@cesium/utils";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Quaternion from "../Core/Quaternion.js";

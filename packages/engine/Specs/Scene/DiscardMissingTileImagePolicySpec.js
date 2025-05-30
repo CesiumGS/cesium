@@ -1,7 +1,7 @@
 import {
   Cartesian2,
-  Resource,
   DiscardMissingTileImagePolicy,
+  Resource,
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";

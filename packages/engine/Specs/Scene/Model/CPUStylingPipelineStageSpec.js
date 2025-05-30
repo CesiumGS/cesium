@@ -1,3 +1,4 @@
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import {
   clone,
   Color,
@@ -9,7 +10,6 @@ import {
   _shadersCPUStylingStageFS,
   _shadersCPUStylingStageVS,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/CPUStylingPipelineStage", function () {
   const defaultRenderResources = {

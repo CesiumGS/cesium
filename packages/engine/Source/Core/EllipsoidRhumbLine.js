@@ -1,8 +1,6 @@
+import { Check, defined, DeveloperError } from "@cesium/utils";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
 

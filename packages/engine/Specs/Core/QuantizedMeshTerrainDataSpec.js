@@ -1,7 +1,7 @@
+import { defined } from "@cesium/utils";
 import {
   BoundingSphere,
   Cartesian3,
-  defined,
   GeographicTilingScheme,
   Math as CesiumMath,
   QuantizedMeshTerrainData,

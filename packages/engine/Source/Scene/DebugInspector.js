@@ -1,8 +1,8 @@
+import { defined } from "@cesium/utils";
 import Color from "../Core/Color.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
-import defined from "../Core/defined.js";
+import ShaderSource from "../Renderer/ShaderSource.js";
 
 /**
  * @private

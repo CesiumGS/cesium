@@ -1,4 +1,7 @@
 import {
+  Billboard,
+  BillboardCollection,
+  BlendOption,
   BoundingRectangle,
   BoundingSphere,
   Cartesian2,
@@ -9,20 +12,17 @@ import {
   createGuid,
   DistanceDisplayCondition,
   Globe,
+  HeightReference,
+  HorizontalOrigin,
   Math as CesiumMath,
   NearFarScalar,
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
   Rectangle,
   Resource,
-  Billboard,
-  BillboardCollection,
-  BlendOption,
-  HeightReference,
-  HorizontalOrigin,
+  SplitDirection,
   TextureAtlas,
   VerticalOrigin,
-  SplitDirection,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

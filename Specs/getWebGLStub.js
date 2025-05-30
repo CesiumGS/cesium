@@ -1,4 +1,5 @@
-import { clone, defined, DeveloperError, WebGLConstants } from "@cesium/engine";
+import { clone, WebGLConstants } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/utils";
 
 function getWebGLStub(canvas, options) {
   const stub = clone(WebGLConstants);

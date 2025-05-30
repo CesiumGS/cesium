@@ -1,10 +1,9 @@
+import { defined, RuntimeError } from "@cesium/utils";
 import Cartesian4 from "../Core/Cartesian4.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import I3SNode from "./I3SNode.js";
 import I3SSymbology from "./I3SSymbology.js";

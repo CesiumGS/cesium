@@ -1,12 +1,12 @@
 import {
+  Appearance,
   ArcType,
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
   GeometryInstance,
-  PolylineGeometry,
-  Appearance,
   PolylineColorAppearance,
+  PolylineGeometry,
   Primitive,
 } from "../../index.js";
 

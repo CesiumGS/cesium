@@ -1,12 +1,12 @@
+import createContext from "../../../../Specs/createContext.js";
 import {
-  PropertyTextureProperty,
   Matrix3,
   MetadataClassProperty,
   PixelDatatype,
   PixelFormat,
+  PropertyTextureProperty,
   Texture,
 } from "../../index.js";
-import createContext from "../../../../Specs/createContext.js";
 
 describe(
   "Scene/PropertyTextureProperty",

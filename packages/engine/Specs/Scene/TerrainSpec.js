@@ -1,4 +1,4 @@
-import { Terrain, EllipsoidTerrainProvider } from "../../index.js";
+import { EllipsoidTerrainProvider, Terrain } from "../../index.js";
 
 describe("Scene/Terrain", function () {
   it("constructor throws without terrain promise", function () {

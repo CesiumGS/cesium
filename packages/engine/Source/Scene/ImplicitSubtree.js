@@ -1,9 +1,6 @@
-import Check from "../Core/Check.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import defined from "../Core/defined.js";
+import { Check, defined, DeveloperError, RuntimeError } from "@cesium/utils";
 import destroyObject from "../Core/destroyObject.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitMetadataView from "./ImplicitMetadataView.js";

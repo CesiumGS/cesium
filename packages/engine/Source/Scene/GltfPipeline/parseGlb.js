@@ -1,9 +1,8 @@
-import addPipelineExtras from "./addPipelineExtras.js";
-import removeExtensionsUsed from "./removeExtensionsUsed.js";
-import defined from "../../Core/defined.js";
+import { defined, RuntimeError } from "@cesium/utils";
 import getMagic from "../../Core/getMagic.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
-import RuntimeError from "../../Core/RuntimeError.js";
+import addPipelineExtras from "./addPipelineExtras.js";
+import removeExtensionsUsed from "./removeExtensionsUsed.js";
 
 const sizeOfUint32 = 4;
 

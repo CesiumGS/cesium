@@ -1,8 +1,7 @@
+import { Check, defined } from "@cesium/utils";
 import Cartesian2 from "./Cartesian2.js";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
+import Frozen from "./Frozen.js";
 import GeographicProjection from "./GeographicProjection.js";
 import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";

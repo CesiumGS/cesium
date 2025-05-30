@@ -1,8 +1,8 @@
 import {
-  TileMetadata,
+  BoundingVolumeSemantics,
   Math,
   MetadataClass,
-  BoundingVolumeSemantics,
+  TileMetadata,
 } from "../../index.js";
 
 describe("Scene/BoundingVolumeSemantics", function () {

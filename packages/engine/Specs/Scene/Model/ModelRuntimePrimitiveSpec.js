@@ -3,15 +3,17 @@ import {
   BatchTexturePipelineStage,
   Cesium3DTileStyle,
   ClassificationPipelineStage,
+  ClassificationType,
+  CPUStylingPipelineStage,
   CustomShader,
   CustomShaderMode,
   CustomShaderPipelineStage,
-  FeatureIdPipelineStage,
-  CPUStylingPipelineStage,
   DequantizationPipelineStage,
+  FeatureIdPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
+  MetadataPickingPipelineStage,
   MetadataPipelineStage,
   ModelRuntimePrimitive,
   ModelType,
@@ -29,8 +31,6 @@ import {
   VertexAttributeSemantic,
   VerticalExaggerationPipelineStage,
   WireframePipelineStage,
-  ClassificationType,
-  MetadataPickingPipelineStage,
 } from "../../../index.js";
 
 import createFrameState from "../../../../../Specs/createFrameState.js";

@@ -1,11 +1,11 @@
 import {
   Cartesian2,
   Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   GridMaterialProperty,
+  JulianDate,
   SampledProperty,
+  TimeInterval,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
 

@@ -1,16 +1,16 @@
+import { RuntimeError } from "@cesium/utils";
 import {
+  CallbackProperty,
   Cartesian3,
   Color,
-  Credit,
-  Event,
-  JulianDate,
-  PolygonHierarchy,
-  RuntimeError,
-  CallbackProperty,
   ConstantProperty,
+  Credit,
   EntityCollection,
+  Event,
   GeoJsonDataSource,
   HeightReference,
+  JulianDate,
+  PolygonHierarchy,
 } from "../../index.js";
 
 describe("DataSources/GeoJsonDataSource", function () {

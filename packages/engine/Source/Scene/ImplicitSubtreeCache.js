@@ -1,6 +1,6 @@
-import Frozen from "../Core/Frozen.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/utils";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
+import Frozen from "../Core/Frozen.js";
 
 /**
  * @alias ImplicitSubtreeCache

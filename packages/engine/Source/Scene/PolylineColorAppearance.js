@@ -1,5 +1,5 @@
+import { FeatureDetection } from "@cesium/utils";
 import Frozen from "../Core/Frozen.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import PerInstanceFlatColorAppearanceFS from "../Shaders/Appearances/PerInstanceFlatColorAppearanceFS.js";
 import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppearanceVS.js";

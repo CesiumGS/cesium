@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/utils";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import loadKTX2 from "../Core/loadKTX2.js";

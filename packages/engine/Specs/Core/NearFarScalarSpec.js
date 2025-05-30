@@ -1,5 +1,5 @@
-import { NearFarScalar } from "../../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+import { NearFarScalar } from "../../index.js";
 
 describe("Core/NearFarScalar", function () {
   it("constructs without arguments", function () {

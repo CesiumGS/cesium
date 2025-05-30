@@ -1,10 +1,10 @@
+import { RuntimeError } from "@cesium/utils";
 import Composite3DTileContent from "./Composite3DTileContent.js";
 import Geometry3DTileContent from "./Geometry3DTileContent.js";
 import Implicit3DTileContent from "./Implicit3DTileContent.js";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
-import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * Maps a tile's magic field in its header to a new content object for the tile's payload.

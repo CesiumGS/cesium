@@ -1,4 +1,5 @@
-import { Frozen, FeatureDetection } from "@cesium/engine";
+import { Frozen } from "@cesium/engine";
+import { FeatureDetection } from "@cesium/utils";
 
 function createMouseEvent(type, options) {
   options = options ?? Frozen.EMPTY_OBJECT;

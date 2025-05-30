@@ -1,5 +1,5 @@
+import { defined } from "@cesium/utils";
 import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
 
