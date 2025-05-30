@@ -9,6 +9,7 @@ import {
   DistanceDisplayCondition,
   Ellipsoid,
   Math as CesiumMath,
+  HeightReference,
   NearFarScalar,
   Rectangle,
   Cesium3DTileBatchTable,
@@ -577,6 +578,7 @@ describe(
         maxHeight,
         cartoPositions,
       );
+      const heightReference = HeightReference.CLAMP_TO_TERRAIN;
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       batchTable.update(mockTileset, scene.frameState);
@@ -589,6 +591,8 @@ describe(
           rectangle: rectangle,
           minimumHeight: minHeight,
           maximumHeight: maxHeight,
+          heightReference: heightReference,
+          scene,
         }),
       );
 
@@ -616,7 +620,61 @@ describe(
         }).then(function () {
           expect(billboard.ready).toEqual(true);
           expect(scene).toRender([0, 0, 255, 255]);
+          expect(billboard.heightReference).toEqual(heightReference);
         });
+      });
+    });
+
+    it("renders a point with a label", function () {
+      const minHeight = 0.0;
+      const maxHeight = 100.0;
+      const cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
+      const positions = encodePositions(
+        rectangle,
+        minHeight,
+        maxHeight,
+        cartoPositions,
+      );
+      const heightReference = HeightReference.CLAMP_TO_TERRAIN;
+
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      batchTable.update(mockTileset, scene.frameState);
+
+      points = scene.primitives.add(
+        new Vector3DTilePoints({
+          positions: positions,
+          batchTable: batchTable,
+          batchIds: new Uint16Array([0]),
+          rectangle: rectangle,
+          minimumHeight: minHeight,
+          maximumHeight: maxHeight,
+          heightReference: heightReference,
+          scene,
+        }),
+      );
+
+      const style = new Cesium3DTileStyle({
+        labelText: '"test"',
+        labelColor: "rgba(100, 255, 0, 255)",
+        labelHorizontalOrigin: HorizontalOrigin.LEFT,
+      });
+      return loadPoints(points).then(function () {
+        const features = [];
+        points.createFeatures(mockTileset, features);
+        points.applyStyle(style, features);
+
+        const collection = points._labelCollection;
+        expect(collection.length).toEqual(1);
+        const label = collection.get(0);
+        expect(label).toBeDefined();
+
+        scene.camera.lookAt(
+          Cartesian3.fromDegrees(0.0, 0.0, 10.0),
+          new Cartesian3(0.0, 0.0, 50.0),
+        );
+
+        expect(scene).toRender([100, 255, 0, 255]);
+        expect(label.heightReference).toEqual(heightReference);
       });
     });
 
