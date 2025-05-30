@@ -169,7 +169,7 @@ void main()
 
     FragmentInput fragmentInput;
     #if defined(STATISTICS)
-        setStatistics(fragmentInput.metadata.statistics);
+        setStatistics(fragmentInput.metadataStatistics);
     #endif
 
     czm_modelMaterial materialOutput;
