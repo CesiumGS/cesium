@@ -60,8 +60,8 @@ const customShader = new Cesium.CustomShader({
 
 ## Applying A Custom Shader
 
-Custom shaders can be applied to either 3D Tiles or a `Model` as
-follows:
+Custom shaders can be applied to either 3D Tiles, a `Model`, or
+a `VoxelPrimitive` as follows:
 
 ```js
 const customShader = new Cesium.CustomShader(/* ... */);
@@ -69,16 +69,27 @@ const customShader = new Cesium.CustomShader(/* ... */);
 // Applying to all tiles in a tileset.
 const tileset = await Cesium.Cesium3DTileset.fromUrl(
   "http://example.com/tileset.json", {
-    customShader: customShader
+    customShader: customShader,
 });
 viewer.scene.primitives.add(tileset);
 
 // Applying to a model directly
 const model = await Cesium.Model.fromGltfAsync({,
   url: "http://example.com/model.gltf",
-  customShader: customShader
+  customShader: customShader,
+});
+
+// Applying to a VoxelPrimitive
+const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+  "http://example.com/tileset.json",
+);
+const voxelPrimitive = new Cesium.VoxelPrimitive({
+  provider: provider,
+  customShader: customShader,
 });
 ```
+
+Voxels only support a subset of custom shader functionality. See [Using custom shaders for voxel rendering](#using-custom-shaders-for-voxel-rendering).
 
 ## Uniforms
 
@@ -229,7 +240,7 @@ struct FragmentInput {
 };
 ```
 
-## Attributes Struct
+## `Attributes` Struct
 
 The `Attributes` struct is dynamically generated given the variables used in
 the custom shader and the attributes available in the primitive to render.
@@ -871,3 +882,19 @@ even when `lightingModel` is `LightingModel.UNLIT`.
 
 When `scene.highDynamicRange` is `false`, the final computed color
 (after custom shaders and lighting) is converted to `sRGB`.
+
+## Using custom shaders for voxel rendering
+
+Voxel rendering uses a subset of custom shader functionality.
+
+The supplied shader is executed in the fragment shader _only_. (If a `vertexShaderText` is supplied, it will be ignored.)
+The supplied fragment shader is executed at each step of the raymarching through the voxel.
+The final rendered color at a given pixel will be an alpha-blended composition of the shader executions at all steps along the ray.
+
+The `FragmentInput` struct in a voxel shader has some differences with other custom shaders:
+
+- `Attributes`: Only `positionEC` and `normalEC` properties are supported.
+- `FeatureIds` is not present in voxel shaders.
+- `Metadata` is fully supported.
+- `MetadataClass` is not present.
+- `MetadataStatistics`: The only supported statistics are `min` and `max`.

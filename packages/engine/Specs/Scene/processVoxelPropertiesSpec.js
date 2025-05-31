@@ -49,17 +49,17 @@ describe("Scene/processVoxelProperties", function () {
       propertyStatisticsFields,
     );
 
-    // Check for Statistics struct
-    const statisticsFields = ["    PropertyStatistics_a a;"];
+    // Check for MetadataStatistics struct
+    const metadataStatisticsFields = ["    PropertyStatistics_a a;"];
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      "Statistics",
-      "Statistics",
-      statisticsFields,
+      "MetadataStatistics",
+      "MetadataStatistics",
+      metadataStatisticsFields,
     );
 
     // Check for Metadata struct
-    const metadataFields = ["    Statistics statistics;", "    float a;"];
+    const metadataFields = ["    float a;"];
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       "Metadata",
@@ -67,33 +67,23 @@ describe("Scene/processVoxelProperties", function () {
       metadataFields,
     );
 
-    // Check for VoxelProperty structs
-    const voxelPropertyFields = [
-      "    vec3 partialDerivativeLocal;",
-      "    vec3 partialDerivativeWorld;",
-      "    vec3 partialDerivativeView;",
-      "    vec3 partialDerivativeValid;",
-    ];
+    // Check for Attributes struct
+    const attributesFields = ["    vec3 positionEC;", "    vec3 normalEC;"];
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      "VoxelProperty_a",
-      "VoxelProperty_a",
-      voxelPropertyFields,
+      "Attributes",
+      "Attributes",
+      attributesFields,
     );
 
     // Check for Voxel struct
     const voxelFields = [
-      "    VoxelProperty_a a;",
-      "    vec3 positionEC;",
-      "    vec3 positionUv;",
-      "    vec3 positionShapeUv;",
-      "    vec3 positionUvLocal;",
-      "    vec3 surfaceNormal;",
       "    vec3 viewDirUv;",
       "    float travelDistance;",
       "    int stepCount;",
       "    int sampleIndex;",
       "    int tileIndex;",
+      "    float distanceToDepthBuffer;",
     ];
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
@@ -103,7 +93,12 @@ describe("Scene/processVoxelProperties", function () {
     );
 
     // Check for FragmentInput struct
-    const fragmentInputFields = ["    Metadata metadata;", "    Voxel voxel;"];
+    const fragmentInputFields = [
+      "    MetadataStatistics metadataStatistics;",
+      "    Metadata metadata;",
+      "    Attributes attributes;",
+      "    Voxel voxel;",
+    ];
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       "FragmentInput",
@@ -121,11 +116,82 @@ describe("Scene/processVoxelProperties", function () {
     );
 
     // Check clearProperties function
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+      shaderBuilder,
+      "clearProperties",
+      "Properties clearProperties()",
+      [
+        "    Properties properties;",
+        "    properties.a = float(0.0);",
+        "    return properties;",
+      ],
+    );
+
     // Check sumProperties function
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+      shaderBuilder,
+      "sumProperties",
+      "Properties sumProperties(Properties propertiesA, Properties propertiesB)",
+      [
+        "    Properties properties;",
+        "    properties.a = propertiesA.a + propertiesB.a;",
+        "    return properties;",
+      ],
+    );
+
     // Check scaleProperties function
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+      shaderBuilder,
+      "scaleProperties",
+      "Properties scaleProperties(Properties properties, float scale)",
+      [
+        "    Properties scaledProperties = properties;",
+        "    scaledProperties.a *= scale;",
+        "    return scaledProperties;",
+      ],
+    );
+
     // Check mixProperties function
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+      shaderBuilder,
+      "mixProperties",
+      "Properties mixProperties(Properties propertiesA, Properties propertiesB, float mixFactor)",
+      [
+        "    Properties properties;",
+        "    properties.a = mix(propertiesA.a, propertiesB.a, mixFactor);",
+        "    return properties;",
+      ],
+    );
+
     // Check copyPropertiesToMetadata function
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+      shaderBuilder,
+      "copyPropertiesToMetadata",
+      "void copyPropertiesToMetadata(in Properties properties, inout Metadata metadata)",
+      ["    metadata.a = properties.a;"],
+    );
+
     // Check setStatistics function
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+      shaderBuilder,
+      "setStatistics",
+      "void setStatistics(inout MetadataStatistics metadataStatistics)",
+      [
+        "    metadataStatistics.a.min = 0.0;",
+        "    metadataStatistics.a.max = 1.0;",
+      ],
+    );
+
     // Check getPropertiesFromMegatextureAtUv function
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+      shaderBuilder,
+      "getPropertiesFromMegatextureAtUv",
+      "Properties getPropertiesFromMegatextureAtUv(vec2 texcoord)",
+      [
+        "    Properties properties;",
+        "    properties.a = texture(u_megatextureTextures[0], texcoord).r;",
+        "    return properties;",
+      ],
+    );
   });
 });

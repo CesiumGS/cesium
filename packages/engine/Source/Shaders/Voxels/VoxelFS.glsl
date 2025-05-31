@@ -15,6 +15,7 @@
     #define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
 #endif
 
+uniform mat4 u_transformPositionUvToView;
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
 uniform vec3 u_cameraDirectionUv;
@@ -168,9 +169,10 @@ void main()
 
     FragmentInput fragmentInput;
     #if defined(STATISTICS)
-        setStatistics(fragmentInput.metadata.statistics);
+        setStatistics(fragmentInput.metadataStatistics);
     #endif
 
+    czm_modelMaterial materialOutput;
     vec4 colorAccum = vec4(0.0);
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
@@ -179,18 +181,19 @@ void main()
 
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
-        fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionShapeUv = pointJacobian.point;
-        fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
+
+        fragmentInput.attributes.positionEC = vec3(u_transformPositionUvToView * vec4(positionUv, 1.0));
+        fragmentInput.attributes.normalEC = normalize(czm_normal * step.xyz);
+
         fragmentInput.voxel.viewDirUv = viewRayUv.dir;
-        fragmentInput.voxel.surfaceNormal = step.xyz;
+
         fragmentInput.voxel.travelDistance = step.w;
         fragmentInput.voxel.stepCount = stepCount;
         fragmentInput.voxel.tileIndex = sampleDatas[0].megatextureIndex;
         fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0]);
+        fragmentInput.voxel.distanceToDepthBuffer = ix.distanceToDepthBuffer - currentT;
 
         // Run the custom shader
-        czm_modelMaterial materialOutput;
         fragmentMain(fragmentInput, materialOutput);
 
         // Sanitize the custom shader output
