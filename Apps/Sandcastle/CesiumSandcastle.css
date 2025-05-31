@@ -186,6 +186,25 @@ a.linkButton:hover {
   overflow: auto !important;
 }
 
+.feedback {
+  width: 250px;
+
+  .future-banner {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    text-align: center;
+    flex-direction: column;
+
+    h3 {
+      margin: 0 1em;
+    }
+    p {
+      margin: 1em 1.5em;
+    }
+  }
+}
+
 .claro .dijitTabContainerTop-tabs .dijitTabChecked .dijitTabContent {
   background-position: 0 -103px;
 }

@@ -155,6 +155,16 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.instanceCount = 0;
+
+  /**
+   * The PrimitiveRenderResources for the primitives of the node.
+   *
+   * @type {PrimitiveRenderResources[]}
+   * @default []
+   *
+   * @private
+   */
+  this.primitiveRenderResources = [];
 }
 
 export default NodeRenderResources;
