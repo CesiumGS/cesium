@@ -39,7 +39,7 @@
 
 ## Get the Code
 
-- Setup Git if it isn't already ([link](https://help.github.com/articles/set-up-git/#platform-all)).
+- [Setup Git](https://help.github.com/articles/set-up-git/#platform-all) if it isn't already.
   - New to git or need a refresher? Now's a good time to learn! [Easy tutorials here.](https://guides.github.com/)
   - Make sure your SSH keys are configured ([linux](https://help.github.com/articles/generating-ssh-keys#platform-linux) | [mac](https://help.github.com/articles/generating-ssh-keys#platform-mac) | [windows](https://help.github.com/articles/generating-ssh-keys#platform-windows)).
   - Double-check your settings for name and email: `git config --get-regexp user.*`.
