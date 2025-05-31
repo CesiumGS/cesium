@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install node 20
+      - name: install node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -33,10 +33,10 @@ jobs:
       BRANCH: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-      - name: install node 20
+      - name: install node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: build
@@ -50,10 +50,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install node 20
+      - name: install node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: release build
@@ -62,14 +62,14 @@ jobs:
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
       - name: cloc
         run: npm run cloc
-  node-18:
+  node-20:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install node 18
+      - name: install node 20
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       - name: npm install
         run: npm install
       - name: release build
