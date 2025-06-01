@@ -312,32 +312,32 @@ function handleMouseUp(screenSpaceEventHandler, event) {
     return;
   }
 
-  if (screenSpaceEventHandler._buttonDown[MouseButton.LEFT]) {
+  if (screenSpaceEventHandler._buttonDown[0]) {
     cancelMouseEvent(
       screenSpaceEventHandler,
       ScreenSpaceEventType.LEFT_UP,
       ScreenSpaceEventType.LEFT_CLICK,
       event,
     );
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false;
+    screenSpaceEventHandler._buttonDown[0] = false;
   }
-  if (screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE]) {
+  if (screenSpaceEventHandler._buttonDown[1]) {
     cancelMouseEvent(
       screenSpaceEventHandler,
       ScreenSpaceEventType.MIDDLE_UP,
       ScreenSpaceEventType.MIDDLE_CLICK,
       event,
     );
-    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] = false;
+    screenSpaceEventHandler._buttonDown[1] = false;
   }
-  if (screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]) {
+  if (screenSpaceEventHandler._buttonDown[2]) {
     cancelMouseEvent(
       screenSpaceEventHandler,
       ScreenSpaceEventType.RIGHT_UP,
       ScreenSpaceEventType.RIGHT_CLICK,
       event,
     );
-    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] = false;
+    screenSpaceEventHandler._buttonDown[2] = false;
   }
 }
 
@@ -375,9 +375,9 @@ function handleMouseMove(screenSpaceEventHandler, event) {
   Cartesian2.clone(position, previousPosition);
 
   if (
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
-    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
-    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]
+    screenSpaceEventHandler._buttonDown[0] ||
+    screenSpaceEventHandler._buttonDown[1] ||
+    screenSpaceEventHandler._buttonDown[2]
   ) {
     event.preventDefault();
   }
@@ -541,12 +541,9 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
   let clickAction;
   const pinching = screenSpaceEventHandler._isPinching;
 
-  if (
-    numberOfTouches !== 1 &&
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT]
-  ) {
+  if (numberOfTouches !== 1 && screenSpaceEventHandler._buttonDown[0]) {
     // transitioning from single touch, trigger UP and might trigger CLICK
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false;
+    screenSpaceEventHandler._buttonDown[0] = false;
 
     if (defined(screenSpaceEventHandler._touchHoldTimer)) {
       clearTimeout(screenSpaceEventHandler._touchHoldTimer);
@@ -624,7 +621,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
       screenSpaceEventHandler._primaryPreviousPosition,
     );
 
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = true;
+    screenSpaceEventHandler._buttonDown[0] = true;
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.LEFT_DOWN,
@@ -750,10 +747,7 @@ function fireTouchMoveEvents(screenSpaceEventHandler, event) {
   const numberOfTouches = positions.length;
   let action;
 
-  if (
-    numberOfTouches === 1 &&
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT]
-  ) {
+  if (numberOfTouches === 1 && screenSpaceEventHandler._buttonDown[0]) {
     // moving single touch
     const position = positions.values[0];
     Cartesian2.clone(position, screenSpaceEventHandler._primaryPosition);
@@ -981,9 +975,9 @@ function handlePointerMove(screenSpaceEventHandler, event) {
 function ScreenSpaceEventHandler(element) {
   this._inputEvents = {};
   this._buttonDown = {
-    LEFT: false,
-    MIDDLE: false,
-    RIGHT: false,
+    0: false, // LEFT
+    1: false, // MIDDLE
+    2: false, // RIGHT
   };
   this._isPinching = false;
   this._isTouchHolding = false;
