@@ -29,7 +29,8 @@ import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import Axis from "./Axis.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import GaussianSplat3DTilesContent from "./GaussianSplat3DTilesContent.js";
+import Transforms from "../Core/Transforms.js";
+import Quaternion from "../Core/Quaternion.js";
 
 const scratchSplatMatrix = new Matrix4();
 
@@ -131,53 +132,87 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const splatPrimitive = tile.content.splatPrimitive;
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
-  let computedModelMatrix = Matrix4.multiplyTransformation(
+  const computedModelMatrix = Matrix4.multiplyTransformation(
     computedTransform,
     gaussianSplatPrimitive._axisCorrectionMatrix,
     new Matrix4(),
   );
 
-  computedModelMatrix = Matrix4.multiplyTransformation(
+  Matrix4.multiplyTransformation(
     computedModelMatrix,
     tile.content.worldTransform,
-    new Matrix4(),
+    computedModelMatrix,
   );
 
-  let rootComputed = Matrix4.multiplyTransformation(
-    tile.tileset.root.computedTransform,
-    gaussianSplatPrimitive._axisCorrectionMatrix,
+  const center = tile.tileset.boundingSphere.center;
+  const toGlobal = Transforms.eastNorthUpToFixedFrame(center);
+  const toLocal = Matrix4.inverse(toGlobal, new Matrix4());
+
+  const transform = Matrix4.multiplyTransformation(
+    toLocal,
+    computedModelMatrix,
     new Matrix4(),
   );
-
-  rootComputed = Matrix4.multiplyTransformation(
-    rootComputed,
-    tile.tileset.root.content.worldTransform,
-    new Matrix4(),
-  );
-
-  const inverseRoot = Matrix4.inverse(rootComputed, new Matrix4());
 
   const positions = ModelUtility.getAttributeBySemantic(
     splatPrimitive,
     VertexAttributeSemantic.POSITION,
   ).typedArray;
 
-  for (let i = 0; i < positions.length; i += 3) {
-    const worldPosition = Matrix4.multiplyByPoint(
-      computedModelMatrix,
-      new Cartesian3(positions[i], positions[i + 1], positions[i + 2]),
-      new Cartesian3(),
+  const rotations = ModelUtility.getAttributeBySemantic(
+    splatPrimitive,
+    VertexAttributeSemantic.ROTATION,
+  ).typedArray;
+
+  const scales = ModelUtility.getAttributeBySemantic(
+    splatPrimitive,
+    VertexAttributeSemantic.SCALE,
+  ).typedArray;
+
+  const mat = new Matrix4();
+  for (let i = 0; i < positions.length / 3; ++i) {
+    const position = new Cartesian3(
+      positions[i * 3],
+      positions[i * 3 + 1],
+      positions[i * 3 + 2],
+    );
+    const rotation = new Quaternion(
+      rotations[i * 4],
+      rotations[i * 4 + 1],
+      rotations[i * 4 + 2],
+      rotations[i * 4 + 3],
+    );
+    const scale = new Cartesian3(
+      scales[i * 3],
+      scales[i * 3 + 1],
+      scales[i * 3 + 2],
     );
 
-    const position = Matrix4.multiplyByPoint(
-      inverseRoot,
-      worldPosition,
-      new Cartesian3(),
+    Matrix4.fromTranslationQuaternionRotationScale(
+      position,
+      rotation,
+      scale,
+      mat,
     );
 
-    positions[i] = position.x;
-    positions[i + 1] = position.y;
-    positions[i + 2] = position.z;
+    Matrix4.multiplyTransformation(transform, mat, mat);
+
+    Matrix4.getTranslation(mat, position);
+    Matrix4.getRotation(mat, rotation);
+    Matrix4.getScale(mat, scale);
+
+    positions[i * 3] = position.x;
+    positions[i * 3 + 1] = position.y;
+    positions[i * 3 + 2] = position.z;
+
+    rotations[i * 4] = rotation.x;
+    rotations[i * 4 + 1] = rotation.y;
+    rotations[i * 4 + 2] = rotation.z;
+    rotations[i * 4 + 3] = rotation.w;
+
+    scales[i * 3] = scale.x;
+    scales[i * 3 + 1] = scale.y;
+    scales[i * 3 + 2] = scale.z;
   }
 };
 
@@ -238,7 +273,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const renderStateOptions = renderResources.renderStateOptions;
   renderStateOptions.cull.enabled = false;
   renderStateOptions.depthMask = false;
-  renderStateOptions.depthTest.enabled = false;
+  renderStateOptions.depthTest.enabled = true;
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
   renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
 
@@ -338,19 +373,8 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     interleave: false,
   });
 
-  let modelMatrix = Matrix4.multiply(
-    tileset._root.computedTransform,
-    primitive._axisCorrectionMatrix,
-    new Matrix4(),
-  );
-
-  if (tileset._root._content instanceof GaussianSplat3DTilesContent) {
-    modelMatrix = Matrix4.multiplyTransformation(
-      modelMatrix,
-      tileset.root.content.worldTransform,
-      new Matrix4(),
-    );
-  }
+  const center = tileset.boundingSphere.center;
+  const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
 
   const command = new DrawCommand({
     boundingVolume: tileset.boundingSphere,
