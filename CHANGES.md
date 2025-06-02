@@ -19,8 +19,8 @@ vec3 voxelNormal = fsInput.attributes.normalEC;
 
 #### Additions :tada:
 
-- Support Texture3D and add Volume Cloud SandBox Sample. [#12550](https://github.com/CesiumGS/cesium/issues/12550)
-- Basic support for draping imagery on 3D Tiles. [#7591](https://github.com/CesiumGS/cesium/issues/7591)
+- Add basic support for draping imagery on 3D Tiles. [#12567](https://github.com/CesiumGS/cesium/pull/12567)
+- Add support for 3D Textures and add Volume Cloud sandcastle example. [#12661](https://github.com/CesiumGS/cesium/pull/12611)
 
 #### Fixes :wrench:
 
