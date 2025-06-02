@@ -140,13 +140,13 @@ function VoxelRenderResources(primitive) {
     }
     shaderBuilder.addFragmentLines([IntersectClippingPlanes]);
   }
+  shaderBuilder.addFragmentLines([IntersectDepth]);
   if (primitive._depthTest) {
     shaderBuilder.addDefine(
       "DEPTH_TEST",
       undefined,
       ShaderDestination.FRAGMENT,
     );
-    shaderBuilder.addFragmentLines([IntersectDepth]);
   }
 
   if (shapeType === "BOX") {

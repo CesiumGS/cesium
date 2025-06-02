@@ -45,6 +45,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
  * @see VoxelShapeType
+ * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -356,12 +357,6 @@ function VoxelPrimitive(options) {
    */
   this._transformDirectionWorldToLocal = new Matrix3();
 
-  /**
-   * @type {Matrix3}
-   * @private
-   */
-  this._transformNormalLocalToWorld = new Matrix3();
-
   // Rendering
   /**
    * @type {boolean}
@@ -448,7 +443,6 @@ function VoxelPrimitive(options) {
     transformPositionViewToUv: new Matrix4(),
     transformPositionUvToView: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
-    transformNormalLocalToWorld: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
     cameraDirectionUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
@@ -1082,6 +1076,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {CustomShader}
+   * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
    */
   customShader: {
     get: function () {
@@ -1142,10 +1137,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
-const scratchScale = new Cartesian3();
-const scratchLocalScale = new Cartesian3();
-const scratchRotation = new Matrix3();
-const scratchRotationAndLocalScale = new Matrix3();
 const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
 const scratchTransformPositionLocalToProjection = new Matrix4();
@@ -1312,10 +1303,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     this._transformDirectionWorldToLocal,
     transformDirectionViewToWorld,
     uniforms.transformDirectionViewToLocal,
-  );
-  uniforms.transformNormalLocalToWorld = Matrix3.clone(
-    this._transformNormalLocalToWorld,
-    uniforms.transformNormalLocalToWorld,
   );
   uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
     this._transformPositionWorldToUv,
@@ -1621,23 +1608,6 @@ function updateShapeAndTransforms(primitive, shape, provider) {
     transformPositionLocalToWorld,
     scratchTransformPositionWorldToLocal,
   );
-  const rotation = Matrix4.getRotation(
-    transformPositionLocalToWorld,
-    scratchRotation,
-  );
-  // Note that inverse(rotation) is the same as transpose(rotation)
-  const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
-  const maximumScaleComponent = Cartesian3.maximumComponent(scale);
-  const localScale = Cartesian3.divideByScalar(
-    scale,
-    maximumScaleComponent,
-    scratchLocalScale,
-  );
-  const rotationAndLocalScale = Matrix3.multiplyByScale(
-    rotation,
-    localScale,
-    scratchRotationAndLocalScale,
-  );
 
   // Set member variables when the shape is dirty
   primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
@@ -1657,10 +1627,6 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   primitive._transformDirectionWorldToLocal = Matrix4.getMatrix3(
     transformPositionWorldToLocal,
     primitive._transformDirectionWorldToLocal,
-  );
-  primitive._transformNormalLocalToWorld = Matrix3.inverseTranspose(
-    rotationAndLocalScale,
-    primitive._transformNormalLocalToWorld,
   );
 
   return true;
