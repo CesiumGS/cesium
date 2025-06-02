@@ -322,33 +322,66 @@
       <div
         id="bottomPanel"
         class="bottomPanel"
-        data-dojo-type="dijit.layout.TabContainer"
+        data-dojo-type="dijit.layout.BorderContainer"
         data-dojo-props="region: 'bottom', splitter: true"
       >
         <div
-          id="innerPanel"
           class="bottomPanel"
           data-dojo-type="dijit.layout.TabContainer"
-          data-dojo-props="title: 'Gallery', nested: true"
+          data-dojo-props="region: 'center', splitter: false"
         >
           <div
-            id="searchContainer"
-            class="galleryContainer"
-            data-dojo-type="dijit.layout.ContentPane"
-            data-dojo-props="title: 'Search Results'"
+            id="innerPanel"
+            class="bottomPanel"
+            data-dojo-type="dijit.layout.TabContainer"
+            data-dojo-props="title: 'Gallery', nested: true"
           >
-            <div id="searchResults" class="demosContainer">
-              <div id="searchDemos" class="demos"></div>
+            <div
+              id="searchContainer"
+              class="galleryContainer"
+              data-dojo-type="dijit.layout.ContentPane"
+              data-dojo-props="title: 'Search Results'"
+            >
+              <div id="searchResults" class="demosContainer">
+                <div id="searchDemos" class="demos"></div>
+              </div>
+            </div>
+          </div>
+          <div
+            id="logContainer"
+            data-dojo-type="dijit.layout.ContentPane"
+            data-dojo-props="title: 'Console'"
+          >
+            <div class="logContainer">
+              <div id="logOutput"></div>
             </div>
           </div>
         </div>
         <div
-          id="logContainer"
-          data-dojo-type="dijit.layout.ContentPane"
-          data-dojo-props="title: 'Console'"
+          class="feedback"
+          data-dojo-type="dijit.layout.TabContainer"
+          data-dojo-props="region: 'right'"
         >
-          <div class="logContainer">
-            <div id="logOutput"></div>
+          <div
+            class="future-banner"
+            data-dojo-type="dijit.layout.ContentPane"
+            data-dojo-props="title: 'Feedback'"
+          >
+            <h3>Help needed</h3>
+            <p>
+              We're currently gathering user feedback to make Sandcastle even
+              better.
+            </p>
+            <button data-dojo-type="dijit/form/Button" type="button">
+              Please share your thoughts!
+              <script
+                type="dojo/on"
+                data-dojo-event="click"
+                data-dojo-args="evt"
+              >
+                window.open("https://community.cesium.com/t/upgrading-sandcastle-we-need-your-input/39715/", "_blank")
+              </script>
+            </button>
           </div>
         </div>
       </div>

@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install node 20
+      - name: install node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -33,10 +33,10 @@ jobs:
       BRANCH: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-      - name: install node 20
+      - name: install node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: build
@@ -50,10 +50,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install node 20
+      - name: install node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: release build
@@ -78,10 +78,10 @@ jobs:
       GITHUB_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
-      - name: install node 20
+      - name: install node 22
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: set the version in package.json
@@ -116,14 +116,14 @@ jobs:
       - name: set status
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: npm run deploy-status -- --status success --message Deployed
-  node-18:
+  node-20:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install node 18
+      - name: install node 20
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       - name: npm install
         run: npm install
       - name: release build
