@@ -6,7 +6,16 @@
 
 #### Breaking Changes :mega:
 
-- The `FragmentInput` struct for voxel shaders has been updated to be more consistent with the `CustomShader` documentation. Remaining differences in `CustomShader` usage between `VoxelPrimitive` and `Cesium3DTileset` or `Model` are now documented in the Custom Shader Guide. [#12636](https://github.com/CesiumGS/cesium/pull/12636)
+- The `FragmentInput` struct for voxel shaders has been updated to be more consistent with the `CustomShader` documentation. Remaining differences in `CustomShader` usage between `VoxelPrimitive` and `Cesium3DTileset` or `Model` are now documented in the Custom Shader Guide. [#12636](https://github.com/CesiumGS/cesium/pull/12636). Key changes include:
+  - The non-standard position attributes `fsInput.voxel.positionUv`, `fsInput.voxel.positionShapeUv`, and `fsInput.voxel.positionLocal` have been removed, and replaced by a single eye coordinate position `fsInput.attributes.positionEC`.
+  - The normal in model coordinates `fsInput.voxel.surfaceNormal` has been replaced by a normal in eye coordinates `fsInput.attributes.normalEC`. Example:
+
+```glsl
+// Replace this:
+// vec3 voxelNormal = normalize(czm_normal * fsInput.voxel.surfaceNormal);
+// with this:
+vec3 voxelNormal = fsInput.attributes.normalEC;
+```
 
 #### Additions :tada:
 
