@@ -185,57 +185,6 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   }
 };
 
-/**
- * Returns the encoded texture attribute data ready to be be used in a bound texture.
- * @param {*} primitive
- */
-GaussianSplatPrimitive.generateTextureAttributeData = function (tile) {
-  const content = tile.content;
-  const gsplatData = content._gsplatData;
-
-  content.gaussianSplatTextureDataPending = true;
-
-  const promise = GaussianSplatTextureGenerator.generateFromAttributes({
-    attributes: {
-      positions: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          gsplatData,
-          VertexAttributeSemantic.POSITION,
-        ).typedArray,
-      ),
-      scales: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          gsplatData,
-          VertexAttributeSemantic.SCALE,
-        ).typedArray,
-      ),
-      rotations: new Float32Array(
-        ModelUtility.getAttributeBySemantic(
-          gsplatData,
-          VertexAttributeSemantic.ROTATION,
-        ).typedArray,
-      ),
-      colors: new Uint8Array(
-        ModelUtility.getAttributeByName(gsplatData, "COLOR_0").typedArray,
-      ),
-    },
-    count: content.pointsLength,
-  });
-  if (promise === undefined) {
-    tile.gaussianSplatTextureDataPending = false;
-    return;
-  }
-  promise
-    .then((splatTextureData) => {
-      content.attributeTextureData = splatTextureData;
-      content.gaussianSplatTextureDataPending = false;
-    })
-    .catch((error) => {
-      console.error("Error generating Gaussian splat texture data:", error);
-      content.gaussianSplatTextureDataPending = false;
-    });
-};
-
 GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
   primitive._gaussianSplatTexturePending = true;
   const promise = GaussianSplatTextureGenerator.generateFromAttributes({
