@@ -25,7 +25,7 @@
     "./Specs/**/*"
   ],
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=20.19.0"
   },
   "dependencies": {
     "@cesium/engine": "^17.0.0",
