@@ -161,9 +161,7 @@ GaussianSplatPrimitive.prototype.onTileLoad = function (tile) {
   this._dirty = true;
 };
 
-GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {
-  this._dirty = true;
-};
+GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
 
 GaussianSplatPrimitive.transformTile = function (tile) {
   const computedTransform = tile.computedTransform;
@@ -582,14 +580,16 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       scratchSplatMatrix,
     );
 
-    this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
-      primitive: {
-        positions: new Float32Array(this._positions),
-        modelView: Float32Array.from(scratchSplatMatrix),
-        count: this._numSplats,
-      },
-      sortType: "Index",
-    });
+    if (this._sorterPromise === undefined) {
+      this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
+        primitive: {
+          positions: new Float32Array(this._positions),
+          modelView: Float32Array.from(scratchSplatMatrix),
+          count: this._numSplats,
+        },
+        sortType: "Index",
+      });
+    }
 
     if (this._sorterPromise === undefined) {
       this._sorterState = GaussianSplatSortingState.WAITING;
@@ -635,6 +635,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
     this._sorterState = GaussianSplatSortingState.IDLE; //reset state for next frame
     this._dirty = false;
+    this._sorterPromise = undefined; //reset promise for next frame
   } else if (this._sorterState === GaussianSplatSortingState.ERROR) {
     console.error("Error in Gaussian Splat sorting state.");
   }
