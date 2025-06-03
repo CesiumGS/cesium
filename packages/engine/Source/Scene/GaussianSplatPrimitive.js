@@ -53,6 +53,15 @@ function GaussianSplatPrimitive(options) {
   this._debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
   this._needsGaussianSplatTexture = true;
   this._splatScale = 1.0;
+  this._prevViewMatrix = new Matrix4();
+  this._gaussianSplatTexture = undefined;
+
+  /**
+   * The dirty flag forces the primitive to render this frame.
+   * @type {boolean}
+   * @private
+   */
+  this._dirty = false;
 
   this._tileset = options.tileset;
   this._baseTilesetUpdate = this._tileset.update.bind(this._tileset);
@@ -63,7 +72,6 @@ function GaussianSplatPrimitive(options) {
 
   this._tileset.tileLoad.addEventListener(this.onTileLoad, this);
   this._tileset.tileVisible.addEventListener(this.onTileVisible, this);
-
   this._selectedTileLen = 0;
   this._drawCommand = undefined;
 
@@ -122,9 +130,13 @@ GaussianSplatPrimitive.prototype.isDestroyed = function () {
   return this._isDestroyed;
 };
 
-GaussianSplatPrimitive.prototype.onTileLoad = function (tile) {};
+GaussianSplatPrimitive.prototype.onTileLoad = function (tile) {
+  this._dirty = true;
+};
 
-GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
+GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {
+  this._dirty = true;
+};
 
 GaussianSplatPrimitive.transformTile = function (tile) {
   const computedTransform = tile.computedTransform;
@@ -232,22 +244,30 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
   }
   promise
     .then((splatTextureData) => {
-      const splatTex = new Texture({
-        context: frameState.context,
-        source: {
+      if (!primitive._gaussianSplatTexture) {
+        // First frame, so create the texture.
+        primitive._gaussianSplatTexture = new Texture({
+          context: frameState.context,
+          source: {
+            width: splatTextureData.width,
+            height: splatTextureData.height,
+            arrayBufferView: splatTextureData.data,
+          },
+          preMultiplyAlpha: false,
+          skipColorSpaceConversion: true,
+          pixelFormat: PixelFormat.RGBA_INTEGER,
+          pixelDatatype: PixelDatatype.UNSIGNED_INT,
+          flipY: false,
+          sampler: Sampler.NEAREST,
+        });
+      } else {
+        primitive._gaussianSplatTexture.source = {
           width: splatTextureData.width,
           height: splatTextureData.height,
           arrayBufferView: splatTextureData.data,
-        },
-        preMultiplyAlpha: false,
-        skipColorSpaceConversion: true,
-        pixelFormat: PixelFormat.RGBA_INTEGER,
-        pixelDatatype: PixelDatatype.UNSIGNED_INT,
-        flipY: false,
-        sampler: Sampler.NEAREST,
-      });
+        };
+      }
 
-      primitive._gaussianSplatTexture = splatTex;
       primitive._hasGaussianSplatTexture = true;
       primitive._needsGaussianSplatTexture = false;
       primitive._gaussianSplatTexturePending = false;
@@ -409,6 +429,14 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
     if (
+      !this._dirty &&
+      Matrix4.equals(frameState.camera.viewMatrix, this._prevViewMatrix)
+    ) {
+      // No need to update if the view matrix hasn't changed and the primitive isn't dirty.
+      return;
+    }
+
+    if (
       tileset._selectedTiles.length !== 0 &&
       tileset._selectedTiles.length !== this._selectedTileLen
     ) {
@@ -499,6 +527,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
 
+    Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
     Matrix4.multiply(
       frameState.camera.viewMatrix,
       this._rootTransform,
@@ -548,17 +577,18 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
 
-    return;
+    this._sorterState = GaussianSplatSortingState.SORTING; //set state to sorting
   } else if (this._sorterState === GaussianSplatSortingState.SORTING) {
-    return; //still sorting, wait for next frame
+    //still sorting, wait for next frame
   } else if (this._sorterState === GaussianSplatSortingState.SORTED) {
     //update the draw command if sorted
     GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
     this._sorterState = GaussianSplatSortingState.IDLE; //reset state for next frame
   } else if (this._sorterState === GaussianSplatSortingState.ERROR) {
     console.error("Error in Gaussian Splat sorting state.");
-    return;
   }
+
+  this._dirty = false;
 };
 
 export default GaussianSplatPrimitive;
