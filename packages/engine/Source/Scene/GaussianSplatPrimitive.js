@@ -118,9 +118,9 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._scales = undefined;
   this._colors = undefined;
   this._indexes = undefined;
-  if (defined(this.gaussianSplatTexture)) {
-    this.gaussianSplatTexture.destroy();
-    this.gaussianSplatTexture = undefined;
+  if (defined(this._gaussianSplatTexture)) {
+    this._gaussianSplatTexture.destroy();
+    this._gaussianSplatTexture = undefined;
   }
 
   this._isDestroyed = true;
