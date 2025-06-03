@@ -86,6 +86,7 @@ function GaussianSplatPrimitive(options) {
 
   this._isDestroyed = false;
   this._sorterState = GaussianSplatSortingState.IDLE;
+  this._sorterPromise = undefined;
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -318,7 +319,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const { shaderBuilder } = renderResources;
   const renderStateOptions = renderResources.renderStateOptions;
   renderStateOptions.cull.enabled = false;
-  renderStateOptions.depthMask = false;
+  renderStateOptions.depthMask = true;
   renderStateOptions.depthTest.enabled = true;
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
   renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
@@ -454,6 +455,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     frameState.commandList.push(this._drawCommand);
   }
 
+  if (frameState.passes.pick === true) {
+    return;
+  }
+
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
     if (
       !this._dirty &&
@@ -561,7 +566,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       scratchSplatMatrix,
     );
 
-    const promise = GaussianSplatSorter.radixSortIndexes({
+    this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
       primitive: {
         positions: new Float32Array(this._positions),
         modelView: Float32Array.from(scratchSplatMatrix),
@@ -570,36 +575,38 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       sortType: "Index",
     });
 
-    if (promise === undefined) {
+    if (this._sorterPromise === undefined) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
-    promise.catch((err) => {
+    this._sorterPromise.catch((err) => {
       this._sorterState = GaussianSplatSortingState.ERROR;
       throw err;
     });
-    promise.then((sortedData) => {
+    this._sorterPromise.then((sortedData) => {
       this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
-    const promise = GaussianSplatSorter.radixSortIndexes({
-      primitive: {
-        positions: new Float32Array(this._positions),
-        modelView: Float32Array.from(scratchSplatMatrix),
-        count: this._numSplats,
-      },
-      sortType: "Index",
-    });
-    if (promise === undefined) {
+    if (this._sorterPromise === undefined) {
+      this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
+        primitive: {
+          positions: new Float32Array(this._positions),
+          modelView: Float32Array.from(scratchSplatMatrix),
+          count: this._numSplats,
+        },
+        sortType: "Index",
+      });
+    }
+    if (this._sorterPromise === undefined) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
-    promise.catch((err) => {
+    this._sorterPromise.catch((err) => {
       this._sorterState = GaussianSplatSortingState.ERROR;
       throw err;
     });
-    promise.then((sortedData) => {
+    this._sorterPromise.then((sortedData) => {
       this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
@@ -611,6 +618,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     //update the draw command if sorted
     GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
     this._sorterState = GaussianSplatSortingState.IDLE; //reset state for next frame
+    this._dirty = false;
   } else if (this._sorterState === GaussianSplatSortingState.ERROR) {
     console.error("Error in Gaussian Splat sorting state.");
   }
