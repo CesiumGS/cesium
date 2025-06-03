@@ -74,6 +74,8 @@ function GaussianSplatPrimitive(options) {
   this._gaussianSplatTexture = undefined;
   this._lastTextureWidth = 0;
   this._lastTextureHeight = 0;
+  this._vertexArray = undefined;
+  this._vertexArrayLen = -1;
 
   /**
    * The dirty flag forces the primitive to render this frame.
@@ -107,11 +109,11 @@ function GaussianSplatPrimitive(options) {
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
   /**
-    * Gets a value indicating whether or not the primitive is ready for use.
-    @memberof GaussianSplatPrimitive.prototype
-    @type {boolean}
-    @readonly
-    */
+   * Gets a value indicating whether or not the primitive is ready for use.
+   @memberof GaussianSplatPrimitive.prototype
+   @type {boolean}
+   @readonly
+   */
   ready: {
     get: function () {
       return this._ready;
@@ -140,6 +142,11 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   if (defined(this._gaussianSplatTexture)) {
     this._gaussianSplatTexture.destroy();
     this._gaussianSplatTexture = undefined;
+  }
+
+  if (defined(this._vertexArray)) {
+    this._vertexArray.destroy();
+    this._vertexArray = undefined;
   }
 
   this._isDestroyed = true;
@@ -394,27 +401,39 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   idxAttr.constant = 0;
   idxAttr.instanceDivisor = 1;
 
-  const geometry = new Geometry({
-    attributes: {
-      screenQuadPosition: new GeometryAttribute({
-        componentDatatype: ComponentDatatype.FLOAT,
-        componentsPerAttribute: 2,
-        values: [-1, -1, 1, -1, 1, 1, -1, 1],
-        name: "_SCREEN_QUAD_POS",
-        variableName: "screenQuadPosition",
-      }),
-      splatIndex: { ...idxAttr, variableName: "splatIndex" },
-    },
-    primitiveType: PrimitiveType.TRIANGLE_STRIP,
-  });
+  if (
+    !defined(primitive._vertexArray) ||
+    primitive._indexes.length > primitive._vertexArrayLen
+  ) {
+    console.log("here");
+    const geometry = new Geometry({
+      attributes: {
+        screenQuadPosition: new GeometryAttribute({
+          componentDatatype: ComponentDatatype.FLOAT,
+          componentsPerAttribute: 2,
+          values: [-1, -1, 1, -1, 1, 1, -1, 1],
+          name: "_SCREEN_QUAD_POS",
+          variableName: "screenQuadPosition",
+        }),
+        splatIndex: { ...idxAttr, variableName: "splatIndex" },
+      },
+      primitiveType: PrimitiveType.TRIANGLE_STRIP,
+    });
 
-  const vertexArray = VertexArray.fromGeometry({
-    context: frameState.context,
-    geometry: geometry,
-    attributeLocations: splatQuadAttrLocations,
-    bufferUsage: BufferUsage.DYNAMIC_DRAW,
-    interleave: false,
-  });
+    primitive._vertexArray = VertexArray.fromGeometry({
+      context: frameState.context,
+      geometry: geometry,
+      attributeLocations: splatQuadAttrLocations,
+      bufferUsage: BufferUsage.DYNAMIC_DRAW,
+      interleave: false,
+    });
+  } else {
+    primitive._vertexArray
+      .getAttribute(1)
+      .vertexBuffer.copyFromArrayView(primitive._indexes);
+  }
+
+  primitive._vertexArrayLen = primitive._indexes.length;
 
   const center = tileset.boundingSphere.center;
   const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
@@ -424,7 +443,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     modelMatrix: modelMatrix,
     uniformMap: uniformMap,
     renderState: renderState,
-    vertexArray: vertexArray,
+    vertexArray: primitive._vertexArray,
     shaderProgram: shaderProgram,
     cull: renderStateOptions.cull.enabled,
     pass: Pass.GAUSSIAN_SPLATS,
