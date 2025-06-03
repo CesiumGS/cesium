@@ -148,7 +148,7 @@ for more info.
 
 will checkout pull request [#3941](https://github.com/CesiumGS/cesium/pull/3941).
 
-More details can be found [here](https://cli.github.com/manual/gh_pr_checkout).
+More details can be found in the [GitHub CLI manual](https://cli.github.com/manual/gh_pr_checkout).
 
 #### Using git
 

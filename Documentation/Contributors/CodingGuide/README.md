@@ -128,7 +128,7 @@ A few more naming conventions are introduced below along with their design patte
 
 ## Linting
 
-For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
+For syntax and style guidelines, we use the ESLint recommended settings as a base and extend it with additional rules (see the [list of all rules](http://eslint.org/docs/rules/)) via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
 
 **General rules:**
 
