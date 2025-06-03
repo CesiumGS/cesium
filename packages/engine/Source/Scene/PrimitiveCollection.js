@@ -15,7 +15,9 @@ import Event from "../Core/Event.js";
  *
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.show=true] Determines if the primitives in the collection will be shown.
- * @param {boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
+ * @param {boolean | "reference-counted"} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed. If "reference-counted" is specified, then
+ * the adding a primitive to this collection increments its reference count. Removing the primitive decrements the reference count and, if the reference count is zero, destroys the primitive.
+ * This permits primitives to be shared between multiple collections.
  *
  * @example
  * const billboards = new Cesium.BillboardCollection();
@@ -50,6 +52,8 @@ function PrimitiveCollection(options) {
    * Determines if primitives in the collection are destroyed when they are removed by
    * {@link PrimitiveCollection#destroy} or  {@link PrimitiveCollection#remove} or implicitly
    * by {@link PrimitiveCollection#removeAll}.
+   * If `options.destroyPrimitives` was specified as "reference-counted" in the constructor, then this defaults to `true`. If it is subsequently changed to `false`,
+   * adding and removing primitives will still update their reference counts, but removal will not destroy the primitive.
    *
    * @type {boolean}
    * @default true
@@ -70,7 +74,9 @@ function PrimitiveCollection(options) {
    * const b = labels.isDestroyed(); // false
    * labels = labels.destroy();    // explicitly destroy
    */
-  this.destroyPrimitives = options.destroyPrimitives ?? true;
+  this.destroyPrimitives = false !== options.destroyPrimitives;
+
+  this._countReferences = "reference-counted" === options.destroyPrimitives;
 }
 
 Object.defineProperties(PrimitiveCollection.prototype, {
@@ -160,6 +166,14 @@ PrimitiveCollection.prototype.add = function (primitive, index) {
     this._primitives.splice(index, 0, primitive);
   }
 
+  if (this._countReferences) {
+    if (!defined(external._referenceCount)) {
+      external._referenceCount = 1;
+    } else {
+      ++external._referenceCount;
+    }
+  }
+
   this._primitiveAdded.raiseEvent(primitive);
 
   return primitive;
@@ -188,8 +202,14 @@ PrimitiveCollection.prototype.remove = function (primitive) {
       this._primitives.splice(index, 1);
 
       delete primitive._external._composites[this._guid];
+      if (this._countReferences) {
+        primitive._external._referenceCount--;
+      }
 
-      if (this.destroyPrimitives) {
+      if (
+        this.destroyPrimitives &&
+        (!this._countReferences || primitive._external._referenceCount <= 0)
+      ) {
         primitive.destroy();
       }
 
@@ -226,13 +246,20 @@ PrimitiveCollection.prototype.removeAll = function () {
   const primitives = this._primitives;
   const length = primitives.length;
   for (let i = 0; i < length; ++i) {
-    delete primitives[i]._external._composites[this._guid];
-
-    if (this.destroyPrimitives) {
-      primitives[i].destroy();
+    const primitive = primitives[i];
+    delete primitive._external._composites[this._guid];
+    if (this._countReferences) {
+      primitive._external._referenceCount--;
     }
 
-    this._primitiveRemoved.raiseEvent(primitives[i]);
+    if (
+      this.destroyPrimitives &&
+      (!this._countReferences || primitive._external._referenceCount <= 0)
+    ) {
+      primitive.destroy();
+    }
+
+    this._primitiveRemoved.raiseEvent(primitive);
   }
   this._primitives = [];
 };
