@@ -42,6 +42,23 @@ const GaussianSplatSortingState = {
   ERROR: 4,
 };
 
+function createGaussianSplatTexture(context, splatTextureData) {
+  return new Texture({
+    context: context,
+    source: {
+      width: splatTextureData.width,
+      height: splatTextureData.height,
+      arrayBufferView: splatTextureData.data,
+    },
+    preMultiplyAlpha: false,
+    skipColorSpaceConversion: true,
+    pixelFormat: PixelFormat.RGBA_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    flipY: false,
+    sampler: Sampler.NEAREST,
+  });
+}
+
 function GaussianSplatPrimitive(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._positions = undefined;
@@ -248,40 +265,20 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
     .then((splatTextureData) => {
       if (!primitive._gaussianSplatTexture) {
         // First frame, so create the texture.
-        primitive._gaussianSplatTexture = new Texture({
-          context: frameState.context,
-          source: {
-            width: splatTextureData.width,
-            height: splatTextureData.height,
-            arrayBufferView: splatTextureData.data,
-          },
-          preMultiplyAlpha: false,
-          skipColorSpaceConversion: true,
-          pixelFormat: PixelFormat.RGBA_INTEGER,
-          pixelDatatype: PixelDatatype.UNSIGNED_INT,
-          flipY: false,
-          sampler: Sampler.NEAREST,
-        });
+        primitive._gaussianSplatTexture = createGaussianSplatTexture(
+          frameState.context,
+          splatTextureData,
+        );
       } else if (
         primitive._lastTextureHeight !== splatTextureData.height ||
         primitive._lastTextureWidth !== splatTextureData.width
       ) {
-        console.log("Recreated texture");
-        primitive._gaussianSplatTexture.destroy();
-        primitive._gaussianSplatTexture = new Texture({
-          context: frameState.context,
-          source: {
-            width: splatTextureData.width,
-            height: splatTextureData.height,
-            arrayBufferView: splatTextureData.data,
-          },
-          preMultiplyAlpha: false,
-          skipColorSpaceConversion: true,
-          pixelFormat: PixelFormat.RGBA_INTEGER,
-          pixelDatatype: PixelDatatype.UNSIGNED_INT,
-          flipY: false,
-          sampler: Sampler.NEAREST,
-        });
+        const oldTex = primitive._gaussianSplatTexture;
+        primitive._gaussianSplatTexture = createGaussianSplatTexture(
+          frameState.context,
+          splatTextureData,
+        );
+        oldTex.destroy();
       } else {
         primitive._gaussianSplatTexture.copyFrom({
           source: {
