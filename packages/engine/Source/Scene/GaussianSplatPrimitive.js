@@ -55,6 +55,8 @@ function GaussianSplatPrimitive(options) {
   this._splatScale = 1.0;
   this._prevViewMatrix = new Matrix4();
   this._gaussianSplatTexture = undefined;
+  this._lastTextureWidth = 0;
+  this._lastTextureHeight = 0;
 
   /**
    * The dirty flag forces the primitive to render this frame.
@@ -260,13 +262,38 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
           flipY: false,
           sampler: Sampler.NEAREST,
         });
+      } else if (
+        primitive._lastTextureHeight !== splatTextureData.height ||
+        primitive._lastTextureWidth !== splatTextureData.width
+      ) {
+        console.log("Recreated texture");
+        primitive._gaussianSplatTexture.destroy();
+        primitive._gaussianSplatTexture = new Texture({
+          context: frameState.context,
+          source: {
+            width: splatTextureData.width,
+            height: splatTextureData.height,
+            arrayBufferView: splatTextureData.data,
+          },
+          preMultiplyAlpha: false,
+          skipColorSpaceConversion: true,
+          pixelFormat: PixelFormat.RGBA_INTEGER,
+          pixelDatatype: PixelDatatype.UNSIGNED_INT,
+          flipY: false,
+          sampler: Sampler.NEAREST,
+        });
       } else {
-        primitive._gaussianSplatTexture.source = {
-          width: splatTextureData.width,
-          height: splatTextureData.height,
-          arrayBufferView: splatTextureData.data,
-        };
+        primitive._gaussianSplatTexture.copyFrom({
+          source: {
+            width: splatTextureData.width,
+            height: splatTextureData.height,
+            arrayBufferView: splatTextureData.data,
+          },
+        });
       }
+
+      primitive._lastTextureHeight = splatTextureData.height;
+      primitive._lastTextureWidth = splatTextureData.width;
 
       primitive._hasGaussianSplatTexture = true;
       primitive._needsGaussianSplatTexture = false;
@@ -579,7 +606,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
     this._sorterState = GaussianSplatSortingState.SORTING; //set state to sorting
   } else if (this._sorterState === GaussianSplatSortingState.SORTING) {
-    //still sorting, wait for next frame
+    return; //still sorting, wait for next frame
   } else if (this._sorterState === GaussianSplatSortingState.SORTED) {
     //update the draw command if sorted
     GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
