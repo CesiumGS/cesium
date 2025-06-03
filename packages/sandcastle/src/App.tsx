@@ -428,7 +428,19 @@ Sandcastle.addToolbarMenu(${variableName});`,
           path={jsIsActive ? "script.js" : "index.html"}
           language={jsIsActive ? "javascript" : "html"}
           value={jsIsActive ? codeState.code : codeState.html}
-          options={{ minimap: { size: "fill" }, tabSize: 2 }}
+          options={{
+            automaticLayout: true,
+            bracketPairColorization: {
+              enabled: false,
+            },
+            guides: {
+              bracketPairs: "active",
+            },
+            minimap: { size: "fill" },
+            placeholder: "// Select a demo from the gallery to load.",
+            renderWhitespace: "trailing",
+            tabSize: 2,
+          }}
           onMount={handleEditorDidMount}
           beforeMount={handleEditorWillMount}
           onChange={handleChange}
