@@ -29,16 +29,15 @@
         //Sandcastle_Begin
         Cesium.Ion.defaultAccessToken =
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTA3MDg3OC0xMmVjLTRhYmYtOGFjYy1kNTdhZmVkN2Q2NTgiLCJpZCI6MTQwNTg1LCJpYXQiOjE3NDcxNTI0Nzd9.fUjTRAtTYZHuza3V5vAfXr8Y0Ja_zihC9KQtO9szX_8";
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+        });
         viewer.scene.debugShowFramesPerSecond = true;
 
         const ORBIT_RANGE_FACTOR = 3;
         const ORBIT_PITCH_DIVIDEND = 8;
 
-        const cellTowerTileset = await Cesium.Cesium3DTileset.fromIonAssetId(3395431, {
-          maximumScreenSpaceError: 1,
-          loadGltfWithGaussianSplatContent: true,
-        });
+        const cellTowerTileset = await Cesium.Cesium3DTileset.fromIonAssetId(3433318);
 
         viewer.scene.primitives.add(cellTowerTileset);
         setupCamera();
