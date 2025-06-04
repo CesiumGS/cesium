@@ -7,10 +7,15 @@ import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
 import destroyObject from "../Core/destroyObject.js";
 
 /**
+ * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-spz-splat-compression/extensions/2.0/Khronos/KHR_spz_gaussian_splats_compression|KHR_spz_gaussian_splats_compression} extension.
  * <p>
- * Implements the {@link Cesium3DTileContent} interface for the KHR_spz_gaussian_splats_compression glTF extension.
+ * Implements the {@link Cesium3DTileContent} interface.
+ * </p>
+ *
+ * @alias GaussianSplat3DTileContent
+ * @constructor
+ * @private
  */
-
 function GaussianSplat3DTileContent(tileset, tile, resource, gltf) {
   this._tileset = tileset;
   this._tile = tile;
