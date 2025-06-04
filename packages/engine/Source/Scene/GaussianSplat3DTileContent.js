@@ -34,8 +34,6 @@ function GaussianSplat3DTileContent(tileset, tile, resource, gltf) {
    */
   this.splatPrimitive = undefined;
   this.worldTransform = undefined;
-  this._attributeTextureData = undefined;
-  this._gaussianSplatTextureDataPending = false;
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
@@ -100,13 +98,17 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
 
   geometryByteLength: {
     get: function () {
-      return 0;
+      return this.splatPrimitive.attributes.reduce((totalLength, attribute) => {
+        return totalLength + attribute.byteLength;
+      }, 0);
     },
   },
 
   texturesByteLength: {
     get: function () {
-      return 0;
+      return this.splatPrimitive.attributes.reduce((totalLength, attribute) => {
+        return totalLength + attribute.byteLength;
+      }, 0);
     },
   },
 
