@@ -38,6 +38,7 @@
         const ORBIT_PITCH_DIVIDEND = 8;
 
         const cellTowerTileset = await Cesium.Cesium3DTileset.fromIonAssetId(3433318);
+        const scratchHeadingPitchRange = new Cesium.HeadingPitchRange();
 
         viewer.scene.primitives.add(cellTowerTileset);
         setupCamera();
@@ -51,10 +52,10 @@
           const range = boundingSphere.radius * ORBIT_RANGE_FACTOR;
           const pitch = -Math.PI / ORBIT_PITCH_DIVIDEND;
 
-          viewer.camera.lookAt(
-            boundingSphere.center,
-            new Cesium.HeadingPitchRange(heading, pitch, range),
-          );
+          scratchHeadingPitchRange.heading = heading;
+          scratchHeadingPitchRange.pitch = pitch;
+          scratchHeadingPitchRange.range = range;
+          viewer.camera.lookAt(boundingSphere.center, scratchHeadingPitchRange);
 
           return true;
         }
@@ -66,7 +67,6 @@
           startTime = performance.now();
           isRunning = true;
           viewer.scene.postUpdate.addEventListener(cameraOrbitTickCallback);
-          // requestAnimationFrame(cameraOrbitTickCallback);
         }
 
         function cameraOrbitTickCallback(scene, timestamp) {
@@ -80,12 +80,10 @@
 
           const range = boundingSphere.radius * ORBIT_RANGE_FACTOR;
           const pitch = -Math.PI / ORBIT_PITCH_DIVIDEND;
-          viewer.camera.lookAt(
-            boundingSphere.center,
-            new Cesium.HeadingPitchRange(heading, pitch, range),
-          );
-
-          // requestAnimationFrame(cameraOrbitTickCallback);
+          scratchHeadingPitchRange.heading = heading;
+          scratchHeadingPitchRange.pitch = pitch;
+          scratchHeadingPitchRange.range = range;
+          viewer.camera.lookAt(boundingSphere.center, scratchHeadingPitchRange);
         }
 
         Sandcastle.addToolbarButton("Start Orbit", startCameraOrbit);
