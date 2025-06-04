@@ -10,7 +10,7 @@ import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
  * Implements the {@link Cesium3DTileContent} interface for the KHR_spz_gaussian_splats_compression glTF extension.
  */
 
-function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
+function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -38,7 +38,7 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
   this._transformed = false;
 }
 
-Object.defineProperties(GaussianSplat3DTilesContent.prototype, {
+Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   featuresLength: {
     get: function () {
       return 0;
@@ -118,7 +118,7 @@ Object.defineProperties(GaussianSplat3DTilesContent.prototype, {
   },
 });
 
-GaussianSplat3DTilesContent.fromGltf = async function (
+GaussianSplat3DTileContent.fromGltf = async function (
   tileset,
   tile,
   resource,
@@ -154,13 +154,10 @@ GaussianSplat3DTilesContent.fromGltf = async function (
     throw new RuntimeError(`Failed to load glTF: ${error.message}`);
   }
 
-  return new GaussianSplat3DTilesContent(loader, tileset, tile, resource);
+  return new GaussianSplat3DTileContent(loader, tileset, tile, resource);
 };
 
-GaussianSplat3DTilesContent.prototype.update = function (
-  primitive,
-  frameState,
-) {
+GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   const loader = this._loader;
 
   if (this._ready) {
@@ -194,15 +191,11 @@ GaussianSplat3DTilesContent.prototype.update = function (
   this._resourcesLoaded = loader.process(frameState);
 };
 
-GaussianSplat3DTilesContent.prototype.pick = function (
-  ray,
-  frameState,
-  result,
-) {
+GaussianSplat3DTileContent.prototype.pick = function (ray, frameState, result) {
   return undefined;
 };
 
-GaussianSplat3DTilesContent.prototype.destroy = function () {
+GaussianSplat3DTileContent.prototype.destroy = function () {
   this.splatPrimitive.destroy();
   this.splatPrimitive = undefined;
   this._tileset.gaussianSplatPrimitive.destroy();
@@ -218,4 +211,4 @@ GaussianSplat3DTilesContent.prototype.destroy = function () {
   this._resourcesLoaded = false;
 };
 
-export default GaussianSplat3DTilesContent;
+export default GaussianSplat3DTileContent;

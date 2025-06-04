@@ -4,7 +4,7 @@ import Implicit3DTileContent from "./Implicit3DTileContent.js";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
-import GaussianSplat3DTilesContent from "./GaussianSplat3DTilesContent.js";
+import GaussianSplat3DTileContent from "./GaussianSplat3DTileContent.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
 /**
@@ -96,7 +96,7 @@ const Cesium3DTileContentFactory = {
     if (
       tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression")
     ) {
-      return GaussianSplat3DTilesContent.fromGltf(tileset, tile, resource, glb);
+      return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
@@ -104,12 +104,7 @@ const Cesium3DTileContentFactory = {
     if (
       tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression")
     ) {
-      return GaussianSplat3DTilesContent.fromGltf(
-        tileset,
-        tile,
-        resource,
-        json,
-      );
+      return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
