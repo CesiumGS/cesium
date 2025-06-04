@@ -2,7 +2,7 @@ import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
-import GaussianSplatTextureGenerator from "./Model/GaussianSplatTextureGenerator.js";
+import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
