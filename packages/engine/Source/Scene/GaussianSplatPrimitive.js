@@ -502,19 +502,16 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
 
     if (
-      tileset._selectedTiles.length !== 0 &&
-      tileset._selectedTiles.length !== this._selectedTileLen
+      tileset._selectedTiles.length !== 0 //&&
+      //  tileset._selectedTiles.length !== this._selectedTileLen
     ) {
       this._numSplats = 0;
       this._positions = undefined;
-      this._rotations = undefined;
-      this._scales = undefined;
-      this._colors = undefined;
       this._indexes = undefined;
-      this._needsGaussianSplatTexture = true;
-      this._gaussianSplatTexturePending = false;
 
-      const tiles = tileset._selectedTiles;
+      const tiles = tileset._selectedTiles.filter(
+        (tile) => tile.content.attributeTextureData !== undefined,
+      );
       const totalElements = tiles.reduce(
         (total, tile) => total + tile.content.pointsLength,
         0,
@@ -550,35 +547,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           ),
       );
 
-      this._scales = aggregateAttributeValues(
-        ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.SCALE,
-          ),
-      );
-
-      this._rotations = aggregateAttributeValues(
-        ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.ROTATION,
-          ),
-      );
-
-      this._colors = aggregateAttributeValues(
-        ComponentDatatype.UNSIGNED_BYTE,
-        (splatPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.COLOR,
-          ),
-      );
-
       this._numSplats = totalElements;
-      this._selectedTileLen = tileset._selectedTiles.length;
+      // this._selectedTileLen = tileset._selectedTiles.length;
     }
 
     if (this._numSplats === 0) {
@@ -586,7 +556,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
 
     /// TEXTURE GEN
-    const tiles = tileset._selectedTiles;
+    const tiles = tileset._selectedTiles.filter(
+      (tile) => tile.content.attributeTextureData !== undefined,
+    );
     const textureSize = tiles.reduce((total, tile) => {
       if (!defined(tile.content.attributeTextureData)) {
         return total;
@@ -603,19 +575,37 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       0,
     );
 
-    this._indexes = new Uint32Array(this._numSplats);
-    this._megaTextureOffsets = new Uint32Array(this._selectedTileLen);
+    const indexLen = tiles.reduce(
+      (total, tile) => total + tile.content.pointsLength,
+      0,
+    );
 
-    const attributeTextureData = new Uint32Array(textureSize);
+    if (this._indexes === undefined || this._indexes.length < indexLen) {
+      this._indexes = new Uint32Array(indexLen);
+    }
+
+    if (
+      (tiles.length > this._megaTextureOffsets?.length) |
+      (this._megaTextureOffsets === undefined)
+    ) {
+      this._megaTextureOffsets = new Uint32Array(tiles.length);
+    }
+
+    if (
+      this._attributeTextureData === undefined ||
+      this._attributeTextureData?.length < textureSize
+    ) {
+      this._attributeTextureData = new Uint32Array(textureSize);
+    }
     let textureOffset = 0;
     let indexOffset = 0;
     let splatOffset = 0;
-    for (let i = 0; i < this._selectedTileLen; i++) {
-      const texture = tileset._selectedTiles[i].content.attributeTextureData;
+    for (let i = 0; i < tiles.length; i++) {
+      const texture = tiles[i].content.attributeTextureData;
       if (defined(texture)) {
-        attributeTextureData.set(texture.data, textureOffset);
+        this._attributeTextureData.set(texture.data, textureOffset);
 
-        const tileSplatCount = tileset._selectedTiles[i].content.pointsLength;
+        const tileSplatCount = tiles[i].content.pointsLength;
         const textureIndexes = new Uint32Array(
           Array.from(
             { length: tileSplatCount },
@@ -623,7 +613,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           ),
         );
         this._megaTextureOffsets[i] = splatOffset;
-        this._indexes.set(textureIndexes, indexOffset);
+        try {
+          this._indexes.set(textureIndexes, indexOffset);
+        } catch (e) {
+          console.error(`Error setting indexes for tile ${i}: ${e.message}`);
+        }
         textureOffset += texture.data.length;
         indexOffset += tileSplatCount;
         splatOffset += texture.data.length / 8;
@@ -635,7 +629,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       source: {
         width: 2048,
         height: textureHeight,
-        arrayBufferView: attributeTextureData,
+        arrayBufferView: this._attributeTextureData,
       },
       preMultiplyAlpha: false,
       skipColorSpaceConversion: true,
@@ -659,10 +653,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         primitive: {
           positions: new Float32Array(this._positions),
           modelView: Float32Array.from(scratchSplatMatrix),
-          count: this._numSplats,
+          count: this._positions.length / 3,
         },
         sortType: "Index",
       });
+      this._sorterState = GaussianSplatSortingState.SORTING;
     }
 
     if (this._sorterPromise === undefined) {
@@ -674,7 +669,19 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       throw err;
     });
     this._sorterPromise.then((sortedData) => {
-      this._indexes = sortedData;
+      const n = this._indexes.length;
+      const temp = new Array(n);
+
+      // Map values to new positions based on sortedData
+      for (let i = 0; i < n; i++) {
+        temp[i] = this._indexes[sortedData[i]];
+      }
+
+      // Copy back to _indexes for in-place effect
+      for (let i = 0; i < n; i++) {
+        this._indexes[i] = temp[i];
+      }
+      // this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
@@ -687,6 +694,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         },
         sortType: "Index",
       });
+      this._sorterState = GaussianSplatSortingState.SORTING;
     }
     if (this._sorterPromise === undefined) {
       this._sorterState = GaussianSplatSortingState.WAITING;
@@ -697,7 +705,19 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       throw err;
     });
     this._sorterPromise.then((sortedData) => {
-      this._indexes = sortedData;
+      const n = this._indexes.length;
+      const temp = new Array(n);
+
+      // Map values to new positions based on sortedData
+      for (let i = 0; i < n; i++) {
+        temp[i] = this._indexes[sortedData[i]];
+      }
+
+      // Copy back to _indexes for in-place effect
+      for (let i = 0; i < n; i++) {
+        this._indexes[i] = temp[i];
+      }
+      // this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
 
