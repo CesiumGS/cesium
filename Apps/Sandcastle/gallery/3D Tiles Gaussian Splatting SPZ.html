@@ -65,32 +65,33 @@
           }
           startTime = performance.now();
           isRunning = true;
-          requestAnimationFrame(cameraOrbitTickCallback);
+          viewer.scene.postUpdate.addEventListener(cameraOrbitTickCallback);
+          // requestAnimationFrame(cameraOrbitTickCallback);
         }
 
-        function cameraOrbitTickCallback(timestamp) {
+        function cameraOrbitTickCallback(scene, timestamp) {
           if (!isRunning) {
             return;
           }
 
           const boundingSphere = cellTowerTileset.boundingSphere;
-          const elapsedSeconds = (timestamp - startTime) / 1000;
+          const elapsedSeconds = (performance.now() - startTime) / 1000;
           const heading = (elapsedSeconds / 15) * Math.PI * 2;
 
           const range = boundingSphere.radius * ORBIT_RANGE_FACTOR;
           const pitch = -Math.PI / ORBIT_PITCH_DIVIDEND;
-
           viewer.camera.lookAt(
             boundingSphere.center,
             new Cesium.HeadingPitchRange(heading, pitch, range),
           );
 
-          requestAnimationFrame(cameraOrbitTickCallback);
+          // requestAnimationFrame(cameraOrbitTickCallback);
         }
 
         Sandcastle.addToolbarButton("Start Orbit", startCameraOrbit);
         Sandcastle.addToolbarButton("Stop Orbit", () => {
           isRunning = false;
+          viewer.scene.postUpdate.removeEventListener(cameraOrbitTickCallback);
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();
