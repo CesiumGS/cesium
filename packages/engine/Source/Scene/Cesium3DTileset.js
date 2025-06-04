@@ -131,6 +131,7 @@ import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
  * @property {boolean} [debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
  * @property {boolean} [debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
  * @property {boolean} [debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
+ * @property {boolean} [debugTreatTilesetAsGaussianSplats=false] For debugging only. When true, treats the tileset as a Gaussian splat tileset.
  */
 
 /**
@@ -989,6 +990,18 @@ function Cesium3DTileset(options) {
    * @default false
    */
   this.debugShowUrl = options.debugShowUrl ?? false;
+
+  /**
+   * This property is for debugging only; it is not optimized for production use.
+   * <p>
+   * When true, treats the tileset content as Gaussian splats instead of meshes.
+   * </p>
+   *
+   * @type {*|boolean}
+   * @default false
+   */
+  this.debugTreatTilesetAsGaussianSplats =
+    options.debugTreatTilesetAsGaussianSplats ?? false;
 
   /**
    * Function for examining vector lines as they are being streamed.
