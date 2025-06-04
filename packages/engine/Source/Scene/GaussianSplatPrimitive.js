@@ -404,7 +404,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     !defined(primitive._vertexArray) ||
     primitive._indexes.length > primitive._vertexArrayLen
   ) {
-    console.log("here");
     const geometry = new Geometry({
       attributes: {
         screenQuadPosition: new GeometryAttribute({
