@@ -4,11 +4,21 @@ import GltfLoader from "./GltfLoader.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Axis from "./Axis.js";
 import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
+import GaussianSplatTextureGenerator from "./Model/GaussianSplatTextureGenerator.js";
+import ModelUtility from "./Model/ModelUtility.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
  * <p>
  * Implements the {@link Cesium3DTileContent} interface for the KHR_spz_gaussian_splats_compression glTF extension.
  */
+
+const GaussianSplatTextureGeneratorState = {
+  UNINITIALIZED: 0,
+  PENDING: 1,
+  READY: 2,
+  ERROR: 3,
+};
 
 function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
   this._tileset = tileset;
@@ -29,13 +39,15 @@ function GaussianSplat3DTilesContent(loader, tileset, tile, resource) {
    */
   this.splatPrimitive = undefined;
   this.worldTransform = undefined;
-  this._attributeTextureData = undefined;
-  this._gaussianSplatTextureDataPending = false;
+  this.attributeTextureData = undefined;
 
   this._metadata = undefined;
   this._group = undefined;
   this._ready = false;
   this._transformed = false;
+
+  this._textureGeneratorState =
+    GaussianSplatTextureGeneratorState.UNINITIALIZED;
 }
 
 Object.defineProperties(GaussianSplat3DTilesContent.prototype, {
@@ -157,6 +169,56 @@ GaussianSplat3DTilesContent.fromGltf = async function (
   return new GaussianSplat3DTilesContent(loader, tileset, tile, resource);
 };
 
+/**
+ * Returns the encoded texture attribute data ready to be be used in a bound texture.
+ * @param {*} primitive
+ */
+GaussianSplat3DTilesContent.prototype.generateTextureAttributeData =
+  function () {
+    const splatPrimitive = this.splatPrimitive;
+
+    const promise = GaussianSplatTextureGenerator.generateFromAttributes({
+      attributes: {
+        positions: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            splatPrimitive,
+            VertexAttributeSemantic.POSITION,
+          ).typedArray,
+        ),
+        scales: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            splatPrimitive,
+            VertexAttributeSemantic.SCALE,
+          ).typedArray,
+        ),
+        rotations: new Float32Array(
+          ModelUtility.getAttributeBySemantic(
+            splatPrimitive,
+            VertexAttributeSemantic.ROTATION,
+          ).typedArray,
+        ),
+        colors: new Uint8Array(
+          ModelUtility.getAttributeByName(splatPrimitive, "COLOR_0").typedArray,
+        ),
+      },
+      count: this.pointsLength,
+    });
+    if (promise === undefined) {
+      this._textureGeneratorState =
+        GaussianSplatTextureGeneratorState.UNINITIALIZED;
+      return;
+    }
+    promise
+      .then((splatTextureData) => {
+        this.attributeTextureData = splatTextureData;
+        this._textureGeneratorState = GaussianSplatTextureGeneratorState.READY;
+      })
+      .catch((error) => {
+        console.error("Error generating Gaussian splat texture data:", error);
+        this._textureGeneratorState = GaussianSplatTextureGeneratorState.ERROR;
+      });
+  };
+
 GaussianSplat3DTilesContent.prototype.update = function (
   primitive,
   frameState,
@@ -173,6 +235,12 @@ GaussianSplat3DTilesContent.prototype.update = function (
       this._transformed = true;
     }
 
+    if (
+      this._textureGeneratorState ===
+      GaussianSplatTextureGeneratorState.UNINITIALIZED
+    ) {
+      this.generateTextureAttributeData();
+    }
     return;
   }
 
