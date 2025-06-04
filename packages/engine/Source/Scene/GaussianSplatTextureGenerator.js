@@ -1,7 +1,7 @@
-import defined from "../../Core/defined.js";
-import FeatureDetection from "../../Core/FeatureDetection.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import TaskProcessor from "../../Core/TaskProcessor.js";
+import defined from "../Core/defined.js";
+import FeatureDetection from "../Core/FeatureDetection.js";
+import RuntimeError from "../Core/RuntimeError.js";
+import TaskProcessor from "../Core/TaskProcessor.js";
 
 function GaussianSplatTextureGenerator() {}
 
