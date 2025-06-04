@@ -97,7 +97,7 @@ const Cesium3DTileContentFactory = {
       tileset.debugTreatTilesetAsGaussianSplats ||
       tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression")
     ) {
-      return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
+      return new GaussianSplat3DTileContent(tileset, tile, resource, glb);
     }
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
@@ -106,7 +106,7 @@ const Cesium3DTileContentFactory = {
       tileset.debugTreatTilesetAsGaussianSplats ||
       tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression")
     ) {
-      return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
+      return new GaussianSplat3DTileContent(tileset, tile, resource, json);
     }
 
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);

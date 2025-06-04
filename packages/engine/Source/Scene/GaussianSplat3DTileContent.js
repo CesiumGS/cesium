@@ -11,11 +11,10 @@ import destroyObject from "../Core/destroyObject.js";
  * Implements the {@link Cesium3DTileContent} interface for the KHR_spz_gaussian_splats_compression glTF extension.
  */
 
-function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
+function GaussianSplat3DTileContent(tileset, tile, resource, gltf) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
-  this._loader = loader;
 
   if (this._tileset.gaussianSplatPrimitive === undefined) {
     this._tileset.gaussianSplatPrimitive = new GaussianSplatPrimitive({
@@ -42,6 +41,37 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   this._group = undefined;
   this._ready = false;
   this._transformed = false;
+
+  const basePath = resource;
+  const baseResource = Resource.createIfNeeded(basePath);
+
+  const loaderOptions = {
+    releaseGltfJson: false,
+    upAxis: Axis.Y,
+    forwardAxis: Axis.Z,
+  };
+
+  if (defined(gltf.asset)) {
+    loaderOptions.gltfJson = gltf;
+    loaderOptions.baseResource = baseResource;
+    loaderOptions.gltfResource = baseResource;
+  } else if (gltf instanceof Uint8Array) {
+    loaderOptions.typedArray = gltf;
+    loaderOptions.baseResource = baseResource;
+    loaderOptions.gltfResource = baseResource;
+  } else {
+    loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
+  }
+
+  const loader = new GltfLoader(loaderOptions);
+  this._loader = loader;
+
+  try {
+    loader.load();
+  } catch (error) {
+    loader.destroy();
+    throw new RuntimeError(`Failed to load glTF: ${error.message}`);
+  }
 }
 
 Object.defineProperties(GaussianSplat3DTileContent.prototype, {
@@ -136,45 +166,6 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
     },
   },
 });
-
-GaussianSplat3DTileContent.fromGltf = async function (
-  tileset,
-  tile,
-  resource,
-  gltf,
-) {
-  const basePath = resource;
-  const baseResource = Resource.createIfNeeded(basePath);
-
-  const loaderOptions = {
-    releaseGltfJson: false,
-    upAxis: Axis.Y,
-    forwardAxis: Axis.Z,
-  };
-
-  if (defined(gltf.asset)) {
-    loaderOptions.gltfJson = gltf;
-    loaderOptions.baseResource = baseResource;
-    loaderOptions.gltfResource = baseResource;
-  } else if (gltf instanceof Uint8Array) {
-    loaderOptions.typedArray = gltf;
-    loaderOptions.baseResource = baseResource;
-    loaderOptions.gltfResource = baseResource;
-  } else {
-    loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
-  }
-
-  const loader = new GltfLoader(loaderOptions);
-
-  try {
-    await loader.load();
-  } catch (error) {
-    loader.destroy();
-    throw new RuntimeError(`Failed to load glTF: ${error.message}`);
-  }
-
-  return new GaussianSplat3DTileContent(loader, tileset, tile, resource);
-};
 
 GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   const loader = this._loader;
