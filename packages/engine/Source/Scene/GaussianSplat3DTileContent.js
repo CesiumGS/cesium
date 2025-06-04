@@ -4,6 +4,7 @@ import GltfLoader from "./GltfLoader.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Axis from "./Axis.js";
 import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
+import destroyObject from "../Core/destroyObject.js";
 
 /**
  * <p>
@@ -31,6 +32,11 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   this.worldTransform = undefined;
   this._attributeTextureData = undefined;
   this._gaussianSplatTextureDataPending = false;
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface.
+   */
+  this.featurePropertiesDirty = false;
 
   this._metadata = undefined;
   this._group = undefined;
@@ -69,6 +75,13 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
     },
   },
 
+  batchTableByteLength: {
+    // eslint-disable-next-line getter-return
+    get: function () {
+      return 0;
+    },
+  },
+
   innerContents: {
     get: function () {
       return undefined;
@@ -96,6 +109,12 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  batchTable: {
+    get: function () {
+      return undefined;
     },
   },
 
@@ -191,8 +210,27 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   this._resourcesLoaded = loader.process(frameState);
 };
 
+GaussianSplat3DTileContent.prototype.hasProperty = function (batchId, name) {
+  return false;
+};
+
+GaussianSplat3DTileContent.prototype.getFeature = function (batchId) {
+  return undefined;
+};
+
+GaussianSplat3DTileContent.prototype.applyDebugSettings = function (
+  enabled,
+  color,
+) {};
+
+GaussianSplat3DTileContent.prototype.applyStyle = function (style) {};
+
 GaussianSplat3DTileContent.prototype.pick = function (ray, frameState, result) {
   return undefined;
+};
+
+GaussianSplat3DTileContent.prototype.isDestroyed = function () {
+  return false;
 };
 
 GaussianSplat3DTileContent.prototype.destroy = function () {
@@ -209,6 +247,8 @@ GaussianSplat3DTileContent.prototype.destroy = function () {
   this._group = undefined;
   this._metadata = undefined;
   this._resourcesLoaded = false;
+
+  return destroyObject(this);
 };
 
 export default GaussianSplat3DTileContent;
