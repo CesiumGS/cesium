@@ -1,145 +1,95 @@
-// import {
-//   PrimitiveType,
-//   DrawCommand,
-//   GaussianSplatPrimitive,
-//   GaussianSplatRenderResources,
-//   ShaderDestination,
-//   GeometryAttribute,
-//   VertexArray,
-//   BoundingSphere,
-//   Cartesian3,
-//   BlendingState,
-//   ResourceCache,
-//   Matrix4,
-// } from "../../index.js";
+import {
+  Cartesian3,
+  PerspectiveFrustum,
+  Math as CesiumMath,
+  ResourceCache,
+  RequestScheduler,
+  HeadingPitchRange,
+  GaussianSplat3DTileContent,
+} from "../../index.js";
 
-// import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
-// import ShaderBuilderTester from "../../../../Specs/ShaderBuilderTester.js";
-// import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
-// import createContext from "../../../../Specs/createContext.js";
-// import createScene from "../../../../Specs/createScene.js";
-// import Cesium3DTile from "../../Source/Scene/Cesium3DTile.js";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
 
-// describe("Scene/GaussianSplatPrimitive", function () {
-//   describe("buildGSplatDrawCommand", function () {
-//     let primitive;
-//     let scene;
-//     let context;
+describe(
+  "Scene/GaussianSplatPrimitive",
+  function () {
+    const tilesetUrl = "Data/Cesium3DTiles/GaussianSplats/tower/tileset.json";
 
-//     beforeAll(function () {
-//       scene = createScene();
-//       context = createContext();
-//     });
+    let scene;
+    let options;
+    const centerLongitude = 8.269009;
+    const centerLatitude = 46.0117223;
 
-//     afterAll(function () {
-//       scene.destroyForSpecs();
-//       context.destroyForSpecs();
-//     });
+    beforeAll(function () {
+      scene = createScene();
+    });
 
-//     async function loadTileset() {
-//       const tileset = await GaussianSplatPrimitive.fromUrl(
-//         "./Data/Cesium3DTiles/GaussianSplats/talon/tileset.json",
-//       );
-//       scene.primitives.add(tileset);
-//       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-//       return tileset;
-//     }
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
 
-//     // beforeEach(function () {
-//     //   primitive = loadTileset();
-//     // });
+    function setZoom(distance) {
+      // Bird's eye view
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, distance));
+    }
 
-//     afterEach(function () {
+    function viewAllTiles() {
+      setZoom(15.0);
+    }
 
-//       primitive.destroy();
-//       primitive = undefined;
-//       ResourceCache.clearForSpecs();
-//     });
+    beforeEach(function () {
+      RequestScheduler.clearForSpecs();
+      scene.morphTo3D(0.0);
 
-//     it("creates a DrawCommand with correct properties", function () {
-//       return loadTileset().then(function(primitive) {
-//       Cesium3DTilesTester.waitForTilesLoaded(scene, primitive).then(() => {
-//       GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, scene.frameState);
+      const camera = scene.camera;
+      camera.frustum = new PerspectiveFrustum();
+      camera.frustum.aspectRatio =
+        scene.drawingBufferWidth / scene.drawingBufferHeight;
+      camera.frustum.fov = CesiumMath.toRadians(60.0);
 
-//       expect(primitive._drawCommand).toBeInstanceOf(DrawCommand);
-//       expect(primitive._drawCommand.boundingVolume).toBe(
-//         primitive._tileset.boundingSphere,
-//       );
-//       expect(primitive._drawCommand.modelMatrix).toBe(primitive._modelMatrix);
-//       expect(primitive._drawCommand.uniformMap.u_splatScale()).toBe(
-//         primitive.splatScale,
-//       );
-//       expect(primitive._drawCommand.uniformMap.u_splatAttributeTexture()).toBe(
-//         primitive.gaussianSplatTexture,
-//       );
-//       expect(primitive._drawCommand.primitiveType).toBe(
-//         PrimitiveType.TRIANGLE_STRIP,
-//       );
-//     });});});
+      viewAllTiles();
 
-//     it("configures shaderBuilder with correct defines and attributes", function () {
-//       return loadTileset().then(function(primitive) {
-//       const shaderBuilder = new GaussianSplatRenderResources(primitive)
-//         .shaderBuilder;
+      options = {
+        cullRequestsWhileMoving: false,
+        maximumScreenSpaceError: 1,
+      };
+    });
 
-//         GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, scene.frameState);
+    afterEach(function () {
+      scene.primitives.removeAll();
+      ResourceCache.clearForSpecs();
+    });
+    it("loads a Gaussian Splat tileset", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(
+        function (tileset) {
+          scene.camera.lookAt(
+            tileset.boundingSphere.center,
+            new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+          );
+          expect(tileset.hasExtension("3DTILES_content_gltf")).toBe(true);
+          expect(
+            tileset.isGltfExtensionUsed("KHR_spz_gaussian_splats_compression"),
+          ).toBe(true);
+          expect(
+            tileset.isGltfExtensionRequired(
+              "KHR_spz_gaussian_splats_compression",
+            ),
+          ).toBe(true);
 
-//       expect(shaderBuilder.addDefine).toHaveBeenCalledWith(
-//         "HAS_GAUSSIAN_SPLATS",
-//         undefined,
-//         ShaderDestination.BOTH,
-//       );
-//       expect(shaderBuilder.addDefine).toHaveBeenCalledWith(
-//         "HAS_SPLAT_TEXTURE",
-//         undefined,
-//         ShaderDestination.BOTH,
-//       );
-//       expect(shaderBuilder.addAttribute).toHaveBeenCalledWith(
-//         "float",
-//         "a_splatIndex",
-//       );
-//     });});
-
-//     it("configures renderStateOptions correctly", function () {
-//       return loadTileset().then(function(primitive) {
-//       const renderResources = new GaussianSplatRenderResources(primitive);
-
-//       GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, scene.frameState);
-
-//       expect(renderResources.renderStateOptions.cull.enabled).toBe(false);
-//       expect(renderResources.renderStateOptions.depthMask).toBe(true);
-//       expect(renderResources.renderStateOptions.depthTest.enabled).toBe(true);
-//       expect(renderResources.renderStateOptions.blending).toBe(
-//         BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
-//       );
-//     });});
-
-//     it("handles debugShowBoundingVolume correctly", function () {
-//       return loadTileset().then(function(primitive) {
-//       primitive.debugShowBoundingVolume = true;
-
-//       GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, scene.frameState);
-
-//       const shaderBuilder = new GaussianSplatRenderResources(primitive)
-//         .shaderBuilder;
-//       expect(shaderBuilder.addDefine).toHaveBeenCalledWith(
-//         "DEBUG_BOUNDING_VOLUMES",
-//         undefined,
-//         ShaderDestination.BOTH,
-//       );
-//     });});
-
-//     it("creates geometry with correct attributes", function () {
-//       return loadTileset().then(function(primitive) {
-//       GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, scene.frameState);
-
-//       const geometry =
-//         VertexArray.fromGeometry.calls.mostRecent().args[0].geometry;
-//       expect(geometry.attributes.screenQuadPosition).toBeInstanceOf(
-//         GeometryAttribute,
-//       );
-//       expect(geometry.attributes.splatIndex).toBeInstanceOf(GeometryAttribute);
-//       expect(geometry.primitiveType).toBe(PrimitiveType.TRIANGLE_STRIP);
-//     });});
-//   });
-// });
+          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+            function () {
+              const tile = tileset._root;
+              expect(tile.content).toBeDefined();
+              expect(tile.content instanceof GaussianSplat3DTileContent).toBe(
+                true,
+              );
+            },
+          );
+        },
+      );
+    });
+  },
+  "WebGL",
+);

@@ -232,7 +232,6 @@ GaussianSplat3DTileContent.prototype.isDestroyed = function () {
 };
 
 GaussianSplat3DTileContent.prototype.destroy = function () {
-  this.splatPrimitive.destroy();
   this.splatPrimitive = undefined;
   this._tileset.gaussianSplatPrimitive.destroy();
   this._tileset.gaussianSplatPrimitive = undefined;
