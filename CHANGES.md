@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.130 - 2025-06-02
+## 1.131 - 2025-07-02
 
 ### @cesium/engine
 
@@ -12,14 +12,49 @@
 
 #### Fixes :wrench:
 
+## 1.130 - 2025-06-02
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- The `FragmentInput` struct for voxel shaders has been updated to be more consistent with the `CustomShader` documentation. Remaining differences in `CustomShader` usage between `VoxelPrimitive` and `Cesium3DTileset` or `Model` are now documented in the Custom Shader Guide. [#12636](https://github.com/CesiumGS/cesium/pull/12636). Key changes include:
+  - The non-standard position attributes `fsInput.voxel.positionUv`, `fsInput.voxel.positionShapeUv`, and `fsInput.voxel.positionLocal` have been removed, and replaced by a single eye coordinate position `fsInput.attributes.positionEC`.
+  - The normal in model coordinates `fsInput.voxel.surfaceNormal` has been replaced by a normal in eye coordinates `fsInput.attributes.normalEC`. Example:
+
+```glsl
+// Replace this:
+// vec3 voxelNormal = normalize(czm_normal * fsInput.voxel.surfaceNormal);
+// with this:
+vec3 voxelNormal = fsInput.attributes.normalEC;
+```
+
+#### Additions :tada:
+
+- Add basic support for draping imagery on 3D Tiles. [#12567](https://github.com/CesiumGS/cesium/pull/12567)
+- Add support for 3D Textures and add Volume Cloud sandcastle example. [#12661](https://github.com/CesiumGS/cesium/pull/12611)
+
+#### Fixes :wrench:
+
+- Fixed voxel rendering with orthographic cameras. [#12629](https://github.com/CesiumGS/cesium/pull/12629)
+
 ## 1.129 - 2025-05-01
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- `VoxelProvider.minimumBounds` and `.maximumBounds` are now specified as physical values, rather than shape space values. [#12592](https://github.com/CesiumGS/cesium/pull/12592)
+
+#### Additions :tada:
+
+- Added `Material with Custom GLSL` Sandbox Demo. [#12549](https://github.com/CesiumGS/cesium/issues/12549)
+
 #### Fixes :wrench:
 
 - `QuadtreePrimitive.updateHeights` now converts position to Cartographic before invoking the callback, ensuring compatibility with change introduced by [commit 53889cb](https://github.com/CesiumGS/cesium/commit/53889cb) and preventing unnecessary computation. [#12555](https://github.com/CesiumGS/cesium/pull/12555)
-- `Check.typeOf.object` now asserts `Record<string|number|symbol, any>` intead of `object` to allow property checks after assertion. [#12572](https://github.com/CesiumGS/cesium/issues/12572)
+- Fixed `Polyline*MaterialProperty` width artifacts (reverted [#12434](https://github.com/CesiumGS/cesium/pull/12434)). [#12506](https://github.com/CesiumGS/cesium/issues/12506)
+- `Check.typeOf.object` now asserts `Record<string|number|symbol, any>` instead of `object` to allow property checks after assertion. [#12572](https://github.com/CesiumGS/cesium/issues/12572)
 
 ## 1.128 - 2025-04-01
 

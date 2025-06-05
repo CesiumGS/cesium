@@ -14,6 +14,10 @@ void main()
     ProcessedAttributes attributes;
     initializeAttributes(attributes);
 
+    #ifdef HAS_IMAGERY
+    initializeImageryAttributes();
+    #endif
+
     // Dequantize the quantized ones and add them to the
     // attributes struct.
     #ifdef USE_DEQUANTIZATION
