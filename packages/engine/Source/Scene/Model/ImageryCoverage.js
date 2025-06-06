@@ -130,6 +130,10 @@ class ImageryCoverage {
     imageryLayer,
     inputImageryLevel,
   ) {
+    if (!imageryLayer.show) {
+      return [];
+    }
+
     const imageryProvider = imageryLayer.imageryProvider;
     const imageryLevel = ImageryCoverage._clampImageryLevel(
       imageryProvider,
