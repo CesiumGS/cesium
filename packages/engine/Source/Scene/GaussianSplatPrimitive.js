@@ -556,26 +556,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
   renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
 
-  shaderBuilder.addDefine(
-    "HAS_GAUSSIAN_SPLATS",
-    undefined,
-    ShaderDestination.BOTH,
-  );
-
-  shaderBuilder.addDefine(
-    "HAS_SPLAT_TEXTURE",
-    undefined,
-    ShaderDestination.BOTH,
-  );
-
-  if (primitive.debugShowBoundingVolume) {
-    shaderBuilder.addDefine(
-      "DEBUG_BOUNDING_VOLUMES",
-      undefined,
-      ShaderDestination.BOTH,
-    );
-  }
-
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("float", "a_splatIndex");
   shaderBuilder.addVarying("vec4", "v_splatColor");
