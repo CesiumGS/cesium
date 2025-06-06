@@ -83,7 +83,19 @@ body {
   margin: 5px;
   padding: 2px 5px;
   position: absolute;
+  background: rgba(42, 42, 42, 0.8);
+  background: var(--ids-color-bg-page-base);
+  padding: 8px;
+  border-radius: 4px;
 }
+/* #toolbar input {
+  vertical-align: middle;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+#toolbar .header {
+  font-weight: bold;
+} */
 
 .infoPanel {
   background: rgba(42, 42, 42, 0.8);
