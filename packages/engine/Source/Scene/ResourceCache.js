@@ -391,6 +391,20 @@ ResourceCache.getDracoLoader = function (options) {
   return ResourceCache.add(dracoLoader);
 };
 
+/**
+ * Gets an existing SPZ loader from the cache, or creates a new loader if one does not already exist.
+ * This loader is used to decode SPZ (Splat Point Cloud) data in glTF.
+ * 
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.primitive The primitive containing the SPZ extension.
+ * @param {object} options.spz The SPZ extension object.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ *
+ * @return {GltfSpzLoader} The cached SPZ loader.
+ @private
+ * */
 ResourceCache.getSpzLoader = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, primitive, spz, gltfResource, baseResource } = options;
