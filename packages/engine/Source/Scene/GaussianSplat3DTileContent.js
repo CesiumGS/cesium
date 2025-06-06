@@ -29,10 +29,17 @@ function GaussianSplat3DTileContent(tileset, tile, resource, gltf) {
 
   /**
    * glTF primitive data that contains the Gaussian splat data needed for rendering.
+   * @type{Primitive}
    * @private
    *
    */
   this.splatPrimitive = undefined;
+
+  /**
+   * Transform matrix to turn model coordinates into world coordinates.
+   * @type {Matrix4}
+   * @private
+   */
   this.worldTransform = undefined;
 
   /**
@@ -43,6 +50,11 @@ function GaussianSplat3DTileContent(tileset, tile, resource, gltf) {
   this._metadata = undefined;
   this._group = undefined;
   this._ready = false;
+  /**
+   * Indicates whether or not the local coordinates of the tile have been transformed
+   * @type {boolean}
+   * @private
+   */
   this._transformed = false;
 
   const basePath = resource;
@@ -129,9 +141,18 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof GaussianSplat3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   */
+
   ready: {
     get: function () {
-      return this._ready;
+      return this._ready && this._transformed;
     },
   },
 
@@ -235,6 +256,10 @@ GaussianSplat3DTileContent.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * Frees the resources used by this object.
+ * @private
+ */
 GaussianSplat3DTileContent.prototype.destroy = function () {
   this.splatPrimitive = undefined;
   this._tileset.gaussianSplatPrimitive.destroy();

@@ -31,6 +31,7 @@ import Axis from "./Axis.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Transforms from "../Core/Transforms.js";
 import Quaternion from "../Core/Quaternion.js";
+import destroyObject from "../Core/destroyObject.js";
 
 const scratchSplatMatrix = new Matrix4();
 
@@ -59,22 +60,127 @@ function createGaussianSplatTexture(context, splatTextureData) {
   });
 }
 
+/** * A primitive that renders Gaussian splats.
+ * <p>
+ * This primitive is used to render Gaussian splats in a 3D Tileset.
+ * It is designed to work with the KHR_spz_gaussian_splats_compression extension.
+ * </p>
+ * @alias GaussianSplatPrimitive
+ * @constructor
+ * @param {Object} [options] An object with the following properties:
+ * @param {Cesium3DTileset} options.tileset The tileset that this primitive belongs to.
+ * @param {boolean} [options.debugShowBoundingVolume=false] Whether to show the bounding volume of the primitive for debugging purposes.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
 function GaussianSplatPrimitive(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
+
+  /**
+   * The positions of the Gaussian splats in the primitive.
+   * @type {Float32Array}
+   * @private
+   */
   this._positions = undefined;
+  /**
+   * The rotations of the Gaussian splats in the primitive.
+   * @type {Float32Array}
+   * @private
+   */
   this._rotations = undefined;
+  /**
+   * The scales of the Gaussian splats in the primitive.
+   * @type {Float32Array}
+   * @private
+   */
   this._scales = undefined;
+  /**
+   * The colors of the Gaussian splats in the primitive.
+   * @type {Uint8Array}
+   * @private
+   */
   this._colors = undefined;
+  /**
+   * The indexes of the Gaussian splats in the primitive.
+   * Used to index into the splat attribute texture in the vertex shader.
+   * @type {Uint32Array}
+   * @private
+   */
   this._indexes = undefined;
+  /**
+   * The number of splats in the primitive.
+   * This is the total number of splats across all selected tiles.
+   * @type {number}
+   * @private
+   */
   this._numSplats = 0;
-  this._debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
+  /**
+   * Indicates whether or not the primitive needs a Gaussian splat texture.
+   * This is set to true when the primitive is first created or when the splat attributes change.
+   * @type {boolean}
+   * @private
+   */
   this._needsGaussianSplatTexture = true;
+  /**
+   * The scale of the Gaussian splats.
+   * This is used to control the size of the splats when rendered.
+   * @type {number}
+   * @private
+   */
   this._splatScale = 1.0;
+  /**
+   * The previous view matrix used to determine if the primitive needs to be updated.
+   * This is used to avoid unnecessary updates when the view matrix hasn't changed.
+   * @type {Matrix4}
+   * @private
+   */
   this._prevViewMatrix = new Matrix4();
+
+  /**
+   * Indicates whether or not to show the bounding volume of the primitive for debugging purposes.
+   * This is used to visualize the bounding volume of the primitive in the scene.
+   * @type {boolean}
+   * @private
+   */
+  this._debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
+
+  /**
+   * The texture used to store the Gaussian splat attributes.
+   * This texture is created from the splat attributes (positions, scales, rotations, colors)
+   * and is used in the vertex shader to render the splats.
+   * @type {Texture}
+   * @private
+   * @see {@link GaussianSplatTextureGenerator}
+   */
   this.gaussianSplatTexture = undefined;
+  /**
+   * The last width of the Gaussian splat texture.
+   * This is used to track changes in the texture size and update the primitive accordingly.
+   * @type {number}
+   * @private
+   */
   this._lastTextureWidth = 0;
+  /**
+   * The last height of the Gaussian splat texture.
+   * This is used to track changes in the texture size and update the primitive accordingly.
+   * @type {number}
+   * @private
+   */
   this._lastTextureHeight = 0;
+  /**
+   * The vertex array used to render the Gaussian splats.
+   * This vertex array contains the attributes needed to render the splats, such as positions and indexes.
+   * @type {VertexArray}
+   * @private
+   */
   this._vertexArray = undefined;
+  /**
+   * The length of the vertex array, used to track changes in the number of splats.
+   * This is used to determine if the vertex array needs to be rebuilt.
+   * @type {number}
+   * @private
+   */
   this._vertexArrayLen = -1;
 
   /**
@@ -93,18 +199,81 @@ function GaussianSplatPrimitive(options) {
 
   this._tileset.tileLoad.addEventListener(this.onTileLoad, this);
   this._tileset.tileVisible.addEventListener(this.onTileVisible, this);
-  this.selectedTileLen = 0;
-  this._drawCommand = undefined;
 
+  /**
+   * Tracks current count of selected tiles.
+   * This is used to determine if the primitive needs to be rebuilt.
+   * @type {number}
+   * @private
+   */
+  this.selectedTileLen = 0;
+
+  /**
+   * Indicates whether or not the primitive is ready for use.
+   * @type {boolean}
+   * @private
+   */
+  this._ready = false;
+
+  /**
+   * Indicates whether or not the primitive has a Gaussian splat texture.
+   * @type {boolean}
+   * @private
+   */
+  this._hasGaussianSplatTexture = false;
+
+  /**
+   * Indicates whether or not the primitive is currently generating a Gaussian splat texture.
+   * @type {boolean}
+   * @private
+   */
+  this._gaussianSplatTexturePending = false;
+
+  /**
+   * The draw command used to render the Gaussian splats.
+   * @type {DrawCommand}
+   * @private
+   */
+  this._drawCommand = undefined;
+  /**
+   * The root transform of the tileset.
+   * This is used to transform the splats into world space.
+   * @type {Matrix4}
+   * @private
+   */
   this._rootTransform = undefined;
+
+  /**
+   * The axis correction matrix to transform the splats from Y-up to Z-up.
+   * @type {Matrix4}
+   * @private
+   */
   this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
     Axis.Y,
     Axis.X,
     new Matrix4(),
   );
 
+  /**
+   * Indicates whether or not the primitive has been destroyed.
+   * @type {boolean}
+   * @private
+   */
   this._isDestroyed = false;
+
+  /**
+   * The state of the Gaussian splat sorting process.
+   * This is used to track the progress of the sorting operation.
+   * @type {GaussianSplatSortingState}
+   * @private
+   */
   this._sorterState = GaussianSplatSortingState.IDLE;
+  /**
+   * A promise that resolves when the Gaussian splat sorting operation is complete.
+   * This is used to track the progress of the sorting operation.
+   * @type {Promise}
+   * @private
+   */
   this._sorterPromise = undefined;
 }
 
@@ -134,6 +303,10 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   },
 });
 
+/**
+ * Destroys the primitive and releases its resources in a deterministic manner.
+ * @private
+ */
 GaussianSplatPrimitive.prototype.destroy = function () {
   this._positions = undefined;
   this._rotations = undefined;
@@ -145,24 +318,60 @@ GaussianSplatPrimitive.prototype.destroy = function () {
     this.gaussianSplatTexture = undefined;
   }
 
+  const drawCommand = this._drawCommand;
+  if (defined(drawCommand)) {
+    drawCommand.shaderProgram =
+      drawCommand.shaderProgram && drawCommand.shaderProgram.destroy();
+  }
+
   if (defined(this._vertexArray)) {
     this._vertexArray.destroy();
     this._vertexArray = undefined;
   }
 
-  this._isDestroyed = true;
+  return destroyObject(this);
 };
 
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ * @returns {boolean} Returns true if the primitive has been destroyed, otherwise false.
+ * @private
+ */
 GaussianSplatPrimitive.prototype.isDestroyed = function () {
   return this._isDestroyed;
 };
 
+/**
+ * Event callback for when a tile is loaded.
+ * This method is called when a tile is loaded and the primitive needs to be updated.
+ * It sets the dirty flag to true, indicating that the primitive needs to be rebuilt.
+ * @param {Cesium3DTile} tile
+ * @private
+ */
 GaussianSplatPrimitive.prototype.onTileLoad = function (tile) {
   this._dirty = true;
 };
 
+/**
+ * Callback for visible tiles.
+ * @param {Cesium3DTile} tile
+ * @private
+ */
 GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
 
+/**
+ * Transforms the tile's splat primitive attributes into world space.
+ *  * <br /><br />
+ * This method applies the computed transform of the tile and the tileset's bounding sphere
+ * to the splat primitive's position, rotation, and scale attributes.
+ * It modifies the attributes in place, transforming them from local space to world space.
+ *
+ * @param {Cesium3DTile} tile
+ * @private
+ */
 GaussianSplatPrimitive.transformTile = function (tile) {
   const computedTransform = tile.computedTransform;
   const splatPrimitive = tile.content.splatPrimitive;
@@ -252,6 +461,17 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   }
 };
 
+/**
+ * Generates the Gaussian splat texture for the primitive.
+ * This method creates a texture from the splat attributes (positions, scales, rotations, colors)
+ * and updates the primitive's state accordingly.
+ *
+ * @see {@link GaussianSplatTextureGenerator}
+ *
+ * @param {GaussianSplatPrimitive} primitive
+ * @param {FrameState} frameState
+ * @private
+ */
 GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
   primitive._gaussianSplatTexturePending = true;
   const promise = GaussianSplatTextureGenerator.generateFromAttributes({
@@ -312,6 +532,16 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
     });
 };
 
+/**
+ * Builds the draw command for the Gaussian splat primitive.
+ * This method sets up the shader program, render state, and vertex array for rendering the Gaussian splats.
+ * It also configures the attributes and uniforms required for rendering.
+ *
+ * @param {GaussianSplatPrimitive} primitive
+ * @param {FrameState} frameState
+ *
+ * @private
+ */
 GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   primitive,
   frameState,
@@ -457,6 +687,16 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   primitive._drawCommand = command;
 };
 
+/**
+ * Updates the Gaussian splat primitive for the current frame.
+ * This method checks if the primitive needs to be updated based on the current frame state,
+ * and if so, it processes the selected tiles, aggregates their attributes,
+ * and generates the Gaussian splat texture if necessary.
+ * It also handles the sorting of splat indexes and builds the draw command for rendering.
+ *
+ * @param {FrameState} frameState
+ * @private
+ */
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
