@@ -1,32 +1,39 @@
 import { MouseEventHandler } from "react";
 import "./Gallery.css";
 
-export type GalleryDemo = {
-  name: string;
+export type GalleryItem = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail?: string;
   isNew: boolean;
-  img: string;
-  js: string;
-  html?: string;
 };
 
 type GalleryCardProps = {
-  demo: GalleryDemo;
+  name: string;
+  imageSrc: string;
   cardClickHandler: MouseEventHandler<HTMLDivElement>;
 };
 
-function GalleryCard({ demo, cardClickHandler }: GalleryCardProps) {
+export function GalleryCard({
+  name,
+  imageSrc,
+  cardClickHandler,
+}: GalleryCardProps) {
   return (
     <div className="card" onClick={cardClickHandler}>
-      <div>{demo.name}</div>
-      <img src={`gallery/${demo.img}`} alt="" />
+      <div>{name}</div>
+      <img src={imageSrc} alt="" />
     </div>
   );
 }
 
 type GalleryProps = {
-  demos: GalleryDemo[];
-  loadDemo: (demo: GalleryDemo) => void;
+  demos: GalleryItem[];
+  loadDemo: (demo: GalleryItem) => void;
 };
+
+const GALLERY_BASE = __GALLERY_BASE_URL__;
 
 function Gallery({ demos, loadDemo }: GalleryProps) {
   return (
@@ -34,8 +41,9 @@ function Gallery({ demos, loadDemo }: GalleryProps) {
       {demos.map((demo) => {
         return (
           <GalleryCard
-            key={demo.name}
-            demo={demo}
+            key={demo.id}
+            name={demo.title}
+            imageSrc={`${GALLERY_BASE}/${demo.id}/${demo.thumbnail}`}
             cardClickHandler={() => loadDemo(demo)}
           ></GalleryCard>
         );

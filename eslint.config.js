@@ -105,6 +105,16 @@ export default [
     },
   },
   {
+    files: ["packages/sandcastle/gallery/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+    },
+    rules: {
+      "no-alert": "off",
+    },
+  },
+  {
     files: ["Specs/**/*", "packages/**/Specs/**/*"],
     languageOptions: {
       globals: {

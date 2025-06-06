@@ -1,0 +1,8 @@
+id: 3d-models
+legacyId: 3D Models.html
+title: 3D Models
+thumbnail: ./thumbnail.jpg
+description: Create 3D models using glTF.
+labels:
+  - Tutorial
+  - Showcases
