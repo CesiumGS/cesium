@@ -20,6 +20,7 @@ import {
   createIndexJs,
   buildCesium,
 } from "./scripts/build.js";
+import { buildGalleryList } from "./packages/sandcastle/scripts/buildGallery.js";
 
 const argv = yargs(process.argv)
   .options({
@@ -274,6 +275,24 @@ async function generateDevelopmentBuild() {
       }
 
       specsCache.clear();
+    });
+
+    const galleryWatcher = chokidar.watch(
+      ["packages/sandcastle/public/gallery"],
+      {
+        ignored: (file, stats) =>
+          !!stats?.isFile() &&
+          !file.endsWith(".yml") &&
+          !file.endsWith(".yaml"),
+        ignoreInitial: true,
+      },
+    );
+
+    const galleryDirectory = "packages/sandcastle/public/gallery";
+    galleryWatcher.on("all", (event) => {
+      if (event === "add" || event === "change" || event === "unlink") {
+        buildGalleryList(galleryDirectory);
+      }
     });
 
     // Rebuild jsHintOptions as needed and serve as-is
