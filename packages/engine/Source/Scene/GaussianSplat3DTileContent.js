@@ -106,9 +106,13 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
 
   texturesByteLength: {
     get: function () {
-      return this.splatPrimitive.attributes.reduce((totalLength, attribute) => {
-        return totalLength + attribute.byteLength;
-      }, 0);
+      const texture = this._tileset.gaussianSplatPrimitive.gaussianSplatTexture;
+      const selectedTileLen =
+        this._tileset.gaussianSplatPrimitive.selectedTileLen;
+      if (texture === undefined || selectedTileLen === 0) {
+        return 0;
+      }
+      return texture.sizeInBytes / selectedTileLen;
     },
   },
 
