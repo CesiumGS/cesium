@@ -1,35 +1,6 @@
 import Pako from "pako";
 
 export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
-  //   return `window.startup = async function (Cesium, Sandcastle) {
-  //   'use strict';
-  //   //Sandcastle_Begin
-  //   ${addExtraLine ? "\n" : ""}${code}
-  //   //Sandcastle_End
-  //   Sandcastle.finishedLoading();
-  //   };
-  //   if (typeof Cesium !== 'undefined' && typeof Sandcastle !== 'undefined') {
-  //       window.startupCalled = true;
-  //     window.startup(Cesium, Sandcastle).catch((error) => {
-  //         "use strict";
-  //       console.error(error);
-  //     });
-  // }
-  //     `;
-  // return `${jsEditor.getValue()}\nSandcastle.finishedLoading();`;
-  // return `import Sandcastle from 'Sandcastle';
-  //     (async function () {
-  //       ${jsEditor.getValue().replace(/import.*;/, "")}
-  //       Sandcastle.finishedLoading();
-  //   })().catch(error => {
-  //     console.error('window catch', error)
-  //   })
-  //     `;
-  //   return `import * as Cesium from 'cesium';
-  //   import Sandcastle from 'Sandcastle';
-  // ${addExtraLine ? "\n" : ""}${code.replace(/import[\w\s*;']*;/, "")}
-  // Sandcastle.finishedLoading();
-
   let imports = "";
 
   if (!/import.*Cesium.*from.*;?$/m.test(code)) {
@@ -40,7 +11,10 @@ export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
   }
 
   return `${imports}${addExtraLine ? "\n" : ""}${code}
+// Call default actions that might have been set up
 Sandcastle.finishedLoading();
+// Set Cesium on the window for use in DevTools
+window.Cesium = Cesium;
 `;
 }
 
