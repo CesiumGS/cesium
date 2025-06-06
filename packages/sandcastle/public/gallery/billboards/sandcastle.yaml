@@ -1,10 +1,8 @@
 id: billboards
-legacy-id: Billboards.html
+legacyId: Billboards.html
 title: Billboards
 thumbnail: ./Billboards.jpg
 description: Add billboard images and markers to the scene.
 labels:
   - Beginner
   - Showcases
-category: Working with 3D Tiles
-context: Each instance of a 3D tileset has a modelMatrix property that, when set, modifies the entire tileset's position, rotation, and scale. This transformations are applied in worldspace before the tileset's root tile transform.

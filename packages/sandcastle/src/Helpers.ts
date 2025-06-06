@@ -4,10 +4,10 @@ export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
   let imports = "";
 
   if (!/import.*Cesium.*from.*;?$/m.test(code)) {
-    imports += `import * as Cesium from "cesium"\n`;
+    imports += `import * as Cesium from "cesium";\n`;
   }
   if (!/import.*Sandcastle.*from.*;?$/m.test(code)) {
-    imports += `import Sandcastle from "Sandcastle"\n`;
+    imports += `import Sandcastle from "Sandcastle";\n`;
   }
 
   return `${imports}${addExtraLine ? "\n" : ""}${code}

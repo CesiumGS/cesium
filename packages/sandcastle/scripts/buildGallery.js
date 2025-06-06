@@ -56,6 +56,21 @@ export function buildGalleryList(galleryDirectory) {
       continue;
     }
 
+    const expectedKeys = [
+      "id",
+      "legacyId",
+      "title",
+      "description",
+      "thumbnail",
+      "labels",
+    ];
+    // Check that all keys in a yaml file are values we expect
+    for (const key of Object.keys(metadata)) {
+      if (!expectedKeys.includes(key)) {
+        console.error(filePath, "has an extra key:", key);
+      }
+    }
+
     const { id, title, description, thumbnail } = metadata;
 
     // Validate metadata
@@ -95,7 +110,7 @@ export function buildGalleryList(galleryDirectory) {
       description: description,
       isNew: false,
     });
-    const legacyId = metadata["legacy-id"];
+    const legacyId = metadata.legacyId;
     if (legacyId) {
       output.legacyIdMap[legacyId] = id;
     }

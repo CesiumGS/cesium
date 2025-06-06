@@ -1,10 +1,8 @@
 id: 3d-models
-legacy-id: 3D Models.html
+legacyId: 3D Models.html
 title: 3D Models
 thumbnail: ./thumbnail.jpg
 description: Create 3D models using glTF.
 labels:
   - Tutorial
   - Showcases
-category: Working with 3D Tiles
-context: Each instance of a 3D tileset has a modelMatrix property that, when set, modifies the entire tileset's position, rotation, and scale. This transformations are applied in worldspace before the tileset's root tile transform.
