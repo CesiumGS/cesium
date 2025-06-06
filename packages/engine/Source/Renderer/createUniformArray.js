@@ -39,6 +39,7 @@ function createUniformArray(gl, activeUniform, uniformName, locations) {
         locations,
       );
     case gl.SAMPLER_2D:
+    case gl.SAMPLER_3D:
     case gl.SAMPLER_CUBE:
       return new UniformArraySampler(gl, activeUniform, uniformName, locations);
     case gl.INT:

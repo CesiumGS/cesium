@@ -412,6 +412,29 @@ PixelFormat.textureSizeInBytes = function (
 /**
  * @private
  */
+PixelFormat.texture3DSizeInBytes = function (
+  pixelFormat,
+  pixelDatatype,
+  width,
+  height,
+  depth,
+) {
+  let componentsLength = PixelFormat.componentsLength(pixelFormat);
+  if (PixelDatatype.isPacked(pixelDatatype)) {
+    componentsLength = 1;
+  }
+  return (
+    componentsLength *
+    PixelDatatype.sizeInBytes(pixelDatatype) *
+    width *
+    height *
+    depth
+  );
+};
+
+/**
+ * @private
+ */
 PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
   const mod =
     PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, 1) % 4;
@@ -513,6 +536,19 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
         return WebGLConstants.RG16F;
       case PixelFormat.RED:
         return WebGLConstants.R16F;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.UNSIGNED_BYTE) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA:
+        return WebGLConstants.RGBA8;
+      case PixelFormat.RGB:
+        return WebGLConstants.RGB8;
+      case PixelFormat.RG:
+        return WebGLConstants.RG8;
+      case PixelFormat.RED:
+        return WebGLConstants.R8;
     }
   }
 
