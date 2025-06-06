@@ -64,12 +64,31 @@ const PixelFormat = {
   RGBA: WebGLConstants.RGBA,
 
   /**
-   * Integral versions of above types. Required if using integral textures.
+   * A pixel format containing a red channel as an integer.
+   * @type {number}
+   * @constant
    */
-
   RED_INTEGER: WebGLConstants.RED_INTEGER,
+
+  /**
+   * A pixel format containing red and green channels as integers.
+   * @type {number}
+   * @constant
+   */
   RG_INTEGER: WebGLConstants.RG_INTEGER,
+
+  /**
+   * A pixel format containing red, green, and blue channels as integers.
+   * @type {number}
+   * @constant
+   */
   RGB_INTEGER: WebGLConstants.RGB_INTEGER,
+
+  /**
+   * A pixel format containing red, green, blue, and alpha channels as integers.
+   * @type {number}
+   * @constant
+   */
   RGBA_INTEGER: WebGLConstants.RGBA_INTEGER,
 
   /**
