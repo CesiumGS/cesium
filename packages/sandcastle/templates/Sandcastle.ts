@@ -118,13 +118,17 @@ const Sandcastle = {
     input.checked = checked;
     input.type = "checkbox";
     input.style.pointerEvents = "none";
+    input.className = "🥝-checkbox";
     const label = document.createElement("label");
-    label.appendChild(input);
     label.appendChild(document.createTextNode(text));
     label.style.pointerEvents = "none";
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "cesium-button";
+    label.className = "🥝-label";
+    const button = document.createElement("div");
+    // button.type = "button";
+    button.className = "🥝-field";
+    button.dataset.kiwiLabelPlacement = "after";
+    button.dataset.kiwiControlType = "checkable";
+    button.appendChild(input);
     button.appendChild(label);
 
     button.onclick = function () {
@@ -152,7 +156,9 @@ const Sandcastle = {
     Sandcastle.declare(onclick);
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "cesium-button";
+    button.className = "🥝-button";
+    button.dataset.kiwiVariant = "solid";
+    button.dataset.kiwiTone = "neutral";
     button.onclick = function () {
       Sandcastle.reset();
       Sandcastle.highlight(onclick);
@@ -190,7 +196,9 @@ const Sandcastle = {
    */
   addToolbarMenu(options: SelectOption[], toolbarId?: string) {
     const menu = document.createElement("select");
-    menu.className = "cesium-button";
+    menu.className = "🥝-button 🥝-select";
+    menu.dataset.kiwiVariant = "solid";
+    menu.dataset.kiwiTone = "neutral";
     menu.onchange = function () {
       Sandcastle.reset();
       const item = options[menu.selectedIndex];
@@ -198,11 +206,22 @@ const Sandcastle = {
         item.onselect();
       }
     };
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "🥝-select-root";
+    wrapper.appendChild(menu);
+
+    // generate element direct from html string https://stackoverflow.com/a/35385518/7416863
+    // TODO: this feels wrong but is necessary for the icon...
+    const icon = document.createElement("template");
+    icon.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 16 16" class="🥝-icon 🥝-disclosure-arrow 🥝-select-arrow" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 10 5 7h6l-3 3Z" clip-rule="evenodd"></path></svg>`;
+    wrapper.appendChild(icon.content.firstChild!);
+
     const toolbar = document.getElementById(toolbarId || "toolbar");
     if (!toolbar) {
       throw new Error(`Toolbar not found: ${toolbarId}`);
     }
-    toolbar.appendChild(menu);
+    toolbar.appendChild(wrapper);
 
     if (!defaultAction && typeof options[0].onselect === "function") {
       defaultAction = options[0].onselect;
