@@ -8,7 +8,8 @@ import "./App.css";
 import Editor, { Monaco } from "@monaco-editor/react";
 import { editor, KeyCode } from "monaco-editor";
 import Gallery, { GalleryItem } from "./Gallery.js";
-import { Button, Root } from "@itwin/itwinui-react/bricks";
+import { Button } from "@stratakit/bricks";
+import { Root } from "@stratakit/foundations";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Bucket from "./Bucket.tsx";
 
