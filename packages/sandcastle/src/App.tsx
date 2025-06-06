@@ -290,6 +290,7 @@ function applyBucket(
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
+const GALLERY_BASE = __GALLERY_BASE_URL__;
 
 // function appendCode(code, run = true) {
 //   const codeMirror = getJsCodeMirror();
@@ -677,7 +678,6 @@ Sandcastle.addToolbarMenu(${variableName});`,
     window.focus();
   }
 
-  const GALLERY_BASE = "/gallery";
   async function loadGalleryItem(galleryItem: GalleryItem) {
     const itemBaseUrl = `${GALLERY_BASE}/${galleryItem.id}`;
 

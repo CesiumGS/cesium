@@ -16,6 +16,7 @@ export default defineConfig(({ command }) => {
   config.define = {
     ...config.define,
     __PAGE_BASE_URL__: JSON.stringify("/"),
+    __GALLERY_BASE_URL__: JSON.stringify("/gallery"),
   };
 
   // When running the local dev server these are just server routes.
