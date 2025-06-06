@@ -76,7 +76,7 @@ function GltfVertexBufferLoader(options) {
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
   const hasSpz = defined(spz);
-  if (hasBufferViewId === hasDraco && hasBufferViewId === hasSpz) {
+  if (hasBufferViewId === (hasDraco !== hasSpz)) {
     throw new DeveloperError(
       "One of options.bufferViewId, options.draco, or options.spz must be defined.",
     );

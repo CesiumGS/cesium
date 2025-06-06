@@ -350,31 +350,28 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasSpz = defined(spz);
 
-  if (!hasSpz) {
-    if (hasBufferViewId === hasDraco) {
-      throw new DeveloperError(
-        "One of options.bufferViewId and options.draco must be defined.",
-      );
-    }
-
-    if (hasDraco && !hasAttributeSemantic) {
-      throw new DeveloperError(
-        "When options.draco is defined options.attributeSemantic must also be defined.",
-      );
-    }
-
-    if (hasDraco) {
-      Check.typeOf.object("options.draco", draco);
-      Check.typeOf.string("options.attributeSemantic", attributeSemantic);
-    }
-
-    if (!loadBuffer && !loadTypedArray) {
-      throw new DeveloperError(
-        "At least one of loadBuffer and loadTypedArray must be true.",
-      );
-    }
+  if (hasBufferViewId === (hasDraco !== hasSpz)) {
+    throw new DeveloperError(
+      "One of options.bufferViewId and options.draco must be defined.",
+    );
   }
 
+  if (hasDraco && !hasAttributeSemantic) {
+    throw new DeveloperError(
+      "When options.draco is defined options.attributeSemantic must also be defined.",
+    );
+  }
+
+  if (hasDraco) {
+    Check.typeOf.object("options.draco", draco);
+    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
+  }
+
+  if (!loadBuffer && !loadTypedArray) {
+    throw new DeveloperError(
+      "At least one of loadBuffer and loadTypedArray must be true.",
+    );
+  }
   //>>includeEnd('debug');
 
   let cacheKeySuffix = "";
