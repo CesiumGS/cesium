@@ -13,7 +13,7 @@ import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
-  "Scene/GaussianSplat3dTileContent",
+  "Scene/GaussianSplat3DTileContent",
   function () {
     const tilesetUrl = "Data/Cesium3DTiles/GaussianSplats/tower/tileset.json";
 
@@ -49,22 +49,13 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    it("loads a Gaussian Splat tileset", function () {
+    it("loads Gaussian Splat content", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(
         function (tileset) {
           scene.camera.lookAt(
             tileset.boundingSphere.center,
             new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
           );
-          expect(tileset.hasExtension("3DTILES_content_gltf")).toBe(true);
-          expect(
-            tileset.isGltfExtensionUsed("KHR_spz_gaussian_splats_compression"),
-          ).toBe(true);
-          expect(
-            tileset.isGltfExtensionRequired(
-              "KHR_spz_gaussian_splats_compression",
-            ),
-          ).toBe(true);
 
           return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
             function () {

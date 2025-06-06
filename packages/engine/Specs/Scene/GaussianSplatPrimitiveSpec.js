@@ -47,7 +47,7 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    it("load Gaussian Splat content", function () {
+    it("load a Gaussian Splat tileset", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(
         function (tileset) {
           scene.camera.lookAt(
