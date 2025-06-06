@@ -107,7 +107,12 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
       return 0;
     },
   },
-
+  /**
+   * The number of bytes used by the geometry attributes of this content.
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {number}
+   * @readonly
+   */
   geometryByteLength: {
     get: function () {
       return this.splatPrimitive.attributes.reduce((totalLength, attribute) => {
@@ -115,7 +120,12 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
       }, 0);
     },
   },
-
+  /**
+   * The number of bytes used by the textures of this content.
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {number}
+   * @readonly
+   */
   texturesByteLength: {
     get: function () {
       const texture = this._tileset.gaussianSplatPrimitive.gaussianSplatTexture;
@@ -156,18 +166,34 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
     },
   },
 
+  /**
+   * The tileset that this content belongs to.
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {Cesium3DTileset}
+   * @readonly
+   */
   tileset: {
     get: function () {
       return this._tileset;
     },
   },
-
+  /**
+   * The tile that this content belongs to.
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {Cesium3DTile}
+   * @readonly
+   */
   tile: {
     get: function () {
       return this._tile;
     },
   },
-
+  /**
+   * The resource that this content was loaded from.
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {Resource}
+   * @readonly
+   */
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
@@ -199,6 +225,12 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
 });
 
+/**
+ * Updates the content of the tile and prepares it for rendering.
+ * @param {Cesium3DTileset}
+ * @param {FrameState} frameState - The current frame state.
+ * @private
+ */
 GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   const loader = this._loader;
 
