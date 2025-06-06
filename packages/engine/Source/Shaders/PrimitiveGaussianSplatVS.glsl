@@ -27,7 +27,7 @@ vec4 calcCovVectors(vec3 viewPos, mat3 Vrk) {
     //transform our covariance into view space
     //ensures orientation is correct
     mat3 Vrk_view = Rs * Vrk * transpose(Rs);
-    
+
     mat3 cov = transpose(J) * Vrk_view * J;
 
     float diagonal1 = cov[0][0] + .3;
@@ -53,7 +53,7 @@ void main() {
     uint texIdx = uint(a_splatIndex);
     ivec2 posCoord = ivec2((texIdx & 0x3ffu) << 1, texIdx >> 10);
     vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
-    
+
     vec4 splatViewPos = czm_modelView * vec4(splatPosition.xyz, 1.0);
     vec4 clipPosition = czm_projection * splatViewPos;
 
@@ -91,4 +91,6 @@ void main() {
 
     v_vertPos = corner ;
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
+
+    v_splitDirection = u_splitDirection;
 }

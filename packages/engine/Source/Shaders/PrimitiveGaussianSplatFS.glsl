@@ -1,4 +1,7 @@
 void main() {
+    if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
+    if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
+
     mediump float A = dot(v_vertPos, v_vertPos);
     if(A > 1.0) {
         discard;

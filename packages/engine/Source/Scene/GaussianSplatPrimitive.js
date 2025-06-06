@@ -31,6 +31,7 @@ import Axis from "./Axis.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Transforms from "../Core/Transforms.js";
 import Quaternion from "../Core/Quaternion.js";
+import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
 
 const scratchSplatMatrix = new Matrix4();
@@ -182,6 +183,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._vertexArrayLen = -1;
+  this._splitDirection = SplitDirection.NONE;
 
   /**
    * The dirty flag forces the primitive to render this frame.
@@ -299,6 +301,24 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
       //>>includeEnd('debug');
 
       this._splatScale = splatScale;
+    },
+  },
+
+  /**
+   * The {@link SplitDirection} to apply to this point.
+   * @memberof PointPrimitive.prototype
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  splitDirection: {
+    get: function () {
+      return this._splitDirection;
+    },
+    set: function (value) {
+      if (this._splitDirection !== value) {
+        this._splitDirection = value;
+        this._dirty = true;
+      }
     },
   },
 });
@@ -561,6 +581,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
   shaderBuilder.addUniform(
+    "float",
+    "u_splitDirection",
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addVarying("float", "v_splitDirection");
+  shaderBuilder.addUniform(
     "highp usampler2D",
     "u_splatAttributeTexture",
     ShaderDestination.VERTEX,
@@ -576,6 +602,10 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
+  };
+
+  uniformMap.u_splitDirection = function () {
+    return primitive.splitDirection;
   };
 
   renderResources.instanceCount = primitive._numSplats;
@@ -690,6 +720,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   if (frameState.passes.pick === true) {
     return;
+  }
+
+  if (this.splitDirection !== tileset.splitDirection) {
+    this.splitDirection = tileset.splitDirection;
   }
 
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
