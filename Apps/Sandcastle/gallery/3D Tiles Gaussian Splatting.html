@@ -2,99 +2,110 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <!-- Use Chrome Frame in IE -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta
       name="description"
-      content="Load 3D Tiles 1.1 Gaussian Splats dataset of a cell tower"
+      content="View the same power station dataset as a 3D Gaussian splatting tileset and a Mesh tileset."
     />
-    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
   <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
+
+      #slider {
+        position: absolute;
+        left: 50%;
+        top: 0px;
+        background-color: #d3d3d3;
+        width: 5px;
+        height: 100%;
+        z-index: 9999;
+      }
+
+      #slider:hover {
+        cursor: ew-resize;
+      }
     </style>
-    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="cesiumContainer" class="fullSize">
+      <div id="slider"></div>
+    </div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.Ion.defaultAccessToken =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2MWEyNWI4NS02ZWVmLTQyZTEtOTRjZi02NjljOWNhOWViNGEiLCJpZCI6MTQwNTg1LCJpYXQiOjE3MzYzNjg4OTR9.rIAEC387JLBYOPt3w1fliKTWZgTGCQYJlG8o5HJsTwY";
+        Cesium.ion.defaultAccessToken =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkNGE4YjVlNy0yYWYwLTRjZWYtODdhNy03YzQ0YTY5MzQyNzAiLCJpZCI6MTEzNTcyLCJpYXQiOjE3NDkyNDQ1MTJ9._KY_AU5jtlG9b8O7bJqsXbzrEUvwkOyAb78a2C_0oo4";
         const viewer = new Cesium.Viewer("cesiumContainer");
-        viewer.scene.debugShowFramesPerSecond = true;
 
-        const ORBIT_RANGE_FACTOR = 3;
-        const ORBIT_PITCH_DIVIDEND = 8;
+        try {
+          // TODO: Replace with the final asset when available.
+          const left = await Cesium.Cesium3DTileset.fromIonAssetId(3431611);
+          viewer.scene.primitives.add(left);
+          left.splitDirection = Cesium.SplitDirection.LEFT;
 
-        let cellTowerTileset;
-        Cesium.Cesium3DTileset.fromIonAssetId(2917325, {
-          maximumScreenSpaceError: 1,
-        }).then((tileset) => {
-          cellTowerTileset = tileset;
-          viewer.scene.primitives.add(cellTowerTileset);
-          setupCamera();
-        });
-        let startTime;
-        let isRunning = false;
+          viewer.zoomTo(left);
 
-        function setupCamera() {
-          const boundingSphere = cellTowerTileset.boundingSphere;
-          const heading = 0;
-          const range = boundingSphere.radius * ORBIT_RANGE_FACTOR;
-          const pitch = -Math.PI / ORBIT_PITCH_DIVIDEND;
-
-          viewer.camera.lookAt(
-            boundingSphere.center,
-            new Cesium.HeadingPitchRange(heading, pitch, range),
-          );
-
-          return true;
+          const right = await Cesium.createOsmBuildingsAsync();
+          // const right = await Cesium.Cesium3DTileset.fromIonAssetId(3431611);
+          viewer.scene.primitives.add(right);
+          right.splitDirection = Cesium.SplitDirection.RIGHT;
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
         }
 
-        function startCameraOrbit() {
-          if (!setupCamera()) {
-            return;
-          }
-          startTime = performance.now();
-          isRunning = true;
-          requestAnimationFrame(cameraOrbitTickCallback);
-        }
+        // Sync the position of the slider with the split position
+        const slider = document.getElementById("slider");
+        viewer.scene.splitPosition = slider.offsetLeft / slider.parentElement.offsetWidth;
 
-        function cameraOrbitTickCallback(timestamp) {
-          if (!isRunning) {
+        const handler = new Cesium.ScreenSpaceEventHandler(slider);
+
+        let moveActive = false;
+
+        function move(movement) {
+          if (!moveActive) {
             return;
           }
 
-          const boundingSphere = cellTowerTileset.boundingSphere;
-          const elapsedSeconds = (timestamp - startTime) / 1000;
-          const heading = (elapsedSeconds / 15) * Math.PI * 2;
-
-          const range = boundingSphere.radius * ORBIT_RANGE_FACTOR;
-          const pitch = -Math.PI / ORBIT_PITCH_DIVIDEND;
-
-          viewer.camera.lookAt(
-            boundingSphere.center,
-            new Cesium.HeadingPitchRange(heading, pitch, range),
-          );
-
-          requestAnimationFrame(cameraOrbitTickCallback);
+          const relativeOffset = movement.endPosition.x;
+          const splitPosition =
+            (slider.offsetLeft + relativeOffset) / slider.parentElement.offsetWidth;
+          slider.style.left = `${100.0 * splitPosition}%`;
+          viewer.scene.splitPosition = splitPosition;
         }
 
-        Sandcastle.addToolbarButton("Start Orbit", startCameraOrbit);
-        Sandcastle.addToolbarButton("Stop Orbit", () => {
-          isRunning = false;
-        });
+        handler.setInputAction(function () {
+          moveActive = true;
+        }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+        handler.setInputAction(function () {
+          moveActive = true;
+        }, Cesium.ScreenSpaceEventType.PINCH_START);
+
+        handler.setInputAction(move, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        handler.setInputAction(move, Cesium.ScreenSpaceEventType.PINCH_MOVE);
+
+        handler.setInputAction(function () {
+          moveActive = false;
+        }, Cesium.ScreenSpaceEventType.LEFT_UP);
+        handler.setInputAction(function () {
+          moveActive = false;
+        }, Cesium.ScreenSpaceEventType.PINCH_END);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
@@ -102,6 +113,7 @@
           "use strict";
           console.error(error);
         });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>
