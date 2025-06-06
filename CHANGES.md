@@ -1,5 +1,31 @@
 # Change Log
 
+## 1.130 - 2025-06-02
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- The `FragmentInput` struct for voxel shaders has been updated to be more consistent with the `CustomShader` documentation. Remaining differences in `CustomShader` usage between `VoxelPrimitive` and `Cesium3DTileset` or `Model` are now documented in the Custom Shader Guide. [#12636](https://github.com/CesiumGS/cesium/pull/12636). Key changes include:
+  - The non-standard position attributes `fsInput.voxel.positionUv`, `fsInput.voxel.positionShapeUv`, and `fsInput.voxel.positionLocal` have been removed, and replaced by a single eye coordinate position `fsInput.attributes.positionEC`.
+  - The normal in model coordinates `fsInput.voxel.surfaceNormal` has been replaced by a normal in eye coordinates `fsInput.attributes.normalEC`. Example:
+
+```glsl
+// Replace this:
+// vec3 voxelNormal = normalize(czm_normal * fsInput.voxel.surfaceNormal);
+// with this:
+vec3 voxelNormal = fsInput.attributes.normalEC;
+```
+
+#### Additions :tada:
+
+- Add basic support for draping imagery on 3D Tiles. [#12567](https://github.com/CesiumGS/cesium/pull/12567)
+- Add support for 3D Textures and add Volume Cloud sandcastle example. [#12661](https://github.com/CesiumGS/cesium/pull/12611)
+
+#### Fixes :wrench:
+
+- Fixed voxel rendering with orthographic cameras. [#12629](https://github.com/CesiumGS/cesium/pull/12629)
+
 ## 1.129 - 2025-05-01
 
 ### @cesium/engine

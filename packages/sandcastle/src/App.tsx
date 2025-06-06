@@ -24,6 +24,7 @@ function getBaseUrl() {
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
+const GALLERY_BASE = __GALLERY_BASE_URL__;
 
 function App() {
   const [jsIsActive, setJsIsActive] = useState(true);
@@ -281,7 +282,6 @@ Sandcastle.addToolbarMenu(${variableName});`,
     window.focus();
   }
 
-  const GALLERY_BASE = "/gallery";
   const loadGalleryItem = useCallback(
     async function loadGalleryItem(galleryId: string) {
       const galleryItem = galleryItems.find((item) => item.id === galleryId);

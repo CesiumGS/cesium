@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "files": ["scripts/buildGallery.js"],
   "scripts": {
     "dev": "vite --config vite.config.dev.ts",
     "build": "npm run build-app",

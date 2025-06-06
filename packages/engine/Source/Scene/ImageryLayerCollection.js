@@ -7,11 +7,12 @@ import Rectangle from "../Core/Rectangle.js";
 import ImageryLayer from "./ImageryLayer.js";
 
 /**
- * An ordered collection of imagery layers.
+ * An ordered collection of imagery layers for rendering raster imagery on a {@link Globe} or {@link Cesium3DTileset}.
  *
  * @alias ImageryLayerCollection
  * @constructor
- *
+ * @see {@link Scene#imageryLayers} for manipulating imagery layers on the globe.
+ * @see {@link Cesium3DTileset#imageryLayers} for manipulating imagery layers on a 3D tileset.
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
  */

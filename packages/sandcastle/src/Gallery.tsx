@@ -33,6 +33,8 @@ type GalleryProps = {
   loadDemo: (demo: GalleryItem) => void;
 };
 
+const GALLERY_BASE = __GALLERY_BASE_URL__;
+
 function Gallery({ demos, loadDemo }: GalleryProps) {
   return (
     <>
@@ -41,7 +43,7 @@ function Gallery({ demos, loadDemo }: GalleryProps) {
           <GalleryCard
             key={demo.id}
             name={demo.title}
-            imageSrc={`gallery/${demo.id}/${demo.thumbnail}`}
+            imageSrc={`${GALLERY_BASE}/${demo.id}/${demo.thumbnail}`}
             cardClickHandler={() => loadDemo(demo)}
           ></GalleryCard>
         );
