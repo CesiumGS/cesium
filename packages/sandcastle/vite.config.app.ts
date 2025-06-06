@@ -19,7 +19,7 @@ export default defineConfig(() => {
   config.define = {
     ...config.define,
     __PAGE_BASE_URL__: JSON.stringify("/"),
-    __GALLERY_BASE_URL__: JSON.stringify("/packages/sandcastle/public/gallery"),
+    __GALLERY_BASE_URL__: JSON.stringify("/packages/sandcastle/gallery"),
   };
 
   const copyPlugin = viteStaticCopy({

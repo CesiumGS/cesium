@@ -277,18 +277,12 @@ async function generateDevelopmentBuild() {
       specsCache.clear();
     });
 
-    const galleryWatcher = chokidar.watch(
-      ["packages/sandcastle/public/gallery"],
-      {
-        ignored: (file, stats) =>
-          !!stats?.isFile() &&
-          !file.endsWith(".yml") &&
-          !file.endsWith(".yaml"),
-        ignoreInitial: true,
-      },
-    );
-
-    const galleryDirectory = "packages/sandcastle/public/gallery";
+    const galleryDirectory = "packages/sandcastle/gallery";
+    const galleryWatcher = chokidar.watch([galleryDirectory], {
+      ignored: (file, stats) =>
+        !!stats?.isFile() && !file.endsWith(".yml") && !file.endsWith(".yaml"),
+      ignoreInitial: true,
+    });
     galleryWatcher.on("all", (event) => {
       if (event === "add" || event === "change" || event === "unlink") {
         buildGalleryList(galleryDirectory);

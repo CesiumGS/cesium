@@ -33,6 +33,7 @@ export default defineConfig(({ command }) => {
       { src: "../../Apps/SampleData", dest: "Apps" },
       { src: "../../Apps/SampleData", dest: "" },
       { src: "templates/Sandcastle.d.ts", dest: "templates" },
+      { src: "gallery", dest: "" },
     ],
   });
 

@@ -612,7 +612,7 @@ const externalResolvePlugin = {
  * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
-  buildGalleryList("packages/sandcastle/public/gallery");
+  buildGalleryList("packages/sandcastle/gallery");
 
   const demoObjects = [];
   const demoJSONs = [];

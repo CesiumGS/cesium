@@ -132,7 +132,7 @@ export function buildGalleryList(galleryDirectory) {
 /* global process */
 if (import.meta.url.endsWith(process.argv[1])) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
-  const defaultGalleryDirectory = join(__dirname, "../public/gallery");
+  const defaultGalleryDirectory = join(__dirname, "../gallery");
   const { output, hasErrors } = buildGalleryList(defaultGalleryDirectory);
   console.log("processed", output.entries.length, "sandcastles");
   if (hasErrors) {
