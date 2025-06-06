@@ -5,6 +5,25 @@ import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 import { loadSpz } from "@spz-loader/core";
 
+/**
+ * Load a SPZ buffer from a glTF.
+ * <p>
+ * Implements the {@link ResourceLoader} interface.
+ * </p>
+ * @alias GltfSpzLoader
+ * @constructor
+ * @augments ResourceLoader
+ * @param {object} options Object with the following properties:
+ * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+ * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.primitive The primitive containing the SPZ extension.
+ * @param {object} options.spz The SPZ extension object.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {string} [options.cacheKey] The cache key of the resource.
+ *
+ * @private
+ */
 function GltfSpzLoader(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
@@ -46,11 +65,25 @@ if (defined(Object.create)) {
 }
 
 Object.defineProperties(GltfSpzLoader.prototype, {
+  /**
+   * The cache key of the resource.
+   * @memberof GltfSpzLoader.prototype
+   * @type {string}
+   * @readonly
+   * @private
+   */
   cacheKey: {
     get: function () {
       return this._cacheKey;
     },
   },
+  /**
+   * The decoded SPZ data.
+   * @memberof GltfSpzLoader.prototype
+   * @type {object}
+   * @readonly
+   * @private
+   */
   decodedData: {
     get: function () {
       return this._decodedData;
@@ -86,6 +119,11 @@ async function loadResources(loader) {
   }
 }
 
+/**
+ * Loads the SPZ resource.
+ * @returns {Promise<Resource>} A promise that resolves to the resource when the SPZ is loaded.
+ * @private
+ */
 GltfSpzLoader.prototype.load = async function () {
   if (defined(this._promise)) {
     return this._promise;
@@ -126,6 +164,11 @@ async function processDecode(loader, decodePromise) {
   }
 }
 
+/**
+ * Processes the SPZ resource.
+ * @param {FrameState} frameState The frame state.
+ * @private
+ */
 GltfSpzLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
@@ -160,6 +203,10 @@ GltfSpzLoader.prototype.process = function (frameState) {
   this._decodePromise = processDecode(this, decodePromise);
 };
 
+/**
+ * Unloads the SPZ resource and frees associated resources.
+ * @private
+ */
 GltfSpzLoader.prototype.unload = function () {
   if (defined(this._bufferViewLoader)) {
     this._resourceCache.unload(this._bufferViewLoader);
