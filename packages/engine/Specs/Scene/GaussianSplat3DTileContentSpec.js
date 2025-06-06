@@ -5,13 +5,15 @@ import {
   RequestScheduler,
   HeadingPitchRange,
   GaussianSplat3DTileContent,
+  ModelUtility,
+  VertexAttributeSemantic,
 } from "../../index.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
-  "Scene/GaussianSplatPrimitive",
+  "Scene/GaussianSplat3dTileContent",
   function () {
     const tilesetUrl = "Data/Cesium3DTiles/GaussianSplats/tower/tileset.json";
 
@@ -47,7 +49,7 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    it("load Gaussian Splat content", function () {
+    it("loads a Gaussian Splat tileset", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(
         function (tileset) {
           scene.camera.lookAt(
@@ -67,10 +69,37 @@ describe(
           return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
             function () {
               const tile = tileset._root;
-              expect(tile.content).toBeDefined();
-              expect(tile.content instanceof GaussianSplat3DTileContent).toBe(
-                true,
-              );
+              const content = tile.content;
+              expect(content).toBeDefined();
+              expect(content instanceof GaussianSplat3DTileContent).toBe(true);
+
+              const splatPrimitive = content.splatPrimitive;
+              expect(splatPrimitive).toBeDefined();
+              expect(splatPrimitive.attributes.length).toBeGreaterThan(0);
+              const positions = ModelUtility.getAttributeBySemantic(
+                splatPrimitive,
+                VertexAttributeSemantic.POSITION,
+              ).typedArray;
+
+              const rotations = ModelUtility.getAttributeBySemantic(
+                splatPrimitive,
+                VertexAttributeSemantic.ROTATION,
+              ).typedArray;
+
+              const scales = ModelUtility.getAttributeBySemantic(
+                splatPrimitive,
+                VertexAttributeSemantic.SCALE,
+              ).typedArray;
+
+              const colors = ModelUtility.getAttributeBySemantic(
+                splatPrimitive,
+                VertexAttributeSemantic.COLOR,
+              ).typedArray;
+
+              expect(positions.length).toBeGreaterThan(0);
+              expect(rotations.length).toBeGreaterThan(0);
+              expect(scales.length).toBeGreaterThan(0);
+              expect(colors.length).toBeGreaterThan(0);
             },
           );
         },
