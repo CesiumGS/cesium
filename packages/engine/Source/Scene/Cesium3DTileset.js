@@ -3846,6 +3846,9 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
  */
 Cesium3DTileset.prototype.isGltfExtensionUsed = function (gltfExtensionName) {
   if (this.hasExtension("3DTILES_content_gltf")) {
+    if (this.extensions === undefined) {
+      return false;
+    }
     const extensionsUsed =
       this.extensions["3DTILES_content_gltf"].extensionsUsed;
 
