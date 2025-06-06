@@ -3,7 +3,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -48,7 +47,7 @@ function Cesium3DTileBatchTable(
   if (defined(batchTableJson)) {
     extensions = batchTableJson.extensions;
   }
-  this._extensions = defaultValue(extensions, {});
+  this._extensions = extensions ?? {};
 
   const properties = initializeProperties(batchTableJson);
   this._properties = properties;
@@ -266,13 +265,11 @@ Cesium3DTileBatchTable.prototype.applyStyle = function (style) {
   for (let i = 0; i < length; ++i) {
     const feature = content.getFeature(i);
     const color = defined(style.color)
-      ? defaultValue(
-          style.color.evaluateColor(feature, scratchColor),
-          DEFAULT_COLOR_VALUE,
-        )
+      ? (style.color.evaluateColor(feature, scratchColor) ??
+        DEFAULT_COLOR_VALUE)
       : DEFAULT_COLOR_VALUE;
     const show = defined(style.show)
-      ? defaultValue(style.show.evaluate(feature), DEFAULT_SHOW_VALUE)
+      ? (style.show.evaluate(feature) ?? DEFAULT_SHOW_VALUE)
       : DEFAULT_SHOW_VALUE;
     this.setColor(i, color);
     this.setShow(i, show);
@@ -783,45 +780,6 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
   };
 };
 
-Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback =
-  function () {
-    if (this.featuresLength === 0) {
-      return;
-    }
-    return function (source) {
-      source = ShaderSource.replaceMain(source, "tile_main");
-      if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-        // When VTF is supported, per-feature show/hide already happened in the fragment shader
-        source +=
-          "uniform sampler2D tile_pickTexture;\n" +
-          "in vec2 tile_featureSt; \n" +
-          "in vec4 tile_featureColor; \n" +
-          "void main() \n" +
-          "{ \n" +
-          "    tile_main(); \n" +
-          "    out_FragColor = tile_featureColor; \n" +
-          "    out_FragColor.rgb *= out_FragColor.a; \n" +
-          "}";
-      } else {
-        source +=
-          "uniform sampler2D tile_batchTexture; \n" +
-          "uniform sampler2D tile_pickTexture;\n" +
-          "in vec2 tile_featureSt; \n" +
-          "void main() \n" +
-          "{ \n" +
-          "    tile_main(); \n" +
-          "    vec4 featureProperties = texture(tile_batchTexture, tile_featureSt); \n" +
-          "    if (featureProperties.a == 0.0) { \n" + // show: alpha == 0 - false, non-zero - true
-          "        discard; \n" +
-          "    } \n" +
-          "    out_FragColor = featureProperties; \n" +
-          "    out_FragColor.rgb *= out_FragColor.a; \n" +
-          "} \n";
-      }
-      return source;
-    };
-  };
-
 function getColorBlend(batchTable) {
   const tileset = batchTable._content.tileset;
   const colorBlendMode = tileset.colorBlendMode;
@@ -851,9 +809,8 @@ Cesium3DTileBatchTable.prototype.getUniformMapCallback = function () {
     const batchUniformMap = {
       tile_batchTexture: function () {
         // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
-        return defaultValue(
-          that._batchTexture.batchTexture,
-          that._batchTexture.defaultTexture,
+        return (
+          that._batchTexture.batchTexture ?? that._batchTexture.defaultTexture
         );
       },
       tile_textureDimensions: function () {

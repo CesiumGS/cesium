@@ -107,7 +107,7 @@ ITwinData.createTilesetForRealityDataId = async function (
   if (defined(rootDocument)) {
     Check.typeOf.string("rootDocument", rootDocument);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   if (!defined(type) || !defined(rootDocument)) {
     const metadata = await ITwinPlatform.getRealityDataMetadata(
@@ -170,7 +170,7 @@ ITwinData.createDataSourceForRealityDataId = async function (
   if (defined(rootDocument)) {
     Check.typeOf.string("rootDocument", rootDocument);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   if (!defined(type) || !defined(rootDocument)) {
     const metadata = await ITwinPlatform.getRealityDataMetadata(
@@ -227,10 +227,15 @@ ITwinData.loadGeospatialFeatures = async function (
     Check.typeOf.number.lessThanOrEquals("limit", limit, 10000);
     Check.typeOf.number.greaterThanOrEquals("limit", limit, 1);
   }
-  if (!defined(ITwinPlatform.defaultAccessToken)) {
-    throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const pageLimit = limit ?? 10000;
 
@@ -239,7 +244,7 @@ ITwinData.loadGeospatialFeatures = async function (
   const resource = new Resource({
     url: tilesetUrl,
     headers: {
-      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
+      Authorization: ITwinPlatform._getAuthorizationHeader(),
       Accept: "application/vnd.bentley.itwin-platform.v1+json",
     },
     queryParameters: {

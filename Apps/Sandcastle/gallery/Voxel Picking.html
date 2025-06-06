@@ -7,8 +7,11 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta name="description" content="For debugging voxel picking." />
-    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
+    <meta
+      name="description"
+      content="Use the cursor to select and inspect individual voxel cells."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Voxels" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
@@ -61,6 +64,14 @@
 
         const scratchColor = new Cesium.Color();
 
+        const globalTransform = Cesium.Matrix4.fromScale(
+          Cesium.Cartesian3.fromElements(
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+          ),
+        );
+
         function ProceduralMultiTileVoxelProvider(shape) {
           this.shape = shape;
           this.dimensions = new Cesium.Cartesian3(4, 4, 4);
@@ -68,13 +79,14 @@
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
           this._levelCount = 3;
+          this.globalTransform = globalTransform;
         }
 
         ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
           const { tileLevel, tileX, tileY, tileZ } = options;
 
           if (tileLevel >= this._levelCount) {
-            return undefined;
+            return Promise.reject(`No tiles available beyond level ${this._levelCount}`);
           }
 
           const dimensions = this.dimensions;
@@ -83,7 +95,8 @@
             tileZ * dimensions.y * dimensions.x + tileY * dimensions.x + tileX;
           const dataTile = constructRandomTileData(dimensions, type, randomSeed);
 
-          return Promise.resolve([dataTile]);
+          const content = Cesium.VoxelContent.fromMetadataArray([dataTile]);
+          return Promise.resolve(content);
         };
 
         function constructRandomTileData(dimensions, type, randomSeed) {
@@ -126,7 +139,7 @@
         const customShader = new Cesium.CustomShader({
           fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
     {
-      vec3 voxelNormal = normalize(czm_normal * fsInput.voxel.surfaceNormal);
+      vec3 voxelNormal = fsInput.attributes.normalEC;
       float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
       float lighting = 0.5 + 0.5 * diffuse;
 
@@ -153,19 +166,10 @@
           },
         });
 
-        const modelMatrix = Cesium.Matrix4.fromScale(
-          Cesium.Cartesian3.fromElements(
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-          ),
-        );
-
         const voxelPrimitive = scene.primitives.add(
           new Cesium.VoxelPrimitive({
             provider: provider,
             customShader: customShader,
-            modelMatrix: modelMatrix,
           }),
         );
 

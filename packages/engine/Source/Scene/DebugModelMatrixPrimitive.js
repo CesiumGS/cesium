@@ -1,7 +1,7 @@
 import ArcType from "../Core/ArcType.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
@@ -39,7 +39,7 @@ import Primitive from "./Primitive.js";
  * }));
  */
 function DebugModelMatrixPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The length of the axes in meters.
@@ -47,7 +47,7 @@ function DebugModelMatrixPrimitive(options) {
    * @type {number}
    * @default 10000000.0
    */
-  this.length = defaultValue(options.length, 10000000.0);
+  this.length = options.length ?? 10000000.0;
   this._length = undefined;
 
   /**
@@ -56,7 +56,7 @@ function DebugModelMatrixPrimitive(options) {
    * @type {number}
    * @default 2.0
    */
-  this.width = defaultValue(options.width, 2.0);
+  this.width = options.width ?? 2.0;
   this._width = undefined;
 
   /**
@@ -65,7 +65,7 @@ function DebugModelMatrixPrimitive(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The 4x4 matrix that defines the reference frame, i.e., origin plus axes, to visualize.
@@ -73,9 +73,7 @@ function DebugModelMatrixPrimitive(options) {
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = new Matrix4();
 
   /**

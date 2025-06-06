@@ -1,7 +1,6 @@
 import ForEach from "./ForEach.js";
 import forEachTextureInMaterial from "./forEachTextureInMaterial.js";
 import usesExtension from "./usesExtension.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 
 const allElementTypes = [
@@ -25,7 +24,7 @@ const allElementTypes = [
  * @private
  */
 function removeUnusedElements(gltf, elementTypes) {
-  elementTypes = defaultValue(elementTypes, allElementTypes);
+  elementTypes = elementTypes ?? allElementTypes;
   allElementTypes.forEach(function (type) {
     if (elementTypes.indexOf(type) > -1) {
       removeUnusedElementsByType(gltf, type);

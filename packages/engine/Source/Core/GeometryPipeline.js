@@ -6,7 +6,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import EncodedCartesian3 from "./EncodedCartesian3.js";
@@ -169,7 +168,7 @@ GeometryPipeline.createLineSegmentsForVectors = function (
   attributeName,
   length,
 ) {
-  attributeName = defaultValue(attributeName, "normal");
+  attributeName = attributeName ?? "normal";
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(geometry)) {
@@ -185,7 +184,7 @@ GeometryPipeline.createLineSegmentsForVectors = function (
   }
   //>>includeEnd('debug');
 
-  length = defaultValue(length, 10000.0);
+  length = length ?? 10000.0;
 
   const positions = geometry.attributes.position.values;
   const vectors = geometry.attributes[attributeName].values;
@@ -243,7 +242,7 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
   if (!defined(geometry)) {
     throw new DeveloperError("geometry is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   // There can be a WebGL performance hit when attribute 0 is disabled, so
   // assign attribute locations to well-known attributes.

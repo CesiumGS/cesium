@@ -2,7 +2,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Clock from "../Core/Clock.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -212,7 +212,7 @@ function CesiumWidget(container, options) {
 
   container = getElement(container);
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //Configure the widget DOM elements
   const element = document.createElement("div");
@@ -248,10 +248,8 @@ function CesiumWidget(container, options) {
     }
   }
 
-  const blurActiveElementOnCanvasFocus = defaultValue(
-    options.blurActiveElementOnCanvasFocus,
-    true,
-  );
+  const blurActiveElementOnCanvasFocus =
+    options.blurActiveElementOnCanvasFocus ?? true;
 
   if (blurActiveElementOnCanvasFocus) {
     canvas.addEventListener("mousedown", blurActiveElement);
@@ -272,12 +270,10 @@ function CesiumWidget(container, options) {
     ? getElement(options.creditViewport)
     : element;
 
-  const showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
+  const showRenderLoopErrors = options.showRenderLoopErrors ?? true;
 
-  const useBrowserRecommendedResolution = defaultValue(
-    options.useBrowserRecommendedResolution,
-    true,
-  );
+  const useBrowserRecommendedResolution =
+    options.useBrowserRecommendedResolution ?? true;
 
   this._element = element;
   this._container = container;
@@ -314,7 +310,7 @@ function CesiumWidget(container, options) {
   configureCanvasSize(this);
 
   try {
-    const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+    const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
     const scene = new Scene({
       canvas: canvas,
@@ -324,7 +320,7 @@ function CesiumWidget(container, options) {
       ellipsoid: ellipsoid,
       mapProjection: options.mapProjection,
       orderIndependentTranslucency: options.orderIndependentTranslucency,
-      scene3DOnly: defaultValue(options.scene3DOnly, false),
+      scene3DOnly: options.scene3DOnly ?? false,
       shadows: options.shadows,
       mapMode2D: options.mapMode2D,
       requestRenderMode: options.requestRenderMode,
@@ -345,10 +341,7 @@ function CesiumWidget(container, options) {
     }
     if (globe !== false) {
       scene.globe = globe;
-      scene.globe.shadows = defaultValue(
-        options.terrainShadows,
-        ShadowMode.RECEIVE_ONLY,
-      );
+      scene.globe.shadows = options.terrainShadows ?? ShadowMode.RECEIVE_ONLY;
     }
 
     let skyBox = options.skyBox;
@@ -395,7 +388,7 @@ function CesiumWidget(container, options) {
           "Specify either options.terrainProvider or options.terrain.",
         );
       }
-      //>>includeEnd('debug')
+      //>>includeEnd('debug');
 
       scene.setTerrain(options.terrain);
     }
@@ -412,10 +405,7 @@ function CesiumWidget(container, options) {
     }
 
     this._useDefaultRenderLoop = undefined;
-    this.useDefaultRenderLoop = defaultValue(
-      options.useDefaultRenderLoop,
-      true,
-    );
+    this.useDefaultRenderLoop = options.useDefaultRenderLoop ?? true;
 
     this._targetFrameRate = undefined;
     this.targetFrameRate = options.targetFrameRate;
@@ -1134,6 +1124,8 @@ CesiumWidget.prototype._updateCanAnimate = function (isUpdated) {
   this._clock.canAnimate = isUpdated;
 };
 
+const boundingSphereScratch = new BoundingSphere();
+
 /**
  * @private
  */
@@ -1146,15 +1138,15 @@ CesiumWidget.prototype._onTick = function (clock) {
   }
 
   const entityView = this._entityView;
-  if (defined(entityView) && defined(entityView.boundingSphere)) {
+  if (defined(entityView)) {
     const trackedEntity = this._trackedEntity;
     const trackedState = this._dataSourceDisplay.getBoundingSphere(
       trackedEntity,
       false,
-      entityView.boundingSphere,
+      entityView.boundingSphere ?? boundingSphereScratch,
     );
     if (trackedState === BoundingSphereState.DONE) {
-      entityView.update(time, entityView.boundingSphere);
+      entityView.update(time);
     }
   }
 };

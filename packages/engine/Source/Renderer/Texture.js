@@ -1,7 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -23,7 +23,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
  * @property {boolean} [skipColorSpaceConversion=false] If true, color space conversions will be skipped when reading the texel values.
- * @property {Sampler} [sampler] Information about how to sample the cubemap texture.
+ * @property {Sampler} [sampler] Information about how to sample the texture.
  * @property {number} [width] The pixel width of the texture. If not supplied, must be available from the source.
  * @property {number} [height] The pixel height of the texture. If not supplied, must be available from the source.
  * @property {boolean} [preMultiplyAlpha] If true, the alpha channel will be multiplied into the other channels.
@@ -43,7 +43,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @private
  */
 function Texture(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -613,7 +613,7 @@ Texture.create = function (options) {
  * @private
  */
 Texture.fromFramebuffer = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -704,7 +704,8 @@ Object.defineProperties(Texture.prototype, {
    * coordinates in both directions, uses linear filtering for both magnification and minification,
    * and uses a maximum anisotropy of 1.0.
    * @memberof Texture.prototype
-   * @type {object}
+   * @type {Sampler}
+   * @private
    */
   sampler: {
     get: function () {
@@ -842,7 +843,7 @@ function setupSampler(texture, sampler) {
  * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
  * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- *
+ * @private
  * @example
  * texture.copyFrom({
  *  source: {
@@ -965,7 +966,7 @@ Texture.prototype.copyFrom = function (options) {
  * @param {number} [framebufferYOffset=0] optional
  * @param {number} [width=width] optional
  * @param {number} [height=height] optional
- *
+ * @private
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
@@ -986,12 +987,12 @@ Texture.prototype.copyFromFramebuffer = function (
   width,
   height,
 ) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
-  framebufferXOffset = defaultValue(framebufferXOffset, 0);
-  framebufferYOffset = defaultValue(framebufferYOffset, 0);
-  width = defaultValue(width, this._width);
-  height = defaultValue(height, this._height);
+  xOffset = xOffset ?? 0;
+  yOffset = yOffset ?? 0;
+  framebufferXOffset = framebufferXOffset ?? 0;
+  framebufferYOffset = framebufferYOffset ?? 0;
+  width = width ?? this._width;
+  height = height ?? this._height;
 
   //>>includeStart('debug', pragmas.debug);
   if (PixelFormat.isDepthFormat(this._pixelFormat)) {
@@ -1060,7 +1061,7 @@ Texture.prototype.copyFromFramebuffer = function (
 
 /**
  * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
- *
+ * @private
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
  * @exception {DeveloperError} hint is invalid.
@@ -1069,7 +1070,7 @@ Texture.prototype.copyFromFramebuffer = function (
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
  */
 Texture.prototype.generateMipmap = function (hint) {
-  hint = defaultValue(hint, MipmapHint.DONT_CARE);
+  hint = hint ?? MipmapHint.DONT_CARE;
 
   //>>includeStart('debug', pragmas.debug);
   if (PixelFormat.isDepthFormat(this._pixelFormat)) {

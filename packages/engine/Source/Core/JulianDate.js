@@ -1,5 +1,4 @@
 import binarySearch from "./binarySearch.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import GregorianDate from "./GregorianDate.js";
@@ -216,9 +215,9 @@ function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
    */
   this.secondsOfDay = undefined;
 
-  julianDayNumber = defaultValue(julianDayNumber, 0.0);
-  secondsOfDay = defaultValue(secondsOfDay, 0.0);
-  timeStandard = defaultValue(timeStandard, TimeStandard.UTC);
+  julianDayNumber = julianDayNumber ?? 0.0;
+  secondsOfDay = secondsOfDay ?? 0.0;
+  timeStandard = timeStandard ?? TimeStandard.UTC;
 
   //If julianDayNumber is fractional, make it an integer and add the number of seconds the fraction represented.
   const wholeDays = julianDayNumber | 0;
@@ -383,7 +382,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
           ) {
             throw new DeveloperError(iso8601ErrorMessage);
           }
-          //>>includeEnd('debug')
+          //>>includeEnd('debug');
         } else {
           tokens = date.match(matchWeekDate);
           if (tokens !== null) {
@@ -402,7 +401,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             ) {
               throw new DeveloperError(iso8601ErrorMessage);
             }
-            //>>includeEnd('debug')
+            //>>includeEnd('debug');
 
             const january4 = new Date(Date.UTC(year, 0, 4));
             dayOfYear = weekNumber * 7 + dayOfWeek - january4.getUTCDay() - 3;
@@ -410,7 +409,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             //None of our regular expressions succeeded in parsing the date properly.
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(iso8601ErrorMessage);
-            //>>includeEnd('debug')
+            //>>includeEnd('debug');
           }
         }
         //Split an ordinal date into month/day.
@@ -434,7 +433,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
   ) {
     throw new DeveloperError(iso8601ErrorMessage);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   //Now move onto the time string, which is much simpler.
   //If no time is specified, it is considered the beginning of the day, UTC to match Javascript's implementation.
@@ -447,7 +446,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
       if (dashCount > 0 && dashCount !== 2 && dashCount !== 3) {
         throw new DeveloperError(iso8601ErrorMessage);
       }
-      //>>includeEnd('debug')
+      //>>includeEnd('debug');
 
       hour = +tokens[1];
       minute = +tokens[2];
@@ -462,7 +461,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
         if (dashCount > 2) {
           throw new DeveloperError(iso8601ErrorMessage);
         }
-        //>>includeEnd('debug')
+        //>>includeEnd('debug');
 
         hour = +tokens[1];
         minute = +tokens[2];
@@ -477,7 +476,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
         } else {
           //>>includeStart('debug', pragmas.debug);
           throw new DeveloperError(iso8601ErrorMessage);
-          //>>includeEnd('debug')
+          //>>includeEnd('debug');
         }
       }
     }
@@ -903,7 +902,7 @@ JulianDate.equals = function (left, right) {
  * @returns {boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 JulianDate.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||

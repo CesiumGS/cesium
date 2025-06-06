@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -193,9 +192,9 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   let pointBatchIds;
   let i;
 
-  const numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
-  const numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
-  const numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
+  const numberOfPolygons = featureTableJson.POLYGONS_LENGTH ?? 0;
+  const numberOfPolylines = featureTableJson.POLYLINES_LENGTH ?? 0;
+  const numberOfPoints = featureTableJson.POINTS_LENGTH ?? 0;
 
   if (numberOfPolygons > 0 && defined(featureTableJson.POLYGON_BATCH_IDS)) {
     const polygonBatchIdsByteOffset =
@@ -289,7 +288,7 @@ function createClampedPolylines(options) {
 }
 
 function initialize(content, arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
 
   const uint8Array = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
@@ -377,9 +376,9 @@ function initialize(content, arrayBuffer, byteOffset) {
     }
   }
 
-  const numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
-  const numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
-  const numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
+  const numberOfPolygons = featureTableJson.POLYGONS_LENGTH ?? 0;
+  const numberOfPolylines = featureTableJson.POLYLINES_LENGTH ?? 0;
+  const numberOfPoints = featureTableJson.POINTS_LENGTH ?? 0;
   const totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
 
   const batchTable = new Cesium3DTileBatchTable(
@@ -431,18 +430,17 @@ function initialize(content, arrayBuffer, byteOffset) {
   if (numberOfPolygons > 0) {
     featureTable.featuresLength = numberOfPolygons;
 
-    const polygonCounts = defaultValue(
+    const polygonCounts =
       featureTable.getPropertyArray(
         "POLYGON_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ),
+      ) ??
       featureTable.getPropertyArray(
         "POLYGON_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ), // Workaround for old vector tilesets using the non-plural name
-    );
+      ); // Workaround for old vector tilesets using the non-plural name;
 
     if (!defined(polygonCounts)) {
       throw new RuntimeError(
@@ -450,18 +448,17 @@ function initialize(content, arrayBuffer, byteOffset) {
       );
     }
 
-    const polygonIndexCounts = defaultValue(
+    const polygonIndexCounts =
       featureTable.getPropertyArray(
         "POLYGON_INDEX_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ),
+      ) ??
       featureTable.getPropertyArray(
         "POLYGON_INDEX_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ), // Workaround for old vector tilesets using the non-plural name
-    );
+      ); // Workaround for old vector tilesets using the non-plural name;
 
     if (!defined(polygonIndexCounts)) {
       throw new RuntimeError(
@@ -531,18 +528,17 @@ function initialize(content, arrayBuffer, byteOffset) {
   if (numberOfPolylines > 0) {
     featureTable.featuresLength = numberOfPolylines;
 
-    const polylineCounts = defaultValue(
+    const polylineCounts =
       featureTable.getPropertyArray(
         "POLYLINE_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ),
+      ) ??
       featureTable.getPropertyArray(
         "POLYLINE_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ), // Workaround for old vector tilesets using the non-plural name
-    );
+      ); // Workaround for old vector tilesets using the non-plural name;
 
     if (!defined(polylineCounts)) {
       throw new RuntimeError(

@@ -4,7 +4,6 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
@@ -384,7 +383,7 @@ PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function (
   ellipsoid,
   perPositionHeight,
 ) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const n1 = scaleToGeodeticHeightN1;
   let n2 = scaleToGeodeticHeightN2;

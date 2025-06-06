@@ -1,5 +1,5 @@
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import Ellipsoid from "./Ellipsoid.js";
 
 /**
@@ -39,11 +39,11 @@ import Ellipsoid from "./Ellipsoid.js";
  *
  */
 function createWorldTerrainAsync(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(1, {
-    requestVertexNormals: defaultValue(options.requestVertexNormals, false),
-    requestWaterMask: defaultValue(options.requestWaterMask, false),
+    requestVertexNormals: options.requestVertexNormals ?? false,
+    requestWaterMask: options.requestWaterMask ?? false,
     ellipsoid: Ellipsoid.WGS84,
   });
 }

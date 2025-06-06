@@ -2,9 +2,8 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
@@ -48,15 +47,13 @@ function Context(canvas, options) {
     requestWebgl1,
     webgl: webglOptions = {},
     allowTextureFilterAnisotropic = true,
-  } = defaultValue(options, {});
+  } = options ?? {};
 
   // Override select WebGL defaults
-  webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
-  webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
-  webglOptions.powerPreference = defaultValue(
-    webglOptions.powerPreference,
-    "high-performance",
-  ); // WebGL default is "default"
+  webglOptions.alpha = webglOptions.alpha ?? false; // WebGL default is true
+  webglOptions.stencil = webglOptions.stencil ?? true; // WebGL default is false
+  webglOptions.powerPreference =
+    webglOptions.powerPreference ?? "high-performance"; // WebGL default is "default"
 
   const glContext = defined(getWebGLStub)
     ? getWebGLStub(canvas, webglOptions)
@@ -1241,8 +1238,8 @@ function bindFramebuffer(context, framebuffer) {
 const defaultClearCommand = new ClearCommand();
 
 Context.prototype.clear = function (clearCommand, passState) {
-  clearCommand = defaultValue(clearCommand, defaultClearCommand);
-  passState = defaultValue(passState, this._defaultPassState);
+  clearCommand = clearCommand ?? defaultClearCommand;
+  passState = passState ?? this._defaultPassState;
 
   const gl = this._gl;
   let bitmask = 0;
@@ -1275,14 +1272,11 @@ Context.prototype.clear = function (clearCommand, passState) {
     bitmask |= gl.STENCIL_BUFFER_BIT;
   }
 
-  const rs = defaultValue(clearCommand.renderState, this._defaultRenderState);
+  const rs = clearCommand.renderState ?? this._defaultRenderState;
   applyRenderState(this, rs, passState, true);
 
   // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-  const framebuffer = defaultValue(
-    clearCommand.framebuffer,
-    passState.framebuffer,
-  );
+  const framebuffer = clearCommand.framebuffer ?? passState.framebuffer;
   bindFramebuffer(this, framebuffer);
 
   gl.clear(bitmask);
@@ -1343,7 +1337,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   }
   //>>includeEnd('debug');
 
-  context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
+  context._us.model = drawCommand._modelMatrix ?? Matrix4.IDENTITY;
   shaderProgram._setUniforms(
     uniformMap,
     context._us,
@@ -1408,18 +1402,12 @@ Context.prototype.draw = function (
   Check.defined("drawCommand.shaderProgram", drawCommand._shaderProgram);
   //>>includeEnd('debug');
 
-  passState = defaultValue(passState, this._defaultPassState);
+  passState = passState ?? this._defaultPassState;
   // The command's framebuffer takes precedence over the pass' framebuffer, e.g., for off-screen rendering.
-  const framebuffer = defaultValue(
-    drawCommand._framebuffer,
-    passState.framebuffer,
-  );
-  const renderState = defaultValue(
-    drawCommand._renderState,
-    this._defaultRenderState,
-  );
-  shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
-  uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
+  const framebuffer = drawCommand._framebuffer ?? passState.framebuffer;
+  const renderState = drawCommand._renderState ?? this._defaultRenderState;
+  shaderProgram = shaderProgram ?? drawCommand._shaderProgram;
+  uniformMap = uniformMap ?? drawCommand._uniformMap;
 
   beginDraw(this, framebuffer, passState, shaderProgram, renderState);
   continueDraw(this, drawCommand, shaderProgram, uniformMap);
@@ -1460,11 +1448,11 @@ Context.prototype.endFrame = function () {
 Context.prototype.readPixels = function (readState) {
   const gl = this._gl;
 
-  readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
-  const x = Math.max(defaultValue(readState.x, 0), 0);
-  const y = Math.max(defaultValue(readState.y, 0), 0);
-  const width = defaultValue(readState.width, gl.drawingBufferWidth);
-  const height = defaultValue(readState.height, gl.drawingBufferHeight);
+  readState = readState ?? Frozen.EMPTY_OBJECT;
+  const x = Math.max(readState.x ?? 0, 0);
+  const y = Math.max(readState.y ?? 0, 0);
+  const width = readState.width ?? gl.drawingBufferWidth;
+  const height = readState.height ?? gl.drawingBufferHeight;
   const framebuffer = readState.framebuffer;
 
   //>>includeStart('debug', pragmas.debug);
@@ -1546,7 +1534,7 @@ Context.prototype.createViewportQuadCommand = function (
   fragmentShaderSource,
   overrides,
 ) {
-  overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
+  overrides = overrides ?? Frozen.EMPTY_OBJECT;
 
   return new DrawCommand({
     vertexArray: this.getViewportQuadVertexArray(),
@@ -1670,8 +1658,5 @@ Context.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-
-// Used for specs.
-Context._deprecationWarning = deprecationWarning;
 
 export default Context;

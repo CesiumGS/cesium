@@ -4,7 +4,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import EllipseGeometryLibrary from "./EllipseGeometryLibrary.js";
@@ -918,17 +918,14 @@ function computeRectangle(
  * @see EllipseGeometry.createGeometry
  */
 function EllipseGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const semiMajorAxis = options.semiMajorAxis;
   const semiMinorAxis = options.semiMinorAxis;
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.center", center);
@@ -944,20 +941,20 @@ function EllipseGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  const height = defaultValue(options.height, 0.0);
-  const extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = options.height ?? 0.0;
+  const extrudedHeight = options.extrudedHeight ?? height;
 
   this._center = Cartesian3.clone(center);
   this._semiMajorAxis = semiMajorAxis;
   this._semiMinorAxis = semiMinorAxis;
   this._ellipsoid = Ellipsoid.clone(ellipsoid);
-  this._rotation = defaultValue(options.rotation, 0.0);
-  this._stRotation = defaultValue(options.stRotation, 0.0);
+  this._rotation = options.rotation ?? 0.0;
+  this._stRotation = options.stRotation ?? 0.0;
   this._height = Math.max(extrudedHeight, height);
   this._granularity = granularity;
   this._vertexFormat = VertexFormat.clone(vertexFormat);
   this._extrudedHeight = Math.min(extrudedHeight, height);
-  this._shadowVolume = defaultValue(options.shadowVolume, false);
+  this._shadowVolume = options.shadowVolume ?? false;
   this._workerName = "createEllipseGeometry";
   this._offsetAttribute = options.offsetAttribute;
 
@@ -990,7 +987,7 @@ EllipseGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value._center, array, startingIndex);
   startingIndex += Cartesian3.packedLength;
@@ -1009,7 +1006,7 @@ EllipseGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._granularity;
   array[startingIndex++] = value._extrudedHeight;
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -1045,7 +1042,7 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const center = Cartesian3.unpack(array, startingIndex, scratchCenter);
   startingIndex += Cartesian3.packedLength;
@@ -1117,17 +1114,14 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Rectangle} The result rectangle
  */
 EllipseGeometry.computeRectangle = function (options, result) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const semiMajorAxis = options.semiMajorAxis;
   const semiMinorAxis = options.semiMinorAxis;
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  const rotation = defaultValue(options.rotation, 0.0);
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const rotation = options.rotation ?? 0.0;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.center", center);

@@ -1,6 +1,6 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -26,7 +26,7 @@ import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
  * @private
  */
 function ModelRuntimeNode(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const node = options.node;
   const transform = options.transform;

@@ -1,7 +1,7 @@
 import addToArray from "./addToArray.js";
 import ForEach from "./ForEach.js";
 import getAccessorByteStride from "./getAccessorByteStride.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 
@@ -16,19 +16,19 @@ import WebGLConstants from "../../Core/WebGLConstants.js";
 function addDefaults(gltf) {
   ForEach.accessor(gltf, function (accessor) {
     if (defined(accessor.bufferView)) {
-      accessor.byteOffset = defaultValue(accessor.byteOffset, 0);
+      accessor.byteOffset = accessor.byteOffset ?? 0;
     }
   });
 
   ForEach.bufferView(gltf, function (bufferView) {
     if (defined(bufferView.buffer)) {
-      bufferView.byteOffset = defaultValue(bufferView.byteOffset, 0);
+      bufferView.byteOffset = bufferView.byteOffset ?? 0;
     }
   });
 
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
-      primitive.mode = defaultValue(primitive.mode, WebGLConstants.TRIANGLES);
+      primitive.mode = primitive.mode ?? WebGLConstants.TRIANGLES;
       if (!defined(primitive.material)) {
         if (!defined(gltf.materials)) {
           gltf.materials = [];
@@ -44,7 +44,7 @@ function addDefaults(gltf) {
   ForEach.accessorContainingVertexAttributeData(gltf, function (accessorId) {
     const accessor = gltf.accessors[accessorId];
     const bufferViewId = accessor.bufferView;
-    accessor.normalized = defaultValue(accessor.normalized, false);
+    accessor.normalized = accessor.normalized ?? false;
     if (defined(bufferViewId)) {
       const bufferView = gltf.bufferViews[bufferViewId];
       bufferView.byteStride = getAccessorByteStride(gltf, accessor);
@@ -62,10 +62,7 @@ function addDefaults(gltf) {
   });
 
   ForEach.material(gltf, function (material) {
-    const extensions = defaultValue(
-      material.extensions,
-      defaultValue.EMPTY_OBJECT
-    );
+    const extensions = material.extensions ?? Frozen.EMPTY_OBJECT;
     const materialsCommon = extensions.KHR_materials_common;
     if (defined(materialsCommon)) {
       const technique = materialsCommon.technique;
@@ -81,7 +78,7 @@ function addDefaults(gltf) {
         ? values.emission
         : [0.0, 0.0, 0.0, 1.0];
 
-      values.transparency = defaultValue(values.transparency, 1.0);
+      values.transparency = values.transparency ?? 1.0;
 
       if (technique !== "CONSTANT") {
         values.diffuse = defined(values.diffuse)
@@ -91,32 +88,23 @@ function addDefaults(gltf) {
           values.specular = defined(values.specular)
             ? values.specular
             : [0.0, 0.0, 0.0, 1.0];
-          values.shininess = defaultValue(values.shininess, 0.0);
+          values.shininess = values.shininess ?? 0.0;
         }
       }
 
       // These actually exist on the extension object, not the values object despite what's shown in the spec
-      materialsCommon.transparent = defaultValue(
-        materialsCommon.transparent,
-        false
-      );
-      materialsCommon.doubleSided = defaultValue(
-        materialsCommon.doubleSided,
-        false
-      );
+      materialsCommon.transparent = materialsCommon.transparent ?? false;
+      materialsCommon.doubleSided = materialsCommon.doubleSided ?? false;
 
       return;
     }
 
-    material.emissiveFactor = defaultValue(
-      material.emissiveFactor,
-      [0.0, 0.0, 0.0]
-    );
-    material.alphaMode = defaultValue(material.alphaMode, "OPAQUE");
-    material.doubleSided = defaultValue(material.doubleSided, false);
+    material.emissiveFactor = material.emissiveFactor ?? [0.0, 0.0, 0.0];
+    material.alphaMode = material.alphaMode ?? "OPAQUE";
+    material.doubleSided = material.doubleSided ?? false;
 
     if (material.alphaMode === "MASK") {
-      material.alphaCutoff = defaultValue(material.alphaCutoff, 0.5);
+      material.alphaCutoff = material.alphaCutoff ?? 0.5;
     }
 
     const techniquesExtension = extensions.KHR_techniques_webgl;
@@ -135,18 +123,12 @@ function addDefaults(gltf) {
 
     const pbrMetallicRoughness = material.pbrMetallicRoughness;
     if (defined(pbrMetallicRoughness)) {
-      pbrMetallicRoughness.baseColorFactor = defaultValue(
-        pbrMetallicRoughness.baseColorFactor,
-        [1.0, 1.0, 1.0, 1.0]
-      );
-      pbrMetallicRoughness.metallicFactor = defaultValue(
-        pbrMetallicRoughness.metallicFactor,
-        1.0
-      );
-      pbrMetallicRoughness.roughnessFactor = defaultValue(
-        pbrMetallicRoughness.roughnessFactor,
-        1.0
-      );
+      pbrMetallicRoughness.baseColorFactor =
+        pbrMetallicRoughness.baseColorFactor ?? [1.0, 1.0, 1.0, 1.0];
+      pbrMetallicRoughness.metallicFactor =
+        pbrMetallicRoughness.metallicFactor ?? 1.0;
+      pbrMetallicRoughness.roughnessFactor =
+        pbrMetallicRoughness.roughnessFactor ?? 1.0;
       addTextureDefaults(pbrMetallicRoughness.baseColorTexture);
       addTextureDefaults(pbrMetallicRoughness.metallicRoughnessTexture);
     }
@@ -154,25 +136,19 @@ function addDefaults(gltf) {
     const pbrSpecularGlossiness =
       extensions.KHR_materials_pbrSpecularGlossiness;
     if (defined(pbrSpecularGlossiness)) {
-      pbrSpecularGlossiness.diffuseFactor = defaultValue(
-        pbrSpecularGlossiness.diffuseFactor,
-        [1.0, 1.0, 1.0, 1.0]
-      );
-      pbrSpecularGlossiness.specularFactor = defaultValue(
-        pbrSpecularGlossiness.specularFactor,
-        [1.0, 1.0, 1.0]
-      );
-      pbrSpecularGlossiness.glossinessFactor = defaultValue(
-        pbrSpecularGlossiness.glossinessFactor,
-        1.0
-      );
+      pbrSpecularGlossiness.diffuseFactor =
+        pbrSpecularGlossiness.diffuseFactor ?? [1.0, 1.0, 1.0, 1.0];
+      pbrSpecularGlossiness.specularFactor =
+        pbrSpecularGlossiness.specularFactor ?? [1.0, 1.0, 1.0];
+      pbrSpecularGlossiness.glossinessFactor =
+        pbrSpecularGlossiness.glossinessFactor ?? 1.0;
       addTextureDefaults(pbrSpecularGlossiness.specularGlossinessTexture);
     }
   });
 
   ForEach.animation(gltf, function (animation) {
     ForEach.animationSampler(animation, function (sampler) {
-      sampler.interpolation = defaultValue(sampler.interpolation, "LINEAR");
+      sampler.interpolation = sampler.interpolation ?? "LINEAR";
     });
   });
 
@@ -185,23 +161,20 @@ function addDefaults(gltf) {
       defined(node.rotation) ||
       defined(node.scale)
     ) {
-      node.translation = defaultValue(node.translation, [0.0, 0.0, 0.0]);
-      node.rotation = defaultValue(node.rotation, [0.0, 0.0, 0.0, 1.0]);
-      node.scale = defaultValue(node.scale, [1.0, 1.0, 1.0]);
+      node.translation = node.translation ?? [0.0, 0.0, 0.0];
+      node.rotation = node.rotation ?? [0.0, 0.0, 0.0, 1.0];
+      node.scale = node.scale ?? [1.0, 1.0, 1.0];
     } else {
-      node.matrix = defaultValue(
-        node.matrix,
-        [
-          1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-          0.0, 1.0,
-        ]
-      );
+      node.matrix = node.matrix ?? [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0,
+      ];
     }
   });
 
   ForEach.sampler(gltf, function (sampler) {
-    sampler.wrapS = defaultValue(sampler.wrapS, WebGLConstants.REPEAT);
-    sampler.wrapT = defaultValue(sampler.wrapT, WebGLConstants.REPEAT);
+    sampler.wrapS = sampler.wrapS ?? WebGLConstants.REPEAT;
+    sampler.wrapT = sampler.wrapT ?? WebGLConstants.REPEAT;
   });
 
   if (defined(gltf.scenes) && !defined(gltf.scene)) {
@@ -229,7 +202,7 @@ function getAnimatedNodes(gltf) {
 
 function addTextureDefaults(texture) {
   if (defined(texture)) {
-    texture.texCoord = defaultValue(texture.texCoord, 0);
+    texture.texCoord = texture.texCoord ?? 0;
   }
 }
 

@@ -2,16 +2,15 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
 
 function initialize(ellipsoid, x, y, z) {
-  x = defaultValue(x, 0.0);
-  y = defaultValue(y, 0.0);
-  z = defaultValue(z, 0.0);
+  x = x ?? 0.0;
+  y = y ?? 0.0;
+  z = z ?? 0.0;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals("x", x, 0.0);
@@ -321,7 +320,7 @@ Ellipsoid.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value._radii, array, startingIndex);
 
@@ -341,7 +340,7 @@ Ellipsoid.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const radii = Cartesian3.unpack(array, startingIndex);
   return Ellipsoid.fromCartesian3(radii, result);
@@ -470,7 +469,7 @@ Ellipsoid.prototype.cartographicArrayToCartesianArray = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartographics", cartographics);
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const length = cartographics.length;
   if (!defined(result)) {
@@ -716,7 +715,7 @@ Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function (
   Check.typeOf.number.greaterThan("Ellipsoid.radii.z", this._radii.z, 0);
   //>>includeEnd('debug');
 
-  buffer = defaultValue(buffer, 0.0);
+  buffer = buffer ?? 0.0;
 
   const squaredXOverSquaredZ = this._squaredXOverSquaredZ;
 

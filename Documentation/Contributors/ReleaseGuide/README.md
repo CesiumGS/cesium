@@ -28,7 +28,7 @@ There is no release manager; instead, our community shares the responsibility. A
    2. Go to Content at the top
    3. Click "New Item" -> Developer Credentials -> API Key credentials
    4. Set the expiration date to the day after the next release (no referrer URLs)
-   5. Only turn on "Basemaps" permissions
+   5. Only turn on "Static maps" permissions
    6. Skip adding items
    7. Set the title and copy the API key on the last screen
    8. Open the previous release's item and Delete it

@@ -2,7 +2,6 @@ import AssociativeArray from "../Core/AssociativeArray.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -283,7 +282,7 @@ LabelVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
   const label = item.label;
   result.center = Cartesian3.clone(
-    defaultValue(label._clampedPosition, label.position),
+    label._clampedPosition ?? label.position,
     result.center,
   );
   result.radius = 0;

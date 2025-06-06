@@ -5,6 +5,45 @@ import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 
 /**
+ * A simple Least Recently Used (LRU) cache implementation.
+ */
+class LRUCache {
+  constructor(maxSize) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) {
+      return undefined;
+    }
+    // Move accessed item to the end (most recently used)
+    const value = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+
+  set(key, value) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      // Remove the least recently used (first entry)
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+}
+
+// Maximum cache entries per tile
+const MAX_CACHE_ENTRIES = 1000;
+
+/**
  * A single tile in a {@link QuadtreePrimitive}.
  *
  * @alias QuadtreeTile
@@ -74,6 +113,9 @@ function QuadtreeTile(options) {
   this._lastSelectionResultFrame = undefined;
   this._loadedCallbacks = {};
 
+  // Cache for storing computed position values per tile to avoid redundant calculations
+  this._positionCache = new LRUCache(MAX_CACHE_ENTRIES);
+
   /**
    * Gets or sets the current state of the tile in the tile load pipeline.
    * @type {QuadtreeTileLoadState}
@@ -141,6 +183,132 @@ QuadtreeTile.createLevelZeroTiles = function (tilingScheme) {
   }
 
   return result;
+};
+
+/**
+ * Creates a spatial hash key for the given longitude, latitude, and tile level.
+ * The precision is adjusted based on the tile level and extent to achieve finer precision at higher levels.
+ *
+ * This function calculates the spatial hash key by first determining the precision at the given tile for the current maximum screenspace error (MAX_ERROR_PX),
+ * and then rounding the longitude and latitude to that precision for consistency.
+ *
+ * The steps for computing the level precision are as follows:
+ *
+ * 1. Compute the resolution (meters per pixel) at the given level:
+ *      level_resolution_m = (2 * PI * RADIUS) / (2^level * TILE_SIZE)
+ *
+ * 2. Compute the target precision in meters:
+ *      level_precision_m = level_resolution_m * MAX_ERROR_PX
+ *
+ * 3. Compute the target precision to radians:
+ *      level_precision_rad = level_precision_m / BODY_RADIUS
+ *
+ * This simplifies to:
+ *      level_precision_rad = (2 * PI * MAX_ERROR_PX) / (2^level * TILE_SIZE)
+ * which can also be written as:
+ *      level_precision_rad = (PI * MAX_ERROR_PX) / (2^(level-1) * TILE_SIZE)
+ *
+ * The computed level_precision_rad is then used to round the input longitude and latitude,
+ * ensuring that positions that fall within the same spatial bin produce the same hash key.
+ *
+ * The constants below are computed once since they are fixed for the given configuration.
+ *
+ * @param {number} longitude - The longitude in radians.
+ * @param {number} latitude - The latitude in radians.
+ * @param {Rectangle} rectangle - The quadtree tile extents.
+ * @returns {string} A string representing the spatial hash key.
+ */
+const TILE_SIZE = 256;
+
+function createSpatialHashKey(
+  longitude,
+  latitude,
+  rectangle,
+  maximumScreenSpaceError,
+) {
+  // Adjust precision based on quadtree level - higher levels get finer precision
+  const maxError = (rectangle.width / TILE_SIZE) * maximumScreenSpaceError;
+  // Round to the grid precision
+  const lonGrid = Math.floor(longitude / maxError) * maxError;
+  const latGrid = Math.floor(latitude / maxError) * maxError;
+  return `${lonGrid.toFixed(10)},${latGrid.toFixed(10)}`;
+}
+
+/**
+ * Generates a unique cache key for a given cartographic position.
+ * @memberof QuadtreeTile
+ *
+ * @param {Cartographic} cartographic The cartographic coordinates.
+ * @param {number} maximumScreenSpaceError The maximum screen-space error, in pixels, that is allowed.
+ *        A higher maximum error will render fewer tiles and improve performance, while a lower
+ *        value will improve visual quality.
+ * @returns {string} A string representing the spatial hash key.
+ */
+QuadtreeTile.prototype._getCacheKey = function (
+  cartographic,
+  maximumScreenSpaceError,
+) {
+  return createSpatialHashKey(
+    cartographic.longitude,
+    cartographic.latitude,
+    this._rectangle,
+    maximumScreenSpaceError,
+  );
+};
+
+/**
+ * Retrieves a cached position for the specified cartographic position.
+ *
+ * @memberof QuadtreeTile
+ *
+ * @param {Cartographic} cartographic - The cartographic coordinates.
+ * @param {number} maximumScreenSpaceError The maximum screen-space error, in pixels, that is allowed.
+ *        A higher maximum error will render fewer tiles and improve performance, while a lower
+ *        value will improve visual quality.
+ * @returns {Object|undefined} The cached position data or undefined if not found.
+ */
+QuadtreeTile.prototype.getPositionCacheEntry = function (
+  cartographic,
+  maximumScreenSpaceError,
+) {
+  return this._positionCache.get(
+    this._getCacheKey(cartographic, maximumScreenSpaceError),
+  );
+};
+
+/**
+ * Sets a position on the cache for this tile.
+ *
+ * @memberof QuadtreeTile
+ *
+ * @param {Cartographic} cartographic - The cartographic coordinates.
+ * @param {number} maximumScreenSpaceError The maximum screen-space error, in pixels, that is allowed.
+ *        A higher maximum error will render fewer tiles and improve performance, while a lower
+ *        value will improve visual quality.
+ * @param {Object} value - The object to be cached.
+ */
+QuadtreeTile.prototype.setPositionCacheEntry = function (
+  cartographic,
+  maximumScreenSpaceError,
+  value,
+) {
+  this._positionCache.set(
+    this._getCacheKey(cartographic, maximumScreenSpaceError),
+    value,
+  );
+};
+
+/**
+ * Clears the position cache for this tile.
+ * This function removes all cached positions that were previously stored
+ * to optimize height computations.
+ *
+ * @memberof QuadtreeTile
+ */
+QuadtreeTile.prototype.clearPositionCache = function () {
+  if (this._positionCache.size > 0) {
+    this._positionCache.clear();
+  }
 };
 
 QuadtreeTile.prototype._updateCustomData = function (
@@ -513,6 +681,8 @@ QuadtreeTile.prototype.findTileToNorth = function (levelZeroTiles) {
  * @memberof QuadtreeTile
  */
 QuadtreeTile.prototype.freeResources = function () {
+  // Clears cached heights when the tile is freed
+  this.clearPositionCache();
   this.state = QuadtreeTileLoadState.START;
   this.renderable = false;
   this.upsampledFromParent = false;

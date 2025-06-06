@@ -1,6 +1,5 @@
 import addExtensionsUsed from "./addExtensionsUsed.js";
 import ForEach from "./ForEach.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 
@@ -84,10 +83,8 @@ function moveTechniqueRenderStates(gltf) {
             defined(blendFunctions.blendFuncSeparate))
         ) {
           blendingForTechnique[techniqueIndex] = {
-            blendEquation: defaultValue(
-              blendFunctions.blendEquationSeparate,
-              defaultBlendEquation
-            ),
+            blendEquation:
+              blendFunctions.blendEquationSeparate ?? defaultBlendEquation,
             blendFactors: getSupportedBlendFactors(
               blendFunctions.blendFuncSeparate,
               defaultBlendFactors

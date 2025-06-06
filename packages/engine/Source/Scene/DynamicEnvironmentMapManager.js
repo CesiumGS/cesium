@@ -2,7 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -79,10 +79,10 @@ function DynamicEnvironmentMapManager(options) {
   this._shouldRegenerateShaders = false;
   this._shouldReset = false;
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const mipmapLevels = Math.min(
-    defaultValue(options.mipmapLevels, 7),
+    options.mipmapLevels ?? 7,
     Math.log2(ContextLimits.maximumCubeMapSize),
   );
 
@@ -121,7 +121,7 @@ function DynamicEnvironmentMapManager(options) {
    * @type {boolean}
    * @default true
    */
-  this.enabled = defaultValue(options.enabled, true);
+  this.enabled = options.enabled ?? true;
 
   /**
    * Disables updates. For internal use.
@@ -135,20 +135,14 @@ function DynamicEnvironmentMapManager(options) {
    * @type {number}
    * @default 3600
    */
-  this.maximumSecondsDifference = defaultValue(
-    options.maximumSecondsDifference,
-    60 * 60,
-  );
+  this.maximumSecondsDifference = options.maximumSecondsDifference ?? 60 * 60;
 
   /**
    * The maximum difference in position before a new environment map is created, in meters. Small differences in position will not visibly affect results.
    * @type {number}
    * @default 1000
    */
-  this.maximumPositionEpsilon = defaultValue(
-    options.maximumPositionEpsilon,
-    1000.0,
-  );
+  this.maximumPositionEpsilon = options.maximumPositionEpsilon ?? 1000.0;
 
   /**
    * The intensity of the scattered light emitted from the atmosphere. This should be adjusted relative to the value of {@link Scene.light} intensity.
@@ -157,17 +151,15 @@ function DynamicEnvironmentMapManager(options) {
    * @see DirectionalLight.intensity
    * @see SunLight.intensity
    */
-  this.atmosphereScatteringIntensity = defaultValue(
-    options.atmosphereScatteringIntensity,
-    2.0,
-  );
+  this.atmosphereScatteringIntensity =
+    options.atmosphereScatteringIntensity ?? 2.0;
 
   /**
    * The gamma correction to apply to the range of light emitted from the environment. 1.0 uses the unmodified incoming light color.
    * @type {number}
    * @default 1.0
    */
-  this.gamma = defaultValue(options.gamma, 1.0);
+  this.gamma = options.gamma ?? 1.0;
 
   /**
    * The brightness of light emitted from the environment. 1.0 uses the unmodified emitted environment color. Less than 1.0
@@ -175,7 +167,7 @@ function DynamicEnvironmentMapManager(options) {
    * @type {number}
    * @default 1.0
    */
-  this.brightness = defaultValue(options.brightness, 1.0);
+  this.brightness = options.brightness ?? 1.0;
 
   /**
    * The saturation of the light emitted from the environment. 1.0 uses the unmodified emitted environment color. Less than 1.0 reduces the
@@ -183,24 +175,23 @@ function DynamicEnvironmentMapManager(options) {
    * @type {number}
    * @default 1.0
    */
-  this.saturation = defaultValue(options.saturation, 1.0);
+  this.saturation = options.saturation ?? 1.0;
 
   /**
    * Solid color used to represent the ground.
    * @type {Color}
    * @default DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR
    */
-  this.groundColor = defaultValue(
-    options.groundColor,
-    DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR,
-  );
+  this.groundColor =
+    options.groundColor ??
+    DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR;
 
   /**
    * The percentage of light reflected from the ground. The average earth albedo is 0.31.
    * @type {number}
    * @default 0.31
    */
-  this.groundAlbedo = defaultValue(options.groundAlbedo, 0.31);
+  this.groundAlbedo = options.groundAlbedo ?? 0.31;
 }
 
 Object.defineProperties(DynamicEnvironmentMapManager.prototype, {

@@ -13,7 +13,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
@@ -40,16 +40,14 @@ const updateFunctions = {
  * @private
  */
 function updateVersion(gltf, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const targetVersion = options.targetVersion;
   let version = gltf.version;
 
-  gltf.asset = defaultValue(gltf.asset, {
-    version: "1.0",
-  });
+  gltf.asset = gltf.asset ?? { version: "1.0" };
 
-  gltf.asset.version = defaultValue(gltf.asset.version, "1.0");
-  version = defaultValue(version, gltf.asset.version).toString();
+  gltf.asset.version = gltf.asset.version ?? "1.0";
+  version = (version ?? gltf.asset.version).toString();
 
   // Invalid version
   if (!Object.prototype.hasOwnProperty.call(updateFunctions, version)) {
@@ -107,11 +105,8 @@ function setPrimitiveModes(gltf) {
         const primitivesLength = primitives.length;
         for (let i = 0; i < primitivesLength; ++i) {
           const primitive = primitives[i];
-          const defaultMode = defaultValue(
-            primitive.primitive,
-            WebGLConstants.TRIANGLES
-          );
-          primitive.mode = defaultValue(primitive.mode, defaultMode);
+          const defaultMode = primitive.primitive ?? WebGLConstants.TRIANGLES;
+          primitive.mode = primitive.mode ?? defaultMode;
           delete primitive.primitive;
         }
       }
@@ -205,23 +200,15 @@ function removeTechniquePasses(gltf) {
       const technique = techniques[techniqueId];
       const passes = technique.passes;
       if (defined(passes)) {
-        const passName = defaultValue(technique.pass, "defaultPass");
+        const passName = technique.pass ?? "defaultPass";
         if (Object.prototype.hasOwnProperty.call(passes, passName)) {
           const pass = passes[passName];
           const instanceProgram = pass.instanceProgram;
-          technique.attributes = defaultValue(
-            technique.attributes,
-            instanceProgram.attributes
-          );
-          technique.program = defaultValue(
-            technique.program,
-            instanceProgram.program
-          );
-          technique.uniforms = defaultValue(
-            technique.uniforms,
-            instanceProgram.uniforms
-          );
-          technique.states = defaultValue(technique.states, pass.states);
+          technique.attributes =
+            technique.attributes ?? instanceProgram.attributes;
+          technique.program = technique.program ?? instanceProgram.program;
+          technique.uniforms = technique.uniforms ?? instanceProgram.uniforms;
+          technique.states = technique.states ?? pass.states;
         }
         delete technique.passes;
         delete technique.pass;
@@ -269,9 +256,9 @@ function glTF08to10(gltf) {
   }
   // gltf.lights -> khrMaterialsCommon.lights
   if (defined(gltf.lights)) {
-    const extensions = defaultValue(gltf.extensions, {});
+    const extensions = gltf.extensions ?? {};
     gltf.extensions = extensions;
-    const materialsCommon = defaultValue(extensions.KHR_materials_common, {});
+    const materialsCommon = extensions.KHR_materials_common ?? {};
     extensions.KHR_materials_common = materialsCommon;
     materialsCommon.lights = gltf.lights;
     delete gltf.lights;
@@ -611,7 +598,7 @@ const knownExtensions = {
 };
 function requireKnownExtensions(gltf) {
   const extensionsUsed = gltf.extensionsUsed;
-  gltf.extensionsRequired = defaultValue(gltf.extensionsRequired, []);
+  gltf.extensionsRequired = gltf.extensionsRequired ?? [];
   if (defined(extensionsUsed)) {
     const extensionsUsedLength = extensionsUsed.length;
     for (let i = 0; i < extensionsUsedLength; ++i) {
@@ -768,7 +755,7 @@ function requireByteLength(gltf) {
       const accessorByteEnd =
         accessor.byteOffset + accessor.count * accessorByteStride;
       bufferView.byteLength = Math.max(
-        defaultValue(bufferView.byteLength, 0),
+        bufferView.byteLength ?? 0,
         accessorByteEnd
       );
     }
@@ -793,10 +780,8 @@ function moveByteStrideToBufferView(gltf) {
   const bufferViewMap = {};
   ForEach.accessor(gltf, function (accessor) {
     if (defined(accessor.bufferView)) {
-      bufferViewMap[accessor.bufferView] = defaultValue(
-        bufferViewMap[accessor.bufferView],
-        []
-      );
+      bufferViewMap[accessor.bufferView] =
+        bufferViewMap[accessor.bufferView] ?? [];
       bufferViewMap[accessor.bufferView].push(accessor);
     }
   });
@@ -955,7 +940,7 @@ function validatePresentAccessorMinMax(gltf) {
 }
 
 function glTF10to20(gltf) {
-  gltf.asset = defaultValue(gltf.asset, {});
+  gltf.asset = gltf.asset ?? {};
   gltf.asset.version = "2.0";
   // material.instanceTechnique properties should be directly on the material. instanceTechnique is a gltf 0.8 property but is seen in some 1.0 models.
   updateInstanceTechniques(gltf);
@@ -1052,15 +1037,11 @@ function srgbToLinear(srgb) {
 }
 
 function convertTechniquesToPbr(gltf, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const baseColorTextureNames = defaultValue(
-    options.baseColorTextureNames,
-    defaultBaseColorTextureNames
-  );
-  const baseColorFactorNames = defaultValue(
-    options.baseColorFactorNames,
-    defaultBaseColorFactorNames
-  );
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const baseColorTextureNames =
+    options.baseColorTextureNames ?? defaultBaseColorTextureNames;
+  const baseColorFactorNames =
+    options.baseColorFactorNames ?? defaultBaseColorFactorNames;
 
   // Future work: convert other values like emissive, specular, etc. Only handling diffuse right now.
   ForEach.material(gltf, function (material) {
@@ -1102,16 +1083,14 @@ function assignAsEmissive(material, emissive) {
 function convertMaterialsCommonToPbr(gltf) {
   // Future work: convert KHR_materials_common lights to KHR_lights_punctual
   ForEach.material(gltf, function (material) {
-    const materialsCommon = defaultValue(
-      material.extensions,
-      defaultValue.EMPTY_OBJECT
-    ).KHR_materials_common;
+    const materialsCommon = (material.extensions ?? Frozen.EMPTY_OBJECT)
+      .KHR_materials_common;
     if (!defined(materialsCommon)) {
       // Nothing to do
       return;
     }
 
-    const values = defaultValue(materialsCommon.values, {});
+    const values = materialsCommon.values ?? {};
     const ambient = values.ambient;
     const diffuse = values.diffuse;
     const emission = values.emission;

@@ -4,7 +4,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -66,7 +66,7 @@ import ClippingPlane from "./ClippingPlane.js";
  * viewer.zoomTo(entity);
  */
 function ClippingPlaneCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._planes = [];
 
@@ -75,7 +75,7 @@ function ClippingPlaneCollection(options) {
   this._dirtyIndex = -1;
   this._multipleDirtyPlanes = false;
 
-  this._enabled = defaultValue(options.enabled, true);
+  this._enabled = options.enabled ?? true;
 
   /**
    * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes
@@ -84,9 +84,7 @@ function ClippingPlaneCollection(options) {
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * The color applied to highlight the edge along which an object is clipped.
@@ -94,7 +92,7 @@ function ClippingPlaneCollection(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.edgeColor = Color.clone(defaultValue(options.edgeColor, Color.WHITE));
+  this.edgeColor = Color.clone(options.edgeColor ?? Color.WHITE);
 
   /**
    * The width, in pixels, of the highlight applied to the edge along which an object is clipped.
@@ -102,7 +100,7 @@ function ClippingPlaneCollection(options) {
    * @type {number}
    * @default 0.0
    */
-  this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
+  this.edgeWidth = options.edgeWidth ?? 0.0;
 
   /**
    * An event triggered when a new clipping plane is added to the collection.  Event handlers
@@ -124,10 +122,7 @@ function ClippingPlaneCollection(options) {
   // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
   this._owner = undefined;
 
-  const unionClippingRegions = defaultValue(
-    options.unionClippingRegions,
-    false,
-  );
+  const unionClippingRegions = options.unionClippingRegions ?? false;
   this._unionClippingRegions = unionClippingRegions;
   this._testIntersection = unionClippingRegions
     ? unionIntersectFunction
