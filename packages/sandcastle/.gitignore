@@ -13,4 +13,5 @@ dist-ssr
 *.local
 
 public/gallery/list.json
-public/templates/Sandcastle.*
+templates/Sandcastle.d.ts
+templates/Sandcastle.js

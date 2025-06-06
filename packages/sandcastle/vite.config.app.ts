@@ -1,4 +1,5 @@
 import { defineConfig, UserConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 import baseConfig, { cesiumPathReplace } from "./vite.config.ts";
 
@@ -20,8 +21,12 @@ export default defineConfig(() => {
     __PAGE_BASE_URL__: JSON.stringify("/"),
   };
 
+  const copyPlugin = viteStaticCopy({
+    targets: [{ src: "templates/Sandcastle.(d.ts|js)", dest: "templates" }],
+  });
+
   const plugins = config.plugins ?? [];
-  config.plugins = [...plugins, cesiumPathReplace(cesiumBaseUrl)];
+  config.plugins = [...plugins, copyPlugin, cesiumPathReplace(cesiumBaseUrl)];
 
   return config;
 });

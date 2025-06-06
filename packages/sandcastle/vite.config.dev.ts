@@ -1,5 +1,6 @@
 import { defineConfig, UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+
 import baseConfig, { cesiumPathReplace } from "./vite.config.ts";
 
 export default defineConfig(() => {
@@ -7,6 +8,11 @@ export default defineConfig(() => {
 
   const cesiumSource = "../../Build/CesiumUnminified";
   const cesiumBaseUrl = "Build/CesiumUnminified";
+
+  config.define = {
+    ...config.define,
+    __PAGE_BASE_URL__: JSON.stringify("/"),
+  };
 
   const copyPlugin = viteStaticCopy({
     targets: [
@@ -18,13 +24,9 @@ export default defineConfig(() => {
       { src: `../../Source/Cesium.d.ts`, dest: "Source" },
       { src: "../../Apps/SampleData", dest: "Apps" },
       { src: "../../Apps/SampleData", dest: "" },
+      { src: "templates/Sandcastle.d.ts", dest: "templates" },
     ],
   });
-
-  config.define = {
-    ...config.define,
-    __PAGE_BASE_URL__: JSON.stringify("/"),
-  };
 
   const plugins = config.plugins ?? [];
   config.plugins = [
