@@ -170,6 +170,8 @@ export default function pickModelNew(model, ray, frameState, result) {
  * @param {ModelRuntimeNode} runtimeNode The runtime node
  * @param {FrameState} frameState The frame state
  * @returns The matrices
+ *
+ * @private
  */
 function computeRuntimeNodeMatrices(model, runtimeNode, frameState) {
   const sceneGraph = model.sceneGraph;
@@ -239,6 +241,8 @@ function computeRuntimeNodeMatrices(model, runtimeNode, frameState) {
  * @param {boolean} usesWebgl2 Whether the rendering context
  * uses WebGL 2
  * @returns The instance transforms
+ *
+ * @private
  */
 function computeInstancesTransforms(
   runtimeNode,
@@ -342,6 +346,8 @@ function computeInstancesTransforms(
  * @param {ModelComponents.Primitive} primitive The primitive
  * @param {boolean} usesWebgl2 Whether the context uses WebGL2
  * @returns The picked geometry
+ *
+ * @private
  */
 function obtainPickedGeometry(primitive, usesWebgl2) {
   const positionAttribute = ModelUtility.getAttributeBySemantic(
@@ -459,6 +465,8 @@ function obtainPickedGeometry(primitive, usesWebgl2) {
  * @param {Matrix4[]} transforms The transforms
  * @param {boolean} backfaceCulling Whether backface culling is enabled
  * @returns The information about the closest intersection
+ *
+ * @private
  */
 function computeClosest(ray, pickedGeometry, transforms, backfaceCulling) {
   let minT = Number.MAX_VALUE;
@@ -544,6 +552,8 @@ function computeClosest(ray, pickedGeometry, transforms, backfaceCulling) {
  * @param {Ray} ray
  * @param {Matrix4} transform
  * @returns The transformed ray
+ *
+ * @private
  */
 function computeInverseTransformedRay(ray, transform) {
   const inverseTransform = Matrix4.inverse(transform, scratchInverseTransform);
