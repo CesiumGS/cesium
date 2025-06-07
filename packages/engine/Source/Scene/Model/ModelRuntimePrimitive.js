@@ -223,6 +223,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasQuantization = ModelUtility.hasQuantizedAttributes(
     primitive.attributes,
   );
+
   const generateWireframeIndices =
     model.debugWireframe &&
     PrimitiveType.isTriangles(primitive.primitiveType) &&

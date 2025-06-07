@@ -64,6 +64,34 @@ const PixelFormat = {
   RGBA: WebGLConstants.RGBA,
 
   /**
+   * A pixel format containing a red channel as an integer.
+   * @type {number}
+   * @constant
+   */
+  RED_INTEGER: WebGLConstants.RED_INTEGER,
+
+  /**
+   * A pixel format containing red and green channels as integers.
+   * @type {number}
+   * @constant
+   */
+  RG_INTEGER: WebGLConstants.RG_INTEGER,
+
+  /**
+   * A pixel format containing red, green, and blue channels as integers.
+   * @type {number}
+   * @constant
+   */
+  RGB_INTEGER: WebGLConstants.RGB_INTEGER,
+
+  /**
+   * A pixel format containing red, green, blue, and alpha channels as integers.
+   * @type {number}
+   * @constant
+   */
+  RGBA_INTEGER: WebGLConstants.RGBA_INTEGER,
+
+  /**
    * A pixel format containing a luminance (intensity) channel.
    *
    * @type {number}
@@ -190,14 +218,18 @@ const PixelFormat = {
 PixelFormat.componentsLength = function (pixelFormat) {
   switch (pixelFormat) {
     case PixelFormat.RGB:
+    case PixelFormat.RGB_INTEGER:
       return 3;
     case PixelFormat.RGBA:
+    case PixelFormat.RGBA_INTEGER:
       return 4;
     case PixelFormat.LUMINANCE_ALPHA:
     case PixelFormat.RG:
+    case PixelFormat.RG_INTEGER:
       return 2;
     case PixelFormat.ALPHA:
     case PixelFormat.RED:
+    case PixelFormat.RED_INTEGER:
     case PixelFormat.LUMINANCE:
       return 1;
     default:
@@ -217,6 +249,10 @@ PixelFormat.validate = function (pixelFormat) {
     pixelFormat === PixelFormat.RG ||
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.RGBA ||
+    pixelFormat === PixelFormat.RED_INTEGER ||
+    pixelFormat === PixelFormat.RG_INTEGER ||
+    pixelFormat === PixelFormat.RGB_INTEGER ||
+    pixelFormat === PixelFormat.RGBA_INTEGER ||
     pixelFormat === PixelFormat.LUMINANCE ||
     pixelFormat === PixelFormat.LUMINANCE_ALPHA ||
     pixelFormat === PixelFormat.RGB_DXT1 ||
@@ -532,6 +568,32 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
         return WebGLConstants.RG8;
       case PixelFormat.RED:
         return WebGLConstants.R8;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.INT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA_INTEGER:
+        return WebGLConstants.RGBA32I;
+      case PixelFormat.RGB_INTEGER:
+        return WebGLConstants.RGB32I;
+      case PixelFormat.RG_INTEGER:
+        return WebGLConstants.RG32I;
+      case PixelFormat.RED_INTEGER:
+        return WebGLConstants.R32I;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA_INTEGER:
+        return WebGLConstants.RGBA32UI;
+      case PixelFormat.RGB_INTEGER:
+        return WebGLConstants.RGB32UI;
+      case PixelFormat.RG_INTEGER:
+        return WebGLConstants.RG32UI;
+      case PixelFormat.RED_INTEGER:
+        return WebGLConstants.R32UI;
     }
   }
 

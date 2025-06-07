@@ -145,7 +145,7 @@ void main()
         #else
         gl_PointSize = 1.0;
         #endif
-
+        
         gl_PointSize *= show;
     #endif
 

@@ -1,5 +1,6 @@
 
 precision highp float;
+
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -86,7 +87,7 @@ void main()
 
     // When not picking metadata END
     //========================================================================
-    #else 
+    #else
     //========================================================================
     // When picking metadata START
 
@@ -124,3 +125,4 @@ void main()
 
     out_FragColor = color;
 }
+
