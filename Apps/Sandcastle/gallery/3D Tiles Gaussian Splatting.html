@@ -12,7 +12,7 @@
       name="description"
       content="View the same power station dataset as a 3D Gaussian splatting tileset and a Mesh tileset."
     />
-    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -49,20 +49,25 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.ion.defaultAccessToken =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkNGE4YjVlNy0yYWYwLTRjZWYtODdhNy03YzQ0YTY5MzQyNzAiLCJpZCI6MTEzNTcyLCJpYXQiOjE3NDkyNDQ1MTJ9._KY_AU5jtlG9b8O7bJqsXbzrEUvwkOyAb78a2C_0oo4";
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+        });
 
         try {
-          // TODO: Replace with the final asset when available.
-          const left = await Cesium.Cesium3DTileset.fromIonAssetId(3431611);
+          const left = await Cesium.Cesium3DTileset.fromIonAssetId(3443920);
           viewer.scene.primitives.add(left);
           left.splitDirection = Cesium.SplitDirection.LEFT;
 
-          viewer.zoomTo(left);
+          viewer.zoomTo(
+            left,
+            new Cesium.HeadingPitchRange(
+              Cesium.Math.toRadians(-50),
+              Cesium.Math.toRadians(-20),
+              100.0,
+            ),
+          );
 
-          const right = await Cesium.createOsmBuildingsAsync();
-          // const right = await Cesium.Cesium3DTileset.fromIonAssetId(3431611);
+          const right = await Cesium.Cesium3DTileset.fromIonAssetId(3443919);
           viewer.scene.primitives.add(right);
           right.splitDirection = Cesium.SplitDirection.RIGHT;
         } catch (error) {
