@@ -29,9 +29,8 @@ function GaussianSplat3DTileContent(tileset, tile, resource, gltf) {
 
   /**
    * glTF primitive data that contains the Gaussian splat data needed for rendering.
-   * @type{Primitive}
+   * @type {Primitive}
    * @private
-   *
    */
   this.splatPrimitive = undefined;
 
