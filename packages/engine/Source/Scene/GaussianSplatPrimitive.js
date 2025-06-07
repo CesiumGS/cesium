@@ -306,7 +306,7 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 
   /**
    * The {@link SplitDirection} to apply to this point.
-   * @memberof PointPrimitive.prototype
+   * @memberof GaussianSplatPrimitive.prototype
    * @type {SplitDirection}
    * @default {@link SplitDirection.NONE}
    */
