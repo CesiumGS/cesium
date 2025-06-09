@@ -435,23 +435,22 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   ).typedArray;
 
   const mat = new Matrix4();
+  const position = new Cartesian3();
+  const rotation = new Quaternion();
+  const scale = new Cartesian3();
   for (let i = 0; i < positions.length / 3; ++i) {
-    const position = new Cartesian3(
-      positions[i * 3],
-      positions[i * 3 + 1],
-      positions[i * 3 + 2],
-    );
-    const rotation = new Quaternion(
-      rotations[i * 4],
-      rotations[i * 4 + 1],
-      rotations[i * 4 + 2],
-      rotations[i * 4 + 3],
-    );
-    const scale = new Cartesian3(
-      scales[i * 3],
-      scales[i * 3 + 1],
-      scales[i * 3 + 2],
-    );
+    position.x = positions[i * 3];
+    position.y = positions[i * 3 + 1];
+    position.z = positions[i * 3 + 2];
+
+    rotation.x = rotations[i * 4];
+    rotation.y = rotations[i * 4 + 1];
+    rotation.z = rotations[i * 4 + 2];
+    rotation.w = rotations[i * 4 + 3];
+
+    scale.x = scales[i * 3];
+    scale.y = scales[i * 3 + 1];
+    scale.z = scales[i * 3 + 2];
 
     Matrix4.fromTranslationQuaternionRotationScale(
       position,
