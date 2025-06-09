@@ -15,7 +15,7 @@ import createScene from "../../../../Specs/createScene.js";
 describe(
   "Scene/GaussianSplat3DTileContent",
   function () {
-    const tilesetUrl = "Data/Cesium3DTiles/GaussianSplats/tower/tileset.json";
+    const tilesetUrl = "./Data/Cesium3DTiles/GaussianSplats/tower/tileset.json";
 
     let scene;
     let options;
