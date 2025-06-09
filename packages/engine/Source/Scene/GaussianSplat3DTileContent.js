@@ -160,7 +160,19 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
 
   ready: {
     get: function () {
-      return this._ready && this._transformed;
+      return this._ready;
+    },
+  },
+
+  /**
+   * Returns true when the tile's content is transformed to world coordinates; otherwise false
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  transformed: {
+    get: function () {
+      return this._transformed;
     },
   },
 
