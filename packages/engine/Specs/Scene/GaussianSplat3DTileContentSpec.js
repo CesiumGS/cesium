@@ -11,6 +11,7 @@ import {
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/GaussianSplat3DTileContent",
@@ -49,6 +50,26 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
+    const waitForTileContent = function (tileset, options) {
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return tileset._root.content !== undefined;
+      }, options).then(function () {
+        scene.renderForSpecs();
+        return tileset;
+      });
+    };
+
+    const waitForContentReady = function (tileset, options) {
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return tileset._root.content.ready;
+      }, options).then(function () {
+        scene.renderForSpecs();
+        return tileset;
+      });
+    };
+
     it("loads Gaussian Splat content", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(
         function (tileset) {
@@ -57,8 +78,8 @@ describe(
             new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
           );
 
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
+          return waitForTileContent(tileset).then(function (tileset) {
+            return waitForContentReady(tileset).then(function () {
               const tile = tileset._root;
               const content = tile.content;
               expect(content).toBeDefined();
@@ -91,8 +112,8 @@ describe(
               expect(rotations.length).toBeGreaterThan(0);
               expect(scales.length).toBeGreaterThan(0);
               expect(colors.length).toBeGreaterThan(0);
-            },
-          );
+            });
+          });
         },
       );
     });

@@ -9,6 +9,7 @@ import {
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/GaussianSplatPrimitive",
@@ -47,6 +48,16 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
+    const waitForTileContent = function (tileset, options) {
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return tileset._root.content !== undefined;
+      }, options).then(function () {
+        scene.renderForSpecs();
+        return tileset;
+      });
+    };
+
     it("load a Gaussian Splat tileset", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(
         function (tileset) {
@@ -64,15 +75,13 @@ describe(
             ),
           ).toBe(true);
 
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              const tile = tileset._root;
-              expect(tile.content).toBeDefined();
-              expect(tile.content instanceof GaussianSplat3DTileContent).toBe(
-                true,
-              );
-            },
-          );
+          return waitForTileContent(tileset).then(function () {
+            const tile = tileset._root;
+            expect(tile.content).toBeDefined();
+            expect(tile.content instanceof GaussianSplat3DTileContent).toBe(
+              true,
+            );
+          });
         },
       );
     });
