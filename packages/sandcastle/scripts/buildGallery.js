@@ -45,6 +45,7 @@ export function buildGalleryList(galleryDirectory) {
   for (const filePath of yamlFiles) {
     const file = readFileSync(filePath, { encoding: "utf-8" });
     let metadata;
+
     try {
       metadata = parse(file);
     } catch (error) {
@@ -86,9 +87,6 @@ export function buildGalleryList(galleryDirectory) {
     }
 
     const galleryBase = `${galleryDirectory}/${metadata.id}`;
-
-    // const galleryFiles = globbySync(galleryBase);
-    // console.log("gallery files", galleryFiles);
 
     if (!existsSync(`${galleryBase}/index.html`)) {
       console.error(id, "- Missing index.html");
