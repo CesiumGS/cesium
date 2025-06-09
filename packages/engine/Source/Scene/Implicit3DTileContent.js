@@ -1235,6 +1235,9 @@ function makeTileMultipleContents(
   hasImplicitContentMetadata,
   contentCount,
 ) {
+  const isLeaf =
+    !defined(tileHeader.children) || tileHeader.children.length === 0;
+
   // TODO: Need to update statistics.numberOfTilesTotal?
   const deepCopy = true;
   const baseTileJson = clone(tileHeader, deepCopy);
@@ -1258,6 +1261,11 @@ function makeTileMultipleContents(
     childTileJson.geometricError = 0.0;
     childTileJson.content = clone(contentHeader, deepCopy);
 
+    if (!isLeaf) {
+      childTileJson.refine = "REPLACE";
+      childTileJson.geometricError = parentTile._geometricError * 0.5;
+    }
+
     const childTile = makeTile(content, baseResource, childTileJson, tile);
     childTile.implicitCoordinates = implicitCoordinates;
     childTile.implicitSubtree = subtree;
@@ -1267,6 +1275,21 @@ function makeTileMultipleContents(
     childTile.implicitInnerContentIndex = i % innerContentCount;
 
     tile.children.push(childTile);
+
+    if (!isLeaf) {
+      const grandchildTileJson = clone(baseTileJson, deepCopy);
+      grandchildTileJson.refine = "REPLACE";
+      grandchildTileJson.geometricError = 0.0;
+
+      const grandchildTile = makeTile(
+        content,
+        baseResource,
+        grandchildTileJson,
+        childTile,
+      );
+
+      childTile.children.push(grandchildTile);
+    }
   }
 
   return tile;
