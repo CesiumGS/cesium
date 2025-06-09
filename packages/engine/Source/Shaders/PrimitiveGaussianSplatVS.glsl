@@ -1,3 +1,15 @@
+//
+// Vertex shader for Gaussian splats.
+
+// The splats are rendered as quads in view space. Splat attributes are loaded from a texture with precomputed 3D covariance.
+
+// Passes local quad coordinates and color to the fragment shader for Gaussian evaluation. 
+//
+// Discards splats outside the view frustum or with negligible screen size.
+//
+
+// Transforms and projects splat covariance into screen space and extracts the major and minor axes of the Gaussian ellipsoid
+// which is used to calculate the vertex position in clip space.
 vec4 calcCovVectors(vec3 viewPos, mat3 Vrk) {
     vec4 t = vec4(viewPos, 1.0);
     float focal = czm_viewport.z * czm_projection[0][0];

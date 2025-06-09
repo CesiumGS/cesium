@@ -1,3 +1,9 @@
+//
+// Fragment shader for Gaussian splats.
+// Renders a Gaussian splat within a quad, discarding fragments outside the unit circle.
+// Applies an approximate Gaussian falloff based on distance from the center and outputs
+// a color modulated by the alpha and Gaussian weight.
+//
 void main() {
     if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
     if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
