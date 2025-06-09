@@ -102,10 +102,15 @@ const Cesium3DTileContentFactory = {
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
-    if (
-      tileset.debugTreatTilesetAsGaussianSplats ||
-      tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression")
-    ) {
+    const forceGaussianSplats =
+      tileset.debugTreatTilesetAsGaussianSplats ?? false;
+    let hasGaussianSplatExtension = false;
+    if (tileset.isGltfExtensionUsed instanceof Function) {
+      hasGaussianSplatExtension = tileset.isGltfExtensionUsed(
+        "KHR_spz_gaussian_splats_compression",
+      );
+    }
+    if (forceGaussianSplats || hasGaussianSplatExtension) {
       return new GaussianSplat3DTileContent(tileset, tile, resource, json);
     }
 
