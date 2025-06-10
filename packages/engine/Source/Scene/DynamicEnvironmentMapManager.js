@@ -81,9 +81,12 @@ function DynamicEnvironmentMapManager(options) {
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  const mipmapLevels = Math.min(
-    options.mipmapLevels ?? 7,
-    Math.log2(ContextLimits.maximumCubeMapSize),
+  const mipmapLevels = Math.max(
+    1,
+    Math.min(
+      options.mipmapLevels ?? 7,
+      Math.log2(ContextLimits.maximumCubeMapSize),
+    ),
   );
 
   this._mipmapLevels = mipmapLevels;
