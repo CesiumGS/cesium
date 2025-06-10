@@ -231,7 +231,7 @@ Resource.supportsImageBitmapOptions = function () {
   })
     .then(function (blob) {
       const imageBitmapOptions = {
-        imageOrientation: "flipY", // default is "none"
+        imageOrientation: "flipY", // default is "from-image"
         premultiplyAlpha: "none", // default is "default"
         colorSpaceConversion: "none", // default is "default"
       };
