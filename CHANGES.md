@@ -1,5 +1,25 @@
 # Change Log
 
+## 1.131 - 2025-06-10
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- This PR fixes issue #12596 by updating the Voxel spec data to use the array format for contentAvailability as required by the latest 3D Tiles 1.1 specification. 
+
+
+```glsl
+// Replace this:
+// "contentAvailability": {
+//  "constant": 1
+// }
+// with this:
+"contentAvailability": [{
+  "constant": 1,
+}]
+```
+
 ## 1.130 - 2025-06-02
 
 ### @cesium/engine
