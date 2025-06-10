@@ -2036,7 +2036,7 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   );
 
   return createImageBitmap(blob, {
-    imageOrientation: options.flipY ? "flipY" : "none",
+    imageOrientation: options.flipY ? "flipY" : "from-image",
     premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none",
     colorSpaceConversion: options.skipColorSpaceConversion ? "none" : "default",
   });
