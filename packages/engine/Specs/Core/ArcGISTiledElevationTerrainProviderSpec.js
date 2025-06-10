@@ -150,7 +150,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       // Tile request
       if (url.indexOf("/tile/") !== -1) {
@@ -161,7 +161,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
         return;
       }
@@ -196,22 +196,21 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
 
   it("conforms to TerrainProvider interface", function () {
     expect(ArcGISTiledElevationTerrainProvider).toConformToInterface(
-      TerrainProvider
+      TerrainProvider,
     );
   });
 
   it("fromUrl throws without url", async function () {
     await expectAsync(
-      ArcGISTiledElevationTerrainProvider.fromUrl()
+      ArcGISTiledElevationTerrainProvider.fromUrl(),
     ).toBeRejectedWithDeveloperError(
-      "url is required, actual value was undefined"
+      "url is required, actual value was undefined",
     );
   });
 
   it("fromUrl resolves to new ArcGISTiledElevationTerrainProvider", async function () {
-    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      "made/up/url"
-    );
+    const provider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
 
     expect(provider).toBeInstanceOf(ArcGISTiledElevationTerrainProvider);
   });
@@ -220,16 +219,15 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     const resource = new Resource({
       url: "made/up/url",
     });
-    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      resource
-    );
+    const provider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl(resource);
 
     expect(provider).toBeInstanceOf(ArcGISTiledElevationTerrainProvider);
   });
 
   it("fromUrl resolves with url promise", async function () {
     const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      Promise.resolve("made/up/url")
+      Promise.resolve("made/up/url"),
     );
     expect(provider).toBeInstanceOf(ArcGISTiledElevationTerrainProvider);
   });
@@ -237,39 +235,36 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
   it("fromUrl rejects if url rejects", async function () {
     await expectAsync(
       ArcGISTiledElevationTerrainProvider.fromUrl(
-        Promise.reject(new Error("my message"))
-      )
+        Promise.reject(new Error("my message")),
+      ),
     ).toBeRejectedWithError("my message");
   });
 
   it("has error event", async function () {
-    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      "made/up/url"
-    );
+    const provider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
     expect(provider.errorEvent).toBeDefined();
     expect(provider.errorEvent).toBe(provider.errorEvent);
   });
 
   it("returns reasonable geometric error for various levels", async function () {
-    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      "made/up/url"
-    );
+    const provider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
     expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
     expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
       provider.getLevelMaximumGeometricError(1) * 2.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
       provider.getLevelMaximumGeometricError(2) * 2.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
   it("logo is undefined if credit is not provided", async function () {
     delete metadata.copyrightText;
-    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      "made/up/url"
-    );
+    const provider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
     expect(provider.credit).toBeUndefined();
   });
 
@@ -278,27 +273,25 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       "made/up/url",
       {
         credit: "thanks to our awesome made up contributors!",
-      }
+      },
     );
     expect(provider.credit).toBeDefined();
   });
 
   it("does not have a water mask", async function () {
-    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      "made/up/url"
-    );
+    const provider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl("made/up/url");
     expect(provider.hasWaterMask).toBe(false);
   });
 
   it("detects WebMercator tiling scheme", async function () {
     const baseUrl = "made/up/url";
 
-    const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      baseUrl
-    );
+    const terrainProvider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl);
 
     expect(terrainProvider.tilingScheme).toBeInstanceOf(
-      WebMercatorTilingScheme
+      WebMercatorTilingScheme,
     );
   });
 
@@ -306,9 +299,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     const baseUrl = "made/up/url";
     metadata.spatialReference.latestWkid = 4326;
 
-    const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      baseUrl
-    );
+    const terrainProvider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl);
 
     expect(terrainProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
   });
@@ -318,7 +310,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     metadata.spatialReference.latestWkid = 1234;
 
     await expectAsync(
-      ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+      ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl),
     ).toBeRejectedWithError(RuntimeError, "Invalid spatial reference");
   });
 
@@ -327,16 +319,15 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     delete metadata.tileInfo;
 
     await expectAsync(
-      ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+      ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl),
     ).toBeRejectedWithError(RuntimeError, "tileInfo is required");
   });
 
   it("checks availability if TileMap capability exists", async function () {
     const baseUrl = "made/up/url";
 
-    const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      baseUrl
-    );
+    const terrainProvider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl);
 
     expect(terrainProvider._hasAvailability).toBe(true);
     expect(terrainProvider._tilesAvailable).toBeDefined();
@@ -347,9 +338,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     const baseUrl = "made/up/url";
     metadata.capabilities = "Image,Mensuration";
 
-    const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-      baseUrl
-    );
+    const terrainProvider =
+      await ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl);
 
     expect(terrainProvider._hasAvailability).toBe(false);
     expect(terrainProvider._tilesAvailable).toBeUndefined();
@@ -360,9 +350,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     it("provides HeightmapTerrainData", async function () {
       const baseUrl = "made/up/url";
 
-      const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-        baseUrl
-      );
+      const terrainProvider =
+        await ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl);
 
       const promise = terrainProvider.requestTileGeometry(0, 0, 0);
       RequestScheduler.update();
@@ -377,15 +366,14 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         // Do nothing, so requests never complete
         deferreds.push(deferred);
       };
 
-      const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
-        baseUrl
-      );
+      const terrainProvider =
+        await ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl);
 
       let promise;
       let i;
@@ -410,7 +398,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       await Promise.all(
         deferreds.map(function (deferred) {
           return deferred.promise;
-        })
+        }),
       );
     });
   });

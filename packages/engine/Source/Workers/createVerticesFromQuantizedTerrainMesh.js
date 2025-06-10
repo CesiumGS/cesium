@@ -25,7 +25,7 @@ const toPack = new Cartesian2();
 
 function createVerticesFromQuantizedTerrainMesh(
   parameters,
-  transferableObjects
+  transferableObjects,
 ) {
   const quantizedVertices = parameters.quantizedVertices;
   const quantizedVertexCount = quantizedVertices.length / 3;
@@ -60,9 +60,8 @@ function createVerticesFromQuantizedTerrainMesh(
   let southMercatorY;
   let oneOverMercatorHeight;
   if (includeWebMercatorT) {
-    southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-      south
-    );
+    southMercatorY =
+      WebMercatorProjection.geodeticLatitudeToMercatorAngle(south);
     oneOverMercatorHeight =
       1.0 /
       (WebMercatorProjection.geodeticLatitudeToMercatorAngle(north) -
@@ -72,11 +71,11 @@ function createVerticesFromQuantizedTerrainMesh(
   const uBuffer = quantizedVertices.subarray(0, quantizedVertexCount);
   const vBuffer = quantizedVertices.subarray(
     quantizedVertexCount,
-    2 * quantizedVertexCount
+    2 * quantizedVertexCount,
   );
   const heightBuffer = quantizedVertices.subarray(
     quantizedVertexCount * 2,
-    3 * quantizedVertexCount
+    3 * quantizedVertexCount,
   );
   const hasVertexNormals = defined(octEncodedNormals);
 
@@ -114,7 +113,7 @@ function createVerticesFromQuantizedTerrainMesh(
     const height = CesiumMath.lerp(
       minimumHeight,
       maximumHeight,
-      heightBuffer[i] / maxShort
+      heightBuffer[i] / maxShort,
     );
 
     cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
@@ -135,7 +134,7 @@ function createVerticesFromQuantizedTerrainMesh(
     if (includeWebMercatorT) {
       webMercatorTs[i] =
         (WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-          cartographicScratch.latitude
+          cartographicScratch.latitude,
         ) -
           southMercatorY) *
         oneOverMercatorHeight;
@@ -151,40 +150,41 @@ function createVerticesFromQuantizedTerrainMesh(
     Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
   }
 
-  const westIndicesSouthToNorth = copyAndSort(parameters.westIndices, function (
-    a,
-    b
-  ) {
-    return uvs[a].y - uvs[b].y;
-  });
-  const eastIndicesNorthToSouth = copyAndSort(parameters.eastIndices, function (
-    a,
-    b
-  ) {
-    return uvs[b].y - uvs[a].y;
-  });
-  const southIndicesEastToWest = copyAndSort(parameters.southIndices, function (
-    a,
-    b
-  ) {
-    return uvs[b].x - uvs[a].x;
-  });
-  const northIndicesWestToEast = copyAndSort(parameters.northIndices, function (
-    a,
-    b
-  ) {
-    return uvs[a].x - uvs[b].x;
-  });
+  const westIndicesSouthToNorth = copyAndSort(
+    parameters.westIndices,
+    function (a, b) {
+      return uvs[a].y - uvs[b].y;
+    },
+  );
+  const eastIndicesNorthToSouth = copyAndSort(
+    parameters.eastIndices,
+    function (a, b) {
+      return uvs[b].y - uvs[a].y;
+    },
+  );
+  const southIndicesEastToWest = copyAndSort(
+    parameters.southIndices,
+    function (a, b) {
+      return uvs[b].x - uvs[a].x;
+    },
+  );
+  const northIndicesWestToEast = copyAndSort(
+    parameters.northIndices,
+    function (a, b) {
+      return uvs[a].x - uvs[b].x;
+    },
+  );
 
   let occludeePointInScaledSpace;
   if (minimumHeight < 0.0) {
     // Horizon culling point needs to be recomputed since the tile is at least partly under the ellipsoid.
     const occluder = new EllipsoidalOccluder(ellipsoid);
-    occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
-      center,
-      positions,
-      minimumHeight
-    );
+    occludeePointInScaledSpace =
+      occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
+        center,
+        positions,
+        minimumHeight,
+      );
   }
 
   let hMin = minimumHeight;
@@ -199,8 +199,8 @@ function createVerticesFromQuantizedTerrainMesh(
       ellipsoid,
       toENU,
       minimum,
-      maximum
-    )
+      maximum,
+    ),
   );
   hMin = Math.min(
     hMin,
@@ -213,8 +213,8 @@ function createVerticesFromQuantizedTerrainMesh(
       ellipsoid,
       toENU,
       minimum,
-      maximum
-    )
+      maximum,
+    ),
   );
   hMin = Math.min(
     hMin,
@@ -227,8 +227,8 @@ function createVerticesFromQuantizedTerrainMesh(
       ellipsoid,
       toENU,
       minimum,
-      maximum
-    )
+      maximum,
+    ),
   );
   hMin = Math.min(
     hMin,
@@ -241,8 +241,8 @@ function createVerticesFromQuantizedTerrainMesh(
       ellipsoid,
       toENU,
       minimum,
-      maximum
-    )
+      maximum,
+    ),
   );
 
   const aaBox = new AxisAlignedBoundingBox(minimum, maximum, center);
@@ -256,7 +256,7 @@ function createVerticesFromQuantizedTerrainMesh(
     includeWebMercatorT,
     includeGeodeticSurfaceNormals,
     exaggeration,
-    exaggerationRelativeHeight
+    exaggerationRelativeHeight,
   );
   const vertexStride = encoding.stride;
   const size =
@@ -279,7 +279,7 @@ function createVerticesFromQuantizedTerrainMesh(
       heights[j],
       toPack,
       webMercatorTs[j],
-      geodeticSurfaceNormals[j]
+      geodeticSurfaceNormals[j],
     );
   }
 
@@ -287,7 +287,7 @@ function createVerticesFromQuantizedTerrainMesh(
   const indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
   const indexBuffer = IndexDatatype.createTypedArray(
     quantizedVertexCount + edgeVertexCount,
-    indexBufferLength
+    indexBufferLength,
   );
   indexBuffer.set(parameters.indices, 0);
 
@@ -319,7 +319,7 @@ function createVerticesFromQuantizedTerrainMesh(
     southMercatorY,
     oneOverMercatorHeight,
     westLongitudeOffset,
-    westLatitudeOffset
+    westLatitudeOffset,
   );
   vertexBufferIndex += parameters.westIndices.length * vertexStride;
   addSkirt(
@@ -336,7 +336,7 @@ function createVerticesFromQuantizedTerrainMesh(
     southMercatorY,
     oneOverMercatorHeight,
     southLongitudeOffset,
-    southLatitudeOffset
+    southLatitudeOffset,
   );
   vertexBufferIndex += parameters.southIndices.length * vertexStride;
   addSkirt(
@@ -353,7 +353,7 @@ function createVerticesFromQuantizedTerrainMesh(
     southMercatorY,
     oneOverMercatorHeight,
     eastLongitudeOffset,
-    eastLatitudeOffset
+    eastLatitudeOffset,
   );
   vertexBufferIndex += parameters.eastIndices.length * vertexStride;
   addSkirt(
@@ -370,7 +370,7 @@ function createVerticesFromQuantizedTerrainMesh(
     southMercatorY,
     oneOverMercatorHeight,
     northLongitudeOffset,
-    northLatitudeOffset
+    northLatitudeOffset,
   );
 
   TerrainProvider.addSkirtIndices(
@@ -380,7 +380,7 @@ function createVerticesFromQuantizedTerrainMesh(
     northIndicesWestToEast,
     quantizedVertexCount,
     indexBuffer,
-    parameters.indices.length
+    parameters.indices.length,
   );
 
   transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
@@ -411,7 +411,7 @@ function findMinMaxSkirts(
   ellipsoid,
   toENU,
   minimum,
-  maximum
+  maximum,
 ) {
   let hMin = Number.POSITIVE_INFINITY;
 
@@ -436,7 +436,7 @@ function findMinMaxSkirts(
 
     const position = ellipsoid.cartographicToCartesian(
       cartographicScratch,
-      cartesian3Scratch
+      cartesian3Scratch,
     );
     Matrix4.multiplyByPoint(toENU, position, position);
 
@@ -462,7 +462,7 @@ function addSkirt(
   southMercatorY,
   oneOverMercatorHeight,
   longitudeOffset,
-  latitudeOffset
+  latitudeOffset,
 ) {
   const hasVertexNormals = defined(octEncodedNormals);
 
@@ -489,7 +489,7 @@ function addSkirt(
 
     const position = ellipsoid.cartographicToCartesian(
       cartographicScratch,
-      cartesian3Scratch
+      cartesian3Scratch,
     );
 
     if (hasVertexNormals) {
@@ -502,7 +502,7 @@ function addSkirt(
     if (encoding.hasWebMercatorT) {
       webMercatorT =
         (WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-          cartographicScratch.latitude
+          cartographicScratch.latitude,
         ) -
           southMercatorY) *
         oneOverMercatorHeight;
@@ -521,7 +521,7 @@ function addSkirt(
       cartographicScratch.height,
       toPack,
       webMercatorT,
-      geodeticSurfaceNormal
+      geodeticSurfaceNormal,
     );
   }
 }
@@ -545,5 +545,5 @@ function copyAndSort(typedArray, comparator) {
   return copy;
 }
 export default createTaskProcessorWorker(
-  createVerticesFromQuantizedTerrainMesh
+  createVerticesFromQuantizedTerrainMesh,
 );

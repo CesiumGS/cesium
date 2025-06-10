@@ -47,7 +47,7 @@ describe("Core/CylinderOutlineGeometry", function () {
         topRadius: 1,
         bottomRadius: 1,
         slices: 3,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(6 * 3); // 3 top + 3 bottom
@@ -62,7 +62,7 @@ describe("Core/CylinderOutlineGeometry", function () {
         bottomRadius: 1,
         slices: 3,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
 
     const numVertices = 6;
@@ -82,7 +82,7 @@ describe("Core/CylinderOutlineGeometry", function () {
         bottomRadius: 1,
         slices: 3,
         numberOfVerticalLines: 0,
-      })
+      }),
     );
 
     const numVertices = 6; //3 top 3 bottom
@@ -121,28 +121,23 @@ describe("Core/CylinderOutlineGeometry", function () {
         bottomRadius: -100,
       });
 
-      const geometry0 = CylinderOutlineGeometry.createGeometry(
-        cylinderOutline0
-      );
-      const geometry1 = CylinderOutlineGeometry.createGeometry(
-        cylinderOutline1
-      );
-      const geometry2 = CylinderOutlineGeometry.createGeometry(
-        cylinderOutline2
-      );
-      const geometry3 = CylinderOutlineGeometry.createGeometry(
-        cylinderOutline3
-      );
-      const geometry4 = CylinderOutlineGeometry.createGeometry(
-        cylinderOutline4
-      );
+      const geometry0 =
+        CylinderOutlineGeometry.createGeometry(cylinderOutline0);
+      const geometry1 =
+        CylinderOutlineGeometry.createGeometry(cylinderOutline1);
+      const geometry2 =
+        CylinderOutlineGeometry.createGeometry(cylinderOutline2);
+      const geometry3 =
+        CylinderOutlineGeometry.createGeometry(cylinderOutline3);
+      const geometry4 =
+        CylinderOutlineGeometry.createGeometry(cylinderOutline4);
 
       expect(geometry0).toBeUndefined();
       expect(geometry1).toBeUndefined();
       expect(geometry2).toBeUndefined();
       expect(geometry3).toBeUndefined();
       expect(geometry4).toBeUndefined();
-    }
+    },
   );
 
   const cylinder = new CylinderOutlineGeometry({

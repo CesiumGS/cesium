@@ -1,7 +1,7 @@
-import { defaultValue, defined, Math as CesiumMath } from "@cesium/engine";
+import { defined, Math as CesiumMath } from "@cesium/engine";
 
 function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
-  namePrefix = defaultValue(namePrefix, "");
+  namePrefix = namePrefix ?? "";
 
   it(`${namePrefix} can pack`, function () {
     const packedArray = [];
@@ -65,13 +65,13 @@ function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
         packedInstance,
         0,
         0,
-        packedForInterpolation
+        packedForInterpolation,
       );
       const value = packable.unpackInterpolationResult(
         packedForInterpolation,
         packedInstance,
         0,
-        0
+        0,
       );
       const result = packable.unpack(packedInstance);
       expect(value).toEqual(result);

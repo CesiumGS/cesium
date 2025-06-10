@@ -8,15 +8,19 @@ import SceneMode from "./SceneMode.js";
 function GlobeSurfaceShader(
   numberOfDayTextures,
   flags,
+  flags2,
   material,
   shaderProgram,
-  clippingShaderState
+  clippingShaderState,
+  clippingPolygonShaderState,
 ) {
   this.numberOfDayTextures = numberOfDayTextures;
   this.flags = flags;
+  this.flags2 = flags2;
   this.material = material;
   this.shaderProgram = shaderProgram;
   this.clippingShaderState = clippingShaderState;
+  this.clippingPolygonShaderState = clippingPolygonShaderState;
 }
 
 /**
@@ -60,6 +64,31 @@ function getPositionMode(sceneMode) {
   return positionMode;
 }
 
+function getPolygonClippingFunction(context) {
+  // return a noop for webgl1
+  if (!context.webgl2) {
+    return `void clipPolygons(highp sampler2D clippingDistance, int regionsLength, vec2 clippingPosition, int regionIndex) {
+    }`;
+  }
+
+  return `void clipPolygons(highp sampler2D clippingDistance, int regionsLength, vec2 clippingPosition, int regionIndex) {
+    czm_clipPolygons(clippingDistance, regionsLength, clippingPosition, regionIndex);
+  }`;
+}
+
+function getUnpackClippingFunction(context) {
+  // return a noop for webgl1
+  if (!context.webgl2) {
+    return `vec4 unpackClippingExtents(highp sampler2D extentsTexture, int index) {
+      return vec4();
+    }`;
+  }
+
+  return `vec4 unpackClippingExtents(highp sampler2D extentsTexture, int index) {
+    return czm_unpackClippingExtents(extentsTexture, index);
+  }`;
+}
+
 function get2DYPositionFraction(useWebMercatorProjection) {
   const get2DYPositionFractionGeographicProjection =
     "float get2DYPositionFraction(vec2 textureCoordinates) { return get2DGeographicYPositionFraction(textureCoordinates); }";
@@ -82,6 +111,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   const applyAlpha = options.applyAlpha;
   const applyDayNightAlpha = options.applyDayNightAlpha;
   const applySplit = options.applySplit;
+  const hasWaterMask = options.hasWaterMask;
   const showReflectiveOcean = options.showReflectiveOcean;
   const showOceanWaves = options.showOceanWaves;
   const enableLighting = options.enableLighting;
@@ -95,6 +125,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   const enableFog = options.enableFog;
   const enableClippingPlanes = options.enableClippingPlanes;
   const clippingPlanes = options.clippingPlanes;
+  const enableClippingPolygons = options.enableClippingPolygons;
+  const clippingPolygons = options.clippingPolygons;
   const clippedByBoundaries = options.clippedByBoundaries;
   const hasImageryLayerCutout = options.hasImageryLayerCutout;
   const colorCorrect = options.colorCorrect;
@@ -140,30 +172,33 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (applySaturation << 5) |
     (applyGamma << 6) |
     (applyAlpha << 7) |
-    (showReflectiveOcean << 8) |
-    (showOceanWaves << 9) |
-    (enableLighting << 10) |
-    (dynamicAtmosphereLighting << 11) |
-    (dynamicAtmosphereLightingFromSun << 12) |
-    (showGroundAtmosphere << 13) |
-    (perFragmentGroundAtmosphere << 14) |
-    (hasVertexNormals << 15) |
-    (useWebMercatorProjection << 16) |
-    (enableFog << 17) |
-    (quantization << 18) |
-    (applySplit << 19) |
-    (enableClippingPlanes << 20) |
-    (cartographicLimitRectangleFlag << 21) |
-    (imageryCutoutFlag << 22) |
-    (colorCorrect << 23) |
-    (highlightFillTile << 24) |
-    (colorToAlpha << 25) |
-    (hasGeodeticSurfaceNormals << 26) |
-    (hasExaggeration << 27) |
-    (showUndergroundColor << 28) |
-    (translucent << 29) |
-    (applyDayNightAlpha << 30) |
-    (splitTerrain << 31);
+    (hasWaterMask << 8) |
+    (showReflectiveOcean << 9) |
+    (showOceanWaves << 10) |
+    (enableLighting << 11) |
+    (dynamicAtmosphereLighting << 12) |
+    (dynamicAtmosphereLightingFromSun << 13) |
+    (showGroundAtmosphere << 14) |
+    (perFragmentGroundAtmosphere << 15) |
+    (hasVertexNormals << 16) |
+    (useWebMercatorProjection << 17) |
+    (enableFog << 18) |
+    (quantization << 19) |
+    (applySplit << 20) |
+    (enableClippingPlanes << 21) |
+    (enableClippingPolygons << 22) |
+    (cartographicLimitRectangleFlag << 23) |
+    (imageryCutoutFlag << 24) |
+    (colorCorrect << 25) |
+    (highlightFillTile << 26) |
+    (colorToAlpha << 27) |
+    (hasGeodeticSurfaceNormals << 28) |
+    (hasExaggeration << 29) |
+    (showUndergroundColor << 30) |
+    (translucent << 31);
+
+  // More bit flags that don't fit in the first `flag`
+  const flags2 = applyDayNightAlpha | (splitTerrain << 2);
 
   let currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -171,13 +206,24 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       ? clippingPlanes.clippingPlanesState
       : 0;
   }
+
+  let currentClippingPolygonsShaderState = 0;
+  if (defined(clippingPolygons) && clippingPolygons.length > 0) {
+    currentClippingPolygonsShaderState = enableClippingPolygons
+      ? clippingPolygons.clippingPolygonsState
+      : 0;
+  }
+
   let surfaceShader = surfaceTile.surfaceShader;
   if (
     defined(surfaceShader) &&
     surfaceShader.numberOfDayTextures === numberOfDayTextures &&
     surfaceShader.flags === flags &&
+    surfaceShader.flags2 === flags2 &&
     surfaceShader.material === this.material &&
-    surfaceShader.clippingShaderState === currentClippingShaderState
+    surfaceShader.clippingShaderState === currentClippingShaderState &&
+    surfaceShader.clippingPolygonShaderState ===
+      currentClippingPolygonsShaderState
   ) {
     return surfaceShader.shaderProgram;
   }
@@ -188,27 +234,41 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     shadersByFlags = this._shadersByTexturesFlags[numberOfDayTextures] = [];
   }
 
-  surfaceShader = shadersByFlags[flags];
+  let shadersByFlags2 = shadersByFlags[flags];
+  if (!defined(shadersByFlags2)) {
+    shadersByFlags2 = shadersByFlags[flags2] = [];
+  }
+
+  surfaceShader = shadersByFlags2[flags2];
   if (
     !defined(surfaceShader) ||
     surfaceShader.material !== this.material ||
-    surfaceShader.clippingShaderState !== currentClippingShaderState
+    surfaceShader.clippingShaderState !== currentClippingShaderState ||
+    surfaceShader.clippingPolygonShaderState !==
+      currentClippingPolygonsShaderState
   ) {
     // Cache miss - we've never seen this combination of numberOfDayTextures and flags before.
     const vs = this.baseVertexShaderSource.clone();
     const fs = this.baseFragmentShaderSource.clone();
 
+    // Need to go before GlobeFS
     if (currentClippingShaderState !== 0) {
       fs.sources.unshift(
-        getClippingFunction(clippingPlanes, frameState.context)
-      ); // Need to go before GlobeFS
+        getClippingFunction(clippingPlanes, frameState.context),
+      );
+    }
+
+    // Need to go before GlobeFS
+    if (currentClippingPolygonsShaderState !== 0) {
+      fs.sources.unshift(getPolygonClippingFunction(frameState.context));
+      vs.sources.unshift(getUnpackClippingFunction(frameState.context));
     }
 
     vs.defines.push(quantizationDefine);
     fs.defines.push(
       `TEXTURE_UNITS ${numberOfDayTextures}`,
       cartographicLimitRectangleDefine,
-      imageryCutoutDefine
+      imageryCutoutDefine,
     );
 
     if (applyBrightness) {
@@ -231,6 +291,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     }
     if (applyDayNightAlpha) {
       fs.defines.push("APPLY_DAY_NIGHT_ALPHA");
+    }
+    if (hasWaterMask) {
+      fs.defines.push("HAS_WATER_MASK");
     }
     if (showReflectiveOcean) {
       fs.defines.push("SHOW_REFLECTIVE_OCEAN");
@@ -294,6 +357,22 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       fs.defines.push("ENABLE_CLIPPING_PLANES");
     }
 
+    if (enableClippingPolygons) {
+      fs.defines.push("ENABLE_CLIPPING_POLYGONS");
+      vs.defines.push("ENABLE_CLIPPING_POLYGONS");
+
+      if (clippingPolygons.inverse) {
+        fs.defines.push("CLIPPING_INVERSE");
+      }
+
+      fs.defines.push(
+        `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`,
+      );
+      vs.defines.push(
+        `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`,
+      );
+    }
+
     if (colorCorrect) {
       fs.defines.push("COLOR_CORRECT");
     }
@@ -334,7 +413,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
         texelUnclipped = v_textureCoordinates.x < cutoutAndColorResult.x || cutoutAndColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < cutoutAndColorResult.y || cutoutAndColorResult.w < v_textureCoordinates.y;\n\
         cutoutAndColorResult = sampleAndBlend(\n`;
       } else {
-        computeDayColor += "\
+        computeDayColor +=
+          "\
         color = sampleAndBlend(\n";
       }
       computeDayColor += `\
@@ -344,17 +424,16 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
             u_dayTextureTexCoordsRectangle[${i}],\n\
             u_dayTextureTranslationAndScale[${i}],\n\
             ${applyAlpha ? `u_dayTextureAlpha[${i}]` : "1.0"},\n\
-            ${applyDayNightAlpha ? `u_dayTextureNightAlpha[${i}]` : "1.0"},\n${
-        applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"
-      },\n${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\
+            ${applyDayNightAlpha ? `u_dayTextureNightAlpha[${i}]` : "1.0"},\n\
+            ${applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"},\n\
+            ${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\
             ${applyContrast ? `u_dayTextureContrast[${i}]` : "0.0"},\n\
             ${applyHue ? `u_dayTextureHue[${i}]` : "0.0"},\n\
             ${applySaturation ? `u_dayTextureSaturation[${i}]` : "0.0"},\n\
             ${applyGamma ? `u_dayTextureOneOverGamma[${i}]` : "0.0"},\n\
             ${applySplit ? `u_dayTextureSplit[${i}]` : "0.0"},\n\
             ${colorToAlpha ? `u_colorsToAlpha[${i}]` : "vec4(0.0)"},\n\
-        nightBlend\
-        );\n`;
+            nightBlend\);\n`;
       if (hasImageryLayerCutout) {
         computeDayColor +=
           "\
@@ -362,7 +441,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       }
     }
 
-    computeDayColor += "\
+    computeDayColor +=
+      "\
         return color;\n\
     }";
 
@@ -378,13 +458,17 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       attributeLocations: terrainEncoding.getAttributeLocations(),
     });
 
-    surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(
+    surfaceShader = new GlobeSurfaceShader(
       numberOfDayTextures,
       flags,
+      flags2,
       this.material,
       shader,
-      currentClippingShaderState
+      currentClippingShaderState,
+      currentClippingPolygonsShaderState,
     );
+
+    shadersByFlags2[flags2] = surfaceShader;
   }
 
   surfaceTile.surfaceShader = surfaceShader;
@@ -392,7 +476,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
 };
 
 GlobeSurfaceShaderSet.prototype.destroy = function () {
-  let flags;
+  let flags, flags2;
   let shader;
 
   const shadersByTexturesFlags = this._shadersByTexturesFlags;
@@ -405,9 +489,14 @@ GlobeSurfaceShaderSet.prototype.destroy = function () {
 
       for (flags in shadersByFlags) {
         if (shadersByFlags.hasOwnProperty(flags)) {
-          shader = shadersByFlags[flags];
-          if (defined(shader)) {
-            shader.shaderProgram.destroy();
+          const shadersByFlags2 = shadersByFlags[flags];
+          for (flags2 in shadersByFlags2) {
+            if (shadersByFlags2.hasOwnProperty(flags2)) {
+              shader = shadersByFlags2[flags2];
+              if (defined(shader)) {
+                shader.shaderProgram.destroy();
+              }
+            }
           }
         }
       }

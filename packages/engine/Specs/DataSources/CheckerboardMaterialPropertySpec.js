@@ -67,21 +67,21 @@ describe("DataSources/CheckerboardMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.RED,
-      })
+      }),
     );
     property.oddColor.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: Color.BLUE,
-      })
+      }),
     );
     property.repeat.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: new Cartesian2(5, 5),
-      })
+      }),
     );
 
     expect(property.isConstant).toBe(false);
@@ -146,7 +146,7 @@ describe("DataSources/CheckerboardMaterialProperty", function () {
       property,
       "repeat",
       new Cartesian2(5, 5),
-      new Cartesian2(7, 7)
+      new Cartesian2(7, 7),
     );
   });
 });

@@ -1,19 +1,15 @@
 import {
   Cartesian3,
   Ellipsoid,
+  Math as CesiumMath,
   PolylinePipeline,
   Transforms,
 } from "../../index.js";
 
-import { Math as CesiumMath } from "../../index.js";
-
 describe("Core/PolylinePipeline", function () {
   it("wrapLongitude", function () {
     const positions = Cartesian3.fromDegreesArray([
-      -75.163789,
-      39.952335,
-      -80.2264393,
-      25.7889689,
+      -75.163789, 39.952335, -80.2264393, 25.7889689,
     ]);
     const segments = PolylinePipeline.wrapLongitude(positions);
     expect(segments.lengths.length).toEqual(1);
@@ -65,7 +61,7 @@ describe("Core/PolylinePipeline", function () {
     expect(newPositions.length).toEqual(3);
     expect(Cartesian3.fromArray(newPositions, 0)).toEqualEpsilon(
       Cartesian3.fromDegrees(0, 0, 30),
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -86,13 +82,13 @@ describe("Core/PolylinePipeline", function () {
     const p3n = Cartesian3.fromArray(newPositions, 3);
     const p2n = Cartesian3.fromArray(newPositions, 6);
     expect(Cartesian3.equalsEpsilon(p1, p1n, CesiumMath.EPSILON4)).toEqual(
-      true
+      true,
     );
     expect(Cartesian3.equalsEpsilon(p2, p2n, CesiumMath.EPSILON4)).toEqual(
-      true
+      true,
     );
     expect(Cartesian3.equalsEpsilon(p3, p3n, CesiumMath.EPSILON4)).toEqual(
-      true
+      true,
     );
   });
 
@@ -132,7 +128,7 @@ describe("Core/PolylinePipeline", function () {
     expect(newPositions.length).toEqual(3);
     expect(Cartesian3.fromArray(newPositions, 0)).toEqualEpsilon(
       Cartesian3.fromDegrees(0, 0, 30),
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -153,13 +149,13 @@ describe("Core/PolylinePipeline", function () {
     const p3n = Cartesian3.fromArray(newPositions, 3);
     const p2n = Cartesian3.fromArray(newPositions, 6);
     expect(Cartesian3.equalsEpsilon(p1, p1n, CesiumMath.EPSILON4)).toEqual(
-      true
+      true,
     );
     expect(Cartesian3.equalsEpsilon(p2, p2n, CesiumMath.EPSILON4)).toEqual(
-      true
+      true,
     );
     expect(Cartesian3.equalsEpsilon(p3, p3n, CesiumMath.EPSILON4)).toEqual(
-      true
+      true,
     );
   });
 

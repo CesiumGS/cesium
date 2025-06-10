@@ -24,6 +24,7 @@ function createUniform(gl, activeUniform, uniformName, location) {
     case gl.FLOAT_VEC4:
       return new UniformFloatVec4(gl, activeUniform, uniformName, location);
     case gl.SAMPLER_2D:
+    case gl.SAMPLER_3D:
     case gl.SAMPLER_CUBE:
       return new UniformSampler(gl, activeUniform, uniformName, location);
     case gl.INT:
@@ -46,7 +47,7 @@ function createUniform(gl, activeUniform, uniformName, location) {
       return new UniformMat4(gl, activeUniform, uniformName, location);
     default:
       throw new RuntimeError(
-        `Unrecognized uniform type: ${activeUniform.type} for uniform "${uniformName}".`
+        `Unrecognized uniform type: ${activeUniform.type} for uniform "${uniformName}".`,
       );
   }
 }

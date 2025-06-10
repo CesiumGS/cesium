@@ -1,6 +1,9 @@
-import { Cartographic, Ellipsoid, EllipsoidGeodesic } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartographic,
+  Ellipsoid,
+  EllipsoidGeodesic,
+  Math as CesiumMath,
+} from "../../index.js";
 
 describe("Core/EllipsoidGeodesic", function () {
   it("throws without start", function () {
@@ -21,7 +24,7 @@ describe("Core/EllipsoidGeodesic", function () {
     expect(function () {
       const elGeo = new EllipsoidGeodesic(
         new Cartographic(Math.PI, Math.PI),
-        new Cartographic(0, Math.PI)
+        new Cartographic(0, Math.PI),
       );
       return elGeo.interpolateUsingSurfaceDistance(0);
     }).toThrowDeveloperError();
@@ -79,7 +82,7 @@ describe("Core/EllipsoidGeodesic", function () {
     const start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
     const end = new Cartographic(
       CesiumMath.PI_OVER_TWO,
-      CesiumMath.PI_OVER_TWO
+      CesiumMath.PI_OVER_TWO,
     );
     const geodesic = new EllipsoidGeodesic();
     geodesic.setEndPoints(start, end);
@@ -95,7 +98,7 @@ describe("Core/EllipsoidGeodesic", function () {
     const geodesic = new EllipsoidGeodesic(start, end, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       geodesic.startHeading,
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -107,7 +110,7 @@ describe("Core/EllipsoidGeodesic", function () {
     const geodesic = new EllipsoidGeodesic(start, end, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       geodesic.endHeading,
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -119,7 +122,7 @@ describe("Core/EllipsoidGeodesic", function () {
     const geodesic = new EllipsoidGeodesic(start, end, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO * 6).toEqualEpsilon(
       geodesic.surfaceDistance,
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -147,7 +150,7 @@ describe("Core/EllipsoidGeodesic", function () {
     const thirtyDegrees = Math.PI / 6;
     expect(thirtyDegrees * 6).toEqualEpsilon(
       geodesic.surfaceDistance,
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -162,7 +165,7 @@ describe("Core/EllipsoidGeodesic", function () {
     const sixtyDegrees = Math.PI / 3;
     expect(sixtyDegrees * 6).toEqualEpsilon(
       geodesic.surfaceDistance,
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -180,7 +183,7 @@ describe("Core/EllipsoidGeodesic", function () {
 
     expect(start.longitude).toEqualEpsilon(
       first.longitude,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
     expect(start.latitude).toEqualEpsilon(first.latitude, CesiumMath.EPSILON13);
     expect(end.longitude).toEqualEpsilon(last.longitude, CesiumMath.EPSILON13);
@@ -202,11 +205,11 @@ describe("Core/EllipsoidGeodesic", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       midpoint.longitude,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       midpoint.latitude,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
   });
 
@@ -223,7 +226,7 @@ describe("Core/EllipsoidGeodesic", function () {
 
     expect(start.longitude).toEqualEpsilon(
       first.longitude,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
     expect(start.latitude).toEqualEpsilon(first.latitude, CesiumMath.EPSILON13);
     expect(end.longitude).toEqualEpsilon(last.longitude, CesiumMath.EPSILON13);
@@ -244,11 +247,11 @@ describe("Core/EllipsoidGeodesic", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       midpoint.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       midpoint.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -267,11 +270,11 @@ describe("Core/EllipsoidGeodesic", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       result.longitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       result.latitude,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -293,11 +296,11 @@ describe("Core/EllipsoidGeodesic", function () {
 
     expect(expectedMid.longitude).toEqualEpsilon(
       result.longitude,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
     expect(expectedMid.latitude).toEqualEpsilon(
       result.latitude,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
   });
 });

@@ -1,6 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import EllipseOutlineGeometry from "./EllipseOutlineGeometry.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -14,7 +14,7 @@ import Ellipsoid from "./Ellipsoid.js";
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The circle's center point in the fixed frame.
  * @param {number} options.radius The radius in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid the circle will be on.
  * @param {number} [options.height=0.0] The distance in meters between the circle and the ellipsoid surface.
  * @param {number} [options.granularity=0.02] The angular distance between points on the circle in radians.
  * @param {number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
@@ -35,7 +35,7 @@ import Ellipsoid from "./Ellipsoid.js";
  * const geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
  */
 function CircleOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const radius = options.radius;
 
   //>>includeStart('debug', pragmas.debug);
@@ -78,7 +78,7 @@ CircleOutlineGeometry.pack = function (value, array, startingIndex) {
   return EllipseOutlineGeometry.pack(
     value._ellipseGeometry,
     array,
-    startingIndex
+    startingIndex,
   );
 };
 
@@ -111,15 +111,15 @@ CircleOutlineGeometry.unpack = function (array, startingIndex, result) {
   const ellipseGeometry = EllipseOutlineGeometry.unpack(
     array,
     startingIndex,
-    scratchEllipseGeometry
+    scratchEllipseGeometry,
   );
   scratchOptions.center = Cartesian3.clone(
     ellipseGeometry._center,
-    scratchOptions.center
+    scratchOptions.center,
   );
   scratchOptions.ellipsoid = Ellipsoid.clone(
     ellipseGeometry._ellipsoid,
-    scratchOptions.ellipsoid
+    scratchOptions.ellipsoid,
   );
   scratchOptions.height = ellipseGeometry._height;
   scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;

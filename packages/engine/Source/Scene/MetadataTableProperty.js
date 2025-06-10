@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
@@ -32,7 +32,7 @@ import MetadataType from "./MetadataType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataTableProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const count = options.count;
   const property = options.property;
   const classProperty = options.classProperty;
@@ -61,25 +61,18 @@ function MetadataTableProperty(options) {
   if (isVariableLengthArray) {
     // EXT_structural_metadata uses arrayOffsetType.
     // EXT_feature_metadata uses offsetType for both arrays and strings
-    let arrayOffsetType = defaultValue(
-      property.arrayOffsetType,
-      property.offsetType
-    );
-    arrayOffsetType = defaultValue(
-      MetadataComponentType[arrayOffsetType],
-      MetadataComponentType.UINT32
-    );
+    let arrayOffsetType = property.arrayOffsetType ?? property.offsetType;
+    arrayOffsetType =
+      MetadataComponentType[arrayOffsetType] ?? MetadataComponentType.UINT32;
 
     // EXT_structural_metadata uses arrayOffsets.
     // EXT_feature_metadata uses arrayOffsetBufferView
-    const arrayOffsetBufferView = defaultValue(
-      property.arrayOffsets,
-      property.arrayOffsetBufferView
-    );
+    const arrayOffsetBufferView =
+      property.arrayOffsets ?? property.arrayOffsetBufferView;
     arrayOffsets = new BufferView(
       bufferViews[arrayOffsetBufferView],
       arrayOffsetType,
-      count + 1
+      count + 1,
     );
 
     byteLength += arrayOffsets.typedArray.byteLength;
@@ -101,25 +94,18 @@ function MetadataTableProperty(options) {
   let stringOffsets;
   if (hasStrings) {
     // EXT_structural_metadata uses stringOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
-    let stringOffsetType = defaultValue(
-      property.stringOffsetType,
-      property.offsetType
-    );
-    stringOffsetType = defaultValue(
-      MetadataComponentType[stringOffsetType],
-      MetadataComponentType.UINT32
-    );
+    let stringOffsetType = property.stringOffsetType ?? property.offsetType;
+    stringOffsetType =
+      MetadataComponentType[stringOffsetType] ?? MetadataComponentType.UINT32;
 
     // EXT_structural_metadata uses stringOffsets.
     // EXT_feature_metadata uses stringOffsetBufferView
-    const stringOffsetBufferView = defaultValue(
-      property.stringOffsets,
-      property.stringOffsetBufferView
-    );
+    const stringOffsetBufferView =
+      property.stringOffsets ?? property.stringOffsetBufferView;
     stringOffsets = new BufferView(
       bufferViews[stringOffsetBufferView],
       stringOffsetType,
-      componentCount + 1
+      componentCount + 1,
     );
 
     byteLength += stringOffsets.typedArray.byteLength;
@@ -141,11 +127,11 @@ function MetadataTableProperty(options) {
 
   // EXT_structural_metadata uses values
   // EXT_feature_metadata uses bufferView
-  const valuesBufferView = defaultValue(property.values, property.bufferView);
+  const valuesBufferView = property.values ?? property.bufferView;
   const values = new BufferView(
     bufferViews[valuesBufferView],
     valueType,
-    valueCount
+    valueCount,
   );
   byteLength += values.typedArray.byteLength;
 
@@ -160,8 +146,8 @@ function MetadataTableProperty(options) {
   // class property. The class property handles setting the default of identity:
   // (offset 0, scale 1) with the same array shape as the property's type
   // information.
-  offset = defaultValue(offset, classProperty.offset);
-  scale = defaultValue(scale, classProperty.scale);
+  offset = offset ?? classProperty.offset;
+  scale = scale ?? classProperty.scale;
 
   // Since metadata table properties are stored as packed typed
   // arrays, flatten the offset/scale to make it easier to apply the
@@ -402,7 +388,7 @@ function checkIndex(table, index) {
   if (!defined(index) || index < 0 || index >= count) {
     const maximumIndex = count - 1;
     throw new DeveloperError(
-      `index is required and between zero and count - 1. Actual value: ${maximumIndex}`
+      `index is required and between zero and count - 1. Actual value: ${maximumIndex}`,
     );
   }
 }
@@ -446,7 +432,7 @@ function getArrayValues(property, classProperty, index) {
     offset *= componentCount;
     length *= componentCount;
   } else {
-    const arrayLength = defaultValue(classProperty.arrayLength, 1);
+    const arrayLength = classProperty.arrayLength ?? 1;
     const componentCount = arrayLength * property._vectorComponentCount;
     offset = index * componentCount;
     length = componentCount;
@@ -493,7 +479,7 @@ function set(property, index, value) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
   } else {
-    const arrayLength = defaultValue(classProperty.arrayLength, 1);
+    const arrayLength = classProperty.arrayLength ?? 1;
     const componentCount = arrayLength * property._vectorComponentCount;
     offset = index * componentCount;
     length = componentCount;
@@ -510,7 +496,7 @@ function getString(index, values, stringOffsets) {
   return getStringFromTypedArray(
     values.typedArray,
     stringByteOffset,
-    stringByteLength
+    stringByteLength,
   );
 }
 
@@ -734,7 +720,7 @@ function applyValueTransform(property, value) {
     value,
     property._offset,
     property._scale,
-    MetadataComponentType.applyValueTransform
+    MetadataComponentType.applyValueTransform,
   );
 }
 
@@ -749,7 +735,7 @@ function unapplyValueTransform(property, value) {
     value,
     property._offset,
     property._scale,
-    MetadataComponentType.unapplyValueTransform
+    MetadataComponentType.unapplyValueTransform,
   );
 }
 
@@ -763,12 +749,12 @@ function BufferView(bufferView, componentType, length) {
   if (componentType === MetadataComponentType.INT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
-        "INT64 type is not fully supported on this platform. Values greater than 2^53 - 1 or less than -(2^53 - 1) may lose precision when read."
+        "INT64 type is not fully supported on this platform. Values greater than 2^53 - 1 or less than -(2^53 - 1) may lose precision when read.",
       );
       typedArray = new Uint8Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length * 8
+        length * 8,
       );
       getFunction = function (index) {
         return getInt64NumberFallback(index, that);
@@ -777,7 +763,7 @@ function BufferView(bufferView, componentType, length) {
       typedArray = new Uint8Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length * 8
+        length * 8,
       );
       getFunction = function (index) {
         return getInt64BigIntFallback(index, that);
@@ -787,7 +773,7 @@ function BufferView(bufferView, componentType, length) {
       typedArray = new BigInt64Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length
+        length,
       );
       setFunction = function (index, value) {
         // Convert the number to a BigInt before setting the value in the typed array
@@ -797,12 +783,12 @@ function BufferView(bufferView, componentType, length) {
   } else if (componentType === MetadataComponentType.UINT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
-        "UINT64 type is not fully supported on this platform. Values greater than 2^53 - 1 may lose precision when read."
+        "UINT64 type is not fully supported on this platform. Values greater than 2^53 - 1 may lose precision when read.",
       );
       typedArray = new Uint8Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length * 8
+        length * 8,
       );
       getFunction = function (index) {
         return getUint64NumberFallback(index, that);
@@ -811,7 +797,7 @@ function BufferView(bufferView, componentType, length) {
       typedArray = new Uint8Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length * 8
+        length * 8,
       );
       getFunction = function (index) {
         return getUint64BigIntFallback(index, that);
@@ -821,7 +807,7 @@ function BufferView(bufferView, componentType, length) {
       typedArray = new BigUint64Array(
         bufferView.buffer,
         bufferView.byteOffset,
-        length
+        length,
       );
       setFunction = function (index, value) {
         // Convert the number to a BigInt before setting the value in the typed array
@@ -834,7 +820,7 @@ function BufferView(bufferView, componentType, length) {
       componentDatatype,
       bufferView.buffer,
       bufferView.byteOffset,
-      length
+      length,
     );
     setFunction = function (index, value) {
       that.typedArray[index] = value;

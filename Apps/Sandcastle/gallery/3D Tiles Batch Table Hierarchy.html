@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -22,10 +22,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar button {
@@ -98,7 +95,7 @@
         let tileset;
         try {
           tileset = await Cesium.Cesium3DTileset.fromUrl(
-            "../../SampleData/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json"
+            "../../SampleData/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json",
           );
 
           viewer.scene.primitives.add(tileset);

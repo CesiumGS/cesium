@@ -1,5 +1,3 @@
-import defaultValue from "./defaultValue.js";
-
 /**
  * Clones an object, returning a new object containing the same properties.
  *
@@ -14,7 +12,7 @@ function clone(object, deep) {
     return object;
   }
 
-  deep = defaultValue(deep, false);
+  deep = deep ?? false;
 
   const result = new object.constructor();
   for (const propertyName in object) {

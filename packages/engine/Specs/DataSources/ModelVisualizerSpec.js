@@ -95,7 +95,7 @@ describe(
     it("object with no model does not create one", function () {
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       visualizer.update(JulianDate.now());
       expect(scene.primitives.length).toEqual(0);
@@ -119,7 +119,7 @@ describe(
       model.minimumPixelSize = new ConstantProperty(24.0);
       model.uri = new ConstantProperty(boxArticulationsUrl);
       model.distanceDisplayCondition = new ConstantProperty(
-        new DistanceDisplayCondition(10.0, 100.0)
+        new DistanceDisplayCondition(10.0, 100.0),
       );
 
       const translation = new Cartesian3(1.0, 2.0, 3.0);
@@ -143,13 +143,13 @@ describe(
       model.customShader = new ConstantProperty(customShader);
 
       model.imageBasedLightingFactor = new ConstantProperty(
-        new Cartesian2(0.5, 0.5)
+        new Cartesian2(0.5, 0.5),
       );
       model.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       testObject.model = model;
 
@@ -169,32 +169,37 @@ describe(
       expect(primitive.modelMatrix).toEqual(
         Transforms.eastNorthUpToFixedFrame(
           Cartesian3.fromDegrees(1, 2, 3),
-          scene.globe.ellipsoid
-        )
+          scene.globe.ellipsoid,
+        ),
       );
       expect(primitive.distanceDisplayCondition).toEqual(
-        new DistanceDisplayCondition(10.0, 100.0)
+        new DistanceDisplayCondition(10.0, 100.0),
       );
       expect(primitive.clippingPlanes._planes.length).toEqual(
-        clippingPlanes._planes.length
+        clippingPlanes._planes.length,
       );
       expect(
         Cartesian3.equals(
           primitive.clippingPlanes._planes[0].normal,
-          clippingPlanes._planes[0].normal
-        )
+          clippingPlanes._planes[0].normal,
+        ),
       ).toBe(true);
       expect(primitive.clippingPlanes._planes[0].distance).toEqual(
-        clippingPlanes._planes[0].distance
+        clippingPlanes._planes[0].distance,
       );
 
       expect(primitive.customShader).toEqual(customShader);
 
       expect(primitive.imageBasedLighting.imageBasedLightingFactor).toEqual(
-        new Cartesian2(0.5, 0.5)
+        new Cartesian2(0.5, 0.5),
       );
 
       expect(primitive.lightColor).toEqual(new Cartesian3(1.0, 1.0, 0.0));
+
+      expect(primitive.environmentMapManager.enabled).toBeTrue();
+      expect(primitive.environmentMapManager.maximumPositionEpsilon).toEqual(
+        Number.POSITIVE_INFINITY,
+      );
 
       // wait till the model is loaded before we can check node transformations
       await pollToPromise(function () {
@@ -207,16 +212,17 @@ describe(
       const node = primitive.getNode("Root");
       expect(node).toBeDefined();
 
-      const transformationMatrix = Matrix4.fromTranslationQuaternionRotationScale(
-        translation,
-        rotation,
-        scale
-      );
+      const transformationMatrix =
+        Matrix4.fromTranslationQuaternionRotationScale(
+          translation,
+          rotation,
+          scale,
+        );
 
       Matrix4.multiplyTransformation(
         node.originalMatrix,
         transformationMatrix,
-        transformationMatrix
+        transformationMatrix,
       );
 
       expect(node.matrix).toEqual(transformationMatrix);
@@ -244,7 +250,7 @@ describe(
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       testObject.model = model;
 
@@ -266,25 +272,50 @@ describe(
       const node = primitive.getNode("Root");
 
       const expected = [
-        0.7147690483240505,
-        -0.04340611926232735,
-        -0.0749741046529782,
-        0,
-        -0.06188330295778636,
-        0.05906797312763484,
-        -0.6241645867602773,
-        0,
-        0.03752515582279579,
-        0.5366347296529127,
-        0.04706410108373541,
-        0,
-        1,
-        3,
-        -2,
-        1,
+        0.7147690483240505, -0.04340611926232735, -0.0749741046529782, 0,
+        -0.06188330295778636, 0.05906797312763484, -0.6241645867602773, 0,
+        0.03752515582279579, 0.5366347296529127, 0.04706410108373541, 0, 1, 3,
+        -2, 1,
       ];
 
       expect(node.matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
+    it("can apply model environmentMapOptions", async function () {
+      const time = JulianDate.now();
+
+      const model = new ModelGraphics();
+      model.uri = new ConstantProperty(boxArticulationsUrl);
+
+      model.environmentMapOptions = {
+        enabled: false,
+      };
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.position = new ConstantPositionProperty(
+        Cartesian3.fromDegrees(1, 2, 3),
+      );
+      testObject.model = model;
+
+      visualizer.update(time);
+
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
+
+      // wait till the model is loaded before we can check articulations
+      await pollToPromise(function () {
+        scene.render();
+        return primitive.ready;
+      });
+      visualizer.update(time);
+
+      expect(primitive.environmentMapManager.enabled).toBeFalse();
+      expect(primitive.environmentMapManager.maximumPositionEpsilon).toEqual(
+        Number.POSITIVE_INFINITY,
+      );
     });
 
     it("creates a primitive from ModelGraphics with a Resource", async function () {
@@ -295,12 +326,12 @@ describe(
       model.uri = new ConstantProperty(
         new Resource({
           url: boxArticulationsUrl,
-        })
+        }),
       );
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       testObject.model = model;
 
@@ -331,7 +362,7 @@ describe(
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       testObject.model = model;
       visualizer.update(time);
@@ -355,7 +386,7 @@ describe(
       testObject.model = model;
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       model.uri = new ConstantProperty(boxUrl);
       visualizer.update(time);
@@ -376,7 +407,7 @@ describe(
       testObject.model = model;
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       model.uri = new ConstantProperty(boxUrl);
       visualizer.update(time);
@@ -400,7 +431,7 @@ describe(
       expect(state).toBe(BoundingSphereState.DONE);
       const expected = BoundingSphere.clone(
         primitive.boundingSphere,
-        new BoundingSphere()
+        new BoundingSphere(),
       );
       expect(result).toEqual(expected);
     });
@@ -452,7 +483,7 @@ describe(
       expectedCenter.height = 10.0;
       expect(result.center).toEqualEpsilon(
         Cartographic.toCartesian(expectedCenter),
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
     });
 
@@ -462,7 +493,7 @@ describe(
       const position = Cartesian3.fromDegrees(
         149.515332,
         -34.984799,
-        heightOffset
+        heightOffset,
       );
 
       const tileset = new Cesium3DTileset({
@@ -507,7 +538,7 @@ describe(
       expectedCenter.height = heightOffset + 10.0;
       expect(result.center).toEqualEpsilon(
         Cartographic.toCartesian(expectedCenter),
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
     });
 
@@ -558,7 +589,7 @@ describe(
       expectedCenter.height = 10.0;
       expect(result.center).toEqualEpsilon(
         Cartographic.toCartesian(expectedCenter),
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
     });
 
@@ -568,7 +599,7 @@ describe(
       const position = Cartesian3.fromDegrees(
         149.515332,
         -34.984799,
-        heightOffset
+        heightOffset,
       );
 
       const tileset = new Cesium3DTileset({
@@ -613,7 +644,7 @@ describe(
       expectedCenter.height = heightOffset + 10.0;
       expect(result.center).toEqualEpsilon(
         Cartographic.toCartesian(expectedCenter),
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
     });
 
@@ -664,7 +695,7 @@ describe(
       expectedCenter.height = 20.0;
       expect(result.center).toEqualEpsilon(
         Cartographic.toCartesian(expectedCenter),
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
     });
 
@@ -674,7 +705,7 @@ describe(
       const position = Cartesian3.fromDegrees(
         149.515332,
         -34.984799,
-        heightOffset
+        heightOffset,
       );
 
       const tileset = new Cesium3DTileset({
@@ -719,7 +750,7 @@ describe(
       expectedCenter.height = heightOffset + 20.0;
       expect(result.center).toEqualEpsilon(
         Cartographic.toCartesian(expectedCenter),
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
     });
 
@@ -732,7 +763,7 @@ describe(
       testObject.model = model;
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       model.uri = new ConstantProperty(boxUrl);
       visualizer.update(time);
@@ -756,7 +787,7 @@ describe(
       expect(state).toBe(BoundingSphereState.DONE);
       const expected = BoundingSphere.clone(
         primitive.boundingSphere,
-        new BoundingSphere()
+        new BoundingSphere(),
       );
       expect(result).toEqual(expected);
     });
@@ -776,7 +807,7 @@ describe(
       testObject.model = model;
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       model.uri = new ConstantProperty("/path/to/incorrect/file");
       visualizer.update(time);
@@ -807,5 +838,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

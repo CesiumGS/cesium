@@ -83,7 +83,7 @@ Object.defineProperties(Terrain.prototype, {
 
   /**
    * Returns true when the terrain provider has been successfully created. Otherwise, returns false.
-   * @memberof Viewer.prototype
+   * @memberof Terrain.prototype
    *
    * @type {boolean}
    * @readonly
@@ -96,7 +96,7 @@ Object.defineProperties(Terrain.prototype, {
 
   /**
    * The terrain provider providing surface geometry to a globe. Do not use until {@link Terrain.readyEvent} is raised.
-   * @memberof Viewer.prototype
+   * @memberof Terrain.prototype
    *
    * @type {TerrainProvider}
    * @readonly

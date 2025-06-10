@@ -4,7 +4,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import EllipseGeometryLibrary from "./EllipseGeometryLibrary.js";
@@ -77,12 +77,12 @@ function computeTopBottomAttributes(positions, options, extrude) {
   const projection = new GeographicProjection(ellipsoid);
   const projectedCenter = projection.project(
     ellipsoid.cartesianToCartographic(center, scratchCartographic),
-    projectedCenterScratch
+    projectedCenterScratch,
   );
 
   const geodeticNormal = ellipsoid.scaleToGeodeticSurface(
     center,
-    scratchCartesian1
+    scratchCartesian1,
   );
   ellipsoid.geodeticSurfaceNormal(geodeticNormal, geodeticNormal);
 
@@ -92,14 +92,14 @@ function computeTopBottomAttributes(positions, options, extrude) {
     let rotation = Quaternion.fromAxisAngle(
       geodeticNormal,
       stRotation,
-      quaternionScratch
+      quaternionScratch,
     );
     textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrix);
 
     rotation = Quaternion.fromAxisAngle(
       geodeticNormal,
       -stRotation,
-      quaternionScratch
+      quaternionScratch,
     );
     tangentMatrix = Matrix3.fromQuaternion(rotation, tangentMatrix);
   } else {
@@ -110,12 +110,12 @@ function computeTopBottomAttributes(positions, options, extrude) {
   const minTexCoord = Cartesian2.fromElements(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
-    scratchMinTexCoord
+    scratchMinTexCoord,
   );
   const maxTexCoord = Cartesian2.fromElements(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
-    scratchMaxTexCoord
+    scratchMaxTexCoord,
   );
 
   let length = positions.length;
@@ -130,11 +130,11 @@ function computeTopBottomAttributes(positions, options, extrude) {
       const rotatedPoint = Matrix3.multiplyByVector(
         textureMatrix,
         position,
-        scratchCartesian2
+        scratchCartesian2,
       );
       const projectedPoint = projection.project(
         ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic),
-        scratchCartesian3
+        scratchCartesian3,
       );
       Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
@@ -180,7 +180,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
         if (vertexFormat.tangent || vertexFormat.bitangent) {
           tangent = Cartesian3.normalize(
             Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent),
-            tangent
+            tangent,
           );
           Matrix3.multiplyByVector(tangentMatrix, tangent, tangent);
         }
@@ -209,7 +209,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
         if (vertexFormat.bitangent) {
           bitangent = Cartesian3.normalize(
             Cartesian3.cross(normal, tangent, bitangent),
-            bitangent
+            bitangent,
           );
           bitangents[i] = bitangent.x;
           bitangents[i1] = bitangent.y;
@@ -242,7 +242,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
     const finalPositions = EllipseGeometryLibrary.raisePositionsToHeight(
       positions,
       options,
-      extrude
+      extrude,
     );
     attributes.position = new GeometryAttribute({
       componentDatatype: ComponentDatatype.DOUBLE,
@@ -314,7 +314,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
 function topIndices(numPts) {
   // numTriangles in half = 3 + 8 + 12 + ... = -1 + 4 + (4 + 4) + (4 + 4 + 4) + ... = -1 + 4 * (1 + 2 + 3 + ...)
   //              = -1 + 4 * ((n * ( n + 1)) / 2)
-  // total triangles = 2 * numTrangles in half
+  // total triangles = 2 * numTriangles in half
   // indices = total triangles * 3;
   // Substitute numPts for n above
 
@@ -419,21 +419,21 @@ function computeEllipse(options) {
   boundingSphereCenter = Cartesian3.multiplyByScalar(
     options.ellipsoid.geodeticSurfaceNormal(center, boundingSphereCenter),
     options.height,
-    boundingSphereCenter
+    boundingSphereCenter,
   );
   boundingSphereCenter = Cartesian3.add(
     center,
     boundingSphereCenter,
-    boundingSphereCenter
+    boundingSphereCenter,
   );
   const boundingSphere = new BoundingSphere(
     boundingSphereCenter,
-    options.semiMajorAxis
+    options.semiMajorAxis,
   );
   const cep = EllipseGeometryLibrary.computeEllipsePositions(
     options,
     true,
-    false
+    false,
   );
   const positions = cep.positions;
   const numPts = cep.numPts;
@@ -484,30 +484,30 @@ function computeWallAttributes(positions, options) {
   const projection = new GeographicProjection(ellipsoid);
   const projectedCenter = projection.project(
     ellipsoid.cartesianToCartographic(center, scratchCartographic),
-    projectedCenterScratch
+    projectedCenterScratch,
   );
 
   const geodeticNormal = ellipsoid.scaleToGeodeticSurface(
     center,
-    scratchCartesian1
+    scratchCartesian1,
   );
   ellipsoid.geodeticSurfaceNormal(geodeticNormal, geodeticNormal);
   const rotation = Quaternion.fromAxisAngle(
     geodeticNormal,
     stRotation,
-    quaternionScratch
+    quaternionScratch,
   );
   const textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
 
   const minTexCoord = Cartesian2.fromElements(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
-    scratchMinTexCoord
+    scratchMinTexCoord,
   );
   const maxTexCoord = Cartesian2.fromElements(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
-    scratchMaxTexCoord
+    scratchMaxTexCoord,
   );
 
   let length = positions.length;
@@ -522,11 +522,11 @@ function computeWallAttributes(positions, options) {
       const rotatedPoint = Matrix3.multiplyByVector(
         textureMatrix,
         position,
-        scratchCartesian2
+        scratchCartesian2,
       );
       const projectedPoint = projection.project(
         ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic),
-        scratchCartesian3
+        scratchCartesian3,
       );
       Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
@@ -560,18 +560,18 @@ function computeWallAttributes(positions, options) {
     let scaledNormal = Cartesian3.multiplyByScalar(
       normal,
       height,
-      scratchCartesian4
+      scratchCartesian4,
     );
     position = Cartesian3.add(position, scaledNormal, position);
     scaledNormal = Cartesian3.multiplyByScalar(
       normal,
       extrudedHeight,
-      scaledNormal
+      scaledNormal,
     );
     extrudedPosition = Cartesian3.add(
       extrudedPosition,
       scaledNormal,
-      extrudedPosition
+      extrudedPosition,
     );
 
     if (vertexFormat.position) {
@@ -589,18 +589,18 @@ function computeWallAttributes(positions, options) {
       const next = Cartesian3.fromArray(
         positions,
         (i + 3) % length,
-        scratchCartesian4
+        scratchCartesian4,
       );
       Cartesian3.subtract(next, position, next);
       const bottom = Cartesian3.subtract(
         extrudedPosition,
         position,
-        scratchCartesian3
+        scratchCartesian3,
       );
 
       normal = Cartesian3.normalize(
         Cartesian3.cross(bottom, next, normal),
-        normal
+        normal,
       );
 
       if (vertexFormat.normal) {
@@ -616,7 +616,7 @@ function computeWallAttributes(positions, options) {
       if (vertexFormat.tangent) {
         tangent = Cartesian3.normalize(
           Cartesian3.cross(bitangent, normal, tangent),
-          tangent
+          tangent,
         );
         tangents[i] = tangent.x;
         tangents[i1] = tangent.y;
@@ -750,43 +750,43 @@ function computeExtrudedEllipse(options) {
   let scaledNormal = Cartesian3.multiplyByScalar(
     ellipsoid.geodeticSurfaceNormal(center, scratchCartesian1),
     options.height,
-    scratchCartesian1
+    scratchCartesian1,
   );
   topBoundingSphere.center = Cartesian3.add(
     center,
     scaledNormal,
-    topBoundingSphere.center
+    topBoundingSphere.center,
   );
   topBoundingSphere.radius = semiMajorAxis;
 
   scaledNormal = Cartesian3.multiplyByScalar(
     ellipsoid.geodeticSurfaceNormal(center, scaledNormal),
     options.extrudedHeight,
-    scaledNormal
+    scaledNormal,
   );
   bottomBoundingSphere.center = Cartesian3.add(
     center,
     scaledNormal,
-    bottomBoundingSphere.center
+    bottomBoundingSphere.center,
   );
   bottomBoundingSphere.radius = semiMajorAxis;
 
   const cep = EllipseGeometryLibrary.computeEllipsePositions(
     options,
     true,
-    true
+    true,
   );
   const positions = cep.positions;
   const numPts = cep.numPts;
   const outerPositions = cep.outerPositions;
   const boundingSphere = BoundingSphere.union(
     topBoundingSphere,
-    bottomBoundingSphere
+    bottomBoundingSphere,
   );
   const topBottomAttributes = computeTopBottomAttributes(
     positions,
     options,
-    true
+    true,
   );
   let indices = topIndices(numPts);
   const length = indices.length;
@@ -800,7 +800,7 @@ function computeExtrudedEllipse(options) {
 
   const topBottomIndices = IndexDatatype.createTypedArray(
     (posLength * 2) / 3,
-    indices
+    indices,
   );
 
   const topBottomGeo = new Geometry({
@@ -813,7 +813,7 @@ function computeExtrudedEllipse(options) {
   indices = computeWallIndices(outerPositions);
   const wallIndices = IndexDatatype.createTypedArray(
     (outerPositions.length * 2) / 3,
-    indices
+    indices,
   );
 
   const wallGeo = new Geometry({
@@ -845,7 +845,7 @@ function computeRectangle(
   rotation,
   granularity,
   ellipsoid,
-  result
+  result,
 ) {
   const cep = EllipseGeometryLibrary.computeEllipsePositions(
     {
@@ -856,7 +856,7 @@ function computeRectangle(
       granularity: granularity,
     },
     false,
-    true
+    true,
   );
   const positionsFlat = cep.outerPositions;
   const positionsCount = positionsFlat.length / 3;
@@ -892,7 +892,7 @@ function computeRectangle(
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
  * @param {number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid the ellipse will be on.
  * @param {number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
  * @param {number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
  * @param {number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
@@ -918,17 +918,14 @@ function computeRectangle(
  * @see EllipseGeometry.createGeometry
  */
 function EllipseGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const semiMajorAxis = options.semiMajorAxis;
   const semiMinorAxis = options.semiMinorAxis;
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
-  );
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.center", center);
@@ -936,7 +933,7 @@ function EllipseGeometry(options) {
   Check.typeOf.number("options.semiMinorAxis", semiMinorAxis);
   if (semiMajorAxis < semiMinorAxis) {
     throw new DeveloperError(
-      "semiMajorAxis must be greater than or equal to the semiMinorAxis."
+      "semiMajorAxis must be greater than or equal to the semiMinorAxis.",
     );
   }
   if (granularity <= 0.0) {
@@ -944,20 +941,20 @@ function EllipseGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  const height = defaultValue(options.height, 0.0);
-  const extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = options.height ?? 0.0;
+  const extrudedHeight = options.extrudedHeight ?? height;
 
   this._center = Cartesian3.clone(center);
   this._semiMajorAxis = semiMajorAxis;
   this._semiMinorAxis = semiMinorAxis;
   this._ellipsoid = Ellipsoid.clone(ellipsoid);
-  this._rotation = defaultValue(options.rotation, 0.0);
-  this._stRotation = defaultValue(options.stRotation, 0.0);
+  this._rotation = options.rotation ?? 0.0;
+  this._stRotation = options.stRotation ?? 0.0;
   this._height = Math.max(extrudedHeight, height);
   this._granularity = granularity;
   this._vertexFormat = VertexFormat.clone(vertexFormat);
   this._extrudedHeight = Math.min(extrudedHeight, height);
-  this._shadowVolume = defaultValue(options.shadowVolume, false);
+  this._shadowVolume = options.shadowVolume ?? false;
   this._workerName = "createEllipseGeometry";
   this._offsetAttribute = options.offsetAttribute;
 
@@ -990,7 +987,7 @@ EllipseGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value._center, array, startingIndex);
   startingIndex += Cartesian3.packedLength;
@@ -1009,7 +1006,7 @@ EllipseGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._granularity;
   array[startingIndex++] = value._extrudedHeight;
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -1045,7 +1042,7 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const center = Cartesian3.unpack(array, startingIndex, scratchCenter);
   startingIndex += Cartesian3.packedLength;
@@ -1056,7 +1053,7 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
 
@@ -1109,7 +1106,7 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
  * @param {number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid the ellipse will be on.
  * @param {number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
  * @param {Rectangle} [result] An object in which to store the result
@@ -1117,17 +1114,14 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Rectangle} The result rectangle
  */
 EllipseGeometry.computeRectangle = function (options, result) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const semiMajorAxis = options.semiMajorAxis;
   const semiMinorAxis = options.semiMinorAxis;
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
-  );
-  const rotation = defaultValue(options.rotation, 0.0);
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const rotation = options.rotation ?? 0.0;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.center", center);
@@ -1135,7 +1129,7 @@ EllipseGeometry.computeRectangle = function (options, result) {
   Check.typeOf.number("options.semiMinorAxis", semiMinorAxis);
   if (semiMajorAxis < semiMinorAxis) {
     throw new DeveloperError(
-      "semiMajorAxis must be greater than or equal to the semiMinorAxis."
+      "semiMajorAxis must be greater than or equal to the semiMinorAxis.",
     );
   }
   if (granularity <= 0.0) {
@@ -1150,7 +1144,7 @@ EllipseGeometry.computeRectangle = function (options, result) {
     rotation,
     granularity,
     ellipsoid,
-    result
+    result,
   );
 };
 
@@ -1174,12 +1168,12 @@ EllipseGeometry.createGeometry = function (ellipseGeometry) {
     height,
     extrudedHeight,
     0,
-    CesiumMath.EPSILON2
+    CesiumMath.EPSILON2,
   );
 
   ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(
     ellipseGeometry._center,
-    ellipseGeometry._center
+    ellipseGeometry._center,
   );
   const options = {
     center: ellipseGeometry._center,
@@ -1231,7 +1225,7 @@ EllipseGeometry.createGeometry = function (ellipseGeometry) {
 EllipseGeometry.createShadowVolume = function (
   ellipseGeometry,
   minHeightFunc,
-  maxHeightFunc
+  maxHeightFunc,
 ) {
   const granularity = ellipseGeometry._granularity;
   const ellipsoid = ellipseGeometry._ellipsoid;
@@ -1269,7 +1263,7 @@ function textureCoordinateRotationPoints(ellipseGeometry) {
       granularity: ellipseGeometry._granularity,
     },
     false,
-    true
+    true,
   );
   const positionsFlat = cep.outerPositions;
   const positionsCount = positionsFlat.length / 3;
@@ -1284,7 +1278,7 @@ function textureCoordinateRotationPoints(ellipseGeometry) {
     positions,
     stRotation,
     ellipsoid,
-    boundingRectangle
+    boundingRectangle,
   );
 }
 
@@ -1301,7 +1295,7 @@ Object.defineProperties(EllipseGeometry.prototype, {
           this._semiMinorAxis,
           this._rotation,
           this._granularity,
-          this._ellipsoid
+          this._ellipsoid,
         );
       }
       return this._rectangle;
@@ -1314,9 +1308,8 @@ Object.defineProperties(EllipseGeometry.prototype, {
   textureCoordinateRotationPoints: {
     get: function () {
       if (!defined(this._textureCoordinateRotationPoints)) {
-        this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(
-          this
-        );
+        this._textureCoordinateRotationPoints =
+          textureCoordinateRotationPoints(this);
       }
       return this._textureCoordinateRotationPoints;
     },

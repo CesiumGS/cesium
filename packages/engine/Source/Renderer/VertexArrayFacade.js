@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -21,7 +20,7 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
   //>>includeEnd('debug');
 
   const attrs = VertexArrayFacade._verifyAttributes(attributes);
-  sizeInVertices = defaultValue(sizeInVertices, 0);
+  sizeInVertices = sizeInVertices ?? 0;
   const precreatedAttributes = [];
   const attributesByUsage = {};
   let attributesForUsage;
@@ -64,9 +63,8 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
       attributesForUsage = attributesByUsage[usage];
 
       attributesForUsage.sort(compare);
-      const vertexSizeInBytes = VertexArrayFacade._vertexSizeInBytes(
-        attributesForUsage
-      );
+      const vertexSizeInBytes =
+        VertexArrayFacade._vertexSizeInBytes(attributesForUsage);
 
       const bufferUsage = attributesForUsage[0].usage;
 
@@ -78,7 +76,7 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
         arrayBuffer: undefined,
         arrayViews: VertexArrayFacade._createArrayViews(
           attributesForUsage,
-          vertexSizeInBytes
+          vertexSizeInBytes,
         ),
       };
 
@@ -87,7 +85,7 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
   }
 
   this._size = 0;
-  this._instanced = defaultValue(instanced, false);
+  this._instanced = instanced ?? false;
 
   this._precreated = precreatedAttributes;
   this._context = context;
@@ -104,18 +102,15 @@ VertexArrayFacade._verifyAttributes = function (attributes) {
     const attribute = attributes[i];
 
     const attr = {
-      index: defaultValue(attribute.index, i),
-      enabled: defaultValue(attribute.enabled, true),
+      index: attribute.index ?? i,
+      enabled: attribute.enabled ?? true,
       componentsPerAttribute: attribute.componentsPerAttribute,
-      componentDatatype: defaultValue(
-        attribute.componentDatatype,
-        ComponentDatatype.FLOAT
-      ),
-      normalize: defaultValue(attribute.normalize, false),
+      componentDatatype: attribute.componentDatatype ?? ComponentDatatype.FLOAT,
+      normalize: attribute.normalize ?? false,
 
       // There will be either a vertexBuffer or an [optional] usage.
       vertexBuffer: attribute.vertexBuffer,
-      usage: defaultValue(attribute.usage, BufferUsage.STATIC_DRAW),
+      usage: attribute.usage ?? BufferUsage.STATIC_DRAW,
     };
     attrs.push(attr);
 
@@ -127,20 +122,20 @@ VertexArrayFacade._verifyAttributes = function (attributes) {
       attr.componentsPerAttribute !== 4
     ) {
       throw new DeveloperError(
-        "attribute.componentsPerAttribute must be in the range [1, 4]."
+        "attribute.componentsPerAttribute must be in the range [1, 4].",
       );
     }
 
     const datatype = attr.componentDatatype;
     if (!ComponentDatatype.validate(datatype)) {
       throw new DeveloperError(
-        "Attribute must have a valid componentDatatype or not specify it."
+        "Attribute must have a valid componentDatatype or not specify it.",
       );
     }
 
     if (!BufferUsage.validate(attr.usage)) {
       throw new DeveloperError(
-        "Attribute must have a valid usage or not specify it."
+        "Attribute must have a valid usage or not specify it.",
       );
     }
     //>>includeEnd('debug');
@@ -154,7 +149,7 @@ VertexArrayFacade._verifyAttributes = function (attributes) {
     //>>includeStart('debug', pragmas.debug);
     if (uniqueIndices[index]) {
       throw new DeveloperError(
-        `Index ${index} is used by more than one attribute.`
+        `Index ${index} is used by more than one attribute.`,
       );
     }
     //>>includeEnd('debug');
@@ -263,7 +258,7 @@ VertexArrayFacade._resize = function (buffer, size) {
       view.view = ComponentDatatype.createArrayBufferView(
         view.componentDatatype,
         arrayBuffer,
-        view.offsetInBytes
+        view.offsetInBytes,
       );
     }
 
@@ -358,7 +353,7 @@ VertexArrayFacade.prototype.commit = function (indexBuffer) {
           attributes,
           buffer,
           offset,
-          this._instanced
+          this._instanced,
         );
       }
 
@@ -414,7 +409,7 @@ VertexArrayFacade._appendAttributes = function (
   attributes,
   buffer,
   vertexBufferOffset,
-  instanced
+  instanced,
 ) {
   const arrayViews = buffer.arrayViews;
   const length = arrayViews.length;
@@ -437,17 +432,17 @@ VertexArrayFacade._appendAttributes = function (
 
 VertexArrayFacade.prototype.subCommit = function (
   offsetInVertices,
-  lengthInVertices
+  lengthInVertices,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (offsetInVertices < 0 || offsetInVertices >= this._size) {
     throw new DeveloperError(
-      "offsetInVertices must be greater than or equal to zero and less than the vertex array size."
+      "offsetInVertices must be greater than or equal to zero and less than the vertex array size.",
     );
   }
   if (offsetInVertices + lengthInVertices > this._size) {
     throw new DeveloperError(
-      "offsetInVertices + lengthInVertices cannot exceed the vertex array size."
+      "offsetInVertices + lengthInVertices cannot exceed the vertex array size.",
     );
   }
   //>>includeEnd('debug');
@@ -469,7 +464,7 @@ function subCommit(buffer, offsetInVertices, lengthInVertices) {
     // PERFORMANCE_IDEA: Does creating the typed view add too much GC overhead?
     buffer.vertexBuffer.copyFromArrayView(
       new Uint8Array(buffer.arrayBuffer, byteOffset, byteLength),
-      byteOffset
+      byteOffset,
     );
   }
 }

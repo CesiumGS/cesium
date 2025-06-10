@@ -70,7 +70,7 @@ PlaneGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -85,14 +85,14 @@ PlaneGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
-      this._fillProperty.getValue(time)
+      this._fillProperty.getValue(time),
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-    distanceDisplayCondition
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
+  const distanceDisplayConditionAttribute =
+    DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+      distanceDisplayCondition,
+    );
   if (this._materialProperty instanceof ColorMaterialProperty) {
     let currentColor;
     if (
@@ -123,12 +123,12 @@ PlaneGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
   const plane = Property.getValueOrDefault(
     planeGraphics.plane,
     time,
-    options.plane
+    options.plane,
   );
   const dimensions = Property.getValueOrUndefined(
     planeGraphics.dimensions,
     time,
-    options.dimensions
+    options.dimensions,
   );
 
   options.plane = plane;
@@ -138,7 +138,7 @@ PlaneGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     plane,
     dimensions,
     modelMatrix,
-    modelMatrix
+    modelMatrix,
   );
 
   return new GeometryInstance({
@@ -163,7 +163,7 @@ PlaneGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
 
   if (!this._outlineEnabled) {
     throw new DeveloperError(
-      "This instance does not represent an outlined geometry."
+      "This instance does not represent an outlined geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -174,11 +174,10 @@ PlaneGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
     this._outlineColorProperty,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
 
   const planeGraphics = entity.plane;
   const options = this._options;
@@ -186,12 +185,12 @@ PlaneGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
   const plane = Property.getValueOrDefault(
     planeGraphics.plane,
     time,
-    options.plane
+    options.plane,
   );
   const dimensions = Property.getValueOrUndefined(
     planeGraphics.dimensions,
     time,
-    options.dimensions
+    options.dimensions,
   );
 
   options.plane = plane;
@@ -201,7 +200,7 @@ PlaneGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
     plane,
     dimensions,
     modelMatrix,
-    modelMatrix
+    modelMatrix,
   );
 
   return new GeometryInstance({
@@ -213,12 +212,13 @@ PlaneGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
         isAvailable &&
           entity.isShowing &&
           this._showProperty.getValue(time) &&
-          this._showOutlineProperty.getValue(time)
+          this._showOutlineProperty.getValue(time),
       ),
       color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-      distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-        distanceDisplayCondition
-      ),
+      distanceDisplayCondition:
+        DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+          distanceDisplayCondition,
+        ),
     },
   });
 };
@@ -257,7 +257,7 @@ PlaneGeometryUpdater.prototype._setStaticOptions = function (entity, plane) {
   options.plane = plane.plane.getValue(Iso8601.MINIMUM_VALUE, options.plane);
   options.dimensions = plane.dimensions.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.dimensions
+    options.dimensions,
   );
 };
 
@@ -269,33 +269,34 @@ PlaneGeometryUpdater.DynamicGeometryUpdater = DynamicPlaneGeometryUpdater;
 function DynamicPlaneGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 }
 
 if (defined(Object.create)) {
   DynamicPlaneGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
-  DynamicPlaneGeometryUpdater.prototype.constructor = DynamicPlaneGeometryUpdater;
+  DynamicPlaneGeometryUpdater.prototype.constructor =
+    DynamicPlaneGeometryUpdater;
 }
 
 DynamicPlaneGeometryUpdater.prototype._isHidden = function (
   entity,
   plane,
-  time
+  time,
 ) {
   const options = this._options;
   const position = Property.getValueOrUndefined(
     entity.position,
     time,
-    positionScratch
+    positionScratch,
   );
   return (
     !defined(position) ||
@@ -308,14 +309,14 @@ DynamicPlaneGeometryUpdater.prototype._isHidden = function (
 DynamicPlaneGeometryUpdater.prototype._setOptions = function (
   entity,
   plane,
-  time
+  time,
 ) {
   const options = this._options;
   options.plane = Property.getValueOrDefault(plane.plane, time, options.plane);
   options.dimensions = Property.getValueOrUndefined(
     plane.dimensions,
     time,
-    options.dimensions
+    options.dimensions,
   );
 };
 
@@ -333,7 +334,7 @@ function createPrimitiveMatrix(plane, dimensions, transform, result) {
   const translation = Cartesian3.multiplyByScalar(
     normal,
     -distance,
-    scratchTranslation
+    scratchTranslation,
   );
 
   let up = Cartesian3.clone(Cartesian3.UNIT_Z, scratchUp);
@@ -341,7 +342,7 @@ function createPrimitiveMatrix(plane, dimensions, transform, result) {
     CesiumMath.equalsEpsilon(
       Math.abs(Cartesian3.dot(up, normal)),
       1.0,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     )
   ) {
     up = Cartesian3.clone(Cartesian3.UNIT_Y, up);
@@ -361,18 +362,18 @@ function createPrimitiveMatrix(plane, dimensions, transform, result) {
     dimensions.x,
     dimensions.y,
     1.0,
-    scratchScale
+    scratchScale,
   );
   const rotationScaleMatrix = Matrix3.multiplyByScale(
     rotationMatrix,
     scale,
-    scratchRotationScale
+    scratchRotationScale,
   );
 
   const localTransform = Matrix4.fromRotationTranslation(
     rotationScaleMatrix,
     translation,
-    scratchLocalTransform
+    scratchLocalTransform,
   );
   return Matrix4.multiplyTransformation(transform, localTransform, result);
 }

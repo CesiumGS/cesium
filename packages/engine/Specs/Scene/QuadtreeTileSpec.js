@@ -1,11 +1,12 @@
 import {
+  Cartesian3,
+  Cartographic,
   GeographicTilingScheme,
   Rectangle,
+  Math as CesiumMath,
   WebMercatorTilingScheme,
   QuadtreeTile,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/QuadtreeTile", function () {
   it("throws without a options", function () {
@@ -30,7 +31,7 @@ describe("Scene/QuadtreeTile", function () {
           -CesiumMath.PI_OVER_FOUR,
           0.0,
           CesiumMath.PI_OVER_FOUR,
-          CesiumMath.PI_OVER_FOUR
+          CesiumMath.PI_OVER_FOUR,
         ),
         x: 0,
         y: 0,
@@ -59,7 +60,7 @@ describe("Scene/QuadtreeTile", function () {
     const rectangle = desc.tilingScheme.tileXYToRectangle(
       desc.x,
       desc.y,
-      desc.level
+      desc.level,
     );
     expect(tile.rectangle).toEqual(rectangle);
   });
@@ -366,17 +367,95 @@ describe("Scene/QuadtreeTile", function () {
       const southeast = tiles[3];
 
       expect(northeast.rectangle.west).toBeGreaterThan(
-        northwest.rectangle.west
+        northwest.rectangle.west,
       );
       expect(southeast.rectangle.west).toBeGreaterThan(
-        southwest.rectangle.west
+        southwest.rectangle.west,
       );
       expect(northeast.rectangle.south).toBeGreaterThan(
-        southeast.rectangle.south
+        southeast.rectangle.south,
       );
       expect(northwest.rectangle.south).toBeGreaterThan(
-        southwest.rectangle.south
+        southwest.rectangle.south,
       );
+    });
+  });
+
+  describe("QuadtreeTile Position Cache", function () {
+    it("store and retrieve a cached position correctly", function () {
+      // Create a dummy Cartographic position
+      const longitude = CesiumMath.toRadians(45);
+      const latitude = CesiumMath.toRadians(30);
+      const cartographic = new Cartographic(longitude, latitude, 0);
+      const maximumScreenSpaceError = 2;
+
+      // Create a dummy Cartesian3 position (the computed clamped position)
+      const dummyPosition = new Cartesian3(1000, 2000, 3000);
+
+      // Create a dummy QuadtreeTile instance.
+      const tile = new QuadtreeTile({
+        level: 3,
+        x: 0,
+        y: 0,
+        tilingScheme: new GeographicTilingScheme(),
+        parent: undefined,
+      });
+
+      // Ensure the tile's cache is cleared before the test.
+      tile.clearPositionCache();
+
+      // Set a cache entry for the given cartographic position.
+      tile.setPositionCacheEntry(
+        cartographic,
+        maximumScreenSpaceError,
+        dummyPosition,
+      );
+
+      // Retrieve the cache entry.
+      const cachedData = tile.getPositionCacheEntry(
+        cartographic,
+        maximumScreenSpaceError,
+      );
+      expect(cachedData).toBeDefined();
+      expect(cachedData).toEqual(dummyPosition);
+
+      // Also check that the cache size is 1.
+      expect(tile._positionCache.cache.size).toEqual(1);
+    });
+
+    it("generate consistent cache keys for equivalent cartographic values", function () {
+      // Two separate Cartographic instances with the same longitude/latitude
+      const lon = CesiumMath.toRadians(45);
+      const lat = CesiumMath.toRadians(30);
+      const carto1 = new Cartographic(lon, lat, 0);
+      const carto2 = new Cartographic(lon, lat, 0);
+      const maximumScreenSpaceError = 2;
+
+      // Create a dummy tile at level 3.
+      const tile = new QuadtreeTile({
+        level: 3,
+        x: 0,
+        y: 0,
+        tilingScheme: new GeographicTilingScheme(),
+        parent: undefined,
+      });
+      tile.clearPositionCache();
+
+      // Set a cache entry using the first cartographic object.
+      const dummyPosition = new Cartesian3(1000, 2000, 3000);
+      tile.setPositionCacheEntry(
+        carto1,
+        maximumScreenSpaceError,
+        dummyPosition,
+      );
+
+      // Retrieve the cache entry using the second (equal) cartographic instance.
+      const cachedData = tile.getPositionCacheEntry(
+        carto2,
+        maximumScreenSpaceError,
+      );
+      expect(cachedData).toBeDefined();
+      expect(cachedData).toEqual(dummyPosition);
     });
   });
 });

@@ -78,11 +78,11 @@ function computeRotationAngle(start, end, position, ellipsoid) {
   const tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
   const next = tangentPlane.projectPointOntoPlane(
     Cartesian3.add(position, start, nextScratch),
-    nextScratch
+    nextScratch,
   );
   const prev = tangentPlane.projectPointOntoPlane(
     Cartesian3.add(position, end, prevScratch),
-    prevScratch
+    prevScratch,
   );
   const angle = Cartesian2.angleBetween(next, prev);
 
@@ -105,7 +105,7 @@ function addPosition(
   ellipsoid,
   height,
   xScalar,
-  repeat
+  repeat,
 ) {
   let west = westScratch;
   let finalPosition = finalPosScratch;
@@ -120,7 +120,7 @@ function addPosition(
   transform = Matrix4.multiplyTransformation(
     transform,
     Matrix4.fromRotationTranslation(rotationZ, heightCartesian, translation),
-    transform
+    transform,
   );
   const scale = scaleMatrix;
   scale[0] = xScalar;
@@ -131,12 +131,12 @@ function addPosition(
       finalPosition = Matrix3.multiplyByVector(
         scale,
         finalPosition,
-        finalPosition
+        finalPosition,
       );
       finalPosition = Matrix4.multiplyByPoint(
         transform,
         finalPosition,
-        finalPosition
+        finalPosition,
       );
       finalPositions.push(finalPosition.x, finalPosition.y, finalPosition.z);
     }
@@ -153,7 +153,7 @@ function addPositions(
   finalPositions,
   ellipsoid,
   heights,
-  xScalar
+  xScalar,
 ) {
   for (let i = 0; i < centers.length; i += 3) {
     const center = Cartesian3.fromArray(centers, i, centerScratch);
@@ -165,7 +165,7 @@ function addPositions(
       ellipsoid,
       heights[i / 3],
       xScalar,
-      1
+      1,
     );
   }
   return finalPositions;
@@ -233,11 +233,11 @@ function computeRoundCorner(
   finalPositions,
   shape,
   height,
-  duplicatePoints
+  duplicatePoints,
 ) {
   const angle = Cartesian3.angleBetween(
     Cartesian3.subtract(startPoint, pivot, scratch1),
-    Cartesian3.subtract(endPoint, pivot, scratch2)
+    Cartesian3.subtract(endPoint, pivot, scratch2),
   );
   const granularity =
     cornerType === CornerType.BEVELED
@@ -250,14 +250,14 @@ function computeRoundCorner(
       Quaternion.fromAxisAngle(
         Cartesian3.negate(pivot, scratch1),
         angle / (granularity + 1),
-        quaterion
+        quaterion,
       ),
-      rotMatrix
+      rotMatrix,
     );
   } else {
     m = Matrix3.fromQuaternion(
       Quaternion.fromAxisAngle(pivot, angle / (granularity + 1), quaterion),
-      rotMatrix
+      rotMatrix,
     );
   }
 
@@ -282,7 +282,7 @@ function computeRoundCorner(
         ellipsoid,
         height,
         1,
-        repeat
+        repeat,
       );
     }
   } else {
@@ -300,7 +300,7 @@ function computeRoundCorner(
       ellipsoid,
       height,
       1,
-      1
+      1,
     );
 
     endPoint = Cartesian3.clone(endPoint, startPointScratch);
@@ -318,7 +318,7 @@ function computeRoundCorner(
       ellipsoid,
       height,
       1,
-      1
+      1,
     );
   }
 
@@ -326,7 +326,7 @@ function computeRoundCorner(
 }
 
 PolylineVolumeGeometryLibrary.removeDuplicatesFromShape = function (
-  shapePositions
+  shapePositions,
 ) {
   const length = shapePositions.length;
   const cleanedPositions = [];
@@ -346,16 +346,16 @@ PolylineVolumeGeometryLibrary.angleIsGreaterThanPi = function (
   forward,
   backward,
   position,
-  ellipsoid
+  ellipsoid,
 ) {
   const tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
   const next = tangentPlane.projectPointOntoPlane(
     Cartesian3.add(position, forward, nextScratch),
-    nextScratch
+    nextScratch,
   );
   const prev = tangentPlane.projectPointOntoPlane(
     Cartesian3.add(position, backward, prevScratch),
-    prevScratch
+    prevScratch,
   );
 
   return prev.x * next.y - prev.y * next.x >= 0.0;
@@ -369,7 +369,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
   shape2D,
   boundingRectangle,
   geometry,
-  duplicatePoints
+  duplicatePoints,
 ) {
   const ellipsoid = geometry._ellipsoid;
   const heights = scaleToSurface(positions, ellipsoid);
@@ -415,7 +415,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
       ellipsoid,
       h0 + heightOffset,
       1,
-      1
+      1,
     );
   }
   previousPosition = Cartesian3.clone(position, previousPosition);
@@ -428,20 +428,18 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     nextPosition = positions[i + 1];
     if (position.equals(nextPosition)) {
       oneTimeWarning(
-        "Positions are too close and are considered equivalent with rounding error."
+        "Positions are too close and are considered equivalent with rounding error.",
       );
       continue;
     }
     forward = Cartesian3.subtract(nextPosition, position, forward);
     forward = Cartesian3.normalize(forward, forward);
-    cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
-    cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
     surfaceNormal = ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
 
     const forwardProjection = Cartesian3.multiplyByScalar(
       surfaceNormal,
       Cartesian3.dot(forward, surfaceNormal),
-      scratchForwardProjection
+      scratchForwardProjection,
     );
     Cartesian3.subtract(forward, forwardProjection, forwardProjection);
     Cartesian3.normalize(forwardProjection, forwardProjection);
@@ -449,7 +447,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     const backwardProjection = Cartesian3.multiplyByScalar(
       surfaceNormal,
       Cartesian3.dot(backward, surfaceNormal),
-      scratchBackwardProjection
+      scratchBackwardProjection,
     );
     Cartesian3.subtract(backward, backwardProjection, backwardProjection);
     Cartesian3.normalize(backwardProjection, backwardProjection);
@@ -457,19 +455,21 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     const doCorner = !CesiumMath.equalsEpsilon(
       Math.abs(Cartesian3.dot(forwardProjection, backwardProjection)),
       1.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     if (doCorner) {
+      cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
+      cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
       cornerDirection = Cartesian3.cross(
         cornerDirection,
         surfaceNormal,
-        cornerDirection
+        cornerDirection,
       );
       cornerDirection = Cartesian3.cross(
         surfaceNormal,
         cornerDirection,
-        cornerDirection
+        cornerDirection,
       );
       cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
       const scalar =
@@ -477,14 +477,14 @@ PolylineVolumeGeometryLibrary.computePositions = function (
         Math.max(
           0.25,
           Cartesian3.magnitude(
-            Cartesian3.cross(cornerDirection, backward, scratch1)
-          )
+            Cartesian3.cross(cornerDirection, backward, scratch1),
+          ),
         );
       const leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(
         forward,
         backward,
         position,
-        ellipsoid
+        ellipsoid,
       );
       if (leftIsOutside) {
         pivot = Cartesian3.add(
@@ -492,14 +492,14 @@ PolylineVolumeGeometryLibrary.computePositions = function (
           Cartesian3.multiplyByScalar(
             cornerDirection,
             scalar * width,
-            cornerDirection
+            cornerDirection,
           ),
-          pivot
+          pivot,
         );
         start = Cartesian3.add(
           pivot,
           Cartesian3.multiplyByScalar(left, width, start),
-          start
+          start,
         );
         scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
         scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
@@ -507,7 +507,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
           scratch2Array,
           h0 + heightOffset,
           h1 + heightOffset,
-          granularity
+          granularity,
         );
         subdividedPositions = PolylinePipeline.generateArc({
           positions: scratch2Array,
@@ -521,14 +521,14 @@ PolylineVolumeGeometryLibrary.computePositions = function (
           finalPositions,
           ellipsoid,
           subdividedHeights,
-          1
+          1,
         );
         left = Cartesian3.cross(surfaceNormal, forward, left);
         left = Cartesian3.normalize(left, left);
         end = Cartesian3.add(
           pivot,
           Cartesian3.multiplyByScalar(left, width, end),
-          end
+          end,
         );
         if (
           cornerType === CornerType.ROUNDED ||
@@ -544,7 +544,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
             finalPositions,
             shapeForSides,
             h1 + heightOffset,
-            duplicatePoints
+            duplicatePoints,
           );
         } else {
           cornerDirection = Cartesian3.negate(cornerDirection, cornerDirection);
@@ -556,7 +556,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
             ellipsoid,
             h1 + heightOffset,
             scalar,
-            repeat
+            repeat,
           );
         }
         previousPosition = Cartesian3.clone(end, previousPosition);
@@ -566,14 +566,14 @@ PolylineVolumeGeometryLibrary.computePositions = function (
           Cartesian3.multiplyByScalar(
             cornerDirection,
             scalar * width,
-            cornerDirection
+            cornerDirection,
           ),
-          pivot
+          pivot,
         );
         start = Cartesian3.add(
           pivot,
           Cartesian3.multiplyByScalar(left, -width, start),
-          start
+          start,
         );
         scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
         scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
@@ -581,7 +581,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
           scratch2Array,
           h0 + heightOffset,
           h1 + heightOffset,
-          granularity
+          granularity,
         );
         subdividedPositions = PolylinePipeline.generateArc({
           positions: scratch2Array,
@@ -595,14 +595,14 @@ PolylineVolumeGeometryLibrary.computePositions = function (
           finalPositions,
           ellipsoid,
           subdividedHeights,
-          1
+          1,
         );
         left = Cartesian3.cross(surfaceNormal, forward, left);
         left = Cartesian3.normalize(left, left);
         end = Cartesian3.add(
           pivot,
           Cartesian3.multiplyByScalar(left, -width, end),
-          end
+          end,
         );
         if (
           cornerType === CornerType.ROUNDED ||
@@ -618,7 +618,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
             finalPositions,
             shapeForSides,
             h1 + heightOffset,
-            duplicatePoints
+            duplicatePoints,
           );
         } else {
           finalPositions = addPosition(
@@ -629,7 +629,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
             ellipsoid,
             h1 + heightOffset,
             scalar,
-            repeat
+            repeat,
           );
         }
         previousPosition = Cartesian3.clone(end, previousPosition);
@@ -644,7 +644,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
         ellipsoid,
         h0 + heightOffset,
         1,
-        1
+        1,
       );
       previousPosition = position;
     }
@@ -659,7 +659,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     scratch2Array,
     h0 + heightOffset,
     h1 + heightOffset,
-    granularity
+    granularity,
   );
   subdividedPositions = PolylinePipeline.generateArc({
     positions: scratch2Array,
@@ -673,7 +673,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     finalPositions,
     ellipsoid,
     subdividedHeights,
-    1
+    1,
   );
   if (duplicatePoints) {
     ends = addPosition(
@@ -684,7 +684,7 @@ PolylineVolumeGeometryLibrary.computePositions = function (
       ellipsoid,
       h1 + heightOffset,
       1,
-      1
+      1,
     );
   }
 

@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import MetadataSchema from "./MetadataSchema.js";
@@ -26,7 +26,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataSchemaLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const schema = options.schema;
   const resource = options.resource;
   const cacheKey = options.cacheKey;
@@ -34,7 +34,7 @@ function MetadataSchemaLoader(options) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
     throw new DeveloperError(
-      "One of options.schema and options.resource must be defined."
+      "One of options.schema and options.resource must be defined.",
     );
   }
   //>>includeEnd('debug');

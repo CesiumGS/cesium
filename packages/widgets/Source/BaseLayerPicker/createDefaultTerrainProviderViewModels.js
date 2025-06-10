@@ -1,6 +1,7 @@
 import {
   buildModuleUrl,
   createWorldTerrainAsync,
+  Ellipsoid,
   EllipsoidTerrainProvider,
 } from "@cesium/engine";
 import ProviderViewModel from "./ProviderViewModel.js";
@@ -17,16 +18,16 @@ function createDefaultTerrainProviderViewModels() {
       tooltip: "WGS84 standard ellipsoid, also known as EPSG:4326",
       category: "Cesium ion",
       creationFunction: function () {
-        return new EllipsoidTerrainProvider();
+        return new EllipsoidTerrainProvider({ ellipsoid: Ellipsoid.WGS84 });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Cesium World Terrain",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/TerrainProviders/CesiumWorldTerrain.png"
+        "Widgets/Images/TerrainProviders/CesiumWorldTerrain.png",
       ),
       tooltip:
         "High-resolution global terrain tileset curated from several datasources and hosted by Cesium ion",
@@ -37,7 +38,7 @@ function createDefaultTerrainProviderViewModels() {
           requestVertexNormals: true,
         });
       },
-    })
+    }),
   );
 
   return providerViewModels;

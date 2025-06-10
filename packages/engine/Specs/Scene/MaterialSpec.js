@@ -1,7 +1,6 @@
 import {
   Cartesian3,
   Color,
-  defaultValue,
   defined,
   Ellipsoid,
   GeometryInstance,
@@ -38,7 +37,7 @@ describe(
         backgroundColor[1],
         backgroundColor[2],
         backgroundColor[3],
-        scene.backgroundColor
+        scene.backgroundColor,
       );
       scene.primitives.destroyPrimitives = false;
       scene.camera.setView({ destination: rectangle });
@@ -71,7 +70,7 @@ describe(
       polyline = polylines.add({
         positions: Cartesian3.fromDegreesArray(
           [-50.0, 0.0, 50.0, 0.0],
-          Ellipsoid.WGS84
+          Ellipsoid.WGS84,
         ),
         width: 5.0,
       });
@@ -84,7 +83,7 @@ describe(
     });
 
     function renderMaterial(material, ignoreBackground, callback) {
-      ignoreBackground = defaultValue(ignoreBackground, false);
+      ignoreBackground = ignoreBackground ?? false;
       polygon.appearance.material = material;
       if (!ignoreBackground) {
         expect(scene).toRender(backgroundColor);
@@ -494,22 +493,8 @@ describe(
         fabric: {
           uniforms: {
             value: [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
+              0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+              0.5, 0.5, 0.5,
             ],
           },
           components: {
@@ -1063,5 +1048,5 @@ describe(
       material.destroy();
     });
   },
-  "WebGL"
+  "WebGL",
 );

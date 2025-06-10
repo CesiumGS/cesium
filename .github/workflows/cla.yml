@@ -10,18 +10,20 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v3
-      - name: install node 20
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: install node 22
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: install npm packages
-        run: npm install googleapis @octokit/core handlebars fs-extra        
+        working-directory: ./.github/actions/check-for-CLA
+        run: npm install
       - name: run script
-        run: node .github/actions/check-for-CLA/index.js
+        working-directory: ./.github/actions/check-for-CLA
+        run: node index.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PULL_REQUEST_ID: ${{ github.event.number }}      
+          PULL_REQUEST_ID: ${{ github.event.number }}
           GOOGLE_KEYS: ${{ secrets.GOOGLE_KEYS }}
-          INDIVIDUAL_CLA_SHEET_ID: ${{ secrets.INDIVIDUAL_CLA_SHEET_ID }}  
-          CORPORATE_CLA_SHEET_ID: ${{ secrets.CORPORATE_CLA_SHEET_ID }}  
+          INDIVIDUAL_CLA_SHEET_ID: ${{ secrets.INDIVIDUAL_CLA_SHEET_ID }}
+          CORPORATE_CLA_SHEET_ID: ${{ secrets.CORPORATE_CLA_SHEET_ID }}

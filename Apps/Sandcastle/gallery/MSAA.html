@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -36,9 +33,7 @@
           terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2022-08-01T00:00:00Z"
-        );
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
 
         const scene = viewer.scene;
         if (!scene.msaaSupported) {
@@ -50,16 +45,13 @@
           const position = Cesium.Cartesian3.fromDegrees(
             -123.0744619,
             44.0503706,
-            height
+            height,
           );
           const heading = Cesium.Math.toRadians(135);
           const pitch = 0;
           const roll = 0;
           const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-          const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-            position,
-            hpr
-          );
+          const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
           const entity = viewer.entities.add({
             name: url,
@@ -74,7 +66,7 @@
           const target = Cesium.Cartesian3.fromDegrees(
             -123.0744619,
             44.0503706,
-            height + 7.5
+            height + 7.5,
           );
           const offset = new Cesium.Cartesian3(50.0, -15.0, 0.0);
           viewer.scene.camera.lookAt(target, offset);
@@ -85,9 +77,7 @@
           currentAssetId = assetId;
 
           try {
-            const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-              assetId
-            );
+            const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
 
             if (currentAssetId !== assetId) {
               // Another scenario was loaded. Discard the result.
@@ -110,12 +100,12 @@
                 destination: new Cesium.Cartesian3(
                   1331419.302230775,
                   -4656681.5022043325,
-                  4136232.6465900405
+                  4136232.6465900405,
                 ),
                 orientation: new Cesium.HeadingPitchRoll(
                   6.032455545102689,
                   -0.056832496140112765,
-                  6.282360923090216
+                  6.282360923090216,
                 ),
                 endTransform: Cesium.Matrix4.IDENTITY,
               });
@@ -131,7 +121,7 @@
                 destination: new Cesium.Cartesian3(
                   1234138.7804841248,
                   -5086063.633843134,
-                  3633284.606361642
+                  3633284.606361642,
                 ),
                 orientation: {
                   heading: 0.4304630387656614,
@@ -150,7 +140,7 @@
               scene.primitives.removeAll();
               createModel(
                 "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
-                1000.0
+                1000.0,
               );
             },
           },

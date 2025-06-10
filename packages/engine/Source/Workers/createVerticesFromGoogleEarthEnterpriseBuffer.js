@@ -3,7 +3,6 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
@@ -24,7 +23,7 @@ const sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
 const sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
 
 function indexOfEpsilon(arr, elem, elemType) {
-  elemType = defaultValue(elemType, CesiumMath);
+  elemType = elemType ?? CesiumMath;
   const count = arr.length;
   for (let i = 0; i < count; ++i) {
     if (elemType.equalsEpsilon(arr[i], elem, CesiumMath.EPSILON12)) {
@@ -37,7 +36,7 @@ function indexOfEpsilon(arr, elem, elemType) {
 
 function createVerticesFromGoogleEarthEnterpriseBuffer(
   parameters,
-  transferableObjects
+  transferableObjects,
 ) {
   parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
   parameters.rectangle = Rectangle.clone(parameters.rectangle);
@@ -53,7 +52,7 @@ function createVerticesFromGoogleEarthEnterpriseBuffer(
     parameters.skirtHeight,
     parameters.includeWebMercatorT,
     parameters.negativeAltitudeExponentBias,
-    parameters.negativeElevationThreshold
+    parameters.negativeElevationThreshold,
   );
   const vertices = statistics.vertices;
   transferableObjects.push(vertices.buffer);
@@ -96,7 +95,7 @@ function processBuffer(
   skirtHeight,
   includeWebMercatorT,
   negativeAltitudeExponentBias,
-  negativeElevationThreshold
+  negativeElevationThreshold,
 ) {
   let geographicWest;
   let geographicSouth;
@@ -126,16 +125,15 @@ function processBuffer(
 
   const fromENU = Transforms.eastNorthUpToFixedFrame(
     relativeToCenter,
-    ellipsoid
+    ellipsoid,
   );
   const toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
 
   let southMercatorY;
   let oneOverMercatorHeight;
   if (includeWebMercatorT) {
-    southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-      geographicSouth
-    );
+    southMercatorY =
+      WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicSouth);
     oneOverMercatorHeight =
       1.0 /
       (WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicNorth) -
@@ -279,7 +277,7 @@ function processBuffer(
         const index = indexOfEpsilon(
           quadBorderPoints,
           scratchCartographic,
-          Cartographic
+          Cartographic,
         );
         if (index === -1) {
           quadBorderPoints.push(Cartographic.clone(scratchCartographic));
@@ -409,7 +407,7 @@ function processBuffer(
     westBorder,
     -percentage * rectangleWidth,
     true,
-    -percentage * rectangleHeight
+    -percentage * rectangleHeight,
   );
   addSkirt(
     positions,
@@ -421,7 +419,7 @@ function processBuffer(
     skirtOptions,
     southBorder,
     -percentage * rectangleHeight,
-    false
+    false,
   );
   addSkirt(
     positions,
@@ -434,7 +432,7 @@ function processBuffer(
     eastBorder,
     percentage * rectangleWidth,
     true,
-    percentage * rectangleHeight
+    percentage * rectangleHeight,
   );
   addSkirt(
     positions,
@@ -446,7 +444,7 @@ function processBuffer(
     skirtOptions,
     northBorder,
     percentage * rectangleHeight,
-    false
+    false,
   );
 
   // Since the corner between the north and west sides is in the west array, generate the last
@@ -463,7 +461,7 @@ function processBuffer(
       firstSkirtIndex,
       firstSkirtIndex,
       firstBorderIndex,
-      lastBorderIndex
+      lastBorderIndex,
     );
   }
 
@@ -476,16 +474,17 @@ function processBuffer(
       rectangle,
       minHeight,
       maxHeight,
-      ellipsoid
+      ellipsoid,
     );
   }
 
   const occluder = new EllipsoidalOccluder(ellipsoid);
-  const occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
-    relativeToCenter,
-    positions,
-    minHeight
-  );
+  const occludeePointInScaledSpace =
+    occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
+      relativeToCenter,
+      positions,
+      minHeight,
+    );
 
   const aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
   const encoding = new TerrainEncoding(
@@ -498,7 +497,7 @@ function processBuffer(
     includeWebMercatorT,
     includeGeodeticSurfaceNormals,
     exaggeration,
-    exaggerationRelativeHeight
+    exaggerationRelativeHeight,
   );
   const vertices = new Float32Array(size * encoding.stride);
 
@@ -512,7 +511,7 @@ function processBuffer(
       heights[k],
       undefined,
       webMercatorTs[k],
-      geodeticSurfaceNormals[k]
+      geodeticSurfaceNormals[k],
     );
   }
 
@@ -538,12 +537,12 @@ function processBuffer(
     .reverse();
 
   southIndicesEastToWest.unshift(
-    eastIndicesNorthToSouth[eastIndicesNorthToSouth.length - 1]
+    eastIndicesNorthToSouth[eastIndicesNorthToSouth.length - 1],
   );
   southIndicesEastToWest.push(westIndicesSouthToNorth[0]);
 
   northIndicesWestToEast.unshift(
-    westIndicesSouthToNorth[westIndicesSouthToNorth.length - 1]
+    westIndicesSouthToNorth[westIndicesSouthToNorth.length - 1],
   );
   northIndicesWestToEast.push(eastIndicesNorthToSouth[0]);
 
@@ -576,7 +575,7 @@ function addSkirt(
   borderPoints,
   fudgeFactor,
   eastOrWest,
-  cornerFudge
+  cornerFudge,
 ) {
   const count = borderPoints.length;
   for (let j = 0; j < count; ++j) {
@@ -590,7 +589,7 @@ function addSkirt(
     latitude = CesiumMath.clamp(
       latitude,
       -CesiumMath.PI_OVER_TWO,
-      CesiumMath.PI_OVER_TWO
+      CesiumMath.PI_OVER_TWO,
     ); // Don't go over the poles
     const height = borderCartographic.height - skirtOptions.skirtHeight;
     skirtOptions.hMin = Math.min(skirtOptions.hMin, height);
@@ -612,9 +611,8 @@ function addSkirt(
       scratchCartographic.latitude -= cornerFudge;
     }
 
-    const pos = skirtOptions.ellipsoid.cartographicToCartesian(
-      scratchCartographic
-    );
+    const pos =
+      skirtOptions.ellipsoid.cartographicToCartesian(scratchCartographic);
     positions.push(pos);
     heights.push(height);
     uvs.push(Cartesian2.clone(uvs[borderIndex])); // Copy UVs from border point
@@ -641,7 +639,7 @@ function addSkirt(
         currentIndex,
         currentIndex,
         borderIndex,
-        lastBorderIndex
+        lastBorderIndex,
       );
     }
 
@@ -649,5 +647,5 @@ function addSkirt(
   }
 }
 export default createTaskProcessorWorker(
-  createVerticesFromGoogleEarthEnterpriseBuffer
+  createVerticesFromGoogleEarthEnterpriseBuffer,
 );

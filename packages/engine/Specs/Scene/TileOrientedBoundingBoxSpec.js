@@ -2,12 +2,11 @@ import {
   Cartesian3,
   Color,
   Intersect,
+  Math as CesiumMath,
   Matrix3,
   Plane,
   TileOrientedBoundingBox,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createFrameState from "../../../../Specs/createFrameState.js";
 
@@ -15,7 +14,7 @@ describe("Scene/TileOrientedBoundingBox", function () {
   const center = new Cartesian3(0.0, 0.0, 0.0);
   const halfAxes = Matrix3.fromScale(
     new Cartesian3(0.5, 0.5, 0.5),
-    new Matrix3()
+    new Matrix3(),
   );
   const tileBoundingVolume = new TileOrientedBoundingBox(center, halfAxes);
 
@@ -63,7 +62,7 @@ describe("Scene/TileOrientedBoundingBox", function () {
     expect(tileBoundingVolume.distanceToCamera(frameState)).not.toEqual(0.0);
     frameState.camera.position = new Cartesian3(100.5, 100.5, 100.5);
     expect(tileBoundingVolume.distanceToCamera(frameState)).toEqual(
-      Math.sqrt(30000.0)
+      Math.sqrt(30000.0),
     );
   });
 
@@ -71,11 +70,11 @@ describe("Scene/TileOrientedBoundingBox", function () {
     frameState.camera.position = new Cartesian3(
       2170456.713380141,
       -36351235.19646463,
-      28403328.27058654
+      28403328.27058654,
     );
     expect(tileBoundingVolume.distanceToCamera(frameState)).toEqualEpsilon(
       46183029.05370139,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -88,15 +87,15 @@ describe("Scene/TileOrientedBoundingBox", function () {
   it("intersects plane", function () {
     let plane = new Plane(Cartesian3.UNIT_X, 0.0);
     expect(tileBoundingVolume.intersectPlane(plane)).toEqual(
-      Intersect.INTERSECTING
+      Intersect.INTERSECTING,
     );
     plane = new Plane(Cartesian3.UNIT_X, 0.5 - CesiumMath.EPSILON6);
     expect(tileBoundingVolume.intersectPlane(plane)).toEqual(
-      Intersect.INTERSECTING
+      Intersect.INTERSECTING,
     );
     plane = new Plane(Cartesian3.UNIT_X, -0.5 + CesiumMath.EPSILON6);
     expect(tileBoundingVolume.intersectPlane(plane)).toEqual(
-      Intersect.INTERSECTING
+      Intersect.INTERSECTING,
     );
   });
 

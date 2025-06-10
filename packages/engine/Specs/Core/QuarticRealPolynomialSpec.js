@@ -1,5 +1,4 @@
-import { QuarticRealPolynomial } from "../../index.js";
-import { Math as CesiumMath } from "../../index.js";
+import { Math as CesiumMath, QuarticRealPolynomial } from "../../index.js";
 
 describe("Core/QuarticRealPolynomial", function () {
   it("discriminant throws without a", function () {
@@ -109,7 +108,7 @@ describe("Core/QuarticRealPolynomial", function () {
       -16.0,
       48.0,
       -64.0,
-      32.0
+      32.0,
     );
     expect(roots.length).toEqual(4);
     expect(roots[0]).toEqualEpsilon(2.0, CesiumMath.EPSILON15);
@@ -124,7 +123,7 @@ describe("Core/QuarticRealPolynomial", function () {
       0.0,
       -4.0,
       0.0,
-      2.0
+      2.0,
     );
     expect(roots.length).toEqual(4);
     expect(roots[0]).toEqualEpsilon(-1.0, CesiumMath.EPSILON15);
@@ -139,7 +138,7 @@ describe("Core/QuarticRealPolynomial", function () {
       -8.0,
       16.0,
       -16.0,
-      6.0
+      6.0,
     );
     expect(roots.length).toEqual(2);
     expect(roots[0]).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -152,7 +151,7 @@ describe("Core/QuarticRealPolynomial", function () {
       8.0,
       -6.0,
       -20.0,
-      16.0
+      16.0,
     );
     expect(roots.length).toEqual(4);
     expect(roots[0]).toEqualEpsilon(-4.0, CesiumMath.EPSILON15);
@@ -167,7 +166,7 @@ describe("Core/QuarticRealPolynomial", function () {
       4.0,
       -26.0,
       -28.0,
-      48.0
+      48.0,
     );
     expect(roots.length).toEqual(4);
     expect(roots[0]).toEqualEpsilon(-4.0, CesiumMath.EPSILON15);
@@ -182,7 +181,7 @@ describe("Core/QuarticRealPolynomial", function () {
       -8.0,
       14.0,
       -8.0,
-      3.0
+      3.0,
     );
     expect(roots.length).toEqual(0);
   });
@@ -193,7 +192,7 @@ describe("Core/QuarticRealPolynomial", function () {
       2.0,
       6.0,
       -26.0,
-      -30.0
+      -30.0,
     );
     expect(roots.length).toEqual(3);
     expect(roots[0]).toEqualEpsilon(-5.0, CesiumMath.EPSILON15);

@@ -55,7 +55,7 @@ describe("DataSources/WallGraphics", function () {
     expect(wall.maximumHeights.getValue()).toEqual(options.maximumHeights);
     expect(wall.shadows.getValue()).toEqual(options.shadows);
     expect(wall.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
   });
 
@@ -89,7 +89,7 @@ describe("DataSources/WallGraphics", function () {
     expect(target.maximumHeights).toBe(source.maximumHeights);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -167,7 +167,7 @@ describe("DataSources/WallGraphics", function () {
     expect(result.maximumHeights).toBe(source.maximumHeights);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -194,13 +194,13 @@ describe("DataSources/WallGraphics", function () {
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
   });
 });

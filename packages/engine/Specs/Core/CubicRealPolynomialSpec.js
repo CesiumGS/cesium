@@ -1,6 +1,4 @@
-import { CubicRealPolynomial } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import { CubicRealPolynomial, Math as CesiumMath } from "../../index.js";
 
 describe("Core/CubicRealPolynomial", function () {
   it("discriminant throws without a", function () {

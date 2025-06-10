@@ -54,7 +54,7 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
       globeTranslucency.packedDepthFramebuffer;
     expect(globeTranslucency._clearCommand.framebuffer).toBe(firstFramebuffer);
     expect(globeTranslucency._packedDepthCommand.framebuffer).toBe(
-      firstPackedDepthFramebuffer
+      firstPackedDepthFramebuffer,
     );
 
     viewport.width = 50;
@@ -62,10 +62,10 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
     expect(firstColorTexture.isDestroyed()).toBe(true);
     expect(globeTranslucency._colorTexture).not.toBe(firstColorTexture);
     expect(globeTranslucency._clearCommand.framebuffer).not.toBe(
-      firstFramebuffer
+      firstFramebuffer,
     );
     expect(globeTranslucency._packedDepthCommand.framebuffer).not.toBe(
-      firstPackedDepthFramebuffer
+      firstPackedDepthFramebuffer,
     );
   });
 
@@ -89,7 +89,7 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
     expect(firstColorTexture.isDestroyed()).toBe(true);
     expect(globeTranslucency.classificationTexture).not.toBe(firstColorTexture);
     expect(globeTranslucency.classificationTexture.pixelDatatype).toBe(
-      expectedPixelDatatype
+      expectedPixelDatatype,
     );
   });
 

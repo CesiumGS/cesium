@@ -28,9 +28,7 @@ RayShapeIntersection intersectScene(in vec2 screenCoord, in Ray ray, out Interse
     #endif
 
     // Depth
-    #if defined(DEPTH_TEST)
-        intersectDepth(screenCoord, ray, ix);
-    #endif
+    intersectDepth(screenCoord, ray, ix);
 
     // Find the first intersection that's in front of the ray
     #if (INTERSECTION_COUNT > 1)

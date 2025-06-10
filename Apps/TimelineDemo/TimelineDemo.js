@@ -1,6 +1,5 @@
 define(["dijit/dijit", "dojo"], function (dijit, dojo) {
   "use strict";
-  /* global Cesium */
 
   const defined = Cesium.defined;
   const Clock = Cesium.Clock;
@@ -22,7 +21,7 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
 
   function updateScrubTime(julianDate) {
     document.getElementById("mousePos").innerHTML = `${timeline.makeLabel(
-      julianDate
+      julianDate,
     )} UTC`;
   }
 
@@ -65,7 +64,7 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
       `<br/>Start: ${timeline.makeLabel(e.startJulian)} UTC` +
       `<br/>&nbsp;Stop: ${timeline.makeLabel(e.endJulian)} UTC` +
       `<br/>&nbsp;Span: ${spanToString(
-        e.totalSpan
+        e.totalSpan,
       )}<br/>&nbsp;&nbsp;Tic: ${spanToString(e.mainTicSpan)}`;
     updateScrubTime(clock.currentTime);
   }
@@ -91,7 +90,7 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
       }),
       8,
       Color.RED,
-      new Color(0.55, 0.55, 0.55, 0.25)
+      new Color(0.55, 0.55, 0.55, 0.25),
     );
 
     timeline.addTrack(
@@ -100,7 +99,7 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
         stop: endJulian,
       }),
       8,
-      Color.LIME
+      Color.LIME,
     );
 
     const middle = JulianDate.secondsDifference(endJulian, startJulian) / 4;
@@ -111,7 +110,7 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
       }),
       8,
       Color.DEEPSKYBLUE,
-      new Color(0.55, 0.55, 0.55, 0.25)
+      new Color(0.55, 0.55, 0.55, 0.25),
     );
 
     const clockViewModel = new ClockViewModel(clock);
@@ -216,7 +215,7 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
       timeline.resize();
       animation.resize();
     },
-    false
+    false,
   );
 
   dojo.ready(function () {

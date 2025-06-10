@@ -5,7 +5,6 @@ import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
-import defaultValue from "../../Core/defaultValue.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import ModelType from "./ModelType.js";
 
@@ -167,7 +166,7 @@ ModelFeatureTable.prototype.update = function (frameState) {
 
   const currentStyleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
     this._featuresLength,
-    this._batchTexture.translucentFeaturesLength
+    this._batchTexture.translucentFeaturesLength,
   );
 
   if (this._styleCommandsNeeded !== currentStyleCommandsNeeded) {
@@ -214,7 +213,7 @@ ModelFeatureTable.prototype.hasProperty = function (featureId, propertyName) {
 
 ModelFeatureTable.prototype.hasPropertyBySemantic = function (
   featureId,
-  propertyName
+  propertyName,
 ) {
   return this._propertyTable.hasPropertyBySemantic(featureId, propertyName);
 };
@@ -225,7 +224,7 @@ ModelFeatureTable.prototype.getProperty = function (featureId, name) {
 
 ModelFeatureTable.prototype.getPropertyBySemantic = function (
   featureId,
-  semantic
+  semantic,
 ) {
   return this._propertyTable.getPropertyBySemantic(featureId, semantic);
 };
@@ -264,16 +263,11 @@ ModelFeatureTable.prototype.applyStyle = function (style) {
   for (let i = 0; i < this._featuresLength; i++) {
     const feature = this.getFeature(i);
     const color = defined(style.color)
-      ? defaultValue(
-          style.color.evaluateColor(feature, scratchColor),
-          BatchTexture.DEFAULT_COLOR_VALUE
-        )
+      ? (style.color.evaluateColor(feature, scratchColor) ??
+        BatchTexture.DEFAULT_COLOR_VALUE)
       : BatchTexture.DEFAULT_COLOR_VALUE;
     const show = defined(style.show)
-      ? defaultValue(
-          style.show.evaluate(feature),
-          BatchTexture.DEFAULT_SHOW_VALUE
-        )
+      ? (style.show.evaluate(feature) ?? BatchTexture.DEFAULT_SHOW_VALUE)
       : BatchTexture.DEFAULT_SHOW_VALUE;
 
     this.setColor(i, color);

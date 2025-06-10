@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import CesiumMath from "./Math.js";
-import defaultValue from "./defaultValue.js";
 import DeveloperError from "./DeveloperError.js";
 import Quaternion from "./Quaternion.js";
 
@@ -60,7 +59,7 @@ Spline.getPointType = function (point) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "point must be a Cartesian3, Quaternion, or number."
+    "point must be a Cartesian3, Quaternion, or number.",
   );
   //>>includeEnd('debug');
 };
@@ -104,7 +103,7 @@ Spline.prototype.findTimeInterval = function (time, startIndex) {
 
   // Take advantage of temporal coherence by checking current, next and previous intervals
   // for containment of time.
-  startIndex = defaultValue(startIndex, 0);
+  startIndex = startIndex ?? 0;
 
   if (time >= times[startIndex]) {
     if (startIndex + 1 < length && time < times[startIndex + 1]) {

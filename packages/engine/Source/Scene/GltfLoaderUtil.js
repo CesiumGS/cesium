@@ -1,6 +1,6 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Sampler from "../Renderer/Sampler.js";
@@ -34,10 +34,8 @@ const GltfLoaderUtil = {};
  * @private
  */
 GltfLoaderUtil.getImageIdFromTexture = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const textureId = options.textureId;
-  const supportedImageFormats = options.supportedImageFormats;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltf, textureId, supportedImageFormats } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -72,13 +70,8 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
  * @private
  */
 GltfLoaderUtil.createSampler = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const textureInfo = options.textureInfo;
-  const compressedTextureNoMipmap = defaultValue(
-    options.compressedTextureNoMipmap,
-    false
-  );
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltf, textureInfo, compressedTextureNoMipmap = false } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -97,10 +90,10 @@ GltfLoaderUtil.createSampler = function (options) {
 
   if (defined(samplerId)) {
     const sampler = gltf.samplers[samplerId];
-    wrapS = defaultValue(sampler.wrapS, wrapS);
-    wrapT = defaultValue(sampler.wrapT, wrapT);
-    minFilter = defaultValue(sampler.minFilter, minFilter);
-    magFilter = defaultValue(sampler.magFilter, magFilter);
+    wrapS = sampler.wrapS ?? wrapS;
+    wrapT = sampler.wrapT ?? wrapT;
+    minFilter = sampler.minFilter ?? minFilter;
+    magFilter = sampler.magFilter ?? magFilter;
   }
 
   if (
@@ -139,30 +132,25 @@ const defaultScale = new Cartesian2(1.0, 1.0);
  * @returns {ModelComponents.TextureReader} The texture reader for this model.
  */
 GltfLoaderUtil.createModelTextureReader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const textureInfo = options.textureInfo;
-  const channels = options.channels;
-  const texture = options.texture;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { textureInfo, channels, texture } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.textureInfo", textureInfo);
   //>>includeEnd('debug');
 
-  let texCoord = defaultValue(textureInfo.texCoord, 0);
+  let texCoord = textureInfo.texCoord ?? 0;
   let transform;
 
-  const textureTransform = defaultValue(
-    textureInfo.extensions,
-    defaultValue.EMPTY_OBJECT
-  ).KHR_texture_transform;
+  const textureTransform = textureInfo.extensions?.KHR_texture_transform;
 
   if (defined(textureTransform)) {
-    texCoord = defaultValue(textureTransform.texCoord, texCoord);
+    texCoord = textureTransform.texCoord ?? texCoord;
 
     const offset = defined(textureTransform.offset)
       ? Cartesian2.unpack(textureTransform.offset)
       : Cartesian2.ZERO;
-    let rotation = defaultValue(textureTransform.rotation, 0.0);
+    let rotation = textureTransform.rotation ?? 0.0;
     const scale = defined(textureTransform.scale)
       ? Cartesian2.unpack(textureTransform.scale)
       : defaultScale;
@@ -186,6 +174,7 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   modelTextureReader.index = textureInfo.index;
   modelTextureReader.texture = texture;
   modelTextureReader.texCoord = texCoord;
+  modelTextureReader.scale = textureInfo.scale;
   modelTextureReader.transform = transform;
   modelTextureReader.channels = channels;
 

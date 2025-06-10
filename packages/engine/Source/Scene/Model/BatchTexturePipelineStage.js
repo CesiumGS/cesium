@@ -1,5 +1,4 @@
 import combine from "../../Core/combine.js";
-import defaultValue from "../../Core/defaultValue.js";
 
 /**
  * The batch texture stage is responsible for setting up the batch texture for the primitive.
@@ -25,7 +24,7 @@ const BatchTexturePipelineStage = {
 BatchTexturePipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const batchTextureUniforms = {};
@@ -45,7 +44,7 @@ BatchTexturePipelineStage.process = function (
   const batchTexture = featureTable.batchTexture;
   shaderBuilder.addUniform("sampler2D", "model_batchTexture");
   batchTextureUniforms.model_batchTexture = function () {
-    return defaultValue(batchTexture.batchTexture, batchTexture.defaultTexture);
+    return batchTexture.batchTexture ?? batchTexture.defaultTexture;
   };
 
   // Batch texture step size
@@ -65,7 +64,7 @@ BatchTexturePipelineStage.process = function (
 
   renderResources.uniformMap = combine(
     batchTextureUniforms,
-    renderResources.uniformMap
+    renderResources.uniformMap,
   );
 };
 

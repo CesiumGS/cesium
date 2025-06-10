@@ -8,7 +8,7 @@
       "voxel": {
         "properties": {
           "a": {
-            "type": "SCALAR",
+            "type": "VEC4",
             "componentType": "FLOAT32"
           }
         }
@@ -37,13 +37,13 @@
         1.0,
         1.0,
         -1.0,
-        0.0
+        500000.0
       ]
     },
-    "geometricError": 0.0,
+    "geometricError": 16.0,
     "refine": "REPLACE",
     "content": {
-      "uri": "tiles/{level}/{x}/{y}/{z}.json",
+      "uri": "tiles/{level}/{x}/{y}/{z}.gltf",
       "extensions": {
         "3DTILES_content_voxels": {
           "dimensions": [
@@ -57,7 +57,7 @@
     },
     "implicitTiling": {
       "subdivisionScheme": "OCTREE",
-      "subtreeLevels": 3,
+      "subtreeLevels": 1,
       "availableLevels": 1,
       "subtrees": {
         "uri": "subtrees/{level}/{x}/{y}/{z}.json"

@@ -86,17 +86,15 @@ function ProjectionPickerViewModel(scene) {
   });
 
   this._eventHelper = new EventHelper();
-  this._eventHelper.add(scene.morphComplete, function (
-    transitioner,
-    oldMode,
-    newMode,
-    isMorphing
-  ) {
-    that.sceneMode = newMode;
-    that._orthographic =
-      newMode === SceneMode.SCENE2D ||
-      that._scene.camera.frustum instanceof OrthographicFrustum;
-  });
+  this._eventHelper.add(
+    scene.morphComplete,
+    function (transitioner, oldMode, newMode, isMorphing) {
+      that.sceneMode = newMode;
+      that._orthographic =
+        newMode === SceneMode.SCENE2D ||
+        that._scene.camera.frustum instanceof OrthographicFrustum;
+    },
+  );
   this._eventHelper.add(scene.preRender, function () {
     that._flightInProgress = defined(scene.camera._currentFlight);
   });

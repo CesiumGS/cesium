@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,7 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta name="description" content="Apply materials to the globe." />
+    <meta name="description" content="Apply an elevation map to the globe." />
     <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       .demo-container {
@@ -80,8 +77,8 @@
       <div class="demo-container">
         <div>
           <label
-            ><input type="checkbox" data-bind="checked: enableContour" />Enable
-            Contour Lines</label
+            ><input type="checkbox" data-bind="checked: enableContour" />Enable Contour
+            Lines</label
           >
         </div>
         <div>
@@ -109,10 +106,7 @@
           <span data-bind="text: contourWidth"></span>px
         </div>
         <div>
-          <button
-            type="button"
-            data-bind="click: changeColor, enable: enableContour"
-          >
+          <button type="button" data-bind="click: changeColor, enable: enableContour">
             Change contour color
           </button>
         </div>
@@ -144,8 +138,7 @@
               components: {
                 diffuse:
                   "contourMaterial.alpha == 0.0 ? elevationRampMaterial.diffuse : contourMaterial.diffuse",
-                alpha:
-                  "max(contourMaterial.alpha, elevationRampMaterial.alpha)",
+                alpha: "max(contourMaterial.alpha, elevationRampMaterial.alpha)",
               },
             },
             translucent: false,
@@ -244,10 +237,7 @@
           contourWidth: 2.0,
           selectedShading: "elevation",
           changeColor: function () {
-            contourUniforms.color = Cesium.Color.fromRandom(
-              { alpha: 1.0 },
-              contourColor
-            );
+            contourUniforms.color = Cesium.Color.fromRandom({ alpha: 1.0 }, contourColor);
           },
         };
 
@@ -266,8 +256,7 @@
           if (hasContour) {
             if (selectedShading === "elevation") {
               material = getElevationContourMaterial();
-              shadingUniforms =
-                material.materials.elevationRampMaterial.uniforms;
+              shadingUniforms = material.materials.elevationRampMaterial.uniforms;
               shadingUniforms.minimumHeight = minHeight;
               shadingUniforms.maximumHeight = maxHeight;
               contourUniforms = material.materials.contourMaterial.uniforms;
@@ -340,7 +329,7 @@
                   destination: new Cesium.Cartesian3(
                     322100.7492728492,
                     5917960.047024654,
-                    3077602.646977297
+                    3077602.646977297,
                   ),
                   orientation: {
                     heading: 5.988151498702285,
@@ -348,9 +337,8 @@
                     roll: 0,
                   },
                 });
-                viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601(
-                  "2017-09-22T04:00:00Z"
-                );
+                viewer.clockViewModel.currentTime =
+                  Cesium.JulianDate.fromIso8601("2017-09-22T04:00:00Z");
               },
             },
             {
@@ -360,7 +348,7 @@
                   destination: new Cesium.Cartesian3(
                     -2495709.521843174,
                     -4391600.804712465,
-                    3884463.7192916023
+                    3884463.7192916023,
                   ),
                   orientation: {
                     heading: 1.7183056487769202,
@@ -368,9 +356,8 @@
                     roll: 0.0079181631783527,
                   },
                 });
-                viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601(
-                  "2017-09-22T18:00:00Z"
-                );
+                viewer.clockViewModel.currentTime =
+                  Cesium.JulianDate.fromIso8601("2017-09-22T18:00:00Z");
               },
             },
             {
@@ -380,7 +367,7 @@
                   destination: new Cesium.Cartesian3(
                     -2301222.367751603,
                     -3485269.915771613,
-                    4812080.961755785
+                    4812080.961755785,
                   ),
                   orientation: {
                     heading: 0.11355958593902571,
@@ -388,9 +375,8 @@
                     roll: 0.00039019018274721873,
                   },
                 });
-                viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601(
-                  "2017-09-22T18:00:00Z"
-                );
+                viewer.clockViewModel.currentTime =
+                  Cesium.JulianDate.fromIso8601("2017-09-22T18:00:00Z");
               },
             },
             {
@@ -400,7 +386,7 @@
                   destination: new Cesium.Cartesian3(
                     282157.6960889096,
                     5638892.465594703,
-                    2978736.186473513
+                    2978736.186473513,
                   ),
                   orientation: {
                     heading: 4.747266966349747,
@@ -408,13 +394,12 @@
                     roll: 6.280340554587955,
                   },
                 });
-                viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601(
-                  "2017-09-22T04:00:00Z"
-                );
+                viewer.clockViewModel.currentTime =
+                  Cesium.JulianDate.fromIso8601("2017-09-22T04:00:00Z");
               },
             },
           ],
-          "zoomButtons"
+          "zoomButtons",
         );
         //Sandcastle_End
       };

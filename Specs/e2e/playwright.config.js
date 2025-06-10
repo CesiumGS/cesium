@@ -51,7 +51,14 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"], viewport: defaultViewport },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: defaultViewport,
+        launchOptions: {
+          // this forces chrome to use the gpu for webgl which greatly speeds up tests
+          args: ["--use-angle=gl"],
+        },
+      },
     },
     {
       name: "firefox",

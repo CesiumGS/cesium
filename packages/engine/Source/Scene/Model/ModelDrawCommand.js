@@ -3,7 +3,7 @@ import Cartesian2 from "../../Core/Cartesian2.js";
 import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
@@ -34,7 +34,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @private
  */
 function ModelDrawCommand(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;
@@ -124,7 +124,7 @@ function ModelDerivedCommand(options) {
   this.updateDebugShowBoundingVolume = options.updateDebugShowBoundingVolume;
 
   // Whether this ModelDerivedCommand is in 2D.
-  this.is2D = defaultValue(options.is2D, false);
+  this.is2D = options.is2D ?? false;
 
   // A ModelDerivedCommand that is the 2D version of this one.
   this.derivedCommand2D = undefined;
@@ -299,7 +299,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
       this._boundingVolume = BoundingSphere.transform(
         this.runtimePrimitive.boundingSphere,
         this._modelMatrix,
-        this._boundingVolume
+        this._boundingVolume,
       );
     },
   },
@@ -413,7 +413,7 @@ function updateModelMatrix2D(drawCommand, frameState) {
   const modelMatrix = drawCommand._modelMatrix;
   drawCommand._modelMatrix2D = Matrix4.clone(
     modelMatrix,
-    drawCommand._modelMatrix2D
+    drawCommand._modelMatrix2D,
   );
 
   // Change the translation's y-component so it appears on the opposite side
@@ -427,7 +427,7 @@ function updateModelMatrix2D(drawCommand, frameState) {
   drawCommand._boundingVolume2D = BoundingSphere.transform(
     drawCommand.runtimePrimitive.boundingSphere,
     drawCommand._modelMatrix2D,
-    drawCommand._boundingVolume2D
+    drawCommand._boundingVolume2D,
   );
 }
 
@@ -537,7 +537,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
         pushCommand(
           tileset._backfaceCommands,
           this._skipLodBackfaceCommand,
-          use2D
+          use2D,
         );
       }
 
@@ -578,7 +578,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
  */
 ModelDrawCommand.prototype.pushSilhouetteCommands = function (
   frameState,
-  result
+  result,
 ) {
   const use2D = shouldUse2DCommands(this, frameState);
   pushCommand(result, this._silhouetteColorCommand, use2D);

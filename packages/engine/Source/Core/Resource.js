@@ -3,7 +3,7 @@ import appendForwardSlash from "./appendForwardSlash.js";
 import Check from "./Check.js";
 import clone from "./clone.js";
 import combine from "./combine.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -91,7 +91,7 @@ const xhrBlobSupported = (function () {
  * });
  */
 function Resource(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   if (typeof options === "string") {
     options = {
       url: options,
@@ -118,7 +118,7 @@ function Resource(options) {
    *
    * @type {Request}
    */
-  this.request = defaultValue(options.request, new Request());
+  this.request = options.request ?? new Request();
 
   /**
    * A proxy to be used when loading the resource.
@@ -139,10 +139,10 @@ function Resource(options) {
    *
    * @type {number}
    */
-  this.retryAttempts = defaultValue(options.retryAttempts, 0);
+  this.retryAttempts = options.retryAttempts ?? 0;
   this._retryCount = 0;
 
-  const parseUrl = defaultValue(options.parseUrl, true);
+  const parseUrl = options.parseUrl ?? true;
   if (parseUrl) {
     this.parseUrl(options.url, true, true);
   } else {
@@ -603,13 +603,13 @@ Resource.prototype.setQueryParameters = function (params, useAsDefault) {
     this._queryParameters = combineQueryParameters(
       this._queryParameters,
       params,
-      false
+      false,
     );
   } else {
     this._queryParameters = combineQueryParameters(
       params,
       this._queryParameters,
-      false
+      false,
     );
   }
 };
@@ -624,7 +624,7 @@ Resource.prototype.appendQueryParameters = function (params) {
   this._queryParameters = combineQueryParameters(
     params,
     this._queryParameters,
-    true
+    true,
   );
 };
 
@@ -664,20 +664,20 @@ Resource.prototype.getDerivedResource = function (options) {
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    const preserveQuery = defaultValue(options.preserveQueryParameters, false);
+    const preserveQuery = options.preserveQueryParameters ?? false;
     resource.parseUrl(options.url, true, preserveQuery, this._url);
   }
 
   if (defined(options.queryParameters)) {
     resource._queryParameters = combine(
       options.queryParameters,
-      resource.queryParameters
+      resource.queryParameters,
     );
   }
   if (defined(options.templateValues)) {
     resource._templateValues = combine(
       options.templateValues,
-      resource.templateValues
+      resource.templateValues,
     );
   }
   if (defined(options.headers)) {
@@ -897,14 +897,11 @@ Resource.fetchBlob = function (options) {
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
 Resource.prototype.fetchImage = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const preferImageBitmap = defaultValue(options.preferImageBitmap, false);
-  const preferBlob = defaultValue(options.preferBlob, false);
-  const flipY = defaultValue(options.flipY, false);
-  const skipColorSpaceConversion = defaultValue(
-    options.skipColorSpaceConversion,
-    false
-  );
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const preferImageBitmap = options.preferImageBitmap ?? false;
+  const preferBlob = options.preferBlob ?? false;
+  const flipY = options.flipY ?? false;
+  const skipColorSpaceConversion = options.skipColorSpaceConversion ?? false;
 
   checkAndResetRequest(this.request);
   // We try to load the image normally if
@@ -1029,7 +1026,7 @@ function fetchImage(options) {
       deferred,
       flipY,
       skipColorSpaceConversion,
-      preferImageBitmap
+      preferImageBitmap,
     );
 
     return deferred.promise;
@@ -1270,7 +1267,7 @@ Resource.fetchXML = function (options) {
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
 Resource.prototype.fetchJsonp = function (callbackParameterName) {
-  callbackParameterName = defaultValue(callbackParameterName, "callback");
+  callbackParameterName = callbackParameterName ?? "callback";
 
   checkAndResetRequest(this.request);
 
@@ -1380,7 +1377,7 @@ Resource.prototype._makeRequest = function (options) {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     );
     if (defined(xhr) && defined(xhr.abort)) {
       request.cancelFunction = function () {
@@ -1461,7 +1458,7 @@ function decodeDataUriArrayBuffer(isBase64, data) {
 }
 
 function decodeDataUri(dataUriRegexResult, responseType) {
-  responseType = defaultValue(responseType, "");
+  responseType = responseType ?? "";
   const mimeType = dataUriRegexResult[1];
   const isBase64 = !!dataUriRegexResult[2];
   const data = dataUriRegexResult[3];
@@ -1483,7 +1480,7 @@ function decodeDataUri(dataUriRegexResult, responseType) {
       parser = new DOMParser();
       return parser.parseFromString(
         decodeDataUriText(isBase64, data),
-        mimeType
+        mimeType,
       );
     case "json":
       return JSON.parse(decodeDataUriText(isBase64, data));
@@ -1915,7 +1912,7 @@ Resource._Implementations = {};
 Resource._Implementations.loadImageElement = function (
   url,
   crossOrigin,
-  deferred
+  deferred,
 ) {
   const image = new Image();
 
@@ -1962,7 +1959,7 @@ Resource._Implementations.createImage = function (
   deferred,
   flipY,
   skipColorSpaceConversion,
-  preferImageBitmap
+  preferImageBitmap,
 ) {
   const url = request.url;
   // Passing an Image to createImageBitmap will force it to run on the main thread
@@ -1990,7 +1987,7 @@ Resource._Implementations.createImage = function (
         xhrDeferred,
         undefined,
         undefined,
-        undefined
+        undefined,
       );
 
       if (defined(xhr) && defined(xhr.abort)) {
@@ -2003,8 +2000,8 @@ Resource._Implementations.createImage = function (
           if (!defined(blob)) {
             deferred.reject(
               new RuntimeError(
-                `Successfully retrieved ${url} but it contained no content.`
-              )
+                `Successfully retrieved ${url} but it contained no content.`,
+              ),
             );
             return;
           }
@@ -2035,7 +2032,7 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   Check.typeOf.bool("options.premultiplyAlpha", options.premultiplyAlpha);
   Check.typeOf.bool(
     "options.skipColorSpaceConversion",
-    options.skipColorSpaceConversion
+    options.skipColorSpaceConversion,
   );
 
   return createImageBitmap(blob, {
@@ -2052,7 +2049,7 @@ function loadWithHttpRequest(
   data,
   headers,
   deferred,
-  overrideMimeType
+  overrideMimeType,
 ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
   fetch(url, {
@@ -2066,7 +2063,7 @@ function loadWithHttpRequest(
           responseHeaders[key] = value;
         });
         deferred.reject(
-          new RequestErrorEvent(response.status, response, responseHeaders)
+          new RequestErrorEvent(response.status, response, responseHeaders),
         );
         return;
       }
@@ -2096,7 +2093,7 @@ Resource._Implementations.loadWithXhr = function (
   data,
   headers,
   deferred,
-  overrideMimeType
+  overrideMimeType,
 ) {
   const dataUriRegexResult = dataUriRegex.exec(url);
   if (dataUriRegexResult !== null) {
@@ -2112,7 +2109,7 @@ Resource._Implementations.loadWithXhr = function (
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     );
     return;
   }
@@ -2158,8 +2155,8 @@ Resource._Implementations.loadWithXhr = function (
         new RequestErrorEvent(
           xhr.status,
           xhr.response,
-          xhr.getAllResponseHeaders()
-        )
+          xhr.getAllResponseHeaders(),
+        ),
       );
       return;
     }
@@ -2212,7 +2209,7 @@ Resource._Implementations.loadWithXhr = function (
       deferred.resolve(xhr.responseText);
     } else {
       deferred.reject(
-        new RuntimeError("Invalid XMLHttpRequest response type.")
+        new RuntimeError("Invalid XMLHttpRequest response type."),
       );
     }
   };
@@ -2229,7 +2226,7 @@ Resource._Implementations.loadWithXhr = function (
 Resource._Implementations.loadAndExecuteScript = function (
   url,
   functionName,
-  deferred
+  deferred,
 ) {
   return loadAndExecuteScript(url, functionName).catch(function (e) {
     deferred.reject(e);
@@ -2261,7 +2258,7 @@ Resource.DEFAULT = Object.freeze(
       typeof document === "undefined"
         ? ""
         : document.location.href.split("?")[0],
-  })
+  }),
 );
 
 /**

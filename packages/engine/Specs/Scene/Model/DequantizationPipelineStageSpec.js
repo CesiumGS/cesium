@@ -96,7 +96,7 @@ describe(
           [
             "    attributes.normalMC = czm_octDecode(a_quantized_normalMC, model_normalizationRange_normalMC).zxy;",
             "    attributes.positionMC = model_quantizedVolumeOffset_positionMC + a_quantized_positionMC * model_quantizedVolumeStepSize_positionMC;",
-          ]
+          ],
         );
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentFunctionIds(shaderBuilder, []);
@@ -125,9 +125,11 @@ describe(
         const uniformValues = {
           normalRange: uniformMap.model_normalizationRange_normalMC(),
           positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
-          positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
+          positionStepSize:
+            uniformMap.model_quantizedVolumeStepSize_positionMC(),
           texCoordOffset: uniformMap.model_quantizedVolumeOffset_texCoord_0(),
-          texCoordStepSize: uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
+          texCoordStepSize:
+            uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
         };
 
         const expected = {
@@ -135,20 +137,20 @@ describe(
           positionOffset: new Cartesian3(
             -2.430910110473633,
             0.2667999863624573,
-            -1.3960000276565552
+            -1.3960000276565552,
           ),
           positionStepSize: new Cartesian3(
             0.0002971928118058615,
             0.0002971928118058615,
-            0.0002971928118058615
+            0.0002971928118058615,
           ),
           texCoordOffset: new Cartesian2(
             0.0029563899151980877,
-            0.015672028064727783
+            0.015672028064727783,
           ),
           texCoordStepSize: new Cartesian2(
             0.0002397004064622816,
-            0.0002397004064622816
+            0.0002397004064622816,
           ),
         };
 
@@ -180,9 +182,11 @@ describe(
         const uniformValues = {
           normalRange: uniformMap.model_normalizationRange_normalMC(),
           texCoordOffset: uniformMap.model_quantizedVolumeOffset_texCoord_0(),
-          texCoordStepSize: uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
+          texCoordStepSize:
+            uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
           positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
-          positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
+          positionStepSize:
+            uniformMap.model_quantizedVolumeStepSize_positionMC(),
           colorOffset: uniformMap.model_quantizedVolumeOffset_color_0(),
           colorStepSize: uniformMap.model_quantizedVolumeStepSize_color_0(),
         };
@@ -193,24 +197,24 @@ describe(
           positionStepSize: new Cartesian3(
             0.00006103888176768602,
             0.00006103888176768602,
-            0.00006103888176768602
+            0.00006103888176768602,
           ),
           texCoordOffset: new Cartesian2(0, 0),
           texCoordStepSize: new Cartesian2(
             0.0002442002442002442,
-            0.0002442002442002442
+            0.0002442002442002442,
           ),
           colorOffset: new Cartesian4(
             4.908018991223173e-10,
             0.0006933663971722126,
             0.000028382812160998583,
-            0
+            0,
           ),
           colorStepSize: new Cartesian4(
             0.00392145689795999,
             0.00392145689795999,
             0.00392145689795999,
-            1
+            1,
           ),
         };
 
@@ -240,22 +244,24 @@ describe(
 
         const uniformValues = {
           texCoordOffset: uniformMap.model_quantizedVolumeOffset_texCoord_0(),
-          texCoordStepSize: uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
+          texCoordStepSize:
+            uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
           positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
-          positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
+          positionStepSize:
+            uniformMap.model_quantizedVolumeStepSize_positionMC(),
         };
 
         const expected = {
           texCoordOffset: new Cartesian2(0, 0),
           texCoordStepSize: new Cartesian2(
             0.0002442002442002442,
-            0.0002442002442002442
+            0.0002442002442002442,
           ),
           positionOffset: new Cartesian3(-0.5, -0.5, -0.5),
           positionStepSize: new Cartesian3(
             0.00006103888176768602,
             0.00006103888176768602,
-            0.00006103888176768602
+            0.00006103888176768602,
           ),
         };
 
@@ -284,12 +290,12 @@ describe(
           shaderBuilder,
           DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
           DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
-          []
+          [],
         );
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentFunctionIds(shaderBuilder, []);
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

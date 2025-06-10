@@ -29,7 +29,7 @@ function viewerCesiumInspectorMixin(viewer) {
   viewer.container.appendChild(cesiumInspectorContainer);
   const cesiumInspector = new CesiumInspector(
     cesiumInspectorContainer,
-    viewer.scene
+    viewer.scene,
   );
 
   Object.defineProperties(viewer, {

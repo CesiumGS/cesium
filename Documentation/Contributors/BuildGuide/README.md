@@ -21,19 +21,25 @@
     npm install
    ```
 
-3. Start the [server](#development-server)
+3. Build the project
+
+   ```bash
+   npm run build
+   ```
+
+4. Start the [server](#development-server)
 
    ```bash
    npm start
    ```
 
-4. Navigate to : [`http://localhost:8080/`](http://localhost:8080)
+5. Navigate to : [`http://localhost:8080/`](http://localhost:8080)
 
 ---
 
 ## Get the Code
 
-- Setup Git if it isn't already ([link](https://help.github.com/articles/set-up-git/#platform-all)).
+- [Setup Git](https://help.github.com/articles/set-up-git/#platform-all) if it isn't already.
   - New to git or need a refresher? Now's a good time to learn! [Easy tutorials here.](https://guides.github.com/)
   - Make sure your SSH keys are configured ([linux](https://help.github.com/articles/generating-ssh-keys#platform-linux) | [mac](https://help.github.com/articles/generating-ssh-keys#platform-mac) | [windows](https://help.github.com/articles/generating-ssh-keys#platform-windows)).
   - Double-check your settings for name and email: `git config --get-regexp user.*`.
@@ -53,7 +59,7 @@
 
 Prerequisites:
 
-- Install [Node.js](http://nodejs.org/) on your system. Building Cesium requires Node 18.x or newer.
+- Install [Node.js](http://nodejs.org/) on your system. Building Cesium requires Node 20.x or newer.
 
 Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 
@@ -61,8 +67,13 @@ Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) fo
 npm install
 ```
 
-Cesium ships with a simple HTTP server for testing.
-Once all modules have been installed, run `npm start` to use it:
+Cesium ships with a simple HTTP server for testing. Once all modules have been installed, run `npm run build` to build the project:
+
+```bash
+npm run build
+```
+
+Then, run the development server:
 
 ```bash
 npm start

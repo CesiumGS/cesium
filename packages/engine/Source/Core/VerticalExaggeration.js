@@ -1,4 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
+import Cartographic from "./Cartographic.js";
 import DeveloperError from "./DeveloperError.js";
 import defined from "./defined.js";
 
@@ -22,11 +23,11 @@ VerticalExaggeration.getHeight = function (height, scale, relativeHeight) {
   if (!Number.isFinite(relativeHeight)) {
     throw new DeveloperError("relativeHeight must be a finite number.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
   return (height - relativeHeight) * scale + relativeHeight;
 };
 
-const scratchCartographic = new Cartesian3();
+const scratchCartographic = new Cartographic();
 
 /**
  * Scales a position by exaggeration.
@@ -42,11 +43,11 @@ VerticalExaggeration.getPosition = function (
   ellipsoid,
   verticalExaggeration,
   verticalExaggerationRelativeHeight,
-  result
+  result,
 ) {
   const cartographic = ellipsoid.cartesianToCartographic(
     position,
-    scratchCartographic
+    scratchCartographic,
   );
   // If the position is too near the center of the ellipsoid, exaggeration is undefined.
   if (!defined(cartographic)) {
@@ -55,14 +56,14 @@ VerticalExaggeration.getPosition = function (
   const newHeight = VerticalExaggeration.getHeight(
     cartographic.height,
     verticalExaggeration,
-    verticalExaggerationRelativeHeight
+    verticalExaggerationRelativeHeight,
   );
   return Cartesian3.fromRadians(
     cartographic.longitude,
     cartographic.latitude,
     newHeight,
     ellipsoid,
-    result
+    result,
   );
 };
 

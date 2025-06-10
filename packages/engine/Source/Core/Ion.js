@@ -4,12 +4,14 @@ import Resource from "./Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2MThmZGJiNi1kMDRlLTQ4ZGMtYjU0Ny0yNTljMjM1NzliN2MiLCJpZCI6MjU5LCJpYXQiOjE3MDkzMDQzNjZ9.7gsbNN-OaPZJ7QwMDB2vdF2geQDd8lMBAEK77_5Qol4";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZTlhZTM1MC1lNjM0LTRkNTQtYTE3OC02NWI0YjQ3NTAxNzgiLCJpZCI6MjU5LCJpYXQiOjE3NDg4ODUxMzV9.8mGFxgmp1QW0MIdArET4EVn5c7DKlt_HHA_Gnnu7eF4";
+
 const defaultTokenMessage =
   '<b> \
         This application is using Cesium\'s default ion access token. Please assign <i>Cesium.Ion.defaultAccessToken</i> \
         with an access token from your ion account before making any Cesium API calls. \
         You can sign up for a free ion account at <a href="https://cesium.com">https://cesium.com</a>.</b>';
+
 /**
  * Default settings for accessing the Cesium ion API.
  *

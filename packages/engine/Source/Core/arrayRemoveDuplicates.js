@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 
@@ -51,7 +50,7 @@ function arrayRemoveDuplicates(
   values,
   equalsEpsilon,
   wrapAround,
-  removedIndices
+  removedIndices,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("equalsEpsilon", equalsEpsilon);
@@ -61,7 +60,7 @@ function arrayRemoveDuplicates(
     return undefined;
   }
 
-  wrapAround = defaultValue(wrapAround, false);
+  wrapAround = wrapAround ?? false;
   const storeRemovedIndices = defined(removedIndices);
 
   const length = values.length;

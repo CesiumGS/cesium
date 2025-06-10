@@ -108,7 +108,7 @@ describe(
         SceneMode2DPipelineStage.process(
           renderResources,
           primitive,
-          scene.frameState
+          scene.frameState,
         );
 
         const model = renderResources.model;
@@ -123,7 +123,7 @@ describe(
         // Check that the position attribute's typed array has been unloaded.
         const positionAttribute = ModelUtility.getAttributeBySemantic(
           primitive,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         expect(positionAttribute.typedArray).toBeUndefined();
 
@@ -135,12 +135,12 @@ describe(
 
         const translationMatrix = Matrix4.fromTranslation(
           runtimePrimitive.boundingSphere2D.center,
-          scratchMatrix
+          scratchMatrix,
         );
         const expected = Matrix4.multiplyTransformation(
           scene.frameState.context.uniformState.view,
           translationMatrix,
-          translationMatrix
+          translationMatrix,
         );
         expect(renderResources.uniformMap.u_modelView2D()).toEqual(expected);
       });
@@ -160,7 +160,7 @@ describe(
         SceneMode2DPipelineStage.process(
           renderResources,
           primitive,
-          scene.frameState
+          scene.frameState,
         );
 
         const model = renderResources.model;
@@ -175,7 +175,7 @@ describe(
         // Check that the position attribute's typed array has been unloaded.
         const positionAttribute = ModelUtility.getAttributeBySemantic(
           primitive,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         expect(positionAttribute.typedArray).toBeUndefined();
 
@@ -186,12 +186,12 @@ describe(
 
         const translationMatrix = Matrix4.fromTranslation(
           runtimePrimitive.boundingSphere2D.center,
-          scratchMatrix
+          scratchMatrix,
         );
         const expected = Matrix4.multiplyTransformation(
           scene.frameState.context.uniformState.view,
           translationMatrix,
-          translationMatrix
+          translationMatrix,
         );
         expect(renderResources.uniformMap.u_modelView2D()).toEqual(expected);
       });
@@ -211,7 +211,7 @@ describe(
         SceneMode2DPipelineStage.process(
           renderResources,
           primitive,
-          scene.frameState
+          scene.frameState,
         );
 
         // Only the 2D bounding sphere will be computed for the primitive.
@@ -222,7 +222,7 @@ describe(
         // Check that the position attribute's typed array has been unloaded.
         const positionAttribute = ModelUtility.getAttributeBySemantic(
           primitive,
-          VertexAttributeSemantic.POSITION
+          VertexAttributeSemantic.POSITION,
         );
         expect(positionAttribute.typedArray).toBeUndefined();
 
@@ -235,5 +235,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

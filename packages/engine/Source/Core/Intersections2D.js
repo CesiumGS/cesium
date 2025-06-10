@@ -43,7 +43,7 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
   u0,
   u1,
   u2,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(threshold)) {
@@ -242,7 +242,7 @@ Intersections2D.computeBarycentricCoordinates = function (
   y2,
   x3,
   y3,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(x)) {
@@ -319,7 +319,7 @@ Intersections2D.computeLineSegmentLineSegmentIntersection = function (
   y10,
   x11,
   y11,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("x00", x00);

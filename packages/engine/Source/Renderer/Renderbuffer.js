@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -10,7 +10,7 @@ import RenderbufferFormat from "./RenderbufferFormat.js";
  * @private
  */
 function Renderbuffer(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -20,12 +20,12 @@ function Renderbuffer(options) {
   const gl = context._gl;
   const maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
 
-  const format = defaultValue(options.format, RenderbufferFormat.RGBA4);
+  const format = options.format ?? RenderbufferFormat.RGBA4;
   const width = defined(options.width) ? options.width : gl.drawingBufferWidth;
   const height = defined(options.height)
     ? options.height
     : gl.drawingBufferHeight;
-  const numSamples = defaultValue(options.numSamples, 1);
+  const numSamples = options.numSamples ?? 1;
 
   //>>includeStart('debug', pragmas.debug);
   if (!RenderbufferFormat.validate(format)) {
@@ -36,7 +36,7 @@ function Renderbuffer(options) {
 
   if (width > maximumRenderbufferSize) {
     throw new DeveloperError(
-      `Width must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`
+      `Width must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`,
     );
   }
 
@@ -44,7 +44,7 @@ function Renderbuffer(options) {
 
   if (height > maximumRenderbufferSize) {
     throw new DeveloperError(
-      `Height must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`
+      `Height must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`,
     );
   }
   //>>includeEnd('debug');
@@ -62,7 +62,7 @@ function Renderbuffer(options) {
       numSamples,
       format,
       width,
-      height
+      height,
     );
   } else {
     gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);

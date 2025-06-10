@@ -147,27 +147,23 @@ describe("Scene/ContentMetadata", function () {
 
   it("getPropertyBySemantic returns the property value", function () {
     expect(contentMetadata.getPropertyBySemantic("COLOR")).toEqual([
-      255,
-      125,
-      0,
+      255, 125, 0,
     ]);
   });
 
   it("setPropertyBySemantic sets property value", function () {
     expect(contentMetadata.getPropertyBySemantic("COLOR")).toEqual([
-      255,
-      125,
-      0,
+      255, 125, 0,
     ]);
     expect(contentMetadata.setPropertyBySemantic("COLOR", [0, 0, 0])).toBe(
-      true
+      true,
     );
     expect(contentMetadata.getPropertyBySemantic("COLOR")).toEqual([0, 0, 0]);
   });
 
   it("setPropertyBySemantic returns false if the semantic doesn't exist", function () {
     expect(contentMetadata.setPropertyBySemantic("AUTHOR", "Test Author")).toBe(
-      false
+      false,
     );
   });
 });

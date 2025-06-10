@@ -1,7 +1,6 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Rectangle from "./Rectangle.js";
@@ -70,7 +69,7 @@ Object.defineProperties(EllipsoidalOccluder.prototype, {
       const ellipsoid = this._ellipsoid;
       const cv = ellipsoid.transformPositionToScaledSpace(
         cameraPosition,
-        this._cameraPositionInScaledSpace
+        this._cameraPositionInScaledSpace,
       );
       const vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
 
@@ -100,12 +99,12 @@ EllipsoidalOccluder.prototype.isPointVisible = function (occludee) {
   const ellipsoid = this._ellipsoid;
   const occludeeScaledSpacePosition = ellipsoid.transformPositionToScaledSpace(
     occludee,
-    scratchCartesian
+    scratchCartesian,
   );
   return isScaledSpacePointVisible(
     occludeeScaledSpacePosition,
     this._cameraPositionInScaledSpace,
-    this._distanceToLimbInScaledSpaceSquared
+    this._distanceToLimbInScaledSpaceSquared,
   );
 };
 
@@ -126,12 +125,12 @@ EllipsoidalOccluder.prototype.isPointVisible = function (occludee) {
  * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
  */
 EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function (
-  occludeeScaledSpacePosition
+  occludeeScaledSpacePosition,
 ) {
   return isScaledSpacePointVisible(
     occludeeScaledSpacePosition,
     this._cameraPositionInScaledSpace,
-    this._distanceToLimbInScaledSpaceSquared
+    this._distanceToLimbInScaledSpaceSquared,
   );
 };
 
@@ -147,36 +146,34 @@ const scratchCameraPositionInScaledSpaceShrunk = new Cartesian3();
  * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space of the possibly-shrunk ellipsoid.
  * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
  */
-EllipsoidalOccluder.prototype.isScaledSpacePointVisiblePossiblyUnderEllipsoid = function (
-  occludeeScaledSpacePosition,
-  minimumHeight
-) {
-  const ellipsoid = this._ellipsoid;
-  let vhMagnitudeSquared;
-  let cv;
+EllipsoidalOccluder.prototype.isScaledSpacePointVisiblePossiblyUnderEllipsoid =
+  function (occludeeScaledSpacePosition, minimumHeight) {
+    const ellipsoid = this._ellipsoid;
+    let vhMagnitudeSquared;
+    let cv;
 
-  if (
-    defined(minimumHeight) &&
-    minimumHeight < 0.0 &&
-    ellipsoid.minimumRadius > -minimumHeight
-  ) {
-    // This code is similar to the cameraPosition setter, but unrolled for performance because it will be called a lot.
-    cv = scratchCameraPositionInScaledSpaceShrunk;
-    cv.x = this._cameraPosition.x / (ellipsoid.radii.x + minimumHeight);
-    cv.y = this._cameraPosition.y / (ellipsoid.radii.y + minimumHeight);
-    cv.z = this._cameraPosition.z / (ellipsoid.radii.z + minimumHeight);
-    vhMagnitudeSquared = cv.x * cv.x + cv.y * cv.y + cv.z * cv.z - 1.0;
-  } else {
-    cv = this._cameraPositionInScaledSpace;
-    vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
-  }
+    if (
+      defined(minimumHeight) &&
+      minimumHeight < 0.0 &&
+      ellipsoid.minimumRadius > -minimumHeight
+    ) {
+      // This code is similar to the cameraPosition setter, but unrolled for performance because it will be called a lot.
+      cv = scratchCameraPositionInScaledSpaceShrunk;
+      cv.x = this._cameraPosition.x / (ellipsoid.radii.x + minimumHeight);
+      cv.y = this._cameraPosition.y / (ellipsoid.radii.y + minimumHeight);
+      cv.z = this._cameraPosition.z / (ellipsoid.radii.z + minimumHeight);
+      vhMagnitudeSquared = cv.x * cv.x + cv.y * cv.y + cv.z * cv.z - 1.0;
+    } else {
+      cv = this._cameraPositionInScaledSpace;
+      vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
+    }
 
-  return isScaledSpacePointVisible(
-    occludeeScaledSpacePosition,
-    cv,
-    vhMagnitudeSquared
-  );
-};
+    return isScaledSpacePointVisible(
+      occludeeScaledSpacePosition,
+      cv,
+      vhMagnitudeSquared,
+    );
+  };
 
 /**
  * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
@@ -197,13 +194,13 @@ EllipsoidalOccluder.prototype.isScaledSpacePointVisiblePossiblyUnderEllipsoid = 
 EllipsoidalOccluder.prototype.computeHorizonCullingPoint = function (
   directionToPoint,
   positions,
-  result
+  result,
 ) {
   return computeHorizonCullingPointFromPositions(
     this._ellipsoid,
     directionToPoint,
     positions,
-    result
+    result,
   );
 };
 
@@ -226,24 +223,20 @@ const scratchEllipsoidShrunk = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
  * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
  * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
  */
-EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid = function (
-  directionToPoint,
-  positions,
-  minimumHeight,
-  result
-) {
-  const possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(
-    this._ellipsoid,
-    minimumHeight,
-    scratchEllipsoidShrunk
-  );
-  return computeHorizonCullingPointFromPositions(
-    possiblyShrunkEllipsoid,
-    directionToPoint,
-    positions,
-    result
-  );
-};
+EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid =
+  function (directionToPoint, positions, minimumHeight, result) {
+    const possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(
+      this._ellipsoid,
+      minimumHeight,
+      scratchEllipsoidShrunk,
+    );
+    return computeHorizonCullingPointFromPositions(
+      possiblyShrunkEllipsoid,
+      directionToPoint,
+      positions,
+      result,
+    );
+  };
 /**
  * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
  * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
@@ -262,22 +255,17 @@ EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid =
  * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
  * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
  */
-EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices = function (
-  directionToPoint,
-  vertices,
-  stride,
-  center,
-  result
-) {
-  return computeHorizonCullingPointFromVertices(
-    this._ellipsoid,
-    directionToPoint,
-    vertices,
-    stride,
-    center,
-    result
-  );
-};
+EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices =
+  function (directionToPoint, vertices, stride, center, result) {
+    return computeHorizonCullingPointFromVertices(
+      this._ellipsoid,
+      directionToPoint,
+      vertices,
+      stride,
+      center,
+      result,
+    );
+  };
 
 /**
  * Similar to {@link EllipsoidalOccluder#computeHorizonCullingPointFromVertices} except computes the culling
@@ -298,28 +286,22 @@ EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices = function 
  * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
  * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
  */
-EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid = function (
-  directionToPoint,
-  vertices,
-  stride,
-  center,
-  minimumHeight,
-  result
-) {
-  const possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(
-    this._ellipsoid,
-    minimumHeight,
-    scratchEllipsoidShrunk
-  );
-  return computeHorizonCullingPointFromVertices(
-    possiblyShrunkEllipsoid,
-    directionToPoint,
-    vertices,
-    stride,
-    center,
-    result
-  );
-};
+EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid =
+  function (directionToPoint, vertices, stride, center, minimumHeight, result) {
+    const possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(
+      this._ellipsoid,
+      minimumHeight,
+      scratchEllipsoidShrunk,
+    );
+    return computeHorizonCullingPointFromVertices(
+      possiblyShrunkEllipsoid,
+      directionToPoint,
+      vertices,
+      stride,
+      center,
+      result,
+    );
+  };
 
 const subsampleScratch = [];
 
@@ -335,31 +317,28 @@ const subsampleScratch = [];
  * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
  * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
  */
-EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectangle = function (
-  rectangle,
-  ellipsoid,
-  result
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("rectangle", rectangle);
-  //>>includeEnd('debug');
+EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectangle =
+  function (rectangle, ellipsoid, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("rectangle", rectangle);
+    //>>includeEnd('debug');
 
-  const positions = Rectangle.subsample(
-    rectangle,
-    ellipsoid,
-    0.0,
-    subsampleScratch
-  );
-  const bs = BoundingSphere.fromPoints(positions);
+    const positions = Rectangle.subsample(
+      rectangle,
+      ellipsoid,
+      0.0,
+      subsampleScratch,
+    );
+    const bs = BoundingSphere.fromPoints(positions);
 
-  // If the bounding sphere center is too close to the center of the occluder, it doesn't make
-  // sense to try to horizon cull it.
-  if (Cartesian3.magnitude(bs.center) < 0.1 * ellipsoid.minimumRadius) {
-    return undefined;
-  }
+    // If the bounding sphere center is too close to the center of the occluder, it doesn't make
+    // sense to try to horizon cull it.
+    if (Cartesian3.magnitude(bs.center) < 0.1 * ellipsoid.minimumRadius) {
+      return undefined;
+    }
 
-  return this.computeHorizonCullingPoint(bs.center, positions, result);
-};
+    return this.computeHorizonCullingPoint(bs.center, positions, result);
+  };
 
 const scratchEllipsoidShrunkRadii = new Cartesian3();
 
@@ -373,7 +352,7 @@ function getPossiblyShrunkEllipsoid(ellipsoid, minimumHeight, result) {
       ellipsoid.radii.x + minimumHeight,
       ellipsoid.radii.y + minimumHeight,
       ellipsoid.radii.z + minimumHeight,
-      scratchEllipsoidShrunkRadii
+      scratchEllipsoidShrunkRadii,
     );
     ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, result);
   }
@@ -384,7 +363,7 @@ function computeHorizonCullingPointFromPositions(
   ellipsoid,
   directionToPoint,
   positions,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("directionToPoint", directionToPoint);
@@ -397,7 +376,7 @@ function computeHorizonCullingPointFromPositions(
 
   const scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(
     ellipsoid,
-    directionToPoint
+    directionToPoint,
   );
   let resultMagnitude = 0.0;
 
@@ -406,7 +385,7 @@ function computeHorizonCullingPointFromPositions(
     const candidateMagnitude = computeMagnitude(
       ellipsoid,
       position,
-      scaledSpaceDirectionToPoint
+      scaledSpaceDirectionToPoint,
     );
     if (candidateMagnitude < 0.0) {
       // all points should face the same direction, but this one doesn't, so return undefined
@@ -426,7 +405,7 @@ function computeHorizonCullingPointFromVertices(
   vertices,
   stride,
   center,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("directionToPoint", directionToPoint);
@@ -438,11 +417,11 @@ function computeHorizonCullingPointFromVertices(
     result = new Cartesian3();
   }
 
-  stride = defaultValue(stride, 3);
-  center = defaultValue(center, Cartesian3.ZERO);
+  stride = stride ?? 3;
+  center = center ?? Cartesian3.ZERO;
   const scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(
     ellipsoid,
-    directionToPoint
+    directionToPoint,
   );
   let resultMagnitude = 0.0;
 
@@ -454,7 +433,7 @@ function computeHorizonCullingPointFromVertices(
     const candidateMagnitude = computeMagnitude(
       ellipsoid,
       positionScratch,
-      scaledSpaceDirectionToPoint
+      scaledSpaceDirectionToPoint,
     );
     if (candidateMagnitude < 0.0) {
       // all points should face the same direction, but this one doesn't, so return undefined
@@ -469,7 +448,7 @@ function computeHorizonCullingPointFromVertices(
 function isScaledSpacePointVisible(
   occludeeScaledSpacePosition,
   cameraPositionInScaledSpace,
-  distanceToLimbInScaledSpaceSquared
+  distanceToLimbInScaledSpaceSquared,
 ) {
   // See https://cesium.com/blog/2013/04/25/Horizon-culling/
   const cv = cameraPositionInScaledSpace;
@@ -477,7 +456,7 @@ function isScaledSpacePointVisible(
   const vt = Cartesian3.subtract(
     occludeeScaledSpacePosition,
     cv,
-    scratchCartesian
+    scratchCartesian,
   );
   const vtDotVc = -Cartesian3.dot(vt, cv);
   // If vhMagnitudeSquared < 0 then we are below the surface of the ellipsoid and
@@ -497,14 +476,14 @@ const directionScratch = new Cartesian3();
 function computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint) {
   const scaledSpacePosition = ellipsoid.transformPositionToScaledSpace(
     position,
-    scaledSpaceScratch
+    scaledSpaceScratch,
   );
   let magnitudeSquared = Cartesian3.magnitudeSquared(scaledSpacePosition);
   let magnitude = Math.sqrt(magnitudeSquared);
   const direction = Cartesian3.divideByScalar(
     scaledSpacePosition,
     magnitude,
-    directionScratch
+    directionScratch,
   );
 
   // For the purpose of this computation, points below the ellipsoid are consider to be on it instead.
@@ -513,7 +492,7 @@ function computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint) {
 
   const cosAlpha = Cartesian3.dot(direction, scaledSpaceDirectionToPoint);
   const sinAlpha = Cartesian3.magnitude(
-    Cartesian3.cross(direction, scaledSpaceDirectionToPoint, direction)
+    Cartesian3.cross(direction, scaledSpaceDirectionToPoint, direction),
   );
   const cosBeta = 1.0 / magnitude;
   const sinBeta = Math.sqrt(magnitudeSquared - 1.0) * cosBeta;
@@ -524,7 +503,7 @@ function computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint) {
 function magnitudeToPoint(
   scaledSpaceDirectionToPoint,
   resultMagnitude,
-  result
+  result,
 ) {
   // The horizon culling point is undefined if there were no positions from which to compute it,
   // the directionToPoint is pointing opposite all of the positions,  or if we computed NaN or infinity.
@@ -539,7 +518,7 @@ function magnitudeToPoint(
   return Cartesian3.multiplyByScalar(
     scaledSpaceDirectionToPoint,
     resultMagnitude,
-    result
+    result,
   );
 }
 
@@ -552,7 +531,7 @@ function computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint) {
 
   ellipsoid.transformPositionToScaledSpace(
     directionToPoint,
-    directionToPointScratch
+    directionToPointScratch,
   );
   return Cartesian3.normalize(directionToPointScratch, directionToPointScratch);
 }

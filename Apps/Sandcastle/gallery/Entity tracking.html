@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Apply different tracking reference frames to tracked entities."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // This example illustrates the possible tracking reference frames
+        // apllied to two different entities: a near surface slow moving
+        // object and a satellite
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+          shouldAnimate: true,
+        });
+
+        const startTime = Cesium.JulianDate.fromIso8601("2012-03-15T10:00:00Z");
+
+        const satelliteStopTime = Cesium.JulianDate.fromIso8601("2012-03-16T10:00:00Z");
+
+        const droneStopTime = Cesium.JulianDate.fromIso8601("2012-03-15T10:00:30Z");
+
+        const dataSource = await viewer.dataSources.add(
+          Cesium.CzmlDataSource.load("../../SampleData/tracking.czml"),
+        );
+
+        const satellite = dataSource.entities.getById("Satellite/ISS");
+        const drone = dataSource.entities.getById("CesiumDrone");
+
+        satellite.viewFrom = new Cesium.Cartesian3(-300, 20, 100);
+        drone.viewFrom = new Cesium.Cartesian3(-50, 0, 5);
+
+        Sandcastle.addDefaultToolbarButton("Satellites", function () {
+          viewer.clock.stopTime = satelliteStopTime;
+          viewer.clock.currentTime = startTime;
+          viewer.clock.multiplier = 30;
+          viewer.timeline.zoomTo(startTime, satelliteStopTime);
+          viewer.trackedEntity = satellite;
+        });
+
+        Sandcastle.addToolbarButton("Drone", function () {
+          viewer.clock.stopTime = droneStopTime;
+          viewer.clock.currentTime = startTime;
+          viewer.clock.multiplier = 1;
+          viewer.timeline.zoomTo(startTime, droneStopTime);
+          viewer.trackedEntity = drone;
+        });
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Tracking reference frame: Auto-detect",
+            onselect: function () {
+              satellite.trackingReferenceFrame = Cesium.TrackingReferenceFrame.AUTODETECT;
+              drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.AUTODETECT;
+            },
+          },
+          {
+            text: "Tracking reference frame: Inertial",
+            onselect: function () {
+              satellite.trackingReferenceFrame = Cesium.TrackingReferenceFrame.INERTIAL;
+              drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.INERTIAL;
+            },
+          },
+          {
+            text: "Tracking reference frame: Velocity",
+            onselect: function () {
+              satellite.trackingReferenceFrame = Cesium.TrackingReferenceFrame.VELOCITY;
+              drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.VELOCITY;
+            },
+          },
+          {
+            text: "Tracking reference frame: East-North-Up",
+            onselect: function () {
+              satellite.trackingReferenceFrame = Cesium.TrackingReferenceFrame.ENU;
+              drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.ENU;
+            },
+          },
+        ]);
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

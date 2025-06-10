@@ -31,7 +31,7 @@ function Cesium3DTilesetVisualizer(scene, entityCollection) {
 
   entityCollection.collectionChanged.addEventListener(
     Cesium3DTilesetVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   this._scene = scene;
@@ -75,7 +75,7 @@ Cesium3DTilesetVisualizer.prototype.update = function (time) {
     if (show) {
       modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
       resource = Resource.createIfNeeded(
-        Property.getValueOrUndefined(tilesetGraphics._uri, time)
+        Property.getValueOrUndefined(tilesetGraphics._uri, time),
       );
     }
 
@@ -111,7 +111,7 @@ Cesium3DTilesetVisualizer.prototype.update = function (time) {
     tileset.maximumScreenSpaceError = Property.getValueOrDefault(
       tilesetGraphics.maximumScreenSpaceError,
       time,
-      tileset.maximumScreenSpaceError
+      tileset.maximumScreenSpaceError,
     );
   }
 
@@ -133,7 +133,7 @@ Cesium3DTilesetVisualizer.prototype.isDestroyed = function () {
 Cesium3DTilesetVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     Cesium3DTilesetVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   const entities = this._entitiesToVisualize.values;
   const tilesetHash = this._tilesetHash;
@@ -157,7 +157,7 @@ Cesium3DTilesetVisualizer.prototype.destroy = function () {
  */
 Cesium3DTilesetVisualizer.prototype.getBoundingSphere = function (
   entity,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(entity)) {
@@ -194,7 +194,7 @@ Cesium3DTilesetVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
   removed,
-  changed
+  changed,
 ) {
   let i;
   let entity;

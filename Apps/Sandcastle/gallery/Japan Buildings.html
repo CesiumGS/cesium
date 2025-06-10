@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Worldwide 3D buildings with rich metadata from OpenStreetMap."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases, ion Assets" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          // Load Japan Regional Terrain
+          terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(2767062),
+          baseLayerPicker: false,
+          sceneModePicker: false,
+          animation: false,
+          timeline: false,
+        });
+        const scene = viewer.scene;
+        scene.globe.depthTestAgainstTerrain = true;
+
+        try {
+          // Load the Japan Building data asset
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2602291);
+          scene.primitives.add(tileset);
+          await viewer.zoomTo(tileset);
+        } catch (error) {
+          console.log(error);
+        }
+
+        // Define camera locations for points of interest
+        const hiroshima = {
+          destination: new Cesium.Cartesian3(
+            -3558117.165209301,
+            3887175.058311886,
+            3582090.381367681,
+          ),
+          orientation: {
+            direction: new Cesium.Cartesian3(
+              0.915045649098936,
+              -0.16130516440787898,
+              0.3696919041586574,
+            ),
+            up: new Cesium.Cartesian3(
+              -0.20924973638933655,
+              0.5937271886242537,
+              0.7769829942214522,
+            ),
+          },
+        };
+
+        const tokyoTower = {
+          destination: new Cesium.Cartesian3(
+            -3959788.9678092706,
+            3353283.9088315447,
+            3697270.0292328526,
+          ),
+          orientation: {
+            direction: new Cesium.Cartesian3(
+              0.1473261076519599,
+              -0.9210400676146971,
+              0.3605276852787276,
+            ),
+            up: new Cesium.Cartesian3(
+              -0.6082716434343354,
+              0.20305763470537083,
+              0.7673155835649066,
+            ),
+          },
+        };
+
+        const kyotoNijoCastle = {
+          destination: new Cesium.Cartesian3(
+            -3746418.0787567603,
+            3649244.7209161296,
+            3638967.47570257,
+          ),
+          orientation: {
+            direction: new Cesium.Cartesian3(
+              0.9417381486076588,
+              -0.026110036454204615,
+              0.335331963065526,
+            ),
+            up: new Cesium.Cartesian3(
+              -0.2518896785254185,
+              0.6059364940549604,
+              0.7545810460280222,
+            ),
+          },
+        };
+
+        const sapporo = {
+          destination: new Cesium.Cartesian3(
+            -3644464.457824361,
+            2916376.559037763,
+            4333280.277694175,
+          ),
+          orientation: {
+            direction: new Cesium.Cartesian3(
+              -0.3679337542668949,
+              -0.8827113216318188,
+              -0.2923105799215557,
+            ),
+            up: new Cesium.Cartesian3(
+              -0.7773373481004832,
+              0.11948179734604299,
+              0.6176331818734058,
+            ),
+          },
+        };
+
+        const kaga = {
+          destination: new Cesium.Cartesian3(
+            -3720805.8497414757,
+            3554280.4145123693,
+            3756470.8341226312,
+          ),
+          orientation: {
+            direction: new Cesium.Cartesian3(
+              -0.29857010298659575,
+              0.04749330012764362,
+              -0.9532052664801844,
+            ),
+            up: new Cesium.Cartesian3(
+              -0.7423221317622432,
+              0.6161776077834791,
+              0.2632166566959398,
+            ),
+          },
+        };
+
+        const hakone = {
+          destination: new Cesium.Cartesian3(
+            -3938455.040928949,
+            3417079.906560689,
+            3662889.160230748,
+          ),
+          orientation: {
+            direction: new Cesium.Cartesian3(
+              0.09245366141098484,
+              0.5115481128951291,
+              -0.854266263342487,
+            ),
+            up: new Cesium.Cartesian3(
+              -0.6151172847807794,
+              0.703996434356258,
+              0.35499260045470854,
+            ),
+          },
+        };
+
+        const mtFujiGotemba = {
+          destination: new Cesium.Cartesian3(
+            -3930814.3315207073,
+            3422614.91809806,
+            3665138.546010887,
+          ),
+          orientation: {
+            direction: new Cesium.Cartesian3(
+              0.8178889459747928,
+              0.5717362258573416,
+              0.06461702635254533,
+            ),
+            up: new Cesium.Cartesian3(
+              -0.49123560987022913,
+              0.6353948538216464,
+              0.595785997932473,
+            ),
+          },
+        };
+
+        const options1 = [
+          {
+            text: "Hiroshima | 広島",
+            onselect: function () {
+              scene.camera.flyTo(hiroshima);
+            },
+          },
+          {
+            text: "Tokyo Tower | 東京タワー",
+            onselect: function () {
+              scene.camera.flyTo(tokyoTower);
+            },
+          },
+          {
+            text: "Kyoto - Nijo Castle | 京都 - 二条城",
+            onselect: function () {
+              scene.camera.flyTo(kyotoNijoCastle);
+            },
+          },
+          {
+            text: "Hakone | 箱根",
+            onselect: function () {
+              scene.camera.flyTo(hakone);
+            },
+          },
+          {
+            text: "Mt. Fuji - Gotemba | 富士山 - 御殿場",
+            onselect: function () {
+              scene.camera.flyTo(mtFujiGotemba);
+            },
+          },
+          {
+            text: "Sapporo | 札幌",
+            onselect: function () {
+              scene.camera.flyTo(sapporo);
+            },
+          },
+          {
+            text: "Kaga | 加賀",
+            onselect: function () {
+              scene.camera.flyTo(kaga);
+            },
+          },
+        ];
+        Sandcastle.addToolbarMenu(options1);
+
+        // Set up a light to come from the camera to always highlight the buildings
+        const cameraLight = new Cesium.DirectionalLight({
+          direction: scene.camera.directionWC, // Updated every frame
+          intensity: 2.0,
+        });
+        scene.globe.enableLighting = true;
+        scene.globe.dynamicAtmosphereLightingFromSun = false;
+        scene.globe.dynamicAtmosphereLighting = false;
+        scene.light = cameraLight;
+
+        scene.preRender.addEventListener(function (scene, time) {
+          scene.light.direction = Cesium.Cartesian3.clone(
+            scene.camera.directionWC,
+            scene.light.direction,
+          );
+        });
+
+        viewer.homeButton.viewModel.command.beforeExecute.addEventListener((e) => {
+          e.cancel = true;
+          scene.camera.flyTo(hiroshima);
+        });
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

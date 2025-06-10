@@ -19,7 +19,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
 
     const passedPositions = await sampleTerrainMostDetailed(
       worldTerrain,
-      positions
+      positions,
     );
     expect(passedPositions).toBe(positions);
     expect(positions[0].height).toBeGreaterThan(5000);
@@ -30,7 +30,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
 
   it("should throw querying heights from terrain without availability", async function () {
     const terrainProvider = await CesiumTerrainProvider.fromUrl(
-      "Data/CesiumTerrainTileJson/StandardHeightmap.tile.json"
+      "Data/CesiumTerrainTileJson/StandardHeightmap.tile.json",
     );
 
     const positions = [
@@ -39,9 +39,9 @@ describe("Core/sampleTerrainMostDetailed", function () {
     ];
 
     await expectAsync(
-      sampleTerrainMostDetailed(terrainProvider, positions)
+      sampleTerrainMostDetailed(terrainProvider, positions),
     ).toBeRejectedWithDeveloperError(
-      "sampleTerrainMostDetailed requires a terrain provider that has tile availability."
+      "sampleTerrainMostDetailed requires a terrain provider that has tile availability.",
     );
   });
 
@@ -65,13 +65,13 @@ describe("Core/sampleTerrainMostDetailed", function () {
     ];
 
     await expectAsync(
-      sampleTerrainMostDetailed(undefined, positions)
+      sampleTerrainMostDetailed(undefined, positions),
     ).toBeRejectedWithDeveloperError("terrainProvider is required.");
   });
 
   it("throws without positions", async function () {
     await expectAsync(
-      sampleTerrainMostDetailed(worldTerrain, undefined)
+      sampleTerrainMostDetailed(worldTerrain, undefined),
     ).toBeRejectedWithDeveloperError("positions is required.");
   });
 
@@ -94,7 +94,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
     const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
 
     return expectAsync(
-      sampleTerrainMostDetailed(terrainProvider, positions, true)
+      sampleTerrainMostDetailed(terrainProvider, positions, true),
     ).toBeRejected();
   });
 });

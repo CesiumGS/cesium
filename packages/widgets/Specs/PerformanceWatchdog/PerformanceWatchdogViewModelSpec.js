@@ -199,5 +199,5 @@ describe(
       expect(viewModel.showingLowFrameRateMessage).toBe(false);
     });
   },
-  "WebGL"
+  "WebGL",
 );

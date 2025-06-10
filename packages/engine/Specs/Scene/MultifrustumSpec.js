@@ -4,10 +4,10 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  defaultValue,
   defined,
   destroyObject,
   GeometryPipeline,
+  Math as CesiumMath,
   Matrix4,
   Resource,
   BufferUsage,
@@ -22,8 +22,6 @@ import {
   TextureAtlas,
 } from "../../index.js";
 
-import { Math as CesiumMath } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -31,7 +29,6 @@ describe(
   "Scene/Multifrustum",
   function () {
     let scene;
-    let context;
     let primitives;
     let atlas;
 
@@ -61,7 +58,6 @@ describe(
 
     beforeEach(function () {
       scene = createScene();
-      context = scene.context;
       primitives = scene.primitives;
 
       scene.logarithmicDepthBuffer = false;
@@ -89,16 +85,14 @@ describe(
 
     function createBillboards() {
       atlas = new TextureAtlas({
-        context: context,
         borderWidthInPixels: 1,
         initialSize: new Cartesian2(3, 3),
+        // ANGLE workaround
+        sampler: Sampler.NEAREST,
       });
-
-      // ANGLE Workaround
-      atlas.texture.sampler = Sampler.NEAREST;
-
-      let billboards = new BillboardCollection();
-      billboards.textureAtlas = atlas;
+      let billboards = new BillboardCollection({
+        textureAtlas: atlas,
+      });
       billboards.destroyTextureAtlas = false;
       billboard0 = billboards.add({
         position: new Cartesian3(0.0, 0.0, -50.0),
@@ -208,8 +202,8 @@ describe(
     });
 
     function createPrimitive(bounded, closestFrustum) {
-      bounded = defaultValue(bounded, true);
-      closestFrustum = defaultValue(closestFrustum, false);
+      bounded = bounded ?? true;
+      closestFrustum = closestFrustum ?? false;
 
       function Primitive() {
         this._va = undefined;
@@ -217,7 +211,7 @@ describe(
         this._rs = undefined;
         this._modelMatrix = Matrix4.fromTranslation(
           new Cartesian3(0.0, 0.0, -50000.0),
-          new Matrix4()
+          new Matrix4(),
         );
 
         this.color = new Color(1.0, 1.0, 0.0, 1.0);
@@ -254,18 +248,17 @@ describe(
           const maximum = Cartesian3.multiplyByScalar(
             dimensions,
             0.5,
-            new Cartesian3()
+            new Cartesian3(),
           );
           const minimum = Cartesian3.negate(maximum, new Cartesian3());
           const geometry = BoxGeometry.createGeometry(
             new BoxGeometry({
               minimum: minimum,
               maximum: maximum,
-            })
+            }),
           );
-          const attributeLocations = GeometryPipeline.createAttributeLocations(
-            geometry
-          );
+          const attributeLocations =
+            GeometryPipeline.createAttributeLocations(geometry);
           this._va = VertexArray.fromGeometry({
             context: frameState.context,
             geometry: geometry,
@@ -297,7 +290,7 @@ describe(
               ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0)
               : undefined,
             pass: Pass.OPAQUE,
-          })
+          }),
         );
       };
 
@@ -376,5 +369,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

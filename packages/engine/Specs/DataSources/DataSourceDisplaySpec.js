@@ -105,14 +105,14 @@ describe(
       const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
-        456
+        456,
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.DONE;
 
       const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
-        1011
+        1011,
       );
       visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
 
@@ -135,7 +135,7 @@ describe(
 
         const expected = BoundingSphere.union(
           visualizer1.getBoundingSphereResult,
-          visualizer2.getBoundingSphereResult
+          visualizer2.getBoundingSphereResult,
         );
 
         expect(state).toBe(BoundingSphereState.DONE);
@@ -143,18 +143,54 @@ describe(
       });
     });
 
-    it("Computes partial bounding sphere.", function () {
+    it("should not return PENDING when this._ready is false and allowPartial is true", function () {
       const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
-        456
+        456,
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
 
       const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
-        1011
+        1011,
+      );
+      visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
+
+      display = new DataSourceDisplay({
+        scene: scene,
+        dataSourceCollection: dataSourceCollection,
+        visualizersCallback: function () {
+          return [visualizer1, visualizer2];
+        },
+      });
+
+      const entity = new Entity();
+      const dataSource = new MockDataSource();
+      dataSource.entities.add(entity);
+      return display.dataSources.add(dataSource).then(function () {
+        display.update(Iso8601.MINIMUM_VALUE);
+
+        const result = new BoundingSphere();
+        const state = display.getBoundingSphere(entity, true, result);
+
+        expect(state).toBe(BoundingSphereState.DONE);
+      });
+    });
+
+    it("Computes partial bounding sphere.", function () {
+      const visualizer1 = new MockVisualizer();
+      visualizer1.getBoundingSphereResult = new BoundingSphere(
+        new Cartesian3(1, 2, 3),
+        456,
+      );
+      visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
+
+      const visualizer2 = new MockVisualizer();
+      visualizer2.getBoundingSphereResult = new BoundingSphere(
+        new Cartesian3(7, 8, 9),
+        1011,
       );
       visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
 
@@ -184,14 +220,14 @@ describe(
       const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
-        456
+        456,
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
 
       const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
-        1011
+        1011,
       );
       visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
 
@@ -327,7 +363,7 @@ describe(
       });
     });
 
-    it("ready is true when datasources are ready", function () {
+    it("ready is true once datasources are ready and stays true", async function () {
       const source1 = new MockDataSource();
       const source2 = new MockDataSource();
 
@@ -336,18 +372,57 @@ describe(
         dataSourceCollection: dataSourceCollection,
         visualizersCallback: visualizersCallback,
       });
-      expect(display.ready).toBe(false);
+      expect(display.ready).withContext("before adding sources").toBe(false);
 
-      return Promise.all([
+      await Promise.all([
         dataSourceCollection.add(source1),
         dataSourceCollection.add(source2),
-      ]).then(function () {
+      ]);
+
+      display.update(Iso8601.MINIMUM_VALUE);
+      expect(display.ready).withContext("after adding sources").toBe(true);
+
+      spyOn(MockVisualizer.prototype, "update").and.returnValue(false);
+      display.update(Iso8601.MINIMUM_VALUE);
+      expect(display.ready).withContext("after updating again").toBe(true);
+    });
+
+    it("triggers a rendering when the data source becomes ready", function () {
+      scene.requestRenderMode = true;
+      scene.maximumRenderTimeChange = undefined;
+
+      // When the scene is constructed, then a listener that will be added via
+      // RequestScheduler.requestCompletedEvent.addEventListener
+      // that requests a single render (by putting a call to scene.requestRender()
+      // into the scene._frameState.afterRender list). The requestCompletedEvent
+      // is triggered when the request for the terrain heights completes that
+      // is initiated via GroundPolylinePrimitive.initializeTerrainHeights()
+      // in beforeAll of this suite.
+      // Consume this render request here
+      scene.renderForSpecs();
+
+      const source = new MockDataSource();
+      display = new DataSourceDisplay({
+        scene: scene,
+        dataSourceCollection: dataSourceCollection,
+        visualizersCallback: visualizersCallback,
+      });
+      expect(display.ready).toBe(false);
+
+      return dataSourceCollection.add(source).then(function () {
+        // When the source becomes ready, a render should
+        // be requested
         display.update(Iso8601.MINIMUM_VALUE);
         expect(display.ready).toBe(true);
+        expect(scene._renderRequested).toBe(true);
 
-        spyOn(MockVisualizer.prototype, "update").and.returnValue(false);
+        scene.renderForSpecs();
+
+        // The source should remain ready during subsequent updates,
+        // and no further renders should be requested
         display.update(Iso8601.MINIMUM_VALUE);
-        expect(display.ready).toBe(false);
+        expect(display.ready).toBe(true);
+        expect(scene._renderRequested).toBe(false);
       });
     });
 
@@ -431,7 +506,7 @@ describe(
 
         expect(display._primitives.contains(source._primitives)).toBe(true);
         expect(
-          display._groundPrimitives.contains(source._groundPrimitives)
+          display._groundPrimitives.contains(source._groundPrimitives),
         ).toBe(true);
       });
     });
@@ -448,7 +523,7 @@ describe(
       return dataSourceCollection.add(source).then(function () {
         expect(display._primitives.contains(source._primitives)).toBe(true);
         expect(
-          display._groundPrimitives.contains(source._groundPrimitives)
+          display._groundPrimitives.contains(source._groundPrimitives),
         ).toBe(true);
 
         dataSourceCollection.remove(source);
@@ -562,13 +637,13 @@ describe(
       });
       expect(scene.primitives.contains(display._primitives)).toBe(false);
       expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-        false
+        false,
       );
 
       return dataSourceCollection.add(new MockDataSource()).then(function () {
         expect(scene.primitives.contains(display._primitives)).toBe(true);
         expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-          true
+          true,
         );
       });
     });
@@ -583,7 +658,7 @@ describe(
 
         expect(scene.primitives.contains(display._primitives)).toBe(true);
         expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-          true
+          true,
         );
       });
     });
@@ -596,14 +671,14 @@ describe(
       });
       expect(scene.primitives.contains(display._primitives)).toBe(false);
       expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-        false
+        false,
       );
 
       display.defaultDataSource.entities.add(new Entity());
 
       expect(scene.primitives.contains(display._primitives)).toBe(true);
       expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-        true
+        true,
       );
     });
 
@@ -613,7 +688,7 @@ describe(
       const callback = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         entityCluster,
-        dataSource
+        dataSource,
       );
       expect(callback.length).toEqual(8);
       expect(callback[0]).toBeInstanceOf(BillboardVisualizer);
@@ -634,7 +709,7 @@ describe(
       const callback = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         entityCluster,
-        dataSource
+        dataSource,
       );
       expect(callback.length).withContext("length before register").toEqual(8);
 
@@ -642,7 +717,7 @@ describe(
       const callback2 = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         entityCluster,
-        dataSource
+        dataSource,
       );
       expect(callback2.length).withContext("length after register").toEqual(9);
       expect(callback2[8]).toBeInstanceOf(FakeVisualizer);
@@ -651,12 +726,12 @@ describe(
       const callback3 = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         entityCluster,
-        dataSource
+        dataSource,
       );
       expect(callback3.length)
         .withContext("length after unregister")
         .toEqual(8);
     });
   },
-  "WebGL"
+  "WebGL",
 );

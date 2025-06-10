@@ -2,7 +2,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import combine from "./combine.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
@@ -48,10 +47,10 @@ function OpenCageGeocoderService(url, apiKey, params) {
   url.appendForwardSlash();
   url.setQueryParameters({ key: apiKey });
   this._url = url;
-  this._params = defaultValue(params, {});
+  this._params = params ?? {};
   this._credit = new Credit(
     `Geodata copyright <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors`,
-    false
+    false,
   );
 }
 
@@ -117,7 +116,7 @@ OpenCageGeocoderService.prototype.geocode = async function (query) {
           bounds.southwest.lng,
           bounds.southwest.lat,
           bounds.northeast.lng,
-          bounds.northeast.lat
+          bounds.northeast.lat,
         );
       } else {
         const lon = resultObject.geometry.lat;

@@ -53,10 +53,10 @@ describe("Scene/Model/TilesetPipelineStage", function () {
 
     const renderStateOptions = renderResources.renderStateOptions;
     expect(renderStateOptions.stencilTest).toEqual(
-      StencilConstants.setCesium3DTileBit()
+      StencilConstants.setCesium3DTileBit(),
     );
     expect(renderStateOptions.stencilMask).toEqual(
-      StencilConstants.CESIUM_3D_TILE_MASK
+      StencilConstants.CESIUM_3D_TILE_MASK,
     );
   });
 });

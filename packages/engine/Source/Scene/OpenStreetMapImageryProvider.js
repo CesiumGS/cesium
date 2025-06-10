@@ -1,5 +1,5 @@
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -8,7 +8,7 @@ import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const defaultCredit = new Credit(
-  "MapQuest, Open Street Map and contributors, CC-BY-SA"
+  "MapQuest, Open Street Map and contributors, CC-BY-SA",
 );
 
 /**
@@ -57,15 +57,15 @@ const defaultCredit = new Credit(
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function OpenStreetMapImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://tile.openstreetmap.org/")
+    options.url ?? "https://tile.openstreetmap.org/",
   );
   resource.appendForwardSlash();
   resource.url += `{z}/{x}/{y}${
     options.retinaTiles ? "@2x" : ""
-  }.${defaultValue(options.fileExtension, "png")}`;
+  }.${options.fileExtension ?? "png"}`;
 
   const tilingScheme = new WebMercatorTilingScheme({
     ellipsoid: options.ellipsoid,
@@ -74,33 +74,33 @@ function OpenStreetMapImageryProvider(options) {
   const tileWidth = 256;
   const tileHeight = 256;
 
-  const minimumLevel = defaultValue(options.minimumLevel, 0);
+  const minimumLevel = options.minimumLevel ?? 0;
   const maximumLevel = options.maximumLevel;
 
-  const rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+  const rectangle = options.rectangle ?? tilingScheme.rectangle;
 
   // Check the number of tiles at the minimum level.  If it's more than four,
   // throw an exception, because starting at the higher minimum
   // level will cause too many tiles to be downloaded and rendered.
   const swTile = tilingScheme.positionToTileXY(
     Rectangle.southwest(rectangle),
-    minimumLevel
+    minimumLevel,
   );
   const neTile = tilingScheme.positionToTileXY(
     Rectangle.northeast(rectangle),
-    minimumLevel
+    minimumLevel,
   );
   const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      `The rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
+      `The rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`,
     );
   }
   //>>includeEnd('debug');
 
-  let credit = defaultValue(options.credit, defaultCredit);
+  let credit = options.credit ?? defaultCredit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
@@ -119,9 +119,10 @@ function OpenStreetMapImageryProvider(options) {
 
 if (defined(Object.create)) {
   OpenStreetMapImageryProvider.prototype = Object.create(
-    UrlTemplateImageryProvider.prototype
+    UrlTemplateImageryProvider.prototype,
   );
-  OpenStreetMapImageryProvider.prototype.constructor = OpenStreetMapImageryProvider;
+  OpenStreetMapImageryProvider.prototype.constructor =
+    OpenStreetMapImageryProvider;
 }
 
 export default OpenStreetMapImageryProvider;

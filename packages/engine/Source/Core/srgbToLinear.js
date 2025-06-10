@@ -26,7 +26,7 @@ function srgbToLinear(value) {
   return Math.pow(
     // eslint-disable-next-line no-loss-of-precision
     (value + 0.055) * 0.94786729857819905213270142180095,
-    2.4
+    2.4,
   );
 }
 export default srgbToLinear;

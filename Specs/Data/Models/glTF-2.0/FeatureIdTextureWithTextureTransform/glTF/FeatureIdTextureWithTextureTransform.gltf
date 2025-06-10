@@ -122,6 +122,7 @@
             "EXT_mesh_features": {
               "featureIds": [
                 {
+                  "featureCount": 64,
                   "texture": {
                     "channels": [
                       0

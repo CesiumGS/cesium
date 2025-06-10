@@ -1,6 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import EllipseGeometry from "./EllipseGeometry.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -15,7 +15,7 @@ import VertexFormat from "./VertexFormat.js";
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The circle's center point in the fixed frame.
  * @param {number} options.radius The radius in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid the circle will be on.
  * @param {number} [options.height=0.0] The distance in meters between the circle and the ellipsoid surface.
  * @param {number} [options.granularity=0.02] The angular distance between points on the circle in radians.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -37,7 +37,7 @@ import VertexFormat from "./VertexFormat.js";
  * const geometry = Cesium.CircleGeometry.createGeometry(circle);
  */
 function CircleGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const radius = options.radius;
 
   //>>includeStart('debug', pragmas.debug);
@@ -90,7 +90,7 @@ const scratchEllipseGeometry = new EllipseGeometry({
 const scratchOptions = {
   center: new Cartesian3(),
   radius: undefined,
-  ellipsoid: Ellipsoid.clone(Ellipsoid.UNIT_SPHERE),
+  ellipsoid: Ellipsoid.clone(Ellipsoid.default),
   height: undefined,
   extrudedHeight: undefined,
   granularity: undefined,
@@ -113,22 +113,26 @@ CircleGeometry.unpack = function (array, startingIndex, result) {
   const ellipseGeometry = EllipseGeometry.unpack(
     array,
     startingIndex,
-    scratchEllipseGeometry
+    scratchEllipseGeometry,
   );
   scratchOptions.center = Cartesian3.clone(
     ellipseGeometry._center,
-    scratchOptions.center
+    scratchOptions.center,
   );
   scratchOptions.ellipsoid = Ellipsoid.clone(
     ellipseGeometry._ellipsoid,
-    scratchOptions.ellipsoid
+    scratchOptions.ellipsoid,
+  );
+  scratchOptions.ellipsoid = Ellipsoid.clone(
+    ellipseGeometry._ellipsoid,
+    scratchEllipseGeometry._ellipsoid,
   );
   scratchOptions.height = ellipseGeometry._height;
   scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;
   scratchOptions.granularity = ellipseGeometry._granularity;
   scratchOptions.vertexFormat = VertexFormat.clone(
     ellipseGeometry._vertexFormat,
-    scratchOptions.vertexFormat
+    scratchOptions.vertexFormat,
   );
   scratchOptions.stRotation = ellipseGeometry._stRotation;
   scratchOptions.shadowVolume = ellipseGeometry._shadowVolume;
@@ -160,7 +164,7 @@ CircleGeometry.createGeometry = function (circleGeometry) {
 CircleGeometry.createShadowVolume = function (
   circleGeometry,
   minHeightFunc,
-  maxHeightFunc
+  maxHeightFunc,
 ) {
   const granularity = circleGeometry._ellipseGeometry._granularity;
   const ellipsoid = circleGeometry._ellipseGeometry._ellipsoid;

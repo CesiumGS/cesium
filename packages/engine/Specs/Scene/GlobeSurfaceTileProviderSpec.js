@@ -5,7 +5,6 @@ import {
   Color,
   Credit,
   CreditDisplay,
-  defaultValue,
   defined,
   Ellipsoid,
   EllipsoidTerrainProvider,
@@ -19,6 +18,8 @@ import {
   BlendingState,
   ClippingPlane,
   ClippingPlaneCollection,
+  ClippingPolygon,
+  ClippingPolygonCollection,
   Fog,
   Globe,
   GlobeSurfaceShaderSet,
@@ -45,7 +46,7 @@ describe(
       quadtreePrimitive,
       minimumTiles,
       maximumTiles,
-      callback
+      callback,
     ) {
       let tileCount = 0;
       quadtreePrimitive.forEachRenderedTile(function (tile) {
@@ -111,7 +112,7 @@ describe(
 
     it("conforms to QuadtreeTileProvider interface", function () {
       expect(GlobeSurfaceTileProvider).toConformToInterface(
-        QuadtreeTileProvider
+        QuadtreeTileProvider,
       );
     });
 
@@ -136,7 +137,7 @@ describe(
             });
           }
           expect(
-            constructWithoutImageryLayerCollection
+            constructWithoutImageryLayerCollection,
           ).toThrowDeveloperError();
         });
 
@@ -148,11 +149,11 @@ describe(
             });
           }
           expect(
-            constructWithoutImageryLayerCollection
+            constructWithoutImageryLayerCollection,
           ).toThrowDeveloperError();
         });
       },
-      "WebGL"
+      "WebGL",
     );
 
     describe(
@@ -160,181 +161,200 @@ describe(
       function () {
         it("removing a layer removes it from all tiles", async function () {
           const provider = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Red16x16.png"
+            "Data/Images/Red16x16.png",
           );
           const layer = scene.imageryLayers.addImageryProvider(provider);
 
           await updateUntilDone(scene.globe);
           // All tiles should have one or more associated images.
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toBeGreaterThan(0);
-            for (let i = 0; i < tile.data.imagery.length; ++i) {
-              const imagery = defaultValue(
-                tile.data.imagery[i].readyImagery,
-                tile.data.imagery[i].loadingImagery
-              );
-              expect(imagery.imageryLayer).toEqual(layer);
-            }
-          });
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toBeGreaterThan(0);
+              for (let i = 0; i < tile.data.imagery.length; ++i) {
+                const imagery =
+                  tile.data.imagery[i].readyImagery ??
+                  tile.data.imagery[i].loadingImagery;
+                expect(imagery.imageryLayer).toEqual(layer);
+              }
+            },
+          );
 
           scene.imageryLayers.remove(layer);
 
           // All associated images should be gone.
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toEqual(0);
-          });
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toEqual(0);
+            },
+          );
         });
 
         it("adding a layer adds it to all tiles after update", async function () {
           const provider = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Red16x16.png"
+            "Data/Images/Red16x16.png",
           );
           scene.imageryLayers.addImageryProvider(provider);
 
           await updateUntilDone(scene.globe);
           const provider2 = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Green4x4.png"
+            "Data/Images/Green4x4.png",
           );
           // Add another layer
           const layer2 = scene.imageryLayers.addImageryProvider(provider2);
 
           await updateUntilDone(scene.globe);
           // All tiles should have one or more associated images.
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toBeGreaterThan(0);
-            let hasImageFromLayer2 = false;
-            for (let i = 0; i < tile.data.imagery.length; ++i) {
-              let imageryTile = tile.data.imagery[i].readyImagery;
-              if (!defined(imageryTile)) {
-                imageryTile = tile.data.imagery[i].loadingImagery;
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toBeGreaterThan(0);
+              let hasImageFromLayer2 = false;
+              for (let i = 0; i < tile.data.imagery.length; ++i) {
+                let imageryTile = tile.data.imagery[i].readyImagery;
+                if (!defined(imageryTile)) {
+                  imageryTile = tile.data.imagery[i].loadingImagery;
+                }
+                if (imageryTile.imageryLayer === layer2) {
+                  hasImageFromLayer2 = true;
+                }
               }
-              if (imageryTile.imageryLayer === layer2) {
-                hasImageFromLayer2 = true;
-              }
-            }
-            expect(hasImageFromLayer2).toEqual(true);
-          });
+              expect(hasImageFromLayer2).toEqual(true);
+            },
+          );
         });
 
         it("moving a layer moves the corresponding TileImagery instances on every tile", async function () {
           const provider1 = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Red16x16.png"
+            "Data/Images/Red16x16.png",
           );
           const layer1 = scene.imageryLayers.addImageryProvider(provider1);
           const provider2 = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Green4x4.png"
+            "Data/Images/Green4x4.png",
           );
           const layer2 = scene.imageryLayers.addImageryProvider(provider2);
 
           await updateUntilDone(scene.globe);
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toBeGreaterThan(0);
-            let indexOfFirstLayer1 = tile.data.imagery.length;
-            let indexOfLastLayer1 = -1;
-            let indexOfFirstLayer2 = tile.data.imagery.length;
-            for (let i = 0; i < tile.data.imagery.length; ++i) {
-              const imagery = defaultValue(
-                tile.data.imagery[i].readyImagery,
-                tile.data.imagery[i].loadingImagery
-              );
-              if (imagery.imageryLayer === layer1) {
-                indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
-                indexOfLastLayer1 = i;
-              } else {
-                expect(imagery.imageryLayer).toEqual(layer2);
-                indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toBeGreaterThan(0);
+              let indexOfFirstLayer1 = tile.data.imagery.length;
+              let indexOfLastLayer1 = -1;
+              let indexOfFirstLayer2 = tile.data.imagery.length;
+              for (let i = 0; i < tile.data.imagery.length; ++i) {
+                const imagery =
+                  tile.data.imagery[i].readyImagery ??
+                  tile.data.imagery[i].loadingImagery;
+                if (imagery.imageryLayer === layer1) {
+                  indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
+                  indexOfLastLayer1 = i;
+                } else {
+                  expect(imagery.imageryLayer).toEqual(layer2);
+                  indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
+                }
               }
-            }
-            expect(indexOfFirstLayer1).toBeLessThan(indexOfFirstLayer2);
-            expect(indexOfLastLayer1).toBeLessThan(indexOfFirstLayer2);
-          });
+              expect(indexOfFirstLayer1).toBeLessThan(indexOfFirstLayer2);
+              expect(indexOfLastLayer1).toBeLessThan(indexOfFirstLayer2);
+            },
+          );
 
           scene.imageryLayers.raiseToTop(layer1);
 
           await updateUntilDone(scene.globe);
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toBeGreaterThan(0);
-            let indexOfFirstLayer2 = tile.data.imagery.length;
-            let indexOfLastLayer2 = -1;
-            let indexOfFirstLayer1 = tile.data.imagery.length;
-            for (let i = 0; i < tile.data.imagery.length; ++i) {
-              if (tile.data.imagery[i].readyImagery.imageryLayer === layer2) {
-                indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
-                indexOfLastLayer2 = i;
-              } else {
-                expect(tile.data.imagery[i].readyImagery.imageryLayer).toEqual(
-                  layer1
-                );
-                indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toBeGreaterThan(0);
+              let indexOfFirstLayer2 = tile.data.imagery.length;
+              let indexOfLastLayer2 = -1;
+              let indexOfFirstLayer1 = tile.data.imagery.length;
+              for (let i = 0; i < tile.data.imagery.length; ++i) {
+                if (tile.data.imagery[i].readyImagery.imageryLayer === layer2) {
+                  indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
+                  indexOfLastLayer2 = i;
+                } else {
+                  expect(
+                    tile.data.imagery[i].readyImagery.imageryLayer,
+                  ).toEqual(layer1);
+                  indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
+                }
               }
-            }
-            expect(indexOfFirstLayer2).toBeLessThan(indexOfFirstLayer1);
-            expect(indexOfLastLayer2).toBeLessThan(indexOfFirstLayer1);
-          });
+              expect(indexOfFirstLayer2).toBeLessThan(indexOfFirstLayer1);
+              expect(indexOfLastLayer2).toBeLessThan(indexOfFirstLayer1);
+            },
+          );
         });
 
         it("adding a layer creates its skeletons only once", async function () {
           const provider1 = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Red16x16.png"
+            "Data/Images/Red16x16.png",
           );
           scene.imageryLayers.addImageryProvider(provider1);
 
           await updateUntilDone(scene.globe);
           // Add another layer
           const provider2 = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Green4x4.png"
+            "Data/Images/Green4x4.png",
           );
           const layer2 = scene.imageryLayers.addImageryProvider(provider2);
 
           await updateUntilDone(scene.globe);
           // All tiles should have one or more associated images.
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toBeGreaterThan(0);
-            let tilesFromLayer2 = 0;
-            for (let i = 0; i < tile.data.imagery.length; ++i) {
-              let imageryTile = tile.data.imagery[i].readyImagery;
-              if (!defined(imageryTile)) {
-                imageryTile = tile.data.imagery[i].loadingImagery;
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toBeGreaterThan(0);
+              let tilesFromLayer2 = 0;
+              for (let i = 0; i < tile.data.imagery.length; ++i) {
+                let imageryTile = tile.data.imagery[i].readyImagery;
+                if (!defined(imageryTile)) {
+                  imageryTile = tile.data.imagery[i].loadingImagery;
+                }
+                if (imageryTile.imageryLayer === layer2) {
+                  ++tilesFromLayer2;
+                }
               }
-              if (imageryTile.imageryLayer === layer2) {
-                ++tilesFromLayer2;
-              }
-            }
-            expect(tilesFromLayer2).toBe(1);
-          });
+              expect(tilesFromLayer2).toBe(1);
+            },
+          );
         });
 
         it("calling _reload adds a callback per layer per tile", async function () {
           const provider1 = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Red16x16.png"
+            "Data/Images/Red16x16.png",
           );
           const layer1 = scene.imageryLayers.addImageryProvider(provider1);
 
           const provider2 = await SingleTileImageryProvider.fromUrl(
-            "Data/Images/Green4x4.png"
+            "Data/Images/Green4x4.png",
           );
           const layer2 = scene.imageryLayers.addImageryProvider(provider2);
 
           await updateUntilDone(scene.globe);
           // Verify that each tile has 2 imagery objects and no loaded callbacks
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toBe(2);
-            expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
-          });
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toBe(2);
+              expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
+            },
+          );
 
           // Reload each layer
           layer1._imageryProvider._reload();
@@ -346,37 +366,43 @@ describe(
 
           // Verify that each tile has 4 imagery objects (the old imagery and the reloaded imagery for each layer)
           //  and also has 2 callbacks so the old imagery will be removed once loaded.
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toBe(4);
-            expect(Object.keys(tile._loadedCallbacks).length).toBe(2);
-          });
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toBe(4);
+              expect(Object.keys(tile._loadedCallbacks).length).toBe(2);
+            },
+          );
 
           await updateUntilDone(scene.globe);
           // Verify the old imagery was removed and the callbacks are no longer there
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            expect(tile.data.imagery.length).toBe(2);
-            expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
-          });
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              expect(tile.data.imagery.length).toBe(2);
+              expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
+            },
+          );
         });
       },
-      "WebGL"
+      "WebGL",
     );
 
     it("renders in 2D geographic", async function () {
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       scene.imageryLayers.addImageryProvider(provider);
 
       switchViewMode(
         SceneMode.SCENE2D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -387,13 +413,13 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       scene.imageryLayers.addImageryProvider(provider);
 
       switchViewMode(
         SceneMode.SCENE2D,
-        new WebMercatorProjection(Ellipsoid.WGS84)
+        new WebMercatorProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -404,13 +430,13 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       scene.imageryLayers.addImageryProvider(provider);
 
       switchViewMode(
         SceneMode.COLUMBUS_VIEW,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -421,13 +447,13 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       scene.imageryLayers.addImageryProvider(provider);
 
       switchViewMode(
         SceneMode.COLUMBUS_VIEW,
-        new WebMercatorProjection(Ellipsoid.WGS84)
+        new WebMercatorProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -438,13 +464,13 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       scene.imageryLayers.addImageryProvider(provider);
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -455,13 +481,13 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       scene.imageryLayers.addImageryProvider(provider);
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -474,20 +500,20 @@ describe(
       expect(scene).toRenderAndCall((rgba) => (renderedRed = rgba[0]));
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       const layer = scene.imageryLayers.addImageryProvider(provider);
 
       await updateUntilDone(scene.globe);
       expect(scene).toRenderAndCall((rgba) =>
-        expect(rgba[0]).toBeGreaterThan(renderedRed)
+        expect(rgba[0]).toBeGreaterThan(renderedRed),
       );
 
       layer.show = false;
 
       await updateUntilDone(scene.globe);
       expect(scene).toRenderAndCall((rgba) =>
-        expect(rgba[0]).toEqual(renderedRed)
+        expect(rgba[0]).toEqual(renderedRed),
       );
     });
 
@@ -499,7 +525,7 @@ describe(
         "Data/Images/Red16x16.png",
         {
           credit: imageryCredit,
-        }
+        },
       );
       const layer = scene.imageryLayers.addImageryProvider(provider);
 
@@ -508,13 +534,13 @@ describe(
       const creditDisplay = scene.frameState.creditDisplay;
       creditDisplay.showLightbox();
       expect(
-        creditDisplay._currentFrameCredits.lightboxCredits.values
+        creditDisplay._currentFrameCredits.lightboxCredits.values,
       ).toContain(new CreditDisplayElement(imageryCredit));
 
       layer.show = false;
       await updateUntilDone(scene.globe);
       expect(
-        creditDisplay._currentFrameCredits.lightboxCredits.values
+        creditDisplay._currentFrameCredits.lightboxCredits.values,
       ).not.toContain(new CreditDisplayElement(imageryCredit));
 
       creditDisplay.hideLightbox();
@@ -524,14 +550,14 @@ describe(
       it("culls tiles in full fog", async function () {
         expect(scene).toRender([0, 0, 0, 255]);
         const provider = await SingleTileImageryProvider.fromUrl(
-          "Data/Images/Red16x16.png"
+          "Data/Images/Red16x16.png",
         );
         scene.imageryLayers.addImageryProvider(provider);
         const oldFog = scene.fog;
         scene.fog = new Fog();
         switchViewMode(
           SceneMode.SCENE3D,
-          new GeographicProjection(Ellipsoid.WGS84)
+          new GeographicProjection(Ellipsoid.WGS84),
         );
         scene.camera.lookUp(1.2); // Horizon-view
 
@@ -550,14 +576,14 @@ describe(
       it("culls tiles but does not render fog visuals when renderable is false", async function () {
         expect(scene).toRender([0, 0, 0, 255]);
         const provider = await SingleTileImageryProvider.fromUrl(
-          "Data/Images/Red16x16.png"
+          "Data/Images/Red16x16.png",
         );
         scene.imageryLayers.addImageryProvider(provider);
         const oldFog = scene.fog;
         scene.fog = new Fog();
         switchViewMode(
           SceneMode.SCENE3D,
-          new GeographicProjection(Ellipsoid.WGS84)
+          new GeographicProjection(Ellipsoid.WGS84),
         );
         scene.camera.lookUp(1.2); // Horizon-view
 
@@ -584,14 +610,14 @@ describe(
       it("culls tiles because of increased SSE", async function () {
         expect(scene).toRender([0, 0, 0, 255]);
         const provider = await SingleTileImageryProvider.fromUrl(
-          "Data/Images/Red16x16.png"
+          "Data/Images/Red16x16.png",
         );
         scene.imageryLayers.addImageryProvider(provider);
         const oldFog = scene.fog;
         scene.fog = new Fog();
         switchViewMode(
           SceneMode.SCENE3D,
-          new GeographicProjection(Ellipsoid.WGS84)
+          new GeographicProjection(Ellipsoid.WGS84),
         );
         scene.camera.lookUp(1.2); // Horizon-view
 
@@ -621,7 +647,7 @@ describe(
       scene.fog.enabled = false;
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(scene.globe).then(function () {
@@ -631,12 +657,12 @@ describe(
 
     it("renders in 3D and then Columbus View", async function () {
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       scene.imageryLayers.addImageryProvider(provider);
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -644,7 +670,7 @@ describe(
 
       switchViewMode(
         SceneMode.COLUMBUS_VIEW,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -662,7 +688,7 @@ describe(
       scene.imageryLayers.addImageryProvider(providerWithInvalidRootTiles);
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(scene.globe).then(function () {
@@ -674,7 +700,7 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       const layer = scene.imageryLayers.addImageryProvider(provider);
 
@@ -690,7 +716,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -727,14 +753,14 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       const layer = scene.imageryLayers.addImageryProvider(provider);
       layer.cutoutRectangle = cameraDestination;
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       let baseColor;
@@ -756,13 +782,13 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
 
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       const layer = scene.imageryLayers.addImageryProvider(provider);
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       let layerColor;
@@ -800,7 +826,7 @@ describe(
 
     it("skips layer with uniform alpha value of zero", async function () {
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       const layer = scene.imageryLayers.addImageryProvider(provider);
 
@@ -808,7 +834,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -835,7 +861,7 @@ describe(
 
     it("can render more imagery layers than the available texture units", async function () {
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       for (let i = 0; i < ContextLimits.maximumTextureImageUnits + 1; ++i) {
         scene.imageryLayers.addImageryProvider(provider);
@@ -843,7 +869,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       await updateUntilDone(scene.globe);
@@ -867,12 +893,12 @@ describe(
 
             // The first draw command for each tile should use a non-alpha-blending render state.
             expect(command.renderState.blending).not.toEqual(
-              renderStateWithAlphaBlending.blending
+              renderStateWithAlphaBlending.blending,
             );
           } else {
             // Successive draw commands per tile should alpha blend.
             expect(command.renderState.blending).toEqual(
-              renderStateWithAlphaBlending.blending
+              renderStateWithAlphaBlending.blending,
             );
             expect(command.uniformMap.u_initialColor().w).toEqual(0.0);
           }
@@ -900,7 +926,7 @@ describe(
         "Data/Images/Red16x16.png",
         {
           credit: imageryCredit,
-        }
+        },
       );
       scene.imageryLayers.addImageryProvider(provider);
 
@@ -914,7 +940,7 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
           Resource._DefaultImplementations.loadWithXhr(
@@ -923,7 +949,7 @@ describe(
             method,
             data,
             headers,
-            deferred
+            deferred,
           );
           return;
         }
@@ -935,24 +961,24 @@ describe(
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
       scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
         "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
         {
           credit: terrainCredit,
-        }
+        },
       );
 
       await updateUntilDone(scene.globe);
       const creditDisplay = scene.frameState.creditDisplay;
       creditDisplay.showLightbox();
       expect(
-        creditDisplay._currentFrameCredits.lightboxCredits.values
+        creditDisplay._currentFrameCredits.lightboxCredits.values,
       ).toContain(new CreditDisplayElement(imageryCredit));
       expect(
-        creditDisplay._currentFrameCredits.lightboxCredits.values
+        creditDisplay._currentFrameCredits.lightboxCredits.values,
       ).toContain(new CreditDisplayElement(terrainCredit));
       creditDisplay.hideLightbox();
     });
@@ -967,7 +993,8 @@ describe(
             expect(replacementQueue.count).toBeGreaterThan(0);
             const oldTile = replacementQueue.head;
 
-            surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+            surface.tileProvider.terrainProvider =
+              new EllipsoidTerrainProvider();
 
             scene.renderForSpecs();
 
@@ -1018,7 +1045,7 @@ describe(
           expect(levelZeroTiles[1]).toBe(levelZero1);
         });
       },
-      "WebGL"
+      "WebGL",
     );
 
     it("renders back side of globe when camera is near the poles", function () {
@@ -1026,27 +1053,27 @@ describe(
       camera.position = new Cartesian3(
         2909078.1077849553,
         -38935053.40234136,
-        -63252400.94628872
+        -63252400.94628872,
       );
       camera.direction = new Cartesian3(
         -0.03928753135806185,
         0.44884096070717633,
-        0.8927476025569903
+        0.8927476025569903,
       );
       camera.up = new Cartesian3(
         0.00002847975895320034,
         -0.8934368803055558,
-        0.4491887577613425
+        0.4491887577613425,
       );
       camera.right = new Cartesian3(
         0.99922794650124,
         0.017672942642764363,
-        0.03508814656908402
+        0.03508814656908402,
       );
       scene.cullingVolume = camera.frustum.computeCullingVolume(
         camera.position,
         camera.direction,
-        camera.up
+        camera.up,
       );
 
       return updateUntilDone(scene.globe).then(function () {
@@ -1066,7 +1093,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(scene.globe).then(function () {
@@ -1098,7 +1125,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(scene.globe).then(function () {
@@ -1132,7 +1159,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(scene.globe).then(function () {
@@ -1166,7 +1193,7 @@ describe(
       const globe = scene.globe;
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(globe).then(function () {
@@ -1182,7 +1209,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(globe).then(function () {
@@ -1201,7 +1228,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(globe).then(function () {
@@ -1220,7 +1247,7 @@ describe(
 
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(globe).then(function () {
@@ -1250,7 +1277,7 @@ describe(
       const model = scene.primitives.add(
         await Model.fromGltfAsync({
           url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf",
-        })
+        }),
       );
       model.clippingPlanes = clippingPlanes;
       const globe = scene.globe;
@@ -1260,11 +1287,191 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    describe("clippingPolygons", () => {
+      const positions = Cartesian3.fromRadiansArray([
+        -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+        -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+        0.698743632490865, -1.3194358224045408, 0.6987471965556998,
+      ]);
+      let polygon;
+
+      beforeEach(() => {
+        polygon = new ClippingPolygon({ positions });
+      });
+
+      it("selectively disable rendering globe surface", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84),
+        );
+
+        await updateUntilDone(scene.globe);
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        let result;
+        expect(scene).toRenderAndCall(function (rgba) {
+          result = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        expect(scene).toRender(result);
+
+        scene.globe.clippingPolygons.inverse = true;
+
+        expect(scene).not.toRender(result);
+
+        scene.globe.clippingPolygons = undefined;
+      });
+
+      it("renders with multiple clipping regions", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84),
+        );
+
+        await updateUntilDone(scene.globe);
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        let result;
+        expect(scene).toRenderAndCall(function (rgba) {
+          result = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
+        const positionsB = Cartesian3.fromDegreesArray([
+          153.033834435422932, -27.569622925766826, 153.033836082527984,
+          -27.569616899897252, 153.033905701988772, -27.569628939963906,
+          153.033999779170614, -27.569639093357882,
+        ]);
+
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon, new ClippingPolygon({ positions: positionsB })],
+        });
+
+        expect(scene).toRender(result);
+
+        scene.globe.clippingPolygons.inverse = true;
+
+        expect(scene).not.toRender(result);
+
+        scene.globe.clippingPolygons = undefined;
+      });
+
+      it("Clips tiles when completely inside clipping region", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const globe = scene.globe;
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+          inverse: true,
+        });
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84),
+        );
+
+        await updateUntilDone(globe);
+        const surface = globe._surface;
+        const tile = surface._levelZeroTiles[0];
+        expect(tile.isClipped).toBe(true);
+      });
+
+      it("Clips tiles that intersect a clipping region", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const globe = scene.globe;
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84),
+        );
+
+        await updateUntilDone(globe);
+        const surface = globe._surface;
+        const tile = surface._levelZeroTiles[1];
+        expect(tile.isClipped).toBe(true);
+      });
+
+      it("Doesn't clip tiles when completely outside clipping region", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const globe = scene.globe;
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84),
+        );
+
+        await updateUntilDone(globe);
+        const surface = globe._surface;
+        const tile = surface._levelZeroTiles[0];
+        expect(tile.isClipped).toBe(false);
+      });
+
+      it("destroys attached ClippingPolygonCollections that have been detached", function () {
+        const globe = scene.globe;
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        globe.clippingPolygons = collection;
+        expect(collection.isDestroyed()).toBe(false);
+
+        globe.clippingPolygons = undefined;
+        expect(collection.isDestroyed()).toBe(true);
+      });
+
+      it("throws a DeveloperError when given a ClippingPolygonCollection attached to a Model", async function () {
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        const model = scene.primitives.add(
+          await Model.fromGltfAsync({
+            url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf",
+          }),
+        );
+        model.clippingPolygons = collection;
+        const globe = scene.globe;
+
+        expect(function () {
+          globe.clippingPolygons = collection;
+        }).toThrowDeveloperError();
+      });
+    });
+
     it("cartographicLimitRectangle selectively enables rendering globe surface", function () {
       expect(scene).toRender([0, 0, 0, 255]);
       switchViewMode(
         SceneMode.COLUMBUS_VIEW,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
       let result;
       return updateUntilDone(scene.globe)
@@ -1278,7 +1485,7 @@ describe(
             -2,
             -2,
             -1,
-            -1
+            -1,
           );
           expect(scene).notToRender(result);
           scene.camera.setView({
@@ -1294,14 +1501,14 @@ describe(
     it("cartographicLimitRectangle defaults to Rectangle.MAX_VALUE", function () {
       scene.globe.cartographicLimitRectangle = undefined;
       expect(
-        scene.globe.cartographicLimitRectangle.equals(Rectangle.MAX_VALUE)
+        scene.globe.cartographicLimitRectangle.equals(Rectangle.MAX_VALUE),
       ).toBe(true);
     });
 
     it("cartographicLimitRectangle culls tiles outside the region", function () {
       switchViewMode(
         SceneMode.COLUMBUS_VIEW,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
       let unculledCommandCount;
       return updateUntilDone(scene.globe)
@@ -1311,13 +1518,13 @@ describe(
             -2,
             -2,
             -1,
-            -1
+            -1,
           );
           return updateUntilDone(scene.globe);
         })
         .then(function () {
           expect(unculledCommandCount).toBeGreaterThan(
-            scene.frameState.commandList.length
+            scene.frameState.commandList.length,
           );
         });
     });
@@ -1325,7 +1532,7 @@ describe(
     it("cartographicLimitRectangle may cross the antimeridian", function () {
       switchViewMode(
         SceneMode.SCENE2D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
       let unculledCommandCount;
       return updateUntilDone(scene.globe)
@@ -1335,13 +1542,13 @@ describe(
             179,
             -2,
             -179,
-            -1
+            -1,
           );
           return updateUntilDone(scene.globe);
         })
         .then(function () {
           expect(unculledCommandCount).toBeGreaterThan(
-            scene.frameState.commandList.length
+            scene.frameState.commandList.length,
           );
         });
     });
@@ -1349,14 +1556,14 @@ describe(
     it("disables skirts and enables back face culling when camera is underground", function () {
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
 
       return updateUntilDone(scene.globe)
         .then(function () {
           const command = scene.frameState.commandList[0];
           expect(command.count).toBe(
-            command.owner.data.renderedMesh.indices.length
+            command.owner.data.renderedMesh.indices.length,
           ); // Has skirts
           expect(command.renderState.cull.enabled).toBe(true); // Has back face culling
 
@@ -1365,12 +1572,12 @@ describe(
             destination: new Cartesian3(
               -746658.0557573901,
               -5644191.0002196245,
-              2863585.099969967
+              2863585.099969967,
             ),
             orientation: new HeadingPitchRoll(
               0.3019699121236403,
               0.07316306869231592,
-              0.0007089903642230055
+              0.0007089903642230055,
             ),
           });
           return updateUntilDone(scene.globe);
@@ -1378,74 +1585,16 @@ describe(
         .then(function () {
           const command = scene.frameState.commandList[0];
           expect(command.count).toBe(
-            command.owner.data.renderedMesh.indexCountWithoutSkirts
+            command.owner.data.renderedMesh.indexCountWithoutSkirts,
           ); // No skirts
           expect(command.renderState.cull.enabled).toBe(false); // No back face culling
         });
     });
 
-    it("Detects change in terrain exaggeration", function () {
-      switchViewMode(
-        SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
-      );
-      scene.camera.flyHome(0.0);
-
-      scene.globe.terrainExaggeration = 1.0;
-      scene.globe.terrainExaggerationRelativeHeight = 0.0;
-
-      return updateUntilDone(scene.globe).then(function () {
-        forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-          tile
-        ) {
-          const surfaceTile = tile.data;
-          const encoding = surfaceTile.mesh.encoding;
-          const boundingSphere = surfaceTile.tileBoundingRegion.boundingSphere;
-          expect(encoding.exaggeration).toEqual(1.0);
-          expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
-          expect(boundingSphere.radius).toBeLessThan(7000000.0);
-        });
-
-        scene.globe.terrainExaggeration = 2.0;
-        scene.globe.terrainExaggerationRelativeHeight = -1000000.0;
-
-        return updateUntilDone(scene.globe).then(function () {
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            const surfaceTile = tile.data;
-            const encoding = surfaceTile.mesh.encoding;
-            const boundingSphere =
-              surfaceTile.tileBoundingRegion.boundingSphere;
-            expect(encoding.exaggeration).toEqual(2.0);
-            expect(encoding.hasGeodeticSurfaceNormals).toEqual(true);
-            expect(boundingSphere.radius).toBeGreaterThan(7000000.0);
-          });
-
-          scene.globe.terrainExaggeration = 1.0;
-          scene.globe.terrainExaggerationRelativeHeight = 0.0;
-
-          return updateUntilDone(scene.globe).then(function () {
-            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-              tile
-            ) {
-              const surfaceTile = tile.data;
-              const encoding = surfaceTile.mesh.encoding;
-              const boundingSphere =
-                surfaceTile.tileBoundingRegion.boundingSphere;
-              expect(encoding.exaggeration).toEqual(1.0);
-              expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
-              expect(boundingSphere.radius).toBeLessThan(7000000.0);
-            });
-          });
-        });
-      });
-    });
-
     it("Detects change in vertical exaggeration", function () {
       switchViewMode(
         SceneMode.SCENE3D,
-        new GeographicProjection(Ellipsoid.WGS84)
+        new GeographicProjection(Ellipsoid.WGS84),
       );
       scene.camera.flyHome(0.0);
 
@@ -1453,52 +1602,108 @@ describe(
       scene.verticalExaggerationRelativeHeight = 0.0;
 
       return updateUntilDone(scene.globe).then(function () {
-        forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-          tile
-        ) {
-          const surfaceTile = tile.data;
-          const encoding = surfaceTile.mesh.encoding;
-          const boundingSphere = surfaceTile.tileBoundingRegion.boundingSphere;
-          expect(encoding.exaggeration).toEqual(1.0);
-          expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
-          expect(boundingSphere.radius).toBeLessThan(7000000.0);
-        });
+        forEachRenderedTile(
+          scene.globe._surface,
+          1,
+          undefined,
+          function (tile) {
+            const surfaceTile = tile.data;
+            const encoding = surfaceTile.mesh.encoding;
+            const boundingSphere =
+              surfaceTile.tileBoundingRegion.boundingSphere;
+            expect(encoding.exaggeration).toEqual(1.0);
+            expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
+            expect(boundingSphere.radius).toBeLessThan(7000000.0);
+          },
+        );
 
         scene.verticalExaggeration = 2.0;
         scene.verticalExaggerationRelativeHeight = -1000000.0;
 
         return updateUntilDone(scene.globe).then(function () {
-          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-            tile
-          ) {
-            const surfaceTile = tile.data;
-            const encoding = surfaceTile.mesh.encoding;
-            const boundingSphere =
-              surfaceTile.tileBoundingRegion.boundingSphere;
-            expect(encoding.exaggeration).toEqual(2.0);
-            expect(encoding.hasGeodeticSurfaceNormals).toEqual(true);
-            expect(boundingSphere.radius).toBeGreaterThan(7000000.0);
-          });
+          forEachRenderedTile(
+            scene.globe._surface,
+            1,
+            undefined,
+            function (tile) {
+              const surfaceTile = tile.data;
+              const encoding = surfaceTile.mesh.encoding;
+              const boundingSphere =
+                surfaceTile.tileBoundingRegion.boundingSphere;
+              expect(encoding.exaggeration).toEqual(2.0);
+              expect(encoding.hasGeodeticSurfaceNormals).toEqual(true);
+              expect(boundingSphere.radius).toBeGreaterThan(7000000.0);
+            },
+          );
 
           scene.verticalExaggeration = 1.0;
           scene.verticalExaggerationRelativeHeight = 0.0;
 
           return updateUntilDone(scene.globe).then(function () {
-            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
-              tile
-            ) {
-              const surfaceTile = tile.data;
-              const encoding = surfaceTile.mesh.encoding;
-              const boundingSphere =
-                surfaceTile.tileBoundingRegion.boundingSphere;
-              expect(encoding.exaggeration).toEqual(1.0);
-              expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
-              expect(boundingSphere.radius).toBeLessThan(7000000.0);
-            });
+            forEachRenderedTile(
+              scene.globe._surface,
+              1,
+              undefined,
+              function (tile) {
+                const surfaceTile = tile.data;
+                const encoding = surfaceTile.mesh.encoding;
+                const boundingSphere =
+                  surfaceTile.tileBoundingRegion.boundingSphere;
+                expect(encoding.exaggeration).toEqual(1.0);
+                expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
+                expect(boundingSphere.radius).toBeLessThan(7000000.0);
+              },
+            );
           });
         });
       });
     });
+
+    it("hasWaterMask returns expected value", async function () {
+      // Mock terrain tile loading
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
+          Resource._DefaultImplementations.loadWithXhr(
+            "Data/CesiumTerrainTileJson/tile.32bitIndices.terrain",
+            responseType,
+            method,
+            data,
+            headers,
+            deferred,
+          );
+          return;
+        }
+
+        Resource._DefaultImplementations.loadWithXhr(
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        );
+      };
+      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
+        {
+          requestWaterMask: true,
+        },
+      );
+      scene.globe.showWaterEffect = false;
+
+      await updateUntilDone(scene.globe);
+
+      expect(scene.globe._surface.tileProvider.hasWaterMask).toBeTrue();
+    });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -70,7 +70,7 @@ HilbertOrder.decode2D = function (level, index) {
   // eslint-disable-next-line no-undef
   if (index < BigInt(0) || index >= BigInt(Math.pow(4, level))) {
     throw new DeveloperError(
-      "Hilbert index exceeds valid maximum for given level."
+      "Hilbert index exceeds valid maximum for given level.",
     );
   }
   //>>includeEnd('debug');

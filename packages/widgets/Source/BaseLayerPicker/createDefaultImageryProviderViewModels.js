@@ -27,14 +27,14 @@ function createDefaultImageryProviderViewModels() {
           style: IonWorldImageryStyle.AERIAL,
         });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Bing Maps Aerial with Labels",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/bingAerialLabels.png"
+        "Widgets/Images/ImageryProviders/bingAerialLabels.png",
       ),
       tooltip: "Bing Maps aerial imagery with labels, provided by Cesium ion",
       category: "Cesium ion",
@@ -43,7 +43,7 @@ function createDefaultImageryProviderViewModels() {
           style: IonWorldImageryStyle.AERIAL_WITH_LABELS,
         });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
@@ -57,14 +57,14 @@ function createDefaultImageryProviderViewModels() {
           style: IonWorldImageryStyle.ROAD,
         });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "ArcGIS World Imagery",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldImagery.png"
+        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldImagery.png",
       ),
       tooltip:
         "\
@@ -82,17 +82,17 @@ https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9",
           ArcGisBaseMapType.SATELLITE,
           {
             enablePickFeatures: false,
-          }
+          },
         );
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "ArcGIS World Hillshade",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldHillshade.png"
+        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldHillshade.png",
       ),
       tooltip:
         "\
@@ -107,17 +107,17 @@ https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d",
           ArcGisBaseMapType.HILLSHADE,
           {
             enablePickFeatures: false,
-          }
+          },
         );
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Esri World Ocean",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldOcean.png"
+        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldOcean.png",
       ),
       tooltip:
         "\
@@ -135,17 +135,17 @@ https://www.arcgis.com/home/item.html?id=1e126e7520f9466c9ca28b8f28b5e500",
           ArcGisBaseMapType.OCEANS,
           {
             enablePickFeatures: false,
-          }
+          },
         );
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Open\u00adStreet\u00adMap",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/openStreetMap.png"
+        "Widgets/Images/ImageryProviders/openStreetMap.png",
       ),
       tooltip:
         "OpenStreetMap (OSM) is a collaborative project to create a free editable map \
@@ -156,14 +156,14 @@ of the world.\nhttp://www.openstreetmap.org",
           url: "https://tile.openstreetmap.org/",
         });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Stadia x Stamen Watercolor",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/stamenWatercolor.png"
+        "Widgets/Images/ImageryProviders/stamenWatercolor.png",
       ),
       tooltip:
         "Based on the original basemaps created for the Knight Foundation and reminiscent of hand drawn maps, the watercolor maps from Stamen Design apply raster effect area washes and organic edges over a paper texture to add warm pop to any map.\nhttps://docs.stadiamaps.com/map-styles/stamen-watercolor/",
@@ -178,14 +178,14 @@ of the world.\nhttp://www.openstreetmap.org",
            &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
         });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Stadia x Stamen Toner",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/stamenToner.png"
+        "Widgets/Images/ImageryProviders/stamenToner.png",
       ),
       tooltip:
         "Based on the original basemaps created for the Knight Foundation and the most popular of the excellent styles from Stamen Design, these high-contrast B+W (black and white) maps are the perfect backdrop for your colorful and eye-catching overlays.\nhttps://docs.stadiamaps.com/map-styles/stamen-toner/",
@@ -200,14 +200,14 @@ of the world.\nhttp://www.openstreetmap.org",
             &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
         });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Stadia Alidade Smooth",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/stadiaAlidadeSmooth.png"
+        "Widgets/Images/ImageryProviders/stadiaAlidadeSmooth.png",
       ),
       tooltip:
         "Stadia's custom Alidade Smooth style is designed for maps that use a lot of markers or overlays. It features a muted color scheme and fewer points of interest to allow your added data to shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth/",
@@ -221,14 +221,14 @@ of the world.\nhttp://www.openstreetmap.org",
             &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
         });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Stadia Alidade Smooth Dark",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/stadiaAlidadeSmoothDark.png"
+        "Widgets/Images/ImageryProviders/stadiaAlidadeSmoothDark.png",
       ),
       tooltip:
         "Stadia Alidade Smooth Dark, like its lighter cousin, is also designed to stay out of the way. It just flips the dark mode switch on the color scheme. With the lights out, your data can now literally shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth-dark/",
@@ -242,7 +242,7 @@ of the world.\nhttp://www.openstreetmap.org",
             &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
         });
       },
-    })
+    }),
   );
 
   providerViewModels.push(
@@ -255,7 +255,7 @@ of the world.\nhttp://www.openstreetmap.org",
       creationFunction: function () {
         return IonImageryProvider.fromAssetId(3954);
       },
-    })
+    }),
   );
 
   providerViewModels.push(
@@ -267,14 +267,14 @@ of the world.\nhttp://www.openstreetmap.org",
       creationFunction: function () {
         return IonImageryProvider.fromAssetId(3845);
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Earth at night",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/earthAtNight.png"
+        "Widgets/Images/ImageryProviders/earthAtNight.png",
       ),
       tooltip:
         "The Earth at night, also known as The Black Marble, is a 500 meter resolution global composite imagery layer released by NASA.",
@@ -282,24 +282,24 @@ of the world.\nhttp://www.openstreetmap.org",
       creationFunction: function () {
         return IonImageryProvider.fromAssetId(3812);
       },
-    })
+    }),
   );
 
   providerViewModels.push(
     new ProviderViewModel({
       name: "Natural Earth\u00a0II",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/naturalEarthII.png"
+        "Widgets/Images/ImageryProviders/naturalEarthII.png",
       ),
       tooltip:
         "Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/",
       category: "Cesium ion",
       creationFunction: function () {
         return TileMapServiceImageryProvider.fromUrl(
-          buildModuleUrl("Assets/Textures/NaturalEarthII")
+          buildModuleUrl("Assets/Textures/NaturalEarthII"),
         );
       },
-    })
+    }),
   );
 
   return providerViewModels;

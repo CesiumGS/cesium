@@ -1,4 +1,4 @@
-import { DeveloperError } from "@cesium/engine";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Constants used to indicated what part of the sensor volume to display.
@@ -61,7 +61,7 @@ SensorVolumePortionToDisplay.toString = function (portionToDisplay) {
       return "ABOVE_ELLIPSOID_HORIZON";
     default:
       throw new DeveloperError(
-        "SensorVolumePortionToDisplay value is not valid and cannot be converted to a String."
+        "SensorVolumePortionToDisplay value is not valid and cannot be converted to a String.",
       );
   }
 };

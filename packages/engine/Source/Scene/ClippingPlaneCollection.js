@@ -4,7 +4,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -66,7 +66,7 @@ import ClippingPlane from "./ClippingPlane.js";
  * viewer.zoomTo(entity);
  */
 function ClippingPlaneCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._planes = [];
 
@@ -75,7 +75,7 @@ function ClippingPlaneCollection(options) {
   this._dirtyIndex = -1;
   this._multipleDirtyPlanes = false;
 
-  this._enabled = defaultValue(options.enabled, true);
+  this._enabled = options.enabled ?? true;
 
   /**
    * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes
@@ -84,9 +84,7 @@ function ClippingPlaneCollection(options) {
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * The color applied to highlight the edge along which an object is clipped.
@@ -94,7 +92,7 @@ function ClippingPlaneCollection(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.edgeColor = Color.clone(defaultValue(options.edgeColor, Color.WHITE));
+  this.edgeColor = Color.clone(options.edgeColor ?? Color.WHITE);
 
   /**
    * The width, in pixels, of the highlight applied to the edge along which an object is clipped.
@@ -102,7 +100,7 @@ function ClippingPlaneCollection(options) {
    * @type {number}
    * @default 0.0
    */
-  this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
+  this.edgeWidth = options.edgeWidth ?? 0.0;
 
   /**
    * An event triggered when a new clipping plane is added to the collection.  Event handlers
@@ -124,10 +122,7 @@ function ClippingPlaneCollection(options) {
   // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
   this._owner = undefined;
 
-  const unionClippingRegions = defaultValue(
-    options.unionClippingRegions,
-    false
-  );
+  const unionClippingRegions = options.unionClippingRegions ?? false;
   this._unionClippingRegions = unionClippingRegions;
   this._testIntersection = unionClippingRegions
     ? unionIntersectFunction
@@ -415,7 +410,7 @@ function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
 
     const oct32Normal = AttributeCompression.octEncodeToCartesian4(
       plane.normal,
-      oct32EncodeScratch
+      oct32EncodeScratch,
     );
     uint8View[byteIndex] = oct32Normal.x;
     uint8View[byteIndex + 1] = oct32Normal.y;
@@ -424,7 +419,7 @@ function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
 
     const encodedDistance = Cartesian4.packFloat(
       plane.distance,
-      distanceEncodeScratch
+      distanceEncodeScratch,
     );
     uint8View[byteIndex + 4] = encodedDistance.x;
     uint8View[byteIndex + 5] = encodedDistance.y;
@@ -506,7 +501,7 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
   if (!defined(clippingPlanesTexture)) {
     const requiredResolution = computeTextureResolution(
       pixelsNeeded,
-      textureResolutionScratch
+      textureResolutionScratch,
     );
     // Allocate twice as much space as needed to avoid frequent texture reallocation.
     // Allocate in the Y direction, since texture may be as wide as context texture support.
@@ -523,7 +518,7 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
         flipY: false,
       });
       this._float32View = new Float32Array(
-        requiredResolution.x * requiredResolution.y * 4
+        requiredResolution.x * requiredResolution.y * 4,
       );
     } else {
       clippingPlanesTexture = new Texture({
@@ -536,7 +531,7 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
         flipY: false,
       });
       this._uint8View = new Uint8Array(
-        requiredResolution.x * requiredResolution.y * 4
+        requiredResolution.x * requiredResolution.y * 4,
       );
     }
 
@@ -569,7 +564,7 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
     } else {
       offsetY = Math.floor((dirtyIndex * 2) / clippingPlanesTexture.width);
       offsetX = Math.floor(
-        dirtyIndex * 2 - offsetY * clippingPlanesTexture.width
+        dirtyIndex * 2 - offsetY * clippingPlanesTexture.width,
       );
       packPlanesAsUint8(this, dirtyIndex, dirtyIndex + 1);
       clippingPlanesTexture.copyFrom({
@@ -619,42 +614,40 @@ const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
  *                      if the entire volume is on the opposite side and should be clipped, and
  *                      {@link Intersect.INTERSECTING} if the volume intersects the planes.
  */
-ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = function (
-  tileBoundingVolume,
-  transform
-) {
-  const planes = this._planes;
-  const length = planes.length;
+ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume =
+  function (tileBoundingVolume, transform) {
+    const planes = this._planes;
+    const length = planes.length;
 
-  let modelMatrix = this.modelMatrix;
-  if (defined(transform)) {
-    modelMatrix = Matrix4.multiply(transform, modelMatrix, scratchMatrix);
-  }
-
-  // If the collection is not set to union the clipping regions, the volume must be outside of all planes to be
-  // considered completely clipped. If the collection is set to union the clipping regions, if the volume can be
-  // outside any the planes, it is considered completely clipped.
-  // Lastly, if not completely clipped, if any plane is intersecting, more calculations must be performed.
-  let intersection = Intersect.INSIDE;
-  if (!this.unionClippingRegions && length > 0) {
-    intersection = Intersect.OUTSIDE;
-  }
-
-  for (let i = 0; i < length; ++i) {
-    const plane = planes[i];
-
-    Plane.transform(plane, modelMatrix, scratchPlane); // ClippingPlane can be used for Plane math
-
-    const value = tileBoundingVolume.intersectPlane(scratchPlane);
-    if (value === Intersect.INTERSECTING) {
-      intersection = value;
-    } else if (this._testIntersection(value)) {
-      return value;
+    let modelMatrix = this.modelMatrix;
+    if (defined(transform)) {
+      modelMatrix = Matrix4.multiply(transform, modelMatrix, scratchMatrix);
     }
-  }
 
-  return intersection;
-};
+    // If the collection is not set to union the clipping regions, the volume must be outside of all planes to be
+    // considered completely clipped. If the collection is set to union the clipping regions, if the volume can be
+    // outside any the planes, it is considered completely clipped.
+    // Lastly, if not completely clipped, if any plane is intersecting, more calculations must be performed.
+    let intersection = Intersect.INSIDE;
+    if (!this.unionClippingRegions && length > 0) {
+      intersection = Intersect.OUTSIDE;
+    }
+
+    for (let i = 0; i < length; ++i) {
+      const plane = planes[i];
+
+      Plane.transform(plane, modelMatrix, scratchPlane); // ClippingPlane can be used for Plane math
+
+      const value = tileBoundingVolume.intersectPlane(scratchPlane);
+      if (value === Intersect.INTERSECTING) {
+        intersection = value;
+      } else if (this._testIntersection(value)) {
+        return value;
+      }
+    }
+
+    return intersection;
+  };
 
 /**
  * Sets the owner for the input ClippingPlaneCollection if there wasn't another owner.
@@ -668,7 +661,7 @@ ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = functi
 ClippingPlaneCollection.setOwner = function (
   clippingPlaneCollection,
   owner,
-  key
+  key,
 ) {
   // Don't destroy the ClippingPlaneCollection if it is already owned by newOwner
   if (clippingPlaneCollection === owner[key]) {
@@ -680,7 +673,7 @@ ClippingPlaneCollection.setOwner = function (
     //>>includeStart('debug', pragmas.debug);
     if (defined(clippingPlaneCollection._owner)) {
       throw new DeveloperError(
-        "ClippingPlaneCollection should only be assigned to one object"
+        "ClippingPlaneCollection should only be assigned to one object",
       );
     }
     //>>includeEnd('debug');
@@ -714,7 +707,7 @@ ClippingPlaneCollection.useFloatTexture = function (context) {
 ClippingPlaneCollection.getTextureResolution = function (
   clippingPlaneCollection,
   context,
-  result
+  result,
 ) {
   const texture = clippingPlaneCollection.texture;
   if (defined(texture)) {

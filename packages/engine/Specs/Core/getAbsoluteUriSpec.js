@@ -3,7 +3,7 @@ import { getAbsoluteUri, getBaseUri } from "../../index.js";
 describe("Core/getAbsoluteUri", function () {
   it("works as expected", function () {
     let result = getAbsoluteUri(
-      "http://www.mysite.com/awesome?makeitawesome=true"
+      "http://www.mysite.com/awesome?makeitawesome=true",
     );
     expect(result).toEqual("http://www.mysite.com/awesome?makeitawesome=true");
 
@@ -23,7 +23,7 @@ describe("Core/getAbsoluteUri", function () {
     const result = getAbsoluteUri._implementation(
       "awesome.png",
       undefined,
-      fakeDocument
+      fakeDocument,
     );
     expect(result).toEqual("http://test.com/awesome.png");
   });

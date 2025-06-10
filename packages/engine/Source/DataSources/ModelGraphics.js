@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -18,6 +18,10 @@ function createArticulationStagePropertyBag(value) {
   return new PropertyBag(value);
 }
 
+function createEnvironmentMapPropertyBag(value) {
+  return new PropertyBag(value);
+}
+
 /**
  * @typedef {object} ModelGraphics.ConstructorOptions
  *
@@ -26,6 +30,7 @@ function createArticulationStagePropertyBag(value) {
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the model.
  * @property {Property | string | Resource} [uri] A string or Resource Property specifying the URI of the glTF asset.
  * @property {Property | number} [scale=1.0] A numeric Property specifying a uniform linear scale.
+ * @property {Property | boolean} [enableVerticalExaggeration=true] A boolean Property specifying if the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
  * @property {Property | number} [minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
  * @property {Property | number} [maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @property {Property | boolean} [incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
@@ -39,6 +44,7 @@ function createArticulationStagePropertyBag(value) {
  * @property {Property | ColorBlendMode} [colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
  * @property {Property | number} [colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @property {Property | Cartesian2} [imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
+ * @property {PropertyBag | Object<string, *>} [environmentMapOptions] The properties for managing dynamic environment maps on this entity.
  * @property {Property | Color} [lightColor] A property specifying the light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
  * @property {PropertyBag | Object<string, TranslationRotationScale>} [nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
@@ -70,6 +76,10 @@ function ModelGraphics(options) {
   this._uriSubscription = undefined;
   this._scale = undefined;
   this._scaleSubscription = undefined;
+  this._hasVerticalExaggeration = undefined;
+  this._hasVerticalExaggerationSubscription = undefined;
+  this._enableVerticalExaggeration = undefined;
+  this._enableVerticalExaggerationSubscription = undefined;
   this._minimumPixelSize = undefined;
   this._minimumPixelSizeSubscription = undefined;
   this._maximumScale = undefined;
@@ -96,6 +106,8 @@ function ModelGraphics(options) {
   this._colorBlendAmountSubscription = undefined;
   this._imageBasedLightingFactor = undefined;
   this._imageBasedLightingFactorSubscription = undefined;
+  this._environmentMapOptions = undefined;
+  this._environmentMapOptionsSubscription = undefined;
   this._lightColor = undefined;
   this._lightColorSubscription = undefined;
   this._distanceDisplayCondition = undefined;
@@ -109,7 +121,7 @@ function ModelGraphics(options) {
   this._customShader = undefined;
   this._customShaderSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(ModelGraphics.prototype, {
@@ -151,6 +163,16 @@ Object.defineProperties(ModelGraphics.prototype, {
   scale: createPropertyDescriptor("scale"),
 
   /**
+   * Gets or sets the boolean Property specifying if the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
+   * @memberof ModelGraphics.prototype
+   * @type {Property|undefined}
+   * @default true
+   */
+  enableVerticalExaggeration: createPropertyDescriptor(
+    "enableVerticalExaggeration",
+  ),
+
+  /**
    * Gets or sets the numeric Property specifying the approximate minimum
    * pixel size of the model regardless of zoom. This can be used to ensure that
    * a model is visible even when the viewer zooms out.  When <code>0.0</code>,
@@ -177,7 +199,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   incrementallyLoadTextures: createPropertyDescriptor(
-    "incrementallyLoadTextures"
+    "incrementallyLoadTextures",
   ),
 
   /**
@@ -261,7 +283,18 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   imageBasedLightingFactor: createPropertyDescriptor(
-    "imageBasedLightingFactor"
+    "imageBasedLightingFactor",
+  ),
+
+  /**
+   * Gets or sets the {@link DynamicEnvironmentMapManager.ConstructorOptions} to apply to this model. This is represented as an {@link PropertyBag}.
+   * @memberof ModelGraphics.prototype
+   * @type {PropertyBag}
+   */
+  environmentMapOptions: createPropertyDescriptor(
+    "environmentMapOptions",
+    undefined,
+    createEnvironmentMapPropertyBag,
   ),
 
   /**
@@ -277,7 +310,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -290,7 +323,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   nodeTransformations: createPropertyDescriptor(
     "nodeTransformations",
     undefined,
-    createNodeTransformationPropertyBag
+    createNodeTransformationPropertyBag,
   ),
 
   /**
@@ -302,7 +335,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   articulations: createPropertyDescriptor(
     "articulations",
     undefined,
-    createArticulationStagePropertyBag
+    createArticulationStagePropertyBag,
   ),
 
   /**
@@ -333,6 +366,7 @@ ModelGraphics.prototype.clone = function (result) {
   result.show = this.show;
   result.uri = this.uri;
   result.scale = this.scale;
+  result.enableVerticalExaggeration = this.enableVerticalExaggeration;
   result.minimumPixelSize = this.minimumPixelSize;
   result.maximumScale = this.maximumScale;
   result.incrementallyLoadTextures = this.incrementallyLoadTextures;
@@ -345,6 +379,7 @@ ModelGraphics.prototype.clone = function (result) {
   result.colorBlendMode = this.colorBlendMode;
   result.colorBlendAmount = this.colorBlendAmount;
   result.imageBasedLightingFactor = this.imageBasedLightingFactor;
+  result.environmentMapOptions = this.environmentMapOptions;
   result.lightColor = this.lightColor;
   result.distanceDisplayCondition = this.distanceDisplayCondition;
   result.nodeTransformations = this.nodeTransformations;
@@ -367,59 +402,33 @@ ModelGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.uri = defaultValue(this.uri, source.uri);
-  this.scale = defaultValue(this.scale, source.scale);
-  this.minimumPixelSize = defaultValue(
-    this.minimumPixelSize,
-    source.minimumPixelSize
-  );
-  this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
-  this.incrementallyLoadTextures = defaultValue(
-    this.incrementallyLoadTextures,
-    source.incrementallyLoadTextures
-  );
-  this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
-  this.clampAnimations = defaultValue(
-    this.clampAnimations,
-    source.clampAnimations
-  );
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference
-  );
-  this.silhouetteColor = defaultValue(
-    this.silhouetteColor,
-    source.silhouetteColor
-  );
-  this.silhouetteSize = defaultValue(
-    this.silhouetteSize,
-    source.silhouetteSize
-  );
-  this.color = defaultValue(this.color, source.color);
-  this.colorBlendMode = defaultValue(
-    this.colorBlendMode,
-    source.colorBlendMode
-  );
-  this.colorBlendAmount = defaultValue(
-    this.colorBlendAmount,
-    source.colorBlendAmount
-  );
-  this.imageBasedLightingFactor = defaultValue(
-    this.imageBasedLightingFactor,
-    source.imageBasedLightingFactor
-  );
-  this.lightColor = defaultValue(this.lightColor, source.lightColor);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition
-  );
-  this.clippingPlanes = defaultValue(
-    this.clippingPlanes,
-    source.clippingPlanes
-  );
-  this.customShader = defaultValue(this.customShader, source.customShader);
+  this.show = this.show ?? source.show;
+  this.uri = this.uri ?? source.uri;
+  this.scale = this.scale ?? source.scale;
+  this.enableVerticalExaggeration =
+    this.enableVerticalExaggeration ?? source.enableVerticalExaggeration;
+  this.minimumPixelSize = this.minimumPixelSize ?? source.minimumPixelSize;
+  this.maximumScale = this.maximumScale ?? source.maximumScale;
+  this.incrementallyLoadTextures =
+    this.incrementallyLoadTextures ?? source.incrementallyLoadTextures;
+  this.runAnimations = this.runAnimations ?? source.runAnimations;
+  this.clampAnimations = this.clampAnimations ?? source.clampAnimations;
+  this.shadows = this.shadows ?? source.shadows;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.silhouetteColor = this.silhouetteColor ?? source.silhouetteColor;
+  this.silhouetteSize = this.silhouetteSize ?? source.silhouetteSize;
+  this.color = this.color ?? source.color;
+  this.colorBlendMode = this.colorBlendMode ?? source.colorBlendMode;
+  this.colorBlendAmount = this.colorBlendAmount ?? source.colorBlendAmount;
+  this.imageBasedLightingFactor =
+    this.imageBasedLightingFactor ?? source.imageBasedLightingFactor;
+  this.environmentMapOptions =
+    this.environmentMapOptions ?? source.environmentMapOptions;
+  this.lightColor = this.lightColor ?? source.lightColor;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.clippingPlanes = this.clippingPlanes ?? source.clippingPlanes;
+  this.customShader = this.customShader ?? source.customShader;
 
   const sourceNodeTransformations = source.nodeTransformations;
   if (defined(sourceNodeTransformations)) {
@@ -429,7 +438,7 @@ ModelGraphics.prototype.merge = function (source) {
     } else {
       this.nodeTransformations = new PropertyBag(
         sourceNodeTransformations,
-        createNodeTransformationProperty
+        createNodeTransformationProperty,
       );
     }
   }

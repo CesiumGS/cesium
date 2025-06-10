@@ -83,7 +83,7 @@ describe(
       }
 
       const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 0.0, 0.0, 1.0)
+        new Color(1.0, 0.0, 0.0, 1.0),
       );
       depthColor = depthColorAttribute.value;
       return new Primitive({
@@ -117,25 +117,25 @@ describe(
         tilesetRectangle.west,
         center.latitude,
         center.longitude,
-        tilesetRectangle.north
+        tilesetRectangle.north,
       );
       const urRect = new Rectangle(
         center.longitude,
         center.longitude,
         tilesetRectangle.east,
-        tilesetRectangle.north
+        tilesetRectangle.north,
       );
       const lrRect = new Rectangle(
         center.longitude,
         tilesetRectangle.south,
         tilesetRectangle.east,
-        center.latitude
+        center.latitude,
       );
       const llRect = new Rectangle(
         tilesetRectangle.west,
         tilesetRectangle.south,
         center.longitude,
-        center.latitude
+        center.latitude,
       );
       return [ulRect, urRect, lrRect, llRect];
     }
@@ -160,14 +160,14 @@ describe(
       globeMockPrimitive = new MockPrimitive(globePrimitive, Pass.GLOBE);
       tilesetMockPrimitive = new MockPrimitive(
         tilesetPrimitive,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
 
       // Add the globe mock primitive to the scene.
       scene.primitives.add(globeMockPrimitive);
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)),
-        new Cartesian3(0.0, 0.0, 0.01)
+        new Cartesian3(0.0, 0.0, 0.01),
       );
     });
 
@@ -198,30 +198,29 @@ describe(
       it("renders points", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsTileset
+          vectorTilePointsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -230,14 +229,13 @@ describe(
       it("picks points", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsTileset
+          vectorTilePointsTileset,
         ).then((tileset) => {
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -245,7 +243,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -253,7 +251,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -261,7 +259,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -273,12 +271,11 @@ describe(
       it("styles points for show", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsTileset
+          vectorTilePointsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
 
           // Set show to true.
 
@@ -287,22 +284,22 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
 
@@ -311,121 +308,120 @@ describe(
           tileset.style = undefined;
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
       });
 
-      it("styles points for color", () => {
-        return Cesium3DTilesTester.loadTileset(
+      it("styles points for color", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsTileset
-        ).then((tileset) => {
-          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          vectorTilePointsTileset,
+        );
+        // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+        const [ulRect, urRect, lrRect, llRect] =
+          subdivideRectangle(tilesetRectangle);
 
-          return new Promise((resolve) => {
-            tileset.style = new Cesium3DTileStyle({
-              color: `color("black")`,
-            });
-            scene.renderForSpecs();
-            window.requestAnimationFrame(() => {
-              resolve();
-            });
-          }).then(() => {
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-              new Cartesian3(0.0, 0.0, 5.0)
-            );
-            expect(scene).toRender(blackPixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-              new Cartesian3(0.0, 0.0, 5.0)
-            );
-            expect(scene).toRender(blackPixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-              new Cartesian3(0.0, 0.0, 5.0)
-            );
-            expect(scene).toRender(blackPixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-              new Cartesian3(0.0, 0.0, 5.0)
-            );
-            expect(scene).toRender(blackPixel);
-
-            // Set style to undefined.
-
-            tileset.style = undefined;
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-              new Cartesian3(0.0, 0.0, 5.0)
-            );
-            expect(scene).toRender(whitePixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-              new Cartesian3(0.0, 0.0, 5.0)
-            );
-            expect(scene).toRender(whitePixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-              new Cartesian3(0.0, 0.0, 5.0)
-            );
-            expect(scene).toRender(whitePixel);
-            camera.lookAt(
-              ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-              new Cartesian3(0.0, 0.0, 5.0)
-            );
-            expect(scene).toRender(whitePixel);
-          });
+        tileset.style = new Cesium3DTileStyle({
+          color: `color("black")`,
         });
+
+        // The billboards take an extra frame or so to update color
+        // from the batch texture
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(blackPixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(blackPixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(blackPixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(blackPixel);
+
+        // Set style to undefined.
+
+        tileset.style = undefined;
+
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(whitePixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(whitePixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(whitePixel);
+        camera.lookAt(
+          ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+          new Cartesian3(0.0, 0.0, 5.0),
+        );
+        expect(scene).toRender(whitePixel);
       });
 
       it("renders batched points with batch ids", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsWithBatchIdsTileset
+          vectorTilePointsWithBatchIdsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -434,15 +430,14 @@ describe(
       it("picks batched points with batch ids", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsWithBatchIdsTileset
+          vectorTilePointsWithBatchIdsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -451,7 +446,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -460,7 +455,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -469,7 +464,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -482,30 +477,29 @@ describe(
       it("renders batched points with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsWithBatchTableTileset
+          vectorTilePointsWithBatchTableTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -514,15 +508,14 @@ describe(
       it("picks batched points with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsWithBatchTableTileset
+          vectorTilePointsWithBatchTableTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -531,7 +524,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -540,7 +533,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -549,7 +542,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -562,30 +555,29 @@ describe(
       it("renders batched points with children", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsBatchedChildrenTileset
+          vectorTilePointsBatchedChildrenTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -594,30 +586,29 @@ describe(
       it("renders batched polygons with children with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePointsBatchedChildrenWithBatchTableTileset
+          vectorTilePointsBatchedChildrenWithBatchTableTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -637,30 +628,29 @@ describe(
       it("renders polygons", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsTileset
+          vectorTilePolygonsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -669,13 +659,13 @@ describe(
       it("picks polygons", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsTileset
+          vectorTilePolygonsTileset,
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.center(tilesetRectangle)
+              Rectangle.center(tilesetRectangle),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -687,12 +677,11 @@ describe(
       it("styles polygons for show", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsTileset
+          vectorTilePolygonsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
 
           // Set show to false.
 
@@ -701,22 +690,22 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
 
@@ -727,22 +716,22 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
 
@@ -751,22 +740,22 @@ describe(
           tileset.style = undefined;
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -775,12 +764,11 @@ describe(
       it("styles polygons for color", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsTileset
+          vectorTilePolygonsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
 
           // Set color to black.
 
@@ -789,22 +777,22 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(blackPixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(blackPixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(blackPixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(blackPixel);
 
@@ -813,22 +801,22 @@ describe(
           tileset.style = undefined;
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -841,13 +829,13 @@ describe(
           vectorTilePolygonsTileset,
           {
             classificationType: ClassificationType.CESIUM_3D_TILE,
-          }
+          },
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.center(tilesetRectangle)
+              Rectangle.center(tilesetRectangle),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
 
           globeMockPrimitive.show = false;
@@ -867,13 +855,13 @@ describe(
           vectorTilePolygonsTileset,
           {
             classificationType: ClassificationType.TERRAIN,
-          }
+          },
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.center(tilesetRectangle)
+              Rectangle.center(tilesetRectangle),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
 
           globeMockPrimitive.show = false;
@@ -893,13 +881,13 @@ describe(
           vectorTilePolygonsTileset,
           {
             classificationType: ClassificationType.BOTH,
-          }
+          },
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.center(tilesetRectangle)
+              Rectangle.center(tilesetRectangle),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
 
           globeMockPrimitive.show = false;
@@ -915,30 +903,29 @@ describe(
       it("renders batched polygons with batch ids", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsWithBatchIdsTileset
+          vectorTilePolygonsWithBatchIdsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -947,15 +934,14 @@ describe(
       it("picks batched polygons with batch ids", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsWithBatchIdsTileset
+          vectorTilePolygonsWithBatchIdsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -964,7 +950,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -973,7 +959,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -982,7 +968,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -995,30 +981,29 @@ describe(
       it("renders batched polygons with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsWithBatchTableTileset
+          vectorTilePolygonsWithBatchTableTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -1027,15 +1012,14 @@ describe(
       it("picks batched polygons with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsWithBatchTableTileset
+          vectorTilePolygonsWithBatchTableTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1044,7 +1028,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1053,7 +1037,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1062,7 +1046,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1075,30 +1059,29 @@ describe(
       it("renders batched polygons with children", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsBatchedChildrenTileset
+          vectorTilePolygonsBatchedChildrenTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -1107,30 +1090,29 @@ describe(
       it("renders batched polygons with children with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolygonsBatchedChildrenWithBatchTable
+          vectorTilePolygonsBatchedChildrenWithBatchTable,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -1152,23 +1134,22 @@ describe(
       it("renders polylines", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesTileset
+          vectorTilePolylinesTileset,
         ).then((tileset) => {
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
 
           const nwCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northwest(ulRect)
+            Rectangle.northwest(ulRect),
           );
           const neCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northeast(urRect)
+            Rectangle.northeast(urRect),
           );
           const seCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southeast(lrRect)
+            Rectangle.southeast(lrRect),
           );
           const swCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southwest(llRect)
+            Rectangle.southwest(llRect),
           );
 
           camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
@@ -1212,15 +1193,14 @@ describe(
       it("picks polylines", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesTileset
+          vectorTilePolylinesTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1228,7 +1208,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1236,7 +1216,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1244,7 +1224,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1256,23 +1236,22 @@ describe(
       it("styles polylines for show", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesTileset
+          vectorTilePolylinesTileset,
         ).then((tileset) => {
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
 
           const nwCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northwest(ulRect)
+            Rectangle.northwest(ulRect),
           );
           const neCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northeast(urRect)
+            Rectangle.northeast(urRect),
           );
           const seCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southeast(lrRect)
+            Rectangle.southeast(lrRect),
           );
           const swCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southwest(llRect)
+            Rectangle.southwest(llRect),
           );
 
           // Set show to false.
@@ -1380,23 +1359,22 @@ describe(
       it("styles polylines for color", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesTileset
+          vectorTilePolylinesTileset,
         ).then((tileset) => {
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
 
           const nwCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northwest(ulRect)
+            Rectangle.northwest(ulRect),
           );
           const neCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northeast(urRect)
+            Rectangle.northeast(urRect),
           );
           const seCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southeast(lrRect)
+            Rectangle.southeast(lrRect),
           );
           const swCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southwest(llRect)
+            Rectangle.southwest(llRect),
           );
 
           // Set color to black.
@@ -1466,13 +1444,13 @@ describe(
           vectorTilePolylinesTileset,
           {
             classificationType: ClassificationType.CESIUM_3D_TILE,
-          }
+          },
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.northeast(tilesetRectangle)
+              Rectangle.northeast(tilesetRectangle),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
 
           globeMockPrimitive.show = false;
@@ -1492,13 +1470,13 @@ describe(
           vectorTilePolylinesTileset,
           {
             classificationType: ClassificationType.TERRAIN,
-          }
+          },
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.northeast(tilesetRectangle)
+              Rectangle.northeast(tilesetRectangle),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
 
           globeMockPrimitive.show = false;
@@ -1518,13 +1496,13 @@ describe(
           vectorTilePolylinesTileset,
           {
             classificationType: ClassificationType.BOTH,
-          }
+          },
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.northeast(tilesetRectangle)
+              Rectangle.northeast(tilesetRectangle),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
 
           globeMockPrimitive.show = false;
@@ -1540,24 +1518,23 @@ describe(
       it("renders polylines with batch ids", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesWithBatchIdsTileset
+          vectorTilePolylinesWithBatchIdsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
 
           const nwCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northwest(ulRect)
+            Rectangle.northwest(ulRect),
           );
           const neCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northeast(urRect)
+            Rectangle.northeast(urRect),
           );
           const seCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southeast(lrRect)
+            Rectangle.southeast(lrRect),
           );
           const swCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southwest(llRect)
+            Rectangle.southwest(llRect),
           );
 
           camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
@@ -1601,15 +1578,14 @@ describe(
       it("picks polylines with batch ids", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesWithBatchIdsTileset
+          vectorTilePolylinesWithBatchIdsTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1618,7 +1594,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1627,7 +1603,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1636,7 +1612,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1649,24 +1625,23 @@ describe(
       it("renders polylines with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesWithBatchTableTileset
+          vectorTilePolylinesWithBatchTableTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
 
           const nwCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northwest(ulRect)
+            Rectangle.northwest(ulRect),
           );
           const neCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.northeast(urRect)
+            Rectangle.northeast(urRect),
           );
           const seCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southeast(lrRect)
+            Rectangle.southeast(lrRect),
           );
           const swCorner = ellipsoid.cartographicToCartesian(
-            Rectangle.southwest(llRect)
+            Rectangle.southwest(llRect),
           );
 
           camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
@@ -1710,15 +1685,14 @@ describe(
       it("picks polylines with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesWithBatchTableTileset
+          vectorTilePolylinesWithBatchTableTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1727,7 +1701,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1736,7 +1710,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1745,7 +1719,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -1758,15 +1732,14 @@ describe(
       it("renders batched polylines with children", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesBatchedChildrenTileset
+          vectorTilePolylinesBatchedChildrenTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -1777,7 +1750,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -1788,7 +1761,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -1799,7 +1772,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -1814,15 +1787,14 @@ describe(
       it("renders batched polylines with children with batch table", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTilePolylinesBatchedChildrenWithBatchTableTileset
+          vectorTilePolylinesBatchedChildrenWithBatchTableTileset,
         ).then((tileset) => {
           // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
-          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
-            tilesetRectangle
-          );
+          const [ulRect, urRect, lrRect, llRect] =
+            subdivideRectangle(tilesetRectangle);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -1833,7 +1805,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -1844,7 +1816,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -1855,7 +1827,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -1874,22 +1846,22 @@ describe(
             vectorTilePolylinesWithBatchIdsTileset,
             {
               vectorKeepDecodedPositions: true,
-            }
+            },
           ).then(function (tileset) {
             const content = tileset.root.content;
             const polylinePositions = content.getPolylinePositions(0);
             expect(polylinePositions.length).toBe(60);
             expect(polylinePositions[0]).toEqualEpsilon(
               6378136.806372941,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             );
             expect(polylinePositions[1]).toEqualEpsilon(
               -1113.194885441724,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             );
             expect(polylinePositions[2]).toEqualEpsilon(
               1105.675261474196,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             );
           });
         });
@@ -1900,7 +1872,7 @@ describe(
             vectorTilePolylinesBatchedChildrenTileset,
             {
               vectorKeepDecodedPositions: true,
-            }
+            },
           ).then(function (tileset) {
             const content = tileset.root.children[0].content;
             expect(content.getPolylinePositions(0).length).toBe(60);
@@ -1917,22 +1889,22 @@ describe(
             {
               vectorKeepDecodedPositions: true,
               classificationType: ClassificationType.TERRAIN,
-            }
+            },
           ).then(function (tileset) {
             const content = tileset.root.content;
             const polylinePositions = content.getPolylinePositions(0);
             expect(polylinePositions.length).toBe(54); // duplicate positions are removed
             expect(polylinePositions[0]).toEqualEpsilon(
               6378136.806372941,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             );
             expect(polylinePositions[1]).toEqualEpsilon(
               -1113.194885441724,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             );
             expect(polylinePositions[2]).toEqualEpsilon(
               1105.675261474196,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             );
           });
         });
@@ -1943,7 +1915,7 @@ describe(
             vectorTilePolylinesWithBatchIdsTileset,
             {
               vectorKeepDecodedPositions: true,
-            }
+            },
           ).then(function (tileset) {
             const content = tileset.root.content;
             const polylinePositions = content.getPolylinePositions(1);
@@ -1957,7 +1929,7 @@ describe(
             vectorTilePolygonsWithBatchTableTileset,
             {
               vectorKeepDecodedPositions: true,
-            }
+            },
           ).then(function (tileset) {
             const content = tileset.root.content;
             const polylinePositions = content.getPolylinePositions(0);
@@ -1971,7 +1943,7 @@ describe(
             vectorTilePolylinesWithBatchIdsTileset,
             {
               vectorKeepDecodedPositions: false,
-            }
+            },
           ).then(function (tileset) {
             const content = tileset.root.content;
             const polylinePositions = content.getPolylinePositions(0);
@@ -1991,7 +1963,7 @@ describe(
         -0.02,
         -0.01,
         0.02,
-        0.01
+        0.01,
       );
       const width = combinedTilesetRectangle.width;
       const step = width / 3;
@@ -2004,30 +1976,30 @@ describe(
         west + step,
         south,
         west + step * 2,
-        north
+        north,
       );
       const pointRect = new Rectangle(
         west + step * 2,
         south,
         west + step * 3,
-        north
+        north,
       );
 
       it("renders", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTileCombinedTileset
+          vectorTileCombinedTileset,
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.southeast(polylineRect)
+              Rectangle.southeast(polylineRect),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -2038,7 +2010,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -2047,11 +2019,11 @@ describe(
       it("picks", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTileCombinedTileset
+          vectorTileCombinedTileset,
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -2059,9 +2031,9 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.southeast(polylineRect)
+              Rectangle.southeast(polylineRect),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -2069,7 +2041,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -2081,19 +2053,19 @@ describe(
       it("renders with batch ids", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTileCombinedWithBatchIdsTileset
+          vectorTileCombinedWithBatchIdsTileset,
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
 
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.southeast(polylineRect)
+              Rectangle.southeast(polylineRect),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRenderAndCall((rgba) => {
             // Account for mitering at the corners.
@@ -2104,7 +2076,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toRender(whitePixel);
         });
@@ -2113,11 +2085,11 @@ describe(
       it("picks with batch ids", () => {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          vectorTileCombinedWithBatchIdsTileset
+          vectorTileCombinedWithBatchIdsTileset,
         ).then((tileset) => {
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -2126,9 +2098,9 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(
-              Rectangle.southeast(polylineRect)
+              Rectangle.southeast(polylineRect),
             ),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -2137,7 +2109,7 @@ describe(
           });
           camera.lookAt(
             ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
-            new Cartesian3(0.0, 0.0, 5.0)
+            new Cartesian3(0.0, 0.0, 5.0),
           );
           expect(scene).toPickAndCall((result) => {
             expect(result).toBeDefined();
@@ -2151,7 +2123,7 @@ describe(
     it("throws when calling getFeature with invalid index", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        vectorTilePolygonsWithBatchTableTileset
+        vectorTilePolygonsWithBatchTableTileset,
       ).then(function (tileset) {
         const content = tileset.root.content;
         expect(function () {
@@ -2171,10 +2143,10 @@ describe(
         version: 2,
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Only Vector tile version 1 is supported.  Version 2 is not."
+        "Only Vector tile version 1 is supported.  Version 2 is not.",
       );
     });
 
@@ -2183,10 +2155,10 @@ describe(
         defineFeatureTable: false,
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Feature table must have a byte length greater than zero"
+        "Feature table must have a byte length greater than zero",
       );
     });
 
@@ -2196,10 +2168,10 @@ describe(
         polygonsLength: 1,
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Feature table global property: REGION must be defined"
+        "Feature table global property: REGION must be defined",
       );
     });
 
@@ -2212,21 +2184,21 @@ describe(
         pointBatchIds: [0],
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "If one group of batch ids is defined, then all batch ids must be defined"
+        "If one group of batch ids is defined, then all batch ids must be defined",
       );
     });
 
     it("destroys", async function () {
       const tileset = await Cesium3DTileset.fromUrl(
-        vectorTilePolygonsWithBatchTableTileset
+        vectorTilePolygonsWithBatchTableTileset,
       );
       expect(tileset.isDestroyed()).toEqual(false);
       tileset.destroy();
       expect(tileset.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

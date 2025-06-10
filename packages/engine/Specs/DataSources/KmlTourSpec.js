@@ -16,7 +16,7 @@ describe("DataSources/KmlTour", function () {
     const hpr = new HeadingPitchRange(
       CesiumMath.toRadians(10.0),
       CesiumMath.toRadians(45.0),
-      10000
+      10000,
     );
     return new KmlLookAt(position, hpr);
   }
@@ -55,16 +55,16 @@ describe("DataSources/KmlTour", function () {
   });
 
   it("calls entries play", function () {
-    const waitSpy = spyOn(KmlTourWait.prototype, "play").and.callFake(function (
-      callback
-    ) {
-      callback();
-    });
-    const flySpy = spyOn(KmlTourFlyTo.prototype, "play").and.callFake(function (
-      callback
-    ) {
-      callback();
-    });
+    const waitSpy = spyOn(KmlTourWait.prototype, "play").and.callFake(
+      function (callback) {
+        callback();
+      },
+    );
+    const flySpy = spyOn(KmlTourFlyTo.prototype, "play").and.callFake(
+      function (callback) {
+        callback();
+      },
+    );
 
     const tour = new KmlTour("test", "test");
     const wait = new KmlTourWait(0.1);
@@ -147,7 +147,7 @@ describe("DataSources/KmlTour", function () {
 
       expect(mockWidget.scene.camera.flyTo.calls.count()).toEqual(0);
       expect(mockWidget.scene.camera.flyToBoundingSphere.calls.count()).toEqual(
-        0
+        0,
       );
     }, 5);
   });

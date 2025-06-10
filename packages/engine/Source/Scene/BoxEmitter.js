@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import CesiumMath from "../Core/Math.js";
 
 const defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
@@ -15,7 +14,7 @@ const defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
  * @param {Cartesian3} dimensions The width, height and depth dimensions of the box.
  */
 function BoxEmitter(dimensions) {
-  dimensions = defaultValue(dimensions, defaultDimensions);
+  dimensions = dimensions ?? defaultDimensions;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("dimensions", dimensions);
@@ -69,7 +68,7 @@ BoxEmitter.prototype.emit = function (particle) {
   particle.position = Cartesian3.fromElements(x, y, z, particle.position);
   particle.velocity = Cartesian3.normalize(
     particle.position,
-    particle.velocity
+    particle.velocity,
   );
 };
 export default BoxEmitter;

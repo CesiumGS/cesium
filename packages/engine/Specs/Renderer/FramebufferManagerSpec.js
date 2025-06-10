@@ -256,7 +256,7 @@ describe(
         expect(renderbuffer.width).toEqual(1);
         expect(renderbuffer.height).toEqual(1);
         expect(renderbuffer.format).toEqual(
-          RenderbufferFormat.DEPTH_COMPONENT16
+          RenderbufferFormat.DEPTH_COMPONENT16,
         );
       }
     });
@@ -521,5 +521,5 @@ describe(
       expect(fbm.status).toEqual(fbm.framebuffer.status);
     });
   },
-  "WebGL"
+  "WebGL",
 );

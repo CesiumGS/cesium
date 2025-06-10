@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import JsonMetadataTable from "./JsonMetadataTable.js";
@@ -38,7 +38,7 @@ import JsonMetadataTable from "./JsonMetadataTable.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PropertyTable(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.count", options.count);
@@ -298,21 +298,21 @@ PropertyTable.prototype.getPropertyIds = function (index, results) {
     // concat in place to avoid unnecessary array allocation
     results.push.apply(
       results,
-      this._metadataTable.getPropertyIds(scratchResults)
+      this._metadataTable.getPropertyIds(scratchResults),
     );
   }
 
   if (defined(this._batchTableHierarchy)) {
     results.push.apply(
       results,
-      this._batchTableHierarchy.getPropertyIds(index, scratchResults)
+      this._batchTableHierarchy.getPropertyIds(index, scratchResults),
     );
   }
 
   if (defined(this._jsonMetadataTable)) {
     results.push.apply(
       results,
-      this._jsonMetadataTable.getPropertyIds(scratchResults)
+      this._jsonMetadataTable.getPropertyIds(scratchResults),
     );
   }
 
@@ -434,7 +434,7 @@ PropertyTable.prototype.getPropertyBySemantic = function (index, semantic) {
 PropertyTable.prototype.setPropertyBySemantic = function (
   index,
   semantic,
-  value
+  value,
 ) {
   if (defined(this._metadataTable)) {
     return this._metadataTable.setPropertyBySemantic(index, semantic, value);
@@ -497,7 +497,7 @@ function checkFeatureId(featureId, featuresLength) {
   if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
     throw new DeveloperError(
       `featureId is required and must be between zero and featuresLength - 1 (${featuresLength}` -
-        +")."
+        +").",
     );
   }
 }

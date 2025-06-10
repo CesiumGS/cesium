@@ -2,19 +2,7 @@
   "asset": {
     "version": "1.1"
   },
-  "schema": {
-    "id": "voxel",
-    "classes": {
-      "voxel": {
-        "properties": {
-          "a": {
-            "type": "SCALAR",
-            "componentType": "FLOAT32"
-          }
-        }
-      }
-    }
-  },
+  "schemaUri": "schema.json",
   "statistics": {
     "classes": {
       "voxel": {
@@ -33,27 +21,16 @@
     "boundingVolume": {
       "extensions": {
         "3DTILES_bounding_volume_cylinder": {
-          "cylinder": [
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ]
+          "height": 2.0,
+          "minRadius": 0.0,
+          "maxRadius": 1.0
         }
       }
     },
     "geometricError": 0.0,
     "refine": "REPLACE",
     "content": {
-      "uri": "tiles/{level}/{x}/{y}/{z}.json",
+      "uri": "tiles/{level}/{x}/{y}/{z}.gltf",
       "extensions": {
         "3DTILES_content_voxels": {
           "dimensions": [

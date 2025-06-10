@@ -34,7 +34,7 @@ const WireframePipelineStage = {
 WireframePipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   // Applying normal mapping to the lines will result in rendering
   // errors on Linux. This define is added to disable normal
@@ -43,14 +43,14 @@ WireframePipelineStage.process = function (
   shaderBuilder.addDefine(
     "HAS_WIREFRAME",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   const model = renderResources.model;
   const wireframeIndexBuffer = createWireframeIndexBuffer(
     primitive,
     renderResources.indices,
-    frameState
+    frameState,
   );
   model._pipelineResources.push(wireframeIndexBuffer);
   renderResources.wireframeIndexBuffer = wireframeIndexBuffer;
@@ -69,14 +69,14 @@ WireframePipelineStage.process = function (
   renderResources.primitiveType = PrimitiveType.LINES;
   renderResources.count = WireframeIndexGenerator.getWireframeIndicesCount(
     originalPrimitiveType,
-    originalCount
+    originalCount,
   );
 };
 
 function createWireframeIndexBuffer(primitive, indices, frameState) {
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
-    VertexAttributeSemantic.POSITION
+    VertexAttributeSemantic.POSITION,
   );
   const vertexCount = positionAttribute.count;
   const webgl2 = frameState.context.webgl2;
@@ -101,10 +101,10 @@ function createWireframeIndexBuffer(primitive, indices, frameState) {
   const wireframeIndices = WireframeIndexGenerator.createWireframeIndices(
     primitiveType,
     vertexCount,
-    originalIndices
+    originalIndices,
   );
   const indexDatatype = IndexDatatype.fromSizeInBytes(
-    wireframeIndices.BYTES_PER_ELEMENT
+    wireframeIndices.BYTES_PER_ELEMENT,
   );
 
   return Buffer.createIndexBuffer({

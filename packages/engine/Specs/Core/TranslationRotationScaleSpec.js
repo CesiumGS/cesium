@@ -21,7 +21,7 @@ describe("Core/TranslationRotationScale", function () {
     const transformation = new TranslationRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     expect(transformation.translation).toEqual(translation);

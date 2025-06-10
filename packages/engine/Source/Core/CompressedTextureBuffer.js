@@ -16,7 +16,7 @@ function CompressedTextureBuffer(
   pixelDatatype,
   width,
   height,
-  buffer
+  buffer,
 ) {
   this._format = internalFormat;
   this._datatype = pixelDatatype;
@@ -81,6 +81,17 @@ Object.defineProperties(CompressedTextureBuffer.prototype, {
       return this._buffer;
     },
   },
+  /**
+   * The compressed texture buffer. Alias for bufferView.
+   * @type {Uint8Array}
+   * @readonly
+   * @memberof CompressedTextureBuffer.prototype
+   */
+  arrayBufferView: {
+    get: function () {
+      return this._buffer;
+    },
+  },
 });
 
 /**
@@ -99,7 +110,7 @@ CompressedTextureBuffer.clone = function (object) {
     object._datatype,
     object._width,
     object._height,
-    object._buffer
+    object._buffer,
   );
 };
 

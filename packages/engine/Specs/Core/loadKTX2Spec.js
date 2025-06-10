@@ -36,7 +36,7 @@ describe("Core/loadKTX2", function () {
     supportedFormats,
     width,
     height,
-    isCompressed
+    isCompressed,
   ) {
     const resource = Resource.createIfNeeded(url);
     const loadPromise = resource.fetchArrayBuffer();
@@ -47,7 +47,7 @@ describe("Core/loadKTX2", function () {
         expect(result.width).toEqual(width);
         expect(result.height).toEqual(height);
         expect(PixelFormat.isCompressedFormat(result.internalFormat)).toEqual(
-          isCompressed
+          isCompressed,
         );
         expect(result.bufferView).toBeDefined();
       });
@@ -60,7 +60,7 @@ describe("Core/loadKTX2", function () {
       { etc: true },
       4,
       4,
-      true
+      true,
     );
   });
 
@@ -70,7 +70,7 @@ describe("Core/loadKTX2", function () {
       { etc: true },
       32,
       32,
-      true
+      true,
     );
   });
 
@@ -80,7 +80,7 @@ describe("Core/loadKTX2", function () {
       { etc1: true },
       4,
       4,
-      true
+      true,
     );
   });
 
@@ -90,7 +90,7 @@ describe("Core/loadKTX2", function () {
       { etc1: true },
       32,
       32,
-      true
+      true,
     );
   });
 
@@ -100,7 +100,7 @@ describe("Core/loadKTX2", function () {
       { astc: true },
       4,
       4,
-      true
+      true,
     );
   });
 
@@ -110,7 +110,7 @@ describe("Core/loadKTX2", function () {
       { astc: true },
       32,
       32,
-      true
+      true,
     );
   });
 
@@ -120,7 +120,7 @@ describe("Core/loadKTX2", function () {
       { pvrtc: true },
       4,
       4,
-      true
+      true,
     );
   });
 
@@ -130,7 +130,7 @@ describe("Core/loadKTX2", function () {
       { pvrtc: true },
       32,
       32,
-      true
+      true,
     );
   });
 
@@ -140,7 +140,7 @@ describe("Core/loadKTX2", function () {
       { s3tc: true },
       4,
       4,
-      true
+      true,
     );
   });
 
@@ -150,7 +150,7 @@ describe("Core/loadKTX2", function () {
       { s3tc: true },
       32,
       32,
-      true
+      true,
     );
   });
 
@@ -160,7 +160,7 @@ describe("Core/loadKTX2", function () {
       { bc7: true },
       4,
       4,
-      true
+      true,
     );
   });
 
@@ -170,7 +170,7 @@ describe("Core/loadKTX2", function () {
       { bc7: true },
       32,
       32,
-      true
+      true,
     );
   });
 
@@ -180,13 +180,13 @@ describe("Core/loadKTX2", function () {
       { s3tc: true },
       4,
       4,
-      false
+      false,
     );
   });
 
   it("returns a promise that resolves to an uncompressed texture containing all mip levels of the original texture", function () {
     const resource = Resource.createIfNeeded(
-      "./Data/Images/Green4x4Mipmap.ktx2"
+      "./Data/Images/Green4x4Mipmap.ktx2",
     );
     const loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
@@ -199,7 +199,7 @@ describe("Core/loadKTX2", function () {
           expect(resolvedValue[i].width).toEqual(dims[i]);
           expect(resolvedValue[i].height).toEqual(dims[i]);
           expect(
-            PixelFormat.isCompressedFormat(resolvedValue[i].internalFormat)
+            PixelFormat.isCompressedFormat(resolvedValue[i].internalFormat),
           ).toEqual(false);
           expect(resolvedValue[i].bufferView).toBeDefined();
         }
@@ -209,7 +209,7 @@ describe("Core/loadKTX2", function () {
 
   it("returns a promise that resolves to a compressed texture containing all mip levels of the original texture", function () {
     const resource = Resource.createIfNeeded(
-      "./Data/Images/Green4x4Mipmap_ETC1S.ktx2"
+      "./Data/Images/Green4x4Mipmap_ETC1S.ktx2",
     );
     const loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
@@ -222,7 +222,7 @@ describe("Core/loadKTX2", function () {
           expect(resolvedValue[i].width).toEqual(dims[i]);
           expect(resolvedValue[i].height).toEqual(dims[i]);
           expect(
-            PixelFormat.isCompressedFormat(resolvedValue[i].internalFormat)
+            PixelFormat.isCompressedFormat(resolvedValue[i].internalFormat),
           ).toEqual(true);
           expect(resolvedValue[i].bufferView).toBeDefined();
         }
@@ -266,7 +266,7 @@ describe("Core/loadKTX2", function () {
           expect(resolvedValue).toBeUndefined();
           expect(rejectedError).toBeInstanceOf(RuntimeError);
           expect(rejectedError.message).toEqual(
-            "KTX2 3D textures are unsupported."
+            "KTX2 3D textures are unsupported.",
           );
         });
     });
@@ -291,7 +291,7 @@ describe("Core/loadKTX2", function () {
           expect(resolvedValue).toBeUndefined();
           expect(rejectedError).toBeInstanceOf(RuntimeError);
           expect(rejectedError.message).toEqual(
-            "KTX2 texture arrays are not supported."
+            "KTX2 texture arrays are not supported.",
           );
         });
     });

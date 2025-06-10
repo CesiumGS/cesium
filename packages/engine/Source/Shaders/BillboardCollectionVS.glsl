@@ -11,6 +11,7 @@ in vec4 scaleByDistance;                            // near, nearScale, far, far
 in vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
 in vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
 in vec2 sdf;                                        // sdf outline color (rgb) and width (w)
+in float splitDirection;                            // splitDirection
 #if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
 in vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
 #endif
@@ -28,6 +29,7 @@ out mat2 v_rotationMatrix;
 
 out vec4 v_pickColor;
 out vec4 v_color;
+out float v_splitDirection;
 #ifdef SDF
 out vec4 v_outlineColor;
 out float v_outlineWidth;
@@ -430,5 +432,5 @@ if (lengthSq < disableDepthTestDistance) {
 
     v_color = color;
     v_color.a *= translucency;
-
+    v_splitDirection = splitDirection;
 }

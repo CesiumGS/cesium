@@ -1,6 +1,5 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -91,11 +90,10 @@ Object.defineProperties(Occluder.prototype, {
       const cameraToOccluderVec = Cartesian3.subtract(
         this._occluderPosition,
         cameraPosition,
-        scratchCartesian3
+        scratchCartesian3,
       );
-      let invCameraToOccluderDistance = Cartesian3.magnitudeSquared(
-        cameraToOccluderVec
-      );
+      let invCameraToOccluderDistance =
+        Cartesian3.magnitudeSquared(cameraToOccluderVec);
       const occluderRadiusSqrd = this._occluderRadius * this._occluderRadius;
 
       let horizonDistance;
@@ -103,14 +101,14 @@ Object.defineProperties(Occluder.prototype, {
       let horizonPlanePosition;
       if (invCameraToOccluderDistance > occluderRadiusSqrd) {
         horizonDistance = Math.sqrt(
-          invCameraToOccluderDistance - occluderRadiusSqrd
+          invCameraToOccluderDistance - occluderRadiusSqrd,
         );
         invCameraToOccluderDistance =
           1.0 / Math.sqrt(invCameraToOccluderDistance);
         horizonPlaneNormal = Cartesian3.multiplyByScalar(
           cameraToOccluderVec,
           invCameraToOccluderDistance,
-          scratchCartesian3
+          scratchCartesian3,
         );
         const nearPlaneDistance =
           horizonDistance * horizonDistance * invCameraToOccluderDistance;
@@ -119,9 +117,9 @@ Object.defineProperties(Occluder.prototype, {
           Cartesian3.multiplyByScalar(
             horizonPlaneNormal,
             nearPlaneDistance,
-            scratchCartesian3
+            scratchCartesian3,
           ),
-          scratchCartesian3
+          scratchCartesian3,
         );
       } else {
         horizonDistance = Number.MAX_VALUE;
@@ -146,7 +144,7 @@ Object.defineProperties(Occluder.prototype, {
 Occluder.fromBoundingSphere = function (
   occluderBoundingSphere,
   cameraPosition,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(occluderBoundingSphere)) {
@@ -192,7 +190,7 @@ Occluder.prototype.isPointVisible = function (occludee) {
     let tempVec = Cartesian3.subtract(
       occludee,
       this._occluderPosition,
-      tempVecScratch
+      tempVecScratch,
     );
     let temp = this._occluderRadius;
     temp = Cartesian3.magnitudeSquared(tempVec) - temp * temp;
@@ -226,7 +224,7 @@ const occludeePositionScratch = new Cartesian3();
 Occluder.prototype.isBoundingSphereVisible = function (occludee) {
   const occludeePosition = Cartesian3.clone(
     occludee.center,
-    occludeePositionScratch
+    occludeePositionScratch,
   );
   const occludeeRadius = occludee.radius;
 
@@ -234,7 +232,7 @@ Occluder.prototype.isBoundingSphereVisible = function (occludee) {
     let tempVec = Cartesian3.subtract(
       occludeePosition,
       this._occluderPosition,
-      tempVecScratch
+      tempVecScratch,
     );
     let temp = this._occluderRadius - occludeeRadius;
     temp = Cartesian3.magnitudeSquared(tempVec) - temp * temp;
@@ -244,7 +242,7 @@ Occluder.prototype.isBoundingSphereVisible = function (occludee) {
         tempVec = Cartesian3.subtract(
           occludeePosition,
           this._cameraPosition,
-          tempVec
+          tempVec,
         );
         return (
           temp * temp + occludeeRadius * occludeeRadius >
@@ -260,7 +258,7 @@ Occluder.prototype.isBoundingSphereVisible = function (occludee) {
       tempVec = Cartesian3.subtract(
         occludeePosition,
         this._cameraPosition,
-        tempVec
+        tempVec,
       );
       const tempVecMagnitudeSquared = Cartesian3.magnitudeSquared(tempVec);
       const occluderRadiusSquared = this._occluderRadius * this._occluderRadius;
@@ -301,8 +299,6 @@ const tempScratch = new Cartesian3();
  * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
  * const occluder = new Cesium.Occluder(sphere1, cameraPosition);
  * occluder.computeVisibility(sphere2); //returns Visibility.NONE
- *
- * @see Occluder#isVisible
  */
 Occluder.prototype.computeVisibility = function (occludeeBS) {
   //>>includeStart('debug', pragmas.debug);
@@ -326,7 +322,7 @@ Occluder.prototype.computeVisibility = function (occludeeBS) {
     let tempVec = Cartesian3.subtract(
       occludeePosition,
       this._occluderPosition,
-      tempScratch
+      tempScratch,
     );
     let temp = this._occluderRadius - occludeeRadius;
     const occluderToOccludeeDistSqrd = Cartesian3.magnitudeSquared(tempVec);
@@ -338,7 +334,7 @@ Occluder.prototype.computeVisibility = function (occludeeBS) {
       tempVec = Cartesian3.subtract(
         occludeePosition,
         this._cameraPosition,
-        tempVec
+        tempVec,
       );
       const cameraToOccludeeDistSqrd = Cartesian3.magnitudeSquared(tempVec);
       if (
@@ -366,7 +362,7 @@ Occluder.prototype.computeVisibility = function (occludeeBS) {
       tempVec = Cartesian3.subtract(
         occludeePosition,
         this._horizonPlanePosition,
-        tempVec
+        tempVec,
       );
       return Cartesian3.dot(tempVec, this._horizonPlaneNormal) > -occludeeRadius
         ? Visibility.PARTIAL
@@ -407,7 +403,7 @@ const occludeePointScratch = new Cartesian3();
 Occluder.computeOccludeePoint = function (
   occluderBoundingSphere,
   occludeePosition,
-  positions
+  positions,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(occluderBoundingSphere)) {
@@ -429,7 +425,7 @@ Occluder.computeOccludeePoint = function (
   //>>includeStart('debug', pragmas.debug);
   if (Cartesian3.equals(occluderPosition, occludeePosition)) {
     throw new DeveloperError(
-      "occludeePosition must be different than occluderBoundingSphere.center"
+      "occludeePosition must be different than occluderBoundingSphere.center",
     );
   }
   //>>includeEnd('debug');
@@ -437,7 +433,7 @@ Occluder.computeOccludeePoint = function (
   // Compute a plane with a normal from the occluder to the occludee position.
   const occluderPlaneNormal = Cartesian3.normalize(
     Cartesian3.subtract(occludeePos, occluderPosition, occludeePointScratch),
-    occludeePointScratch
+    occludeePointScratch,
   );
   const occluderPlaneD = -Cartesian3.dot(occluderPlaneNormal, occluderPosition);
 
@@ -446,14 +442,14 @@ Occluder.computeOccludeePoint = function (
   const aRotationVector = Occluder._anyRotationVector(
     occluderPosition,
     occluderPlaneNormal,
-    occluderPlaneD
+    occluderPlaneD,
   );
   let dot = Occluder._horizonToPlaneNormalDotProduct(
     occluderBoundingSphere,
     occluderPlaneNormal,
     occluderPlaneD,
     aRotationVector,
-    positions[0]
+    positions[0],
   );
   if (!dot) {
     //The position is inside the mimimum radius, which is invalid
@@ -466,7 +462,7 @@ Occluder.computeOccludeePoint = function (
       occluderPlaneNormal,
       occluderPlaneD,
       aRotationVector,
-      positions[i]
+      positions[i],
     );
     if (!tempDot) {
       //The position is inside the minimum radius, which is invalid
@@ -488,9 +484,9 @@ Occluder.computeOccludeePoint = function (
     Cartesian3.multiplyByScalar(
       occluderPlaneNormal,
       distance,
-      occludeePointScratch
+      occludeePointScratch,
     ),
-    occludeePointScratch
+    occludeePointScratch,
   );
 };
 
@@ -499,7 +495,7 @@ const computeOccludeePointFromRectangleScratch = [];
  * Computes a point that can be used as the occludee position to the visibility functions from a rectangle.
  *
  * @param {Rectangle} rectangle The rectangle used to create a bounding sphere.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid used to determine positions of the rectangle.
  * @returns {object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
  * which is a boolean value.
  */
@@ -510,22 +506,22 @@ Occluder.computeOccludeePointFromRectangle = function (rectangle, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
   const positions = Rectangle.subsample(
     rectangle,
     ellipsoid,
     0.0,
-    computeOccludeePointFromRectangleScratch
+    computeOccludeePointFromRectangleScratch,
   );
   const bs = BoundingSphere.fromPoints(positions);
 
-  // TODO: get correct ellipsoid center
+  // Assumes the ellipsoid is centered at the origin
   const ellipsoidCenter = Cartesian3.ZERO;
   if (!Cartesian3.equals(ellipsoidCenter, bs.center)) {
     return Occluder.computeOccludeePoint(
       new BoundingSphere(ellipsoidCenter, ellipsoid.minimumRadius),
       bs.center,
-      positions
+      positions,
     );
   }
 
@@ -536,7 +532,7 @@ const tempVec0Scratch = new Cartesian3();
 Occluder._anyRotationVector = function (
   occluderPosition,
   occluderPlaneNormal,
-  occluderPlaneD
+  occluderPlaneD,
 ) {
   const tempVec0 = Cartesian3.abs(occluderPlaneNormal, tempVec0Scratch);
   let majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
@@ -572,12 +568,12 @@ Occluder._anyRotationVector = function (
       Cartesian3.add(
         tempVec0,
         Cartesian3.multiplyByScalar(tempVec1, u, tempVec),
-        tempVec0
+        tempVec0,
       ),
       occluderPosition,
-      tempVec0
+      tempVec0,
     ),
-    tempVec0
+    tempVec0,
   );
 };
 
@@ -587,17 +583,17 @@ Occluder._rotationVector = function (
   occluderPlaneNormal,
   occluderPlaneD,
   position,
-  anyRotationVector
+  anyRotationVector,
 ) {
   //Determine the angle between the occluder plane normal and the position direction
   let positionDirection = Cartesian3.subtract(
     position,
     occluderPosition,
-    posDirectionScratch
+    posDirectionScratch,
   );
   positionDirection = Cartesian3.normalize(
     positionDirection,
-    positionDirection
+    positionDirection,
   );
   if (
     Cartesian3.dot(occluderPlaneNormal, positionDirection) <
@@ -607,7 +603,7 @@ Occluder._rotationVector = function (
     const crossProduct = Cartesian3.cross(
       occluderPlaneNormal,
       positionDirection,
-      positionDirection
+      positionDirection,
     );
     const length = Cartesian3.magnitude(crossProduct);
     if (length > CesiumMath.EPSILON13) {
@@ -628,12 +624,12 @@ Occluder._horizonToPlaneNormalDotProduct = function (
   occluderPlaneNormal,
   occluderPlaneD,
   anyRotationVector,
-  position
+  position,
 ) {
   const pos = Cartesian3.clone(position, posScratch1);
   const occluderPosition = Cartesian3.clone(
     occluderBS.center,
-    occluerPosScratch
+    occluerPosScratch,
   );
   const occluderRadius = occluderBS.radius;
 
@@ -641,11 +637,10 @@ Occluder._horizonToPlaneNormalDotProduct = function (
   let positionToOccluder = Cartesian3.subtract(
     occluderPosition,
     pos,
-    posScratch2
+    posScratch2,
   );
-  const occluderToPositionDistanceSquared = Cartesian3.magnitudeSquared(
-    positionToOccluder
-  );
+  const occluderToPositionDistanceSquared =
+    Cartesian3.magnitudeSquared(positionToOccluder);
   const occluderRadiusSquared = occluderRadius * occluderRadius;
   if (occluderToPositionDistanceSquared < occluderRadiusSquared) {
     return false;
@@ -656,26 +651,26 @@ Occluder._horizonToPlaneNormalDotProduct = function (
     occluderToPositionDistanceSquared - occluderRadiusSquared;
   const horizonDistance = Math.sqrt(horizonDistanceSquared);
   const occluderToPositionDistance = Math.sqrt(
-    occluderToPositionDistanceSquared
+    occluderToPositionDistanceSquared,
   );
   const invOccluderToPositionDistance = 1.0 / occluderToPositionDistance;
   const cosTheta = horizonDistance * invOccluderToPositionDistance;
   const horizonPlaneDistance = cosTheta * horizonDistance;
   positionToOccluder = Cartesian3.normalize(
     positionToOccluder,
-    positionToOccluder
+    positionToOccluder,
   );
   const horizonPlanePosition = Cartesian3.add(
     pos,
     Cartesian3.multiplyByScalar(
       positionToOccluder,
       horizonPlaneDistance,
-      horizonPlanePosScratch
+      horizonPlanePosScratch,
     ),
-    horizonPlanePosScratch
+    horizonPlanePosScratch,
   );
   const horizonCrossDistance = Math.sqrt(
-    horizonDistanceSquared - horizonPlaneDistance * horizonPlaneDistance
+    horizonDistanceSquared - horizonPlaneDistance * horizonPlaneDistance,
   );
 
   //Rotate the position to occluder vector 90 degrees
@@ -684,7 +679,7 @@ Occluder._horizonToPlaneNormalDotProduct = function (
     occluderPlaneNormal,
     occluderPlaneD,
     pos,
-    anyRotationVector
+    anyRotationVector,
   );
   let horizonCrossDirection = Cartesian3.fromElements(
     tempVec.x * tempVec.x * positionToOccluder.x +
@@ -696,35 +691,35 @@ Occluder._horizonToPlaneNormalDotProduct = function (
     (tempVec.x * tempVec.z - tempVec.y) * positionToOccluder.x +
       (tempVec.y * tempVec.z + tempVec.x) * positionToOccluder.y +
       tempVec.z * tempVec.z * positionToOccluder.z,
-    posScratch1
+    posScratch1,
   );
   horizonCrossDirection = Cartesian3.normalize(
     horizonCrossDirection,
-    horizonCrossDirection
+    horizonCrossDirection,
   );
 
   //Horizon positions
   const offset = Cartesian3.multiplyByScalar(
     horizonCrossDirection,
     horizonCrossDistance,
-    posScratch1
+    posScratch1,
   );
   tempVec = Cartesian3.normalize(
     Cartesian3.subtract(
       Cartesian3.add(horizonPlanePosition, offset, posScratch2),
       occluderPosition,
-      posScratch2
+      posScratch2,
     ),
-    posScratch2
+    posScratch2,
   );
   const dot0 = Cartesian3.dot(occluderPlaneNormal, tempVec);
   tempVec = Cartesian3.normalize(
     Cartesian3.subtract(
       Cartesian3.subtract(horizonPlanePosition, offset, tempVec),
       occluderPosition,
-      tempVec
+      tempVec,
     ),
-    tempVec
+    tempVec,
   );
   const dot1 = Cartesian3.dot(occluderPlaneNormal, tempVec);
   return dot0 < dot1 ? dot0 : dot1;

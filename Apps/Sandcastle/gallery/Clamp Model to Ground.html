@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -24,10 +24,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -49,7 +46,7 @@
           destination: Cesium.Cartesian3.fromRadians(
             -1.3193669086512454,
             0.698810888305128,
-            220
+            220,
           ),
           orientation: {
             heading: -1.3,
@@ -72,14 +69,12 @@
         let entity, positionProperty;
         try {
           const dataSource = await Cesium.CzmlDataSource.load(
-            "../../SampleData/ClampToGround.czml"
+            "../../SampleData/ClampToGround.czml",
           );
           viewer.dataSources.add(dataSource);
           entity = dataSource.entities.getById("CesiumMilkTruck");
           positionProperty = entity.position;
-          entity.orientation = new Cesium.VelocityOrientationProperty(
-            positionProperty
-          );
+          entity.orientation = new Cesium.VelocityOrientationProperty(positionProperty);
         } catch (error) {
           console.log(`Error loading CZML: ${error}`);
         }
@@ -93,18 +88,15 @@
               entity.model.uri =
                 "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb";
               entity.model.scale = 2.5;
-              entity.model.heightReference =
-                Cesium.HeightReference.CLAMP_TO_GROUND;
+              entity.model.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
             },
           },
           {
             text: "Relative to ground",
             onselect: () => {
-              entity.model.uri =
-                "../../SampleData/models/CesiumAir/Cesium_Air.glb";
+              entity.model.uri = "../../SampleData/models/CesiumAir/Cesium_Air.glb";
               entity.model.scale = 1.0;
-              entity.model.heightReference =
-                Cesium.HeightReference.RELATIVE_TO_GROUND;
+              entity.model.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
             },
           },
           {
@@ -113,18 +105,15 @@
               entity.model.uri =
                 "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb";
               entity.model.scale = 2.5;
-              entity.model.heightReference =
-                Cesium.HeightReference.CLAMP_TO_TERRAIN;
+              entity.model.heightReference = Cesium.HeightReference.CLAMP_TO_TERRAIN;
             },
           },
           {
             text: "Relative to terrain only",
             onselect: () => {
-              entity.model.uri =
-                "../../SampleData/models/CesiumAir/Cesium_Air.glb";
+              entity.model.uri = "../../SampleData/models/CesiumAir/Cesium_Air.glb";
               entity.model.scale = 1.0;
-              entity.model.heightReference =
-                Cesium.HeightReference.RELATIVE_TO_TERRAIN;
+              entity.model.heightReference = Cesium.HeightReference.RELATIVE_TO_TERRAIN;
             },
           },
           {
@@ -133,25 +122,21 @@
               entity.model.uri =
                 "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb";
               entity.model.scale = 1.0;
-              entity.model.heightReference =
-                Cesium.HeightReference.CLAMP_TO_3D_TILE;
+              entity.model.heightReference = Cesium.HeightReference.CLAMP_TO_3D_TILE;
             },
           },
           {
             text: "Relative to 3D Tiles only",
             onselect: () => {
-              entity.model.uri =
-                "../../SampleData/models/CesiumAir/Cesium_Air.glb";
+              entity.model.uri = "../../SampleData/models/CesiumAir/Cesium_Air.glb";
               entity.model.scale = 1.0;
-              entity.model.heightReference =
-                Cesium.HeightReference.RELATIVE_TO_3D_TILE;
+              entity.model.heightReference = Cesium.HeightReference.RELATIVE_TO_3D_TILE;
             },
           },
           {
             text: "No clamping",
             onselect: () => {
-              entity.model.uri =
-                "../../SampleData/models/CesiumDrone/CesiumDrone.glb";
+              entity.model.uri = "../../SampleData/models/CesiumDrone/CesiumDrone.glb";
               entity.model.scale = 2.5;
               entity.model.heightReference = Cesium.HeightReference.NONE;
             },
@@ -160,26 +145,18 @@
 
         Sandcastle.addDefaultToolbarMenu(clampingOptions);
 
-        Sandcastle.addToggleButton(
-          "Show 3D tileset",
-          tileset.show,
-          (checked) => {
-            tileset.show = checked;
-          }
-        );
-        Sandcastle.addToggleButton(
-          "Show globe",
-          scene.globe.show,
-          (checked) => {
-            scene.globe.show = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Show 3D tileset", tileset.show, (checked) => {
+          tileset.show = checked;
+        });
+        Sandcastle.addToggleButton("Show globe", scene.globe.show, (checked) => {
+          scene.globe.show = checked;
+        });
         Sandcastle.addToggleButton(
           "Track entity",
           Cesium.defined(viewer.trackedEntity),
           (checked) => {
             viewer.trackedEntity = checked ? entity : undefined;
-          }
+          },
         );
         //Sandcastle_End
       };

@@ -1,6 +1,9 @@
-import { Cartesian3, ConeEmitter, Particle } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  ConeEmitter,
+  Math as CesiumMath,
+  Particle,
+} from "../../index.js";
 
 describe("Scene/ConeEmitter", function () {
   it("default constructor", function () {
@@ -35,7 +38,7 @@ describe("Scene/ConeEmitter", function () {
       expect(particle.position).toEqual(Cartesian3.ZERO);
       expect(Cartesian3.magnitude(particle.velocity)).toEqualEpsilon(
         1.0,
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
 
       // acos(dot(unit v, unit z)) <= angle

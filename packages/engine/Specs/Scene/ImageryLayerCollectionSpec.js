@@ -308,12 +308,12 @@ describe(
         const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-          new Cartesian3(0.0, 0.0, 100.0)
+          new Cartesian3(0.0, 0.0, 100.0),
         );
 
         const ray = new Ray(
           camera.position,
-          Cartesian3.negate(camera.direction, new Cartesian3())
+          Cartesian3.negate(camera.direction, new Cartesian3()),
         );
         const imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
         expect(imagery).toBeUndefined();
@@ -323,7 +323,7 @@ describe(
         const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-          new Cartesian3(0.0, 0.0, 100.0)
+          new Cartesian3(0.0, 0.0, 100.0),
         );
 
         const ray = new Ray(camera.position, camera.direction);
@@ -335,7 +335,7 @@ describe(
         const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-          new Cartesian3(0.0, 0.0, 100.0)
+          new Cartesian3(0.0, 0.0, 100.0),
         );
         camera.lookAtTransform(Matrix4.IDENTITY);
         return updateUntilDone(globe, scene).then(function () {
@@ -366,7 +366,7 @@ describe(
         const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-          new Cartesian3(0.0, 0.0, 100.0)
+          new Cartesian3(0.0, 0.0, 100.0),
         );
         camera.lookAtTransform(Matrix4.IDENTITY);
         return updateUntilDone(globe, scene).then(function () {
@@ -414,7 +414,7 @@ describe(
         const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-          new Cartesian3(0.0, 0.0, 100.0)
+          new Cartesian3(0.0, 0.0, 100.0),
         );
         camera.lookAtTransform(Matrix4.IDENTITY);
         return updateUntilDone(globe, scene).then(function () {
@@ -454,16 +454,16 @@ describe(
         const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-          new Cartesian3(0.0, 0.0, 100.0)
+          new Cartesian3(0.0, 0.0, 100.0),
         );
 
         const ray = new Ray(
           camera.position,
-          Cartesian3.negate(camera.direction, new Cartesian3())
+          Cartesian3.negate(camera.direction, new Cartesian3()),
         );
         const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
           ray,
-          scene
+          scene,
         );
         expect(featuresPromise).toBeUndefined();
       });
@@ -472,13 +472,13 @@ describe(
         const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-          new Cartesian3(0.0, 0.0, 100.0)
+          new Cartesian3(0.0, 0.0, 100.0),
         );
 
         const ray = new Ray(camera.position, camera.direction);
         const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
           ray,
-          scene
+          scene,
         );
         expect(featuresPromise).toBeUndefined();
       });
@@ -505,13 +505,13 @@ describe(
           const ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-            new Cartesian3(0.0, 0.0, 100.0)
+            new Cartesian3(0.0, 0.0, 100.0),
           );
 
           const ray = new Ray(camera.position, camera.direction);
           const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
-            scene
+            scene,
           );
           expect(featuresPromise).toBeUndefined();
         });
@@ -543,13 +543,13 @@ describe(
           const ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-            new Cartesian3(0.0, 0.0, 100.0)
+            new Cartesian3(0.0, 0.0, 100.0),
           );
 
           const ray = new Ray(camera.position, camera.direction);
           const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
-            scene
+            scene,
           );
           expect(featuresPromise).toBeUndefined();
         });
@@ -588,14 +588,14 @@ describe(
           const ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-            new Cartesian3(0.0, 0.0, 100.0)
+            new Cartesian3(0.0, 0.0, 100.0),
           );
           camera.lookAtTransform(Matrix4.IDENTITY);
 
           const ray = new Ray(camera.position, camera.direction);
           const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
-            scene
+            scene,
           );
 
           expect(featuresPromise).toBeDefined();
@@ -670,14 +670,14 @@ describe(
           const ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-            new Cartesian3(0.0, 0.0, 100.0)
+            new Cartesian3(0.0, 0.0, 100.0),
           );
           camera.lookAtTransform(Matrix4.IDENTITY);
 
           const ray = new Ray(camera.position, camera.direction);
           const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
-            scene
+            scene,
           );
 
           expect(featuresPromise).toBeDefined();
@@ -700,7 +700,7 @@ describe(
             -Math.PI,
             -WebMercatorProjection.MaximumLatitude,
             Math.PI,
-            WebMercatorProjection.MaximumLatitude
+            WebMercatorProjection.MaximumLatitude,
           ),
           tileWidth: 256,
           tileHeight: 256,
@@ -739,7 +739,7 @@ describe(
           const ray = new Ray(camera.position, camera.direction);
           const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
-            scene
+            scene,
           );
 
           expect(featuresPromise).toBeDefined();
@@ -753,5 +753,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

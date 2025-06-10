@@ -22,7 +22,7 @@ function getClippingFunction(clippingPlaneCollection, context) {
   const textureResolution = ClippingPlaneCollection.getTextureResolution(
     clippingPlaneCollection,
     context,
-    textureResolutionScratch
+    textureResolutionScratch,
   );
   const width = textureResolution.x;
   const height = textureResolution.y;

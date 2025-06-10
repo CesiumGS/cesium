@@ -84,7 +84,7 @@ describe("Scene/TimeDynamicImagery", function () {
     expect(timeDynamicImagery._clock).toBe(options.clock);
     expect(timeDynamicImagery._times).toBe(options.times);
     expect(timeDynamicImagery._requestImageFunction).toBe(
-      options.requestImageFunction
+      options.requestImageFunction,
     );
     expect(timeDynamicImagery._reloadFunction).toBe(options.reloadFunction);
     expect(timeDynamicImagery._currentIntervalIndex).toEqual(0);
@@ -159,7 +159,7 @@ describe("Scene/TimeDynamicImagery", function () {
       1,
       2,
       request,
-      times.get(1)
+      times.get(1),
     );
     expect(timeDynamicImagery._tileCache[1]["0-1-2"]).toBeDefined();
     expect(options.reloadFunction).not.toHaveBeenCalled();
@@ -191,7 +191,7 @@ describe("Scene/TimeDynamicImagery", function () {
       1,
       2,
       request,
-      times.get(1)
+      times.get(1),
     );
     expect(timeDynamicImagery._tileCache[1]["0-1-2"]).toBeDefined();
     expect(options.reloadFunction).not.toHaveBeenCalled();
@@ -226,10 +226,10 @@ describe("Scene/TimeDynamicImagery", function () {
           }
 
           expect(timeDynamicImagery._tilesRequestedForInterval.length).toEqual(
-            count
+            count,
           );
           expect(
-            timeDynamicImagery._tilesRequestedForInterval[count - 1].key
+            timeDynamicImagery._tilesRequestedForInterval[count - 1].key,
           ).toEqual(`${x}-${y}-${level}`);
         }
       }

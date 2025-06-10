@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use clipping regions to hide the area under a model or 3D tileset."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          timeline: false,
+          animation: false,
+          sceneModePicker: false,
+          baseLayerPicker: false,
+          geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
+          // The globe does not need to be displayed,
+          // since the Photorealistic 3D Tiles include terrain
+          globe: false,
+        });
+
+        // Enable rendering the sky
+        viewer.scene.skyAtmosphere.show = true;
+
+        const currentTime = Cesium.JulianDate.fromIso8601(
+          "2020-01-09T23:00:39.018261982600961346Z",
+        );
+        viewer.clock.currentTime = currentTime;
+
+        // Add Photorealistic 3D Tiles
+        let googleTileset;
+        try {
+          googleTileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
+          viewer.scene.primitives.add(googleTileset);
+        } catch (error) {
+          console.log(`Error loading Photorealistic 3D Tiles tileset.
+  ${error}`);
+        }
+
+        // Load a GeoJSON file with positions defining the project footprint
+        let footprint;
+        try {
+          const resource = await Cesium.IonResource.fromAssetId(2533131);
+          const dataSource = await Cesium.GeoJsonDataSource.load(resource, {
+            clampToGround: true,
+          });
+
+          viewer.dataSources.add(dataSource);
+
+          footprint = dataSource.entities.values.find((entity) =>
+            Cesium.defined(entity.polygon),
+          );
+          footprint.polygon.outline = false;
+
+          // Zoom to data location, and set the home view
+          const cameraOffset = new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(95.0),
+            Cesium.Math.toRadians(-75.0),
+            800.0,
+          );
+          viewer.zoomTo(footprint, cameraOffset);
+          viewer.homeButton.viewModel.command.beforeExecute.addEventListener((e) => {
+            e.cancel = true;
+            viewer.zoomTo(footprint, cameraOffset);
+          });
+        } catch (error) {
+          console.log(`Error loading geojson. ${error}`);
+        }
+
+        // Add a clipping region based on the loaded project footprint
+        const positions = footprint.polygon.hierarchy.getValue().positions;
+        const clippingPolygons = new Cesium.ClippingPolygonCollection({
+          polygons: [
+            new Cesium.ClippingPolygon({
+              positions: positions,
+            }),
+          ],
+        });
+        googleTileset.clippingPolygons = clippingPolygons;
+
+        // Add tileset of proposed project design
+        let buildingTileset;
+        try {
+          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2533124);
+          viewer.scene.primitives.add(buildingTileset);
+        } catch (error) {
+          console.log(`Error loading design tileset.
+  ${error}`);
+        }
+
+        Sandcastle.addToggleButton("Show proposed design", true, function (checked) {
+          buildingTileset.show = checked;
+        });
+
+        Sandcastle.addToggleButton("Show footprint", true, function (checked) {
+          footprint.show = checked;
+        });
+
+        Sandcastle.addToggleButton("Clip target location", true, function (checked) {
+          clippingPolygons.enabled = checked;
+        });
+
+        Sandcastle.addToggleButton("Inverse clip", false, function (checked) {
+          clippingPolygons.inverse = checked;
+        });
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -14,6 +14,10 @@ void main()
     ProcessedAttributes attributes;
     initializeAttributes(attributes);
 
+    #ifdef HAS_IMAGERY
+    initializeImageryAttributes();
+    #endif
+
     // Dequantize the quantized ones and add them to the
     // attributes struct.
     #ifdef USE_DEQUANTIZATION
@@ -111,6 +115,10 @@ void main()
     atmosphereStage(attributes);
     #endif
 
+    #ifdef ENABLE_CLIPPING_POLYGONS
+    modelClippingPolygonsStage(attributes);
+    #endif
+
     #ifdef HAS_SILHOUETTE
     silhouetteStage(attributes, positionClip);
     #endif
@@ -141,5 +149,13 @@ void main()
         gl_PointSize *= show;
     #endif
 
-    gl_Position = show * positionClip;
+    // Important NOT to compute gl_Position = show * positionClip or we hit:
+    // https://github.com/CesiumGS/cesium/issues/11270
+    //
+    // We will discard points with v_pointCloudShow == 0 in the fragment shader.
+    gl_Position = positionClip;
+
+    #ifdef HAS_POINT_CLOUD_SHOW_STYLE
+    v_pointCloudShow = show;
+    #endif
 }

@@ -84,7 +84,7 @@ describe("DataSources/GeometryUpdater", function () {
     expect(function () {
       return updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
     }).toThrowDeveloperError();
   });

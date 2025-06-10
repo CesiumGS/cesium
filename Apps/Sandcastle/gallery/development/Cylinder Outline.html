@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -45,7 +42,7 @@
         const modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, length * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create the cylinder outline geometry.  The numberOfVerticalLines
         // option can be used to specify the number of lines connecting
@@ -61,9 +58,7 @@
           geometry: cylinderOutlineGeometry,
           modelMatrix: modelMatrix,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
           },
         });
         // Add the instance to primitives.
@@ -76,7 +71,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

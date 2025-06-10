@@ -1,4 +1,4 @@
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Matrix4 from "./Matrix4.js";
@@ -49,7 +49,7 @@ import Matrix4 from "./Matrix4.js";
  * @see Geometry
  */
 function GeometryInstance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.geometry)) {
@@ -62,7 +62,6 @@ function GeometryInstance(options) {
    *
    * @type Geometry
    *
-   * @default undefined
    */
   this.geometry = options.geometry;
 
@@ -76,14 +75,12 @@ function GeometryInstance(options) {
    *
    * @default Matrix4.IDENTITY
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
    *
-   * @type {object}
+   * @type {object|undefined}
    *
    * @default undefined
    *
@@ -105,9 +102,9 @@ function GeometryInstance(options) {
    *
    * @type {object}
    *
-   * @default undefined
+   * @default {}
    */
-  this.attributes = defaultValue(options.attributes, {});
+  this.attributes = options.attributes ?? {};
 
   /**
    * @private

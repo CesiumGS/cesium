@@ -1,6 +1,6 @@
 import {
   CzmlDataSource,
-  defaultValue,
+  Frozen,
   defined,
   DeveloperError,
   Event,
@@ -48,7 +48,7 @@ function viewerDragDropMixin(viewer, options) {
   }
   if (viewer.hasOwnProperty("dropEnabled")) {
     throw new DeveloperError(
-      "dropEnabled is already defined by another mixin."
+      "dropEnabled is already defined by another mixin.",
     );
   }
   if (viewer.hasOwnProperty("dropError")) {
@@ -56,25 +56,25 @@ function viewerDragDropMixin(viewer, options) {
   }
   if (viewer.hasOwnProperty("clearOnDrop")) {
     throw new DeveloperError(
-      "clearOnDrop is already defined by another mixin."
+      "clearOnDrop is already defined by another mixin.",
     );
   }
   if (viewer.hasOwnProperty("flyToOnDrop")) {
     throw new DeveloperError(
-      "flyToOnDrop is already defined by another mixin."
+      "flyToOnDrop is already defined by another mixin.",
     );
   }
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //Local variables to be closed over by defineProperties.
   let dropEnabled = true;
-  let flyToOnDrop = defaultValue(options.flyToOnDrop, true);
+  let flyToOnDrop = options.flyToOnDrop ?? true;
   const dropError = new Event();
-  let clearOnDrop = defaultValue(options.clearOnDrop, true);
-  let dropTarget = defaultValue(options.dropTarget, viewer.container);
-  let clampToGround = defaultValue(options.clampToGround, true);
+  let clearOnDrop = options.clearOnDrop ?? true;
+  let dropTarget = options.dropTarget ?? viewer.container;
+  let clampToGround = options.clampToGround ?? true;
   let proxy = options.proxy;
 
   dropTarget = getElement(dropTarget);
@@ -283,7 +283,7 @@ function createOnLoadCallback(viewer, file, proxy, clampToGround) {
         viewer.dropError.raiseEvent(
           viewer,
           fileName,
-          `Unrecognized file: ${fileName}`
+          `Unrecognized file: ${fileName}`,
         );
         return;
       }

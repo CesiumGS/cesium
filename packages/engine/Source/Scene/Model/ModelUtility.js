@@ -59,7 +59,7 @@ ModelUtility.getNodeTransform = function (node) {
   return Matrix4.fromTranslationQuaternionRotationScale(
     defined(node.translation) ? node.translation : Cartesian3.ZERO,
     defined(node.rotation) ? node.rotation : Quaternion.IDENTITY,
-    defined(node.scale) ? node.scale : Cartesian3.ONE
+    defined(node.scale) ? node.scale : Cartesian3.ONE,
   );
 };
 
@@ -220,11 +220,11 @@ const cartesianMinScratch = new Cartesian3();
 ModelUtility.getPositionMinMax = function (
   primitive,
   instancingTranslationMin,
-  instancingTranslationMax
+  instancingTranslationMax,
 ) {
   const positionGltfAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
-    "POSITION"
+    "POSITION",
   );
 
   let positionMax = positionGltfAttribute.max;
@@ -234,12 +234,12 @@ ModelUtility.getPositionMinMax = function (
     positionMin = Cartesian3.add(
       positionMin,
       instancingTranslationMin,
-      cartesianMinScratch
+      cartesianMinScratch,
     );
     positionMax = Cartesian3.add(
       positionMax,
       instancingTranslationMax,
-      cartesianMaxScratch
+      cartesianMaxScratch,
     );
   }
 
@@ -346,19 +346,26 @@ ModelUtility.supportedExtensions = {
   CESIUM_primitive_outline: true,
   CESIUM_RTC: true,
   EXT_feature_metadata: true,
+  EXT_implicit_cylinder_region: true,
+  EXT_implicit_ellipsoid_region: true,
   EXT_instance_features: true,
   EXT_mesh_features: true,
   EXT_mesh_gpu_instancing: true,
   EXT_meshopt_compression: true,
+  EXT_primitive_voxels: true,
   EXT_structural_metadata: true,
   EXT_texture_webp: true,
   KHR_blend: true,
   KHR_draco_mesh_compression: true,
-  KHR_techniques_webgl: true,
+  KHR_implicit_shapes: true,
   KHR_materials_common: true,
   KHR_materials_pbrSpecularGlossiness: true,
+  KHR_materials_specular: true,
+  KHR_materials_anisotropy: true,
+  KHR_materials_clearcoat: true,
   KHR_materials_unlit: true,
   KHR_mesh_quantization: true,
+  KHR_techniques_webgl: true,
   KHR_texture_basisu: true,
   KHR_texture_transform: true,
   WEB3D_quantized_attributes: true,

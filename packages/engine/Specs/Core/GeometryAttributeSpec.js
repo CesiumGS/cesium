@@ -13,18 +13,7 @@ describe("Core/GeometryAttribute", function () {
     expect(color.componentsPerAttribute).toEqual(4);
     expect(color.normalize).toEqual(true);
     expect(color.values).toEqual([
-      255,
-      0,
-      0,
-      255,
-      0,
-      255,
-      0,
-      255,
-      0,
-      0,
-      255,
-      255,
+      255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255,
     ]);
   });
 
@@ -33,18 +22,7 @@ describe("Core/GeometryAttribute", function () {
       return new GeometryAttribute({
         componentsPerAttribute: 4,
         values: new Uint8Array([
-          255,
-          0,
-          0,
-          255,
-          0,
-          255,
-          0,
-          255,
-          0,
-          0,
-          255,
-          255,
+          255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255,
         ]),
       });
     }).toThrowDeveloperError();
@@ -55,18 +33,7 @@ describe("Core/GeometryAttribute", function () {
       return new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         values: new Uint8Array([
-          255,
-          0,
-          0,
-          255,
-          0,
-          255,
-          0,
-          255,
-          0,
-          0,
-          255,
-          255,
+          255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255,
         ]),
       });
     }).toThrowDeveloperError();
@@ -78,18 +45,7 @@ describe("Core/GeometryAttribute", function () {
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 7,
         values: new Uint8Array([
-          255,
-          0,
-          0,
-          255,
-          0,
-          255,
-          0,
-          255,
-          0,
-          0,
-          255,
-          255,
+          255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255,
         ]),
       });
     }).toThrowDeveloperError();

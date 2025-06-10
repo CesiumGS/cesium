@@ -1,6 +1,5 @@
 import {
   Cartesian2,
-  defaultValue,
   defined,
   DeveloperError,
   FeatureDetection,
@@ -18,7 +17,7 @@ import equals from "./equals.js";
 function createMissingFunctionMessageFunction(
   item,
   actualPrototype,
-  expectedInterfacePrototype
+  expectedInterfacePrototype,
 ) {
   return function () {
     return `Expected function '${item}' to exist on ${actualPrototype.constructor.name} because it should implement interface ${expectedInterfacePrototype.constructor.name}.`;
@@ -46,7 +45,14 @@ function makeAsyncThrowFunction(debug, Type, name) {
             .catch((e) => {
               let result = e instanceof Type || e.name === name;
               if (defined(message)) {
-                result = result && util.equals(e.message, message);
+                if (typeof message === "string") {
+                  result = result && e.message === message;
+                } else {
+                  // if the expected message is a regular expression check it against the error message
+                  // this matches how the builtin .toRejectWithError(Error, /message/) works
+                  // https://github.com/jasmine/jasmine/blob/main/src/core/matchers/toThrowError.js
+                  result = result && message.test(e.message);
+                }
               }
               return {
                 pass: result,
@@ -92,7 +98,7 @@ function makeThrowFunction(debug, Type, name) {
   if (debug) {
     return function (util) {
       return {
-        compare: function (actual, expected) {
+        compare: function (actual, message) {
           // based on the built-in Jasmine toThrow matcher
           let result = false;
           let exception;
@@ -110,20 +116,29 @@ function makeThrowFunction(debug, Type, name) {
           if (exception) {
             result = exception instanceof Type || exception.name === name;
           }
+          if (defined(message)) {
+            if (typeof message === "string") {
+              result = result && exception.message === message;
+            } else {
+              // if the expected message is a regular expression check it against the error message
+              // this matches how the builtin .toRejectWithError(Error, /message/) works
+              // https://github.com/jasmine/jasmine/blob/main/src/core/matchers/toThrowError.js
+              result = result && message.test(exception.message);
+            }
+          }
 
-          let message;
+          let testMessage;
           if (result) {
-            message = [
-              `Expected function not to throw ${name} , but it threw`,
-              exception.message || exception,
-            ].join(" ");
+            testMessage = `Expected function not to throw ${name} , but it threw ${exception.message || exception}`;
           } else {
-            message = `Expected function to throw ${name}.`;
+            testMessage = defined(message)
+              ? `Expected to throw with ${name}: ${message}, but it was thrown with ${exception}`
+              : `Expected function to throw with ${name}.`;
           }
 
           return {
             pass: result,
-            message: message,
+            message: testMessage,
           };
         },
       };
@@ -274,7 +289,7 @@ function createDefaultMatchers(debug) {
                 message: createMissingFunctionMessageFunction(
                   item,
                   actualPrototype,
-                  expectedInterfacePrototype
+                  expectedInterfacePrototype,
                 ),
               };
             }
@@ -377,7 +392,7 @@ function createDefaultMatchers(debug) {
       return {
         compare: function (actual, expected, args) {
           const scene = actual;
-          const result = scene.pick(defaultValue(args, new Cartesian2(0, 0)));
+          const result = scene.pick(args ?? new Cartesian2(0, 0));
 
           const webglStub = !!window.webglStub;
           if (!webglStub) {
@@ -398,9 +413,7 @@ function createDefaultMatchers(debug) {
       return {
         compare: function (actual, expected, args) {
           const scene = actual;
-          const result = scene.pickVoxel(
-            defaultValue(args, new Cartesian2(0, 0))
-          );
+          const result = scene.pickVoxel(args ?? new Cartesian2(0, 0));
 
           const webglStub = !!window.webglStub;
           if (!webglStub) {
@@ -467,14 +480,14 @@ function createDefaultMatchers(debug) {
           ray,
           limit,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.drillPickFromRay(
             ray,
             limit,
             objectsToExclude,
-            width
+            width,
           );
 
           const webglStub = !!window.webglStub;
@@ -499,7 +512,7 @@ function createDefaultMatchers(debug) {
           expected,
           position,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.sampleHeight(position, objectsToExclude, width);
@@ -526,13 +539,13 @@ function createDefaultMatchers(debug) {
           expected,
           cartesian,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.clampToHeight(
             cartesian,
             objectsToExclude,
-            width
+            width,
           );
 
           const webglStub = !!window.webglStub;
@@ -555,8 +568,8 @@ function createDefaultMatchers(debug) {
         compare: function (actual, expected, x, y) {
           const scene = actual;
           const canvas = scene.canvas;
-          x = defaultValue(x, canvas.clientWidth / 2);
-          y = defaultValue(y, canvas.clientHeight / 2);
+          x = x ?? canvas.clientWidth / 2;
+          y = y ?? canvas.clientHeight / 2;
           const result = scene.pickPosition(new Cartesian2(x, y));
 
           const webglStub = !!window.webglStub;
@@ -586,7 +599,7 @@ function createDefaultMatchers(debug) {
             // options were passed to to a framebuffer
             context = options.context;
             framebuffer = options.framebuffer;
-            epsilon = defaultValue(options.epsilon, epsilon);
+            epsilon = options.epsilon ?? epsilon;
           } else {
             context = options;
           }
@@ -708,7 +721,7 @@ function createDefaultMatchers(debug) {
     toThrowDeveloperError: makeThrowFunction(
       debug,
       DeveloperError,
-      "DeveloperError"
+      "DeveloperError",
     ),
   };
 }
@@ -718,7 +731,7 @@ function createDefaultAsyncMatchers(debug) {
     toBeRejectedWithDeveloperError: makeAsyncThrowFunction(
       debug,
       DeveloperError,
-      "DeveloperError"
+      "DeveloperError",
     ),
   };
 }
@@ -796,7 +809,7 @@ function renderEquals(util, actual, expected, expectEqual) {
     message = `Expected ${
       expectEqual ? "" : "not "
     }to render [${typedArrayToArray(
-      expected
+      expected,
     )}], but actually rendered [${typedArrayToArray(actualRgba)}].`;
   }
 
@@ -873,8 +886,8 @@ function contextRenderAndReadPixels(options) {
   let sp = options.shaderProgram;
   const uniformMap = options.uniformMap;
   const modelMatrix = options.modelMatrix;
-  const depth = defaultValue(options.depth, 0.0);
-  const clear = defaultValue(options.clear, true);
+  const depth = options.depth ?? 0.0;
+  const clear = options.clear ?? true;
   let clearColor;
 
   if (!defined(context)) {
@@ -883,19 +896,19 @@ function contextRenderAndReadPixels(options) {
 
   if (!defined(fs) && !defined(sp)) {
     throw new DeveloperError(
-      "options.fragmentShader or options.shaderProgram is required."
+      "options.fragmentShader or options.shaderProgram is required.",
     );
   }
 
   if (defined(fs) && defined(sp)) {
     throw new DeveloperError(
-      "Both options.fragmentShader and options.shaderProgram can not be used at the same time."
+      "Both options.fragmentShader and options.shaderProgram can not be used at the same time.",
     );
   }
 
   if (defined(vs) && defined(sp)) {
     throw new DeveloperError(
-      "Both options.vertexShader and options.shaderProgram can not be used at the same time."
+      "Both options.vertexShader and options.shaderProgram can not be used at the same time.",
     );
   }
 
@@ -957,8 +970,8 @@ function contextRenderAndReadPixels(options) {
 function expectContextToRender(actual, expected, expectEqual) {
   const options = actual;
   const context = options.context;
-  const clear = defaultValue(options.clear, true);
-  const epsilon = defaultValue(options.epsilon, 0);
+  const clear = options.clear ?? true;
+  const epsilon = options.epsilon ?? 0;
 
   if (!defined(expected)) {
     expected = [255, 255, 255, 255];

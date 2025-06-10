@@ -1,5 +1,4 @@
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -33,13 +32,13 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstanceAttribute
  */
 function DistanceDisplayConditionGeometryInstanceAttribute(near, far) {
-  near = defaultValue(near, 0.0);
-  far = defaultValue(far, Number.MAX_VALUE);
+  near = near ?? 0.0;
+  far = far ?? Number.MAX_VALUE;
 
   //>>includeStart('debug', pragmas.debug);
   if (far <= near) {
     throw new DeveloperError(
-      "far distance must be greater than near distance."
+      "far distance must be greater than near distance.",
     );
   }
   //>>includeEnd('debug');
@@ -107,7 +106,7 @@ Object.defineProperties(
         return false;
       },
     },
-  }
+  },
 );
 
 /**
@@ -127,25 +126,24 @@ Object.defineProperties(
  *   }
  * });
  */
-DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition = function (
-  distanceDisplayCondition
-) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(distanceDisplayCondition)) {
-    throw new DeveloperError("distanceDisplayCondition is required.");
-  }
-  if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
-    throw new DeveloperError(
-      "distanceDisplayCondition.far distance must be greater than distanceDisplayCondition.near distance."
-    );
-  }
-  //>>includeEnd('debug');
+DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition =
+  function (distanceDisplayCondition) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(distanceDisplayCondition)) {
+      throw new DeveloperError("distanceDisplayCondition is required.");
+    }
+    if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+      throw new DeveloperError(
+        "distanceDisplayCondition.far distance must be greater than distanceDisplayCondition.near distance.",
+      );
+    }
+    //>>includeEnd('debug');
 
-  return new DistanceDisplayConditionGeometryInstanceAttribute(
-    distanceDisplayCondition.near,
-    distanceDisplayCondition.far
-  );
-};
+    return new DistanceDisplayConditionGeometryInstanceAttribute(
+      distanceDisplayCondition.near,
+      distanceDisplayCondition.far,
+    );
+  };
 
 /**
  * Converts a distance display condition to a typed array that can be used to assign a distance display condition attribute.
@@ -160,7 +158,7 @@ DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition =
  */
 DistanceDisplayConditionGeometryInstanceAttribute.toValue = function (
   distanceDisplayCondition,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(distanceDisplayCondition)) {

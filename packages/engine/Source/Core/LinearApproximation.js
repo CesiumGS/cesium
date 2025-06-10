@@ -40,16 +40,16 @@ LinearApproximation.interpolateOrderZero = function (
   xTable,
   yTable,
   yStride,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (xTable.length !== 2) {
     throw new DeveloperError(
-      "The xTable provided to the linear interpolator must have exactly two elements."
+      "The xTable provided to the linear interpolator must have exactly two elements.",
     );
   } else if (yStride <= 0) {
     throw new DeveloperError(
-      "There must be at least 1 dependent variable for each independent variable."
+      "There must be at least 1 dependent variable for each independent variable.",
     );
   }
   //>>includeEnd('debug');
@@ -67,7 +67,7 @@ LinearApproximation.interpolateOrderZero = function (
   //>>includeStart('debug', pragmas.debug);
   if (x0 === x1) {
     throw new DeveloperError(
-      "Divide by zero error: xTable[0] and xTable[1] are equal"
+      "Divide by zero error: xTable[0] and xTable[1] are equal",
     );
   }
   //>>includeEnd('debug');

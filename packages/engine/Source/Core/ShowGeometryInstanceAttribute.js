@@ -1,5 +1,4 @@
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -31,7 +30,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstanceAttribute
  */
 function ShowGeometryInstanceAttribute(show) {
-  show = defaultValue(show, true);
+  show = show ?? true;
 
   /**
    * The values for the attributes stored in a typed array.

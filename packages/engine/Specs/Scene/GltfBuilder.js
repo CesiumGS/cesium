@@ -96,11 +96,10 @@ GltfBuilder.prototype.toGltf = function () {
 
     const byteLength = bufferBuilder.viewBuilders.reduce(function (
       byteLength,
-      viewBuilder
+      viewBuilder,
     ) {
       return byteLength + viewBuilder.bufferView.byteLength;
-    },
-    0);
+    }, 0);
 
     const buffer = new ArrayBuffer(byteLength);
     let nextStart = 0;
@@ -343,9 +342,8 @@ GltfBufferBuilder.prototype.indexBuffer = function (name) {
 function GltfBufferViewBuilder(bufferBuilder, bufferViewIndex, componentType) {
   this.bufferBuilder = bufferBuilder;
   this.bufferViewIndex = bufferViewIndex;
-  this.bufferView = this.bufferBuilder.gltfBuilder.gltf.bufferViews[
-    this.bufferViewIndex
-  ];
+  this.bufferView =
+    this.bufferBuilder.gltfBuilder.gltf.bufferViews[this.bufferViewIndex];
   this.componentType = componentType;
   this.elementStride = 0;
   this.nextOffset = 0;

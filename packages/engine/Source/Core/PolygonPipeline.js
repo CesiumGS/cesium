@@ -4,7 +4,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
@@ -31,7 +30,7 @@ PolygonPipeline.computeArea2D = function (positions) {
   Check.typeOf.number.greaterThanOrEquals(
     "positions.length",
     positions.length,
-    3
+    3,
   );
   //>>includeEnd('debug');
 
@@ -104,9 +103,9 @@ PolygonPipeline.computeSubdivision = function (
   positions,
   indices,
   texcoords,
-  granularity
+  granularity,
 ) {
-  granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+  granularity = granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
   const hasTexcoords = defined(texcoords);
 
@@ -159,17 +158,17 @@ PolygonPipeline.computeSubdivision = function (
     const v0 = Cartesian3.fromArray(
       subdividedPositions,
       i0 * 3,
-      subdivisionV0Scratch
+      subdivisionV0Scratch,
     );
     const v1 = Cartesian3.fromArray(
       subdividedPositions,
       i1 * 3,
-      subdivisionV1Scratch
+      subdivisionV1Scratch,
     );
     const v2 = Cartesian3.fromArray(
       subdividedPositions,
       i2 * 3,
-      subdivisionV2Scratch
+      subdivisionV2Scratch,
     );
 
     let t0, t1, t2;
@@ -177,44 +176,44 @@ PolygonPipeline.computeSubdivision = function (
       t0 = Cartesian2.fromArray(
         subdividedTexcoords,
         i0 * 2,
-        subdivisionT0Scratch
+        subdivisionT0Scratch,
       );
       t1 = Cartesian2.fromArray(
         subdividedTexcoords,
         i1 * 2,
-        subdivisionT1Scratch
+        subdivisionT1Scratch,
       );
       t2 = Cartesian2.fromArray(
         subdividedTexcoords,
         i2 * 2,
-        subdivisionT2Scratch
+        subdivisionT2Scratch,
       );
     }
 
     const s0 = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(v0, subdivisionS0Scratch),
       radius,
-      subdivisionS0Scratch
+      subdivisionS0Scratch,
     );
     const s1 = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(v1, subdivisionS1Scratch),
       radius,
-      subdivisionS1Scratch
+      subdivisionS1Scratch,
     );
     const s2 = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(v2, subdivisionS2Scratch),
       radius,
-      subdivisionS2Scratch
+      subdivisionS2Scratch,
     );
 
     const g0 = Cartesian3.magnitudeSquared(
-      Cartesian3.subtract(s0, s1, subdivisionMidScratch)
+      Cartesian3.subtract(s0, s1, subdivisionMidScratch),
     );
     const g1 = Cartesian3.magnitudeSquared(
-      Cartesian3.subtract(s1, s2, subdivisionMidScratch)
+      Cartesian3.subtract(s1, s2, subdivisionMidScratch),
     );
     const g2 = Cartesian3.magnitudeSquared(
-      Cartesian3.subtract(s2, s0, subdivisionMidScratch)
+      Cartesian3.subtract(s2, s0, subdivisionMidScratch),
     );
 
     const max = Math.max(g0, g1, g2);
@@ -339,9 +338,9 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
   positions,
   indices,
   texcoords,
-  granularity
+  granularity,
 ) {
-  granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+  granularity = granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
   const hasTexcoords = defined(texcoords);
 
@@ -397,17 +396,17 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
     const v0 = Cartesian3.fromArray(
       subdividedPositions,
       i0 * 3,
-      subdivisionV0Scratch
+      subdivisionV0Scratch,
     );
     const v1 = Cartesian3.fromArray(
       subdividedPositions,
       i1 * 3,
-      subdivisionV1Scratch
+      subdivisionV1Scratch,
     );
     const v2 = Cartesian3.fromArray(
       subdividedPositions,
       i2 * 3,
-      subdivisionV2Scratch
+      subdivisionV2Scratch,
     );
 
     let t0, t1, t2;
@@ -415,17 +414,17 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
       t0 = Cartesian2.fromArray(
         subdividedTexcoords,
         i0 * 2,
-        subdivisionT0Scratch
+        subdivisionT0Scratch,
       );
       t1 = Cartesian2.fromArray(
         subdividedTexcoords,
         i1 * 2,
-        subdivisionT1Scratch
+        subdivisionT1Scratch,
       );
       t2 = Cartesian2.fromArray(
         subdividedTexcoords,
         i2 * 2,
-        subdivisionT2Scratch
+        subdivisionT2Scratch,
       );
     }
 
@@ -456,7 +455,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
         if (!defined(i)) {
           mid = rhumb0.interpolateUsingFraction(
             0.5,
-            subdivisionCartographicScratch
+            subdivisionCartographicScratch,
           );
           midHeight = (c0.height + c1.height) * 0.5;
           midCartesian3 = Cartesian3.fromRadians(
@@ -464,12 +463,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
             mid.latitude,
             midHeight,
             ellipsoid,
-            subdivisionMidScratch
+            subdivisionMidScratch,
           );
           subdividedPositions.push(
             midCartesian3.x,
             midCartesian3.y,
-            midCartesian3.z
+            midCartesian3.z,
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
@@ -490,7 +489,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
         if (!defined(i)) {
           mid = rhumb1.interpolateUsingFraction(
             0.5,
-            subdivisionCartographicScratch
+            subdivisionCartographicScratch,
           );
           midHeight = (c1.height + c2.height) * 0.5;
           midCartesian3 = Cartesian3.fromRadians(
@@ -498,12 +497,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
             mid.latitude,
             midHeight,
             ellipsoid,
-            subdivisionMidScratch
+            subdivisionMidScratch,
           );
           subdividedPositions.push(
             midCartesian3.x,
             midCartesian3.y,
-            midCartesian3.z
+            midCartesian3.z,
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
@@ -524,7 +523,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
         if (!defined(i)) {
           mid = rhumb2.interpolateUsingFraction(
             0.5,
-            subdivisionCartographicScratch
+            subdivisionCartographicScratch,
           );
           midHeight = (c2.height + c0.height) * 0.5;
           midCartesian3 = Cartesian3.fromRadians(
@@ -532,12 +531,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
             mid.latitude,
             midHeight,
             ellipsoid,
-            subdivisionMidScratch
+            subdivisionMidScratch,
           );
           subdividedPositions.push(
             midCartesian3.x,
             midCartesian3.y,
-            midCartesian3.z
+            midCartesian3.z,
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
@@ -587,7 +586,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
  *
  * @param {number[]} positions The array of numbers representing the positions to be scaled
  * @param {number} [height=0.0] The desired height to add to the positions
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @param {boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
  * @returns {number[]} The input array of positions, scaled to height
  */
@@ -595,15 +594,15 @@ PolygonPipeline.scaleToGeodeticHeight = function (
   positions,
   height,
   ellipsoid,
-  scaleToSurface
+  scaleToSurface,
 ) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   let n = scaleToGeodeticHeightN;
   let p = scaleToGeodeticHeightP;
 
-  height = defaultValue(height, 0.0);
-  scaleToSurface = defaultValue(scaleToSurface, true);
+  height = height ?? 0.0;
+  scaleToSurface = scaleToSurface ?? true;
 
   if (defined(positions)) {
     const length = positions.length;

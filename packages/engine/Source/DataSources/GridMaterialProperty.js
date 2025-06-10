@@ -1,8 +1,9 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
@@ -26,7 +27,7 @@ const defaultLineThickness = new Cartesian2(1, 1);
  * @constructor
  */
 function GridMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._color = undefined;
@@ -134,14 +135,19 @@ GridMaterialProperty.prototype.getType = function (time) {
   return "Grid";
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 GridMaterialProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
   if (!defined(result)) {
     result = {};
   }
@@ -149,30 +155,30 @@ GridMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   result.cellAlpha = Property.getValueOrDefault(
     this._cellAlpha,
     time,
-    defaultCellAlpha
+    defaultCellAlpha,
   );
   result.lineCount = Property.getValueOrClonedDefault(
     this._lineCount,
     time,
     defaultLineCount,
-    result.lineCount
+    result.lineCount,
   );
   result.lineThickness = Property.getValueOrClonedDefault(
     this._lineThickness,
     time,
     defaultLineThickness,
-    result.lineThickness
+    result.lineThickness,
   );
   result.lineOffset = Property.getValueOrClonedDefault(
     this._lineOffset,
     time,
     defaultLineOffset,
-    result.lineOffset
+    result.lineOffset,
   );
   return result;
 };
