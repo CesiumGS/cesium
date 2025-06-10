@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import parseStructuralMetadata from "./parseStructuralMetadata.js";
@@ -33,16 +33,18 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GltfStructuralMetadataLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const extension = options.extension;
-  const extensionLegacy = options.extensionLegacy;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const supportedImageFormats = options.supportedImageFormats;
-  const frameState = options.frameState;
-  const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const {
+    gltf,
+    extension,
+    extensionLegacy,
+    gltfResource,
+    baseResource,
+    supportedImageFormats,
+    frameState,
+    cacheKey,
+    asynchronous = true,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -53,7 +55,7 @@ function GltfStructuralMetadataLoader(options) {
 
   if (!defined(options.extension) && !defined(options.extensionLegacy)) {
     throw new DeveloperError(
-      "One of options.extension or options.extensionLegacy must be specified"
+      "One of options.extension or options.extensionLegacy must be specified",
     );
   }
   //>>includeEnd('debug');
@@ -79,9 +81,10 @@ function GltfStructuralMetadataLoader(options) {
 
 if (defined(Object.create)) {
   GltfStructuralMetadataLoader.prototype = Object.create(
-    ResourceLoader.prototype
+    ResourceLoader.prototype,
   );
-  GltfStructuralMetadataLoader.prototype.constructor = GltfStructuralMetadataLoader;
+  GltfStructuralMetadataLoader.prototype.constructor =
+    GltfStructuralMetadataLoader;
 }
 
 Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
@@ -210,7 +213,7 @@ function gatherUsedBufferViewIds(extension) {
       const propertyTable = propertyTables[i];
       gatherBufferViewIdsFromProperties(
         propertyTable.properties,
-        bufferViewIdSet
+        bufferViewIdSet,
       );
     }
   }
@@ -239,11 +242,11 @@ async function loadBufferViews(structuralMetadataLoader) {
   let bufferViewIds;
   if (defined(structuralMetadataLoader._extension)) {
     bufferViewIds = gatherUsedBufferViewIds(
-      structuralMetadataLoader._extension
+      structuralMetadataLoader._extension,
     );
   } else {
     bufferViewIds = gatherUsedBufferViewIdsLegacy(
-      structuralMetadataLoader._extensionLegacy
+      structuralMetadataLoader._extensionLegacy,
     );
   }
 
@@ -329,7 +332,7 @@ function loadTextures(structuralMetadataLoader) {
     textureIds = gatherUsedTextureIds(structuralMetadataLoader._extension);
   } else {
     textureIds = gatherUsedTextureIdsLegacy(
-      structuralMetadataLoader._extensionLegacy
+      structuralMetadataLoader._extensionLegacy,
     );
   }
 
@@ -363,10 +366,9 @@ function loadTextures(structuralMetadataLoader) {
 }
 
 async function loadSchema(structuralMetadataLoader) {
-  const extension = defaultValue(
-    structuralMetadataLoader._extension,
-    structuralMetadataLoader._extensionLegacy
-  );
+  const extension =
+    structuralMetadataLoader._extension ??
+    structuralMetadataLoader._extensionLegacy;
 
   let schemaLoader;
   if (defined(extension.schemaUri)) {

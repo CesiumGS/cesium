@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Draw whole/partial spheres and ellipsoids."
-    />
+    <meta name="description" content="Draw whole/partial spheres and ellipsoids." />
     <meta name="cesium-sandcastle-labels" content="Geometries" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -37,11 +31,7 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        const saturnPosition = Cesium.Cartesian3.fromDegrees(
-          -95.0,
-          45.0,
-          300000.0
-        );
+        const saturnPosition = Cesium.Cartesian3.fromDegrees(-95.0, 45.0, 300000.0);
         viewer.entities.add({
           name: "Saturn",
           position: saturnPosition,
@@ -59,8 +49,8 @@
             new Cesium.HeadingPitchRoll(
               Cesium.Math.toRadians(30.0),
               Cesium.Math.toRadians(30.0),
-              0.0
-            )
+              0.0,
+            ),
           ),
           ellipsoid: {
             radii: new Cesium.Cartesian3(400000.0, 400000.0, 400000.0),
@@ -79,8 +69,8 @@
             new Cesium.HeadingPitchRoll(
               Cesium.Math.toRadians(30.0),
               Cesium.Math.toRadians(30.0),
-              0.0
-            )
+              0.0,
+            ),
           ),
           ellipsoid: {
             radii: new Cesium.Cartesian3(460000.0, 460000.0, 460000.0),
@@ -185,7 +175,7 @@
           position: Cesium.Cartesian3.fromDegrees(-102.0, 35.0, 20000.0),
           orientation: Cesium.Transforms.headingPitchRollQuaternion(
             Cesium.Cartesian3.fromDegrees(-102.0, 35.0, 20000.0),
-            new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, 0, 0.0)
+            new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, 0, 0.0),
           ),
           ellipsoid: {
             radii: new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),

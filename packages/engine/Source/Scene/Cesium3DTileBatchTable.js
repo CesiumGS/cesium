@@ -3,7 +3,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -37,7 +36,7 @@ function Cesium3DTileBatchTable(
   featuresLength,
   batchTableJson,
   batchTableBinary,
-  colorChangedCallback
+  colorChangedCallback,
 ) {
   /**
    * @readonly
@@ -48,7 +47,7 @@ function Cesium3DTileBatchTable(
   if (defined(batchTableJson)) {
     extensions = batchTableJson.extensions;
   }
-  this._extensions = defaultValue(extensions, {});
+  this._extensions = extensions ?? {};
 
   const properties = initializeProperties(batchTableJson);
   this._properties = properties;
@@ -56,17 +55,16 @@ function Cesium3DTileBatchTable(
   this._batchTableHierarchy = initializeHierarchy(
     this,
     batchTableJson,
-    batchTableBinary
+    batchTableBinary,
   );
 
   const binaryProperties = getBinaryProperties(
     featuresLength,
     properties,
-    batchTableBinary
+    batchTableBinary,
   );
-  this._binaryPropertiesByteLength = countBinaryPropertyMemory(
-    binaryProperties
-  );
+  this._binaryPropertiesByteLength =
+    countBinaryPropertyMemory(binaryProperties);
   this._batchTableBinaryProperties = binaryProperties;
 
   this._content = content;
@@ -139,7 +137,7 @@ function initializeHierarchy(batchTable, jsonHeader, binaryBody) {
   if (defined(legacyHierarchy)) {
     Cesium3DTileBatchTable._deprecationWarning(
       "batchTableHierarchyExtension",
-      "The batch table HIERARCHY property has been moved to an extension. Use extensions.3DTILES_batch_table_hierarchy instead."
+      "The batch table HIERARCHY property has been moved to an extension. Use extensions.3DTILES_batch_table_hierarchy instead.",
     );
     batchTable._extensions["3DTILES_batch_table_hierarchy"] = legacyHierarchy;
     hierarchy = legacyHierarchy;
@@ -173,7 +171,7 @@ function getBinaryProperties(featuresLength, properties, binaryBody) {
         }
         if (!defined(binaryBody)) {
           throw new RuntimeError(
-            `Property ${name} requires a batch table binary.`
+            `Property ${name} requires a batch table binary.`,
           );
         }
 
@@ -183,7 +181,7 @@ function getBinaryProperties(featuresLength, properties, binaryBody) {
         const typedArray = binaryAccessor.createArrayBufferView(
           binaryBody.buffer,
           binaryBody.byteOffset + byteOffset,
-          featuresLength
+          featuresLength,
         );
 
         if (!defined(binaryProperties)) {
@@ -220,7 +218,7 @@ function countBinaryPropertyMemory(binaryProperties) {
 Cesium3DTileBatchTable.getBinaryProperties = function (
   featuresLength,
   batchTableJson,
-  batchTableBinary
+  batchTableBinary,
 ) {
   return getBinaryProperties(featuresLength, batchTableJson, batchTableBinary);
 };
@@ -267,13 +265,11 @@ Cesium3DTileBatchTable.prototype.applyStyle = function (style) {
   for (let i = 0; i < length; ++i) {
     const feature = content.getFeature(i);
     const color = defined(style.color)
-      ? defaultValue(
-          style.color.evaluateColor(feature, scratchColor),
-          DEFAULT_COLOR_VALUE
-        )
+      ? (style.color.evaluateColor(feature, scratchColor) ??
+        DEFAULT_COLOR_VALUE)
       : DEFAULT_COLOR_VALUE;
     const show = defined(style.show)
-      ? defaultValue(style.show.evaluate(feature), DEFAULT_SHOW_VALUE)
+      ? (style.show.evaluate(feature) ?? DEFAULT_SHOW_VALUE)
       : DEFAULT_SHOW_VALUE;
     this.setColor(i, color);
     this.setShow(i, show);
@@ -303,7 +299,7 @@ function checkBatchId(batchId, featuresLength) {
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
       `batchId is required and must be between zero and featuresLength - 1 (${featuresLength}` -
-        +")."
+        +").",
     );
   }
 }
@@ -378,7 +374,7 @@ Cesium3DTileBatchTable.prototype.getPropertyIds = function (batchId, results) {
   if (defined(this._batchTableHierarchy)) {
     results.push.apply(
       results,
-      this._batchTableHierarchy.getPropertyIds(batchId, scratchPropertyIds)
+      this._batchTableHierarchy.getPropertyIds(batchId, scratchPropertyIds),
     );
   }
 
@@ -390,7 +386,7 @@ Cesium3DTileBatchTable.prototype.getPropertyIds = function (batchId, results) {
  */
 Cesium3DTileBatchTable.prototype.getPropertyBySemantic = function (
   batchId,
-  name
+  name,
 ) {
   // Cesium 3D Tiles 1.0 formats do not have semantics
   return undefined;
@@ -417,7 +413,7 @@ Cesium3DTileBatchTable.prototype.getProperty = function (batchId, name) {
   if (defined(this._batchTableHierarchy)) {
     const hierarchyProperty = this._batchTableHierarchy.getProperty(
       batchId,
-      name
+      name,
     );
     if (defined(hierarchyProperty)) {
       return hierarchyProperty;
@@ -491,7 +487,7 @@ function getGlslComputeSt(batchTable) {
 Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
   handleTranslucent,
   batchIdAttributeName,
-  diffuseAttributeOrUniformName
+  diffuseAttributeOrUniformName,
 ) {
   if (this.featuresLength === 0) {
     return;
@@ -504,7 +500,7 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
     const renamedSource = modifyDiffuse(
       source,
       diffuseAttributeOrUniformName,
-      false
+      false,
     );
     let newMain;
 
@@ -636,7 +632,7 @@ function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
   //   uniform vec3 u_diffuseColor;
   //   uniform sampler2D diffuseTexture;
   let regex = new RegExp(
-    `(uniform|attribute|in)\\s+(vec[34]|sampler2D)\\s+${diffuseAttributeOrUniformName};`
+    `(uniform|attribute|in)\\s+(vec[34]|sampler2D)\\s+${diffuseAttributeOrUniformName};`,
   );
   const uniformMatch = source.match(regex);
 
@@ -716,7 +712,7 @@ function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
 Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
   handleTranslucent,
   diffuseAttributeOrUniformName,
-  hasPremultipliedAlpha
+  hasPremultipliedAlpha,
 ) {
   if (this.featuresLength === 0) {
     return;
@@ -784,44 +780,6 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
   };
 };
 
-Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = function () {
-  if (this.featuresLength === 0) {
-    return;
-  }
-  return function (source) {
-    source = ShaderSource.replaceMain(source, "tile_main");
-    if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-      // When VTF is supported, per-feature show/hide already happened in the fragment shader
-      source +=
-        "uniform sampler2D tile_pickTexture;\n" +
-        "in vec2 tile_featureSt; \n" +
-        "in vec4 tile_featureColor; \n" +
-        "void main() \n" +
-        "{ \n" +
-        "    tile_main(); \n" +
-        "    out_FragColor = tile_featureColor; \n" +
-        "    out_FragColor.rgb *= out_FragColor.a; \n" +
-        "}";
-    } else {
-      source +=
-        "uniform sampler2D tile_batchTexture; \n" +
-        "uniform sampler2D tile_pickTexture;\n" +
-        "in vec2 tile_featureSt; \n" +
-        "void main() \n" +
-        "{ \n" +
-        "    tile_main(); \n" +
-        "    vec4 featureProperties = texture(tile_batchTexture, tile_featureSt); \n" +
-        "    if (featureProperties.a == 0.0) { \n" + // show: alpha == 0 - false, non-zero - true
-        "        discard; \n" +
-        "    } \n" +
-        "    out_FragColor = featureProperties; \n" +
-        "    out_FragColor.rgb *= out_FragColor.a; \n" +
-        "} \n";
-    }
-    return source;
-  };
-};
-
 function getColorBlend(batchTable) {
   const tileset = batchTable._content.tileset;
   const colorBlendMode = tileset.colorBlendMode;
@@ -851,9 +809,8 @@ Cesium3DTileBatchTable.prototype.getUniformMapCallback = function () {
     const batchUniformMap = {
       tile_batchTexture: function () {
         // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
-        return defaultValue(
-          that._batchTexture.batchTexture,
-          that._batchTexture.defaultTexture
+        return (
+          that._batchTexture.batchTexture ?? that._batchTexture.defaultTexture
         );
       },
       tile_textureDimensions: function () {
@@ -888,7 +845,7 @@ const StyleCommandsNeeded = {
 
 Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
   frameState,
-  commandStart
+  commandStart,
 ) {
   const commandList = frameState.commandList;
   const commandEnd = commandList.length;
@@ -938,7 +895,7 @@ Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
           if (!defined(derivedCommands.zback)) {
             derivedCommands.zback = deriveZBackfaceCommand(
               frameState.context,
-              originalCommand
+              originalCommand,
             );
           }
           tileset._backfaceCommands.push(derivedCommands.zback);
@@ -951,7 +908,7 @@ Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
           if (command.renderState.depthMask) {
             derivedCommands.stencil = deriveStencilCommand(
               originalCommand,
-              tile._selectionDepth
+              tile._selectionDepth,
             );
           } else {
             // Ignore if tile does not write depth
@@ -1043,7 +1000,7 @@ function deriveOpaqueCommand(command) {
 function getLogDepthPolygonOffsetFragmentShaderProgram(context, shaderProgram) {
   let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "zBackfaceLogDepth"
+    "zBackfaceLogDepth",
   );
   if (!defined(shader)) {
     const fs = shaderProgram.fragmentShaderSource.clone();
@@ -1057,7 +1014,7 @@ function getLogDepthPolygonOffsetFragmentShaderProgram(context, shaderProgram) {
         vertexShaderSource: shaderProgram.vertexShaderSource,
         fragmentShaderSource: fs,
         attributeLocations: shaderProgram._attributeLocations,
-      }
+      },
     );
   }
 
@@ -1103,7 +1060,7 @@ function deriveZBackfaceCommand(context, command) {
   // tiles to disappear.
   derivedCommand.shaderProgram = getLogDepthPolygonOffsetFragmentShaderProgram(
     context,
-    command.shaderProgram
+    command.shaderProgram,
   );
   return derivedCommand;
 }

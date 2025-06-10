@@ -4,7 +4,7 @@ import Resource from "../Core/Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "AAPKc6e43bbc520149f79229d173c04883558jat1YV8r6Xjl50ulCDeLTkHzW0vzUC-9m6ASQvGmPbo4-xY_kAzsJxJZm-j_Unr";
+  "AAPTxy8BH1VEsoebNVZXo8HurEOF051kAEKlhkOhBEc9BmRwxo7rIWoXrG5RJkAAlrdL0n_Ha7z7WbgHT-DpRd_LxLSeba-Kg8HsK3kJVUF2iiOVOza8OZ-DIdJzjyBZ9IIc5W0JagV3wyuZ9CKE3RHRSADOw-9FbeeUyfJA8iS2mKcK8768q4g11vlHUzVYFhWoKctRWWeG3Amwm6ez2n3vMc1fTSqDdbFP2O6x5eslQDE.AT1_SOxgo20E";
 /**
  * Default options for accessing the ArcGIS image tile service.
  *
@@ -32,8 +32,7 @@ ArcGisMapService.defaultAccessToken = defaultAccessToken;
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer
  */
 ArcGisMapService.defaultWorldImageryServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
 });
 
 /**
@@ -43,8 +42,7 @@ ArcGisMapService.defaultWorldImageryServer = new Resource({
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer
  */
 ArcGisMapService.defaultWorldHillshadeServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
 });
 
 /**
@@ -54,8 +52,7 @@ ArcGisMapService.defaultWorldHillshadeServer = new Resource({
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer
  */
 ArcGisMapService.defaultWorldOceanServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
 });
 
 /**

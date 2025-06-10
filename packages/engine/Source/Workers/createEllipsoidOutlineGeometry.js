@@ -5,7 +5,7 @@ function createEllipsoidOutlineGeometry(ellipsoidGeometry, offset) {
   if (defined(ellipsoidGeometry.buffer, offset)) {
     ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(
       ellipsoidGeometry,
-      offset
+      offset,
     );
   }
   return EllipsoidOutlineGeometry.createGeometry(ellipsoidGeometry);

@@ -34,7 +34,7 @@ describe("DataSources/PathGraphics", function () {
     expect(path.trailTime.getValue()).toEqual(options.trailTime);
     expect(path.resolution.getValue()).toEqual(options.resolution);
     expect(path.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
   });
 
@@ -47,7 +47,7 @@ describe("DataSources/PathGraphics", function () {
     source.trailTime = new ConstantProperty(1);
     source.resolution = new ConstantProperty(1);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 20.0)
+      new DistanceDisplayCondition(10.0, 20.0),
     );
 
     const target = new PathGraphics();
@@ -59,7 +59,7 @@ describe("DataSources/PathGraphics", function () {
     expect(target.trailTime).toBe(source.trailTime);
     expect(target.resolution).toBe(source.resolution);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -72,7 +72,7 @@ describe("DataSources/PathGraphics", function () {
     source.trailTime = new ConstantProperty(1);
     source.resolution = new ConstantProperty(1);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
 
     const color = new ColorMaterialProperty();
@@ -82,7 +82,7 @@ describe("DataSources/PathGraphics", function () {
     const trailTime = new ConstantProperty(1);
     const resolution = new ConstantProperty(1);
     const distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
 
     const target = new PathGraphics();
@@ -113,7 +113,7 @@ describe("DataSources/PathGraphics", function () {
     source.trailTime = new ConstantProperty(1);
     source.resolution = new ConstantProperty(1);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
 
     const result = source.clone();
@@ -124,7 +124,7 @@ describe("DataSources/PathGraphics", function () {
     expect(result.trailTime).toBe(source.trailTime);
     expect(result.resolution).toBe(source.resolution);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 

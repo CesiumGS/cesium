@@ -76,7 +76,7 @@ function ModelRenderResources(model) {
         enabled: true,
         func: DepthFunction.LESS_OR_EQUAL,
       },
-    })
+    }),
   );
 
   /**

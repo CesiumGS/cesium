@@ -125,19 +125,19 @@ describe("Core/BoundingSphere", function () {
   it("equals", function () {
     const sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
     expect(
-      sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0))
+      sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0)),
     ).toEqual(true);
     expect(
-      sphere.equals(new BoundingSphere(new Cartesian3(5.0, 2.0, 3.0), 4.0))
+      sphere.equals(new BoundingSphere(new Cartesian3(5.0, 2.0, 3.0), 4.0)),
     ).toEqual(false);
     expect(
-      sphere.equals(new BoundingSphere(new Cartesian3(1.0, 6.0, 3.0), 4.0))
+      sphere.equals(new BoundingSphere(new Cartesian3(1.0, 6.0, 3.0), 4.0)),
     ).toEqual(false);
     expect(
-      sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 7.0), 4.0))
+      sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 7.0), 4.0)),
     ).toEqual(false);
     expect(
-      sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 8.0))
+      sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 8.0)),
     ).toEqual(false);
     expect(sphere.equals(undefined)).toEqual(false);
   });
@@ -185,7 +185,7 @@ describe("Core/BoundingSphere", function () {
     positions.push(
       new Cartesian3(1, 1, 1),
       new Cartesian3(2, 2, 2),
-      new Cartesian3(3, 3, 3)
+      new Cartesian3(3, 3, 3),
     );
     const sphere = BoundingSphere.fromPoints(positions);
     const radius = sphere.radius;
@@ -261,10 +261,10 @@ describe("Core/BoundingSphere", function () {
     for (let i = 0; i < numElements; i += 3) {
       expect(positions[i] <= max.x && positions[i] >= min.x).toEqual(true);
       expect(positions[i + 1] <= max.y && positions[i + 1] >= min.y).toEqual(
-        true
+        true,
       );
       expect(positions[i + 2] <= max.z && positions[i + 2] >= min.z).toEqual(
-        true
+        true,
       );
     }
   });
@@ -273,7 +273,7 @@ describe("Core/BoundingSphere", function () {
     const sphere = BoundingSphere.fromVertices(
       getPositionsAsFlatArrayWithStride5(),
       undefined,
-      5
+      5,
     );
     expect(sphere.center).toEqual(positionsCenter);
     expect(sphere.radius).toEqual(positionsRadius);
@@ -284,10 +284,10 @@ describe("Core/BoundingSphere", function () {
     const sphere = BoundingSphere.fromVertices(
       getPositionsAsFlatArrayWithStride5(),
       center,
-      5
+      5,
     );
     expect(sphere.center).toEqual(
-      Cartesian3.add(positionsCenter, center, new Cartesian3())
+      Cartesian3.add(positionsCenter, center, new Cartesian3()),
     );
     expect(sphere.radius).toEqual(positionsRadius);
   });
@@ -306,11 +306,11 @@ describe("Core/BoundingSphere", function () {
       getPositionsAsFlatArrayWithStride5(),
       center,
       5,
-      result
+      result,
     );
     expect(sphere).toEqual(result);
     expect(result.center).toEqual(
-      Cartesian3.add(positionsCenter, center, new Cartesian3())
+      Cartesian3.add(positionsCenter, center, new Cartesian3()),
     );
     expect(result.radius).toEqual(positionsRadius);
   });
@@ -326,7 +326,7 @@ describe("Core/BoundingSphere", function () {
     positions.low.length = positions.low.length - 1;
     const sphere = BoundingSphere.fromEncodedCartesianVertices(
       positions.high,
-      positions.low
+      positions.low,
     );
     expect(sphere.center).toEqual(Cartesian3.ZERO);
     expect(sphere.radius).toEqual(0.0);
@@ -336,7 +336,7 @@ describe("Core/BoundingSphere", function () {
     const positions = getPositionsAsEncodedFlatArray();
     const sphere = BoundingSphere.fromEncodedCartesianVertices(
       positions.high,
-      positions.low
+      positions.low,
     );
     expect(sphere.center).toEqual(positionsCenter);
     expect(sphere.radius).toEqual(positionsRadius);
@@ -346,7 +346,7 @@ describe("Core/BoundingSphere", function () {
     let positions = getPositionsAsEncodedFlatArray();
     const sphere = BoundingSphere.fromEncodedCartesianVertices(
       positions.high,
-      positions.low
+      positions.low,
     );
     const radius = sphere.radius;
     const center = sphere.center;
@@ -374,7 +374,7 @@ describe("Core/BoundingSphere", function () {
     ];
     for (let j = 0; j < appendedPositions.length; ++j) {
       const encoded = EncodedCartesian3.fromCartesian(
-        Cartesian3.add(appendedPositions[j], center, new Cartesian3())
+        Cartesian3.add(appendedPositions[j], center, new Cartesian3()),
       );
       positions.high.push(encoded.high.x);
       positions.high.push(encoded.high.y);
@@ -386,7 +386,7 @@ describe("Core/BoundingSphere", function () {
 
     const sphere = BoundingSphere.fromEncodedCartesianVertices(
       positions.high,
-      positions.low
+      positions.low,
     );
     const radius = sphere.radius;
     const sphereCenter = sphere.center;
@@ -399,10 +399,10 @@ describe("Core/BoundingSphere", function () {
     for (let i = 0; i < numElements; i += 3) {
       expect(positions[i] <= max.x && positions[i] >= min.x).toEqual(true);
       expect(positions[i + 1] <= max.y && positions[i + 1] >= min.y).toEqual(
-        true
+        true,
       );
       expect(positions[i + 2] <= max.z && positions[i + 2] >= min.z).toEqual(
-        true
+        true,
       );
     }
   });
@@ -413,7 +413,7 @@ describe("Core/BoundingSphere", function () {
     const sphere = BoundingSphere.fromEncodedCartesianVertices(
       positions.high,
       positions.low,
-      result
+      result,
     );
     expect(sphere).toEqual(result);
     expect(result.center).toEqual(positionsCenter);
@@ -432,11 +432,11 @@ describe("Core/BoundingSphere", function () {
     const expected = new BoundingSphere(
       Cartesian3.ZERO,
       Math.sqrt(
-        rectangle.east * rectangle.east + rectangle.north * rectangle.north
-      )
+        rectangle.east * rectangle.east + rectangle.north * rectangle.north,
+      ),
     );
     expect(BoundingSphere.fromRectangle2D(rectangle, projection)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -451,10 +451,10 @@ describe("Core/BoundingSphere", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const expected = new BoundingSphere(
       Cartesian3.ZERO,
-      ellipsoid.maximumRadius
+      ellipsoid.maximumRadius,
     );
     expect(BoundingSphere.fromRectangle3D(rectangle, ellipsoid)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -465,14 +465,14 @@ describe("Core/BoundingSphere", function () {
     const points = Rectangle.subsample(rectangle, ellipsoid, height);
     const expected = BoundingSphere.fromPoints(points);
     expect(
-      BoundingSphere.fromRectangle3D(rectangle, ellipsoid, height)
+      BoundingSphere.fromRectangle3D(rectangle, ellipsoid, height),
     ).toEqual(expected);
   });
 
   it("fromCornerPoints", function () {
     const sphere = BoundingSphere.fromCornerPoints(
       new Cartesian3(-1.0, -0.0, 0.0),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
     expect(sphere).toEqual(new BoundingSphere(Cartesian3.ZERO, 1.0));
   });
@@ -482,7 +482,7 @@ describe("Core/BoundingSphere", function () {
     const result = BoundingSphere.fromCornerPoints(
       new Cartesian3(0.0, -1.0, 0.0),
       new Cartesian3(0.0, 1.0, 0.0),
-      sphere
+      sphere,
     );
     expect(result).toBe(sphere);
     expect(result).toEqual(new BoundingSphere(Cartesian3.ZERO, 1.0));
@@ -513,7 +513,7 @@ describe("Core/BoundingSphere", function () {
     const result = BoundingSphere.fromEllipsoid(ellipsoid, sphere);
     expect(result).toBe(sphere);
     expect(result).toEqual(
-      new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius)
+      new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius),
     );
   });
 
@@ -548,7 +548,7 @@ describe("Core/BoundingSphere", function () {
 
     const sphere = BoundingSphere.fromBoundingSpheres([one, two]);
     expect(sphere).toEqual(
-      BoundingSphere.union(one, two, new BoundingSphere())
+      BoundingSphere.union(one, two, new BoundingSphere()),
     );
   });
 
@@ -593,7 +593,7 @@ describe("Core/BoundingSphere", function () {
     const transformation = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     const sphere = new BoundingSphere();
@@ -612,7 +612,7 @@ describe("Core/BoundingSphere", function () {
     const transformation = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     const sphere = BoundingSphere.fromTransformation(transformation);
@@ -662,7 +662,7 @@ describe("Core/BoundingSphere", function () {
   it("expands to contain another sphere", function () {
     const bs1 = new BoundingSphere(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      1.0
+      1.0,
     );
     const bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
     const expected = new BoundingSphere(Cartesian3.ZERO, 2.0);
@@ -688,18 +688,18 @@ describe("Core/BoundingSphere", function () {
       Cartesian3.multiplyByScalar(
         Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
         3.0,
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      3.0
+      3.0,
     );
     const bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
     const expected = new BoundingSphere(
       Cartesian3.multiplyByScalar(
         Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
         2.0,
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      4.0
+      4.0,
     );
     BoundingSphere.union(bs1, bs2, bs1);
     expect(bs1).toEqual(expected);
@@ -708,12 +708,12 @@ describe("Core/BoundingSphere", function () {
   it("expands to contain another point", function () {
     const bs = new BoundingSphere(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      1.0
+      1.0,
     );
     const point = Cartesian3.UNIT_X;
     const expected = new BoundingSphere(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      2.0
+      2.0,
     );
     expect(BoundingSphere.expand(bs, point)).toEqual(expected);
   });
@@ -737,7 +737,7 @@ describe("Core/BoundingSphere", function () {
     const transform = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
     const expected = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 1.0);
     expect(BoundingSphere.transformWithoutScale(bs, transform)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -746,7 +746,7 @@ describe("Core/BoundingSphere", function () {
     const transform = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
     const expected = new BoundingSphere(Cartesian3.ZERO, 1.0);
     expect(BoundingSphere.transformWithoutScale(bs, transform)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -756,7 +756,7 @@ describe("Core/BoundingSphere", function () {
     const direction = Cartesian3.UNIT_X;
     const expected = new Interval(1.0, 3.0);
     expect(
-      BoundingSphere.computePlaneDistances(bs, position, direction)
+      BoundingSphere.computePlaneDistances(bs, position, direction),
     ).toEqual(expected);
   });
 
@@ -766,7 +766,7 @@ describe("Core/BoundingSphere", function () {
     const expected = 1.52786405;
     expect(BoundingSphere.distanceSquaredTo(bs, position)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -783,27 +783,26 @@ describe("Core/BoundingSphere", function () {
     const positions2D = [];
     for (let i = 0; i < positions.length; ++i) {
       const position = positions[i];
-      const cartographic = projection.ellipsoid.cartesianToCartographic(
-        position
-      );
+      const cartographic =
+        projection.ellipsoid.cartesianToCartographic(position);
       positions2D.push(projection.project(cartographic));
     }
 
     const boundingSphere3D = BoundingSphere.fromPoints(positions);
     const boundingSphere2D = BoundingSphere.projectTo2D(
       boundingSphere3D,
-      projection
+      projection,
     );
     const actualSphere = BoundingSphere.fromPoints(positions2D);
     actualSphere.center = new Cartesian3(
       actualSphere.center.z,
       actualSphere.center.x,
-      actualSphere.center.y
+      actualSphere.center.y,
     );
 
     expect(boundingSphere2D.center).toEqualEpsilon(
       actualSphere.center,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
     expect(boundingSphere2D.radius).toBeGreaterThan(actualSphere.radius);
   });
@@ -816,9 +815,8 @@ describe("Core/BoundingSphere", function () {
     const positions2D = [];
     for (let i = 0; i < positions.length; ++i) {
       const position = positions[i];
-      const cartographic = projection.ellipsoid.cartesianToCartographic(
-        position
-      );
+      const cartographic =
+        projection.ellipsoid.cartesianToCartographic(position);
       positions2D.push(projection.project(cartographic));
     }
 
@@ -826,19 +824,19 @@ describe("Core/BoundingSphere", function () {
     const boundingSphere2D = BoundingSphere.projectTo2D(
       boundingSphere3D,
       projection,
-      sphere
+      sphere,
     );
     const actualSphere = BoundingSphere.fromPoints(positions2D);
     actualSphere.center = new Cartesian3(
       actualSphere.center.z,
       actualSphere.center.x,
-      actualSphere.center.y
+      actualSphere.center.y,
     );
 
     expect(boundingSphere2D).toBe(sphere);
     expect(boundingSphere2D.center).toEqualEpsilon(
       actualSphere.center,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
     expect(boundingSphere2D.radius).toBeGreaterThan(actualSphere.radius);
   });
@@ -995,7 +993,7 @@ describe("Core/BoundingSphere", function () {
     expect(function () {
       BoundingSphere.computePlaneDistances(
         new BoundingSphere(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -1015,15 +1013,15 @@ describe("Core/BoundingSphere", function () {
   function expectBoundingSphereToContainPoint(
     boundingSphere,
     point,
-    projection
+    projection,
   ) {
     const pointInCartesian = projection.project(point);
     let distanceFromCenter = Cartesian3.magnitude(
       Cartesian3.subtract(
         pointInCartesian,
         boundingSphere.center,
-        new Cartesian3()
-      )
+        new Cartesian3(),
+      ),
     );
 
     // The distanceFromCenter for corner points at the height extreme should equal the
@@ -1044,7 +1042,7 @@ describe("Core/BoundingSphere", function () {
       rectangle,
       projection,
       minHeight,
-      maxHeight
+      maxHeight,
     );
 
     // Test that the corners are inside the bounding sphere.
@@ -1093,56 +1091,56 @@ describe("Core/BoundingSphere", function () {
     point = new Cartographic(
       Rectangle.center(rectangle).longitude,
       rectangle.south,
-      minHeight
+      minHeight,
     );
     expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
     point = new Cartographic(
       Rectangle.center(rectangle).longitude,
       rectangle.south,
-      maxHeight
+      maxHeight,
     );
     expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
     point = new Cartographic(
       Rectangle.center(rectangle).longitude,
       rectangle.north,
-      minHeight
+      minHeight,
     );
     expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
     point = new Cartographic(
       Rectangle.center(rectangle).longitude,
       rectangle.north,
-      maxHeight
+      maxHeight,
     );
     expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
     point = new Cartographic(
       rectangle.west,
       Rectangle.center(rectangle).latitude,
-      minHeight
+      minHeight,
     );
     expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
     point = new Cartographic(
       rectangle.west,
       Rectangle.center(rectangle).latitude,
-      maxHeight
+      maxHeight,
     );
     expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
     point = new Cartographic(
       rectangle.east,
       Rectangle.center(rectangle).latitude,
-      minHeight
+      minHeight,
     );
     expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
     point = new Cartographic(
       rectangle.east,
       Rectangle.center(rectangle).latitude,
-      maxHeight
+      maxHeight,
     );
     expectBoundingSphereToContainPoint(boundingSphere, point, projection);
   });
@@ -1157,6 +1155,6 @@ describe("Core/BoundingSphere", function () {
   createPackableSpecs(
     BoundingSphere,
     new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0),
-    [1.0, 2.0, 3.0, 4.0]
+    [1.0, 2.0, 3.0, 4.0],
   );
 });

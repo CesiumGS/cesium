@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
@@ -24,7 +24,7 @@ function DataRectangle(rectangle, maxLevel) {
  *
  * Initialization options for the VRTheWorldTerrainProvider constructor
  *
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
@@ -37,7 +37,7 @@ function DataRectangle(rectangle, maxLevel) {
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
 function TerrainProviderBuilder(options) {
-  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this.tilingScheme = undefined;
   this.heightmapWidth = undefined;
   this.heightmapHeight = undefined;
@@ -49,7 +49,8 @@ TerrainProviderBuilder.prototype.build = function (provider) {
   provider._tilingScheme = this.tilingScheme;
   provider._heightmapWidth = this.heightmapWidth;
   provider._heightmapHeight = this.heightmapHeight;
-  provider._levelZeroMaximumGeometricError = this.levelZeroMaximumGeometricError;
+  provider._levelZeroMaximumGeometricError =
+    this.levelZeroMaximumGeometricError;
   provider._rectangles = this.rectangles;
 };
 
@@ -66,20 +67,21 @@ function metadataSuccess(terrainProviderBuilder, xml) {
   const tileFormat = xml.getElementsByTagName("TileFormat")[0];
   terrainProviderBuilder.heightmapWidth = parseInt(
     tileFormat.getAttribute("width"),
-    10
+    10,
   );
   terrainProviderBuilder.heightmapHeight = parseInt(
     tileFormat.getAttribute("height"),
-    10
+    10,
   );
-  terrainProviderBuilder.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-    terrainProviderBuilder.ellipsoid,
-    Math.min(
-      terrainProviderBuilder.heightmapWidth,
-      terrainProviderBuilder.heightmapHeight
-    ),
-    terrainProviderBuilder.tilingScheme.getNumberOfXTilesAtLevel(0)
-  );
+  terrainProviderBuilder.levelZeroMaximumGeometricError =
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      terrainProviderBuilder.ellipsoid,
+      Math.min(
+        terrainProviderBuilder.heightmapWidth,
+        terrainProviderBuilder.heightmapHeight,
+      ),
+      terrainProviderBuilder.tilingScheme.getNumberOfXTilesAtLevel(0),
+    );
 
   const dataRectangles = xml.getElementsByTagName("DataExtent");
 
@@ -87,21 +89,21 @@ function metadataSuccess(terrainProviderBuilder, xml) {
     const dataRectangle = dataRectangles[i];
 
     const west = CesiumMath.toRadians(
-      parseFloat(dataRectangle.getAttribute("minx"))
+      parseFloat(dataRectangle.getAttribute("minx")),
     );
     const south = CesiumMath.toRadians(
-      parseFloat(dataRectangle.getAttribute("miny"))
+      parseFloat(dataRectangle.getAttribute("miny")),
     );
     const east = CesiumMath.toRadians(
-      parseFloat(dataRectangle.getAttribute("maxx"))
+      parseFloat(dataRectangle.getAttribute("maxx")),
     );
     const north = CesiumMath.toRadians(
-      parseFloat(dataRectangle.getAttribute("maxy"))
+      parseFloat(dataRectangle.getAttribute("maxy")),
     );
     const maxLevel = parseInt(dataRectangle.getAttribute("maxlevel"), 10);
 
     terrainProviderBuilder.rectangles.push(
-      new DataRectangle(new Rectangle(west, south, east, north), maxLevel)
+      new DataRectangle(new Rectangle(west, south, east, north), maxLevel),
     );
   }
 }
@@ -117,7 +119,7 @@ function metadataFailure(resource, error, provider) {
     undefined,
     provider,
     defined(provider) ? provider._errorEvent : undefined,
-    message
+    message,
   );
 
   throw new RuntimeError(message);
@@ -154,7 +156,7 @@ async function requestMetadata(terrainProviderBuilder, resource, provider) {
  * @see TerrainProvider
  */
 function VRTheWorldTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._errorEvent = new Event();
 
@@ -249,7 +251,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
    * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -280,7 +282,7 @@ VRTheWorldTerrainProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const terrainProviderBuilder = new TerrainProviderBuilder(options);
   const resource = Resource.createIfNeeded(url);
@@ -310,7 +312,7 @@ VRTheWorldTerrainProvider.prototype.requestTileGeometry = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
   const resource = this._resource.getDerivedResource({
@@ -346,7 +348,7 @@ VRTheWorldTerrainProvider.prototype.requestTileGeometry = function (
  * @returns {number} The maximum geometric error.
  */
 VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function (
-  level
+  level,
 ) {
   return this._levelZeroMaximumGeometricError / (1 << level);
 };
@@ -371,7 +373,7 @@ function getChildMask(provider, x, y, level) {
     const intersection = Rectangle.intersection(
       testRectangle,
       parentRectangle,
-      rectangleScratch
+      rectangleScratch,
     );
     if (defined(intersection)) {
       // Parent tile is inside this rectangle, so at least one child is, too.
@@ -386,7 +388,7 @@ function getChildMask(provider, x, y, level) {
           testRectangle,
           x * 2 + 1,
           y * 2,
-          level + 1
+          level + 1,
         )
       ) {
         childMask |= 8; // northeast
@@ -397,7 +399,7 @@ function getChildMask(provider, x, y, level) {
           testRectangle,
           x * 2,
           y * 2 + 1,
-          level + 1
+          level + 1,
         )
       ) {
         childMask |= 1; // southwest
@@ -408,7 +410,7 @@ function getChildMask(provider, x, y, level) {
           testRectangle,
           x * 2 + 1,
           y * 2 + 1,
-          level + 1
+          level + 1,
         )
       ) {
         childMask |= 2; // southeast
@@ -422,7 +424,7 @@ function getChildMask(provider, x, y, level) {
 function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
   const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
   return defined(
-    Rectangle.intersection(tileRectangle, rectangle, rectangleScratch)
+    Rectangle.intersection(tileRectangle, rectangle, rectangleScratch),
   );
 }
 
@@ -437,7 +439,7 @@ function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
 VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
@@ -453,7 +455,7 @@ VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function (
 VRTheWorldTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };

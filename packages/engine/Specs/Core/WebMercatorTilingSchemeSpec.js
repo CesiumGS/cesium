@@ -2,13 +2,12 @@ import {
   Cartesian2,
   Cartographic,
   Ellipsoid,
+  Math as CesiumMath,
   Rectangle,
   TilingScheme,
   WebMercatorProjection,
   WebMercatorTilingScheme,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/WebMercatorTilingScheme", function () {
   let tilingScheme;
@@ -38,19 +37,19 @@ describe("Core/WebMercatorTilingScheme", function () {
       const tilingSchemeRectangle = tilingScheme.rectangle;
       expect(rectangle.west).toEqualEpsilon(
         tilingSchemeRectangle.west,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.south).toEqualEpsilon(
         tilingSchemeRectangle.south,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.east).toEqualEpsilon(
         tilingSchemeRectangle.east,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.north).toEqualEpsilon(
         tilingSchemeRectangle.north,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
 
@@ -61,19 +60,19 @@ describe("Core/WebMercatorTilingScheme", function () {
       expect(result).toEqual(rectangle);
       expect(rectangle.west).toEqualEpsilon(
         tilingSchemeRectangle.west,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.south).toEqualEpsilon(
         tilingSchemeRectangle.south,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.east).toEqualEpsilon(
         tilingSchemeRectangle.east,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.north).toEqualEpsilon(
         tilingSchemeRectangle.north,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
 
@@ -112,20 +111,20 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       expect(northeast.south).toEqualEpsilon(
         southeast.north,
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       );
       expect(northwest.south).toEqualEpsilon(
         southwest.north,
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       );
 
       expect(northeast.west).toEqualEpsilon(
         northwest.east,
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       );
       expect(southeast.west).toEqualEpsilon(
         southwest.east,
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       );
     });
   });
@@ -137,28 +136,28 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       coordinates = tilingScheme.positionToTileXY(
         Rectangle.southwest(tilingSchemeRectangle),
-        0
+        0,
       );
       expect(coordinates.x).toEqual(0);
       expect(coordinates.y).toEqual(0);
 
       coordinates = tilingScheme.positionToTileXY(
         Rectangle.northwest(tilingSchemeRectangle),
-        0
+        0,
       );
       expect(coordinates.x).toEqual(0);
       expect(coordinates.y).toEqual(0);
 
       coordinates = tilingScheme.positionToTileXY(
         Rectangle.northeast(tilingSchemeRectangle),
-        0
+        0,
       );
       expect(coordinates.x).toEqual(0);
       expect(coordinates.y).toEqual(0);
 
       coordinates = tilingScheme.positionToTileXY(
         Rectangle.southeast(tilingSchemeRectangle),
-        0
+        0,
       );
       expect(coordinates.x).toEqual(0);
       expect(coordinates.y).toEqual(0);
@@ -170,28 +169,28 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       coordinates = tilingScheme.positionToTileXY(
         Rectangle.southwest(tilingSchemeRectangle),
-        1
+        1,
       );
       expect(coordinates.x).toEqual(0);
       expect(coordinates.y).toEqual(1);
 
       coordinates = tilingScheme.positionToTileXY(
         Rectangle.northwest(tilingSchemeRectangle),
-        1
+        1,
       );
       expect(coordinates.x).toEqual(0);
       expect(coordinates.y).toEqual(0);
 
       coordinates = tilingScheme.positionToTileXY(
         Rectangle.northeast(tilingSchemeRectangle),
-        1
+        1,
       );
       expect(coordinates.x).toEqual(1);
       expect(coordinates.y).toEqual(0);
 
       coordinates = tilingScheme.positionToTileXY(
         Rectangle.southeast(tilingSchemeRectangle),
-        1
+        1,
       );
       expect(coordinates.x).toEqual(1);
       expect(coordinates.y).toEqual(1);
@@ -200,7 +199,7 @@ describe("Core/WebMercatorTilingScheme", function () {
     it("calculates correct tile indices for the center at level 1", function () {
       const coordinates = tilingScheme.positionToTileXY(
         new Cartographic(0, 0),
-        1
+        1,
       );
       expect(coordinates.x).toEqual(1);
       expect(coordinates.y).toEqual(1);
@@ -209,7 +208,7 @@ describe("Core/WebMercatorTilingScheme", function () {
     it("calculates correct tile indices for the center at level 2", function () {
       const coordinates = tilingScheme.positionToTileXY(
         new Cartographic(0, 0),
-        2
+        2,
       );
       expect(coordinates.x).toEqual(2);
       expect(coordinates.y).toEqual(2);
@@ -220,28 +219,28 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       coordinates = tilingScheme.positionToTileXY(
         new Cartographic(-0.05, -0.05),
-        2
+        2,
       );
       expect(coordinates.x).toEqual(1);
       expect(coordinates.y).toEqual(2);
 
       coordinates = tilingScheme.positionToTileXY(
         new Cartographic(-0.05, 0.05),
-        2
+        2,
       );
       expect(coordinates.x).toEqual(1);
       expect(coordinates.y).toEqual(1);
 
       coordinates = tilingScheme.positionToTileXY(
         new Cartographic(0.05, 0.05),
-        2
+        2,
       );
       expect(coordinates.x).toEqual(2);
       expect(coordinates.y).toEqual(1);
 
       coordinates = tilingScheme.positionToTileXY(
         new Cartographic(0.05, -0.05),
-        2
+        2,
       );
       expect(coordinates.x).toEqual(2);
       expect(coordinates.y).toEqual(2);
@@ -257,33 +256,32 @@ describe("Core/WebMercatorTilingScheme", function () {
     it("converts radians to web mercator meters", function () {
       const tilingScheme = new WebMercatorTilingScheme();
       const rectangleInRadians = new Rectangle(0.1, 0.2, 0.3, 0.4);
-      const nativeRectangle = tilingScheme.rectangleToNativeRectangle(
-        rectangleInRadians
-      );
+      const nativeRectangle =
+        tilingScheme.rectangleToNativeRectangle(rectangleInRadians);
 
       const projection = new WebMercatorProjection();
       const expectedSouthwest = projection.project(
-        Rectangle.southwest(rectangleInRadians)
+        Rectangle.southwest(rectangleInRadians),
       );
       const expectedNortheast = projection.project(
-        Rectangle.northeast(rectangleInRadians)
+        Rectangle.northeast(rectangleInRadians),
       );
 
       expect(nativeRectangle.west).toEqualEpsilon(
         expectedSouthwest.x,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(nativeRectangle.south).toEqualEpsilon(
         expectedSouthwest.y,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(nativeRectangle.east).toEqualEpsilon(
         expectedNortheast.x,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(nativeRectangle.north).toEqualEpsilon(
         expectedNortheast.y,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
 
@@ -293,34 +291,34 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       const projection = new WebMercatorProjection();
       const expectedSouthwest = projection.project(
-        Rectangle.southwest(rectangleInRadians)
+        Rectangle.southwest(rectangleInRadians),
       );
       const expectedNortheast = projection.project(
-        Rectangle.northeast(rectangleInRadians)
+        Rectangle.northeast(rectangleInRadians),
       );
 
       const resultRectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
       const outputRectangle = tilingScheme.rectangleToNativeRectangle(
         rectangleInRadians,
-        resultRectangle
+        resultRectangle,
       );
       expect(outputRectangle).toEqual(resultRectangle);
 
       expect(resultRectangle.west).toEqualEpsilon(
         expectedSouthwest.x,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(resultRectangle.south).toEqualEpsilon(
         expectedSouthwest.y,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(resultRectangle.east).toEqualEpsilon(
         expectedNortheast.x,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(resultRectangle.north).toEqualEpsilon(
         expectedNortheast.y,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -331,10 +329,10 @@ describe("Core/WebMercatorTilingScheme", function () {
       const rectangleInRadians = new Rectangle(0.1, 0.2, 0.3, 0.4);
       const tilingScheme = new WebMercatorTilingScheme({
         rectangleSouthwestInMeters: projection.project(
-          Rectangle.southwest(rectangleInRadians)
+          Rectangle.southwest(rectangleInRadians),
         ),
         rectangleNortheastInMeters: projection.project(
-          Rectangle.northeast(rectangleInRadians)
+          Rectangle.northeast(rectangleInRadians),
         ),
       });
 
@@ -353,18 +351,18 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       const centerOfSouthwesternChild = new Cartographic(
         -Math.PI / 2.0,
-        -Math.PI / 4.0
+        -Math.PI / 4.0,
       );
       expect(
-        tilingScheme.positionToTileXY(centerOfSouthwesternChild, 1)
+        tilingScheme.positionToTileXY(centerOfSouthwesternChild, 1),
       ).toEqual(new Cartesian2(0, 1));
 
       const centerOfNortheasternChild = new Cartographic(
         Math.PI / 2.0,
-        Math.PI / 4.0
+        Math.PI / 4.0,
       );
       expect(
-        tilingScheme.positionToTileXY(centerOfNortheasternChild, 1)
+        tilingScheme.positionToTileXY(centerOfNortheasternChild, 1),
       ).toEqual(new Cartesian2(1, 0));
     });
 
@@ -373,7 +371,7 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       const centerOfMap = new Cartographic(0.0, 0.0);
       expect(tilingScheme.positionToTileXY(centerOfMap, 1)).toEqual(
-        new Cartesian2(1, 1)
+        new Cartesian2(1, 1),
       );
     });
 
@@ -382,7 +380,7 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       const southeastCorner = Rectangle.southeast(tilingScheme.rectangle);
       expect(tilingScheme.positionToTileXY(southeastCorner, 1)).toEqual(
-        new Cartesian2(1, 1)
+        new Cartesian2(1, 1),
       );
     });
 
@@ -391,13 +389,13 @@ describe("Core/WebMercatorTilingScheme", function () {
 
       const centerOfNortheasternChild = new Cartographic(
         Math.PI / 2.0,
-        Math.PI / 4.0
+        Math.PI / 4.0,
       );
       const resultParameter = new Cartesian2(0, 0);
       const returnedResult = tilingScheme.positionToTileXY(
         centerOfNortheasternChild,
         1,
-        resultParameter
+        resultParameter,
       );
       expect(resultParameter).toEqual(returnedResult);
       expect(resultParameter).toEqual(new Cartesian2(1, 0));

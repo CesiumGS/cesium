@@ -61,22 +61,21 @@ const GeometryPipelineStage = {
 GeometryPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
-  const shaderBuilder = renderResources.shaderBuilder;
-  const model = renderResources.model;
+  const { shaderBuilder, model } = renderResources;
 
   // These structs are similar, though the fragment shader version has a couple
   // additional fields.
   shaderBuilder.addStruct(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
     "ProcessedAttributes",
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
   shaderBuilder.addStruct(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
     "ProcessedAttributes",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // The Feature struct is always added since it's required for compilation.
@@ -84,7 +83,7 @@ GeometryPipelineStage.process = function (
   shaderBuilder.addStruct(
     SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   // This initialization function is only needed in the vertex shader,
@@ -93,7 +92,7 @@ GeometryPipelineStage.process = function (
   shaderBuilder.addFunction(
     GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
     GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   // Positions in other coordinate systems need more variables
@@ -102,12 +101,12 @@ GeometryPipelineStage.process = function (
   shaderBuilder.addStructField(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
     "vec3",
-    "positionWC"
+    "positionWC",
   );
   shaderBuilder.addStructField(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
     "vec3",
-    "positionEC"
+    "positionEC",
   );
 
   // Though they have identical signatures, the implementation is different
@@ -116,21 +115,20 @@ GeometryPipelineStage.process = function (
   shaderBuilder.addFunction(
     GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
     GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
   shaderBuilder.addFunction(
     GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
     GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // .pnts point clouds store sRGB color rather than linear color
-  const modelType = model.type;
-  if (modelType === ModelType.TILE_PNTS) {
+  if (model.type === ModelType.TILE_PNTS) {
     shaderBuilder.addDefine(
       "HAS_SRGB_COLOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -152,13 +150,13 @@ GeometryPipelineStage.process = function (
   for (let i = 0; i < length; i++) {
     const attribute = primitive.attributes[i];
     const attributeLocationCount = AttributeType.getAttributeLocationCount(
-      attribute.type
+      attribute.type,
     );
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(attribute.buffer) && !defined(attribute.constant)) {
       throw new DeveloperError(
-        "Attributes must be provided as a Buffer or constant value"
+        "Attributes must be provided as a Buffer or constant value",
       );
     }
     //>>includeEnd('debug');
@@ -182,7 +180,7 @@ GeometryPipelineStage.process = function (
       index,
       attributeLocationCount,
       use2D,
-      instanced
+      instanced,
     );
   }
 
@@ -202,7 +200,7 @@ function processAttribute(
   attributeIndex,
   attributeLocationCount,
   use2D,
-  instanced
+  instanced,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const attributeInfo = ModelUtility.getAttributeInfo(attribute);
@@ -217,14 +215,14 @@ function processAttribute(
       renderResources,
       attribute,
       attributeIndex,
-      attributeLocationCount
+      attributeLocationCount,
     );
   } else {
     addAttributeToRenderResources(
       renderResources,
       attribute,
       attributeIndex,
-      modifyFor2D
+      modifyFor2D,
     );
   }
 
@@ -246,8 +244,7 @@ function processAttribute(
 }
 
 function addSemanticDefine(shaderBuilder, attribute) {
-  const semantic = attribute.semantic;
-  const setIndex = attribute.setIndex;
+  const { semantic, setIndex } = attribute;
   switch (semantic) {
     case VertexAttributeSemantic.NORMAL:
       shaderBuilder.addDefine("HAS_NORMALS");
@@ -270,21 +267,13 @@ function addAttributeToRenderResources(
   renderResources,
   attribute,
   attributeIndex,
-  modifyFor2D
+  modifyFor2D,
 ) {
-  const quantization = attribute.quantization;
-  let type;
-  let componentDatatype;
-  if (defined(quantization)) {
-    type = quantization.type;
-    componentDatatype = quantization.componentDatatype;
-  } else {
-    type = attribute.type;
-    componentDatatype = attribute.componentDatatype;
-  }
+  const { quantization, semantic, setIndex } = attribute;
+  const { type, componentDatatype } = defined(quantization)
+    ? quantization
+    : attribute;
 
-  const semantic = attribute.semantic;
-  const setIndex = attribute.setIndex;
   if (
     semantic === VertexAttributeSemantic.FEATURE_ID &&
     setIndex >= renderResources.featureIdVertexAttributeSetIndex
@@ -335,29 +324,20 @@ function addMatrixAttributeToRenderResources(
   renderResources,
   attribute,
   attributeIndex,
-  columnCount
+  columnCount,
 ) {
-  const quantization = attribute.quantization;
-  let type;
-  let componentDatatype;
-  if (defined(quantization)) {
-    type = quantization.type;
-    componentDatatype = quantization.componentDatatype;
-  } else {
-    type = attribute.type;
-    componentDatatype = attribute.componentDatatype;
-  }
-
-  const normalized = attribute.normalized;
+  const { quantization, normalized } = attribute;
+  const { type, componentDatatype } = defined(quantization)
+    ? quantization
+    : attribute;
 
   // componentCount is either 4, 9 or 16
   const componentCount = AttributeType.getNumberOfComponents(type);
   // componentsPerColumn is either 2, 3, or 4
   const componentsPerColumn = componentCount / columnCount;
 
-  const componentSizeInBytes = ComponentDatatype.getSizeInBytes(
-    componentDatatype
-  );
+  const componentSizeInBytes =
+    ComponentDatatype.getSizeInBytes(componentDatatype);
 
   const columnLengthInBytes = componentsPerColumn * componentSizeInBytes;
 
@@ -435,7 +415,7 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {
 function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
   const vsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS;
   const fsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS;
-  const variableName = attributeInfo.variableName;
+  const { variableName, glslType } = attributeInfo;
 
   if (variableName === "tangentMC") {
     // The w component of the tangent is only used for computing the bitangent,
@@ -451,16 +431,8 @@ function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
     shaderBuilder.addStructField(vsStructId, "vec3", "normalMC");
     shaderBuilder.addStructField(fsStructId, "vec3", "normalEC");
   } else {
-    shaderBuilder.addStructField(
-      vsStructId,
-      attributeInfo.glslType,
-      variableName
-    );
-    shaderBuilder.addStructField(
-      fsStructId,
-      attributeInfo.glslType,
-      variableName
-    );
+    shaderBuilder.addStructField(vsStructId, glslType, variableName);
+    shaderBuilder.addStructField(fsStructId, glslType, variableName);
   }
 
   if (variableName === "positionMC" && use2D) {
@@ -471,7 +443,7 @@ function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
 function updateInitializeAttributesFunction(
   shaderBuilder,
   attributeInfo,
-  use2D
+  use2D,
 ) {
   const functionId = GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES;
   const variableName = attributeInfo.variableName;
@@ -501,8 +473,7 @@ function updateInitializeAttributesFunction(
 }
 
 function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
-  const semantic = attributeInfo.attribute.semantic;
-  const setIndex = attributeInfo.attribute.setIndex;
+  const { semantic, setIndex } = attributeInfo.attribute;
   if (defined(semantic) && !defined(setIndex)) {
     // positions, normals, and tangents are handled statically in
     // GeometryStageVS
@@ -546,12 +517,12 @@ function handleBitangents(shaderBuilder, attributes) {
   shaderBuilder.addStructField(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
     "vec3",
-    "bitangentMC"
+    "bitangentMC",
   );
   shaderBuilder.addStructField(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
     "vec3",
-    "bitangentEC"
+    "bitangentEC",
   );
 }
 

@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -24,7 +23,7 @@ function Geometry3DTileContent(
   tile,
   resource,
   arrayBuffer,
-  byteOffset
+  byteOffset,
 ) {
   this._tileset = tileset;
   this._tile = tile;
@@ -171,13 +170,10 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   let sphereBatchIds;
   let i;
 
-  const numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
-  const numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
-  const numberOfEllipsoids = defaultValue(
-    featureTableJson.ELLIPSOIDS_LENGTH,
-    0
-  );
-  const numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+  const numberOfBoxes = featureTableJson.BOXES_LENGTH ?? 0;
+  const numberOfCylinders = featureTableJson.CYLINDERS_LENGTH ?? 0;
+  const numberOfEllipsoids = featureTableJson.ELLIPSOIDS_LENGTH ?? 0;
+  const numberOfSpheres = featureTableJson.SPHERES_LENGTH ?? 0;
 
   if (numberOfBoxes > 0 && defined(featureTableJson.BOX_BATCH_IDS)) {
     const boxBatchIdsByteOffset =
@@ -185,7 +181,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     boxBatchIds = new Uint16Array(
       featureTableBinary.buffer,
       boxBatchIdsByteOffset,
-      numberOfBoxes
+      numberOfBoxes,
     );
   }
 
@@ -196,7 +192,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     cylinderBatchIds = new Uint16Array(
       featureTableBinary.buffer,
       cylinderBatchIdsByteOffset,
-      numberOfCylinders
+      numberOfCylinders,
     );
   }
 
@@ -207,7 +203,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     ellipsoidBatchIds = new Uint16Array(
       featureTableBinary.buffer,
       ellipsoidBatchIdsByteOffset,
-      numberOfEllipsoids
+      numberOfEllipsoids,
     );
   }
 
@@ -218,7 +214,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     sphereBatchIds = new Uint16Array(
       featureTableBinary.buffer,
       sphereBatchIdsByteOffset,
-      numberOfSpheres
+      numberOfSpheres,
     );
   }
 
@@ -235,7 +231,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
   if (atLeastOneDefined && atLeastOneUndefined) {
     throw new RuntimeError(
-      "If one group of batch ids is defined, then all batch ids must be defined"
+      "If one group of batch ids is defined, then all batch ids must be defined",
     );
   }
 
@@ -283,7 +279,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 function initialize(content, arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
 
   const uint8Array = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
@@ -292,7 +288,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      `Only Geometry tile version 1 is supported.  Version ${version} is not.`
+      `Only Geometry tile version 1 is supported.  Version ${version} is not.`,
     );
   }
   byteOffset += sizeOfUint32;
@@ -310,7 +306,7 @@ function initialize(content, arrayBuffer, byteOffset) {
 
   if (featureTableJSONByteLength === 0) {
     throw new RuntimeError(
-      "Feature table must have a byte length greater than zero"
+      "Feature table must have a byte length greater than zero",
     );
   }
 
@@ -324,14 +320,14 @@ function initialize(content, arrayBuffer, byteOffset) {
   const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
-    featureTableJSONByteLength
+    featureTableJSONByteLength,
   );
   byteOffset += featureTableJSONByteLength;
 
   const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
-    featureTableBinaryByteLength
+    featureTableBinaryByteLength,
   );
   byteOffset += featureTableBinaryByteLength;
 
@@ -346,7 +342,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
-      batchTableJSONByteLength
+      batchTableJSONByteLength,
     );
     byteOffset += batchTableJSONByteLength;
 
@@ -355,20 +351,17 @@ function initialize(content, arrayBuffer, byteOffset) {
       batchTableBinary = new Uint8Array(
         arrayBuffer,
         byteOffset,
-        batchTableBinaryByteLength
+        batchTableBinaryByteLength,
       );
       // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
       batchTableBinary = new Uint8Array(batchTableBinary);
     }
   }
 
-  const numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
-  const numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
-  const numberOfEllipsoids = defaultValue(
-    featureTableJson.ELLIPSOIDS_LENGTH,
-    0
-  );
-  const numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+  const numberOfBoxes = featureTableJson.BOXES_LENGTH ?? 0;
+  const numberOfCylinders = featureTableJson.CYLINDERS_LENGTH ?? 0;
+  const numberOfEllipsoids = featureTableJson.ELLIPSOIDS_LENGTH ?? 0;
+  const numberOfSpheres = featureTableJson.SPHERES_LENGTH ?? 0;
 
   const totalPrimitives =
     numberOfBoxes + numberOfCylinders + numberOfEllipsoids + numberOfSpheres;
@@ -378,7 +371,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     totalPrimitives,
     batchTableJson,
     batchTableBinary,
-    createColorChangedCallback(content)
+    createColorChangedCallback(content),
   );
   content._batchTable = batchTable;
 
@@ -413,7 +406,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       boxes = new Float32Array(
         featureTableBinary.buffer,
         boxesByteOffset,
-        Vector3DTileGeometry.packedBoxLength * numberOfBoxes
+        Vector3DTileGeometry.packedBoxLength * numberOfBoxes,
       );
     }
 
@@ -423,7 +416,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       cylinders = new Float32Array(
         featureTableBinary.buffer,
         cylindersByteOffset,
-        Vector3DTileGeometry.packedCylinderLength * numberOfCylinders
+        Vector3DTileGeometry.packedCylinderLength * numberOfCylinders,
       );
     }
 
@@ -433,7 +426,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       ellipsoids = new Float32Array(
         featureTableBinary.buffer,
         ellipsoidsByteOffset,
-        Vector3DTileGeometry.packedEllipsoidLength * numberOfEllipsoids
+        Vector3DTileGeometry.packedEllipsoidLength * numberOfEllipsoids,
       );
     }
 
@@ -443,7 +436,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       spheres = new Float32Array(
         featureTableBinary.buffer,
         spheresByteOffset,
-        Vector3DTileGeometry.packedSphereLength * numberOfSpheres
+        Vector3DTileGeometry.packedSphereLength * numberOfSpheres,
       );
     }
 
@@ -490,7 +483,7 @@ Geometry3DTileContent.prototype.getFeature = function (batchId) {
     throw new DeveloperError(
       `batchId is required and between zero and featuresLength - 1 (${
         featuresLength - 1
-      }).`
+      }).`,
     );
   }
   //>>includeEnd('debug');

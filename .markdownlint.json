@@ -8,5 +8,10 @@
   "ol-prefix": {
     "style": "ordered"
   },
-  "no-inline-html": true
+  "no-inline-html": {
+    "allowed_elements": ["details", "summary"]
+  },
+  "blanks-around-fences": {
+    "list_items": false
+  }
 }

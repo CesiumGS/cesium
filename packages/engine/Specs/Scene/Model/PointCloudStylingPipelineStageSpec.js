@@ -3,7 +3,6 @@ import {
   Cartesian3,
   Cesium3DTileRefine,
   Cesium3DTileStyle,
-  defaultValue,
   Math as CesiumMath,
   Matrix4,
   ModelType,
@@ -78,10 +77,8 @@ describe(
     }
 
     function mockPntsRenderResources(options) {
-      const pointCloudShading = defaultValue(
-        options.pointCloudShading,
-        new PointCloudShading()
-      );
+      const pointCloudShading =
+        options.pointCloudShading ?? new PointCloudShading();
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {
@@ -133,7 +130,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
@@ -170,7 +167,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
@@ -193,7 +190,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `vec4 getColorFromStyle${functionParameterList}`
+        `vec4 getColorFromStyle${functionParameterList}`,
       );
     });
 
@@ -217,7 +214,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
@@ -240,7 +237,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `vec4 getColorFromStyle${functionParameterList}`
+        `vec4 getColorFromStyle${functionParameterList}`,
       );
 
       expect(renderResources.alphaOptions.pass).toEqual(Pass.TRANSLUCENT);
@@ -266,7 +263,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -283,7 +280,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `float getPointSizeFromStyle${functionParameterList}`
+        `float getPointSizeFromStyle${functionParameterList}`,
       );
     });
 
@@ -307,14 +304,16 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "HAS_POINT_CLOUD_SHOW_STYLE",
         "COMPUTE_POSITION_WC_STYLE",
       ]);
-      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_SHOW_STYLE",
+      ]);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
         "uniform vec4 model_pointCloudParameters;",
@@ -324,7 +323,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `bool getShowFromStyle${functionParameterList}`
+        `bool getShowFromStyle${functionParameterList}`,
       );
     });
 
@@ -347,7 +346,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -357,12 +356,12 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `bool getShowFromStyle${functionParameterList}`
+        `bool getShowFromStyle${functionParameterList}`,
       );
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "attributes.positionMC"
+        "attributes.positionMC",
       );
     });
 
@@ -385,7 +384,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -395,12 +394,12 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `vec4 getColorFromStyle${functionParameterList}`
+        `vec4 getColorFromStyle${functionParameterList}`,
       );
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "v_positionWC"
+        "v_positionWC",
       );
     });
 
@@ -423,7 +422,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitiveWithNormals,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -433,12 +432,12 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `vec4 getColorFromStyle${functionParameterList}`
+        `vec4 getColorFromStyle${functionParameterList}`,
       );
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "attributes.normalMC"
+        "attributes.normalMC",
       );
     });
 
@@ -461,7 +460,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -471,12 +470,12 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `vec4 getColorFromStyle${functionParameterList}`
+        `vec4 getColorFromStyle${functionParameterList}`,
       );
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "attributes.color_0"
+        "attributes.color_0",
       );
     });
 
@@ -499,7 +498,7 @@ describe(
         PointCloudStylingPipelineStage.process(
           renderResources,
           mockPrimitive,
-          scene.frameState
+          scene.frameState,
         );
       }).toThrowError(RuntimeError);
     });
@@ -531,7 +530,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -542,21 +541,21 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `bool getShowFromStyle${functionParameterList}`
+        `bool getShowFromStyle${functionParameterList}`,
       );
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        `vec4 getColorFromStyle${functionParameterList}`
+        `vec4 getColorFromStyle${functionParameterList}`,
       );
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "metadata.temperature"
+        "metadata.temperature",
       );
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "metadata.id"
+        "metadata.id",
       );
     });
 
@@ -582,7 +581,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -625,7 +624,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
@@ -654,7 +653,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -684,7 +683,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        scene.frameState
+        scene.frameState,
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -715,7 +714,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -744,7 +743,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -774,7 +773,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -793,7 +792,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -821,7 +820,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -849,7 +848,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -878,7 +877,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -898,7 +897,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -918,7 +917,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -940,7 +939,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -962,7 +961,7 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
@@ -986,12 +985,12 @@ describe(
       PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
-        frameState
+        frameState,
       );
 
       const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.z).toBe(Number.POSITIVE_INFINITY);
     });
   },
-  "WebGL"
+  "WebGL",
 );

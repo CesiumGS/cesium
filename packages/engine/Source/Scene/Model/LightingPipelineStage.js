@@ -28,21 +28,19 @@ const LightingPipelineStage = {
  * @private
  */
 LightingPipelineStage.process = function (renderResources, primitive) {
-  const model = renderResources.model;
-  const lightingOptions = renderResources.lightingOptions;
-  const shaderBuilder = renderResources.shaderBuilder;
+  const { model, lightingOptions, shaderBuilder } = renderResources;
 
   if (defined(model.lightColor)) {
     shaderBuilder.addDefine(
       "USE_CUSTOM_LIGHT_COLOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     shaderBuilder.addUniform(
       "vec3",
       "model_lightColorHdr",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     const uniformMap = renderResources.uniformMap;
@@ -53,19 +51,19 @@ LightingPipelineStage.process = function (renderResources, primitive) {
 
   // The lighting model is always set by the material. However, custom shaders
   // can override this.
-  const lightingModel = lightingOptions.lightingModel;
+  const { lightingModel } = lightingOptions;
 
   if (lightingModel === LightingModel.PBR) {
     shaderBuilder.addDefine(
       "LIGHTING_PBR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   } else {
     shaderBuilder.addDefine(
       "LIGHTING_UNLIT",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 

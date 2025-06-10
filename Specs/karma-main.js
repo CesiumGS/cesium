@@ -34,5 +34,5 @@ customizeJasmine(
   webglStub,
   release,
   debugCanvasWidth,
-  debugCanvasHeight
+  debugCanvasHeight,
 );

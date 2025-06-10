@@ -14,7 +14,7 @@ describe("Core/PixelFormat", function () {
       PixelFormat.RGB,
       PixelDatatype.UNSIGNED_BYTE,
       width,
-      height
+      height,
     );
     expect(flipped).toEqual(expectedDataBuffer);
   });
@@ -30,7 +30,7 @@ describe("Core/PixelFormat", function () {
       PixelFormat.RGB,
       PixelDatatype.UNSIGNED_BYTE,
       width,
-      height
+      height,
     );
     expect(flipped).toBe(dataBuffer);
   });

@@ -1,7 +1,11 @@
-import { Cartesian3, Cartographic, Ellipsoid, Rectangle } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
-
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Math as CesiumMath,
+  Rectangle,
+} from "../../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/Rectangle", function () {
@@ -146,7 +150,7 @@ describe("Core/Rectangle", function () {
     const result = new Rectangle();
     const rectangle = Rectangle.fromCartographicArray(
       [minLat, minLon, maxLat, maxLon],
-      result
+      result,
     );
     expect(result).toBe(rectangle);
     expect(rectangle.west).toEqual(minLon.longitude);
@@ -165,23 +169,23 @@ describe("Core/Rectangle", function () {
 
     const rectangle = Rectangle.fromCartesianArray(
       wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]),
-      wgs84
+      wgs84,
     );
     expect(rectangle.west).toEqualEpsilon(
       minLon.longitude,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(rectangle.south).toEqualEpsilon(
       minLat.latitude,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(rectangle.east).toEqualEpsilon(
       maxLon.longitude,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(rectangle.north).toEqualEpsilon(
       maxLat.latitude,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -195,7 +199,7 @@ describe("Core/Rectangle", function () {
 
     const rectangle = Rectangle.fromCartesianArray(
       wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]),
-      wgs84
+      wgs84,
     );
     expect(rectangle.east).toEqual(minLon.longitude);
     expect(rectangle.south).toEqual(minLat.latitude);
@@ -215,24 +219,24 @@ describe("Core/Rectangle", function () {
     const rectangle = Rectangle.fromCartesianArray(
       wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]),
       wgs84,
-      result
+      result,
     );
     expect(result).toBe(rectangle);
     expect(rectangle.west).toEqualEpsilon(
       minLon.longitude,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(rectangle.south).toEqualEpsilon(
       minLat.latitude,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(rectangle.east).toEqualEpsilon(
       maxLon.longitude,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(rectangle.north).toEqualEpsilon(
       maxLat.latitude,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -276,19 +280,19 @@ describe("Core/Rectangle", function () {
   it("Static equals works in all cases", function () {
     const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
     expect(
-      Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.3, 0.4))
+      Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.3, 0.4)),
     ).toEqual(true);
     expect(
-      Rectangle.equals(rectangle, new Rectangle(0.5, 0.2, 0.3, 0.4))
+      Rectangle.equals(rectangle, new Rectangle(0.5, 0.2, 0.3, 0.4)),
     ).toEqual(false);
     expect(
-      Rectangle.equals(rectangle, new Rectangle(0.1, 0.5, 0.3, 0.4))
+      Rectangle.equals(rectangle, new Rectangle(0.1, 0.5, 0.3, 0.4)),
     ).toEqual(false);
     expect(
-      Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.5, 0.4))
+      Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.5, 0.4)),
     ).toEqual(false);
     expect(
-      Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.3, 0.5))
+      Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.3, 0.5)),
     ).toEqual(false);
     expect(Rectangle.equals(rectangle, undefined)).toEqual(false);
   });
@@ -299,64 +303,64 @@ describe("Core/Rectangle", function () {
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.1, 0.2, 0.3, 0.4),
-        0.0
-      )
+        0.0,
+      ),
     ).toEqual(true);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.5, 0.2, 0.3, 0.4),
-        0.0
-      )
+        0.0,
+      ),
     ).toEqual(false);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.1, 0.5, 0.3, 0.4),
-        0.0
-      )
+        0.0,
+      ),
     ).toEqual(false);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.1, 0.2, 0.5, 0.4),
-        0.0
-      )
+        0.0,
+      ),
     ).toEqual(false);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.1, 0.2, 0.3, 0.5),
-        0.0
-      )
+        0.0,
+      ),
     ).toEqual(false);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.5, 0.2, 0.3, 0.4),
-        0.4
-      )
+        0.4,
+      ),
     ).toEqual(true);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.1, 0.5, 0.3, 0.4),
-        0.3
-      )
+        0.3,
+      ),
     ).toEqual(true);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.1, 0.2, 0.5, 0.4),
-        0.2
-      )
+        0.2,
+      ),
     ).toEqual(true);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
         new Rectangle(0.1, 0.2, 0.3, 0.5),
-        0.1
-      )
+        0.1,
+      ),
     ).toEqual(true);
     expect(Rectangle.equalsEpsilon(rectangle1, undefined, 0.0)).toEqual(false);
     expect(Rectangle.equalsEpsilon(undefined, rectangle1, 0.0)).toEqual(false);
@@ -366,31 +370,31 @@ describe("Core/Rectangle", function () {
   it("Equals epsilon works in all cases", function () {
     const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.3, 0.4), 0.0)
+      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.3, 0.4), 0.0),
     ).toEqual(true);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.5, 0.2, 0.3, 0.4), 0.0)
+      rectangle.equalsEpsilon(new Rectangle(0.5, 0.2, 0.3, 0.4), 0.0),
     ).toEqual(false);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.1, 0.5, 0.3, 0.4), 0.0)
+      rectangle.equalsEpsilon(new Rectangle(0.1, 0.5, 0.3, 0.4), 0.0),
     ).toEqual(false);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.5, 0.4), 0.0)
+      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.5, 0.4), 0.0),
     ).toEqual(false);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.3, 0.5), 0.0)
+      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.3, 0.5), 0.0),
     ).toEqual(false);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.5, 0.2, 0.3, 0.4), 0.4)
+      rectangle.equalsEpsilon(new Rectangle(0.5, 0.2, 0.3, 0.4), 0.4),
     ).toEqual(true);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.1, 0.5, 0.3, 0.4), 0.3)
+      rectangle.equalsEpsilon(new Rectangle(0.1, 0.5, 0.3, 0.4), 0.3),
     ).toEqual(true);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.5, 0.4), 0.2)
+      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.5, 0.4), 0.2),
     ).toEqual(true);
     expect(
-      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.3, 0.5), 0.1)
+      rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.3, 0.5), 0.1),
     ).toEqual(true);
     expect(rectangle.equalsEpsilon(undefined, 0.0)).toEqual(false);
   });
@@ -409,7 +413,7 @@ describe("Core/Rectangle", function () {
 
   it("validate throws with no rectangle", function () {
     expect(function () {
-      Rectangle.validate();
+      Rectangle._validate();
     }).toThrowDeveloperError();
   });
 
@@ -417,7 +421,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.west = undefined;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -425,7 +429,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.south = undefined;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -433,7 +437,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.east = undefined;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -441,7 +445,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.north = undefined;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -449,7 +453,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.west = Math.PI * 2;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -457,7 +461,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.south = Math.PI * 2;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -465,7 +469,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.east = Math.PI * 2;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -473,7 +477,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.north = Math.PI * 2;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -584,28 +588,28 @@ describe("Core/Rectangle", function () {
     let returnedResult = Rectangle.center(rectangle);
     expect(returnedResult).toEqualEpsilon(
       Cartographic.fromDegrees(180, 0),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
 
     rectangle = Rectangle.fromDegrees(160, 0, -170, 0);
     returnedResult = Rectangle.center(rectangle);
     expect(returnedResult).toEqualEpsilon(
       Cartographic.fromDegrees(175, 0),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
 
     rectangle = Rectangle.fromDegrees(170, 0, -160, 0);
     returnedResult = Rectangle.center(rectangle);
     expect(returnedResult).toEqualEpsilon(
       Cartographic.fromDegrees(-175, 0),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
 
     rectangle = Rectangle.fromDegrees(160, 0, 140, 0);
     returnedResult = Rectangle.center(rectangle);
     expect(returnedResult).toEqualEpsilon(
       Cartographic.fromDegrees(-30, 0),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -631,7 +635,7 @@ describe("Core/Rectangle", function () {
     const returnedResult = Rectangle.intersection(
       rectangle,
       rectangle2,
-      result
+      result,
     );
     expect(returnedResult).toEqual(expected);
     expect(result).toBe(returnedResult);
@@ -781,19 +785,19 @@ describe("Core/Rectangle", function () {
       -CesiumMath.PI,
       -CesiumMath.PI_OVER_TWO,
       +CesiumMath.PI,
-      0.0
+      0.0,
     );
     const rectangle2 = new Rectangle(
       -CesiumMath.PI,
       0.0,
       +CesiumMath.PI,
-      +CesiumMath.PI_OVER_TWO
+      +CesiumMath.PI_OVER_TWO,
     );
     const expected = new Rectangle(
       -CesiumMath.PI,
       -CesiumMath.PI_OVER_TWO,
       +CesiumMath.PI,
-      +CesiumMath.PI_OVER_TWO
+      +CesiumMath.PI_OVER_TWO,
     );
     const returnedResult = Rectangle.union(rectangle1, rectangle2);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -852,31 +856,31 @@ describe("Core/Rectangle", function () {
   it("contains works", function () {
     const rectangle = new Rectangle(west, south, east, north);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(west, south))
+      Rectangle.contains(rectangle, new Cartographic(west, south)),
     ).toEqual(true);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(west, north))
+      Rectangle.contains(rectangle, new Cartographic(west, north)),
     ).toEqual(true);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(east, south))
+      Rectangle.contains(rectangle, new Cartographic(east, south)),
     ).toEqual(true);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(east, north))
+      Rectangle.contains(rectangle, new Cartographic(east, north)),
     ).toEqual(true);
     expect(Rectangle.contains(rectangle, Rectangle.center(rectangle))).toEqual(
-      true
+      true,
     );
     expect(
-      Rectangle.contains(rectangle, new Cartographic(west - 0.1, south))
+      Rectangle.contains(rectangle, new Cartographic(west - 0.1, south)),
     ).toEqual(false);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(west, north + 0.1))
+      Rectangle.contains(rectangle, new Cartographic(west, north + 0.1)),
     ).toEqual(false);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(east, south - 0.1))
+      Rectangle.contains(rectangle, new Cartographic(east, south - 0.1)),
     ).toEqual(false);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(east + 0.1, north))
+      Rectangle.contains(rectangle, new Cartographic(east + 0.1, north)),
     ).toEqual(false);
   });
 
@@ -888,31 +892,31 @@ describe("Core/Rectangle", function () {
 
     const rectangle = new Rectangle(west, south, east, north);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(west, south))
+      Rectangle.contains(rectangle, new Cartographic(west, south)),
     ).toEqual(true);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(west, north))
+      Rectangle.contains(rectangle, new Cartographic(west, north)),
     ).toEqual(true);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(east, south))
+      Rectangle.contains(rectangle, new Cartographic(east, south)),
     ).toEqual(true);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(east, north))
+      Rectangle.contains(rectangle, new Cartographic(east, north)),
     ).toEqual(true);
     expect(Rectangle.contains(rectangle, Rectangle.center(rectangle))).toEqual(
-      true
+      true,
     );
     expect(
-      Rectangle.contains(rectangle, new Cartographic(west - 0.1, south))
+      Rectangle.contains(rectangle, new Cartographic(west - 0.1, south)),
     ).toEqual(false);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(west, north + 0.1))
+      Rectangle.contains(rectangle, new Cartographic(west, north + 0.1)),
     ).toEqual(false);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(east, south - 0.1))
+      Rectangle.contains(rectangle, new Cartographic(east, south - 0.1)),
     ).toEqual(false);
     expect(
-      Rectangle.contains(rectangle, new Cartographic(east + 0.1, north))
+      Rectangle.contains(rectangle, new Cartographic(east + 0.1, north)),
     ).toEqual(false);
   });
 
@@ -943,7 +947,7 @@ describe("Core/Rectangle", function () {
       rectangle,
       Ellipsoid.WGS84,
       0.0,
-      results
+      results,
     );
     expect(results).toBe(returnedResult);
     expect(results[0]).toBe(cartesian0);
@@ -979,26 +983,26 @@ describe("Core/Rectangle", function () {
     const returnedResult = Rectangle.subsample(rectangle);
     expect(returnedResult.length).toEqual(6);
     expect(returnedResult[0]).toEqual(
-      Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle))
+      Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle)),
     );
     expect(returnedResult[1]).toEqual(
-      Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northeast(rectangle))
+      Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northeast(rectangle)),
     );
     expect(returnedResult[2]).toEqual(
-      Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southeast(rectangle))
+      Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southeast(rectangle)),
     );
     expect(returnedResult[3]).toEqual(
-      Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southwest(rectangle))
+      Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southwest(rectangle)),
     );
 
     const cartographic4 = Ellipsoid.WGS84.cartesianToCartographic(
-      returnedResult[4]
+      returnedResult[4],
     );
     expect(cartographic4.latitude).toEqual(0.0);
     expect(cartographic4.longitude).toEqualEpsilon(west, CesiumMath.EPSILON16);
 
     const cartographic5 = Ellipsoid.WGS84.cartesianToCartographic(
-      returnedResult[5]
+      returnedResult[5],
     );
     expect(cartographic5.latitude).toEqual(0.0);
     expect(cartographic5.longitude).toEqualEpsilon(east, CesiumMath.EPSILON16);
@@ -1014,7 +1018,7 @@ describe("Core/Rectangle", function () {
     const returnedResult = Rectangle.subsample(
       rectangle,
       Ellipsoid.WGS84,
-      height
+      height,
     );
 
     const nw = Rectangle.northwest(rectangle);
@@ -1060,7 +1064,7 @@ describe("Core/Rectangle", function () {
       expectedWest,
       expectedSouth,
       expectedEast,
-      expectedNorth
+      expectedNorth,
     );
 
     const subsection = new Rectangle();
@@ -1070,7 +1074,7 @@ describe("Core/Rectangle", function () {
       southLerp,
       eastLerp,
       northLerp,
-      subsection
+      subsection,
     );
 
     expect(result).toEqual(expectedRectangle);
@@ -1097,7 +1101,7 @@ describe("Core/Rectangle", function () {
       expectedWest,
       expectedSouth,
       expectedEast,
-      expectedNorth
+      expectedNorth,
     );
 
     const subsection = Rectangle.subsection(
@@ -1105,7 +1109,7 @@ describe("Core/Rectangle", function () {
       westLerp,
       southLerp,
       eastLerp,
-      northLerp
+      northLerp,
     );
 
     expect(subsection).toEqual(expectedRectangle);
@@ -1131,7 +1135,7 @@ describe("Core/Rectangle", function () {
       expectedWest,
       expectedSouth,
       expectedEast,
-      expectedNorth
+      expectedNorth,
     );
 
     const subsection = Rectangle.subsection(
@@ -1139,7 +1143,7 @@ describe("Core/Rectangle", function () {
       westLerp,
       southLerp,
       eastLerp,
-      northLerp
+      northLerp,
     );
 
     expect(subsection).toEqual(expectedRectangle);
@@ -1165,7 +1169,7 @@ describe("Core/Rectangle", function () {
       expectedWest,
       expectedSouth,
       expectedEast,
-      expectedNorth
+      expectedNorth,
     );
 
     const subsection = Rectangle.subsection(
@@ -1173,7 +1177,7 @@ describe("Core/Rectangle", function () {
       westLerp,
       southLerp,
       eastLerp,
-      northLerp
+      northLerp,
     );
 
     expect(subsection).toEqual(expectedRectangle);
@@ -1201,7 +1205,7 @@ describe("Core/Rectangle", function () {
       expectedWest,
       expectedSouth,
       expectedEast,
-      expectedNorth
+      expectedNorth,
     );
 
     const subsection = Rectangle.subsection(
@@ -1209,7 +1213,7 @@ describe("Core/Rectangle", function () {
       westLerp,
       southLerp,
       eastLerp,
-      northLerp
+      northLerp,
     );
 
     expect(subsection).toEqual(expectedRectangle);
@@ -1235,7 +1239,7 @@ describe("Core/Rectangle", function () {
       expectedWest,
       expectedSouth,
       expectedEast,
-      expectedNorth
+      expectedNorth,
     );
 
     const subsection = Rectangle.subsection(
@@ -1243,7 +1247,7 @@ describe("Core/Rectangle", function () {
       westLerp,
       southLerp,
       eastLerp,
-      northLerp
+      northLerp,
     );
 
     expect(subsection).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
@@ -1269,7 +1273,7 @@ describe("Core/Rectangle", function () {
       expectedWest,
       expectedSouth,
       expectedEast,
-      expectedNorth
+      expectedNorth,
     );
 
     const subsection = Rectangle.subsection(
@@ -1277,7 +1281,7 @@ describe("Core/Rectangle", function () {
       westLerp,
       southLerp,
       eastLerp,
-      northLerp
+      northLerp,
     );
 
     expect(subsection).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
@@ -1303,7 +1307,7 @@ describe("Core/Rectangle", function () {
       expectedWest,
       expectedSouth,
       expectedEast,
-      expectedNorth
+      expectedNorth,
     );
 
     const subsection = Rectangle.subsection(
@@ -1311,7 +1315,7 @@ describe("Core/Rectangle", function () {
       westLerp,
       southLerp,
       eastLerp,
-      northLerp
+      northLerp,
     );
 
     expect(subsection).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
@@ -1438,6 +1442,69 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     expect(function () {
       Rectangle.contains(rectangle, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("fromBoundingSphere works with zero values", function () {
+    const boundingSphere = new BoundingSphere();
+    const result = Rectangle.fromBoundingSphere(boundingSphere);
+    const expectedRectangle = Rectangle.MAX_VALUE;
+    expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("fromBoundingSphere works with non-zero values", function () {
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(10000000.0, 0.0, 0.0),
+      1000.0,
+    );
+    const result = Rectangle.fromBoundingSphere(boundingSphere);
+    const expectedRectangle = new Rectangle();
+    expectedRectangle.west = -0.00009999999966666667;
+    expectedRectangle.south = -0.00010042880729608389;
+    expectedRectangle.east = 0.00009999999966666667;
+    expectedRectangle.north = 0.00010042880729608389;
+    expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("fromBoundingSphere works with bounding sphere centered at the poles", function () {
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(0.0, 0.0, Ellipsoid.WGS84.radii.z),
+      1000.0,
+    );
+    const result = Rectangle.fromBoundingSphere(boundingSphere);
+    const expectedRectangle = new Rectangle();
+    expectedRectangle.west = -CesiumMath.PI_OVER_TWO;
+    expectedRectangle.south = 1.5706400668742968;
+    expectedRectangle.east = CesiumMath.PI;
+    expectedRectangle.north = CesiumMath.PI_OVER_TWO;
+    expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("fromBoundingSphere uses result parameter", function () {
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(10000000.0, 0.0, 0.0),
+      1000.0,
+    );
+    const result = new Rectangle();
+    const returned = Rectangle.fromBoundingSphere(
+      boundingSphere,
+      Ellipsoid.WGS84,
+      result,
+    );
+
+    const expectedRectangle = new Rectangle();
+    expectedRectangle.west = -0.00009999999966666667;
+    expectedRectangle.south = -0.00010042880729608389;
+    expectedRectangle.east = 0.00009999999966666667;
+    expectedRectangle.north = 0.00010042880729608389;
+
+    expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+    expect(returned).toBe(result);
+  });
+
+  it("fromBoundingSphere throws with no bounding sphere", function () {
+    expect(function () {
+      Rectangle.fromBoundingSphere(undefined);
     }).toThrowDeveloperError();
   });
 

@@ -4,10 +4,10 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defaultValue,
   defined,
   Iso8601,
   JulianDate,
+  Math as CesiumMath,
   PolygonHierarchy,
   Rectangle,
   TimeInterval,
@@ -24,12 +24,10 @@ import {
   VerticalOrigin,
 } from "../../index.js";
 
-import { Math as CesiumMath } from "../../index.js";
-
 describe("DataSources/exportKml", function () {
   let kmlDoc;
   function checkKmlDoc(entities, properties, options) {
-    options = defaultValue(options, {});
+    options = options ?? {};
     options.entities = entities;
     const promise = exportKml(options);
     const kml = kmlDoc.documentElement;
@@ -56,7 +54,7 @@ describe("DataSources/exportKml", function () {
         } else if (typeof attribute === "number") {
           expect(Number(nodeAttribute.value)).toEqualEpsilon(
             attribute,
-            CesiumMath.EPSILON7
+            CesiumMath.EPSILON7,
           );
         } else {
           fail();
@@ -81,7 +79,7 @@ describe("DataSources/exportKml", function () {
       } else if (typeof property === "number") {
         expect(Number(node.textContent)).toEqualEpsilon(
           property,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
       } else if (typeof property === "boolean") {
         expect(Number(node.textContent)).toBe(property ? 1 : 0);
@@ -101,12 +99,12 @@ describe("DataSources/exportKml", function () {
     const cartographic2 = Cartographic.fromDegrees(
       Number(values[0]),
       Number(values[1]),
-      Number(values[2])
+      Number(values[2]),
     );
     return Cartographic.equalsEpsilon(
       cartographic1,
       cartographic2,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   }
 
@@ -512,7 +510,7 @@ describe("DataSources/exportKml", function () {
           fileReader.onload = function (event) {
             // Verify its a zip archive
             expect(new DataView(event.target.result).getUint32(0, false)).toBe(
-              0x504b0304
+              0x504b0304,
             );
             resolve();
           };
@@ -558,13 +556,13 @@ describe("DataSources/exportKml", function () {
           Number(values[0]),
           Number(values[1]),
           Number(values[2]),
-          cartographic2
+          cartographic2,
         );
         if (
           Cartographic.equalsEpsilon(
             cartographic1,
             cartographic2,
-            CesiumMath.EPSILON7
+            CesiumMath.EPSILON7,
           )
         ) {
           return true;
@@ -730,13 +728,13 @@ describe("DataSources/exportKml", function () {
           Number(values[0]),
           Number(values[1]),
           Number(values[2]),
-          cartographic2
+          cartographic2,
         );
         if (
           Cartographic.equalsEpsilon(
             cartographic1,
             cartographic2,
-            CesiumMath.EPSILON7
+            CesiumMath.EPSILON7,
           )
         ) {
           return true;
@@ -867,13 +865,13 @@ describe("DataSources/exportKml", function () {
             Number(values[0]),
             Number(values[1]),
             Number(values[2]),
-            cartographic2
+            cartographic2,
           );
           if (
             Cartographic.equalsEpsilon(
               cartographic1,
               cartographic2,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             )
           ) {
             return true;
@@ -1204,13 +1202,13 @@ describe("DataSources/exportKml", function () {
             Number(values[0]),
             Number(values[1]),
             Number(values[2]),
-            cartographic2
+            cartographic2,
           );
           if (
             Cartographic.equalsEpsilon(
               cartographic1,
               cartographic2,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             )
           ) {
             return true;

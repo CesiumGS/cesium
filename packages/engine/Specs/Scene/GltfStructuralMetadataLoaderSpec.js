@@ -258,7 +258,7 @@ describe(
       });
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       const structuralMetadataLoader = new GltfStructuralMetadataLoader({
@@ -272,13 +272,13 @@ describe(
 
       await expectAsync(structuralMetadataLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load structural metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+        "Failed to load structural metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found",
       );
     });
 
     it("load throws if texture fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(buffer)
+        Promise.resolve(buffer),
       );
 
       spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
@@ -297,17 +297,17 @@ describe(
 
       await expectAsync(structuralMetadataLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load structural metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
+        "Failed to load structural metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found",
       );
     });
 
     it("load throws if external schema fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(buffer)
+        Promise.resolve(buffer),
       );
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
@@ -326,17 +326,17 @@ describe(
 
       await expectAsync(structuralMetadataLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load structural metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found"
+        "Failed to load structural metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found",
       );
     });
 
     it("loads structural metadata", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(buffer)
+        Promise.resolve(buffer),
       );
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       const structuralMetadataLoader = new GltfStructuralMetadataLoader({
@@ -351,7 +351,7 @@ describe(
       await structuralMetadataLoader.load();
       await waitForLoaderProcess(structuralMetadataLoader, scene);
       expect(() =>
-        loaderProcess(structuralMetadataLoader, scene)
+        loaderProcess(structuralMetadataLoader, scene),
       ).not.toThrow();
 
       const structuralMetadata = structuralMetadataLoader.structuralMetadata;
@@ -380,13 +380,13 @@ describe(
       expect(colorProperty.textureReader.texture.width).toBe(1);
       expect(colorProperty.textureReader.texture.height).toBe(1);
       expect(colorProperty.textureReader.texture).toBe(
-        intensityProperty.textureReader.texture
+        intensityProperty.textureReader.texture,
       );
 
       expect(vegetationProperty.textureReader.texture.width).toBe(1);
       expect(vegetationProperty.textureReader.texture.height).toBe(1);
       expect(vegetationProperty.textureReader.texture).not.toBe(
-        colorProperty.textureReader.texture
+        colorProperty.textureReader.texture,
       );
 
       expect(Object.keys(structuralMetadata.schema.classes).sort()).toEqual([
@@ -399,15 +399,15 @@ describe(
 
     it("loads structural metadata with external schema", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(buffer)
+        Promise.resolve(buffer),
       );
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        Promise.resolve(schemaJson)
+        Promise.resolve(schemaJson),
       );
 
       const structuralMetadataLoader = new GltfStructuralMetadataLoader({
@@ -433,30 +433,30 @@ describe(
 
     it("destroys structural metadata", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(buffer)
+        Promise.resolve(buffer),
       );
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        Promise.resolve(schemaJson)
+        Promise.resolve(schemaJson),
       );
 
       const destroyBufferView = spyOn(
         GltfBufferViewLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const destroyTexture = spyOn(
         GltfTextureLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const destroySchema = spyOn(
         MetadataSchemaLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const structuralMetadataLoader = new GltfStructuralMetadataLoader({
@@ -486,28 +486,28 @@ describe(
 
     async function resolveAfterDestroy(rejectPromise) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(buffer)
+        Promise.resolve(buffer),
       );
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
       spyOn(Resource.prototype, "fetchJson").and.callFake(() =>
         rejectPromise
           ? Promise.reject(new Error(""))
-          : Promise.resolve(schemaJson)
+          : Promise.resolve(schemaJson),
       );
 
       const destroyBufferView = spyOn(
         GltfBufferViewLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
       const destroyTexture = spyOn(
         GltfTextureLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
       const destroySchema = spyOn(
         MetadataSchemaLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const structuralMetadataLoader = new GltfStructuralMetadataLoader({
@@ -539,5 +539,5 @@ describe(
       return resolveAfterDestroy(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

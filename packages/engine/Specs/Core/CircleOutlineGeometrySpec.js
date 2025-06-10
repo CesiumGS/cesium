@@ -36,7 +36,7 @@ describe("Core/CircleOutlineGeometry", function () {
         center: Cartesian3.fromDegrees(0, 0),
         granularity: 0.1,
         radius: 1.0,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(8 * 3);
@@ -52,7 +52,7 @@ describe("Core/CircleOutlineGeometry", function () {
         granularity: 0.1,
         radius: 1.0,
         extrudedHeight: 5,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(16 * 3); //8 top circle + 8 bottom circle
@@ -68,7 +68,7 @@ describe("Core/CircleOutlineGeometry", function () {
         radius: 1.0,
         extrudedHeight: 10000,
         numberOfVerticalLines: 0,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(16 * 3);
@@ -123,7 +123,7 @@ describe("Core/CircleOutlineGeometry", function () {
     CircleOutlineGeometry,
     packableInstance,
     packedInstance,
-    "extruded"
+    "extruded",
   );
 
   //Because extrudedHeight is optional and has to be taken into account when packing, we have a second test without it.
@@ -155,6 +155,6 @@ describe("Core/CircleOutlineGeometry", function () {
     CircleOutlineGeometry,
     packableInstance,
     packedInstance,
-    "at height"
+    "at height",
   );
 });

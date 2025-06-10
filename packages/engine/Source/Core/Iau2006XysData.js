@@ -1,5 +1,5 @@
 import buildModuleUrl from "./buildModuleUrl.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Iau2006XysSample from "./Iau2006XysSample.js";
 import JulianDate from "./JulianDate.js";
@@ -26,24 +26,22 @@ import TimeStandard from "./TimeStandard.js";
  * @private
  */
 function Iau2006XysData(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._xysFileUrlTemplate = Resource.createIfNeeded(
-    options.xysFileUrlTemplate
+    options.xysFileUrlTemplate,
   );
-  this._interpolationOrder = defaultValue(options.interpolationOrder, 9);
-  this._sampleZeroJulianEphemerisDate = defaultValue(
-    options.sampleZeroJulianEphemerisDate,
-    2442396.5
-  );
+  this._interpolationOrder = options.interpolationOrder ?? 9;
+  this._sampleZeroJulianEphemerisDate =
+    options.sampleZeroJulianEphemerisDate ?? 2442396.5;
   this._sampleZeroDateTT = new JulianDate(
     this._sampleZeroJulianEphemerisDate,
     0.0,
-    TimeStandard.TAI
+    TimeStandard.TAI,
   );
-  this._stepSizeDays = defaultValue(options.stepSizeDays, 1.0);
-  this._samplesPerXysFile = defaultValue(options.samplesPerXysFile, 1000);
-  this._totalSamples = defaultValue(options.totalSamples, 27426);
+  this._stepSizeDays = options.stepSizeDays ?? 1.0;
+  this._samplesPerXysFile = options.samplesPerXysFile ?? 1000;
+  this._totalSamples = options.totalSamples ?? 27426;
   this._samples = new Array(this._totalSamples * 3);
   this._chunkDownloadsInProgress = [];
 
@@ -100,12 +98,12 @@ Iau2006XysData.prototype.preload = function (
   startDayTT,
   startSecondTT,
   stopDayTT,
-  stopSecondTT
+  stopSecondTT,
 ) {
   const startDaysSinceEpoch = getDaysSinceEpoch(
     this,
     startDayTT,
-    startSecondTT
+    startSecondTT,
   );
   const stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
 
@@ -152,7 +150,7 @@ Iau2006XysData.prototype.preload = function (
 Iau2006XysData.prototype.computeXysRadians = function (
   dayTT,
   secondTT,
-  result
+  result,
 ) {
   const daysSinceEpoch = getDaysSinceEpoch(this, dayTT, secondTT);
   if (daysSinceEpoch < 0.0) {

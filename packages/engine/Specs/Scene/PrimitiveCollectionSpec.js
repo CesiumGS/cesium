@@ -1,6 +1,5 @@
 import {
   ColorGeometryInstanceAttribute,
-  defaultValue,
   defined,
   GeometryInstance,
   Rectangle,
@@ -49,22 +48,16 @@ describe(
       // render until all labels have been updated
       return pollToPromise(function () {
         scene.renderForSpecs();
-        const backgroundBillboard = labels._backgroundBillboardCollection.get(
-          0
-        );
-        return (
-          (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
-          labels._labelsToUpdate.length === 0
-        );
+        return labels.ready;
       });
     }
 
     function createLabels(position) {
-      position = defaultValue(position, {
+      position = position ?? {
         x: -1.0,
         y: 0.0,
         z: 0.0,
-      });
+      };
       const labels = new LabelCollection();
       labels.add({
         position: position,
@@ -695,5 +688,5 @@ describe(
       p2.destroy();
     });
   },
-  "WebGL"
+  "WebGL",
 );

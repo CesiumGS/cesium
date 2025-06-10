@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -8,10 +8,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="A sample interior rendered with 3D Tiles."
-    />
+    <meta name="description" content="A sample interior rendered with 3D Tiles." />
     <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -22,10 +19,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -49,12 +43,12 @@
         const initialPosition = new Cesium.Cartesian3(
           -1111583.3721328347,
           -5855888.151574568,
-          2262561.444696748
+          2262561.444696748,
         );
         const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
           100.0,
           -15.0,
-          0.0
+          0.0,
         );
         viewer.scene.camera.setView({
           destination: initialPosition,

@@ -15,13 +15,8 @@ import ShaderDestination from "../Renderer/ShaderDestination.js";
 function processVoxelProperties(renderResources, primitive) {
   const { shaderBuilder } = renderResources;
 
-  const {
-    names,
-    types,
-    componentTypes,
-    minimumValues,
-    maximumValues,
-  } = primitive._provider;
+  const { names, types, componentTypes, minimumValues, maximumValues } =
+    primitive._provider;
 
   const attributeLength = types.length;
   const hasStatistics = defined(minimumValues) && defined(maximumValues);
@@ -29,14 +24,14 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addDefine(
     "METADATA_COUNT",
     attributeLength,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   if (hasStatistics) {
     shaderBuilder.addDefine(
       "STATISTICS",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -49,7 +44,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addStruct(
       propertyStatisticsStructId,
       propertyStatisticsStructName,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     const glslType = getGlslType(type);
     shaderBuilder.addStructField(propertyStatisticsStructId, glslType, "min");
@@ -63,7 +58,7 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStruct(
     statisticsStructId,
     statisticsStructName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   for (let i = 0; i < attributeLength; i++) {
     const name = names[i];
@@ -72,7 +67,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addStructField(
       statisticsStructId,
       propertyStructName,
-      propertyFieldName
+      propertyFieldName,
     );
   }
 
@@ -83,12 +78,12 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStruct(
     metadataStructId,
     metadataStructName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addStructField(
     metadataStructId,
     statisticsStructName,
-    statisticsFieldName
+    statisticsFieldName,
   );
   for (let i = 0; i < attributeLength; i++) {
     const name = names[i];
@@ -107,27 +102,27 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addStruct(
       voxelPropertyStructId,
       voxelPropertyStructName,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addStructField(
       voxelPropertyStructId,
       glslType,
-      "partialDerivativeLocal"
+      "partialDerivativeLocal",
     );
     shaderBuilder.addStructField(
       voxelPropertyStructId,
       glslType,
-      "partialDerivativeWorld"
+      "partialDerivativeWorld",
     );
     shaderBuilder.addStructField(
       voxelPropertyStructId,
       glslType,
-      "partialDerivativeView"
+      "partialDerivativeView",
     );
     shaderBuilder.addStructField(
       voxelPropertyStructId,
       glslType,
-      "partialDerivativeValid"
+      "partialDerivativeValid",
     );
   }
 
@@ -138,7 +133,7 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStruct(
     voxelStructId,
     voxelStructName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   for (let i = 0; i < attributeLength; i++) {
     const name = names[i];
@@ -153,6 +148,7 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirWorld");
   shaderBuilder.addStructField(voxelStructId, "vec3", "surfaceNormal");
   shaderBuilder.addStructField(voxelStructId, "float", "travelDistance");
+  shaderBuilder.addStructField(voxelStructId, "int", "stepCount");
   shaderBuilder.addStructField(voxelStructId, "int", "tileIndex");
   shaderBuilder.addStructField(voxelStructId, "int", "sampleIndex");
 
@@ -162,17 +158,17 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStruct(
     fragmentInputStructId,
     fragmentInputStructName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addStructField(
     fragmentInputStructId,
     metadataStructName,
-    metadataFieldName
+    metadataFieldName,
   );
   shaderBuilder.addStructField(
     fragmentInputStructId,
     voxelStructName,
-    voxelFieldName
+    voxelFieldName,
   );
 
   // Properties struct
@@ -182,7 +178,7 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStruct(
     propertiesStructId,
     propertiesStructName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   for (let i = 0; i < attributeLength; i++) {
     const name = names[i];
@@ -199,7 +195,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addFunction(
       functionId,
       `${propertiesStructName} clearProperties()`,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFunctionLines(functionId, [
       `${propertiesStructName} ${propertiesFieldName};`,
@@ -224,7 +220,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addFunction(
       functionId,
       `${propertiesStructName} sumProperties(${propertiesStructName} propertiesA, ${propertiesStructName} propertiesB)`,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFunctionLines(functionId, [
       `${propertiesStructName} ${propertiesFieldName};`,
@@ -246,7 +242,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addFunction(
       functionId,
       `${propertiesStructName} scaleProperties(${propertiesStructName} ${propertiesFieldName}, float scale)`,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFunctionLines(functionId, [
       `${propertiesStructName} scaledProperties = ${propertiesFieldName};`,
@@ -266,7 +262,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addFunction(
       functionId,
       `${propertiesStructName} mixProperties(${propertiesStructName} propertiesA, ${propertiesStructName} propertiesB, float mixFactor)`,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFunctionLines(functionId, [
       `${propertiesStructName} ${propertiesFieldName};`,
@@ -288,7 +284,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addFunction(
       functionId,
       `void copyPropertiesToMetadata(in ${propertiesStructName} ${propertiesFieldName}, inout ${metadataStructName} ${metadataFieldName})`,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     for (let i = 0; i < attributeLength; i++) {
       const name = names[i];
@@ -304,7 +300,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addFunction(
       functionId,
       `void setStatistics(inout ${statisticsStructName} ${statisticsFieldName})`,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     for (let i = 0; i < attributeLength; i++) {
       const name = names[i];
@@ -314,12 +310,15 @@ function processVoxelProperties(renderResources, primitive) {
         const glslField = getGlslField(type, j);
         const minimumValue = minimumValues[i][j];
         const maximumValue = maximumValues[i][j];
+        if (!defined(minimumValue) || !defined(maximumValue)) {
+          continue;
+        }
         shaderBuilder.addFunctionLines(functionId, [
           `${statisticsFieldName}.${name}.min${glslField} = ${getGlslNumberAsFloat(
-            minimumValue
+            minimumValue,
           )};`,
           `${statisticsFieldName}.${name}.max${glslField} = ${getGlslNumberAsFloat(
-            maximumValue
+            maximumValue,
           )};`,
         ]);
       }
@@ -332,7 +331,7 @@ function processVoxelProperties(renderResources, primitive) {
     shaderBuilder.addFunction(
       functionId,
       `${propertiesStructName} getPropertiesFromMegatextureAtUv(vec2 texcoord)`,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFunctionLines(functionId, [
       `${propertiesStructName} ${propertiesFieldName};`,

@@ -26,6 +26,7 @@ require({
       location: "../Apps/Sandcastle/ThirdParty",
     },
   ],
+  // @ts-expect-error
 }, [
   "CodeMirror/lib/codemirror",
   "dijit/Dialog",
@@ -94,7 +95,7 @@ require({
   dojoscript,
   LinkButton,
   ClipboardJS,
-  pako
+  pako,
 ) {
   "use strict";
   // attach clipboard handling to our Copy button
@@ -234,7 +235,7 @@ require({
   function clearRun() {
     domClass.remove(
       registry.byId("buttonRun").domNode,
-      "highlightToolbarButton"
+      "highlightToolbarButton",
     );
   }
 
@@ -336,8 +337,8 @@ require({
   function openGalleryTooltip() {
     galleryTooltipTimer = undefined;
 
-    const selectedTabName = registry.byId("innerPanel").selectedChildWidget
-      .title;
+    const selectedTabName =
+      registry.byId("innerPanel").selectedChildWidget.title;
     let suffix = `${selectedTabName}Demos`;
     if (selectedTabName === "All") {
       suffix = "all";
@@ -395,7 +396,7 @@ require({
           line = jsEditor.setGutterMarker(
             i,
             "searchGutter",
-            makeLineLabel(`Search: ${searchTerm}`, "searchMarker")
+            makeLineLabel(`Search: ${searchTerm}`, "searchMarker"),
           );
           jsEditor.addLineClass(line, "text", "searchLine");
           errorLines.push(line);
@@ -415,7 +416,7 @@ require({
           line = jsEditor.setGutterMarker(
             scriptLineToEditorLine(hint.line),
             "hintGutter",
-            makeLineLabel(hint.reason, "hintMarker")
+            makeLineLabel(hint.reason, "hintMarker"),
           );
           jsEditor.addLineClass(line, "text", "hintLine");
           errorLines.push(line);
@@ -453,7 +454,7 @@ require({
         {
           line: lineNumber - 1,
           ch: 0,
-        }
+        },
       );
       jsEditor.focus();
       jsEditor.setSelection(
@@ -464,7 +465,7 @@ require({
         {
           line: lineNumber,
           ch: 0,
-        }
+        },
       );
     }
   }
@@ -481,7 +482,7 @@ require({
       line = jsEditor.setGutterMarker(
         lineNum,
         "highlightGutter",
-        makeLineLabel("highlighted by demo", "highlightMarker")
+        makeLineLabel("highlighted by demo", "highlightMarker"),
       );
       jsEditor.addLineClass(line, "text", "highlightLine");
       highlightLines.push(line);
@@ -516,7 +517,7 @@ require({
             demoContainer.scrollLeft -= (e.wheelDelta * 70) / 120;
           }
         },
-        false
+        false,
       );
     } else {
       demoContainer.addEventListener(
@@ -526,7 +527,7 @@ require({
             demoContainer.scrollLeft += (e.detail * 70) / 3;
           }
         },
-        false
+        false,
       );
     }
   }
@@ -572,7 +573,7 @@ require({
         Tab: "indentMore",
         "Shift-Tab": "indentLess",
       },
-    }
+    },
   );
 
   window.onbeforeunload = function (e) {
@@ -626,7 +627,7 @@ require({
         appendConsole(
           "consoleError",
           "Make sure Cesium is built, see the Contributor's Guide for details.",
-          true
+          true,
         );
       }
     };
@@ -673,7 +674,7 @@ require({
 
         element.textContent = embedInSandcastleTemplate(
           jsEditor.getValue(),
-          isFirefox
+          isFirefox,
         );
         bucketDoc.body.appendChild(element);
       }
@@ -697,7 +698,7 @@ require({
         appendConsole(
           "consoleError",
           `Error, first part of ${local.bucketName} must match first part of bucket.html exactly.`,
-          true
+          true,
         );
       } else {
         const bodyAttributes = local.headers.match(/<body([^>]*?)>/)[1];
@@ -719,7 +720,7 @@ require({
         const pos = local.headers.indexOf("</head>");
         const extraHeaders = local.headers.substring(
           local.emptyBucket.length,
-          pos
+          pos,
         );
         bucketDoc.head.innerHTML += extraHeaders;
         activateBucketScripts(bucketDoc);
@@ -828,7 +829,7 @@ require({
             appendConsole(
               "consoleError",
               `Unable to GET gist from GitHub API. This could be due to too many requests from your IP. Try again in an hour or copy and paste the code from the gist: https://gist.github.com/${queryObject.gist}`,
-              true
+              true,
             );
             console.log(error);
           });
@@ -851,13 +852,13 @@ require({
         const doc = parser.parseFromString(demo.code, "text/html");
 
         const script = doc.querySelector(
-          'script[id="cesium_sandcastle_script"]'
+          'script[id="cesium_sandcastle_script"]',
         );
         if (!script) {
           appendConsole(
             "consoleError",
             `Error reading source file: ${demo.name}`,
-            true
+            true,
           );
           return;
         }
@@ -867,7 +868,7 @@ require({
           appendConsole(
             "consoleError",
             `Error reading source file: ${demo.name}`,
-            true
+            true,
           );
           return;
         }
@@ -903,7 +904,7 @@ require({
         document.title = `${e.state.name} - Cesium Sandcastle`;
       }
     },
-    false
+    false,
   );
 
   window.addEventListener(
@@ -930,7 +931,7 @@ require({
             appendConsole(
               "consoleError",
               'Documentation not available.  Please run the "build-docs" build script to generate Cesium documentation.',
-              true
+              true,
             );
             showGallery();
           }
@@ -938,7 +939,7 @@ require({
             appendConsole(
               "consoleError",
               "Error loading gallery, please run the build script.",
-              true
+              true,
             );
           }
           if (deferredLoadError) {
@@ -946,9 +947,9 @@ require({
               "consoleLog",
               `Unable to load demo named ${queryObject.src.replace(
                 ".html",
-                ""
+                "",
               )}. Redirecting to HelloWorld.\n`,
-              true
+              true,
             );
           }
         }
@@ -970,7 +971,7 @@ require({
             line = jsEditor.setGutterMarker(
               lineNumber,
               "errorGutter",
-              makeLineLabel(e.data.error, "errorMarker")
+              makeLineLabel(e.data.error, "errorMarker"),
             );
             jsEditor.addLineClass(line, "text", "errorLine");
             errorLines.push(line);
@@ -986,7 +987,7 @@ require({
         highlightLine(e.data.highlight);
       }
     },
-    true
+    true,
   );
 
   registry.byId("jsContainer").on("show", function () {
@@ -1061,7 +1062,7 @@ require({
     // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
     jsonString = jsonString.substr(2, jsonString.length - 4);
     let base64String = btoa(
-      pako.deflate(jsonString, { raw: true, to: "string", level: 9 })
+      pako.deflate(jsonString, { raw: true, to: "string", level: 9 }),
     );
     base64String = base64String.replace(/\=+$/, ""); // remove padding
 
@@ -1107,7 +1108,7 @@ require({
     let confirmChange = true;
     if (demoHtml !== htmlText || demoCode !== jsText) {
       confirmChange = window.confirm(
-        "You have unsaved changes. Are you sure you want to navigate away from this demo?"
+        "You have unsaved changes. Are you sure you want to navigate away from this demo?",
       );
     }
     if (confirmChange) {
@@ -1132,7 +1133,7 @@ require({
         local.headers
       }\n${htmlEditor.getValue()}<script id="cesium_sandcastle_script">\n${embedInSandcastleTemplate(
         jsEditor.getValue(),
-        false
+        false,
       )}</script>\n` +
       `</body>\n` +
       `</html>\n`
@@ -1143,20 +1144,20 @@ require({
     let currentDemoName = queryObject.src;
     currentDemoName = currentDemoName.replace(".html", "");
     const description = encodeHTML(
-      registry.byId("description").get("value").replace(/\n/g, "\\n")
+      registry.byId("description").get("value").replace(/\n/g, "\\n"),
     ).replace(/\"/g, "&quot;");
     const label = encodeHTML(
-      registry.byId("label").get("value").replace(/\n/g, "\\n")
+      registry.byId("label").get("value").replace(/\n/g, "\\n"),
     ).replace(/\"/g, "&quot;");
 
     let html = getDemoHtml();
     html = html.replace(
       "<title>",
-      `<meta name="description" content="${description}">\n    <title>`
+      `<meta name="description" content="${description}">\n    <title>`,
     );
     html = html.replace(
       "<title>",
-      `<meta name="cesium-sandcastle-labels" content="${label}">\n    <title>`
+      `<meta name="cesium-sandcastle-labels" content="${label}">\n    <title>`,
     );
 
     const octetBlob = new Blob([html], {
@@ -1242,7 +1243,7 @@ require({
       demo.description = description ? description : "";
 
       const labelsMeta = doc.querySelector(
-        'meta[name="cesium-sandcastle-labels"]'
+        'meta[name="cesium-sandcastle-labels"]',
       );
       const labels = labelsMeta && labelsMeta.getAttribute("content");
       if (demo.isNew) {
@@ -1356,7 +1357,7 @@ require({
         let confirmChange = true;
         if (demoHtml !== htmlText || demoCode !== jsText) {
           confirmChange = window.confirm(
-            "You have unsaved changes. Are you sure you want to navigate away from this demo?"
+            "You have unsaved changes. Are you sure you want to navigate away from this demo?",
           );
         }
         if (confirmChange) {

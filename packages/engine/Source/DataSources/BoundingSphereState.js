@@ -3,7 +3,7 @@
  * @enum {number}
  * @private
  */
-const BoundingSphereState = {
+const BoundingSphereState = Object.freeze({
   /**
    * The BoundingSphere has been computed.
    * @type BoundingSphereState
@@ -22,5 +22,5 @@ const BoundingSphereState = {
    * @constant
    */
   FAILED: 2,
-};
-export default Object.freeze(BoundingSphereState);
+});
+export default BoundingSphereState;

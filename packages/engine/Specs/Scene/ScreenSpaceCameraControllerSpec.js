@@ -7,6 +7,7 @@ import {
   GeographicProjection,
   IntersectionTests,
   KeyboardEventModifier,
+  Math as CesiumMath,
   OrthographicFrustum,
   OrthographicOffCenterFrustum,
   Ray,
@@ -17,8 +18,6 @@ import {
   SceneMode,
   ScreenSpaceCameraController,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createCamera from "../../../../Specs/createCamera.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -34,6 +33,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   function MockScene(canvas, camera, ellipsoid) {
     this.canvas = canvas;
     this.camera = camera;
+    this.ellipsoid = ellipsoid;
     this.globe = undefined;
     this.verticalExaggeration = 1.0;
     this.verticalExaggerationRelativeHeight = 0.0;
@@ -77,7 +77,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const offset = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0), new Cartesian3()),
       2.5 * maxRadii,
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     camera = createCamera({
@@ -112,7 +112,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
         canvas,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseDown(canvas, options);
@@ -125,7 +125,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
         canvas,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseUp(document, options);
@@ -138,7 +138,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
         canvas,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseMove(document, options);
@@ -151,14 +151,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
         canvas,
         combine({
           deltaY: -wheelDelta,
-        })
+        }),
       );
     } else if (document.onmousewheel !== undefined) {
       DomEventSimulator.fireMouseWheel(
         canvas,
         combine({
           wheelDelta: wheelDelta,
-        })
+        }),
       );
     }
   }
@@ -250,7 +250,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     camera.right = Cartesian3.cross(
       camera.direction,
       camera.up,
-      new Cartesian3()
+      new Cartesian3(),
     );
   }
 
@@ -271,13 +271,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   function setUp3DUnderground() {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
     scene.cameraUnderground = true;
     controller.enableCollisionDetection = false;
 
     camera.setView({ destination: Camera.DEFAULT_VIEW_RECTANGLE });
     const positionCart = Ellipsoid.WGS84.cartesianToCartographic(
-      camera.position
+      camera.position,
     );
     positionCart.height = -100.0;
     camera.position = Ellipsoid.WGS84.cartographicToCartesian(positionCart);
@@ -299,11 +299,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -318,11 +318,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -337,11 +337,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -356,11 +356,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -375,11 +375,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     camera.up = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
@@ -398,11 +398,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const frustumDiff = camera.frustum.right - camera.frustum.left;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -411,7 +411,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(position.y).toEqual(camera.position.y);
     expect(position.z).toEqual(camera.position.z);
     expect(frustumDiff).toBeGreaterThan(
-      camera.frustum.right - camera.frustum.left
+      camera.frustum.right - camera.frustum.left,
     );
   });
 
@@ -428,11 +428,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const frustumDiff = frustum.right - frustum.left;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -441,7 +441,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(position.y).toEqual(camera.position.y);
     expect(position.z).toEqual(camera.position.z);
     expect(frustumDiff).toBeLessThan(
-      camera.frustum.right - camera.frustum.left
+      camera.frustum.right - camera.frustum.left,
     );
   });
 
@@ -456,7 +456,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(position.y).toEqual(camera.position.y);
     expect(position.z).toEqual(camera.position.z);
     expect(frustumDiff).toBeGreaterThan(
-      camera.frustum.right - camera.frustum.left
+      camera.frustum.right - camera.frustum.left,
     );
   });
 
@@ -478,7 +478,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(position.y).toEqual(camera.position.y);
     expect(position.z).toEqual(camera.position.z);
     expect(frustumDiff).toBeLessThan(
-      camera.frustum.right - camera.frustum.left
+      camera.frustum.right - camera.frustum.left,
     );
   });
 
@@ -495,11 +495,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const frustumDiff = camera.frustum.right - camera.frustum.left;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -508,7 +508,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(position.y).toEqual(camera.position.y);
     expect(position.z).toEqual(camera.position.z);
     expect(frustumDiff).toBeGreaterThan(
-      camera.frustum.right - camera.frustum.left
+      camera.frustum.right - camera.frustum.left,
     );
   });
 
@@ -518,11 +518,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const frustumDiff = camera.frustum.right - camera.frustum.left;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -547,11 +547,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const frustumDiff = camera.frustum.right - camera.frustum.left;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -579,7 +579,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight
+      canvas.clientHeight,
     );
     const endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
@@ -587,12 +587,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
     updateController();
     expect(camera.frustum.right).toEqualEpsilon(
       maxZoom * 0.5,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(camera.frustum.left).toEqual(-camera.frustum.right);
     expect(camera.frustum.top).toEqualEpsilon(
       maxZoom * 0.25,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(camera.frustum.bottom).toEqual(-camera.frustum.top);
   });
@@ -604,11 +604,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -619,15 +619,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(camera.up).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(camera.right).toEqualEpsilon(
       Cartesian3.UNIT_Y,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -638,11 +638,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -653,12 +653,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON15);
     expect(camera.right).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -669,11 +669,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 4,
-      (3 * canvas.clientHeight) / 4
+      (3 * canvas.clientHeight) / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      (3 * canvas.clientHeight) / 4
+      (3 * canvas.clientHeight) / 4,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -684,15 +684,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(camera.up).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(camera.right).toEqualEpsilon(
       Cartesian3.UNIT_Y,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -701,11 +701,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -720,11 +720,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -739,11 +739,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -758,11 +758,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -778,11 +778,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -797,24 +797,24 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition, true);
     updateController();
     expect(camera.position).toEqual(position);
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON12);
     expect(
-      Cartesian3.cross(camera.up, camera.right, new Cartesian3())
+      Cartesian3.cross(camera.up, camera.right, new Cartesian3()),
     ).toEqualEpsilon(camera.direction, CesiumMath.EPSILON12);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON12);
   });
 
@@ -823,11 +823,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -842,11 +842,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -884,11 +884,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -900,11 +900,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUpCV();
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
-      (3 * canvas.clientHeight) / 8
+      (3 * canvas.clientHeight) / 8,
     );
 
     camera.position.y = -100.0;
@@ -914,15 +914,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(
       Cartesian3.dot(
         Cartesian3.normalize(camera.position, new Cartesian3()),
-        Cartesian3.UNIT_Z
-      )
+        Cartesian3.UNIT_Z,
+      ),
     ).toBeGreaterThan(0.0);
     expect(Cartesian3.dot(camera.direction, Cartesian3.UNIT_Z)).toBeLessThan(
-      0.0
+      0.0,
     );
     expect(Cartesian3.dot(camera.up, Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
     expect(Cartesian3.dot(camera.right, Cartesian3.UNIT_Z)).toBeLessThan(
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -932,14 +932,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const origin = Cartesian3.fromDegrees(-72.0, 40.0);
     camera.lookAtTransform(
       Transforms.eastNorthUpToFixedFrame(origin),
-      new Cartesian3(1.0, 0.0, 0.0)
+      new Cartesian3(1.0, 0.0, 0.0),
     );
 
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(0, 0);
     const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -949,15 +949,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.normalize(
         Cartesian3.negate(camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
   });
 
@@ -968,11 +968,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
-      (3 * canvas.clientHeight) / 8
+      (3 * canvas.clientHeight) / 8,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -989,11 +989,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -1024,7 +1024,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const startPosition = new Cartesian2(0, canvas.clientHeight / 2);
     const endPosition = new Cartesian2(
       4.0 * canvas.clientWidth,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -1041,11 +1041,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
-      (3 * canvas.clientHeight) / 8
+      (3 * canvas.clientHeight) / 8,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -1055,15 +1055,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.normalize(
         Cartesian3.negate(camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON12);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON12);
   });
 
@@ -1072,11 +1072,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     camera.constrainedAxis = Cartesian3.clone(Cartesian3.UNIT_Z);
 
@@ -1087,15 +1087,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.normalize(
         Cartesian3.negate(camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
   });
 
@@ -1107,11 +1107,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
-      (3 * canvas.clientHeight) / 8
+      (3 * canvas.clientHeight) / 8,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -1127,7 +1127,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const startPosition = new Cartesian2(0, 0);
     const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -1137,15 +1137,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.normalize(
         Cartesian3.negate(camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
   });
 
@@ -1163,16 +1163,16 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.position.z).toEqualEpsilon(
       Cartesian3.magnitude(camera.position),
-      CesiumMath.EPSILON1
+      CesiumMath.EPSILON1,
     );
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.negate(axis, new Cartesian3()),
-      CesiumMath.EPSILON4
+      CesiumMath.EPSILON4,
     );
     expect(Cartesian3.dot(camera.up, axis)).toBeLessThan(CesiumMath.EPSILON2);
     expect(camera.right).toEqualEpsilon(
       Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
-      CesiumMath.EPSILON4
+      CesiumMath.EPSILON4,
     );
   });
 
@@ -1181,24 +1181,24 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
     expect(Cartesian3.magnitude(position)).toBeGreaterThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
   });
 
   it("zooms in on an object in 3D", function () {
     setUp3D();
 
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1222,14 +1222,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
     updateController();
 
     expect(Cartesian3.magnitude(position)).toBeGreaterThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
   });
 
   it("zooms in on an object in 3D when transform is set", function () {
     setUp3D();
 
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1255,13 +1255,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
     updateController();
 
     expect(Cartesian3.magnitude(position)).toBeGreaterThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
   });
 
   it("zoom in 3D to point 0,0", function () {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1278,7 +1278,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
     expect(Cartesian3.magnitude(position)).toBeGreaterThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
   });
 
@@ -1287,17 +1287,17 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
     expect(Cartesian3.magnitude(position)).toBeLessThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
   });
 
@@ -1305,7 +1305,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUp3D();
 
     const positionCart = Ellipsoid.WGS84.cartesianToCartographic(
-      camera.position
+      camera.position,
     );
     positionCart.height = 0.0;
     camera.position = Ellipsoid.WGS84.cartographicToCartesian(positionCart);
@@ -1316,15 +1316,16 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight * 50
+      canvas.clientHeight * 50,
     );
     const endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
 
-    const height = Ellipsoid.WGS84.cartesianToCartographic(camera.position)
-      .height;
+    const height = Ellipsoid.WGS84.cartesianToCartographic(
+      camera.position,
+    ).height;
     expect(height).toEqualEpsilon(maxDist, CesiumMath.EPSILON2);
   });
 
@@ -1338,7 +1339,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     simulateMouseWheel(120);
     updateController();
     expect(Cartesian3.magnitude(position)).toBeGreaterThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
     expect(camera.heading).toBeCloseTo(heading, 10);
     expect(camera.pitch).toBeCloseTo(pitch, 10);
@@ -1355,7 +1356,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     simulateMouseWheel(-120);
     updateController();
     expect(Cartesian3.magnitude(position)).toBeLessThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
     expect(camera.heading).toBeCloseTo(heading, 10);
     expect(camera.pitch).toBeCloseTo(pitch, 10);
@@ -1378,17 +1379,17 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const frustumWidth = camera.frustum.width;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
     expect(Cartesian3.magnitude(position)).toBeGreaterThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
     expect(frustumWidth).toBeGreaterThan(camera.frustum.width);
   });
@@ -1409,19 +1410,73 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const frustumWidth = camera.frustum.width;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
     expect(Cartesian3.magnitude(position)).toBeLessThan(
-      Cartesian3.magnitude(camera.position)
+      Cartesian3.magnitude(camera.position),
     );
     expect(frustumWidth).toBeLessThan(camera.frustum.width);
+  });
+
+  it("zoom in 3D with orthographic projection with wheel", function () {
+    setUp3D();
+
+    const frustum = new OrthographicFrustum();
+    frustum.aspectRatio = 1.0;
+    frustum.width = 20.0;
+    camera.frustum = frustum;
+
+    expect(frustum.projectionMatrix).toBeDefined();
+
+    camera.setView({ destination: Camera.DEFAULT_VIEW_RECTANGLE });
+
+    const position = Cartesian3.clone(camera.position);
+    const heading = camera.heading;
+    const pitch = camera.pitch;
+    const roll = camera.roll;
+
+    simulateMouseWheel(120);
+    updateController();
+    expect(Cartesian3.magnitude(position)).toBeGreaterThan(
+      Cartesian3.magnitude(camera.position),
+    );
+    expect(camera.heading).toBeCloseTo(heading, 3);
+    expect(camera.pitch).toBeCloseTo(pitch, 3);
+    expect(camera.roll).toBeCloseTo(roll, 3);
+  });
+
+  it("zoom out in 3D with orthographic projection with wheel", function () {
+    setUp3D();
+
+    const frustum = new OrthographicFrustum();
+    frustum.aspectRatio = 1.0;
+    frustum.width = 20.0;
+    camera.frustum = frustum;
+
+    expect(frustum.projectionMatrix).toBeDefined();
+
+    camera.setView({ destination: Camera.DEFAULT_VIEW_RECTANGLE });
+
+    const position = Cartesian3.clone(camera.position);
+    const heading = camera.heading;
+    const pitch = camera.pitch;
+    const roll = camera.roll;
+
+    simulateMouseWheel(-120);
+    updateController();
+    expect(Cartesian3.magnitude(position)).toBeLessThan(
+      Cartesian3.magnitude(camera.position),
+    );
+    expect(camera.heading).toBeCloseTo(heading, 3);
+    expect(camera.pitch).toBeCloseTo(pitch, 3);
+    expect(camera.roll).toBeCloseTo(roll, 3);
   });
 
   it("zoom in 3D when camera is underground", function () {
@@ -1432,11 +1487,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -1444,7 +1499,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const vector = Cartesian3.subtract(
       camera.position,
       position,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const normalizedVector = Cartesian3.normalize(vector, vector);
 
@@ -1457,11 +1512,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -1470,22 +1525,19 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).not.toEqualEpsilon(
       Cartesian3.normalize(
         Cartesian3.negate(camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
 
     const ray = new Ray(camera.positionWC, camera.directionWC);
-    const intersection = IntersectionTests.rayEllipsoid(
-      ray,
-      scene.mapProjection.ellipsoid
-    );
+    const intersection = IntersectionTests.rayEllipsoid(ray, scene.ellipsoid);
     expect(intersection).toBeDefined();
   });
 
@@ -1494,11 +1546,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      (3 * canvas.clientHeight) / 4
+      (3 * canvas.clientHeight) / 4,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -1507,15 +1559,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.normalize(
         Cartesian3.negate(camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
   });
 
@@ -1523,28 +1575,29 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUp3D();
 
     const positionCart = Ellipsoid.WGS84.cartesianToCartographic(
-      camera.position
+      camera.position,
     );
     positionCart.height = controller.minimumZoomDistance;
     camera.position = Ellipsoid.WGS84.cartographicToCartesian(positionCart);
 
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight
+      canvas.clientHeight,
     );
     const endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
     updateController();
 
-    const height = Ellipsoid.WGS84.cartesianToCartographic(camera.position)
-      .height;
+    const height = Ellipsoid.WGS84.cartesianToCartographic(
+      camera.position,
+    ).height;
     expect(height).toBeLessThan(controller.minimumZoomDistance + 10.0);
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
   });
 
@@ -1556,11 +1609,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -1569,16 +1622,89 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).not.toEqual(direction);
   });
 
+  it("maximum tilt angle is 0 in 3D", function () {
+    setUp3D();
+    const originalCameraPosition = Cartesian3.clone(camera.position);
+    const originalCameraDirection = Cartesian3.clone(camera.direction);
+    controller.maximumTiltAngle = 0;
+    const startPosition = new Cartesian2(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 2,
+    );
+    const endPosition = new Cartesian2(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 4,
+    );
+
+    moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+    updateController();
+
+    expect(camera.position).toEqualEpsilon(
+      originalCameraPosition,
+      CesiumMath.EPSILON8,
+    );
+    expect(camera.position).not.toEqualEpsilon(
+      originalCameraDirection,
+      CesiumMath.EPSILON8,
+    );
+
+    const dotProduct = Cartesian3.dot(
+      camera.direction,
+      originalCameraDirection,
+    );
+    const acos = Math.acos(dotProduct);
+    const angle = (acos * 180) / Math.PI;
+    expect(angle).toEqual(0);
+  });
+
+  it("maximum tilt angle is 45 degrees in 3D", function () {
+    setUp3D();
+    const originalCameraPosition = Cartesian3.clone(camera.position);
+    const originalCameraDirection = Cartesian3.clone(camera.direction);
+    controller.maximumTiltAngle = (45 * Math.PI) / 180;
+    const startPosition = new Cartesian2(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 2,
+    );
+    const endPosition = new Cartesian2(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 4,
+    );
+
+    moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+    updateController();
+    moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+    updateController();
+
+    expect(camera.position).not.toEqualEpsilon(
+      originalCameraPosition,
+      CesiumMath.EPSILON8,
+    );
+    expect(camera.position).not.toEqualEpsilon(
+      originalCameraDirection,
+      CesiumMath.EPSILON8,
+    );
+
+    const dotProduct = Cartesian3.dot(
+      camera.direction,
+      originalCameraDirection,
+    );
+    const acos = Math.acos(dotProduct);
+    const angle = (acos * 180) / Math.PI;
+    expect(angle).toBeLessThanOrEqual(45);
+    expect(angle).toBeGreaterThan(44);
+  });
+
   it("looks in 3D", function () {
     setUp3D();
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition, true);
@@ -1587,17 +1713,17 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).not.toEqual(
       Cartesian3.normalize(
         Cartesian3.negate(camera.position, new Cartesian3()),
-        new Cartesian3()
-      )
+        new Cartesian3(),
+      ),
     );
     expect(
-      Cartesian3.cross(camera.direction, camera.up, new Cartesian3())
+      Cartesian3.cross(camera.direction, camera.up, new Cartesian3()),
     ).toEqualEpsilon(camera.right, CesiumMath.EPSILON12);
     expect(
-      Cartesian3.cross(camera.up, camera.right, new Cartesian3())
+      Cartesian3.cross(camera.up, camera.right, new Cartesian3()),
     ).toEqualEpsilon(camera.direction, CesiumMath.EPSILON12);
     expect(
-      Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
+      Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON12);
   });
 
@@ -1606,17 +1732,17 @@ describe("Scene/ScreenSpaceCameraController", function () {
     camera.position = new Cartesian3(
       0.0,
       2.0 * Ellipsoid.WGS84.maximumRadius,
-      0.0
+      0.0,
     );
     camera.direction = Cartesian3.normalize(
       Cartesian3.negate(camera.position, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
     camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
     camera.right = Cartesian3.cross(
       camera.direction,
       camera.up,
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     const axis = Cartesian3.clone(Cartesian3.UNIT_X);
@@ -1624,11 +1750,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -1637,20 +1763,20 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.normalize(
         Cartesian3.negate(camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(camera.right).toEqualEpsilon(
       Cartesian3.normalize(
         Cartesian3.cross(axis, camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(camera.up).toEqualEpsilon(
       Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -1659,17 +1785,17 @@ describe("Scene/ScreenSpaceCameraController", function () {
     camera.position = new Cartesian3(
       0.0,
       2.0 * Ellipsoid.WGS84.maximumRadius,
-      0.0
+      0.0,
     );
     camera.direction = Cartesian3.negate(
       Cartesian3.normalize(camera.position, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
     camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
     camera.right = Cartesian3.cross(
       camera.direction,
       camera.up,
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     const axis = Cartesian3.clone(Cartesian3.UNIT_Z);
@@ -1677,30 +1803,30 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     const startPosition = new Cartesian2(
       canvas.clientWidth * 0.5,
-      canvas.clientHeight * 0.25
+      canvas.clientHeight * 0.25,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth * 0.5,
-      canvas.clientHeight * 0.75
+      canvas.clientHeight * 0.75,
     );
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
     updateController();
 
     expect(Cartesian3.dot(camera.position, axis)).toBeLessThan(
-      CesiumMath.EPSILON2
+      CesiumMath.EPSILON2,
     );
     expect(camera.direction).toEqualEpsilon(
       Cartesian3.negate(
         Cartesian3.normalize(camera.position, new Cartesian3()),
-        new Cartesian3()
+        new Cartesian3(),
       ),
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(camera.right).toEqualEpsilon(axis, CesiumMath.EPSILON12);
     expect(camera.up).toEqualEpsilon(
       Cartesian3.cross(camera.right, camera.direction, new Cartesian3()),
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -1739,11 +1865,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
@@ -1761,18 +1887,18 @@ describe("Scene/ScreenSpaceCameraController", function () {
     let position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
 
     controller.zoomEventTypes = CameraEventType.LEFT_DRAG;
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
     updateController();
     expect(Cartesian3.magnitude(camera.position)).toBeLessThan(
-      Cartesian3.magnitude(position)
+      Cartesian3.magnitude(position),
     );
 
     position = Cartesian3.clone(camera.position);
@@ -1783,7 +1909,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     moveMouse(MouseButtons.LEFT, endPosition, startPosition, true);
     updateController();
     expect(Cartesian3.magnitude(camera.position)).toBeGreaterThan(
-      Cartesian3.magnitude(position)
+      Cartesian3.magnitude(position),
     );
 
     position = Cartesian3.clone(camera.position);
@@ -1797,20 +1923,20 @@ describe("Scene/ScreenSpaceCameraController", function () {
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
     updateController();
     expect(Cartesian3.magnitude(camera.position)).toBeLessThan(
-      Cartesian3.magnitude(position)
+      Cartesian3.magnitude(position),
     );
 
     position = Cartesian3.clone(camera.position);
     moveMouse(MouseButtons.LEFT, endPosition, startPosition, true);
     updateController();
     expect(Cartesian3.magnitude(camera.position)).toBeGreaterThan(
-      Cartesian3.magnitude(position)
+      Cartesian3.magnitude(position),
     );
   });
 
   it("camera does not go below the terrain in 3D", function () {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1821,11 +1947,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     // Trigger terrain adjustment with a small mouse movement
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
@@ -1833,13 +1959,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.positionCartographic.height).toEqualEpsilon(
       controller.minimumZoomDistance,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
   it("camera does not go below the terrain in CV", function () {
     setUpCV();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1850,11 +1976,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     // Trigger terrain adjustment with a small mouse movement
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
@@ -1862,13 +1988,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.position.z).toEqualEpsilon(
       controller.minimumZoomDistance,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
   it("camera does go below the terrain in 3D when collision detection is disabled", function () {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
     controller.enableCollisionDetection = false;
 
     updateController();
@@ -1880,24 +2006,24 @@ describe("Scene/ScreenSpaceCameraController", function () {
     // Trigger terrain adjustment with a small mouse movement
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
     updateController();
 
     expect(camera.positionCartographic.height).toBeLessThan(
-      controller.minimumZoomDistance
+      controller.minimumZoomDistance,
     );
   });
 
   it("camera does go below the terrain in CV when collision detection is disabled", function () {
     setUpCV();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
     controller.enableCollisionDetection = false;
 
     updateController();
@@ -1909,11 +2035,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     // Trigger terrain adjustment with a small mouse movement
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
@@ -1924,52 +2050,52 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("camera does not go below the terrain in 3D with the transform set", function () {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
     camera.lookAt(
       Cartesian3.fromDegrees(-72.0, 40.0, 1.0),
-      new Cartesian3(1.0, 1.0, -10.0)
+      new Cartesian3(1.0, 1.0, -10.0),
     );
 
     // Trigger terrain adjustment with a small mouse movement
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
     updateController();
 
     expect(camera.positionCartographic.height).toBeGreaterThanOrEqual(
-      controller.minimumZoomDistance
+      controller.minimumZoomDistance,
     );
   });
 
   it("camera does not go below the terrain in CV with the transform set", function () {
     setUpCV();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
     camera.lookAt(
       Cartesian3.fromDegrees(-72.0, 40.0, 1.0),
-      new Cartesian3(1.0, 1.0, -10.0)
+      new Cartesian3(1.0, 1.0, -10.0),
     );
 
     // Trigger terrain adjustment with a small mouse movement
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
@@ -1977,8 +2103,42 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.positionWC.x).toEqualEpsilon(
       controller.minimumZoomDistance,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
+  });
+
+  it("can adjust zoom factor", function () {
+    setUp3D();
+
+    // Zoom out
+    const mouseWheelMovement = -120;
+
+    // Slow zoom
+    const initialPosition = Cartesian3.clone(camera.position);
+    controller.zoomFactor = 1.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const slowZoomPosition = Cartesian3.clone(camera.position);
+    const slowZoomMagnitude = Cartesian3.magnitude(slowZoomPosition);
+
+    // Medium zoom
+    camera.position = Cartesian3.clone(initialPosition);
+    controller.zoomFactor = 5.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const mediumZoomPosition = Cartesian3.clone(camera.position);
+    const mediumZoomMagnitude = Cartesian3.magnitude(mediumZoomPosition);
+
+    // Fast zoom
+    camera.position = Cartesian3.clone(initialPosition);
+    controller.zoomFactor = 10.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const fastZoomPosition = Cartesian3.clone(camera.position);
+    const fastZoomMagnitude = Cartesian3.magnitude(fastZoomPosition);
+
+    expect(fastZoomMagnitude).toBeGreaterThan(mediumZoomMagnitude);
+    expect(mediumZoomMagnitude).toBeGreaterThan(slowZoomMagnitude);
   });
 
   it("is destroyed", function () {

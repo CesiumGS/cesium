@@ -332,7 +332,7 @@ describe(
 
       expect(renderAndBlitDepthAttachment(framebuffer)).toEqualEpsilon(
         [128, 128, 128, 255],
-        1
+        1,
       );
     });
 
@@ -381,5 +381,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

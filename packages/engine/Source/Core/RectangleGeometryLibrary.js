@@ -2,6 +2,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
+import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
 import CesiumMath from "./Math.js";
 import Matrix2 from "./Matrix2.js";
@@ -26,7 +27,7 @@ RectangleGeometryLibrary.computePosition = function (
   row,
   col,
   position,
-  st
+  st,
 ) {
   const radiiSquared = ellipsoid.radiiSquared;
   const nwCorner = computedOptions.nwCorner;
@@ -90,7 +91,7 @@ function getRotationOptions(
   granularityY,
   center,
   width,
-  height
+  height,
 ) {
   const cosRotation = Math.cos(rotation);
   const granYCos = granularityY * cosRotation;
@@ -100,6 +101,7 @@ function getRotationOptions(
   const granYSin = granularityY * sinRotation;
   const granXSin = granularityX * sinRotation;
 
+  proj._ellipsoid = Ellipsoid.default;
   nwCartesian = proj.project(nwCorner, nwCartesian);
 
   nwCartesian = Cartesian3.subtract(nwCartesian, centerCartesian, nwCartesian);
@@ -107,7 +109,7 @@ function getRotationOptions(
   nwCartesian = Matrix2.multiplyByVector(
     rotationMatrix,
     nwCartesian,
-    nwCartesian
+    nwCartesian,
   );
   nwCartesian = Cartesian3.add(nwCartesian, centerCartesian, nwCartesian);
   nwCorner = proj.unproject(nwCartesian, nwCorner);
@@ -154,7 +156,7 @@ RectangleGeometryLibrary.computeOptions = function (
   stRotation,
   boundingRectangleScratch,
   nwCornerResult,
-  stNwCornerResult
+  stNwCornerResult,
 ) {
   let east = rectangle.east;
   let west = rectangle.west;
@@ -190,6 +192,7 @@ RectangleGeometryLibrary.computeOptions = function (
     if (center.longitude < nwCorner.longitude) {
       center.longitude += CesiumMath.TWO_PI;
     }
+    proj._ellipsoid = Ellipsoid.default;
     centerCartesian = proj.project(center, centerCartesian);
   }
 
@@ -200,7 +203,7 @@ RectangleGeometryLibrary.computeOptions = function (
 
   const boundingRectangle = Rectangle.clone(
     rectangle,
-    boundingRectangleScratch
+    boundingRectangleScratch,
   );
 
   const computedOptions = {
@@ -224,7 +227,7 @@ RectangleGeometryLibrary.computeOptions = function (
       granularityY,
       center,
       width,
-      height
+      height,
     );
     north = rotationOptions.north;
     south = rotationOptions.south;
@@ -239,10 +242,10 @@ RectangleGeometryLibrary.computeOptions = function (
       south > CesiumMath.PI_OVER_TWO
     ) {
       throw new DeveloperError(
-        "Rotated rectangle is invalid.  It crosses over either the north or south pole."
+        "Rotated rectangle is invalid.  It crosses over either the north or south pole.",
       );
     }
-    //>>includeEnd('debug')
+    //>>includeEnd('debug');
 
     computedOptions.granYCos = rotationOptions.granYCos;
     computedOptions.granYSin = rotationOptions.granYSin;
@@ -266,7 +269,7 @@ RectangleGeometryLibrary.computeOptions = function (
       granularityY,
       center,
       width,
-      height
+      height,
     );
 
     computedOptions.stGranYCos = stRotationOptions.granYCos;

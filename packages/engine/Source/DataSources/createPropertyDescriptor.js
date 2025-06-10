@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import ConstantProperty from "./ConstantProperty.js";
 
@@ -7,7 +6,7 @@ function createProperty(
   privateName,
   subscriptionName,
   configurable,
-  createPropertyCallback
+  createPropertyCallback,
 ) {
   return {
     configurable: configurable,
@@ -41,7 +40,7 @@ function createProperty(
           function () {
             this._definitionChanged.raiseEvent(this, name, value, value);
           },
-          this
+          this,
         );
       }
     },
@@ -65,8 +64,8 @@ function createPropertyDescriptor(name, configurable, createPropertyCallback) {
     name,
     `_${name.toString()}`,
     `_${name.toString()}Subscription`,
-    defaultValue(configurable, false),
-    defaultValue(createPropertyCallback, createConstantProperty)
+    configurable ?? false,
+    createPropertyCallback ?? createConstantProperty,
   );
 }
 export default createPropertyDescriptor;

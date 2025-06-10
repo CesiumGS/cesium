@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import formatError from "./formatError.js";
 
@@ -26,7 +25,7 @@ function TileProviderError(
   y,
   level,
   timesRetried,
-  error
+  error,
 ) {
   /**
    * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
@@ -66,7 +65,7 @@ function TileProviderError(
    * @type {number}
    * @default 0
    */
-  this.timesRetried = defaultValue(timesRetried, 0);
+  this.timesRetried = timesRetried ?? 0;
 
   /**
    * True if the failed operation should be retried; otherwise, false.  The imagery or terrain provider
@@ -114,7 +113,7 @@ TileProviderError.reportError = function (
   x,
   y,
   level,
-  errorDetails
+  errorDetails,
 ) {
   let error = previousError;
   if (!defined(previousError)) {
@@ -125,7 +124,7 @@ TileProviderError.reportError = function (
       y,
       level,
       0,
-      errorDetails
+      errorDetails,
     );
   } else {
     error.provider = provider;
@@ -143,8 +142,8 @@ TileProviderError.reportError = function (
   } else if (defined(provider)) {
     console.log(
       `An error occurred in "${provider.constructor.name}": ${formatError(
-        message
-      )}`
+        message,
+      )}`,
     );
   }
 

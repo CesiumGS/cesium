@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import EllipsoidSurfaceAppearanceFS from "../Shaders/Appearances/EllipsoidSurfaceAppearanceFS.js";
@@ -42,10 +42,10 @@ import Material from "./Material.js";
  * });
  */
 function EllipsoidSurfaceAppearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const translucent = defaultValue(options.translucent, true);
-  const aboveGround = defaultValue(options.aboveGround, false);
+  const translucent = options.translucent ?? true;
+  const aboveGround = options.aboveGround ?? false;
 
   /**
    * The material used to determine the fragment color.  Unlike other {@link EllipsoidSurfaceAppearance}
@@ -68,27 +68,23 @@ function EllipsoidSurfaceAppearance(options) {
    *
    * @default true
    */
-  this.translucent = defaultValue(options.translucent, true);
+  this.translucent = options.translucent ?? true;
 
-  this._vertexShaderSource = defaultValue(
-    options.vertexShaderSource,
-    EllipsoidSurfaceAppearanceVS
-  );
-  this._fragmentShaderSource = defaultValue(
-    options.fragmentShaderSource,
-    EllipsoidSurfaceAppearanceFS
-  );
+  this._vertexShaderSource =
+    options.vertexShaderSource ?? EllipsoidSurfaceAppearanceVS;
+  this._fragmentShaderSource =
+    options.fragmentShaderSource ?? EllipsoidSurfaceAppearanceFS;
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     !aboveGround,
-    options.renderState
+    options.renderState,
   );
   this._closed = false;
 
   // Non-derived members
 
-  this._flat = defaultValue(options.flat, false);
-  this._faceForward = defaultValue(options.faceForward, aboveGround);
+  this._flat = options.flat ?? false;
+  this._faceForward = options.faceForward ?? aboveGround;
   this._aboveGround = aboveGround;
 }
 

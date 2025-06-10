@@ -8,10 +8,11 @@ import {
   ClassificationType,
   ClippingPlane,
   ClippingPlaneCollection,
+  ClippingPolygon,
+  ClippingPolygonCollection,
   Color,
   ColorGeometryInstanceAttribute,
   ContentMetadata,
-  defaultValue,
   destroyObject,
   Ellipsoid,
   GeometryInstance,
@@ -158,11 +159,11 @@ describe(
       });
 
       function rendersGeoJson(url) {
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-          tileset
-        ) {
-          Cesium3DTilesTester.expectRender(scene, tileset);
-        });
+        return Cesium3DTilesTester.loadTileset(scene, url).then(
+          function (tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+          },
+        );
       }
 
       it("renders GeoJSON MultiPolygon", function () {
@@ -198,32 +199,32 @@ describe(
       });
 
       function picksGeoJson(url, hasProperties, expectedFeatureId) {
-        expectedFeatureId = defaultValue(expectedFeatureId, 0);
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-          tileset
-        ) {
-          const content = tileset.root.content;
-          tileset.show = false;
-          expect(scene).toPickPrimitive(undefined);
-          tileset.show = true;
-          expect(scene).toPickAndCall(function (result) {
-            expect(result).toBeDefined();
-            expect(result.primitive).toBe(tileset);
-            expect(result.content).toBe(content);
-            const featureId = result.featureId;
-            expect(featureId).toBe(expectedFeatureId);
-            const feature = content.getFeature(featureId);
-            expect(feature).toBeDefined();
+        expectedFeatureId = expectedFeatureId ?? 0;
+        return Cesium3DTilesTester.loadTileset(scene, url).then(
+          function (tileset) {
+            const content = tileset.root.content;
+            tileset.show = false;
+            expect(scene).toPickPrimitive(undefined);
+            tileset.show = true;
+            expect(scene).toPickAndCall(function (result) {
+              expect(result).toBeDefined();
+              expect(result.primitive).toBe(tileset);
+              expect(result.content).toBe(content);
+              const featureId = result.featureId;
+              expect(featureId).toBe(expectedFeatureId);
+              const feature = content.getFeature(featureId);
+              expect(feature).toBeDefined();
 
-            if (hasProperties) {
-              expect(feature.getProperty("name")).toBe("UL");
-              expect(feature.getProperty("code")).toBe(12);
-            } else {
-              expect(feature.getProperty("name")).toBeUndefined();
-              expect(feature.getProperty("code")).toBeUndefined();
-            }
-          });
-        });
+              if (hasProperties) {
+                expect(feature.getProperty("name")).toBe("UL");
+                expect(feature.getProperty("code")).toBe(12);
+              } else {
+                expect(feature.getProperty("name")).toBeUndefined();
+                expect(feature.getProperty("code")).toBeUndefined();
+              }
+            });
+          },
+        );
       }
 
       it("picks GeoJSON MultiPolygon", function () {
@@ -268,14 +269,14 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          }
+          },
         );
       });
 
       it("renders b3dm with a binary batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withBatchTableBinaryUrl
+          withBatchTableBinaryUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -284,7 +285,7 @@ describe(
       it("renders b3dm content without batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withoutBatchTableUrl
+          withoutBatchTableUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -294,14 +295,14 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(
           function (tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
-          }
+          },
         );
       });
 
       it("picks from b3dm", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withoutBatchTableUrl
+          withoutBatchTableUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           tileset.show = false;
@@ -323,14 +324,14 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, translucentUrl).then(
           function (tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          }
+          },
         );
       });
 
       it("renders with a mix of opaque and translucent features", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          translucentOpaqueMixUrl
+          translucentOpaqueMixUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -340,38 +341,38 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(
           function (tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
-          }
+          },
         );
       });
 
       function expectRenderWithTransform(url) {
         setCamera(centerLongitude, centerLatitude, 15.0);
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-          tileset
-        ) {
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, url).then(
+          function (tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
-          const newLongitude = -1.31962;
-          const newLatitude = 0.698874;
-          const newCenter = Cartesian3.fromRadians(
-            newLongitude,
-            newLatitude,
-            0.0
-          );
-          const newHPR = new HeadingPitchRoll();
-          const newTransform = Transforms.headingPitchRollToFixedFrame(
-            newCenter,
-            newHPR
-          );
+            const newLongitude = -1.31962;
+            const newLatitude = 0.698874;
+            const newCenter = Cartesian3.fromRadians(
+              newLongitude,
+              newLatitude,
+              0.0,
+            );
+            const newHPR = new HeadingPitchRoll();
+            const newTransform = Transforms.headingPitchRollToFixedFrame(
+              newCenter,
+              newHPR,
+            );
 
-          // Update tile transform
-          tileset.root.transform = newTransform;
-          scene.renderForSpecs();
+            // Update tile transform
+            tileset.root.transform = newTransform;
+            scene.renderForSpecs();
 
-          // Move the camera to the new location
-          setCamera(newLongitude, newLatitude, 15.0);
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
+            // Move the camera to the new location
+            setCamera(newLongitude, newLatitude, 15.0);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          },
+        );
       }
 
       it("renders with a tile transform and box bounding volume", function () {
@@ -403,7 +404,7 @@ describe(
               expect(content.hasProperty(featureId, "id")).toBe(true);
               expect(content.getFeature(featureId)).toBeDefined();
             });
-          }
+          },
         );
       });
 
@@ -415,7 +416,7 @@ describe(
             expect(content.innerContents).toBeUndefined();
             expect(content.hasProperty(0, "id")).toBe(true);
             expect(content.getFeature(0)).toBeDefined();
-          }
+          },
         );
       });
 
@@ -448,7 +449,7 @@ describe(
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
             expect(content.batchTableByteLength).toEqual(
-              batchTexturesByteLength
+              batchTexturesByteLength,
             );
 
             // Pick the tile and expect the texture memory to increase
@@ -456,9 +457,9 @@ describe(
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
             expect(content.batchTableByteLength).toEqual(
-              batchTexturesByteLength + pickTexturesByteLength
+              batchTexturesByteLength + pickTexturesByteLength,
             );
-          }
+          },
         );
       });
 
@@ -470,7 +471,7 @@ describe(
               creditDisplay._currentFrameCredits.lightboxCredits.values;
             expect(credits.length).toEqual(1);
             expect(credits[0].credit.html).toEqual("Sample Copyright");
-          }
+          },
         );
       });
 
@@ -523,7 +524,7 @@ describe(
       it("renders i3dm content", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedWithBatchTableUrl
+          instancedWithBatchTableUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRender(scene, tileset);
         });
@@ -532,7 +533,7 @@ describe(
       it("renders with external gltf", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedExternalGltfUrl
+          instancedExternalGltfUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -541,7 +542,7 @@ describe(
       it("renders without normals", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedWithoutNormalsUrl
+          instancedWithoutNormalsUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -550,7 +551,7 @@ describe(
       it("renders with batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedWithBatchTableUrl
+          instancedWithBatchTableUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -559,7 +560,7 @@ describe(
       it("renders without batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedWithoutBatchTableUrl
+          instancedWithoutBatchTableUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -568,7 +569,7 @@ describe(
       it("renders with batch ids", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedWithBatchIdsUrl
+          instancedWithBatchIdsUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -577,7 +578,7 @@ describe(
       it("renders with textures", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedTexturedUrl
+          instancedTexturedUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
@@ -586,7 +587,7 @@ describe(
       it("gets memory usage", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedTexturedUrl
+          instancedTexturedUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
 
@@ -623,7 +624,7 @@ describe(
           expect(content.geometryByteLength).toEqual(geometryByteLength);
           expect(content.texturesByteLength).toEqual(texturesByteLength);
           expect(content.batchTableByteLength).toEqual(
-            batchTexturesByteLength + pickTexturesByteLength
+            batchTexturesByteLength + pickTexturesByteLength,
           );
         });
       });
@@ -631,7 +632,7 @@ describe(
       it("picks from i3dm batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedWithBatchTableUrl
+          instancedWithBatchTableUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           tileset.show = false;
@@ -665,7 +666,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBAUrl).then(
           function (tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
-          }
+          },
         );
       });
 
@@ -683,7 +684,7 @@ describe(
               expect(rgba[0]).toBeGreaterThan(rgba[1]);
               expect(rgba[0]).toBeGreaterThan(rgba[2]);
             });
-          }
+          },
         );
       });
 
@@ -691,14 +692,14 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWGS84Url).then(
           function (tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
-          }
+          },
         );
       });
 
       it("renders point cloud with batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudBatchedUrl
+          pointCloudBatchedUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRender(scene, tileset);
         });
@@ -707,7 +708,7 @@ describe(
       it("renders point cloud with per-point properties", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithPerPointPropertiesUrl
+          pointCloudWithPerPointPropertiesUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRender(scene, tileset);
         });
@@ -725,14 +726,14 @@ describe(
             expect(renderOptions).notToRender(color);
             tileset.debugColorizeTiles = false;
             expect(renderOptions).toRender(color);
-          }
+          },
         );
       });
 
       it("renders pnts with color style", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithPerPointPropertiesUrl
+          pointCloudWithPerPointPropertiesUrl,
         ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -765,7 +766,7 @@ describe(
       it("renders pnts with show style", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithPerPointPropertiesUrl
+          pointCloudWithPerPointPropertiesUrl,
         ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -791,7 +792,7 @@ describe(
       it("renders pnts with point size style", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithPerPointPropertiesUrl
+          pointCloudWithPerPointPropertiesUrl,
         ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -814,7 +815,7 @@ describe(
       it("renders pnts with style using point cloud semantics", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithPerPointPropertiesUrl
+          pointCloudWithPerPointPropertiesUrl,
         ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -850,7 +851,7 @@ describe(
       it("renders pnts with style using point cloud properties", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithPerPointPropertiesUrl
+          pointCloudWithPerPointPropertiesUrl,
         ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -875,7 +876,7 @@ describe(
       it("renders pnts with style using point cloud properties (unicode)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithUnicodePropertyIdsUrl
+          pointCloudWithUnicodePropertyIdsUrl,
         ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -901,7 +902,7 @@ describe(
       it("renders pnts with style and normals", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudNormalsUrl
+          pointCloudNormalsUrl,
         ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -928,7 +929,7 @@ describe(
       it("throws if style references the NORMAL semantic for pnts without normals", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithPerPointPropertiesUrl
+          pointCloudWithPerPointPropertiesUrl,
         ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -955,14 +956,14 @@ describe(
               expect(result.primitive).toBe(tileset);
               expect(result.content).toBe(content);
             });
-          }
+          },
         );
       });
 
       it("picks based on batchId", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudBatchedUrl
+          pointCloudBatchedUrl,
         ).then(function (tileset) {
           // Get the original color
           let color;
@@ -999,14 +1000,14 @@ describe(
             expect(function () {
               return content.getFeature(0);
             }).toThrowDeveloperError();
-          }
+          },
         );
       });
 
       it("batched point cloud works", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudBatchedUrl
+          pointCloudBatchedUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           expect(content.featuresLength).toBe(8);
@@ -1021,7 +1022,7 @@ describe(
         // table will be created.
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudWithPerPointPropertiesUrl
+          pointCloudWithPerPointPropertiesUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           expect(content.featuresLength).toBe(0);
@@ -1037,7 +1038,7 @@ describe(
 
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudBatchedUrl
+          pointCloudBatchedUrl,
         ).then(function (tileset) {
           // Get the number of picked sections with back face culling on
           let pickedCountCulling = 0;
@@ -1068,7 +1069,7 @@ describe(
           Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl),
           Cesium3DTilesTester.loadTileset(
             scene,
-            pointCloudQuantizedOctEncodedUrl
+            pointCloudQuantizedOctEncodedUrl,
           ),
         ];
 
@@ -1085,7 +1086,7 @@ describe(
           for (let i = 0; i < length; ++i) {
             const content = tilesets[i].root.content;
             expect(content.geometryByteLength).toEqual(
-              expectedGeometryMemory[i]
+              expectedGeometryMemory[i],
             );
             expect(content.texturesByteLength).toEqual(0);
           }
@@ -1096,7 +1097,7 @@ describe(
         setCamera(centerLongitude, centerLatitude, 25.0);
         return Cesium3DTilesTester.loadTileset(
           scene,
-          instancedWithBatchTableUrl
+          instancedWithBatchTableUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           tileset.show = false;
@@ -1117,7 +1118,7 @@ describe(
       it("gets memory usage for batch point cloud", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudBatchedUrl
+          pointCloudBatchedUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
 
@@ -1145,7 +1146,7 @@ describe(
           expect(content.geometryByteLength).toEqual(pointCloudGeometryMemory);
           expect(content.texturesByteLength).toEqual(0);
           expect(content.batchTableByteLength).toEqual(
-            binaryPropertyMemory + batchTexturesByteLength
+            binaryPropertyMemory + batchTexturesByteLength,
           );
 
           // Pick the tile and expect the texture memory to increase
@@ -1155,7 +1156,7 @@ describe(
           expect(content.batchTableByteLength).toEqual(
             binaryPropertyMemory +
               batchTexturesByteLength +
-              pickTexturesByteLength
+              pickTexturesByteLength,
           );
         });
       });
@@ -1167,11 +1168,12 @@ describe(
         const scene = createScene({
           canvas: createCanvas(10, 10),
         });
+        scene.msaaSamples = 1;
         noAttenuationPixelCount = scene.logarithmicDepthBuffer ? 20 : 16;
         const center = new Cartesian3.fromRadians(
           centerLongitude,
           centerLatitude,
-          5.0
+          5.0,
         );
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
         scene.postProcessStages.fxaa.enabled = false;
@@ -1179,7 +1181,7 @@ describe(
 
         return Cesium3DTilesTester.loadTileset(
           scene,
-          pointCloudNoColorUrl
+          pointCloudNoColorUrl,
         ).then(function (tileset) {
           tileset.pointCloudShading.eyeDomeLighting = false;
           tileset.root.refine = Cesium3DTileRefine.REPLACE;
@@ -1278,7 +1280,7 @@ describe(
       it("becomes ready with glb", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
-          glbContentUrl
+          glbContentUrl,
         );
         expect(tileset.root.contentReady).toBeTrue();
         expect(tileset.root.content).toBeDefined();
@@ -1287,7 +1289,7 @@ describe(
       it("becomes ready with glTF", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
-          gltfContentUrl
+          gltfContentUrl,
         );
         expect(tileset.root.contentReady).toBeTrue();
         expect(tileset.root.content).toBeDefined();
@@ -1297,14 +1299,14 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
           function (tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
-          }
+          },
         );
       });
 
       it("renders glTF content", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          buildingsMetadataUrl
+          buildingsMetadataUrl,
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRender(scene, tileset);
         });
@@ -1317,14 +1319,14 @@ describe(
             expect(function () {
               content.getFeature(0);
             }).toThrowDeveloperError();
-          }
+          },
         );
       });
 
       it("throws when calling getFeature with invalid index", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          buildingsMetadataUrl
+          buildingsMetadataUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           expect(function () {
@@ -1357,14 +1359,14 @@ describe(
                 return content.getFeature(0);
               }).toThrowDeveloperError();
             });
-          }
+          },
         );
       });
 
       it("picks from glTF feature table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          buildingsMetadataUrl
+          buildingsMetadataUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           tileset.show = false;
@@ -1401,7 +1403,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           noBatchIdsUrl,
-          tilesetOptions
+          tilesetOptions,
         ).then(function (tileset) {
           // expectRender() renders twice, first with tileset.show = false,
           // then with tileset.show = true.
@@ -1420,7 +1422,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           noBatchIdsUrl,
-          tilesetOptions
+          tilesetOptions,
         ).then(function (tileset) {
           // expectRenderBlank() renders twice, first with tileset.show = false,
           // then with tileset.show = true.
@@ -1445,7 +1447,7 @@ describe(
             const content = tile.content;
             const model = content._model;
             const passOptions = Cesium3DTilePass.getPassOptions(
-              Cesium3DTilePass.RENDER
+              Cesium3DTilePass.RENDER,
             );
 
             expect(model.clippingPlanes).toBeUndefined();
@@ -1464,7 +1466,7 @@ describe(
             tile.update(tileset, scene.frameState, passOptions);
 
             expect(model.clippingPlanes).toBeUndefined();
-          }
+          },
         );
       });
 
@@ -1474,7 +1476,7 @@ describe(
             const tile = tileset.root;
             const model = tile.content._model;
             const passOptions = Cesium3DTilePass.getPassOptions(
-              Cesium3DTilePass.RENDER
+              Cesium3DTilePass.RENDER,
             );
 
             expect(model.clippingPlanes).toBeUndefined();
@@ -1498,7 +1500,7 @@ describe(
 
             tile.update(tileset, scene.frameState, passOptions);
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
-          }
+          },
         );
       });
 
@@ -1508,7 +1510,7 @@ describe(
             const tile = tileset.root;
             const model = tile.content._model;
             const passOptions = Cesium3DTilePass.getPassOptions(
-              Cesium3DTilePass.RENDER
+              Cesium3DTilePass.RENDER,
             );
 
             expect(model.clippingPlanes).toBeUndefined();
@@ -1531,7 +1533,7 @@ describe(
             tile.update(tileset, scene.frameState, passOptions);
 
             expect(model.resetDrawCommands.calls.count()).toBe(2);
-          }
+          },
         );
       });
 
@@ -1553,7 +1555,7 @@ describe(
             clipPlane.distance = 5.0;
 
             expect(scene).toRender(color);
-          }
+          },
         );
       });
 
@@ -1569,14 +1571,14 @@ describe(
             tileset.clippingPlanes = new ClippingPlaneCollection({
               planes: [clipPlane],
               modelMatrix: Transforms.eastNorthUpToFixedFrame(
-                tileset.boundingSphere.center
+                tileset.boundingSphere.center,
               ),
               edgeWidth: 20.0,
               edgeColor: Color.RED,
             });
 
             expect(scene).notToRender(color);
-          }
+          },
         );
       });
 
@@ -1584,7 +1586,7 @@ describe(
         // Force uint8 mode - there's a slight rendering difference between
         // float and packed uint8 clipping planes for this test due to the small context
         spyOn(ClippingPlaneCollection, "useFloatTexture").and.returnValue(
-          false
+          false,
         );
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
@@ -1599,7 +1601,7 @@ describe(
                 new ClippingPlane(Cartesian3.UNIT_X, 0.0),
               ],
               modelMatrix: Transforms.eastNorthUpToFixedFrame(
-                tileset.boundingSphere.center
+                tileset.boundingSphere.center,
               ),
               unionClippingRegions: true,
             });
@@ -1609,7 +1611,7 @@ describe(
             tileset.clippingPlanes.unionClippingRegions = false;
 
             expect(scene).toRender(color);
-          }
+          },
         );
       });
 
@@ -1631,7 +1633,7 @@ describe(
                 new ClippingPlane(Cartesian3.UNIT_X, 1.0),
               ],
               modelMatrix: Transforms.eastNorthUpToFixedFrame(
-                tileset.boundingSphere.center
+                tileset.boundingSphere.center,
               ),
               unionClippingRegions: true,
             });
@@ -1641,8 +1643,52 @@ describe(
             tileset.clippingPlanes.unionClippingRegions = false;
 
             expect(scene).toRender(color);
-          }
+          },
         );
+      });
+    });
+
+    describe("clipping polygons", function () {
+      const positions = Cartesian3.fromRadiansArray([
+        centerLongitude + 0.001,
+        centerLatitude + 0.001,
+        centerLongitude + 0.001,
+        centerLatitude - 0.001,
+        centerLongitude - 0.001,
+        centerLatitude - 0.001,
+        centerLongitude - 0.001,
+        centerLatitude + 0.001,
+      ]);
+      let polygon;
+      beforeEach(function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
+        polygon = new ClippingPolygon({ positions });
+      });
+
+      it("clipping planes selectively disable rendering", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          withBatchTableUrl,
+        );
+        let color;
+        expect(scene).toRenderAndCall(function (rgba) {
+          color = rgba;
+        });
+
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        tileset.clippingPolygons = collection;
+
+        expect(scene).notToRender(color);
+
+        collection.inverse = true;
+
+        expect(scene).toRender(color);
       });
     });
 
@@ -1665,7 +1711,7 @@ describe(
         }
 
         const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-          new Color(0.0, 0.0, 0.0, 1.0)
+          new Color(0.0, 0.0, 0.0, 1.0),
         );
 
         return new Primitive({
@@ -1722,7 +1768,7 @@ describe(
         scene = createScene();
 
         const translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
-          new Cartographic(centerLongitude, centerLatitude)
+          new Cartographic(centerLongitude, centerLatitude),
         );
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
         modelMatrix = Matrix4.fromTranslation(translation);
@@ -1732,12 +1778,12 @@ describe(
           centerLongitude - offset,
           centerLatitude - offset,
           centerLongitude + offset,
-          centerLatitude + offset
+          centerLatitude + offset,
         );
         reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
         reusableTilesetPrimitive = createPrimitive(
           rectangle,
-          Pass.CESIUM_3D_TILE
+          Pass.CESIUM_3D_TILE,
         );
       });
 
@@ -1749,7 +1795,7 @@ describe(
         globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
         tilesetPrimitive = new MockPrimitive(
           reusableTilesetPrimitive,
-          Pass.CESIUM_3D_TILE
+          Pass.CESIUM_3D_TILE,
         );
 
         scene.primitives.add(globePrimitive);
@@ -1889,7 +1935,7 @@ describe(
       it("assigns group metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withoutBatchTableUrl
+          withoutBatchTableUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           content.group = new Cesium3DContentGroup({ metadata: groupMetadata });
@@ -1900,7 +1946,7 @@ describe(
       it("assigns metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withoutBatchTableUrl
+          withoutBatchTableUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           content.metadata = contentMetadata;
@@ -1909,5 +1955,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,7 +1,7 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import EllipseGeometryLibrary from "./EllipseGeometryLibrary.js";
@@ -22,21 +22,21 @@ function computeEllipse(options) {
   boundingSphereCenter = Cartesian3.multiplyByScalar(
     options.ellipsoid.geodeticSurfaceNormal(center, boundingSphereCenter),
     options.height,
-    boundingSphereCenter
+    boundingSphereCenter,
   );
   boundingSphereCenter = Cartesian3.add(
     center,
     boundingSphereCenter,
-    boundingSphereCenter
+    boundingSphereCenter,
   );
   const boundingSphere = new BoundingSphere(
     boundingSphereCenter,
-    options.semiMajorAxis
+    options.semiMajorAxis,
   );
   const positions = EllipseGeometryLibrary.computeEllipsePositions(
     options,
     false,
-    true
+    true,
   ).outerPositions;
 
   const attributes = new GeometryAttributes({
@@ -46,7 +46,7 @@ function computeEllipse(options) {
       values: EllipseGeometryLibrary.raisePositionsToHeight(
         positions,
         options,
-        false
+        false,
       ),
     }),
   });
@@ -75,31 +75,31 @@ function computeExtrudedEllipse(options) {
   let scaledNormal = Cartesian3.multiplyByScalar(
     ellipsoid.geodeticSurfaceNormal(center, scratchCartesian1),
     options.height,
-    scratchCartesian1
+    scratchCartesian1,
   );
   topBoundingSphere.center = Cartesian3.add(
     center,
     scaledNormal,
-    topBoundingSphere.center
+    topBoundingSphere.center,
   );
   topBoundingSphere.radius = semiMajorAxis;
 
   scaledNormal = Cartesian3.multiplyByScalar(
     ellipsoid.geodeticSurfaceNormal(center, scaledNormal),
     options.extrudedHeight,
-    scaledNormal
+    scaledNormal,
   );
   bottomBoundingSphere.center = Cartesian3.add(
     center,
     scaledNormal,
-    bottomBoundingSphere.center
+    bottomBoundingSphere.center,
   );
   bottomBoundingSphere.radius = semiMajorAxis;
 
   let positions = EllipseGeometryLibrary.computeEllipsePositions(
     options,
     false,
-    true
+    true,
   ).outerPositions;
   const attributes = new GeometryAttributes({
     position: new GeometryAttribute({
@@ -108,7 +108,7 @@ function computeExtrudedEllipse(options) {
       values: EllipseGeometryLibrary.raisePositionsToHeight(
         positions,
         options,
-        true
+        true,
       ),
     }),
   });
@@ -116,7 +116,7 @@ function computeExtrudedEllipse(options) {
   positions = attributes.position.values;
   const boundingSphere = BoundingSphere.union(
     topBoundingSphere,
-    bottomBoundingSphere
+    bottomBoundingSphere,
   );
   let length = positions.length / 3;
 
@@ -137,16 +137,16 @@ function computeExtrudedEllipse(options) {
     });
   }
 
-  let numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
+  let numberOfVerticalLines = options.numberOfVerticalLines ?? 16;
   numberOfVerticalLines = CesiumMath.clamp(
     numberOfVerticalLines,
     0,
-    length / 2
+    length / 2,
   );
 
   const indices = IndexDatatype.createTypedArray(
     length,
-    length * 2 + numberOfVerticalLines * 2
+    length * 2 + numberOfVerticalLines * 2,
   );
 
   length /= 2;
@@ -188,7 +188,7 @@ function computeExtrudedEllipse(options) {
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
  * @param {number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid the ellipse will be on.
  * @param {number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
  * @param {number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
  * @param {number} [options.rotation=0.0] The angle from north (counter-clockwise) in radians.
@@ -211,16 +211,13 @@ function computeExtrudedEllipse(options) {
  * const geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
  */
 function EllipseOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const semiMajorAxis = options.semiMajorAxis;
   const semiMinorAxis = options.semiMinorAxis;
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
-  );
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(center)) {
@@ -234,7 +231,7 @@ function EllipseOutlineGeometry(options) {
   }
   if (semiMajorAxis < semiMinorAxis) {
     throw new DeveloperError(
-      "semiMajorAxis must be greater than or equal to the semiMinorAxis."
+      "semiMajorAxis must be greater than or equal to the semiMinorAxis.",
     );
   }
   if (granularity <= 0.0) {
@@ -242,20 +239,20 @@ function EllipseOutlineGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  const height = defaultValue(options.height, 0.0);
-  const extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = options.height ?? 0.0;
+  const extrudedHeight = options.extrudedHeight ?? height;
 
   this._center = Cartesian3.clone(center);
   this._semiMajorAxis = semiMajorAxis;
   this._semiMinorAxis = semiMinorAxis;
   this._ellipsoid = Ellipsoid.clone(ellipsoid);
-  this._rotation = defaultValue(options.rotation, 0.0);
+  this._rotation = options.rotation ?? 0.0;
   this._height = Math.max(extrudedHeight, height);
   this._granularity = granularity;
   this._extrudedHeight = Math.min(extrudedHeight, height);
   this._numberOfVerticalLines = Math.max(
-    defaultValue(options.numberOfVerticalLines, 16),
-    0
+    options.numberOfVerticalLines ?? 16,
+    0,
   );
   this._offsetAttribute = options.offsetAttribute;
   this._workerName = "createEllipseOutlineGeometry";
@@ -287,7 +284,7 @@ EllipseOutlineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value._center, array, startingIndex);
   startingIndex += Cartesian3.packedLength;
@@ -302,7 +299,7 @@ EllipseOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._granularity;
   array[startingIndex++] = value._extrudedHeight;
   array[startingIndex++] = value._numberOfVerticalLines;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -337,7 +334,7 @@ EllipseOutlineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const center = Cartesian3.unpack(array, startingIndex, scratchCenter);
   startingIndex += Cartesian3.packedLength;
@@ -403,12 +400,12 @@ EllipseOutlineGeometry.createGeometry = function (ellipseGeometry) {
     height,
     extrudedHeight,
     0,
-    CesiumMath.EPSILON2
+    CesiumMath.EPSILON2,
   );
 
   ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(
     ellipseGeometry._center,
-    ellipseGeometry._center
+    ellipseGeometry._center,
   );
   const options = {
     center: ellipseGeometry._center,

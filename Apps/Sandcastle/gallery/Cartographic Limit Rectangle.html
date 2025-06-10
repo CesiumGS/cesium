@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -47,7 +44,7 @@
           -180.0,
           -23.43687,
           180.0,
-          23.43687
+          23.43687,
         );
 
         globe.cartographicLimitRectangle = coffeeBeltRectangle;
@@ -70,7 +67,7 @@
                 outlineWidth: 4.0,
                 outlineColor: Cesium.Color.WHITE,
               },
-            })
+            }),
           );
         }
 

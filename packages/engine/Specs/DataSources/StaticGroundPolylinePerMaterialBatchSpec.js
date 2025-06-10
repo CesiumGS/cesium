@@ -6,6 +6,7 @@ import {
   defined,
   DistanceDisplayCondition,
   JulianDate,
+  Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
   BoundingSphereState,
@@ -20,8 +21,6 @@ import {
   ClassificationType,
   GroundPolylinePrimitive,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -57,7 +56,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     const polyline = new PolylineGraphics();
     polyline.clampToGround = new ConstantProperty(true);
     polyline.positions = new ConstantProperty(
-      Cartesian3.fromDegreesArray([0, 0, 0.1, 0, 0.1, 0.1, 0, 0.1])
+      Cartesian3.fromDegreesArray([0, 0, 0.1, 0, 0.1, 0.1, 0, 0.1]),
     );
     return polyline;
   }
@@ -71,7 +70,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const polyline1 = createGroundPolyline();
@@ -126,7 +125,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: Color.RED,
-      })
+      }),
     );
     const polyline = createGroundPolyline();
     polyline.material = new ColorMaterialProperty(color);
@@ -142,7 +141,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const updater = new PolylineGeometryUpdater(entity, scene);
@@ -182,7 +181,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: new DistanceDisplayCondition(1.0, 2.0),
-      })
+      }),
     );
 
     const polyline = createGroundPolyline();
@@ -199,7 +198,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const updater = new PolylineGeometryUpdater(entity, scene);
@@ -216,7 +215,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
       let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqualEpsilon(
         [1.0, 2.0],
-        CesiumMath.EPSILON6
+        CesiumMath.EPSILON6,
       );
 
       batch.update(outOfRangeTime);
@@ -243,7 +242,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: true,
-      })
+      }),
     );
     const polyline = createGroundPolyline();
     polyline.show = show;
@@ -258,7 +257,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
 
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
-      false
+      false,
     );
 
     const updater = new PolylineGeometryUpdater(entity, scene);
@@ -295,7 +294,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     function buildEntity() {
@@ -368,7 +367,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
     const polyline1 = createGroundPolyline();
     polyline1.material = Color.RED;
@@ -408,7 +407,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const polyline1 = createGroundPolyline();
@@ -453,7 +452,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const polyline1 = createGroundPolyline();
@@ -500,7 +499,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const polyline1 = createGroundPolyline();
@@ -544,7 +543,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     function buildEntity() {

@@ -57,7 +57,7 @@ describe("Scene/Model/ModelSilhouettePipelineStage", function () {
 
     const uniformMap = renderResources.uniformMap;
     expect(uniformMap.model_silhouetteColor()).toEqual(
-      mockModel.silhouetteColor
+      mockModel.silhouetteColor,
     );
     expect(uniformMap.model_silhouetteSize()).toEqual(mockModel.silhouetteSize);
     expect(uniformMap.model_silhouettePass()).toBe(false);

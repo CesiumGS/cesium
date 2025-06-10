@@ -294,6 +294,64 @@ When new Sandcastle is added, or behavior is intentionally changed, the screensh
 npm run test-e2e-update -- -g "3D Tiles Clipping Planes"
 ```
 
+#### End to End test performance
+
+The vast majority of our end to end tests should run in about 2-5 seconds across any machine (a few may still be above 15 seconds but most should not). If they are taking longer than that you should look to speed them up. We've previously noticed certain browsers not using the GPU under Playwright resulting in slower tests.
+
+The first step to checking for WebGL related issues should be to add an extra test or two to load the WebGL report under the Playwright environment to see if anything (like the wrong GPU) pops out. Expand the details below for an example of these tests
+
+<details><summary>WebGL check example</summary>
+
+```js
+// tests/example1.test.js
+import { test } from "./test.js";
+
+function waitFor(delay) {
+  return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
+const screenshotPath = "Specs/e2e/webgl-check";
+
+const chromeGpu = "chrome://gpu/"; // only works for chrome not firefox
+const webGlReport1 = "https://webglreport.com/?v=1";
+const webGlReport2 = "https://webglreport.com/?v=2";
+
+/**
+ * This is used to check how WebGL is running in the testing environment to spot things like
+ * not using the correct gpu that may affect performace and run time of the tests themselves
+ * Based off of https://www.createit.com/blog/headless-chrome-testing-webgl-using-playwright/
+ */
+test.describe("WebGL verification", () => {
+  // Check if hardware acceleration is enabled. Without it, our tests will be much slower.
+  test("GPU hardware acceleration", async ({ page }) => {
+    await page.goto(chromeGpu);
+    await waitFor(2000);
+    await page.screenshot({
+      path: `${screenshotPath}/screenshot_hardware.png`,
+      fullPage: true,
+    });
+  });
+  test("webgl report v1", async ({ page }) => {
+    await page.goto(webGlReport1);
+    await waitFor(2000);
+    await page.screenshot({
+      path: `${screenshotPath}/screenshot_webgl1.png`,
+      fullPage: true,
+    });
+  });
+  test("webgl report v2", async ({ page }) => {
+    await page.goto(webGlReport2);
+    await waitFor(2000);
+    await page.screenshot({
+      path: `${screenshotPath}/screenshot_webgl2.png`,
+      fullPage: true,
+    });
+  });
+});
+```
+
+</details>
+
 ## `testfailure` Label for Issues
 
 Despite our best efforts, sometimes tests fail. This is often due to a new browser, OS, or driver bug that breaks a test that previously passed. If this indicates a bug in CesiumJS, we strive to quickly fix it. Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/CesiumGS/cesium/issues/2989)), we also strive to quickly fix it.
@@ -363,11 +421,11 @@ it("angleBetween works for acute angles", function () {
   const y = new Cartesian3(1.0, 1.0, 0.0);
   expect(Cartesian3.angleBetween(x, y)).toEqualEpsilon(
     CesiumMath.PI_OVER_FOUR,
-    CesiumMath.EPSILON14
+    CesiumMath.EPSILON14,
   );
   expect(Cartesian3.angleBetween(y, x)).toEqualEpsilon(
     CesiumMath.PI_OVER_FOUR,
-    CesiumMath.EPSILON14
+    CesiumMath.EPSILON14,
   );
 });
 ```
@@ -383,14 +441,26 @@ In addition to testing success cases, we also test all failure cases. The custom
 ```javascript
 it("fromDegrees throws with no latitude", function () {
   expect(function () {
-    Cartesian3.fromDegrees(0.0);
-  }).toThrowDeveloperError();
+    Cartesian3.fromDegrees(0.0, undefined);
+  }).toThrowDeveloperError(
+    "Expected latitude to be typeof number, actual typeof was undefined",
+  );
 });
 ```
 
 Above, `Cartesian3.fromDegrees` is expected to throw a `DeveloperError` because it expects longitude and latitude arguments, and only longitude is provided.
 
-Tips:
+#### Tips
+
+- When testing for exceptions it is recommended to test for the expected error message to verify that the test is triggering the correct error. This can be achieved either with the full error message, like above, or with a regular expression that will match the error message like this:
+
+```javascript
+it("fromDegrees throws with no latitude", function () {
+  expect(function () {
+    Cartesian3.fromDegrees(0.0, undefined);
+  }).toThrowDeveloperError(/Expected latitude to be/);
+});
+```
 
 - When testing for exceptions, put only code that is expected to trigger the exception inside the function passed to `expect()`, in case setup code unintentionally throws an exception.
 - To verify the right exception is thrown, it is often useful to comment out the `expect` call when first running the test, for example:
@@ -398,7 +468,7 @@ Tips:
 ```javascript
 it("fromDegrees throws with no latitude", function () {
   //    expect(function() {
-  Cartesian3.fromDegrees(0.0);
+  Cartesian3.fromDegrees(0.0, undefined);
   //    }).toThrowDeveloperError();
 });
 ```
@@ -475,7 +545,7 @@ it("does not render when show is false", function () {
   scene.primitives.add(
     new DebugModelMatrixPrimitive({
       show: false,
-    })
+    }),
   );
   expect(scene).toRender([0, 0, 0, 255]);
 });
@@ -719,13 +789,13 @@ it("Zooms to longitude, latitude, height", function () {
   viewModel.search();
   expect(Camera.prototype.flyTo).toHaveBeenCalled();
   expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(
-    Cartesian3.fromDegrees(1.0, 2.0, 3.0)
+    Cartesian3.fromDegrees(1.0, 2.0, 3.0),
   );
 
   viewModel.searchText = "1.0   2.0   3.0";
   viewModel.search();
   expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(
-    Cartesian3.fromDegrees(1.0, 2.0, 3.0)
+    Cartesian3.fromDegrees(1.0, 2.0, 3.0),
   );
 });
 ```
@@ -837,7 +907,7 @@ it("fromUrl throws if the SRS is not supported", async function () {
   metadata.spatialReference.latestWkid = 1234;
 
   await expectAsync(
-    ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+    ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl),
   ).toBeRejectedWithError(RuntimeError, "Invalid spatial reference");
 });
 ```
@@ -847,7 +917,7 @@ Since developer errors are removed for release builds, CesiumJS's `toBeRejectedW
 ```javascript
 it("fromUrl throws without url", async function () {
   await expectAsync(Cesium3DTileset.fromUrl()).toBeRejectedWithDeveloperError(
-    "url is required, actual value was undefined"
+    "url is required, actual value was undefined",
   );
 });
 ```
@@ -909,7 +979,7 @@ describe(
 
     // ...
   },
-  "WebGL"
+  "WebGL",
 );
 ```
 

@@ -98,7 +98,7 @@ TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
   return Math.max(
     0.0,
     Cartesian3.distance(boundingSphere.center, frameState.camera.positionWC) -
-      boundingSphere.radius
+      boundingSphere.radius,
   );
 };
 
@@ -144,7 +144,7 @@ TileBoundingSphere.prototype.createDebugVolume = function (color) {
   });
   const modelMatrix = Matrix4.fromTranslation(
     this.center,
-    new Matrix4.clone(Matrix4.IDENTITY)
+    new Matrix4.clone(Matrix4.IDENTITY),
   );
   const instance = new GeometryInstance({
     geometry: geometry,

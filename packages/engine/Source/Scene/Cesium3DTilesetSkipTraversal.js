@@ -73,7 +73,7 @@ Cesium3DTilesetSkipTraversal.selectTiles = function (tileset, frameState) {
   descendantTraversal.stack.trim(descendantTraversal.stackMaximumLength);
   selectionTraversal.stack.trim(selectionTraversal.stackMaximumLength);
   selectionTraversal.ancestorStack.trim(
-    selectionTraversal.ancestorStackMaximumLength
+    selectionTraversal.ancestorStackMaximumLength,
   );
 
   // Update the priority for any requests found during traversal
@@ -98,7 +98,7 @@ function selectDescendants(root, frameState) {
   while (stack.length > 0) {
     descendantTraversal.stackMaximumLength = Math.max(
       descendantTraversal.stackMaximumLength,
-      stack.length
+      stack.length,
     );
     const tile = stack.pop();
     const children = tile.children;
@@ -269,21 +269,17 @@ function executeTraversal(root, frameState) {
     ? Number.MAX_VALUE
     : Math.max(
         tileset.baseScreenSpaceError,
-        tileset.memoryAdjustedScreenSpaceError
+        tileset.memoryAdjustedScreenSpaceError,
       );
-  const {
-    canTraverse,
-    loadTile,
-    visitTile,
-    touchTile,
-  } = Cesium3DTilesetTraversal;
+  const { canTraverse, loadTile, visitTile, touchTile } =
+    Cesium3DTilesetTraversal;
   const stack = traversal.stack;
   stack.push(root);
 
   while (stack.length > 0) {
     traversal.stackMaximumLength = Math.max(
       traversal.stackMaximumLength,
-      stack.length
+      stack.length,
     );
 
     const tile = stack.pop();
@@ -364,11 +360,11 @@ function traverseAndSelect(root, frameState) {
   while (stack.length > 0 || ancestorStack.length > 0) {
     selectionTraversal.stackMaximumLength = Math.max(
       selectionTraversal.stackMaximumLength,
-      stack.length
+      stack.length,
     );
     selectionTraversal.ancestorStackMaximumLength = Math.max(
       selectionTraversal.ancestorStackMaximumLength,
-      ancestorStack.length
+      ancestorStack.length,
     );
 
     if (ancestorStack.length > 0) {

@@ -1,7 +1,7 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
@@ -41,7 +41,7 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  * @param {object} options.geoJson The GeoJson object.
  */
 function GeoJsonLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.geoJson", options.geoJson);
@@ -129,7 +129,7 @@ function ParseResult() {
 function parsePosition(position) {
   const x = position[0];
   const y = position[1];
-  const z = defaultValue(position[2], 0.0);
+  const z = position[2] ?? 0.0;
   return new Cartesian3(x, y, z);
 }
 
@@ -272,7 +272,7 @@ function createLinesPrimitive(features, toLocal, frameState) {
   const featureIdsTypedArray = new Float32Array(vertexCount);
   const indicesTypedArray = IndexDatatype.createTypedArray(
     vertexCount,
-    indexCount
+    indexCount,
   );
   const indexDatatype = IndexDatatype.fromTypedArray(indicesTypedArray);
 
@@ -280,13 +280,13 @@ function createLinesPrimitive(features, toLocal, frameState) {
   const localMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
-    Number.POSITIVE_INFINITY
+    Number.POSITIVE_INFINITY,
   );
 
   const localMax = new Cartesian3(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
-    Number.NEGATIVE_INFINITY
+    Number.NEGATIVE_INFINITY,
   );
 
   let vertexCounter = 0;
@@ -310,12 +310,12 @@ function createLinesPrimitive(features, toLocal, frameState) {
           cartographic.y,
           cartographic.z,
           Ellipsoid.WGS84,
-          scratchCartesian
+          scratchCartesian,
         );
         const localCartesian = Matrix4.multiplyByPoint(
           toLocal,
           globalCartesian,
-          scratchCartesian
+          scratchCartesian,
         );
 
         Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
@@ -426,13 +426,13 @@ function createPointsPrimitive(features, toLocal, frameState) {
   const localMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
-    Number.POSITIVE_INFINITY
+    Number.POSITIVE_INFINITY,
   );
 
   const localMax = new Cartesian3(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
-    Number.NEGATIVE_INFINITY
+    Number.NEGATIVE_INFINITY,
   );
 
   let vertexCounter = 0;
@@ -452,12 +452,12 @@ function createPointsPrimitive(features, toLocal, frameState) {
         cartographic.y,
         cartographic.z,
         Ellipsoid.WGS84,
-        scratchCartesian
+        scratchCartesian,
       );
       const localCartesian = Matrix4.multiplyByPoint(
         toLocal,
         globalCartesian,
-        scratchCartesian
+        scratchCartesian,
       );
 
       Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
@@ -546,10 +546,7 @@ function parse(geoJson, frameState) {
   const properties = {};
   for (let i = 0; i < featureCount; i++) {
     const feature = features[i];
-    const featureProperties = defaultValue(
-      feature.properties,
-      defaultValue.EMPTY_OBJECT
-    );
+    const featureProperties = feature.properties ?? Frozen.EMPTY_OBJECT;
     for (const propertyId in featureProperties) {
       if (featureProperties.hasOwnProperty(propertyId)) {
         if (!defined(properties[propertyId])) {
@@ -564,7 +561,7 @@ function parse(geoJson, frameState) {
     const feature = features[i];
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const value = defaultValue(feature.properties[propertyId], "");
+        const value = feature.properties[propertyId] ?? "";
         properties[propertyId][i] = value;
       }
     }
@@ -593,13 +590,13 @@ function parse(geoJson, frameState) {
   const cartographicMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
-    Number.POSITIVE_INFINITY
+    Number.POSITIVE_INFINITY,
   );
 
   const cartographicMax = new Cartesian3(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
-    Number.NEGATIVE_INFINITY
+    Number.NEGATIVE_INFINITY,
   );
 
   let hasLines = false;
@@ -617,12 +614,12 @@ function parse(geoJson, frameState) {
           Cartesian3.minimumByComponent(
             cartographicMin,
             line[k],
-            cartographicMin
+            cartographicMin,
           );
           Cartesian3.maximumByComponent(
             cartographicMax,
             line[k],
-            cartographicMax
+            cartographicMax,
           );
         }
       }
@@ -643,19 +640,19 @@ function parse(geoJson, frameState) {
   const cartographicCenter = Cartesian3.midpoint(
     cartographicMin,
     cartographicMax,
-    new Cartesian3()
+    new Cartesian3(),
   );
   const ecefCenter = Cartesian3.fromDegrees(
     cartographicCenter.x,
     cartographicCenter.y,
     cartographicCenter.z,
     Ellipsoid.WGS84,
-    new Cartesian3()
+    new Cartesian3(),
   );
   const toGlobal = Transforms.eastNorthUpToFixedFrame(
     ecefCenter,
     Ellipsoid.WGS84,
-    new Matrix4()
+    new Matrix4(),
   );
   const toLocal = Matrix4.inverseTransformation(toGlobal, new Matrix4());
 

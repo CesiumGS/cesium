@@ -1,7 +1,6 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
@@ -24,7 +23,7 @@ function Batch(
   classificationType,
   materialProperty,
   zIndex,
-  asynchronous
+  asynchronous,
 ) {
   let appearanceType;
   if (materialProperty instanceof ColorMaterialProperty) {
@@ -46,10 +45,11 @@ function Batch(
   this.updatersWithAttributes = new AssociativeArray();
   this.attributes = new AssociativeArray();
   this.invalidated = false;
-  this.removeMaterialSubscription = materialProperty.definitionChanged.addEventListener(
-    Batch.prototype.onMaterialChanged,
-    this
-  );
+  this.removeMaterialSubscription =
+    materialProperty.definitionChanged.addEventListener(
+      Batch.prototype.onMaterialChanged,
+      this,
+    );
   this.subscriptions = new AssociativeArray();
   this.showsUpdated = new AssociativeArray();
   this.zIndex = zIndex;
@@ -92,16 +92,13 @@ Batch.prototype.add = function (time, updater, geometryInstance) {
     // Listen for show changes. These will be synchronized in updateShows.
     this.subscriptions.set(
       id,
-      updater.entity.definitionChanged.addEventListener(function (
-        entity,
-        propertyName,
-        newValue,
-        oldValue
-      ) {
-        if (propertyName === "isShowing") {
-          that.showsUpdated.set(updater.id, updater);
-        }
-      })
+      updater.entity.definitionChanged.addEventListener(
+        function (entity, propertyName, newValue, oldValue) {
+          if (propertyName === "isShowing") {
+            that.showsUpdated.set(updater.id, updater);
+          }
+        },
+      ),
     );
   }
   this.createPrimitive = true;
@@ -154,7 +151,7 @@ Batch.prototype.update = function (time) {
         this.material = MaterialProperty.getValue(
           time,
           this.materialProperty,
-          this.material
+          this.material,
         );
         primitive.appearance.material = this.material;
       }
@@ -187,7 +184,7 @@ Batch.prototype.update = function (time) {
       this.material = MaterialProperty.getValue(
         time,
         this.materialProperty,
-        this.material
+        this.material,
       );
       this.primitive.appearance.material = this.material;
     }
@@ -210,16 +207,16 @@ Batch.prototype.update = function (time) {
           colorProperty,
           time,
           Color.WHITE,
-          scratchColor
+          scratchColor,
         );
         if (!Color.equals(attributes._lastColor, resultColor)) {
           attributes._lastColor = Color.clone(
             resultColor,
-            attributes._lastColor
+            attributes._lastColor,
           );
           attributes.color = ColorGeometryInstanceAttribute.toValue(
             resultColor,
-            attributes.color
+            attributes.color,
           );
         }
       }
@@ -230,7 +227,7 @@ Batch.prototype.update = function (time) {
       if (show !== currentShow) {
         attributes.show = ShowGeometryInstanceAttribute.toValue(
           show,
-          attributes.show
+          attributes.show,
         );
       }
 
@@ -241,22 +238,24 @@ Batch.prototype.update = function (time) {
           distanceDisplayConditionProperty,
           time,
           defaultDistanceDisplayCondition,
-          distanceDisplayConditionScratch
+          distanceDisplayConditionScratch,
         );
         if (
           !DistanceDisplayCondition.equals(
             distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
+            attributes._lastDistanceDisplayCondition,
           )
         ) {
-          attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(
-            distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
-          );
-          attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-            distanceDisplayCondition,
-            attributes.distanceDisplayCondition
-          );
+          attributes._lastDistanceDisplayCondition =
+            DistanceDisplayCondition.clone(
+              distanceDisplayCondition,
+              attributes._lastDistanceDisplayCondition,
+            );
+          attributes.distanceDisplayCondition =
+            DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+              distanceDisplayCondition,
+              attributes.distanceDisplayCondition,
+            );
         }
       }
     }
@@ -287,7 +286,7 @@ Batch.prototype.updateShows = function (primitive) {
     if (show !== currentShow) {
       attributes.show = ShowGeometryInstanceAttribute.toValue(
         show,
-        attributes.show
+        attributes.show,
       );
       instance.attributes.show.value[0] = attributes.show[0];
     }
@@ -335,12 +334,12 @@ Batch.prototype.destroy = function () {
 function StaticGroundPolylinePerMaterialBatch(
   orderedGroundPrimitives,
   classificationType,
-  asynchronous
+  asynchronous,
 ) {
   this._items = [];
   this._orderedGroundPrimitives = orderedGroundPrimitives;
   this._classificationType = classificationType;
-  this._asynchronous = defaultValue(asynchronous, true);
+  this._asynchronous = asynchronous ?? true;
 }
 
 StaticGroundPolylinePerMaterialBatch.prototype.add = function (time, updater) {
@@ -362,7 +361,7 @@ StaticGroundPolylinePerMaterialBatch.prototype.add = function (time, updater) {
     this._classificationType,
     updater.fillMaterialProperty,
     zIndex,
-    this._asynchronous
+    this._asynchronous,
   );
   batch.add(time, updater, geometryInstance);
   items.push(batch);
@@ -410,7 +409,7 @@ StaticGroundPolylinePerMaterialBatch.prototype.update = function (time) {
 
 StaticGroundPolylinePerMaterialBatch.prototype.getBoundingSphere = function (
   updater,
-  result
+  result,
 ) {
   const items = this._items;
   const length = items.length;
@@ -423,12 +422,13 @@ StaticGroundPolylinePerMaterialBatch.prototype.getBoundingSphere = function (
   return BoundingSphereState.FAILED;
 };
 
-StaticGroundPolylinePerMaterialBatch.prototype.removeAllPrimitives = function () {
-  const items = this._items;
-  const length = items.length;
-  for (let i = 0; i < length; i++) {
-    items[i].destroy();
-  }
-  this._items.length = 0;
-};
+StaticGroundPolylinePerMaterialBatch.prototype.removeAllPrimitives =
+  function () {
+    const items = this._items;
+    const length = items.length;
+    for (let i = 0; i < length; i++) {
+      items[i].destroy();
+    }
+    this._items.length = 0;
+  };
 export default StaticGroundPolylinePerMaterialBatch;

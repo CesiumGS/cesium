@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -176,16 +175,16 @@ function calculateHeading(
   firstLongitude,
   firstLatitude,
   secondLongitude,
-  secondLatitude
+  secondLatitude,
 ) {
   const sigma1 = calculateSigma(ellipsoidRhumbLine._ellipticity, firstLatitude);
   const sigma2 = calculateSigma(
     ellipsoidRhumbLine._ellipticity,
-    secondLatitude
+    secondLatitude,
   );
   return Math.atan2(
     CesiumMath.negativePiToPi(secondLongitude - firstLongitude),
-    sigma2 - sigma1
+    sigma2 - sigma1,
   );
 }
 
@@ -196,7 +195,7 @@ function calculateArcLength(
   firstLongitude,
   firstLatitude,
   secondLongitude,
-  secondLatitude
+  secondLatitude,
 ) {
   const heading = ellipsoidRhumbLine._heading;
   const deltaLongitude = secondLongitude - firstLongitude;
@@ -209,7 +208,7 @@ function calculateArcLength(
     CesiumMath.equalsEpsilon(
       Math.abs(heading),
       CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     )
   ) {
     //If heading is close to 90 degrees
@@ -230,12 +229,12 @@ function calculateArcLength(
     const M1 = calculateM(
       ellipsoidRhumbLine._ellipticity,
       major,
-      firstLatitude
+      firstLatitude,
     );
     const M2 = calculateM(
       ellipsoidRhumbLine._ellipticity,
       major,
-      secondLatitude
+      secondLatitude,
     );
 
     distance = (M2 - M1) / Math.cos(heading);
@@ -249,20 +248,21 @@ const scratchCart2 = new Cartesian3();
 function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
   const firstCartesian = Cartesian3.normalize(
     ellipsoid.cartographicToCartesian(start, scratchCart2),
-    scratchCart1
+    scratchCart1,
   );
   const lastCartesian = Cartesian3.normalize(
     ellipsoid.cartographicToCartesian(end, scratchCart2),
-    scratchCart2
+    scratchCart2,
   );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals(
     "value",
     Math.abs(
-      Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI
+      Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) -
+        Math.PI,
     ),
-    0.0125
+    0.0125,
   );
   //>>includeEnd('debug');
 
@@ -273,12 +273,12 @@ function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
   ellipsoidRhumbLine._ellipticitySquared =
     (majorSquared - minorSquared) / majorSquared;
   ellipsoidRhumbLine._ellipticity = Math.sqrt(
-    ellipsoidRhumbLine._ellipticitySquared
+    ellipsoidRhumbLine._ellipticitySquared,
   );
 
   ellipsoidRhumbLine._start = Cartographic.clone(
     start,
-    ellipsoidRhumbLine._start
+    ellipsoidRhumbLine._start,
   );
   ellipsoidRhumbLine._start.height = 0;
 
@@ -290,7 +290,7 @@ function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
     start.longitude,
     start.latitude,
     end.longitude,
-    end.latitude
+    end.latitude,
   );
   ellipsoidRhumbLine._distance = calculateArcLength(
     ellipsoidRhumbLine,
@@ -299,7 +299,7 @@ function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
     start.longitude,
     start.latitude,
     end.longitude,
-    end.latitude
+    end.latitude,
   );
 }
 
@@ -309,7 +309,7 @@ function interpolateUsingSurfaceDistance(
   distance,
   major,
   ellipticity,
-  result
+  result,
 ) {
   if (distance === 0.0) {
     return Cartographic.clone(start, result);
@@ -385,12 +385,12 @@ function interpolateUsingSurfaceDistance(
  *
  * @param {Cartographic} [start] The initial planetodetic point on the path.
  * @param {Cartographic} [end] The final planetodetic point on the path.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the rhumb line lies.
  *
  * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
  */
 function EllipsoidRhumbLine(start, end, ellipsoid) {
-  const e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  const e = ellipsoid ?? Ellipsoid.default;
   this._ellipsoid = e;
   this._start = new Cartographic();
   this._end = new Cartographic();
@@ -481,7 +481,7 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
  * @param {Cartographic} start The initial planetodetic point on the path.
  * @param {number} heading The heading in radians.
  * @param {number} distance The rhumb line distance between the start and end point.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the rhumb line lies.
  * @param {EllipsoidRhumbLine} [result] The object in which to store the result.
  * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
  */
@@ -490,7 +490,7 @@ EllipsoidRhumbLine.fromStartHeadingDistance = function (
   heading,
   distance,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("start", start);
@@ -499,7 +499,7 @@ EllipsoidRhumbLine.fromStartHeadingDistance = function (
   Check.typeOf.number.greaterThan("distance", distance, 0.0);
   //>>includeEnd('debug');
 
-  const e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  const e = ellipsoid ?? Ellipsoid.default;
   const major = e.maximumRadius;
   const minor = e.minimumRadius;
   const majorSquared = major * major;
@@ -512,7 +512,7 @@ EllipsoidRhumbLine.fromStartHeadingDistance = function (
     heading,
     distance,
     e.maximumRadius,
-    ellipticity
+    ellipticity,
   );
 
   if (
@@ -550,18 +550,18 @@ EllipsoidRhumbLine.prototype.setEndPoints = function (start, end) {
  */
 EllipsoidRhumbLine.prototype.interpolateUsingFraction = function (
   fraction,
-  result
+  result,
 ) {
   return this.interpolateUsingSurfaceDistance(
     fraction * this._distance,
-    result
+    result,
   );
 };
 
 /**
  * Provides the location of a point at the indicated distance along the rhumb line.
  *
- * @param {number} distance The distance from the inital point to the point of interest along the rhumbLine.
+ * @param {number} distance The distance from the initial point to the point of interest along the rhumbLine.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the rhumb line.
  *
@@ -569,13 +569,13 @@ EllipsoidRhumbLine.prototype.interpolateUsingFraction = function (
  */
 EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function (
   distance,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("distance", distance);
   if (!defined(this._distance) || this._distance === 0.0) {
     throw new DeveloperError(
-      "EllipsoidRhumbLine must have distinct start and end set."
+      "EllipsoidRhumbLine must have distinct start and end set.",
     );
   }
   //>>includeEnd('debug');
@@ -586,7 +586,7 @@ EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function (
     distance,
     this._ellipsoid.maximumRadius,
     this._ellipticity,
-    result
+    result,
   );
 };
 
@@ -602,13 +602,13 @@ EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function (
  */
 EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
   intersectionLongitude,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("intersectionLongitude", intersectionLongitude);
   if (!defined(this._distance) || this._distance === 0.0) {
     throw new DeveloperError(
-      "EllipsoidRhumbLine must have distinct start and end set."
+      "EllipsoidRhumbLine must have distinct start and end set.",
     );
   }
   //>>includeEnd('debug');
@@ -624,7 +624,7 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
     CesiumMath.equalsEpsilon(
       Math.abs(intersectionLongitude),
       Math.PI,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     )
   ) {
     intersectionLongitude = CesiumMath.sign(start.longitude) * Math.PI;
@@ -645,14 +645,14 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
     CesiumMath.equalsEpsilon(
       Math.abs(CesiumMath.PI_OVER_TWO - absHeading),
       CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     )
   ) {
     if (
       CesiumMath.equalsEpsilon(
         intersectionLongitude,
         start.longitude,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       )
     ) {
       return undefined;
@@ -683,7 +683,7 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
     newPhi =
       2 *
         Math.atan(
-          leftComponent * Math.pow(numerator / denominator, ellipticity / 2)
+          leftComponent * Math.pow(numerator / denominator, ellipticity / 2),
         ) -
       CesiumMath.PI_OVER_TWO;
   } while (!CesiumMath.equalsEpsilon(newPhi, phi, CesiumMath.EPSILON12));
@@ -706,13 +706,13 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
  */
 EllipsoidRhumbLine.prototype.findIntersectionWithLatitude = function (
   intersectionLatitude,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("intersectionLatitude", intersectionLatitude);
   if (!defined(this._distance) || this._distance === 0.0) {
     throw new DeveloperError(
-      "EllipsoidRhumbLine must have distinct start and end set."
+      "EllipsoidRhumbLine must have distinct start and end set.",
     );
   }
   //>>includeEnd('debug');
@@ -726,7 +726,7 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLatitude = function (
     CesiumMath.equalsEpsilon(
       Math.abs(heading),
       CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     )
   ) {
     return;

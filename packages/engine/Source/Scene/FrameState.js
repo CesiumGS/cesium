@@ -261,9 +261,10 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @type {object}
    * @property {boolean} enabled <code>true</code> if fog is enabled, <code>false</code> otherwise. This affects both fog culling and rendering.
    * @property {boolean} renderable <code>true</code> if fog should be rendered, <code>false</code> if not. This flag should be checked in combination with fog.enabled.
-   * @property {number} density A positive number used to mix the color and fog color based on camera distance.
-   * @property {number} sse A scalar used to modify the screen space error of geometry partially in fog.
-   * @property {number} minimumBrightness The minimum brightness of terrain with fog applied.
+   * @property {number | undefined} density A positive number used to mix the color and fog color based on camera distance.
+   * @property {number | undefined} visualDensityScalar A positive number to modify how impactful the fog is based off the density
+   * @property {number | undefined} sse A scalar used to modify the screen space error of geometry partially in fog.
+   * @property {number | undefined} minimumBrightness The minimum brightness of terrain with fog applied.
    */
 
   /**
@@ -277,6 +278,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
     enabled: false,
     renderable: false,
     density: undefined,
+    visualDensityScalar: undefined,
     sse: undefined,
     minimumBrightness: undefined,
   };
@@ -421,6 +423,37 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @default 0.0
    */
   this.minimumTerrainHeight = 0.0;
+
+  /**
+   * Whether metadata picking is currently in progress.
+   *
+   * This is set to `true` in the `Picking.pickMetadata` function,
+   * immediately before updating and executing the draw commands,
+   * and set back to `false` immediately afterwards. It will be
+   * used to determine whether the metadata picking draw commands
+   * should be executed, in the `Scene.executeCommand` function.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  this.pickingMetadata = false;
+
+  /**
+   * Metadata picking information.
+   *
+   * This describes the metadata property that is supposed to be picked
+   * in a `Picking.pickMetadata` call.
+   *
+   * This is stored in the frame state and in the metadata picking draw
+   * commands. In the `Scene.updateDerivedCommands` call, it will be
+   * checked whether the instance that is stored in the frame state
+   * is different from the one in the draw command, and if necessary,
+   * the derived commands for metadata picking will be updated based
+   * on this information.
+   *
+   * @type {PickedMetadataInfo|undefined}
+   */
+  this.pickedMetadataInfo = undefined;
 }
 
 /**

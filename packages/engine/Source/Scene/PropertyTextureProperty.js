@@ -1,9 +1,10 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import MetadataType from "./MetadataType.js";
 import MetadataComponentType from "./MetadataComponentType.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A property in a property texture.
@@ -25,7 +26,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PropertyTextureProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const property = options.property;
   const classProperty = options.classProperty;
   const textures = options.textures;
@@ -59,8 +60,8 @@ function PropertyTextureProperty(options) {
   // the class property. The class property handles setting the default of
   // identity: (offset 0, scale 1) with the same scalar/vector/matrix types.
   // array types are disallowed by the spec.
-  offset = defaultValue(offset, classProperty.offset);
-  scale = defaultValue(scale, classProperty.scale);
+  offset = offset ?? classProperty.offset;
+  scale = scale ?? classProperty.scale;
 
   // offset and scale are applied on the GPU, so unpack the values
   // as math types we can use in uniform callbacks.
@@ -110,6 +111,12 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the property JSON itself did not define it, then it will inherit the
+   * value from the `MetadataClassProperty`. There, it also is always
+   * defined, and initialized to the default value if it was not contained
+   * in the class property JSON.
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
@@ -123,6 +130,12 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the property JSON itself did not define it, then it will inherit the
+   * value from the `MetadataClassProperty`. There, it also is always
+   * defined, and initialized to the default value if it was not contained
+   * in the class property JSON.
    *
    * @memberof PropertyTextureProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
@@ -185,20 +198,48 @@ PropertyTextureProperty.prototype.isGpuCompatible = function () {
 
   if (classProperty.isArray) {
     // only support arrays of 1-4 UINT8 scalars (normalized or unnormalized)
-    return (
-      !classProperty.isVariableLengthArray &&
-      classProperty.arrayLength <= 4 &&
-      type === MetadataType.SCALAR &&
-      componentType === MetadataComponentType.UINT8
-    );
+    if (classProperty.isVariableLengthArray) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} is a variable-length array, which is not supported`,
+      );
+      return false;
+    }
+    if (classProperty.arrayLength > 4) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} is an array of length ${classProperty.arrayLength}, but may have at most a length of 4`,
+      );
+      return false;
+    }
+    if (type !== MetadataType.SCALAR) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} is an array of type ${type}, but only SCALAR is supported`,
+      );
+      return false;
+    }
+    if (componentType !== MetadataComponentType.UINT8) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} is an array with component type ${componentType}, but only UINT8 is supported`,
+      );
+      return false;
+    }
+    return true;
   }
 
   if (MetadataType.isVectorType(type) || type === MetadataType.SCALAR) {
-    return componentType === MetadataComponentType.UINT8;
+    if (componentType !== MetadataComponentType.UINT8) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} has component type ${componentType}, but only UINT8 is supported`,
+      );
+      return false;
+    }
+    return true;
   }
 
   // For this initial implementation, only UINT8-based properties
   // are supported.
+  oneTimeWarning(
+    `Property texture property ${classProperty.id} has an unsupported type`,
+  );
   return false;
 };
 

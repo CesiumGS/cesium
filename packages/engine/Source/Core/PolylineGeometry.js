@@ -4,7 +4,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Color from "./Color.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -52,7 +52,7 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
       r0 + i * redPerVertex,
       g0 + i * greenPerVertex,
       b0 + i * bluePerVertex,
-      a0 + i * alphaPerVertex
+      a0 + i * alphaPerVertex,
     );
   }
 
@@ -75,7 +75,7 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  *
  * @exception {DeveloperError} At least two positions are required.
  * @exception {DeveloperError} width must be greater than or equal to one.
@@ -98,11 +98,11 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * const geometry = Cesium.PolylineGeometry.createGeometry(polyline);
  */
 function PolylineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const colors = options.colors;
-  const width = defaultValue(options.width, 1.0);
-  const colorsPerVertex = defaultValue(options.colorsPerVertex, false);
+  const width = options.width ?? 1.0;
+  const colorsPerVertex = options.colorsPerVertex ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(positions) || positions.length < 2) {
@@ -125,17 +125,12 @@ function PolylineGeometry(options) {
   this._width = width;
   this._colorsPerVertex = colorsPerVertex;
   this._vertexFormat = VertexFormat.clone(
-    defaultValue(options.vertexFormat, VertexFormat.DEFAULT)
+    options.vertexFormat ?? VertexFormat.DEFAULT,
   );
 
-  this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
-  this._granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
-  );
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.WGS84)
-  );
+  this._arcType = options.arcType ?? ArcType.GEODESIC;
+  this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
   this._workerName = "createPolylineGeometry";
 
   let numComponents = 1 + positions.length * Cartesian3.packedLength;
@@ -168,7 +163,7 @@ PolylineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -230,7 +225,7 @@ PolylineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -254,7 +249,7 @@ PolylineGeometry.unpack = function (array, startingIndex, result) {
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
 
@@ -314,7 +309,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
     polylineGeometry._positions,
     Cartesian3.equalsEpsilon,
     false,
-    removedIndices
+    removedIndices,
   );
 
   if (defined(colors) && removedIndices.length > 0) {
@@ -352,7 +347,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
     if (arcType === ArcType.GEODESIC) {
       subdivisionSize = CesiumMath.chordLength(
         granularity,
-        ellipsoid.maximumRadius
+        ellipsoid.maximumRadius,
       );
       numberOfPointsFunction = PolylinePipeline.numberOfPoints;
     } else {
@@ -368,7 +363,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
         colorLength += numberOfPointsFunction(
           positions[i],
           positions[i + 1],
-          subdivisionSize
+          subdivisionSize,
         );
       }
 
@@ -388,7 +383,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
             p1,
             c0,
             c1,
-            numColors
+            numColors,
           );
           const interpolatedColorsLength = interpolatedColors.length;
           for (j = 0; j < interpolatedColorsLength; ++j) {
@@ -457,7 +452,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
       Cartesian3.subtract(
         positions[positionsLength - 1],
         positions[positionsLength - 2],
-        position
+        position,
       );
       Cartesian3.add(positions[positionsLength - 1], position, position);
     } else {

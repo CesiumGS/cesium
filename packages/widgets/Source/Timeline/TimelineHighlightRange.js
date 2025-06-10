@@ -1,4 +1,4 @@
-import { defaultValue, JulianDate } from "@cesium/engine";
+import { JulianDate } from "@cesium/engine";
 
 /**
  * @private
@@ -6,7 +6,7 @@ import { defaultValue, JulianDate } from "@cesium/engine";
 function TimelineHighlightRange(color, heightInPx, base) {
   this._color = color;
   this._height = heightInPx;
-  this._base = defaultValue(base, 0);
+  this._base = base ?? 0;
 }
 
 TimelineHighlightRange.prototype.getHeight = function () {
@@ -35,18 +35,18 @@ TimelineHighlightRange.prototype.render = function (renderState) {
   if (this._start && this._stop && this._color) {
     const highlightStart = JulianDate.secondsDifference(
       this._start,
-      renderState.epochJulian
+      renderState.epochJulian,
     );
     let highlightLeft = Math.round(
-      renderState.timeBarWidth * renderState.getAlpha(highlightStart)
+      renderState.timeBarWidth * renderState.getAlpha(highlightStart),
     );
     const highlightStop = JulianDate.secondsDifference(
       this._stop,
-      renderState.epochJulian
+      renderState.epochJulian,
     );
     let highlightWidth =
       Math.round(
-        renderState.timeBarWidth * renderState.getAlpha(highlightStop)
+        renderState.timeBarWidth * renderState.getAlpha(highlightStop),
       ) - highlightLeft;
     if (highlightLeft < 0) {
       highlightWidth += highlightLeft;

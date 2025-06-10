@@ -2,7 +2,7 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import mergeSort from "../Core/mergeSort.js";
@@ -126,7 +126,7 @@ function preprocess(layers) {
       const height = CesiumMath.clamp(
         entryOrig.height,
         createElevationBandMaterial._minimumHeight,
-        createElevationBandMaterial._maximumHeight
+        createElevationBandMaterial._maximumHeight,
       );
 
       // premultiplied alpha
@@ -159,8 +159,8 @@ function preprocess(layers) {
       });
     }
 
-    let extendDownwards = defaultValue(layer.extendDownwards, false);
-    let extendUpwards = defaultValue(layer.extendUpwards, false);
+    let extendDownwards = layer.extendDownwards ?? false;
+    let extendUpwards = layer.extendUpwards ?? false;
 
     // Interpret a single entry to extend all the way up and down.
     if (entries.length === 1 && !extendDownwards && !extendUpwards) {
@@ -174,8 +174,8 @@ function preprocess(layers) {
         0,
         createNewEntry(
           createElevationBandMaterial._minimumHeight,
-          entries[0].color
-        )
+          entries[0].color,
+        ),
       );
     }
     if (extendUpwards) {
@@ -184,8 +184,8 @@ function preprocess(layers) {
         0,
         createNewEntry(
           createElevationBandMaterial._maximumHeight,
-          entries[entries.length - 1].color
-        )
+          entries[entries.length - 1].color,
+        ),
       );
     }
 
@@ -325,7 +325,7 @@ function createLayeredEntries(layers) {
           entry.height,
           prevEntryAccum,
           entryAccum,
-          scratchColorBelow
+          scratchColorBelow,
         );
 
         if (!defined(prevEntry)) {
@@ -349,7 +349,7 @@ function createLayeredEntries(layers) {
           entryAccum.height,
           prevEntry,
           entry,
-          scratchColorAbove
+          scratchColorAbove,
         );
 
         if (!defined(prevEntryAccum)) {
@@ -384,7 +384,7 @@ function createLayeredEntries(layers) {
           // Insert blank gap between last accum entry and first entry
           addEntry(
             prevEntryAccum.height,
-            createElevationBandMaterial._emptyColor
+            createElevationBandMaterial._emptyColor,
           );
           addEntry(entry.height, createElevationBandMaterial._emptyColor);
           addEntry(entry.height, entry.color);
@@ -462,7 +462,7 @@ function createLayeredEntries(layers) {
  * });
  */
 function createElevationBandMaterial(options) {
-  const { scene, layers } = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const { scene, layers } = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", scene);

@@ -25,7 +25,7 @@ describe(
   "Scene/VoxelTraversal",
   function () {
     const keyframeCount = 3;
-    const textureMemory = 500;
+    const textureMemoryByteLength = 256;
 
     let scene;
     let provider;
@@ -36,7 +36,7 @@ describe(
     beforeEach(async function () {
       scene = createScene();
       provider = await Cesium3DTilesVoxelProvider.fromUrl(
-        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       );
 
       camera = scene.camera;
@@ -51,11 +51,8 @@ describe(
       traversal = new VoxelTraversal(
         primitive,
         scene.context,
-        provider.dimensions,
-        provider.types,
-        provider.componentTypes,
         keyframeCount,
-        textureMemory
+        textureMemoryByteLength,
       );
     });
 
@@ -80,7 +77,7 @@ describe(
       shape.update(
         modelMatrix,
         VoxelEllipsoidShape.DefaultMinBounds,
-        VoxelEllipsoidShape.DefaultMaxBounds
+        VoxelEllipsoidShape.DefaultMaxBounds,
       );
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
@@ -89,14 +86,14 @@ describe(
         scene.frameState,
         keyFrameLocation,
         recomputeBoundingVolumes,
-        pauseUpdate
+        pauseUpdate,
       );
       const newOrientedBoundingBox = rootNode.orientedBoundingBox.clone();
       expect(
         OrientedBoundingBox.equals(
           oldOrientedBoundingBox,
-          newOrientedBoundingBox
-        )
+          newOrientedBoundingBox,
+        ),
       ).toBe(false);
       expect(newOrientedBoundingBox.center.equals(translation)).toBe(true);
     });
@@ -109,11 +106,11 @@ describe(
       const rootNode = traversal.rootNode;
       rootNode.computeScreenSpaceError(
         camera.positionWC,
-        screenSpaceErrorMultiplier
+        screenSpaceErrorMultiplier,
       );
 
       let distanceToCamera = Math.sqrt(
-        rootNode.orientedBoundingBox.distanceSquaredTo(camera.positionWC)
+        rootNode.orientedBoundingBox.distanceSquaredTo(camera.positionWC),
       );
       distanceToCamera = Math.max(distanceToCamera, CesiumMath.EPSILON7);
       const error =
@@ -128,7 +125,7 @@ describe(
 
       const visibilityWhenLookingAtRoot = rootNode.visibility(
         scene.frameState,
-        visibilityPlaneMask
+        visibilityPlaneMask,
       );
       expect(visibilityWhenLookingAtRoot).toBe(CullingVolume.MASK_INSIDE);
       // expect(traversal.isRenderable(rootNode)).toBe(true);
@@ -136,7 +133,7 @@ describe(
       turnCameraAround(scene);
       const visibilityWhenLookingAway = rootNode.visibility(
         scene.frameState,
-        visibilityPlaneMask
+        visibilityPlaneMask,
       );
       expect(visibilityWhenLookingAway).toBe(CullingVolume.MASK_OUTSIDE);
     });
@@ -145,6 +142,12 @@ describe(
       expect(traversal.isDestroyed()).toBe(false);
       traversal.destroy();
       expect(traversal.isDestroyed()).toBe(true);
+    });
+
+    it("shows texture memory allocation statistic", function () {
+      expect(traversal.textureMemoryByteLength).toBe(textureMemoryByteLength);
+      traversal.destroy();
+      expect(traversal.textureMemoryByteLength).toBe(0);
     });
 
     it("loads tiles into megatexture", async function () {
@@ -156,14 +159,49 @@ describe(
           scene.frameState,
           keyFrameLocation,
           recomputeBoundingVolumes,
-          pauseUpdate
+          pauseUpdate,
         );
         scene.renderForSpecs();
-        return traversal.megatextures[0].occupiedCount > 0;
+        return (
+          traversal.megatextures[0].occupiedCount > 0 &&
+          traversal._primitive.statistics.texturesByteLength > 0
+        );
       });
 
       const megatexture = traversal.megatextures[0];
       expect(megatexture.occupiedCount).toBe(1);
+      expect(traversal.textureMemoryByteLength).toEqual(
+        textureMemoryByteLength,
+      );
+    });
+
+    it("tile failed event is raised", async function () {
+      traversal._calculateStatistics = true;
+      const keyFrameLocation = 0;
+      const recomputeBoundingVolumes = true;
+      const pauseUpdate = false;
+      const spyFailed = jasmine.createSpy("listener");
+      traversal._primitive.tileFailed.addEventListener(spyFailed);
+      spyOn(traversal._primitive._provider, "requestData").and.callFake(() => {
+        return Promise.reject();
+      });
+      let counter = 0;
+      const target = 3;
+      await pollToPromise(function () {
+        traversal.update(
+          scene.frameState,
+          keyFrameLocation,
+          recomputeBoundingVolumes,
+          pauseUpdate,
+        );
+        counter++;
+        return counter === target;
+      });
+      expect(spyFailed.calls.count()).toBeGreaterThan(1);
+      expect(
+        traversal._primitive.statistics.numberOfTilesWithContentReady,
+      ).toEqual(0);
+      expect(traversal._primitive.statistics.visited).toEqual(3);
     });
 
     it("finds keyframe node with expected metadata values", async function () {
@@ -175,7 +213,7 @@ describe(
           scene.frameState,
           keyFrameLocation,
           recomputeBoundingVolumes,
-          pauseUpdate
+          pauseUpdate,
         );
         scene.renderForSpecs();
         return traversal.megatextures[0].occupiedCount > 0;
@@ -186,64 +224,8 @@ describe(
       expect(keyframeNode).toBeDefined();
       expect(keyframeNode.state).toBe(KeyframeNode.LoadState.LOADED);
       const expectedMetadata = new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]);
-      expect(keyframeNode.metadata[0]).toEqual(expectedMetadata);
-    });
-
-    xit("unloads tiles in megatexture", function () {
-      const keyFrameLocation = 0;
-      const recomputeBoundingVolumes = true;
-      const pauseUpdate = false;
-      function updateTraversalTenTimes() {
-        // to fully fetch data and copy to texture
-        function updateTraversal() {
-          traversal.update(
-            scene.frameState,
-            keyFrameLocation,
-            recomputeBoundingVolumes,
-            pauseUpdate
-          );
-        }
-        for (let i = 0; i < 10; i++) {
-          updateTraversal();
-        }
-      }
-
-      const eps = CesiumMath.EPSILON7;
-      const bottomLeftNearCorner = Cartesian3.fromElements(
-        -0.5 - eps,
-        -0.5 - eps,
-        -0.5 - eps
-      );
-      const topRightFarCorner = Cartesian3.fromElements(
-        0.5 + eps,
-        0.5 + eps,
-        0.5 + eps
-      );
-      scene.camera.position = bottomLeftNearCorner;
-      updateTraversalTenTimes();
-      const numberOfNodesOnGPU = traversal._keyframeNodesInMegatexture.length;
-      const deepestNode =
-        traversal._keyframeNodesInMegatexture[numberOfNodesOnGPU - 1];
-      const deepestSpatialNode = deepestNode.spatialNode;
-      const nodeIsInMegatexture =
-        deepestNode.state === VoxelTraversal.LoadState.LOADED;
-      expect(nodeIsInMegatexture).toBe(true);
-
-      scene.camera.position = topRightFarCorner;
-      turnCameraAround(scene);
-      updateTraversalTenTimes();
-      const nodeNoLongerInMegatexture =
-        traversal._keyframeNodesInMegatexture.filter(function (keyFrameNode) {
-          const spatialNode = keyFrameNode.spatialNode;
-          return (
-            spatialNode.level === deepestSpatialNode.level &&
-            spatialNode.x === deepestSpatialNode.x &&
-            spatialNode.y === deepestSpatialNode.y &&
-            spatialNode.x === deepestSpatialNode.z
-          );
-        }).length === 0;
-      expect(nodeNoLongerInMegatexture).toBe(true);
+      expect(keyframeNode.content.metadata[0]).toEqual(expectedMetadata);
     });
   },
-  "WebGL"
+  "WebGL",
 );

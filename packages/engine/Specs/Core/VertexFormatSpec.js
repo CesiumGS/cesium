@@ -23,12 +23,9 @@ describe("Core/VertexFormat", function () {
     expect(cloned).toEqual(vertexFormat);
   });
 
-  createPackableSpecs(VertexFormat, VertexFormat.POSITION_AND_NORMAL, [
-    1.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-  ]);
+  createPackableSpecs(
+    VertexFormat,
+    VertexFormat.POSITION_AND_NORMAL,
+    [1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+  );
 });

@@ -1,4 +1,4 @@
-import { Check, defaultValue, defined } from "@cesium/engine";
+import { Check, defined } from "@cesium/engine";
 
 /**
  * A static class with helper functions used by CesiumInspector, Cesium3DTilesInspector, and VoxelInspector
@@ -16,7 +16,7 @@ const InspectorShared = {};
 InspectorShared.createCheckbox = function (
   labelText,
   checkedBinding,
-  enableBinding
+  enableBinding,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("labelText", labelText);
@@ -50,7 +50,7 @@ InspectorShared.createSection = function (
   panel,
   headerText,
   sectionVisibleBinding,
-  toggleSectionVisibilityBinding
+  toggleSectionVisibilityBinding,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("panel", panel);
@@ -58,14 +58,14 @@ InspectorShared.createSection = function (
   Check.typeOf.string("sectionVisibleBinding", sectionVisibleBinding);
   Check.typeOf.string(
     "toggleSectionVisibilityBinding",
-    toggleSectionVisibilityBinding
+    toggleSectionVisibilityBinding,
   );
   //>>includeEnd('debug');
   const section = document.createElement("div");
   section.className = "cesium-cesiumInspector-section";
   section.setAttribute(
     "data-bind",
-    `css: { "cesium-cesiumInspector-section-collapsed": !${sectionVisibleBinding} }`
+    `css: { "cesium-cesiumInspector-section-collapsed": !${sectionVisibleBinding} }`,
   );
   panel.appendChild(section);
 
@@ -74,7 +74,7 @@ InspectorShared.createSection = function (
   sectionHeader.appendChild(document.createTextNode(headerText));
   sectionHeader.setAttribute(
     "data-bind",
-    `click: ${toggleSectionVisibilityBinding}`
+    `click: ${toggleSectionVisibilityBinding}`,
   );
   section.appendChild(sectionHeader);
 
@@ -100,7 +100,7 @@ InspectorShared.createRangeInput = function (
   min,
   max,
   step,
-  inputValueBinding
+  inputValueBinding,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("rangeText", rangeText);
@@ -109,7 +109,7 @@ InspectorShared.createRangeInput = function (
   Check.typeOf.number("max", max);
   //>>includeEnd('debug');
 
-  inputValueBinding = defaultValue(inputValueBinding, sliderValueBinding);
+  inputValueBinding = inputValueBinding ?? sliderValueBinding;
   const input = document.createElement("input");
   input.setAttribute("data-bind", `value: ${inputValueBinding}`);
   input.type = "number";
@@ -118,10 +118,54 @@ InspectorShared.createRangeInput = function (
   slider.type = "range";
   slider.min = min;
   slider.max = max;
-  slider.step = defaultValue(step, "any");
+  slider.step = step ?? "any";
   slider.setAttribute(
     "data-bind",
-    `valueUpdate: "input", value: ${sliderValueBinding}`
+    `valueUpdate: "input", value: ${sliderValueBinding}`,
+  );
+
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(slider);
+
+  const container = document.createElement("div");
+  container.className = "cesium-cesiumInspector-slider";
+  container.appendChild(document.createTextNode(rangeText));
+  container.appendChild(input);
+  container.appendChild(wrapper);
+
+  return container;
+};
+
+/**
+ * Creates a range input
+ * @param {string} rangeText The text to display
+ * @param {string} sliderValueBinding The name of the variable used for slider value binding
+ * @param {number} [step] The step size. Defaults to "any".
+ * @param {string} [inputValueBinding] The name of the variable used for input value binding
+ * @return {Element}
+ */
+InspectorShared.createRangeInputWithDynamicMinMax = function (
+  rangeText,
+  sliderValueBinding,
+  step,
+  inputValueBinding,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("rangeText", rangeText);
+  Check.typeOf.string("sliderValueBinding", sliderValueBinding);
+  //>>includeEnd('debug');
+
+  inputValueBinding = inputValueBinding ?? sliderValueBinding;
+  const input = document.createElement("input");
+  input.setAttribute("data-bind", `value: ${inputValueBinding}`);
+  input.type = "number";
+
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.step = step ?? "any";
+  slider.setAttribute(
+    "data-bind",
+    `valueUpdate: "input", value: ${sliderValueBinding}, attr: { min: ${sliderValueBinding}Min, max: ${sliderValueBinding}Max }`,
   );
 
   const wrapper = document.createElement("div");
@@ -146,7 +190,7 @@ InspectorShared.createRangeInput = function (
 InspectorShared.createButton = function (
   buttonText,
   clickedBinding,
-  activeBinding
+  activeBinding,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("buttonText", buttonText);

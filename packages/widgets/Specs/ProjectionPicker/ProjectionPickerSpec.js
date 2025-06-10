@@ -96,7 +96,7 @@ describe(
       addCloseOnInputSpec("pointerDown", DomEventSimulator.firePointerDown);
       addDisabledDuringFlightSpec(
         "pointerDown",
-        DomEventSimulator.firePointerDown
+        DomEventSimulator.firePointerDown,
       );
       addDisabledIn2DSpec("pointerDown", DomEventSimulator.firePointerDown);
     } else {
@@ -105,7 +105,7 @@ describe(
       addDisabledDuringFlightSpec("mousedown", DomEventSimulator.fireMouseDown);
       addDisabledDuringFlightSpec(
         "touchstart",
-        DomEventSimulator.fireTouchStart
+        DomEventSimulator.fireTouchStart,
       );
       addDisabledIn2DSpec("mousedown", DomEventSimulator.fireMouseDown);
       addDisabledIn2DSpec("touchstart", DomEventSimulator.fireTouchStart);
@@ -129,5 +129,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

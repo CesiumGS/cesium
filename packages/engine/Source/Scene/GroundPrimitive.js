@@ -3,7 +3,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -112,7 +112,7 @@ const GroundPrimitiveUniformMap = {
  * @see Appearance
  */
 function GroundPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let appearance = options.appearance;
   const geometryInstances = options.geometryInstances;
@@ -165,7 +165,7 @@ function GroundPrimitive(options) {
    *
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
   /**
    * Determines whether terrain, 3D Tiles or both will be classified.
    *
@@ -173,10 +173,8 @@ function GroundPrimitive(options) {
    *
    * @default ClassificationType.BOTH
    */
-  this.classificationType = defaultValue(
-    options.classificationType,
-    ClassificationType.BOTH
-  );
+  this.classificationType =
+    options.classificationType ?? ClassificationType.BOTH;
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
@@ -187,10 +185,7 @@ function GroundPrimitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -202,10 +197,7 @@ function GroundPrimitive(options) {
    *
    * @default false
    */
-  this.debugShowShadowVolume = defaultValue(
-    options.debugShowShadowVolume,
-    false
-  );
+  this.debugShowShadowVolume = options.debugShowShadowVolume ?? false;
 
   this._boundingVolumes = [];
   this._boundingVolumes2D = [];
@@ -230,15 +222,12 @@ function GroundPrimitive(options) {
   this._classificationPrimitiveOptions = {
     geometryInstances: undefined,
     appearance: undefined,
-    vertexCacheOptimize: defaultValue(options.vertexCacheOptimize, false),
-    interleave: defaultValue(options.interleave, false),
-    releaseGeometryInstances: defaultValue(
-      options.releaseGeometryInstances,
-      true
-    ),
-    allowPicking: defaultValue(options.allowPicking, true),
-    asynchronous: defaultValue(options.asynchronous, true),
-    compressVertices: defaultValue(options.compressVertices, true),
+    vertexCacheOptimize: options.vertexCacheOptimize ?? false,
+    interleave: options.interleave ?? false,
+    releaseGeometryInstances: options.releaseGeometryInstances ?? true,
+    allowPicking: options.allowPicking ?? true,
+    asynchronous: options.asynchronous ?? true,
+    compressVertices: options.compressVertices ?? true,
     _createBoundingVolumeFunction: undefined,
     _updateAndQueueCommandsFunction: undefined,
     _pickPrimitive: that,
@@ -417,22 +406,22 @@ function getRectangle(frameState, geometry) {
     const highPosition = Cartesian3.unpack(
       highPositions,
       i,
-      scratchBVCartesianHigh
+      scratchBVCartesianHigh,
     );
     const lowPosition = Cartesian3.unpack(
       lowPositions,
       i,
-      scratchBVCartesianLow
+      scratchBVCartesianLow,
     );
 
     const position = Cartesian3.add(
       highPosition,
       lowPosition,
-      scratchBVCartesian
+      scratchBVCartesian,
     );
     const cartographic = ellipsoid.cartesianToCartographic(
       position,
-      scratchBVCartographic
+      scratchBVCartographic,
     );
 
     const latitude = cartographic.latitude;
@@ -456,7 +445,7 @@ function getRectangle(frameState, geometry) {
 function setMinMaxTerrainHeights(primitive, rectangle, ellipsoid) {
   const result = ApproximateTerrainHeights.getMinimumMaximumHeights(
     rectangle,
-    ellipsoid
+    ellipsoid,
   );
 
   primitive._minTerrainHeight = result.minimumTerrainHeight;
@@ -471,7 +460,7 @@ function createBoundingVolume(groundPrimitive, frameState, geometry) {
     rectangle,
     groundPrimitive._minHeight,
     groundPrimitive._maxHeight,
-    ellipsoid
+    ellipsoid,
   );
   groundPrimitive._boundingVolumes.push(obb);
 
@@ -481,13 +470,13 @@ function createBoundingVolume(groundPrimitive, frameState, geometry) {
       rectangle,
       projection,
       groundPrimitive._maxHeight,
-      groundPrimitive._minHeight
+      groundPrimitive._minHeight,
     );
     Cartesian3.fromElements(
       boundingVolume.center.z,
       boundingVolume.center.x,
       boundingVolume.center.y,
-      boundingVolume.center
+      boundingVolume.center,
     );
 
     groundPrimitive._boundingVolumes2D.push(boundingVolume);
@@ -505,7 +494,7 @@ function updateAndQueueRenderCommand(
   modelMatrix,
   cull,
   boundingVolume,
-  debugShowBoundingVolume
+  debugShowBoundingVolume,
 ) {
   // Use derived appearance command for 2D if needed
   const classificationPrimitive = groundPrimitive._primitive;
@@ -532,7 +521,7 @@ function updateAndQueuePickCommand(
   frameState,
   modelMatrix,
   cull,
-  boundingVolume
+  boundingVolume,
 ) {
   // Use derived pick command for 2D if needed
   const classificationPrimitive = groundPrimitive._primitive;
@@ -560,7 +549,7 @@ function updateAndQueueCommands(
   modelMatrix,
   cull,
   debugShowBoundingVolume,
-  twoPasses
+  twoPasses,
 ) {
   let boundingVolumes;
   if (frameState.mode === SceneMode.SCENE3D) {
@@ -596,7 +585,7 @@ function updateAndQueueCommands(
           modelMatrix,
           cull,
           boundingVolume,
-          debugShowBoundingVolume
+          debugShowBoundingVolume,
         );
       }
       if (queue3DTilesCommands) {
@@ -608,7 +597,7 @@ function updateAndQueueCommands(
           modelMatrix,
           cull,
           boundingVolume,
-          debugShowBoundingVolume
+          debugShowBoundingVolume,
         );
       }
     }
@@ -626,7 +615,7 @@ function updateAndQueueCommands(
           modelMatrix,
           cull,
           boundingVolume,
-          debugShowBoundingVolume
+          debugShowBoundingVolume,
         );
       }
     }
@@ -654,7 +643,7 @@ function updateAndQueueCommands(
           frameState,
           modelMatrix,
           cull,
-          boundingVolume
+          boundingVolume,
         );
       }
       if (queue3DTilesCommands) {
@@ -665,7 +654,7 @@ function updateAndQueueCommands(
           frameState,
           modelMatrix,
           cull,
-          boundingVolume
+          boundingVolume,
         );
       }
     }
@@ -704,7 +693,7 @@ GroundPrimitive.prototype.update = function (frameState) {
     //>>includeStart('debug', pragmas.debug);
     if (!this.asynchronous) {
       throw new DeveloperError(
-        "For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve."
+        "For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.",
       );
     }
     //>>includeEnd('debug');
@@ -745,7 +734,7 @@ GroundPrimitive.prototype.update = function (frameState) {
       if (defined(id) && defined(instanceRectangle)) {
         const boundingSphere = ApproximateTerrainHeights.getBoundingSphere(
           instanceRectangle,
-          ellipsoid
+          ellipsoid,
         );
         this._boundingSpheresKeys.push(id);
         this._boundingSpheres.push(boundingSphere);
@@ -755,7 +744,7 @@ GroundPrimitive.prototype.update = function (frameState) {
       if (!defined(instanceType) || !defined(instanceType.createShadowVolume)) {
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError(
-          "Not all of the geometry instances have GroundPrimitive support."
+          "Not all of the geometry instances have GroundPrimitive support.",
         );
         //>>includeEnd('debug');
       }
@@ -769,16 +758,16 @@ GroundPrimitive.prototype.update = function (frameState) {
     this._minHeight = VerticalExaggeration.getHeight(
       this._minTerrainHeight,
       exaggeration,
-      exaggerationRelativeHeight
+      exaggerationRelativeHeight,
     );
     this._maxHeight = VerticalExaggeration.getHeight(
       this._maxTerrainHeight,
       exaggeration,
-      exaggerationRelativeHeight
+      exaggerationRelativeHeight,
     );
 
     const useFragmentCulling = GroundPrimitive._supportsMaterials(
-      frameState.context
+      frameState.context,
     );
     this._useFragmentCulling = useFragmentCulling;
 
@@ -807,20 +796,22 @@ GroundPrimitive.prototype.update = function (frameState) {
           geometry.textureCoordinateRotationPoints;
 
         if (usePlanarExtents) {
-          attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(
-            boundingRectangle,
-            textureCoordinateRotationPoints,
-            ellipsoid,
-            frameState.mapProjection,
-            this._maxHeight
-          );
+          attributes =
+            ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(
+              boundingRectangle,
+              textureCoordinateRotationPoints,
+              ellipsoid,
+              frameState.mapProjection,
+              this._maxHeight,
+            );
         } else {
-          attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(
-            boundingRectangle,
-            textureCoordinateRotationPoints,
-            ellipsoid,
-            frameState.mapProjection
-          );
+          attributes =
+            ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(
+              boundingRectangle,
+              textureCoordinateRotationPoints,
+              ellipsoid,
+              frameState.mapProjection,
+            );
         }
 
         const instanceAttributes = instance.attributes;
@@ -834,7 +825,7 @@ GroundPrimitive.prototype.update = function (frameState) {
           geometry: instanceType.createShadowVolume(
             geometry,
             getComputeMinimumHeightFunction(this),
-            getComputeMaximumHeightFunction(this)
+            getComputeMaximumHeightFunction(this),
           ),
           attributes: attributes,
           id: instance.id,
@@ -850,7 +841,7 @@ GroundPrimitive.prototype.update = function (frameState) {
           geometry: instanceType.createShadowVolume(
             geometry,
             getComputeMinimumHeightFunction(this),
-            getComputeMaximumHeightFunction(this)
+            getComputeMaximumHeightFunction(this),
           ),
           attributes: instance.attributes,
           id: instance.id,
@@ -863,7 +854,7 @@ GroundPrimitive.prototype.update = function (frameState) {
 
     primitiveOptions._createBoundingVolumeFunction = function (
       frameState,
-      geometry
+      geometry,
     ) {
       createBoundingVolume(that, frameState, geometry);
     };
@@ -875,7 +866,7 @@ GroundPrimitive.prototype.update = function (frameState) {
       modelMatrix,
       cull,
       debugShowBoundingVolume,
-      twoPasses
+      twoPasses,
     ) {
       updateAndQueueCommands(
         that,
@@ -885,7 +876,7 @@ GroundPrimitive.prototype.update = function (frameState) {
         modelMatrix,
         cull,
         debugShowBoundingVolume,
-        twoPasses
+        twoPasses,
       );
     };
 
@@ -938,7 +929,7 @@ GroundPrimitive.prototype.getGeometryInstanceAttributes = function (id) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(this._primitive)) {
     throw new DeveloperError(
-      "must call update before calling getGeometryInstanceAttributes"
+      "must call update before calling getGeometryInstanceAttributes",
     );
   }
   //>>includeEnd('debug');

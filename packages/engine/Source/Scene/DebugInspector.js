@@ -126,7 +126,7 @@ const scratchShowFrustumCommand = new DrawCommand();
 DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
   scene,
   command,
-  passState
+  passState,
 ) {
   // create debug command
   const shaderProgramId = command.shaderProgram.id;
@@ -134,7 +134,7 @@ DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
   if (!defined(debugShaderProgram)) {
     debugShaderProgram = createDebugShowFrustumsShaderProgram(
       scene,
-      command.shaderProgram
+      command.shaderProgram,
     );
 
     this._cachedShowFrustumsShaders[shaderProgramId] = debugShaderProgram;
@@ -142,7 +142,7 @@ DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
 
   const debugCommand = DrawCommand.shallowClone(
     command,
-    scratchShowFrustumCommand
+    scratchShowFrustumCommand,
   );
   debugCommand.shaderProgram = debugShaderProgram;
   debugCommand.uniformMap = createDebugShowFrustumsUniformMap(scene, command);

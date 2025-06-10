@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -66,17 +63,15 @@
             handler.setInputAction(function (movement) {
               const cartesian = viewer.camera.pickEllipsoid(
                 movement.endPosition,
-                scene.globe.ellipsoid
+                scene.globe.ellipsoid,
               );
               if (cartesian) {
-                const cartographic = Cesium.Cartographic.fromCartesian(
-                  cartesian
-                );
+                const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                 const longitudeString = Cesium.Math.toDegrees(
-                  cartographic.longitude
+                  cartographic.longitude,
                 ).toFixed(2);
                 const latitudeString = Cesium.Math.toDegrees(
-                  cartographic.latitude
+                  cartographic.latitude,
                 ).toFixed(2);
 
                 entity.position = cartesian;
@@ -88,7 +83,7 @@
                 entity.label.show = false;
               }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-          }
+          },
         );
 
         Sandcastle.addToolbarButton("Pick Entity", function () {
@@ -117,33 +112,20 @@
           const pickedEntities = new Cesium.EntityCollection();
           const pickColor = Cesium.Color.YELLOW.withAlpha(0.5);
           function makeProperty(entity, color) {
-            const colorProperty = new Cesium.CallbackProperty(function (
-              time,
-              result
-            ) {
+            const colorProperty = new Cesium.CallbackProperty(function (time, result) {
               if (pickedEntities.contains(entity)) {
                 return pickColor.clone(result);
               }
               return color.clone(result);
-            },
-            false);
+            }, false);
 
-            entity.polygon.material = new Cesium.ColorMaterialProperty(
-              colorProperty
-            );
+            entity.polygon.material = new Cesium.ColorMaterialProperty(colorProperty);
           }
 
           const red = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
-                -70.0,
-                30.0,
-                -60.0,
-                30.0,
-                -60.0,
-                40.0,
-                -70.0,
-                40.0,
+                -70.0, 30.0, -60.0, 30.0, -60.0, 40.0, -70.0, 40.0,
               ]),
               height: 0,
             },
@@ -153,14 +135,7 @@
           const blue = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
-                -75.0,
-                34.0,
-                -63.0,
-                34.0,
-                -63.0,
-                40.0,
-                -75.0,
-                40.0,
+                -75.0, 34.0, -63.0, 34.0, -63.0, 40.0, -75.0, 40.0,
               ]),
               height: 0,
             },
@@ -170,14 +145,7 @@
           const green = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
-                -67.0,
-                36.0,
-                -55.0,
-                36.0,
-                -55.0,
-                30.0,
-                -67.0,
-                30.0,
+                -67.0, 36.0, -55.0, 36.0, -55.0, 30.0, -67.0, 30.0,
               ]),
               height: 0,
             },
@@ -205,8 +173,7 @@
             name: "milktruck",
             position: Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706),
             model: {
-              uri:
-                "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+              uri: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
             },
           });
           viewer.zoomTo(modelEntity);
@@ -229,25 +196,16 @@
 
             const scene = viewer.scene;
             if (scene.mode !== Cesium.SceneMode.MORPHING) {
-              const pickedObject = scene.pick(movement.endPosition);
-              if (
-                scene.pickPositionSupported &&
-                Cesium.defined(pickedObject) &&
-                pickedObject.id === modelEntity
-              ) {
-                const cartesian = viewer.scene.pickPosition(
-                  movement.endPosition
-                );
+              if (scene.pickPositionSupported) {
+                const cartesian = viewer.scene.pickPosition(movement.endPosition);
 
                 if (Cesium.defined(cartesian)) {
-                  const cartographic = Cesium.Cartographic.fromCartesian(
-                    cartesian
-                  );
+                  const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                   const longitudeString = Cesium.Math.toDegrees(
-                    cartographic.longitude
+                    cartographic.longitude,
                   ).toFixed(2);
                   const latitudeString = Cesium.Math.toDegrees(
-                    cartographic.latitude
+                    cartographic.latitude,
                   ).toFixed(2);
                   const heightString = cartographic.height.toFixed(2);
 
@@ -262,7 +220,7 @@
                     0.0,
                     0.0,
                     -cartographic.height *
-                      (scene.mode === Cesium.SceneMode.SCENE2D ? 1.5 : 1.0)
+                      (scene.mode === Cesium.SceneMode.SCENE2D ? 1.5 : 1.0),
                   );
 
                   foundPosition = true;

@@ -24,7 +24,7 @@ function resizeImageToNextPowerOfTwo(image) {
     0,
     0,
     canvas.width,
-    canvas.height
+    canvas.height,
   );
   return canvas;
 }

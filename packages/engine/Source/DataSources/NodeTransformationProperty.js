@@ -1,6 +1,7 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import TranslationRotationScale from "../Core/TranslationRotationScale.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
@@ -18,7 +19,7 @@ const defaultNodeTransformation = new TranslationRotationScale();
  * @param {Property|Cartesian3} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
  */
 function NodeTransformationProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._translation = undefined;
@@ -92,14 +93,19 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
   scale: createPropertyDescriptor("scale"),
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {TranslationRotationScale} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {TranslationRotationScale} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 NodeTransformationProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
   if (!defined(result)) {
     result = new TranslationRotationScale();
   }
@@ -108,19 +114,19 @@ NodeTransformationProperty.prototype.getValue = function (time, result) {
     this._translation,
     time,
     defaultNodeTransformation.translation,
-    result.translation
+    result.translation,
   );
   result.rotation = Property.getValueOrClonedDefault(
     this._rotation,
     time,
     defaultNodeTransformation.rotation,
-    result.rotation
+    result.rotation,
   );
   result.scale = Property.getValueOrClonedDefault(
     this._scale,
     time,
     defaultNodeTransformation.scale,
-    result.scale
+    result.scale,
   );
   return result;
 };

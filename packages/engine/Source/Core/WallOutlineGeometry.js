@@ -1,7 +1,7 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -30,7 +30,7 @@ const scratchCartesian3Position2 = new Cartesian3();
  *        wall at <code>positions</code>. If undefined, the height of each position in used.
  * @param {number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid for coordinate manipulation
  *
  * @exception {DeveloperError} positions length must be greater than or equal to 2.
  * @exception {DeveloperError} positions and maximumHeights must have the same length.
@@ -53,7 +53,7 @@ const scratchCartesian3Position2 = new Cartesian3();
  * const geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
  */
 function WallOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const wallPositions = options.positions;
   const maximumHeights = options.maximumHeights;
@@ -68,7 +68,7 @@ function WallOutlineGeometry(options) {
     maximumHeights.length !== wallPositions.length
   ) {
     throw new DeveloperError(
-      "options.positions and options.maximumHeights must have the same length."
+      "options.positions and options.maximumHeights must have the same length.",
     );
   }
   if (
@@ -76,16 +76,13 @@ function WallOutlineGeometry(options) {
     minimumHeights.length !== wallPositions.length
   ) {
     throw new DeveloperError(
-      "options.positions and options.minimumHeights must have the same length."
+      "options.positions and options.minimumHeights must have the same length.",
     );
   }
   //>>includeEnd('debug');
 
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
-  );
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   this._positions = wallPositions;
   this._minimumHeights = minimumHeights;
@@ -128,7 +125,7 @@ WallOutlineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -192,7 +189,7 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -255,7 +252,7 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
  *        wall at <code>positions</code>. If undefined, the height of each position in used.
  * @param {number} [options.minimumHeight] A constant that defines the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid for coordinate manipulation
  * @returns {WallOutlineGeometry}
  *
  *
@@ -277,7 +274,7 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @see WallOutlineGeometry#createGeometry
  */
 WallOutlineGeometry.fromConstantHeights = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
 
   //>>includeStart('debug', pragmas.debug);
@@ -338,7 +335,7 @@ WallOutlineGeometry.createGeometry = function (wallGeometry) {
     maximumHeights,
     minimumHeights,
     granularity,
-    false
+    false,
   );
   if (!defined(pos)) {
     return;
@@ -362,12 +359,12 @@ WallOutlineGeometry.createGeometry = function (wallGeometry) {
     const topPosition = Cartesian3.fromArray(
       topPositions,
       i3,
-      scratchCartesian3Position1
+      scratchCartesian3Position1,
     );
     const bottomPosition = Cartesian3.fromArray(
       bottomPositions,
       i3,
-      scratchCartesian3Position2
+      scratchCartesian3Position2,
     );
 
     // insert the lower point
@@ -400,12 +397,12 @@ WallOutlineGeometry.createGeometry = function (wallGeometry) {
     const pl = Cartesian3.fromArray(
       positions,
       LL * 3,
-      scratchCartesian3Position1
+      scratchCartesian3Position1,
     );
     const pr = Cartesian3.fromArray(
       positions,
       LR * 3,
-      scratchCartesian3Position2
+      scratchCartesian3Position2,
     );
     if (Cartesian3.equalsEpsilon(pl, pr, CesiumMath.EPSILON10)) {
       continue;

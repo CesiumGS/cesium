@@ -39,7 +39,7 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
       new PolylineVolumeOutlineGeometry({
         polylinePositions: [new Cartesian3()],
         shapePositions: shape,
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
   });
@@ -53,7 +53,7 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
           Cartesian2.UNIT_X,
           Cartesian2.UNIT_X,
         ],
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
   });
@@ -62,14 +62,11 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
     const m = PolylineVolumeOutlineGeometry.createGeometry(
       new PolylineVolumeOutlineGeometry({
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -35.0,
+          90.0, -30.0, 90.0, -35.0,
         ]),
         shapePositions: shape,
         cornerType: CornerType.MITERED,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(24 * 3); // 6 polyline positions * 4 box positions
@@ -80,14 +77,11 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
     const m = PolylineVolumeOutlineGeometry.createGeometry(
       new PolylineVolumeOutlineGeometry({
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -35.0,
+          90.0, -30.0, 90.0, -35.0,
         ]),
         shapePositions: shape.reverse(),
         cornerType: CornerType.MITERED,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(24 * 3);
@@ -98,16 +92,11 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
     const m = PolylineVolumeOutlineGeometry.createGeometry(
       new PolylineVolumeOutlineGeometry({
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          91.0,
-          -31.0,
+          90.0, -30.0, 90.0, -31.0, 91.0, -31.0,
         ]),
         cornerType: CornerType.MITERED,
         shapePositions: shape,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(20 * 3); // (2 ends + 3 corner positions) * 4 box positions
@@ -118,16 +107,11 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
     const m = PolylineVolumeOutlineGeometry.createGeometry(
       new PolylineVolumeOutlineGeometry({
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0,
         ]),
         cornerType: CornerType.MITERED,
         shapePositions: shape,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(20 * 3);
@@ -138,18 +122,11 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
     const m = PolylineVolumeOutlineGeometry.createGeometry(
       new PolylineVolumeOutlineGeometry({
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
-          89.0,
-          -32.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0, 89.0, -32.0,
         ]),
         cornerType: CornerType.ROUNDED,
         shapePositions: shape,
-      })
+      }),
     );
 
     const corners = 36 * 4;
@@ -163,18 +140,11 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
     const m = PolylineVolumeOutlineGeometry.createGeometry(
       new PolylineVolumeOutlineGeometry({
         polylinePositions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
-          89.0,
-          -32.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0, 89.0, -32.0,
         ]),
         cornerType: CornerType.BEVELED,
         shapePositions: shape,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(40 * 3); // 10 positions * 4 for shape
@@ -199,28 +169,8 @@ describe("Core/PolylineVolumeOutlineGeometry", function () {
     granularity: 0.1,
   });
   const packedInstance = [
-    3.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    3.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    1.0,
-    1.0,
-    1.0,
-    1.0,
-    2.0,
-    0.1,
+    3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 3.0, 0.0, 0.0, 1.0, 0.0,
+    0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.1,
   ];
   createPackableSpecs(PolylineVolumeOutlineGeometry, volume, packedInstance);
 });

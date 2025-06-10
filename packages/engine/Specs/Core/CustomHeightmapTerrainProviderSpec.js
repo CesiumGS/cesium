@@ -7,7 +7,7 @@ import {
 describe("Core/CustomHeightmapTerrainProvider", function () {
   it("conforms to TerrainProvider interface", function () {
     expect(CustomHeightmapTerrainProvider).toConformToInterface(
-      TerrainProvider
+      TerrainProvider,
     );
   });
 
@@ -117,11 +117,12 @@ describe("Core/CustomHeightmapTerrainProvider", function () {
       height: height,
     });
 
-    const geometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-      provider.tilingScheme.ellipsoid,
-      Math.max(provider.width, provider.height),
-      provider.tilingScheme.getNumberOfXTilesAtLevel(0)
-    );
+    const geometricError =
+      TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+        provider.tilingScheme.ellipsoid,
+        Math.max(provider.width, provider.height),
+        provider.tilingScheme.getNumberOfXTilesAtLevel(0),
+      );
     expect(provider.getLevelMaximumGeometricError(0)).toBe(geometricError);
   });
 

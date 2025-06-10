@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -11,10 +11,7 @@
       name="description"
       content="A CZML example showing a single entity path split across multiple CZML streams."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Showcases, DataSources, CZML"
-    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, DataSources, CZML" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -99,9 +93,8 @@
 
             // Follow the vehicle with the camera.
             if (!viewer.trackedEntity) {
-              viewer.trackedEntity = vehicleEntity = dataSource.entities.getById(
-                "Vehicle"
-              );
+              viewer.trackedEntity = vehicleEntity =
+                dataSource.entities.getById("Vehicle");
             }
           });
         }
@@ -117,7 +110,7 @@
           // This example uses time offsets from the start to identify which parts need loading.
           const timeOffset = Cesium.JulianDate.secondsDifference(
             clock.currentTime,
-            clock.startTime
+            clock.startTime,
           );
 
           // Filter the list of parts to just the ones that need loading right now.
@@ -136,7 +129,7 @@
 
           if (vehicleEntity) {
             const fuel = vehicleEntity.properties.fuel_remaining.getValue(
-              clock.currentTime
+              clock.currentTime,
             );
             if (Cesium.defined(fuel)) {
               fuelDisplay.textContent = `Fuel: ${fuel.toFixed(2)} gal`;

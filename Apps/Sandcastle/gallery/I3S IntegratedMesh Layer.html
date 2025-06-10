@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Add I3S IntegratedMesh Layer from a service."
-    />
+    <meta name="description" content="Add I3S IntegratedMesh Layer from a service." />
     <meta name="cesium-sandcastle-labels" content="DataSources" />
     <title>I3S Consumption Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -22,10 +19,7 @@
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
 
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -58,7 +52,7 @@
           // If this is not specified, or the URL is invalid no geoid conversion will be applied.
           // The source data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
           const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
           );
 
           // Create i3s options to pass optional parameters useful for debugging and visualizing
@@ -69,7 +63,7 @@
           // Create I3S data provider
           const i3sProvider = await Cesium.I3SDataProvider.fromUrl(
             tours.Frankfurt,
-            i3sOptions
+            i3sOptions,
           );
 
           // Add the i3s layer provider as a primitive data type
@@ -82,9 +76,7 @@
             destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
           });
         } catch (error) {
-          console.log(
-            `There was an error creating the I3S Data Provider: ${error}`
-          );
+          console.log(`There was an error creating the I3S Data Provider: ${error}`);
         } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

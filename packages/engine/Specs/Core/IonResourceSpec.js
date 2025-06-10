@@ -64,35 +64,35 @@ describe("Core/IonResource", function () {
     const options = {};
     const resourceEndpoint = IonResource._createEndpointResource(
       tilesAssetId,
-      options
+      options,
     );
     spyOn(IonResource, "_createEndpointResource").and.returnValue(
-      resourceEndpoint
+      resourceEndpoint,
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
-      Promise.resolve(tilesEndpoint)
+      Promise.resolve(tilesEndpoint),
     );
 
-    return IonResource.fromAssetId(tilesAssetId, options).then(function (
-      resource
-    ) {
-      expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
-        tilesAssetId,
-        options
-      );
-      expect(resourceEndpoint.fetchJson).toHaveBeenCalled();
-      expect(resource._ionEndpointResource).toEqual(resourceEndpoint);
-      expect(resource._ionEndpoint).toEqual(tilesEndpoint);
-    });
+    return IonResource.fromAssetId(tilesAssetId, options).then(
+      function (resource) {
+        expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
+          tilesAssetId,
+          options,
+        );
+        expect(resourceEndpoint.fetchJson).toHaveBeenCalled();
+        expect(resource._ionEndpointResource).toEqual(resourceEndpoint);
+        expect(resource._ionEndpoint).toEqual(tilesEndpoint);
+      },
+    );
   });
 
   function testNonImageryExternalResource(externalEndpoint) {
     const resourceEndpoint = IonResource._createEndpointResource(123890213);
     spyOn(IonResource, "_createEndpointResource").and.returnValue(
-      resourceEndpoint
+      resourceEndpoint,
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
-      Promise.resolve(externalEndpoint)
+      Promise.resolve(externalEndpoint),
     );
 
     return IonResource.fromAssetId(123890213).then(function (resource) {
@@ -137,7 +137,7 @@ describe("Core/IonResource", function () {
     const assetId = 2348234;
     const resource = IonResource._createEndpointResource(assetId);
     expect(resource.url).toBe(
-      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`
+      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`,
     );
   });
 
@@ -151,7 +151,7 @@ describe("Core/IonResource", function () {
       accessToken: accessToken,
     });
     expect(resource.url).toBe(
-      `${serverUrl}v1/assets/${assetId}/endpoint?access_token=${accessToken}`
+      `${serverUrl}v1/assets/${assetId}/endpoint?access_token=${accessToken}`,
     );
   });
 
@@ -165,7 +165,7 @@ describe("Core/IonResource", function () {
     const assetId = 2348234;
     const resource = IonResource._createEndpointResource(assetId);
     expect(resource.url).toBe(
-      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`
+      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`,
     );
 
     Ion.defaultServer = defaultServer;
@@ -353,7 +353,7 @@ describe("Core/IonResource", function () {
       return testCallback(derived, error).then(function () {
         expect(derived._ionEndpoint).toBe(resource._ionEndpoint);
         expect(derived.headers.Authorization).toEqual(
-          resource.headers.Authorization
+          resource.headers.Authorization,
         );
       });
     });

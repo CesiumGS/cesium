@@ -13,6 +13,7 @@ import {
   GeometryInstance,
   GeometryInstanceAttribute,
   HeadingPitchRange,
+  Math as CesiumMath,
   Matrix4,
   PerspectiveFrustum,
   PolygonGeometry,
@@ -27,8 +28,6 @@ import {
   Primitive,
   SceneMode,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import BadGeometry from "../../../../Specs/BadGeometry.js";
 import createContext from "../../../../Specs/createContext.js";
@@ -90,10 +89,10 @@ describe(
       let translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rectangle1)),
-          new Cartesian3()
+          new Cartesian3(),
         ),
         2.0,
-        new Cartesian3()
+        new Cartesian3(),
       );
       rectangleInstance1 = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -112,10 +111,10 @@ describe(
       translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rectangle2)),
-          new Cartesian3()
+          new Cartesian3(),
         ),
         3.0,
-        new Cartesian3()
+        new Cartesian3(),
       );
       rectangleInstance2 = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -361,14 +360,14 @@ describe(
       const boxModelMatrix = Matrix4.multiplyByTranslation(
         Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cartesian3(0.0, 0.0, dimensions.z * 0.5),
-        new Matrix4()
+        new Matrix4(),
       );
 
       const boxGeometry = BoxGeometry.createGeometry(
         BoxGeometry.fromDimensions({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           dimensions: dimensions,
-        })
+        }),
       );
 
       const positions = boxGeometry.attributes.position.values;
@@ -383,7 +382,7 @@ describe(
       BoundingSphere.transform(
         boxGeometry.boundingSphere,
         boxModelMatrix,
-        boxGeometry.boundingSphere
+        boxGeometry.boundingSphere,
       );
 
       const boxGeometryInstance = new GeometryInstance({
@@ -420,10 +419,10 @@ describe(
       const translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rect)),
-          new Cartesian3()
+          new Cartesian3(),
         ),
         100.0,
-        new Cartesian3()
+        new Cartesian3(),
       );
       const rectInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -458,7 +457,7 @@ describe(
             1.0,
             0.0,
             1.0,
-            1.0
+            1.0,
           ),
         },
       });
@@ -486,10 +485,10 @@ describe(
       const translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rect)),
-          new Cartesian3()
+          new Cartesian3(),
         ),
         100.0,
-        new Cartesian3()
+        new Cartesian3(),
       );
       const rectInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -524,7 +523,7 @@ describe(
             1.0,
             0.0,
             1.0,
-            1.0
+            1.0,
           ),
         },
       });
@@ -638,7 +637,7 @@ describe(
       const primitiveModelMatrix = Matrix4.multiplyByTranslation(
         Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cartesian3(0.0, 0.0, dimensions.z * 0.5),
-        new Matrix4()
+        new Matrix4(),
       );
 
       const boxGeometry = BoxGeometry.fromDimensions({
@@ -665,7 +664,7 @@ describe(
       const expectedModelMatrix = Matrix4.multiplyTransformation(
         primitiveModelMatrix,
         instanceModelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
 
       frameState.scene3DOnly = true;
@@ -758,7 +757,7 @@ describe(
 
     it("does not transform to world coordinates", function () {
       rectangleInstance2.modelMatrix = Matrix4.clone(
-        rectangleInstance1.modelMatrix
+        rectangleInstance1.modelMatrix,
       );
       primitive = new Primitive({
         geometryInstances: [rectangleInstance1, rectangleInstance2],
@@ -866,10 +865,10 @@ describe(
       const translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rect)),
-          new Cartesian3()
+          new Cartesian3(),
         ),
         2.0,
-        new Cartesian3()
+        new Cartesian3(),
       );
       const rectInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
@@ -881,10 +880,8 @@ describe(
         id: "rect",
         attributes: {
           color: new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
-          distanceDisplayCondition: new DistanceDisplayConditionGeometryInstanceAttribute(
-            near,
-            far
-          ),
+          distanceDisplayCondition:
+            new DistanceDisplayConditionGeometryInstanceAttribute(near, far),
         },
       });
 
@@ -898,26 +895,30 @@ describe(
       scene.camera.setView({ destination: rect });
       scene.renderForSpecs();
 
-      const boundingSphere = primitive.getGeometryInstanceAttributes("rect")
-        .boundingSphere;
+      const boundingSphere =
+        primitive.getGeometryInstanceAttributes("rect").boundingSphere;
       const center = boundingSphere.center;
       const radius = boundingSphere.radius;
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius)
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius),
       );
       expect(scene).toRender([0, 0, 0, 255]);
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0)
+        new HeadingPitchRange(
+          0.0,
+          -CesiumMath.PI_OVER_TWO,
+          radius + near + 1.0,
+        ),
       );
       expect(scene).notToRender([0, 0, 0, 255]);
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 1.0)
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 1.0),
       );
       expect(scene).toRender([0, 0, 0, 255]);
     });
@@ -938,10 +939,8 @@ describe(
         attributes: {
           color: new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
           show: new ShowGeometryInstanceAttribute(true),
-          distanceDisplayCondition: new DistanceDisplayConditionGeometryInstanceAttribute(
-            near,
-            far
-          ),
+          distanceDisplayCondition:
+            new DistanceDisplayConditionGeometryInstanceAttribute(near, far),
         },
       });
 
@@ -956,8 +955,8 @@ describe(
       scene.frameState.scene3DOnly = true;
       scene.renderForSpecs();
 
-      const boundingSphere = primitive.getGeometryInstanceAttributes("cylinder")
-        .boundingSphere;
+      const boundingSphere =
+        primitive.getGeometryInstanceAttributes("cylinder").boundingSphere;
       const center = boundingSphere.center;
       expect(center).toEqual(translation);
     });
@@ -990,8 +989,8 @@ describe(
       scene.frameState.scene3DOnly = true;
       scene.renderForSpecs();
 
-      const boundingSphere = primitive.getGeometryInstanceAttributes("cylinder")
-        .boundingSphere;
+      const boundingSphere =
+        primitive.getGeometryInstanceAttributes("cylinder").boundingSphere;
       const center = boundingSphere.center;
       expect(center).toEqual(translation);
     });
@@ -1198,7 +1197,7 @@ describe(
             color: new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0),
           },
           id: "invalid",
-        })
+        }),
       );
       instances.push(rectangleInstance2);
 
@@ -1217,13 +1216,13 @@ describe(
         return primitive.ready;
       }).then(function () {
         expect(
-          primitive.getGeometryInstanceAttributes("rectangle1").boundingSphere
+          primitive.getGeometryInstanceAttributes("rectangle1").boundingSphere,
         ).toBeDefined();
         expect(
-          primitive.getGeometryInstanceAttributes("rectangle2").boundingSphere
+          primitive.getGeometryInstanceAttributes("rectangle2").boundingSphere,
         ).toBeDefined();
         expect(
-          primitive.getGeometryInstanceAttributes("invalid").boundingSphere
+          primitive.getGeometryInstanceAttributes("invalid").boundingSphere,
         ).not.toBeDefined();
       });
     });
@@ -1280,9 +1279,8 @@ describe(
         scene.render();
         return primitive.ready;
       }).then(function () {
-        const attributes = primitive.getGeometryInstanceAttributes(
-          "rectangle1"
-        );
+        const attributes =
+          primitive.getGeometryInstanceAttributes("rectangle1");
         expect(function () {
           attributes.color = undefined;
         }).toThrowDeveloperError();
@@ -1327,7 +1325,7 @@ describe(
       scene.renderForSpecs();
 
       expect(
-        primitive.getGeometryInstanceAttributes("unknown")
+        primitive.getGeometryInstanceAttributes("unknown"),
       ).not.toBeDefined();
     });
 
@@ -1370,5 +1368,5 @@ describe(
       expect(primitive.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

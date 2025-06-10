@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -42,30 +41,24 @@ function FrameRateMonitor(options) {
    * Gets or sets the length of the sliding window over which to compute the average frame rate, in seconds.
    * @type {number}
    */
-  this.samplingWindow = defaultValue(
-    options.samplingWindow,
-    FrameRateMonitor.defaultSettings.samplingWindow
-  );
+  this.samplingWindow =
+    options.samplingWindow ?? FrameRateMonitor.defaultSettings.samplingWindow;
 
   /**
    * Gets or sets the length of time to wait at startup and each time the page becomes visible (i.e. when the user
    * switches back to the tab) before starting to measure performance, in seconds.
    * @type {number}
    */
-  this.quietPeriod = defaultValue(
-    options.quietPeriod,
-    FrameRateMonitor.defaultSettings.quietPeriod
-  );
+  this.quietPeriod =
+    options.quietPeriod ?? FrameRateMonitor.defaultSettings.quietPeriod;
 
   /**
    * Gets or sets the length of the warmup period, in seconds.  During the warmup period, a separate
    * (usually lower) frame rate is required.
    * @type {number}
    */
-  this.warmupPeriod = defaultValue(
-    options.warmupPeriod,
-    FrameRateMonitor.defaultSettings.warmupPeriod
-  );
+  this.warmupPeriod =
+    options.warmupPeriod ?? FrameRateMonitor.defaultSettings.warmupPeriod;
 
   /**
    * Gets or sets the minimum frames-per-second that are required for acceptable performance during
@@ -73,10 +66,9 @@ function FrameRateMonitor(options) {
    * <code>lowFrameRate</code> event will be raised and the page will redirect to the <code>redirectOnLowFrameRateUrl</code>, if any.
    * @type {number}
    */
-  this.minimumFrameRateDuringWarmup = defaultValue(
-    options.minimumFrameRateDuringWarmup,
-    FrameRateMonitor.defaultSettings.minimumFrameRateDuringWarmup
-  );
+  this.minimumFrameRateDuringWarmup =
+    options.minimumFrameRateDuringWarmup ??
+    FrameRateMonitor.defaultSettings.minimumFrameRateDuringWarmup;
 
   /**
    * Gets or sets the minimum frames-per-second that are required for acceptable performance after
@@ -84,10 +76,9 @@ function FrameRateMonitor(options) {
    * <code>lowFrameRate</code> event will be raised and the page will redirect to the <code>redirectOnLowFrameRateUrl</code>, if any.
    * @type {number}
    */
-  this.minimumFrameRateAfterWarmup = defaultValue(
-    options.minimumFrameRateAfterWarmup,
-    FrameRateMonitor.defaultSettings.minimumFrameRateAfterWarmup
-  );
+  this.minimumFrameRateAfterWarmup =
+    options.minimumFrameRateAfterWarmup ??
+    FrameRateMonitor.defaultSettings.minimumFrameRateAfterWarmup;
 
   this._lowFrameRate = new Event();
   this._nominalFrameRate = new Event();
@@ -104,30 +95,30 @@ function FrameRateMonitor(options) {
   this._preUpdateRemoveListener = this._scene.preUpdate.addEventListener(
     function (scene, time) {
       update(that, time);
-    }
+    },
   );
 
   this._hiddenPropertyName =
     document.hidden !== undefined
       ? "hidden"
       : document.mozHidden !== undefined
-      ? "mozHidden"
-      : document.msHidden !== undefined
-      ? "msHidden"
-      : document.webkitHidden !== undefined
-      ? "webkitHidden"
-      : undefined;
+        ? "mozHidden"
+        : document.msHidden !== undefined
+          ? "msHidden"
+          : document.webkitHidden !== undefined
+            ? "webkitHidden"
+            : undefined;
 
   const visibilityChangeEventName =
     document.hidden !== undefined
       ? "visibilitychange"
       : document.mozHidden !== undefined
-      ? "mozvisibilitychange"
-      : document.msHidden !== undefined
-      ? "msvisibilitychange"
-      : document.webkitHidden !== undefined
-      ? "webkitvisibilitychange"
-      : undefined;
+        ? "mozvisibilitychange"
+        : document.msHidden !== undefined
+          ? "msvisibilitychange"
+          : document.webkitHidden !== undefined
+            ? "webkitvisibilitychange"
+            : undefined;
 
   function visibilityChangeListener() {
     visibilityChanged(that);
@@ -138,14 +129,14 @@ function FrameRateMonitor(options) {
     document.addEventListener(
       visibilityChangeEventName,
       visibilityChangeListener,
-      false
+      false,
     );
 
     this._visibilityChangeRemoveListener = function () {
       document.removeEventListener(
         visibilityChangeEventName,
         visibilityChangeListener,
-        false
+        false,
       );
     };
   }
@@ -359,7 +350,7 @@ function update(monitor, time) {
           monitor._needsQuietPeriod = true;
           monitor.lowFrameRate.raiseEvent(
             monitor.scene,
-            monitor._lastFramesPerSecond
+            monitor._lastFramesPerSecond,
           );
         }
       } else if (monitor._frameRateIsLow) {
@@ -367,7 +358,7 @@ function update(monitor, time) {
         monitor._needsQuietPeriod = true;
         monitor.nominalFrameRate.raiseEvent(
           monitor.scene,
-          monitor._lastFramesPerSecond
+          monitor._lastFramesPerSecond,
         );
       }
     }

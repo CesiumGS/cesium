@@ -2,7 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
@@ -56,14 +56,14 @@ const defaultImageSize = new Cartesian2(1.0, 1.0);
  * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
  */
 function ParticleSystem(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * Whether to display the particle system.
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * An array of force callbacks. The callback is passed a {@link Particle} and the difference from the last time
@@ -77,14 +77,14 @@ function ParticleSystem(options) {
    * @type {boolean}
    * @default true
    */
-  this.loop = defaultValue(options.loop, true);
+  this.loop = options.loop ?? true;
 
   /**
    * The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
    * @type {object}
    * @default undefined
    */
-  this.image = defaultValue(options.image, undefined);
+  this.image = options.image ?? undefined;
 
   let emitter = options.emitter;
   if (!defined(emitter)) {
@@ -94,76 +94,46 @@ function ParticleSystem(options) {
 
   this._bursts = options.bursts;
 
-  this._modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
+  this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._emitterModelMatrix = Matrix4.clone(
-    defaultValue(options.emitterModelMatrix, Matrix4.IDENTITY)
+    options.emitterModelMatrix ?? Matrix4.IDENTITY,
   );
   this._matrixDirty = true;
   this._combinedMatrix = new Matrix4();
 
   this._startColor = Color.clone(
-    defaultValue(options.color, defaultValue(options.startColor, Color.WHITE))
+    options.color ?? options.startColor ?? Color.WHITE,
   );
   this._endColor = Color.clone(
-    defaultValue(options.color, defaultValue(options.endColor, Color.WHITE))
+    options.color ?? options.endColor ?? Color.WHITE,
   );
 
-  this._startScale = defaultValue(
-    options.scale,
-    defaultValue(options.startScale, 1.0)
-  );
-  this._endScale = defaultValue(
-    options.scale,
-    defaultValue(options.endScale, 1.0)
-  );
+  this._startScale = options.scale ?? options.startScale ?? 1.0;
+  this._endScale = options.scale ?? options.endScale ?? 1.0;
 
-  this._emissionRate = defaultValue(options.emissionRate, 5.0);
+  this._emissionRate = options.emissionRate ?? 5.0;
 
-  this._minimumSpeed = defaultValue(
-    options.speed,
-    defaultValue(options.minimumSpeed, 1.0)
-  );
-  this._maximumSpeed = defaultValue(
-    options.speed,
-    defaultValue(options.maximumSpeed, 1.0)
-  );
+  this._minimumSpeed = options.speed ?? options.minimumSpeed ?? 1.0;
+  this._maximumSpeed = options.speed ?? options.maximumSpeed ?? 1.0;
 
-  this._minimumParticleLife = defaultValue(
-    options.particleLife,
-    defaultValue(options.minimumParticleLife, 5.0)
-  );
-  this._maximumParticleLife = defaultValue(
-    options.particleLife,
-    defaultValue(options.maximumParticleLife, 5.0)
-  );
+  this._minimumParticleLife =
+    options.particleLife ?? options.minimumParticleLife ?? 5.0;
+  this._maximumParticleLife =
+    options.particleLife ?? options.maximumParticleLife ?? 5.0;
 
-  this._minimumMass = defaultValue(
-    options.mass,
-    defaultValue(options.minimumMass, 1.0)
-  );
-  this._maximumMass = defaultValue(
-    options.mass,
-    defaultValue(options.maximumMass, 1.0)
-  );
+  this._minimumMass = options.mass ?? options.minimumMass ?? 1.0;
+  this._maximumMass = options.mass ?? options.maximumMass ?? 1.0;
 
   this._minimumImageSize = Cartesian2.clone(
-    defaultValue(
-      options.imageSize,
-      defaultValue(options.minimumImageSize, defaultImageSize)
-    )
+    options.imageSize ?? options.minimumImageSize ?? defaultImageSize,
   );
   this._maximumImageSize = Cartesian2.clone(
-    defaultValue(
-      options.imageSize,
-      defaultValue(options.maximumImageSize, defaultImageSize)
-    )
+    options.imageSize ?? options.maximumImageSize ?? defaultImageSize,
   );
 
-  this._sizeInMeters = defaultValue(options.sizeInMeters, false);
+  this._sizeInMeters = options.sizeInMeters ?? false;
 
-  this._lifetime = defaultValue(options.lifetime, Number.MAX_VALUE);
+  this._lifetime = options.lifetime ?? Number.MAX_VALUE;
 
   this._billboardCollection = undefined;
   this._particles = [];
@@ -557,7 +527,7 @@ function updateParticlePool(system) {
   const particlePool = system._particlePool;
   const numToAdd = Math.max(
     particleEstimate - particles.length - particlePool.length,
-    0
+    0,
   );
 
   for (let j = 0; j < numToAdd; ++j) {
@@ -630,22 +600,22 @@ function updateBillboard(system, particle) {
   const r = CesiumMath.lerp(
     particle.startColor.red,
     particle.endColor.red,
-    particle.normalizedAge
+    particle.normalizedAge,
   );
   const g = CesiumMath.lerp(
     particle.startColor.green,
     particle.endColor.green,
-    particle.normalizedAge
+    particle.normalizedAge,
   );
   const b = CesiumMath.lerp(
     particle.startColor.blue,
     particle.endColor.blue,
-    particle.normalizedAge
+    particle.normalizedAge,
   );
   const a = CesiumMath.lerp(
     particle.startColor.alpha,
     particle.endColor.alpha,
-    particle.normalizedAge
+    particle.normalizedAge,
   );
   billboard.color = new Color(r, g, b, a);
 
@@ -653,7 +623,7 @@ function updateBillboard(system, particle) {
   billboard.scale = CesiumMath.lerp(
     particle.startScale,
     particle.endScale,
-    particle.normalizedAge
+    particle.normalizedAge,
   );
 }
 
@@ -665,19 +635,19 @@ function addParticle(system, particle) {
   particle.image = system.image;
   particle.life = CesiumMath.randomBetween(
     system._minimumParticleLife,
-    system._maximumParticleLife
+    system._maximumParticleLife,
   );
   particle.mass = CesiumMath.randomBetween(
     system._minimumMass,
-    system._maximumMass
+    system._maximumMass,
   );
   particle.imageSize.x = CesiumMath.randomBetween(
     system._minimumImageSize.x,
-    system._maximumImageSize.x
+    system._maximumImageSize.x,
   );
   particle.imageSize.y = CesiumMath.randomBetween(
     system._minimumImageSize.y,
-    system._maximumImageSize.y
+    system._maximumImageSize.y,
   );
 
   // Reset the normalizedAge and age in case the particle was reused.
@@ -686,7 +656,7 @@ function addParticle(system, particle) {
 
   const speed = CesiumMath.randomBetween(
     system._minimumSpeed,
-    system._maximumSpeed
+    system._maximumSpeed,
   );
   Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
 
@@ -787,7 +757,7 @@ ParticleSystem.prototype.update = function (frameState) {
       this._combinedMatrix = Matrix4.multiply(
         this.modelMatrix,
         this.emitterModelMatrix,
-        this._combinedMatrix
+        this._combinedMatrix,
       );
       this._matrixDirty = false;
     }
@@ -805,26 +775,26 @@ ParticleSystem.prototype.update = function (frameState) {
       Cartesian3.add(
         particle.position,
         particle.velocity,
-        rotatedVelocityScratch
+        rotatedVelocityScratch,
       );
       Matrix4.multiplyByPoint(
         combinedMatrix,
         rotatedVelocityScratch,
-        rotatedVelocityScratch
+        rotatedVelocityScratch,
       );
 
       // Change the position to be in world coordinates
       particle.position = Matrix4.multiplyByPoint(
         combinedMatrix,
         particle.position,
-        particle.position
+        particle.position,
       );
 
       // Orient the velocity in world space as well.
       Cartesian3.subtract(
         rotatedVelocityScratch,
         particle.position,
-        particle.velocity
+        particle.velocity,
       );
       Cartesian3.normalize(particle.velocity, particle.velocity);
 

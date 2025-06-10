@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 /**
@@ -18,19 +17,19 @@ function Spherical(clock, cone, magnitude) {
    * @type {number}
    * @default 0.0
    */
-  this.clock = defaultValue(clock, 0.0);
+  this.clock = clock ?? 0.0;
   /**
    * The cone component.
    * @type {number}
    * @default 0.0
    */
-  this.cone = defaultValue(cone, 0.0);
+  this.cone = cone ?? 0.0;
   /**
    * The magnitude component.
    * @type {number}
    * @default 1.0
    */
-  this.magnitude = defaultValue(magnitude, 1.0);
+  this.magnitude = magnitude ?? 1.0;
 }
 
 /**
@@ -107,8 +106,8 @@ Spherical.normalize = function (spherical, result) {
 /**
  * Returns true if the first spherical is equal to the second spherical, false otherwise.
  *
- * @param {Spherical} left The first Spherical to be compared.
- * @param {Spherical} right The second Spherical to be compared.
+ * @param {Spherical} [left] The first Spherical to be compared.
+ * @param {Spherical} [right] The second Spherical to be compared.
  * @returns {boolean} true if the first spherical is equal to the second spherical, false otherwise.
  */
 Spherical.equals = function (left, right) {
@@ -131,7 +130,7 @@ Spherical.equals = function (left, right) {
  * @returns {boolean} true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
  */
 Spherical.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0.0);
+  epsilon = epsilon ?? 0.0;
   return (
     left === right ||
     (defined(left) &&
@@ -145,7 +144,7 @@ Spherical.equalsEpsilon = function (left, right, epsilon) {
 /**
  * Returns true if this spherical is equal to the provided spherical, false otherwise.
  *
- * @param {Spherical} other The Spherical to be compared.
+ * @param {Spherical} [other] The Spherical to be compared.
  * @returns {boolean} true if this spherical is equal to the provided spherical, false otherwise.
  */
 Spherical.prototype.equals = function (other) {

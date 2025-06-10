@@ -1,6 +1,6 @@
 import Cartesian2 from "./Cartesian2.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
@@ -16,8 +16,8 @@ import Rectangle from "./Rectangle.js";
  * @constructor
  *
  * @param {object} [options] Object with the following properties:
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
- * the WGS84 ellipsoid.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid whose surface is being tiled. Defaults to
+ * the default ellipsoid.
  * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the tiling scheme.
  * @param {number} [options.numberOfLevelZeroTilesX=2] The number of tiles in the X direction at level zero of
  * the tile tree.
@@ -25,19 +25,13 @@ import Rectangle from "./Rectangle.js";
  * the tile tree.
  */
 function GeographicTilingScheme(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-  this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  this._rectangle = options.rectangle ?? Rectangle.MAX_VALUE;
   this._projection = new GeographicProjection(this._ellipsoid);
-  this._numberOfLevelZeroTilesX = defaultValue(
-    options.numberOfLevelZeroTilesX,
-    2
-  );
-  this._numberOfLevelZeroTilesY = defaultValue(
-    options.numberOfLevelZeroTilesY,
-    1
-  );
+  this._numberOfLevelZeroTilesX = options.numberOfLevelZeroTilesX ?? 2;
+  this._numberOfLevelZeroTilesY = options.numberOfLevelZeroTilesY ?? 1;
 }
 
 Object.defineProperties(GeographicTilingScheme.prototype, {
@@ -107,7 +101,7 @@ GeographicTilingScheme.prototype.getNumberOfYTilesAtLevel = function (level) {
  */
 GeographicTilingScheme.prototype.rectangleToNativeRectangle = function (
   rectangle,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("rectangle", rectangle);
@@ -145,7 +139,7 @@ GeographicTilingScheme.prototype.tileXYToNativeRectangle = function (
   x,
   y,
   level,
-  result
+  result,
 ) {
   const rectangleRadians = this.tileXYToRectangle(x, y, level, result);
   rectangleRadians.west = CesiumMath.toDegrees(rectangleRadians.west);
@@ -170,7 +164,7 @@ GeographicTilingScheme.prototype.tileXYToRectangle = function (
   x,
   y,
   level,
-  result
+  result,
 ) {
   const rectangle = this._rectangle;
 
@@ -210,7 +204,7 @@ GeographicTilingScheme.prototype.tileXYToRectangle = function (
 GeographicTilingScheme.prototype.positionToTileXY = function (
   position,
   level,
-  result
+  result,
 ) {
   const rectangle = this._rectangle;
   if (!Rectangle.contains(rectangle, position)) {

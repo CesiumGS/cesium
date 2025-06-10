@@ -59,5 +59,5 @@ describe(
       viewModel.command();
     });
   },
-  "WebGL"
+  "WebGL",
 );

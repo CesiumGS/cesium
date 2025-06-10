@@ -14,14 +14,13 @@ import {
   GeometryInstance,
   GeometryPipeline,
   GeometryType,
+  Math as CesiumMath,
   Matrix4,
   PolygonGeometry,
   PrimitiveType,
   Tipsify,
   VertexFormat,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/GeometryPipeline", function () {
   it("converts triangles to wireframe in place", function () {
@@ -30,7 +29,7 @@ describe("Core/GeometryPipeline", function () {
         attributes: {},
         indices: [0, 1, 2, 3, 4, 5],
         primitiveType: PrimitiveType.TRIANGLES,
-      })
+      }),
     );
 
     expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
@@ -59,7 +58,7 @@ describe("Core/GeometryPipeline", function () {
         attributes: {},
         indices: [0, 1, 2, 3],
         primitiveType: PrimitiveType.TRIANGLE_FAN,
-      })
+      }),
     );
 
     expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
@@ -88,7 +87,7 @@ describe("Core/GeometryPipeline", function () {
         attributes: {},
         indices: [0, 1, 2, 3],
         primitiveType: PrimitiveType.TRIANGLE_STRIP,
-      })
+      }),
     );
 
     expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
@@ -124,7 +123,7 @@ describe("Core/GeometryPipeline", function () {
           attributes: {},
           indices: [],
           primitiveType: PrimitiveType.POINTS,
-        })
+        }),
       );
     }).toThrowDeveloperError();
   });
@@ -149,27 +148,11 @@ describe("Core/GeometryPipeline", function () {
     const lines = GeometryPipeline.createLineSegmentsForVectors(
       geometry,
       "normal",
-      1.0
+      1.0,
     );
     const linePositions = [
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      1.0,
-      1.0,
-      0.0,
-      0.0,
-      1.0,
-      0.0,
-      1.0,
-      0.0,
-      1.0,
-      0.0,
-      0.0,
-      1.0,
-      1.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0,
+      0.0, 1.0, 1.0,
     ];
 
     expect(lines.attributes).toBeDefined();
@@ -178,7 +161,7 @@ describe("Core/GeometryPipeline", function () {
     expect(lines.primitiveType).toEqual(PrimitiveType.LINES);
     expect(lines.boundingSphere.center).toEqual(geometry.boundingSphere.center);
     expect(lines.boundingSphere.radius).toEqual(
-      geometry.boundingSphere.radius + 1.0
+      geometry.boundingSphere.radius + 1.0,
     );
   });
 
@@ -261,24 +244,8 @@ describe("Core/GeometryPipeline", function () {
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 3,
           values: [
-            0.0,
-            1.0,
-            2.0,
-            3.0,
-            4.0,
-            5.0,
-            6.0,
-            7.0,
-            8.0,
-            9.0,
-            10.0,
-            11.0,
-            12.0,
-            13.0,
-            14.0,
-            15.0,
-            16.0,
-            17.0,
+            0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+            13.0, 14.0, 15.0, 16.0, 17.0,
           ],
         }),
       },
@@ -340,24 +307,8 @@ describe("Core/GeometryPipeline", function () {
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 3,
           values: [
-            0.0,
-            1.0,
-            2.0,
-            3.0,
-            4.0,
-            5.0,
-            6.0,
-            7.0,
-            8.0,
-            9.0,
-            10.0,
-            11.0,
-            12.0,
-            13.0,
-            14.0,
-            15.0,
-            16.0,
-            17.0,
+            0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+            13.0, 14.0, 15.0, 16.0, 17.0,
           ],
         }),
       },
@@ -467,7 +418,7 @@ describe("Core/GeometryPipeline", function () {
 
     expect(geometries.length).toEqual(1);
     expect(geometries[0].attributes.time.componentDatatype).toEqual(
-      ComponentDatatype.FLOAT
+      ComponentDatatype.FLOAT,
     );
     expect(geometries[0].attributes.time.componentsPerAttribute).toEqual(1);
     expect(geometries[0].attributes.time.values).toEqual([0, sixtyFourK]);
@@ -507,7 +458,7 @@ describe("Core/GeometryPipeline", function () {
     expect(geometries.length).toEqual(2);
 
     expect(geometries[0].attributes.position.values.length).toEqual(
-      positions.length - 6
+      positions.length - 6,
     ); // Two vertices are not copied (0, 1)
     expect(geometries[0].indices.length).toEqual(indices.length - 3); // One triangle is not copied (0, 1, 2)
 
@@ -546,7 +497,7 @@ describe("Core/GeometryPipeline", function () {
     expect(geometries.length).toEqual(2);
 
     expect(geometries[0].attributes.position.values.length).toEqual(
-      positions.length - 12
+      positions.length - 12,
     ); // Four vertices are not copied
     expect(geometries[0].indices.length).toEqual(indices.length - 4); // Two lines are not copied
 
@@ -581,7 +532,7 @@ describe("Core/GeometryPipeline", function () {
     expect(geometries.length).toEqual(2);
 
     expect(geometries[0].attributes.position.values.length).toEqual(
-      positions.length - 6
+      positions.length - 6,
     ); // Two vertices are not copied
     expect(geometries[0].indices.length).toEqual(indices.length - 2); // Two points are not copied
 
@@ -652,16 +603,16 @@ describe("Core/GeometryPipeline", function () {
       geometry,
       "position",
       "position3D",
-      "position2D"
+      "position2D",
     );
 
     const ellipsoid = Ellipsoid.WGS84;
     const projection = new GeographicProjection();
     const projectedP1 = projection.project(
-      ellipsoid.cartesianToCartographic(p1)
+      ellipsoid.cartesianToCartographic(p1),
     );
     const projectedP2 = projection.project(
-      ellipsoid.cartesianToCartographic(p2)
+      ellipsoid.cartesianToCartographic(p2),
     );
 
     expect(geometry.attributes.position2D.values[0]).toEqual(projectedP1.x);
@@ -697,7 +648,7 @@ describe("Core/GeometryPipeline", function () {
             }),
           },
           primitiveType: PrimitiveType.POINTS,
-        })
+        }),
       );
     }).toThrowDeveloperError();
   });
@@ -715,7 +666,7 @@ describe("Core/GeometryPipeline", function () {
           },
           primitiveType: PrimitiveType.POINTS,
         }),
-        "position"
+        "position",
       );
     }).toThrowDeveloperError();
   });
@@ -734,7 +685,7 @@ describe("Core/GeometryPipeline", function () {
           primitiveType: PrimitiveType.POINTS,
         }),
         "position",
-        "position3D"
+        "position3D",
       );
     }).toThrowDeveloperError();
   });
@@ -754,7 +705,7 @@ describe("Core/GeometryPipeline", function () {
         }),
         "position",
         "position3D",
-        "position2D"
+        "position2D",
       );
     }).toThrowDeveloperError();
   });
@@ -774,7 +725,7 @@ describe("Core/GeometryPipeline", function () {
         geometry,
         "position",
         "position3D",
-        "position2D"
+        "position2D",
       );
     }).toThrowDeveloperError();
   });
@@ -793,7 +744,7 @@ describe("Core/GeometryPipeline", function () {
         geometry,
         "position",
         "position3D",
-        "position2D"
+        "position2D",
       );
     }).toThrowDeveloperError();
   });
@@ -816,7 +767,7 @@ describe("Core/GeometryPipeline", function () {
       geometry,
       "position",
       "positionHigh",
-      "positionLow"
+      "positionLow",
     );
 
     expect(geometry.attributes.positionHigh).toBeDefined();
@@ -848,7 +799,7 @@ describe("Core/GeometryPipeline", function () {
             }),
           },
           primitiveType: PrimitiveType.POINTS,
-        })
+        }),
       );
     }).toThrowDeveloperError();
   });
@@ -866,7 +817,7 @@ describe("Core/GeometryPipeline", function () {
           },
           primitiveType: PrimitiveType.POINTS,
         }),
-        "position"
+        "position",
       );
     }).toThrowDeveloperError();
   });
@@ -885,7 +836,7 @@ describe("Core/GeometryPipeline", function () {
           primitiveType: PrimitiveType.POINTS,
         }),
         "position",
-        "positionHigh"
+        "positionHigh",
       );
     }).toThrowDeveloperError();
   });
@@ -905,7 +856,7 @@ describe("Core/GeometryPipeline", function () {
         }),
         "position",
         "positionHigh",
-        "positionLow"
+        "positionLow",
       );
     }).toThrowDeveloperError();
   });
@@ -925,7 +876,7 @@ describe("Core/GeometryPipeline", function () {
         geometry,
         "position",
         "positionHigh",
-        "positionLow"
+        "positionLow",
       );
     }).toThrowDeveloperError();
   });
@@ -965,7 +916,7 @@ describe("Core/GeometryPipeline", function () {
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       ),
     });
 
@@ -974,13 +925,13 @@ describe("Core/GeometryPipeline", function () {
     const transformedNormals = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 
     expect(transformed.geometry.attributes.position.values).toEqual(
-      transformedPositions
+      transformedPositions,
     );
     expect(transformed.geometry.attributes.normal.values).toEqual(
-      transformedNormals
+      transformedNormals,
     );
     expect(transformed.geometry.boundingSphere).toEqual(
-      new BoundingSphere(new Cartesian3(0.0, 0.5, 0.5), 1.0)
+      new BoundingSphere(new Cartesian3(0.0, 0.5, 0.5), 1.0),
     );
     expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
   });
@@ -1012,13 +963,13 @@ describe("Core/GeometryPipeline", function () {
     const transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
 
     expect(transformed.geometry.attributes.position.values).toEqual(
-      transformedPositions
+      transformedPositions,
     );
     expect(transformed.geometry.attributes.normal.values).toEqual(
-      transformedNormals
+      transformedNormals,
     );
     expect(transformed.geometry.boundingSphere).toEqual(
-      new BoundingSphere(new Cartesian3(0.5, 1.0, 0.0), 4.0)
+      new BoundingSphere(new Cartesian3(0.5, 1.0, 0.0), 4.0),
     );
     expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
   });
@@ -1050,13 +1001,13 @@ describe("Core/GeometryPipeline", function () {
     const transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
 
     expect(transformed.geometry.attributes.position.values).toEqual(
-      transformedPositions
+      transformedPositions,
     );
     expect(transformed.geometry.attributes.normal.values).toEqual(
-      transformedNormals
+      transformedNormals,
     );
     expect(transformed.geometry.boundingSphere).toEqual(
-      new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
+      new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0),
     );
     expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
   });
@@ -1125,7 +1076,7 @@ describe("Core/GeometryPipeline", function () {
           }),
         },
         primitiveType: PrimitiveType.POINTS,
-      })
+      }),
     );
   });
 
@@ -1173,30 +1124,14 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 3,
             values: new Float32Array([
-              0.0,
-              0.0,
-              0.0,
-              1.0,
-              1.0,
-              1.0,
-              2.0,
-              2.0,
-              2.0,
-              3.0,
-              3.0,
-              3.0,
-              4.0,
-              4.0,
-              4.0,
-              5.0,
-              5.0,
-              5.0,
+              0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0,
+              4.0, 4.0, 5.0, 5.0, 5.0,
             ]),
           }),
         },
         indices: new Uint16Array([0, 1, 2, 3, 4, 5]),
         primitiveType: PrimitiveType.TRIANGLES,
-      })
+      }),
     );
   });
 
@@ -1207,37 +1142,23 @@ describe("Core/GeometryPipeline", function () {
           geometry: PolygonGeometry.createGeometry(
             PolygonGeometry.fromPositions({
               positions: Cartesian3.fromDegreesArray([
-                179.0,
-                1.0,
-                179.0,
-                -1.0,
-                -179.0,
-                -1.0,
-                -179.0,
-                1.0,
+                179.0, 1.0, 179.0, -1.0, -179.0, -1.0, -179.0, 1.0,
               ]),
               vertexFormat: VertexFormat.POSITION_ONLY,
               granularity: 2.0 * CesiumMath.RADIANS_PER_DEGREE,
-            })
+            }),
           ),
-        })
+        }),
       ),
       new GeometryInstance({
         geometry: PolygonGeometry.createGeometry(
           PolygonGeometry.fromPositions({
             positions: Cartesian3.fromDegreesArray([
-              -1.0,
-              1.0,
-              -1.0,
-              -1.0,
-              1.0,
-              -1.0,
-              1.0,
-              1.0,
+              -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0,
             ]),
             vertexFormat: VertexFormat.POSITION_ONLY,
             granularity: 2.0 * CesiumMath.RADIANS_PER_DEGREE,
-          })
+          }),
         ),
       }),
     ];
@@ -1282,7 +1203,7 @@ describe("Core/GeometryPipeline", function () {
     ])[0];
     const expected = BoundingSphere.union(
       instance.geometry.boundingSphere,
-      anotherInstance.geometry.boundingSphere
+      anotherInstance.geometry.boundingSphere,
     );
     expect(combined.boundingSphere).toEqual(expected);
   });
@@ -1484,15 +1405,7 @@ describe("Core/GeometryPipeline", function () {
 
     expect(geometry.attributes.normal.values.length).toEqual(3 * 3);
     expect(geometry.attributes.normal.values).toEqual([
-      0,
-      0,
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-      1,
+      0, 0, 1, 0, 0, 1, 0, 0, 1,
     ]);
   });
 
@@ -1518,21 +1431,21 @@ describe("Core/GeometryPipeline", function () {
 
     expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(
       Cartesian3.UNIT_Z,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(
       Cartesian3.UNIT_Z,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     a = Cartesian3.normalize(new Cartesian3(1, 0, 1), new Cartesian3());
     expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1541,27 +1454,7 @@ describe("Core/GeometryPipeline", function () {
       attributes: {
         position: new GeometryAttribute({
           values: [
-            0,
-            0,
-            0,
-            1,
-            0,
-            0,
-            1,
-            0,
-            1,
-            0,
-            0,
-            1,
-            0,
-            1,
-            1,
-            0,
-            1,
-            0,
-            1,
-            1,
-            0,
+            0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0,
           ],
           componentsPerAttribute: 3,
           componentDatatype: ComponentDatatype.FLOAT,
@@ -1579,40 +1472,40 @@ describe("Core/GeometryPipeline", function () {
     let a = Cartesian3.normalize(new Cartesian3(-1, -1, -1), new Cartesian3());
     expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     a = Cartesian3.normalize(new Cartesian3(0, -1, -1), new Cartesian3());
     expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     a = Cartesian3.normalize(new Cartesian3(-1, -1, 0), new Cartesian3());
     expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expect(Cartesian3.fromArray(normals, 12)).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     a = Cartesian3.normalize(new Cartesian3(-1, 0, -1), new Cartesian3());
     expect(Cartesian3.fromArray(normals, 15)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1657,15 +1550,15 @@ describe("Core/GeometryPipeline", function () {
 
     expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(
       a,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1849,26 +1742,10 @@ describe("Core/GeometryPipeline", function () {
     geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
 
     expect(geometry.attributes.tangent.values).toEqual([
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
+      1, 0, 0, 1, 0, 0, 1, 0, 0,
     ]);
     expect(geometry.attributes.bitangent.values).toEqual([
-      0,
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-      1,
-      0,
+      0, 1, 0, 0, 1, 0, 0, 1, 0,
     ]);
   });
 
@@ -1894,37 +1771,17 @@ describe("Core/GeometryPipeline", function () {
     geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
     expect(geometry.attributes.tangent.values).toEqualEpsilon(
       [
-        0.7071067811865475,
-        0,
-        0.7071067811865475,
-        0,
-        1,
-        0,
-        0,
-        1,
-        0,
-        -0.5773502691896258,
-        0.5773502691896258,
-        0.5773502691896258,
+        0.7071067811865475, 0, 0.7071067811865475, 0, 1, 0, 0, 1, 0,
+        -0.5773502691896258, 0.5773502691896258, 0.5773502691896258,
       ],
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(geometry.attributes.bitangent.values).toEqualEpsilon(
       [
-        0,
-        1,
-        0,
-        -1,
-        0,
-        0,
-        -1,
-        0,
-        0,
-        -0.4082482904638631,
-        -0.8164965809277261,
+        0, 1, 0, -1, 0, 0, -1, 0, 0, -0.4082482904638631, -0.8164965809277261,
         0.4082482904638631,
       ],
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1938,7 +1795,7 @@ describe("Core/GeometryPipeline", function () {
         }),
         maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
         minimum: new Cartesian3(-250000.0, -250000.0, -250000.0),
-      })
+      }),
     );
     geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
     const actualTangents = geometry.attributes.tangent.values;
@@ -1949,7 +1806,7 @@ describe("Core/GeometryPipeline", function () {
         vertexFormat: VertexFormat.ALL,
         maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
         minimum: new Cartesian3(-250000.0, -250000.0, -250000.0),
-      })
+      }),
     );
     const expectedTangents = expectedGeometry.attributes.tangent.values;
     const expectedBitangents = expectedGeometry.attributes.bitangent.values;
@@ -1982,7 +1839,7 @@ describe("Core/GeometryPipeline", function () {
         }),
         maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
         minimum: new Cartesian3(-250000.0, -250000.0, -250000.0),
-      })
+      }),
     );
     expect(geometry.attributes.normal).not.toBeDefined();
     geometry = GeometryPipeline.compressVertices(geometry);
@@ -1998,7 +1855,7 @@ describe("Core/GeometryPipeline", function () {
         }),
         maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
         minimum: new Cartesian3(-250000.0, -250000.0, -250000.0),
-      })
+      }),
     );
     expect(geometry.attributes.normal).toBeDefined();
     const originalNormals = geometry.attributes.normal.values.slice();
@@ -2012,10 +1869,10 @@ describe("Core/GeometryPipeline", function () {
 
     for (let i = 0; i < normals.length; ++i) {
       expect(
-        AttributeCompression.octDecodeFloat(normals[i], new Cartesian3())
+        AttributeCompression.octDecodeFloat(normals[i], new Cartesian3()),
       ).toEqualEpsilon(
         Cartesian3.fromArray(originalNormals, i * 3),
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
     }
   });
@@ -2029,7 +1886,7 @@ describe("Core/GeometryPipeline", function () {
         }),
         maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
         minimum: new Cartesian3(-250000.0, -250000.0, -250000.0),
-      })
+      }),
     );
     expect(geometry.attributes.st).toBeDefined();
     const originalST = geometry.attributes.st.values.slice();
@@ -2049,7 +1906,7 @@ describe("Core/GeometryPipeline", function () {
       const texCoord = new Cartesian2(stx, sty);
       expect(texCoord).toEqualEpsilon(
         Cartesian2.fromArray(originalST, i * 2, new Cartesian2()),
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
     }
   });
@@ -2064,7 +1921,7 @@ describe("Core/GeometryPipeline", function () {
         }),
         maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
         minimum: new Cartesian3(-250000.0, -250000.0, -250000.0),
-      })
+      }),
     );
     expect(geometry.attributes.normal).toBeDefined();
     expect(geometry.attributes.st).toBeDefined();
@@ -2084,17 +1941,17 @@ describe("Core/GeometryPipeline", function () {
       expect(
         AttributeCompression.decompressTextureCoordinates(
           stNormal[i],
-          new Cartesian2()
-        )
+          new Cartesian2(),
+        ),
       ).toEqualEpsilon(
         Cartesian2.fromArray(originalST, i, new Cartesian2()),
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
       expect(
-        AttributeCompression.octDecodeFloat(stNormal[i + 1], new Cartesian3())
+        AttributeCompression.octDecodeFloat(stNormal[i + 1], new Cartesian3()),
       ).toEqualEpsilon(
         Cartesian3.fromArray(originalNormals, (i / 2) * 3),
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
     }
   });
@@ -2110,7 +1967,7 @@ describe("Core/GeometryPipeline", function () {
         }),
         maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
         minimum: new Cartesian3(-250000.0, -250000.0, -250000.0),
-      })
+      }),
     );
     expect(geometry.attributes.normal).toBeDefined();
     expect(geometry.attributes.tangent).toBeDefined();
@@ -2136,21 +1993,21 @@ describe("Core/GeometryPipeline", function () {
       const compressed = Cartesian2.fromArray(
         compressedNormals,
         i,
-        new Cartesian2()
+        new Cartesian2(),
       );
       AttributeCompression.octUnpack(compressed, normal, tangent, bitangent);
 
       expect(normal).toEqualEpsilon(
         Cartesian3.fromArray(originalNormals, (i / 2) * 3),
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
       expect(tangent).toEqualEpsilon(
         Cartesian3.fromArray(originalTangents, (i / 2) * 3),
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
       expect(bitangent).toEqualEpsilon(
         Cartesian3.fromArray(originalBitangents, (i / 2) * 3),
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
     }
   });
@@ -2160,18 +2017,11 @@ describe("Core/GeometryPipeline", function () {
       geometry: PolygonGeometry.createGeometry(
         PolygonGeometry.fromPositions({
           positions: Cartesian3.fromDegreesArray([
-            -1.0,
-            1.0,
-            -1.0,
-            -1.0,
-            1.0,
-            -1.0,
-            1.0,
-            1.0,
+            -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0,
           ]),
           vertexFormat: VertexFormat.POSITION_ONLY,
           granularity: 2.0 * CesiumMath.RADIANS_PER_DEGREE,
-        })
+        }),
       ),
     });
 
@@ -2261,14 +2111,14 @@ describe("Core/GeometryPipeline", function () {
       index = i * 2;
       expect(newVec2s[index]).toBe(0);
       expect(newVec2s[index + 1] === 255 || newVec2s[index + 1] === 127).toBe(
-        true
+        true,
       );
 
       index = i * 3;
       expect(newVec3s[index]).toBe(0);
       expect(newVec3s[index + 1]).toBe(0);
       expect(newVec3s[index + 2] === 255 || newVec3s[index + 2] === 127).toBe(
-        true
+        true,
       );
 
       index = i * 4;
@@ -2276,7 +2126,7 @@ describe("Core/GeometryPipeline", function () {
       expect(newVec4s[index + 1]).toBe(0);
       expect(newVec4s[index + 2]).toBe(0);
       expect(newVec4s[index + 3] === 255 || newVec4s[index + 3] === 127).toBe(
-        true
+        true,
       );
     }
 
@@ -2299,14 +2149,14 @@ describe("Core/GeometryPipeline", function () {
       index = i * 2;
       expect(newVec2s[index]).toBe(0);
       expect(newVec2s[index + 1] === 0 || newVec2s[index + 1] === 127).toBe(
-        true
+        true,
       );
 
       index = i * 3;
       expect(newVec3s[index]).toBe(0);
       expect(newVec3s[index + 1]).toBe(0);
       expect(newVec3s[index + 2] === 0 || newVec3s[index + 2] === 127).toBe(
-        true
+        true,
       );
 
       index = i * 4;
@@ -2314,7 +2164,7 @@ describe("Core/GeometryPipeline", function () {
       expect(newVec4s[index + 1]).toBe(0);
       expect(newVec4s[index + 2]).toBe(0);
       expect(newVec4s[index + 3] === 0 || newVec4s[index + 3] === 127).toBe(
-        true
+        true,
       );
     }
   });
@@ -2327,24 +2177,8 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
-              5.0,
-              4.0,
-              3.0,
-              2.0,
-              1.0,
-              0.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0, 5.0,
+              4.0, 3.0, 2.0, 1.0, 0.0,
             ]),
           }),
         },
@@ -2364,24 +2198,8 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
-              5.0,
-              4.0,
-              3.0,
-              2.0,
-              1.0,
-              0.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0, 5.0,
+              4.0, 3.0, 2.0, 1.0, 0.0,
             ]),
           }),
         },
@@ -2421,23 +2239,8 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
-              5.0,
-              4.0,
-              3.0,
-              2.0,
-              1.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0, 5.0,
+              4.0, 3.0, 2.0, 1.0,
             ]),
           }),
         },
@@ -2458,18 +2261,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0,
             ]),
           }),
         },
@@ -2509,24 +2301,8 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
-              5.0,
-              4.0,
-              3.0,
-              2.0,
-              1.0,
-              0.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0, 5.0,
+              4.0, 3.0, 2.0, 1.0, 0.0,
             ]),
           }),
         },
@@ -2537,18 +2313,7 @@ describe("Core/GeometryPipeline", function () {
     GeometryPipeline.splitLongitude(instance);
     expect(instance.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
     expect(instance.geometry.indices).toEqual([
-      0,
-      1,
-      2,
-      0,
-      2,
-      3,
-      3,
-      2,
-      4,
-      3,
-      4,
-      5,
+      0, 1, 2, 0, 2, 3, 3, 2, 4, 3, 4, 5,
     ]);
   });
 
@@ -2579,18 +2344,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0,
             ]),
           }),
         },
@@ -2610,18 +2364,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0,
             ]),
           }),
         },
@@ -2661,15 +2404,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
             ]),
           }),
         },
@@ -2690,18 +2425,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0,
             ]),
           }),
         },
@@ -2741,18 +2465,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              0.0,
-              1.0,
-              2.0,
-              3.0,
-              4.0,
-              5.0,
-              6.0,
-              7.0,
-              8.0,
-              8.0,
-              7.0,
-              6.0,
+              0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0,
             ]),
           }),
         },
@@ -2792,15 +2505,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -1.0,
-              -1.0,
-              0.0,
-              -1.0,
-              1.0,
-              2.0,
-              -1.0,
-              2.0,
-              2.0,
+              -1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 2.0, 2.0,
             ]),
           }),
         },
@@ -2816,7 +2521,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.westHemisphereGeometry.indices.length).toEqual(3);
     expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.position.values.length
+      instance.westHemisphereGeometry.attributes.position.values.length,
     ).toEqual(3 * 3);
 
     expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -2824,7 +2529,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.eastHemisphereGeometry.indices.length).toEqual(6);
     expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.position.values.length
+      instance.eastHemisphereGeometry.attributes.position.values.length,
     ).toEqual(5 * 3);
   });
 
@@ -2836,15 +2541,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -1.0,
-              1.0,
-              2.0,
-              -1.0,
-              -1.0,
-              0.0,
-              -1.0,
-              2.0,
-              2.0,
+              -1.0, 1.0, 2.0, -1.0, -1.0, 0.0, -1.0, 2.0, 2.0,
             ]),
           }),
         },
@@ -2860,7 +2557,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.westHemisphereGeometry.indices.length).toEqual(3);
     expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.position.values.length
+      instance.westHemisphereGeometry.attributes.position.values.length,
     ).toEqual(3 * 3);
 
     expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -2868,7 +2565,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.eastHemisphereGeometry.indices.length).toEqual(6);
     expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.position.values.length
+      instance.eastHemisphereGeometry.attributes.position.values.length,
     ).toEqual(5 * 3);
   });
 
@@ -2880,15 +2577,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -1.0,
-              1.0,
-              2.0,
-              -1.0,
-              2.0,
-              2.0,
-              -1.0,
-              -1.0,
-              0.0,
+              -1.0, 1.0, 2.0, -1.0, 2.0, 2.0, -1.0, -1.0, 0.0,
             ]),
           }),
         },
@@ -2904,7 +2593,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.westHemisphereGeometry.indices.length).toEqual(3);
     expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.position.values.length
+      instance.westHemisphereGeometry.attributes.position.values.length,
     ).toEqual(3 * 3);
 
     expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -2912,7 +2601,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.eastHemisphereGeometry.indices.length).toEqual(6);
     expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.position.values.length
+      instance.eastHemisphereGeometry.attributes.position.values.length,
     ).toEqual(5 * 3);
   });
 
@@ -2924,15 +2613,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -1.0,
-              1.0,
-              0.0,
-              -1.0,
-              -1.0,
-              0.0,
-              -2.0,
-              -1.0,
-              0.0,
+              -1.0, 1.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, 0.0,
             ]),
           }),
         },
@@ -2948,7 +2629,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.westHemisphereGeometry.indices.length).toEqual(6);
     expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.position.values.length
+      instance.westHemisphereGeometry.attributes.position.values.length,
     ).toEqual(5 * 3);
 
     expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -2956,7 +2637,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.eastHemisphereGeometry.indices.length).toEqual(3);
     expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.position.values.length
+      instance.eastHemisphereGeometry.attributes.position.values.length,
     ).toEqual(3 * 3);
   });
 
@@ -2968,15 +2649,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -2.0,
-              -1.0,
-              0.0,
-              -1.0,
-              1.0,
-              0.0,
-              -1.0,
-              -1.0,
-              0.0,
+              -2.0, -1.0, 0.0, -1.0, 1.0, 0.0, -1.0, -1.0, 0.0,
             ]),
           }),
         },
@@ -2992,7 +2665,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.westHemisphereGeometry.indices.length).toEqual(6);
     expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.position.values.length
+      instance.westHemisphereGeometry.attributes.position.values.length,
     ).toEqual(5 * 3);
 
     expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -3000,7 +2673,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.eastHemisphereGeometry.indices.length).toEqual(3);
     expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.position.values.length
+      instance.eastHemisphereGeometry.attributes.position.values.length,
     ).toEqual(3 * 3);
   });
 
@@ -3012,15 +2685,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -1.0,
-              -1.0,
-              0.0,
-              -2.0,
-              -1.0,
-              0.0,
-              -1.0,
-              1.0,
-              0.0,
+              -1.0, -1.0, 0.0, -2.0, -1.0, 0.0, -1.0, 1.0, 0.0,
             ]),
           }),
         },
@@ -3036,7 +2701,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.westHemisphereGeometry.indices.length).toEqual(6);
     expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.position.values.length
+      instance.westHemisphereGeometry.attributes.position.values.length,
     ).toEqual(5 * 3);
 
     expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -3044,7 +2709,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.eastHemisphereGeometry.indices.length).toEqual(3);
     expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.position.values.length
+      instance.eastHemisphereGeometry.attributes.position.values.length,
     ).toEqual(3 * 3);
   });
 
@@ -3100,15 +2765,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -1.0,
-              -1.0,
-              1.0,
-              -1.0,
-              -2.0,
-              1.0,
-              -1.0,
-              -2.0,
-              2.0,
+              -1.0, -1.0, 1.0, -1.0, -2.0, 1.0, -1.0, -2.0, 2.0,
             ]),
           }),
         },
@@ -3123,15 +2780,7 @@ describe("Core/GeometryPipeline", function () {
 
     const positions = geometry.attributes.position.values;
     expect(positions).toEqual([
-      -1.0,
-      -1.0,
-      1.0,
-      -1.0,
-      -2.0,
-      1.0,
-      -1.0,
-      -2.0,
-      2.0,
+      -1.0, -1.0, 1.0, -1.0, -2.0, 1.0, -1.0, -2.0, 2.0,
     ]);
     expect(positions.length).toEqual(3 * 3);
   });
@@ -3144,15 +2793,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -1.0,
-              1.0,
-              1.0,
-              -1.0,
-              2.0,
-              1.0,
-              -1.0,
-              2.0,
-              2.0,
+              -1.0, 1.0, 1.0, -1.0, 2.0, 1.0, -1.0, 2.0, 2.0,
             ]),
           }),
         },
@@ -3178,15 +2819,7 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              1.0,
-              1.0,
-              1.0,
-              1.0,
-              2.0,
-              1.0,
-              1.0,
-              2.0,
-              2.0,
+              1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 2.0,
             ]),
           }),
         },
@@ -3212,60 +2845,28 @@ describe("Core/GeometryPipeline", function () {
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
             values: new Float64Array([
-              -2.0,
-              -1.0,
-              0.0,
-              -3.0,
-              1.0,
-              0.0,
-              -1.0,
-              1.0,
-              0.0,
+              -2.0, -1.0, 0.0, -3.0, 1.0, 0.0, -1.0, 1.0, 0.0,
             ]),
           }),
           normal: new GeometryAttribute({
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 3,
             values: new Float32Array([
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              1.0,
+              0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
             ]),
           }),
           tangent: new GeometryAttribute({
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 3,
             values: new Float32Array([
-              -1.0,
-              0.0,
-              0.0,
-              -1.0,
-              0.0,
-              0.0,
-              -1.0,
-              0.0,
-              0.0,
+              -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
             ]),
           }),
           bitangent: new GeometryAttribute({
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 3,
             values: new Float32Array([
-              0.0,
-              -1.0,
-              0.0,
-              0.0,
-              -1.0,
-              0.0,
-              0.0,
-              -1.0,
-              0.0,
+              0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0,
             ]),
           }),
           st: new GeometryAttribute({
@@ -3286,23 +2887,23 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.westHemisphereGeometry.indices.length).toEqual(3);
     expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.position.values.length
+      instance.westHemisphereGeometry.attributes.position.values.length,
     ).toEqual(3 * 3);
     expect(instance.westHemisphereGeometry.attributes.normal).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.normal.values.length
+      instance.westHemisphereGeometry.attributes.normal.values.length,
     ).toEqual(3 * 3);
     expect(instance.westHemisphereGeometry.attributes.bitangent).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.bitangent.values.length
+      instance.westHemisphereGeometry.attributes.bitangent.values.length,
     ).toEqual(3 * 3);
     expect(instance.westHemisphereGeometry.attributes.tangent).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.tangent.values.length
+      instance.westHemisphereGeometry.attributes.tangent.values.length,
     ).toEqual(3 * 3);
     expect(instance.westHemisphereGeometry.attributes.st).toBeDefined();
     expect(instance.westHemisphereGeometry.attributes.st.values.length).toEqual(
-      3 * 2
+      3 * 2,
     );
 
     expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -3310,23 +2911,23 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.eastHemisphereGeometry.indices.length).toEqual(6);
     expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.position.values.length
+      instance.eastHemisphereGeometry.attributes.position.values.length,
     ).toEqual(5 * 3);
     expect(instance.eastHemisphereGeometry.attributes.normal).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.normal.values.length
+      instance.eastHemisphereGeometry.attributes.normal.values.length,
     ).toEqual(5 * 3);
     expect(instance.eastHemisphereGeometry.attributes.bitangent).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.bitangent.values.length
+      instance.eastHemisphereGeometry.attributes.bitangent.values.length,
     ).toEqual(5 * 3);
     expect(instance.eastHemisphereGeometry.attributes.tangent).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.tangent.values.length
+      instance.eastHemisphereGeometry.attributes.tangent.values.length,
     ).toEqual(5 * 3);
     expect(instance.eastHemisphereGeometry.attributes.st).toBeDefined();
     expect(instance.eastHemisphereGeometry.attributes.st.values.length).toEqual(
-      5 * 2
+      5 * 2,
     );
   });
 
@@ -3352,7 +2953,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.westHemisphereGeometry.indices.length).toEqual(2);
     expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.westHemisphereGeometry.attributes.position.values.length
+      instance.westHemisphereGeometry.attributes.position.values.length,
     ).toEqual(2 * 3);
 
     expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -3360,7 +2961,7 @@ describe("Core/GeometryPipeline", function () {
     expect(instance.eastHemisphereGeometry.indices.length).toEqual(2);
     expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
     expect(
-      instance.eastHemisphereGeometry.attributes.position.values.length
+      instance.eastHemisphereGeometry.attributes.position.values.length,
     ).toEqual(2 * 3);
   });
 
@@ -3441,17 +3042,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                -1.0,
-                0.0,
-                -1.0,
-                -1.0,
-                0.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
+                -1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0,
                 2.0,
               ]),
             }),
@@ -3459,35 +3050,14 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                2.0,
-                3.0,
-                -1.0,
-                2.0,
-                3.0,
+                -1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0,
               ]),
             }),
             prevPosition: new GeometryAttribute({
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                -2.0,
-                -1.0,
-                -1.0,
-                -2.0,
-                -1.0,
-                -1.0,
-                -1.0,
-                0.0,
-                -1.0,
-                -1.0,
+                -1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, -1.0, 0.0, -1.0, -1.0,
                 0.0,
               ]),
             }),
@@ -3495,14 +3065,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.FLOAT,
               componentsPerAttribute: 2,
               values: new Float32Array([
-                -1.0,
-                5.0,
-                1.0,
-                5.0,
-                -1.0,
-                -5.0,
-                1.0,
-                -5.0,
+                -1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0,
               ]),
             }),
           },
@@ -3519,25 +3082,25 @@ describe("Core/GeometryPipeline", function () {
       expect(instance.westHemisphereGeometry.indices.length).toEqual(6);
       expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
       expect(
-        instance.westHemisphereGeometry.attributes.position.values.length
+        instance.westHemisphereGeometry.attributes.position.values.length,
       ).toEqual(4 * 3);
       expect(
-        instance.westHemisphereGeometry.attributes.nextPosition
+        instance.westHemisphereGeometry.attributes.nextPosition,
       ).toBeDefined();
       expect(
-        instance.westHemisphereGeometry.attributes.nextPosition.values.length
+        instance.westHemisphereGeometry.attributes.nextPosition.values.length,
       ).toEqual(4 * 3);
       expect(
-        instance.westHemisphereGeometry.attributes.prevPosition
+        instance.westHemisphereGeometry.attributes.prevPosition,
       ).toBeDefined();
       expect(
-        instance.westHemisphereGeometry.attributes.prevPosition.values.length
+        instance.westHemisphereGeometry.attributes.prevPosition.values.length,
       ).toEqual(4 * 3);
       expect(
-        instance.westHemisphereGeometry.attributes.expandAndWidth
+        instance.westHemisphereGeometry.attributes.expandAndWidth,
       ).toBeDefined();
       expect(
-        instance.westHemisphereGeometry.attributes.expandAndWidth.values.length
+        instance.westHemisphereGeometry.attributes.expandAndWidth.values.length,
       ).toEqual(4 * 2);
 
       expect(instance.eastHemisphereGeometry).toBeDefined();
@@ -3545,25 +3108,25 @@ describe("Core/GeometryPipeline", function () {
       expect(instance.eastHemisphereGeometry.indices.length).toEqual(6);
       expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
       expect(
-        instance.eastHemisphereGeometry.attributes.position.values.length
+        instance.eastHemisphereGeometry.attributes.position.values.length,
       ).toEqual(4 * 3);
       expect(
-        instance.eastHemisphereGeometry.attributes.nextPosition
+        instance.eastHemisphereGeometry.attributes.nextPosition,
       ).toBeDefined();
       expect(
-        instance.eastHemisphereGeometry.attributes.nextPosition.values.length
+        instance.eastHemisphereGeometry.attributes.nextPosition.values.length,
       ).toEqual(4 * 3);
       expect(
-        instance.eastHemisphereGeometry.attributes.prevPosition
+        instance.eastHemisphereGeometry.attributes.prevPosition,
       ).toBeDefined();
       expect(
-        instance.eastHemisphereGeometry.attributes.prevPosition.values.length
+        instance.eastHemisphereGeometry.attributes.prevPosition.values.length,
       ).toEqual(4 * 3);
       expect(
-        instance.eastHemisphereGeometry.attributes.expandAndWidth
+        instance.eastHemisphereGeometry.attributes.expandAndWidth,
       ).toBeDefined();
       expect(
-        instance.eastHemisphereGeometry.attributes.expandAndWidth.values.length
+        instance.eastHemisphereGeometry.attributes.expandAndWidth.values.length,
       ).toEqual(4 * 2);
     });
 
@@ -3575,53 +3138,21 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
+                -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0,
               ]),
             }),
             nextPosition: new GeometryAttribute({
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                2.0,
-                3.0,
-                -1.0,
-                2.0,
-                3.0,
+                -1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0,
               ]),
             }),
             prevPosition: new GeometryAttribute({
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                -2.0,
-                -1.0,
-                -1.0,
-                -2.0,
-                -1.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
+                -1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0,
                 0.0,
               ]),
             }),
@@ -3629,14 +3160,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.FLOAT,
               componentsPerAttribute: 2,
               values: new Float32Array([
-                -1.0,
-                5.0,
-                1.0,
-                5.0,
-                -1.0,
-                -5.0,
-                1.0,
-                -5.0,
+                -1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0,
               ]),
             }),
           },
@@ -3683,18 +3207,7 @@ describe("Core/GeometryPipeline", function () {
         0.0,
       ]);
       expect(nextPositions).toEqual([
-        -1.0,
-        1.0,
-        2.0,
-        -1.0,
-        1.0,
-        2.0,
-        -1.0,
-        2.0,
-        3.0,
-        -1.0,
-        2.0,
-        3.0,
+        -1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0,
       ]);
     });
 
@@ -3706,17 +3219,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                -1.0,
-                2.0,
-                -1.0,
-                -1.0,
+                -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, -1.0, 2.0, -1.0, -1.0,
                 2.0,
               ]),
             }),
@@ -3724,17 +3227,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                -1.0,
-                2.0,
-                -1.0,
-                -1.0,
-                2.0,
-                -1.0,
-                -2.0,
-                0.0,
-                -1.0,
-                -2.0,
+                -1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, -2.0, 0.0, -1.0, -2.0,
                 0.0,
               ]),
             }),
@@ -3742,17 +3235,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                1.0,
-                -1.0,
-                -1.0,
-                1.0,
-                -1.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
+                -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0,
                 0.0,
               ]),
             }),
@@ -3760,14 +3243,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.FLOAT,
               componentsPerAttribute: 2,
               values: new Float32Array([
-                -1.0,
-                5.0,
-                1.0,
-                5.0,
-                -1.0,
-                -5.0,
-                1.0,
-                -5.0,
+                -1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0,
               ]),
             }),
           },
@@ -3814,18 +3290,7 @@ describe("Core/GeometryPipeline", function () {
         0.0,
       ]);
       expect(nextPositions).toEqual([
-        -1.0,
-        -1.0,
-        2.0,
-        -1.0,
-        -1.0,
-        2.0,
-        -1.0,
-        -2.0,
-        0.0,
-        -1.0,
-        -2.0,
-        0.0,
+        -1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, -2.0, 0.0, -1.0, -2.0, 0.0,
       ]);
     });
 
@@ -3837,35 +3302,14 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
-                0.0,
+                -1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
               ]),
             }),
             nextPosition: new GeometryAttribute({
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                -1.0,
-                2.0,
-                -1.0,
-                -1.0,
+                -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, -1.0, 2.0, -1.0, -1.0,
                 2.0,
               ]),
             }),
@@ -3873,32 +3317,14 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -2.0,
-                2.0,
-                2.0,
-                -1.0,
-                2.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
+                -2.0, 2.0, 2.0, -1.0, 2.0, 2.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0,
               ]),
             }),
             expandAndWidth: new GeometryAttribute({
               componentDatatype: ComponentDatatype.FLOAT,
               componentsPerAttribute: 2,
               values: new Float32Array([
-                -1.0,
-                5.0,
-                1.0,
-                5.0,
-                -1.0,
-                -5.0,
-                1.0,
-                -5.0,
+                -1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0,
               ]),
             }),
           },
@@ -3945,18 +3371,7 @@ describe("Core/GeometryPipeline", function () {
         0.0,
       ]);
       expect(prevPositions).toEqual([
-        -2.0,
-        2.0,
-        2.0,
-        -1.0,
-        2.0,
-        2.0,
-        -1.0,
-        1.0,
-        2.0,
-        -1.0,
-        1.0,
-        2.0,
+        -2.0, 2.0, 2.0, -1.0, 2.0, 2.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0,
       ]);
     });
 
@@ -3968,17 +3383,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                -1.0,
-                2.0,
-                -1.0,
-                -1.0,
-                2.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
+                -1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, 0.0, 0.0, -1.0, 0.0,
                 0.0,
               ]),
             }),
@@ -3986,35 +3391,14 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
+                -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0,
               ]),
             }),
             prevPosition: new GeometryAttribute({
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -2.0,
-                -2.0,
-                2.0,
-                -1.0,
-                -2.0,
-                2.0,
-                -1.0,
-                -1.0,
-                2.0,
-                -1.0,
-                -1.0,
+                -2.0, -2.0, 2.0, -1.0, -2.0, 2.0, -1.0, -1.0, 2.0, -1.0, -1.0,
                 2.0,
               ]),
             }),
@@ -4022,14 +3406,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.FLOAT,
               componentsPerAttribute: 2,
               values: new Float32Array([
-                -1.0,
-                5.0,
-                1.0,
-                5.0,
-                -1.0,
-                -5.0,
-                1.0,
-                -5.0,
+                -1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0,
               ]),
             }),
           },
@@ -4076,18 +3453,7 @@ describe("Core/GeometryPipeline", function () {
         0.0,
       ]);
       expect(prevPositions).toEqual([
-        -2.0,
-        -2.0,
-        2.0,
-        -1.0,
-        -2.0,
-        2.0,
-        -1.0,
-        -1.0,
-        2.0,
-        -1.0,
-        -1.0,
-        2.0,
+        -2.0, -2.0, 2.0, -1.0, -2.0, 2.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0,
       ]);
     });
 
@@ -4099,53 +3465,21 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                1.0,
-                0.0,
-                -1.0,
-                1.0,
-                0.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
+                -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0,
               ]),
             }),
             nextPosition: new GeometryAttribute({
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                1.0,
-                2.0,
-                -1.0,
-                2.0,
-                3.0,
-                -1.0,
-                2.0,
-                3.0,
+                -1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0,
               ]),
             }),
             prevPosition: new GeometryAttribute({
               componentDatatype: ComponentDatatype.DOUBLE,
               componentsPerAttribute: 3,
               values: new Float64Array([
-                -1.0,
-                -2.0,
-                -1.0,
-                -1.0,
-                -2.0,
-                -1.0,
-                -1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
+                -1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0,
                 0.0,
               ]),
             }),
@@ -4153,14 +3487,7 @@ describe("Core/GeometryPipeline", function () {
               componentDatatype: ComponentDatatype.FLOAT,
               componentsPerAttribute: 2,
               values: new Float32Array([
-                -1.0,
-                5.0,
-                1.0,
-                5.0,
-                -1.0,
-                -5.0,
-                1.0,
-                -5.0,
+                -1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0,
               ]),
             }),
           },
@@ -4176,18 +3503,7 @@ describe("Core/GeometryPipeline", function () {
 
       const positions = geometry.attributes.position.values;
       expect(positions).toEqual([
-        -1.0,
-        1.0,
-        0.0,
-        -1.0,
-        1.0,
-        0.0,
-        -1.0,
-        1.0,
-        2.0,
-        -1.0,
-        1.0,
-        2.0,
+        -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0,
       ]);
     });
   });

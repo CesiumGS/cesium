@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -183,13 +182,14 @@ ImplicitSubtree.prototype.tileIsAvailableAtIndex = function (index) {
 
 /**
  * Check if a specific tile is available at an implicit tile coordinate
+ * NOTE: only used for voxels.
  *
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
  * @returns {boolean} The value of the i-th bit
  * @private
  */
 ImplicitSubtree.prototype.tileIsAvailableAtCoordinates = function (
-  implicitCoordinates
+  implicitCoordinates,
 ) {
   const index = this.getTileIndex(implicitCoordinates);
   return this.tileIsAvailableAtIndex(index);
@@ -205,9 +205,9 @@ ImplicitSubtree.prototype.tileIsAvailableAtCoordinates = function (
  */
 ImplicitSubtree.prototype.contentIsAvailableAtIndex = function (
   index,
-  contentIndex
+  contentIndex,
 ) {
-  contentIndex = defaultValue(contentIndex, 0);
+  contentIndex = contentIndex ?? 0;
   //>>includeStart('debug', pragmas.debug);
   if (
     contentIndex < 0 ||
@@ -230,7 +230,7 @@ ImplicitSubtree.prototype.contentIsAvailableAtIndex = function (
  */
 ImplicitSubtree.prototype.contentIsAvailableAtCoordinates = function (
   implicitCoordinates,
-  contentIndex
+  contentIndex,
 ) {
   const index = this.getTileIndex(implicitCoordinates);
   return this.contentIsAvailableAtIndex(index, contentIndex);
@@ -249,13 +249,14 @@ ImplicitSubtree.prototype.childSubtreeIsAvailableAtIndex = function (index) {
 
 /**
  * Check if a specific child subtree is available at an implicit tile coordinate
+ * NOTE: only used for voxels.
  *
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a child subtree
  * @returns {boolean} The value of the i-th bit
  * @private
  */
 ImplicitSubtree.prototype.childSubtreeIsAvailableAtCoordinates = function (
-  implicitCoordinates
+  implicitCoordinates,
 ) {
   const index = this.getChildSubtreeIndex(implicitCoordinates);
   return this.childSubtreeIsAvailableAtIndex(index);
@@ -316,7 +317,7 @@ ImplicitSubtree.fromSubtreeJson = async function (
   json,
   subtreeView,
   implicitTileset,
-  implicitCoordinates
+  implicitCoordinates,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("resource", resource);
@@ -330,7 +331,7 @@ ImplicitSubtree.fromSubtreeJson = async function (
   const subtree = new ImplicitSubtree(
     resource,
     implicitTileset,
-    implicitCoordinates
+    implicitCoordinates,
   );
 
   let chunks;
@@ -360,7 +361,7 @@ ImplicitSubtree.fromSubtreeJson = async function (
     for (let i = 0; i < length; i++) {
       const propertyTableIndex = subtreeJson.contentMetadata[i];
       contentPropertyTableJsons.push(
-        subtreeJson.propertyTables[propertyTableIndex]
+        subtreeJson.propertyTables[propertyTableIndex],
       );
     }
   }
@@ -401,14 +402,14 @@ ImplicitSubtree.fromSubtreeJson = async function (
     subtreeJson.contentAvailabilityHeaders = subtreeJson.contentAvailability;
   } else {
     subtreeJson.contentAvailabilityHeaders.push(
-      defaultValue(subtreeJson.contentAvailability, defaultContentAvailability)
+      subtreeJson.contentAvailability ?? defaultContentAvailability,
     );
   }
 
   const bufferHeaders = preprocessBuffers(subtreeJson.buffers);
   const bufferViewHeaders = preprocessBufferViews(
     subtreeJson.bufferViews,
-    bufferHeaders
+    bufferHeaders,
   );
 
   // Buffers and buffer views are inactive until explicitly marked active.
@@ -426,7 +427,7 @@ ImplicitSubtree.fromSubtreeJson = async function (
   const buffersU8 = await requestActiveBuffers(
     subtree,
     bufferHeaders,
-    chunks.binary
+    chunks.binary,
   );
   const bufferViewsU8 = parseActiveBufferViews(bufferViewHeaders, buffersU8);
   parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
@@ -464,7 +465,7 @@ function parseSubtreeChunks(subtreeView) {
   const littleEndian = true;
   const subtreeReader = new DataView(
     subtreeView.buffer,
-    subtreeView.byteOffset
+    subtreeView.byteOffset,
   );
   // Skip to the chunk lengths
   let byteOffset = 8;
@@ -480,12 +481,12 @@ function parseSubtreeChunks(subtreeView) {
   const subtreeJson = getJsonFromTypedArray(
     subtreeView,
     byteOffset,
-    jsonByteLength
+    jsonByteLength,
   );
   byteOffset += jsonByteLength;
   const subtreeBinary = subtreeView.subarray(
     byteOffset,
-    byteOffset + binaryByteLength
+    byteOffset + binaryByteLength,
   );
 
   return {
@@ -644,19 +645,15 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
       const metadataHeader = properties[key];
 
       // An older spec used bufferView
-      const valuesBufferView = defaultValue(
-        metadataHeader.values,
-        metadataHeader.bufferView
-      );
+      const valuesBufferView =
+        metadataHeader.values ?? metadataHeader.bufferView;
       header = bufferViewHeaders[valuesBufferView];
       header.isActive = true;
       header.bufferHeader.isActive = true;
 
       // An older spec used stringOffsetBufferView
-      const stringOffsetBufferView = defaultValue(
-        metadataHeader.stringOffsets,
-        metadataHeader.stringOffsetBufferView
-      );
+      const stringOffsetBufferView =
+        metadataHeader.stringOffsets ?? metadataHeader.stringOffsetBufferView;
       if (defined(stringOffsetBufferView)) {
         header = bufferViewHeaders[stringOffsetBufferView];
         header.isActive = true;
@@ -664,10 +661,8 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
       }
 
       // an older spec used arrayOffsetBufferView
-      const arrayOffsetBufferView = defaultValue(
-        metadataHeader.arrayOffsets,
-        metadataHeader.arrayOffsetBufferView
-      );
+      const arrayOffsetBufferView =
+        metadataHeader.arrayOffsets ?? metadataHeader.arrayOffsetBufferView;
       if (defined(arrayOffsetBufferView)) {
         header = bufferViewHeaders[arrayOffsetBufferView];
         header.isActive = true;
@@ -785,7 +780,7 @@ function parseAvailability(
   subtree,
   subtreeJson,
   implicitTileset,
-  bufferViewsU8
+  bufferViewsU8,
 ) {
   const branchingFactor = implicitTileset.branchingFactor;
   const subtreeLevels = implicitTileset.subtreeLevels;
@@ -803,7 +798,7 @@ function parseAvailability(
     subtreeJson.tileAvailability,
     bufferViewsU8,
     tileAvailabilityBits,
-    computeAvailableCountEnabled
+    computeAvailableCountEnabled,
   );
 
   const hasContentMetadata = subtree._contentPropertyTableJsons.length > 0;
@@ -816,7 +811,7 @@ function parseAvailability(
       bufferViewsU8,
       // content availability has the same length as tile availability.
       tileAvailabilityBits,
-      computeAvailableCountEnabled
+      computeAvailableCountEnabled,
     );
     subtree._contentAvailabilityBitstreams.push(bitstream);
   }
@@ -824,7 +819,7 @@ function parseAvailability(
   subtree._childSubtreeAvailability = parseAvailabilityBitstream(
     subtreeJson.childSubtreeAvailability,
     bufferViewsU8,
-    childSubtreeBits
+    childSubtreeBits,
   );
 }
 
@@ -844,7 +839,7 @@ function parseAvailabilityBitstream(
   availabilityJson,
   bufferViewsU8,
   lengthBits,
-  computeAvailableCountEnabled
+  computeAvailableCountEnabled,
 ) {
   if (defined(availabilityJson.constant)) {
     return new ImplicitAvailabilityBitstream({
@@ -1011,9 +1006,8 @@ ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
   }
 
   const subtreeCoordinates = implicitCoordinates.getSubtreeCoordinates();
-  const offsetCoordinates = subtreeCoordinates.getOffsetCoordinates(
-    implicitCoordinates
-  );
+  const offsetCoordinates =
+    subtreeCoordinates.getOffsetCoordinates(implicitCoordinates);
   const index = offsetCoordinates.tileIndex;
   return index;
 };
@@ -1026,7 +1020,7 @@ ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
  * @private
  */
 ImplicitSubtree.prototype.getChildSubtreeIndex = function (
-  implicitCoordinates
+  implicitCoordinates,
 ) {
   const localLevel =
     implicitCoordinates.level - this._implicitCoordinates.level;
@@ -1037,10 +1031,10 @@ ImplicitSubtree.prototype.getChildSubtreeIndex = function (
   // Call getParentSubtreeCoordinates instead of getSubtreeCoordinates because the
   // child subtree is by definition the root of its own subtree, so we need to find
   // the parent subtree.
-  const parentSubtreeCoordinates = implicitCoordinates.getParentSubtreeCoordinates();
-  const offsetCoordinates = parentSubtreeCoordinates.getOffsetCoordinates(
-    implicitCoordinates
-  );
+  const parentSubtreeCoordinates =
+    implicitCoordinates.getParentSubtreeCoordinates();
+  const offsetCoordinates =
+    parentSubtreeCoordinates.getOffsetCoordinates(implicitCoordinates);
   const index = offsetCoordinates.mortonIndex;
   return index;
 };
@@ -1128,7 +1122,7 @@ ImplicitSubtree.prototype.getTileMetadataView = function (implicitCoordinates) {
  */
 ImplicitSubtree.prototype.getContentMetadataView = function (
   implicitCoordinates,
-  contentIndex
+  contentIndex,
 ) {
   const entityId = getContentEntityId(this, implicitCoordinates, contentIndex);
   if (!defined(entityId)) {

@@ -8,7 +8,7 @@ import {
   CullFace,
   DepthFunction,
   DrawCommand,
-  defaultValue,
+  Frozen,
   defined,
   GeographicProjection,
   Math as CesiumMath,
@@ -57,12 +57,12 @@ describe(
     };
 
     function mockModel(options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
-      const modelColor = defaultValue(options.color, Color.WHITE);
-      const silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
-      const silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
-      const skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
+      const modelColor = options.color ?? Color.WHITE;
+      const silhouetteColor = options.silhouetteColor ?? Color.RED;
+      const silhouetteSize = options.silhouetteSize ?? 0.0;
+      const skipLevelOfDetail = options.skipLevelOfDetail ?? false;
 
       return {
         sceneGraph: {
@@ -100,7 +100,7 @@ describe(
     }
 
     function mockRenderResources(options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
       const model = mockModel(options.modelOptions);
       const resources = {
@@ -117,47 +117,42 @@ describe(
         hasSkipLevelOfDetail: model.hasSkipLevelOfDetail(),
       };
 
-      const boundingSphereTransform2D = defaultValue(
-        options.boundingSphereTransform2D,
-        Matrix4.IDENTITY
-      );
+      const boundingSphereTransform2D =
+        options.boundingSphereTransform2D ?? Matrix4.IDENTITY;
 
       const sceneGraph = resources.model.sceneGraph;
       sceneGraph._boundingSphere2D = BoundingSphere.transform(
         sceneGraph._boundingSphere2D,
         boundingSphereTransform2D,
-        sceneGraph._boundingSphere2D
+        sceneGraph._boundingSphere2D,
       );
 
       return resources;
     }
 
     function createDrawCommand(options) {
-      options = defaultValue(options, {});
+      options = options ?? {};
 
-      options.modelMatrix = defaultValue(
-        options.modelMatrix,
-        Matrix4.clone(Matrix4.IDENTITY)
-      );
+      options.modelMatrix =
+        options.modelMatrix ?? Matrix4.clone(Matrix4.IDENTITY);
 
       const boundingSphere = new BoundingSphere(Cartesian3.ZERO, 1.0);
       options.boundingVolume = BoundingSphere.transform(
         boundingSphere,
         options.modelMatrix,
-        boundingSphere
+        boundingSphere,
       );
 
-      options.renderState = defaultValue(
-        options.renderState,
+      options.renderState =
+        options.renderState ??
         RenderState.fromCache({
           depthTest: {
             enabled: true,
             func: DepthFunction.LESS_OR_EQUAL,
           },
-        })
-      );
+        });
 
-      options.pass = defaultValue(options.pass, Pass.OPAQUE);
+      options.pass = options.pass ?? Pass.OPAQUE;
       options.uniformMap = {};
 
       return new DrawCommand(options);
@@ -165,18 +160,18 @@ describe(
 
     const idlMatrix = Matrix4.fromTranslation(
       Cartesian3.fromDegrees(180, 0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     const idlMatrix2D = Transforms.basisTo2D(
       mockFrameState2D.mapProjection,
       idlMatrix,
-      idlMatrix
+      idlMatrix,
     );
 
     // Creates a ModelDrawCommand with the specified derived commands.
     function createModelDrawCommand(options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
       const deriveSilhouette = options.deriveSilhouette;
       const derive2D = options.derive2D;
@@ -208,7 +203,7 @@ describe(
       if (derive2D) {
         drawCommand.pushCommands(
           mockFrameState2D,
-          mockFrameState2D.commandList
+          mockFrameState2D.commandList,
         );
         mockFrameState2D.commandList.length = 0;
       }
@@ -232,22 +227,19 @@ describe(
 
     function verifyDerivedCommandsDefined(drawCommand, expected) {
       // Verify if the translucent command is defined / undefined.
-      const translucentDefined = defaultValue(expected.translucent, false);
+      const translucentDefined = expected.translucent ?? false;
       const translucentCommand = drawCommand._translucentCommand;
       expect(defined(translucentCommand)).toBe(translucentDefined);
 
       // Verify if the skip level of detail commands are defined / undefined.
-      const skipLevelOfDetailDefined = defaultValue(
-        expected.skipLevelOfDetail,
-        false
-      );
+      const skipLevelOfDetailDefined = expected.skipLevelOfDetail ?? false;
       const skipLodBackfaceCommand = drawCommand._skipLodBackfaceCommand;
       const skipLodStencilCommand = drawCommand._skipLodStencilCommand;
       expect(defined(skipLodBackfaceCommand)).toBe(skipLevelOfDetailDefined);
       expect(defined(skipLodStencilCommand)).toBe(skipLevelOfDetailDefined);
 
       // Verify if the silhouette commands are defined / undefined.
-      const silhouetteDefined = defaultValue(expected.silhouette, false);
+      const silhouetteDefined = expected.silhouette ?? false;
       const silhouetteModelCommand = drawCommand._silhouetteModelCommand;
       const silhouetteColorCommand = drawCommand._silhouetteColorCommand;
       expect(defined(silhouetteModelCommand)).toBe(silhouetteDefined);
@@ -257,11 +249,11 @@ describe(
     function verifyDerivedCommandUpdateFlags(derivedCommand, expected) {
       expect(derivedCommand.updateShadows).toEqual(expected.updateShadows);
       expect(derivedCommand.updateBackFaceCulling).toEqual(
-        expected.updateBackFaceCulling
+        expected.updateBackFaceCulling,
       );
       expect(derivedCommand.updateCullFace).toEqual(expected.updateCullFace);
       expect(derivedCommand.updateDebugShowBoundingVolume).toEqual(
-        expected.updateDebugShowBoundingVolume
+        expected.updateDebugShowBoundingVolume,
       );
     }
 
@@ -298,7 +290,7 @@ describe(
 
       expect(drawCommand.command).toBe(command);
       expect(drawCommand.runtimePrimitive).toBe(
-        renderResources.runtimePrimitive
+        renderResources.runtimePrimitive,
       );
       expect(drawCommand.model).toBe(renderResources.model);
 
@@ -379,7 +371,7 @@ describe(
       function verifySilhouetteModelDerivedCommand(
         derivedCommand,
         stencilReference,
-        modelIsInvisible
+        modelIsInvisible,
       ) {
         const command = derivedCommand.command;
         const renderState = command.renderState;
@@ -420,7 +412,7 @@ describe(
       function verifySilhouetteColorDerivedCommand(
         derivedCommand,
         stencilReference,
-        silhouetteIsTranslucent
+        silhouetteIsTranslucent,
       ) {
         const command = derivedCommand.command;
         const renderState = command.renderState;
@@ -467,7 +459,7 @@ describe(
         drawCommand,
         modelIsTranslucent,
         modelIsInvisible,
-        silhouetteIsTranslucent
+        silhouetteIsTranslucent,
       ) {
         const command = drawCommand.command;
         const derivedCommands = drawCommand._derivedCommands;
@@ -499,7 +491,7 @@ describe(
         verifySilhouetteModelDerivedCommand(
           silhouetteModelCommand,
           stencilReference,
-          modelIsInvisible
+          modelIsInvisible,
         );
 
         const silhouetteColorCommand = derivedCommands[2];
@@ -516,7 +508,7 @@ describe(
         verifySilhouetteColorDerivedCommand(
           silhouetteColorCommand,
           stencilReference,
-          silhouetteIsTranslucent
+          silhouetteIsTranslucent,
         );
       }
 
@@ -540,7 +532,7 @@ describe(
           drawCommand,
           modelIsTranslucent,
           modelIsInvisible,
-          silhouetteIsTranslucent
+          silhouetteIsTranslucent,
         );
       });
 
@@ -567,7 +559,7 @@ describe(
           drawCommand,
           modelIsTranslucent,
           modelIsInvisible,
-          silhouetteIsTranslucent
+          silhouetteIsTranslucent,
         );
       });
 
@@ -592,7 +584,7 @@ describe(
           drawCommand,
           modelIsTranslucent,
           modelIsInvisible,
-          silhouetteIsTranslucent
+          silhouetteIsTranslucent,
         );
       });
 
@@ -618,7 +610,7 @@ describe(
           drawCommand,
           modelIsTranslucent,
           modelIsInvisible,
-          silhouetteIsTranslucent
+          silhouetteIsTranslucent,
         );
       });
     });
@@ -657,19 +649,19 @@ describe(
         expect(stencilTest.enabled).toBe(true);
         expect(stencilTest.mask).toEqual(StencilConstants.SKIP_LOD_MASK);
         expect(stencilTest.reference).toEqual(
-          StencilConstants.CESIUM_3D_TILE_MASK
+          StencilConstants.CESIUM_3D_TILE_MASK,
         );
         expect(stencilTest.frontFunction).toEqual(
-          StencilFunction.GREATER_OR_EQUAL
+          StencilFunction.GREATER_OR_EQUAL,
         );
         expect(stencilTest.frontOperation.zPass).toEqual(
-          StencilOperation.REPLACE
+          StencilOperation.REPLACE,
         );
         expect(stencilTest.backFunction).toEqual(
-          StencilFunction.GREATER_OR_EQUAL
+          StencilFunction.GREATER_OR_EQUAL,
         );
         expect(stencilTest.backOperation.zPass).toEqual(
-          StencilOperation.REPLACE
+          StencilOperation.REPLACE,
         );
 
         const expectedStencilMask =
@@ -928,7 +920,7 @@ describe(
 
         drawCommand.pushCommands(
           mockFrameState2D,
-          mockFrameState2D.commandList
+          mockFrameState2D.commandList,
         );
 
         const originalCommand2D = originalCommand.derivedCommand2D;
@@ -940,7 +932,7 @@ describe(
 
         expect(originalDrawCommand.modelMatrix).toBe(drawCommand._modelMatrix);
         expect(originalDrawCommand2D.modelMatrix).toBe(
-          drawCommand._modelMatrix2D
+          drawCommand._modelMatrix2D,
         );
 
         const commandList = mockFrameState2D.commandList;
@@ -971,7 +963,7 @@ describe(
 
         drawCommand.pushCommands(
           mockFrameState2D,
-          mockFrameState2D.commandList
+          mockFrameState2D.commandList,
         );
 
         const originalCommand2D = originalCommand.derivedCommand2D;
@@ -988,10 +980,10 @@ describe(
         const translucentDrawCommand2D = translucentCommand2D.command;
 
         expect(translucentDrawCommand.modelMatrix).toBe(
-          drawCommand._modelMatrix
+          drawCommand._modelMatrix,
         );
         expect(translucentDrawCommand2D.modelMatrix).toBe(
-          drawCommand._modelMatrix2D
+          drawCommand._modelMatrix2D,
         );
 
         const commandList = mockFrameState2D.commandList;
@@ -1025,7 +1017,7 @@ describe(
 
         drawCommand.pushCommands(
           mockFrameState2D,
-          mockFrameState2D.commandList
+          mockFrameState2D.commandList,
         );
 
         const silhouetteModelCommand2D =
@@ -1078,7 +1070,7 @@ describe(
 
         drawCommand.pushCommands(
           mockFrameState2D,
-          mockFrameState2D.commandList
+          mockFrameState2D.commandList,
         );
 
         const skipLodBackfaceCommand2D =
@@ -1094,14 +1086,14 @@ describe(
         const backfaceDrawCommand2D = skipLodBackfaceCommand2D.command;
         expect(backfaceDrawCommand.modelMatrix).toBe(drawCommand._modelMatrix);
         expect(backfaceDrawCommand2D.modelMatrix).toBe(
-          drawCommand._modelMatrix2D
+          drawCommand._modelMatrix2D,
         );
 
         const stencilDrawCommand = skipLodStencilCommand.command;
         const stencilDrawCommand2D = skipLodStencilCommand2D.command;
         expect(stencilDrawCommand.modelMatrix).toBe(drawCommand._modelMatrix);
         expect(stencilDrawCommand2D.modelMatrix).toBe(
-          drawCommand._modelMatrix2D
+          drawCommand._modelMatrix2D,
         );
 
         const commandList = mockFrameState2D.commandList;
@@ -1119,12 +1111,12 @@ describe(
       it("pushCommands doesn't derive 2D commands if model is not near IDL", function () {
         const modelMatrix = Matrix4.fromTranslation(
           Cartesian3.fromDegrees(100, 250),
-          scratchModelMatrix
+          scratchModelMatrix,
         );
         const modelMatrix2D = Transforms.basisTo2D(
           mockFrameState2D.mapProjection,
           modelMatrix,
-          modelMatrix
+          modelMatrix,
         );
         const renderResources = mockRenderResources({
           boundingSphereTransform2D: modelMatrix2D,
@@ -1142,7 +1134,7 @@ describe(
 
         drawCommand.pushCommands(
           mockFrameState2D,
-          mockFrameState2D.commandList
+          mockFrameState2D.commandList,
         );
 
         // The 2D command should not be derived.
@@ -1167,22 +1159,22 @@ describe(
 
         const translation = Matrix4.getTranslation(
           idlMatrix2D,
-          scratchTranslation
+          scratchTranslation,
         );
 
         drawCommand.pushCommands(
           mockFrameState2D,
-          mockFrameState2D.commandList
+          mockFrameState2D.commandList,
         );
 
         const expectedModelMatrix = computeExpected2DMatrix(
           idlMatrix2D,
-          mockFrameState2D
+          mockFrameState2D,
         );
 
         const expectedTranslation = Matrix4.getTranslation(
           expectedModelMatrix,
-          scratchExpectedTranslation
+          scratchExpectedTranslation,
         );
 
         const originalCommand = drawCommand._originalCommand;
@@ -1198,7 +1190,7 @@ describe(
         expect(translucentDrawCommand.modelMatrix).toEqual(idlMatrix2D);
         expect(originalDrawCommand.boundingVolume.center).toEqual(translation);
         expect(translucentDrawCommand.boundingVolume.center).toEqual(
-          translation
+          translation,
         );
 
         const originalDrawCommand2D = originalCommand2D.command;
@@ -1206,13 +1198,13 @@ describe(
 
         expect(originalDrawCommand2D.modelMatrix).toEqual(expectedModelMatrix);
         expect(translucentDrawCommand2D.modelMatrix).toEqual(
-          expectedModelMatrix
+          expectedModelMatrix,
         );
         expect(originalDrawCommand2D.boundingVolume.center).toEqual(
-          expectedTranslation
+          expectedTranslation,
         );
         expect(translucentDrawCommand2D.boundingVolume.center).toEqual(
-          expectedTranslation
+          expectedTranslation,
         );
       });
     });
@@ -1267,7 +1259,7 @@ describe(
         const silhouetteCommands = [];
         drawCommand.pushSilhouetteCommands(
           mockFrameState2D,
-          silhouetteCommands
+          silhouetteCommands,
         );
         expect(silhouetteCommands.length).toEqual(2);
         expect(silhouetteCommands[0]).toBe(colorDrawCommand);
@@ -1293,7 +1285,7 @@ describe(
         const translation = Cartesian3.fromDegrees(100, 25);
         const modelMatrix = Matrix4.fromTranslation(
           translation,
-          scratchModelMatrix
+          scratchModelMatrix,
         );
 
         drawCommand.modelMatrix = modelMatrix;
@@ -1316,17 +1308,17 @@ describe(
 
         let modelMatrix2D = Matrix4.fromTranslation(
           Cartesian3.fromDegrees(100, 25),
-          scratchModelMatrix
+          scratchModelMatrix,
         );
         modelMatrix2D = Transforms.basisTo2D(
           mockFrameState2D.mapProjection,
           modelMatrix2D,
-          modelMatrix2D
+          modelMatrix2D,
         );
 
         const translation = Matrix4.getTranslation(
           modelMatrix2D,
-          scratchTranslation
+          scratchTranslation,
         );
 
         drawCommand.modelMatrix = modelMatrix2D;
@@ -1343,16 +1335,16 @@ describe(
         // Update the model matrix for the 2D commands
         drawCommand.pushCommands(
           mockFrameState2D,
-          mockFrameState2D.commandList
+          mockFrameState2D.commandList,
         );
 
         const expectedModelMatrix = computeExpected2DMatrix(
           modelMatrix2D,
-          mockFrameState2D
+          mockFrameState2D,
         );
         const expectedTranslation = Matrix4.getTranslation(
           expectedModelMatrix,
-          scratchExpectedTranslation
+          scratchExpectedTranslation,
         );
 
         // The second half of the derived command list contains 2D commands.
@@ -1710,7 +1702,7 @@ describe(
           }
 
           expect(command.debugShowBoundingVolume).toBe(
-            updateDebugShowBoundingVolume
+            updateDebugShowBoundingVolume,
           );
         }
       });
@@ -1741,11 +1733,11 @@ describe(
           }
 
           expect(command.debugShowBoundingVolume).toBe(
-            updateDebugShowBoundingVolume
+            updateDebugShowBoundingVolume,
           );
         }
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

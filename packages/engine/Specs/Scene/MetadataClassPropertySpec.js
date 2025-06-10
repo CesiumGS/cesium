@@ -460,15 +460,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       const isNested = false;
       expect(property.expandConstant(1, isNested)).toEqual([
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1,
       ]);
 
       property = MetadataClassProperty.fromJson({
@@ -482,24 +474,7 @@ describe("Scene/MetadataClassProperty", function () {
       });
 
       expect(property.expandConstant(1, isNested)).toEqual([
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
       ]);
     });
 
@@ -854,7 +829,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = scalarValues[propertyId][i];
             const normalizedValue = property.normalize(value);
             expect(normalizedValue).toEqual(
-              normalizedScalarValues[propertyId][i]
+              normalizedScalarValues[propertyId][i],
             );
           }
         }
@@ -894,7 +869,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = arrayValues[propertyId][i];
             const normalizedValue = property.normalize(clone(value, true));
             expect(normalizedValue).toEqual(
-              normalizedArrayValues[propertyId][i]
+              normalizedArrayValues[propertyId][i],
             );
           }
         }
@@ -930,7 +905,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = vectorValues[propertyId][i];
             const normalizedValue = property.normalize(clone(value, true));
             expect(normalizedValue).toEqual(
-              normalizedVectorValues[propertyId][i]
+              normalizedVectorValues[propertyId][i],
             );
           }
         }
@@ -966,7 +941,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = arrayOfVectorValues[propertyId][i];
             const normalizedValue = property.normalize(clone(value, true));
             expect(normalizedValue).toEqual(
-              normalizedArrayOfVectorValues[propertyId][i]
+              normalizedArrayOfVectorValues[propertyId][i],
             );
           }
         }
@@ -1438,7 +1413,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = scalarValues[propertyId][i];
             const transformedValue = property.applyValueTransform(value);
             expect(transformedValue).toEqual(
-              transformedScalarValues[propertyId][i]
+              transformedScalarValues[propertyId][i],
             );
           }
         }
@@ -1483,7 +1458,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("value transformations are no-ops for identity transformations", function () {
       const valueTransformInPlace = spyOn(
         MetadataClassProperty,
-        "valueTransformInPlace"
+        "valueTransformInPlace",
       );
       const property = MetadataClassProperty.fromJson({
         id: "identityTransform",
@@ -1509,10 +1484,10 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const value = arrayValues[propertyId][i];
             const transformedValue = property.applyValueTransform(
-              clone(value, true)
+              clone(value, true),
             );
             expect(transformedValue).toEqual(
-              transformedArrayValues[propertyId][i]
+              transformedArrayValues[propertyId][i],
             );
           }
         }
@@ -1530,7 +1505,7 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const transformedValue = transformedArrayValues[propertyId][i];
             const value = property.unapplyValueTransform(
-              clone(transformedValue, true)
+              clone(transformedValue, true),
             );
             expect(value).toEqual(arrayValues[propertyId][i]);
           }
@@ -1541,7 +1516,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("value transforms do not transform variable length arrays", function () {
       const valueTransformInPlace = spyOn(
         MetadataClassProperty,
-        "valueTransformInPlace"
+        "valueTransformInPlace",
       );
 
       const property = MetadataClassProperty.fromJson({
@@ -1559,7 +1534,7 @@ describe("Scene/MetadataClassProperty", function () {
       const values = [-1.0, 0.0, 5.0, 4.0];
       expect(property.applyValueTransform(clone(values, true))).toEqual(values);
       expect(property.unapplyValueTransform(clone(values, true))).toEqual(
-        values
+        values,
       );
 
       expect(valueTransformInPlace).not.toHaveBeenCalled();
@@ -1576,10 +1551,10 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const value = vectorValues[propertyId][i];
             const transformedValue = property.applyValueTransform(
-              clone(value, true)
+              clone(value, true),
             );
             expect(transformedValue).toEqual(
-              transformedVectorValues[propertyId][i]
+              transformedVectorValues[propertyId][i],
             );
           }
         }
@@ -1597,7 +1572,7 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const transformedValue = transformedVectorValues[propertyId][i];
             const value = property.unapplyValueTransform(
-              clone(transformedValue, true)
+              clone(transformedValue, true),
             );
             expect(value).toEqual(vectorValues[propertyId][i]);
           }
@@ -1616,10 +1591,10 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const value = arrayOfVectorValues[propertyId][i];
             const transformedValue = property.applyValueTransform(
-              clone(value, true)
+              clone(value, true),
             );
             expect(transformedValue).toEqual(
-              transformedArrayOfVectorValues[propertyId][i]
+              transformedArrayOfVectorValues[propertyId][i],
             );
           }
         }
@@ -1638,7 +1613,7 @@ describe("Scene/MetadataClassProperty", function () {
             const transformedValue =
               transformedArrayOfVectorValues[propertyId][i];
             const value = property.unapplyValueTransform(
-              clone(transformedValue, true)
+              clone(transformedValue, true),
             );
             expect(value).toEqual(arrayOfVectorValues[propertyId][i]);
           }
@@ -2622,7 +2597,7 @@ describe("Scene/MetadataClassProperty", function () {
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
         new Cartesian3(7.0, 8.0, 9.0),
-      ])
+      ]),
     ).toBeUndefined();
   });
 
@@ -2642,7 +2617,7 @@ describe("Scene/MetadataClassProperty", function () {
         new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
         new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
         new Matrix3(3, 0, 0, 0, 3, 0, 0, 0, 3),
-      ])
+      ]),
     ).toBeUndefined();
   });
 
@@ -2657,7 +2632,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate(undefined)).toBe(
-      "required property must have a value"
+      "required property must have a value",
     );
   });
 
@@ -2699,7 +2674,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate(8.0)).toBe(
-      "componentType STRING is incompatible with vector type VEC2"
+      "componentType STRING is incompatible with vector type VEC2",
     );
   });
 
@@ -2713,7 +2688,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate(8.0)).toBe(
-      "componentType INT64 is incompatible with matrix type MAT3"
+      "componentType INT64 is incompatible with matrix type MAT3",
     );
   });
 
@@ -2793,7 +2768,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate([1.0, 2.0])).toBe(
-      "Array length does not match property.arrayLength"
+      "Array length does not match property.arrayLength",
     );
   });
 
@@ -2830,10 +2805,10 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate("INVALID")).toBe(
-      "value INVALID is not a valid enum name for myEnum"
+      "value INVALID is not a valid enum name for myEnum",
     );
     expect(property.validate(0)).toBe(
-      "value 0 is not a valid enum name for myEnum"
+      "value 0 is not a valid enum name for myEnum",
     );
   });
 
@@ -2860,7 +2835,7 @@ describe("Scene/MetadataClassProperty", function () {
         },
       });
       expect(property.validate({})).toBe(
-        `value [object Object] does not match type ${types[i]}`
+        `value [object Object] does not match type ${types[i]}`,
       );
     }
   });
@@ -2873,7 +2848,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
     expect(property.validate({})).toBe(
-      `value [object Object] does not match type BOOLEAN`
+      `value [object Object] does not match type BOOLEAN`,
     );
   });
 
@@ -2885,7 +2860,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
     expect(property.validate({})).toBe(
-      `value [object Object] does not match type STRING`
+      `value [object Object] does not match type STRING`,
     );
   });
 
@@ -2924,7 +2899,7 @@ describe("Scene/MetadataClassProperty", function () {
         });
         for (let i = 0; i < values.length; ++i) {
           expect(property.validate(values[i])).toBe(
-            `value ${values[i]} is out of range for type ${type}`
+            `value ${values[i]} is out of range for type ${type}`,
           );
         }
       }
@@ -2965,7 +2940,7 @@ describe("Scene/MetadataClassProperty", function () {
       });
       for (let i = 0; i < nonFiniteValues.length; ++i) {
         expect(property.validate(nonFiniteValues[i])).toBe(
-          `value ${nonFiniteValues[i]} of type ${type} must be finite`
+          `value ${nonFiniteValues[i]} of type ${type} must be finite`,
         );
       }
     }
@@ -3007,7 +2982,7 @@ describe("Scene/MetadataClassProperty", function () {
         });
         for (let i = 0; i < values.length; ++i) {
           expect(property.validate(values)).toBe(
-            `value ${values[0]} is out of range for type ${componentType}`
+            `value ${values[0]} is out of range for type ${componentType}`,
           );
         }
       }
@@ -3034,16 +3009,16 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(propertyInt8.validate(-1.1)).toBe(
-      "value -1.1 is out of range for type INT8 (normalized)"
+      "value -1.1 is out of range for type INT8 (normalized)",
     );
     expect(propertyInt8.validate(1.1)).toBe(
-      "value 1.1 is out of range for type INT8 (normalized)"
+      "value 1.1 is out of range for type INT8 (normalized)",
     );
     expect(propertyUint8.validate(-0.1)).toBe(
-      "value -0.1 is out of range for type UINT8 (normalized)"
+      "value -0.1 is out of range for type UINT8 (normalized)",
     );
     expect(propertyUint8.validate(1.1)).toBe(
-      "value 1.1 is out of range for type UINT8 (normalized)"
+      "value 1.1 is out of range for type UINT8 (normalized)",
     );
   });
 
@@ -3056,7 +3031,7 @@ describe("Scene/MetadataClassProperty", function () {
         value,
         offset,
         scale,
-        MetadataComponentType.applyValueTransform
+        MetadataComponentType.applyValueTransform,
       );
 
       expect(result).toBe(3);
@@ -3070,7 +3045,7 @@ describe("Scene/MetadataClassProperty", function () {
         value,
         offset,
         scale,
-        MetadataComponentType.applyValueTransform
+        MetadataComponentType.applyValueTransform,
       );
       expect(result).toEqual([3, 4, 5]);
     });
@@ -3095,7 +3070,7 @@ describe("Scene/MetadataClassProperty", function () {
         values,
         offset,
         scale,
-        MetadataComponentType.applyValueTransform
+        MetadataComponentType.applyValueTransform,
       );
       expect(result).toEqual([
         [3, 4, 5],

@@ -1,5 +1,5 @@
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
@@ -7,7 +7,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const trailingSlashRegex = /\/$/;
 const defaultCredit = new Credit(
-  '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>'
+  '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>',
 );
 
 /**
@@ -19,7 +19,7 @@ const defaultCredit = new Credit(
  * @property {string} mapId The Mapbox Map ID.
  * @property {string} accessToken The public access token for the imagery.
  * @property {string} [format='png'] The format of the image request.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
@@ -47,7 +47,7 @@ const defaultCredit = new Credit(
  * @see {@link https://docs.mapbox.com/api/accounts/tokens/}
  */
 function MapboxImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const mapId = options.mapId;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(mapId)) {
@@ -74,13 +74,13 @@ function MapboxImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/")
+    options.url ?? "https://{s}.tiles.mapbox.com/v4/",
   );
 
   this._mapId = mapId;
   this._accessToken = accessToken;
 
-  let format = defaultValue(options.format, "png");
+  let format = options.format ?? "png";
   if (!/\./.test(format)) {
     format = `.${format}`;
   }
@@ -322,7 +322,7 @@ MapboxImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
 };

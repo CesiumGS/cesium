@@ -4,6 +4,7 @@ import {
   defined,
   destroyObject,
   HeadingPitchRoll,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   CustomShader,
@@ -240,147 +241,17 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
-    name: "boundsBoxMaxX",
+    name: "clippingBoxMaxXMin",
     initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "x"),
     getPrimitiveFunction: function () {
-      that.boundsBoxMaxX = that._voxelPrimitive.maxBounds.x;
+      that.clippingBoxMaxXMin = that._voxelPrimitive.minBounds.x;
     },
   });
   addProperty({
-    name: "boundsBoxMinX",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "x"),
+    name: "clippingBoxMaxXMax",
+    initialValue: 1.0,
     getPrimitiveFunction: function () {
-      that.boundsBoxMinX = that._voxelPrimitive.minBounds.x;
-    },
-  });
-  addProperty({
-    name: "boundsBoxMaxY",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "y"),
-    getPrimitiveFunction: function () {
-      that.boundsBoxMaxY = that._voxelPrimitive.maxBounds.y;
-    },
-  });
-  addProperty({
-    name: "boundsBoxMinY",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "y"),
-    getPrimitiveFunction: function () {
-      that.boundsBoxMinY = that._voxelPrimitive.minBounds.y;
-    },
-  });
-  addProperty({
-    name: "boundsBoxMaxZ",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "z"),
-    getPrimitiveFunction: function () {
-      that.boundsBoxMaxZ = that._voxelPrimitive.maxBounds.z;
-    },
-  });
-  addProperty({
-    name: "boundsBoxMinZ",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "z"),
-    getPrimitiveFunction: function () {
-      that.boundsBoxMinZ = that._voxelPrimitive.minBounds.z;
-    },
-  });
-  addProperty({
-    name: "boundsEllipsoidMaxLongitude",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "x"),
-    getPrimitiveFunction: function () {
-      that.boundsEllipsoidMaxLongitude = that._voxelPrimitive.maxBounds.x;
-    },
-  });
-  addProperty({
-    name: "boundsEllipsoidMinLongitude",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "x"),
-    getPrimitiveFunction: function () {
-      that.boundsEllipsoidMinLongitude = that._voxelPrimitive.minBounds.x;
-    },
-  });
-  addProperty({
-    name: "boundsEllipsoidMaxLatitude",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "y"),
-    getPrimitiveFunction: function () {
-      that.boundsEllipsoidMaxLatitude = that._voxelPrimitive.maxBounds.y;
-    },
-  });
-  addProperty({
-    name: "boundsEllipsoidMinLatitude",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "y"),
-    getPrimitiveFunction: function () {
-      that.boundsEllipsoidMinLatitude = that._voxelPrimitive.minBounds.y;
-    },
-  });
-  addProperty({
-    name: "boundsEllipsoidMaxHeight",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "z"),
-    getPrimitiveFunction: function () {
-      that.boundsEllipsoidMaxHeight = that._voxelPrimitive.maxBounds.z;
-    },
-  });
-  addProperty({
-    name: "boundsEllipsoidMinHeight",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "z"),
-    getPrimitiveFunction: function () {
-      that.boundsEllipsoidMinHeight = that._voxelPrimitive.minBounds.z;
-    },
-  });
-  addProperty({
-    name: "boundsCylinderMaxRadius",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "x"),
-    getPrimitiveFunction: function () {
-      that.boundsCylinderMaxRadius = that._voxelPrimitive.maxBounds.x;
-    },
-  });
-  addProperty({
-    name: "boundsCylinderMinRadius",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "x"),
-    getPrimitiveFunction: function () {
-      that.boundsCylinderMinRadius = that._voxelPrimitive.minBounds.x;
-    },
-  });
-  addProperty({
-    name: "boundsCylinderMaxHeight",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "y"),
-    getPrimitiveFunction: function () {
-      that.boundsCylinderMaxHeight = that._voxelPrimitive.maxBounds.y;
-    },
-  });
-  addProperty({
-    name: "boundsCylinderMinHeight",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "y"),
-    getPrimitiveFunction: function () {
-      that.boundsCylinderMinHeight = that._voxelPrimitive.minBounds.y;
-    },
-  });
-  addProperty({
-    name: "boundsCylinderMaxAngle",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxBounds", "z"),
-    getPrimitiveFunction: function () {
-      that.boundsCylinderMaxAngle = that._voxelPrimitive.maxBounds.z;
-    },
-  });
-  addProperty({
-    name: "boundsCylinderMinAngle",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minBounds", "z"),
-    getPrimitiveFunction: function () {
-      that.boundsCylinderMinAngle = that._voxelPrimitive.minBounds.z;
+      that.clippingBoxMaxXMax = that._voxelPrimitive.maxBounds.x;
     },
   });
   addProperty({
@@ -392,11 +263,39 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingBoxMinXMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinXMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinXMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinXMax = that._voxelPrimitive.maxBounds.x;
+    },
+  });
+  addProperty({
     name: "clippingBoxMinX",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "x"),
     getPrimitiveFunction: function () {
       that.clippingBoxMinX = that._voxelPrimitive.minClippingBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMaxYMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxYMin = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMaxYMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxYMax = that._voxelPrimitive.maxBounds.y;
     },
   });
   addProperty({
@@ -408,11 +307,39 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingBoxMinYMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinYMin = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinYMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinYMax = that._voxelPrimitive.maxBounds.y;
+    },
+  });
+  addProperty({
     name: "clippingBoxMinY",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "y"),
     getPrimitiveFunction: function () {
       that.clippingBoxMinY = that._voxelPrimitive.minClippingBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMaxZMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxZMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMaxZMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMaxZMax = that._voxelPrimitive.maxBounds.z;
     },
   });
   addProperty({
@@ -424,11 +351,39 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingBoxMinZMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinZMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingBoxMinZMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingBoxMinZMax = that._voxelPrimitive.maxBounds.z;
+    },
+  });
+  addProperty({
     name: "clippingBoxMinZ",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "z"),
     getPrimitiveFunction: function () {
       that.clippingBoxMinZ = that._voxelPrimitive.minClippingBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxLongitudeMin",
+    initialValue: -CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxLongitudeMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxLongitudeMax",
+    initialValue: CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxLongitudeMax = that._voxelPrimitive.maxBounds.x;
     },
   });
   addProperty({
@@ -441,12 +396,40 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingEllipsoidMinLongitudeMin",
+    initialValue: -CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinLongitudeMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinLongitudeMax",
+    initialValue: CesiumMath.PI,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinLongitudeMax = that._voxelPrimitive.maxBounds.x;
+    },
+  });
+  addProperty({
     name: "clippingEllipsoidMinLongitude",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "x"),
     getPrimitiveFunction: function () {
       that.clippingEllipsoidMinLongitude =
         that._voxelPrimitive.minClippingBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxLatitudeMin",
+    initialValue: -CesiumMath.PI_OVER_TWO,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxLatitudeMin = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxLatitudeMax",
+    initialValue: CesiumMath.PI_OVER_TWO,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxLatitudeMax = that._voxelPrimitive.maxBounds.y;
     },
   });
   addProperty({
@@ -459,12 +442,40 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingEllipsoidMinLatitudeMin",
+    initialValue: -CesiumMath.PI_OVER_TWO,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinLatitudeMin = that._voxelPrimitive.minBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinLatitudeMax",
+    initialValue: CesiumMath.PI_OVER_TWO,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinLatitudeMax = that._voxelPrimitive.maxBounds.y;
+    },
+  });
+  addProperty({
     name: "clippingEllipsoidMinLatitude",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "y"),
     getPrimitiveFunction: function () {
       that.clippingEllipsoidMinLatitude =
         that._voxelPrimitive.minClippingBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxHeightMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxHeightMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMaxHeightMax",
+    initialValue: 100000.0,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMaxHeightMax = that._voxelPrimitive.maxBounds.z;
     },
   });
   addProperty({
@@ -477,12 +488,40 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingEllipsoidMinHeightMin",
+    initialValue: -100000.0,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinHeightMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingEllipsoidMinHeightMax",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingEllipsoidMinHeightMax = that._voxelPrimitive.maxBounds.z;
+    },
+  });
+  addProperty({
     name: "clippingEllipsoidMinHeight",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "z"),
     getPrimitiveFunction: function () {
       that.clippingEllipsoidMinHeight =
         that._voxelPrimitive.minClippingBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMaxRadiusMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxRadiusMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMaxRadiusMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxRadiusMax = that._voxelPrimitive.maxBounds.x;
     },
   });
   addProperty({
@@ -494,6 +533,20 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
+    name: "clippingCylinderMinRadiusMin",
+    initialValue: 0.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinRadiusMin = that._voxelPrimitive.minBounds.x;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinRadiusMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinRadiusMax = that._voxelPrimitive.maxBounds.x;
+    },
+  });
+  addProperty({
     name: "clippingCylinderMinRadius",
     initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "x"),
@@ -502,35 +555,85 @@ function VoxelInspectorViewModel(scene) {
     },
   });
   addProperty({
-    name: "clippingCylinderMaxHeight",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxClippingBounds", "y"),
+    name: "clippingCylinderMaxAngleMin",
+    initialValue: -CesiumMath.PI,
     getPrimitiveFunction: function () {
-      that.clippingCylinderMaxHeight = that._voxelPrimitive.maxClippingBounds.y;
+      that.clippingCylinderMaxAngleMin = that._voxelPrimitive.minBounds.y;
     },
   });
   addProperty({
-    name: "clippingCylinderMinHeight",
-    initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("minClippingBounds", "y"),
+    name: "clippingCylinderMaxAngleMax",
+    initialValue: CesiumMath.PI,
     getPrimitiveFunction: function () {
-      that.clippingCylinderMinHeight = that._voxelPrimitive.minClippingBounds.y;
+      that.clippingCylinderMaxAngleMax = that._voxelPrimitive.maxBounds.y;
     },
   });
   addProperty({
     name: "clippingCylinderMaxAngle",
     initialValue: 0.0,
-    setPrimitiveFunction: getBoundSetter("maxClippingBounds", "z"),
+    setPrimitiveFunction: getBoundSetter("maxClippingBounds", "y"),
     getPrimitiveFunction: function () {
-      that.clippingCylinderMaxAngle = that._voxelPrimitive.maxClippingBounds.z;
+      that.clippingCylinderMaxAngle = that._voxelPrimitive.maxClippingBounds.y;
     },
+  });
+  addProperty({
+    name: "clippingCylinderMinAngleMin",
+    initialValue: -CesiumMath.PI,
+  });
+  addProperty({
+    name: "clippingCylinderMinAngleMax",
+    initialValue: CesiumMath.PI,
   });
   addProperty({
     name: "clippingCylinderMinAngle",
     initialValue: 0.0,
+    setPrimitiveFunction: getBoundSetter("minClippingBounds", "y"),
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinAngle = that._voxelPrimitive.minClippingBounds.y;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMaxHeightMin",
+    initialValue: -1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxHeightMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMaxHeightMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxHeightMax = that._voxelPrimitive.maxBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMaxHeight",
+    initialValue: 0.0,
+    setPrimitiveFunction: getBoundSetter("maxClippingBounds", "z"),
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMaxHeight = that._voxelPrimitive.maxClippingBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinHeightMin",
+    initialValue: -1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinHeightMin = that._voxelPrimitive.minBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinHeightMax",
+    initialValue: 1.0,
+    getPrimitiveFunction: function () {
+      that.clippingCylinderMinHeightMax = that._voxelPrimitive.maxBounds.z;
+    },
+  });
+  addProperty({
+    name: "clippingCylinderMinHeight",
+    initialValue: 0.0,
     setPrimitiveFunction: getBoundSetter("minClippingBounds", "z"),
     getPrimitiveFunction: function () {
-      that.clippingCylinderMinAngle = that._voxelPrimitive.minClippingBounds.z;
+      that.clippingCylinderMinHeight = that._voxelPrimitive.minClippingBounds.z;
     },
   });
 
@@ -545,7 +648,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.translationX = Matrix4.getTranslation(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).x;
     },
   });
@@ -560,7 +663,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.translationY = Matrix4.getTranslation(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).y;
     },
   });
@@ -575,7 +678,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.translationZ = Matrix4.getTranslation(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).z;
     },
   });
@@ -591,7 +694,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.scaleX = Matrix4.getScale(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).x;
     },
   });
@@ -606,7 +709,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.scaleY = Matrix4.getScale(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).y;
     },
   });
@@ -621,7 +724,7 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: function () {
       that.scaleZ = Matrix4.getScale(
         that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
+        new Cartesian3(),
       ).z;
     },
   });
@@ -667,13 +770,13 @@ function setModelMatrix(viewModel) {
     viewModel.translationX,
     viewModel.translationY,
     viewModel.translationZ,
-    scratchTranslation
+    scratchTranslation,
   );
   const scale = Cartesian3.fromElements(
     viewModel.scaleX,
     viewModel.scaleY,
     viewModel.scaleZ,
-    scratchScale
+    scratchScale,
   );
   const hpr = scratchHeadingPitchRoll;
   hpr.heading = viewModel.angleX;
@@ -684,7 +787,7 @@ function setModelMatrix(viewModel) {
   viewModel._voxelPrimitive.modelMatrix = Matrix4.fromRotationTranslation(
     rotationScale,
     translation,
-    viewModel._voxelPrimitive.modelMatrix
+    viewModel._voxelPrimitive.modelMatrix,
   );
 }
 
@@ -716,11 +819,14 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
       }
 
       // Update properties from the new primitive
-      if (defined(voxelPrimitive)) {
-        this._voxelPrimitive = voxelPrimitive;
+      if (!defined(voxelPrimitive)) {
+        return;
+      }
+      this._voxelPrimitive = voxelPrimitive;
 
-        const that = this;
-        that._customShaderCompilationRemoveCallback = that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
+      const that = this;
+      that._customShaderCompilationRemoveCallback =
+        that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
           function (error) {
             const shaderString =
               that._voxelPrimitive.customShader.fragmentShaderText;
@@ -733,15 +839,14 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
               that.shaderCompilationMessage = error.message;
               that.shaderCompilationSuccess = false;
             }
-          }
+          },
         );
-        that._modelMatrixReady = false;
-        for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
-          that._getPrimitiveFunctions[i]();
-        }
-        that._modelMatrixReady = true;
-        setModelMatrix(that);
+      that._modelMatrixReady = false;
+      for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
+        that._getPrimitiveFunctions[i]();
       }
+      that._modelMatrixReady = true;
+      setModelMatrix(that);
     },
   },
 });
@@ -806,7 +911,7 @@ VoxelInspectorViewModel.prototype.compileShader = function () {
  */
 VoxelInspectorViewModel.prototype.shaderEditorKeyPress = function (
   sender,
-  event
+  event,
 ) {
   if (event.keyCode === 9) {
     //tab

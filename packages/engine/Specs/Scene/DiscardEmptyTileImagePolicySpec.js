@@ -20,7 +20,7 @@ describe("Scene/DiscardEmptyTileImagePolicy", function () {
       promises.push(
         pollToPromise(function () {
           return policy.isReady();
-        })
+        }),
       );
 
       return Promise.all(promises, function (results) {
@@ -39,7 +39,7 @@ describe("Scene/DiscardEmptyTileImagePolicy", function () {
       promises.push(
         pollToPromise(function () {
           return policy.isReady();
-        })
+        }),
       );
 
       return Promise.all(promises, function (results) {

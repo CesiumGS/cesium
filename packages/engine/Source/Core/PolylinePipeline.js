@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -28,7 +27,7 @@ PolylinePipeline.numberOfPointsRhumbLine = function (p0, p1, granularity) {
 
   return Math.max(
     1,
-    Math.ceil(Math.sqrt(radiansDistanceSquared / (granularity * granularity)))
+    Math.ceil(Math.sqrt(radiansDistanceSquared / (granularity * granularity))),
   );
 };
 
@@ -96,7 +95,7 @@ function generateCartesianArc(
   h0,
   h1,
   array,
-  offset
+  offset,
 ) {
   const first = ellipsoid.scaleToGeodeticSurface(p0, scaleFirst);
   const last = ellipsoid.scaleToGeodeticSurface(p1, scaleLast);
@@ -118,7 +117,7 @@ function generateCartesianArc(
   for (let i = 1; i < numPoints; i++) {
     const carto = ellipsoidGeodesic.interpolateUsingSurfaceDistance(
       i * surfaceDistanceBetweenPoints,
-      carto2
+      carto2,
     );
     carto.height = heights[i];
     cart = ellipsoid.cartographicToCartesian(carto, cartesian);
@@ -140,14 +139,14 @@ function generateCartesianRhumbArc(
   h0,
   h1,
   array,
-  offset
+  offset,
 ) {
   const start = ellipsoid.cartesianToCartographic(p0, carto1);
   const end = ellipsoid.cartesianToCartographic(p1, carto2);
   const numPoints = PolylinePipeline.numberOfPointsRhumbLine(
     start,
     end,
-    granularity
+    granularity,
   );
   start.height = 0.0;
   end.height = 0.0;
@@ -169,7 +168,7 @@ function generateCartesianRhumbArc(
   for (let i = 1; i < numPoints; i++) {
     const carto = ellipsoidRhumb.interpolateUsingSurfaceDistance(
       i * surfaceDistanceBetweenPoints,
-      carto2
+      carto2,
     );
     carto.height = heights[i];
     cart = ellipsoid.cartographicToCartesian(carto, cartesian);
@@ -208,42 +207,42 @@ PolylinePipeline.wrapLongitude = function (positions, modelMatrix) {
   const segments = [];
 
   if (defined(positions) && positions.length > 0) {
-    modelMatrix = defaultValue(modelMatrix, Matrix4.IDENTITY);
+    modelMatrix = modelMatrix ?? Matrix4.IDENTITY;
     const inverseModelMatrix = Matrix4.inverseTransformation(
       modelMatrix,
-      wrapLongitudeInversMatrix
+      wrapLongitudeInversMatrix,
     );
 
     const origin = Matrix4.multiplyByPoint(
       inverseModelMatrix,
       Cartesian3.ZERO,
-      wrapLongitudeOrigin
+      wrapLongitudeOrigin,
     );
     const xzNormal = Cartesian3.normalize(
       Matrix4.multiplyByPointAsVector(
         inverseModelMatrix,
         Cartesian3.UNIT_Y,
-        wrapLongitudeXZNormal
+        wrapLongitudeXZNormal,
       ),
-      wrapLongitudeXZNormal
+      wrapLongitudeXZNormal,
     );
     const xzPlane = Plane.fromPointNormal(
       origin,
       xzNormal,
-      wrapLongitudeXZPlane
+      wrapLongitudeXZPlane,
     );
     const yzNormal = Cartesian3.normalize(
       Matrix4.multiplyByPointAsVector(
         inverseModelMatrix,
         Cartesian3.UNIT_X,
-        wrapLongitudeYZNormal
+        wrapLongitudeYZNormal,
       ),
-      wrapLongitudeYZNormal
+      wrapLongitudeYZNormal,
     );
     const yzPlane = Plane.fromPointNormal(
       origin,
       yzNormal,
-      wrapLongitudeYZPlane
+      wrapLongitudeYZPlane,
     );
 
     let count = 1;
@@ -264,27 +263,27 @@ PolylinePipeline.wrapLongitude = function (positions, modelMatrix) {
           prev,
           cur,
           xzPlane,
-          wrapLongitudeIntersection
+          wrapLongitudeIntersection,
         );
         if (defined(intersection)) {
           // move point on the xz-plane slightly away from the plane
           const offset = Cartesian3.multiplyByScalar(
             xzNormal,
             5.0e-9,
-            wrapLongitudeOffset
+            wrapLongitudeOffset,
           );
           if (Plane.getPointDistance(xzPlane, prev) < 0.0) {
             Cartesian3.negate(offset, offset);
           }
 
           cartesians.push(
-            Cartesian3.add(intersection, offset, new Cartesian3())
+            Cartesian3.add(intersection, offset, new Cartesian3()),
           );
           segments.push(count + 1);
 
           Cartesian3.negate(offset, offset);
           cartesians.push(
-            Cartesian3.add(intersection, offset, new Cartesian3())
+            Cartesian3.add(intersection, offset, new Cartesian3()),
           );
           count = 1;
         }
@@ -311,7 +310,7 @@ PolylinePipeline.wrapLongitude = function (positions, modelMatrix) {
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
  * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @returns {number[]} A new array of positions of type {number} that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
@@ -337,8 +336,8 @@ PolylinePipeline.generateArc = function (options) {
   //>>includeEnd('debug');
 
   const length = positions.length;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-  let height = defaultValue(options.height, 0);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  let height = options.height ?? 0;
   const hasHeightArray = Array.isArray(height);
 
   if (length < 1) {
@@ -357,10 +356,7 @@ PolylinePipeline.generateArc = function (options) {
 
   let minDistance = options.minDistance;
   if (!defined(minDistance)) {
-    const granularity = defaultValue(
-      options.granularity,
-      CesiumMath.RADIANS_PER_DEGREE
-    );
+    const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
     minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
   }
 
@@ -371,7 +367,7 @@ PolylinePipeline.generateArc = function (options) {
     numPoints += PolylinePipeline.numberOfPoints(
       positions[i],
       positions[i + 1],
-      minDistance
+      minDistance,
     );
   }
 
@@ -394,7 +390,7 @@ PolylinePipeline.generateArc = function (options) {
       h0,
       h1,
       newPositions,
-      offset
+      offset,
     );
   }
 
@@ -418,7 +414,7 @@ const scratchCartographic1 = new Cartographic();
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
  * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @returns {number[]} A new array of positions of type {number} that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
@@ -444,8 +440,8 @@ PolylinePipeline.generateRhumbArc = function (options) {
   //>>includeEnd('debug');
 
   const length = positions.length;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-  let height = defaultValue(options.height, 0);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  let height = options.height ?? 0;
   const hasHeightArray = Array.isArray(height);
 
   if (length < 1) {
@@ -462,23 +458,20 @@ PolylinePipeline.generateRhumbArc = function (options) {
     return [p.x, p.y, p.z];
   }
 
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
-  );
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
   let numPoints = 0;
   let i;
 
   let c0 = ellipsoid.cartesianToCartographic(
     positions[0],
-    scratchCartographic0
+    scratchCartographic0,
   );
   let c1;
   for (i = 0; i < length - 1; i++) {
     c1 = ellipsoid.cartesianToCartographic(
       positions[i + 1],
-      scratchCartographic1
+      scratchCartographic1,
     );
     numPoints += PolylinePipeline.numberOfPointsRhumbLine(c0, c1, granularity);
     c0 = Cartographic.clone(c1, scratchCartographic0);
@@ -503,7 +496,7 @@ PolylinePipeline.generateRhumbArc = function (options) {
       h0,
       h1,
       newPositions,
-      offset
+      offset,
     );
   }
 
@@ -524,7 +517,7 @@ PolylinePipeline.generateRhumbArc = function (options) {
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
  * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
@@ -554,7 +547,7 @@ PolylinePipeline.generateCartesianArc = function (options) {
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
  * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example

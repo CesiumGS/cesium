@@ -2,7 +2,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
@@ -77,7 +76,7 @@ function EllipsoidGeometryUpdater(entity, scene) {
     entity,
     "ellipsoid",
     entity.ellipsoid,
-    undefined
+    undefined,
   );
 }
 
@@ -114,7 +113,7 @@ Object.defineProperties(EllipsoidGeometryUpdater.prototype, {
 EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
   time,
   skipModelMatrix,
-  modelMatrixResult
+  modelMatrixResult,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
@@ -128,14 +127,14 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
-      this._fillProperty.getValue(time)
+      this._fillProperty.getValue(time),
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-    distanceDisplayCondition
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
+  const distanceDisplayConditionAttribute =
+    DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+      distanceDisplayCondition,
+    );
 
   const attributes = {
     show: show,
@@ -164,8 +163,8 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -178,8 +177,8 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
           time,
           entity.ellipsoid.heightReference,
           this._options.radii.z * 0.5,
-          this._scene.mapProjection.ellipsoid,
-          modelMatrixResult
+          this._scene.ellipsoid,
+          modelMatrixResult,
         ),
     attributes: attributes,
   });
@@ -198,7 +197,7 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
 EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time,
   skipModelMatrix,
-  modelMatrixResult
+  modelMatrixResult,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
@@ -211,23 +210,23 @@ EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
     this._outlineColorProperty,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
 
   const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
         this._showProperty.getValue(time) &&
-        this._showOutlineProperty.getValue(time)
+        this._showOutlineProperty.getValue(time),
     ),
     color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-    distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-      distanceDisplayCondition
-    ),
+    distanceDisplayCondition:
+      DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+        distanceDisplayCondition,
+      ),
     offset: undefined,
   };
   if (defined(this._options.offsetAttribute)) {
@@ -236,8 +235,8 @@ EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -250,8 +249,8 @@ EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
           time,
           entity.ellipsoid.heightReference,
           this._options.radii.z * 0.5,
-          this._scene.mapProjection.ellipsoid,
-          modelMatrixResult
+          this._scene.ellipsoid,
+          modelMatrixResult,
         ),
     attributes: attributes,
   });
@@ -288,12 +287,12 @@ EllipsoidGeometryUpdater.prototype._isDynamic = function (entity, ellipsoid) {
 
 EllipsoidGeometryUpdater.prototype._setStaticOptions = function (
   entity,
-  ellipsoid
+  ellipsoid,
 ) {
   const heightReference = Property.getValueOrDefault(
     ellipsoid.heightReference,
     Iso8601.MINIMUM_VALUE,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   const options = this._options;
   options.vertexFormat =
@@ -302,39 +301,39 @@ EllipsoidGeometryUpdater.prototype._setStaticOptions = function (
       : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
   options.radii = ellipsoid.radii.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.radii
+    options.radii,
   );
   options.innerRadii = Property.getValueOrUndefined(
     ellipsoid.innerRadii,
-    options.radii
+    options.radii,
   );
   options.minimumClock = Property.getValueOrUndefined(
     ellipsoid.minimumClock,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.maximumClock = Property.getValueOrUndefined(
     ellipsoid.maximumClock,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.minimumCone = Property.getValueOrUndefined(
     ellipsoid.minimumCone,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.maximumCone = Property.getValueOrUndefined(
     ellipsoid.maximumCone,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.stackPartitions = Property.getValueOrUndefined(
     ellipsoid.stackPartitions,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.slicePartitions = Property.getValueOrUndefined(
     ellipsoid.slicePartitions,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.subdivisions = Property.getValueOrUndefined(
     ellipsoid.subdivisions,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.offsetAttribute =
     heightReference !== HeightReference.NONE
@@ -342,9 +341,11 @@ EllipsoidGeometryUpdater.prototype._setStaticOptions = function (
       : undefined;
 };
 
-EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnEntityPropertyChanged;
+EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged =
+  heightReferenceOnEntityPropertyChanged;
 
-EllipsoidGeometryUpdater.DynamicGeometryUpdater = DynamicEllipsoidGeometryUpdater;
+EllipsoidGeometryUpdater.DynamicGeometryUpdater =
+  DynamicEllipsoidGeometryUpdater;
 
 /**
  * @private
@@ -352,13 +353,13 @@ EllipsoidGeometryUpdater.DynamicGeometryUpdater = DynamicEllipsoidGeometryUpdate
 function DynamicEllipsoidGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 
   this._scene = geometryUpdater._scene;
@@ -376,9 +377,10 @@ function DynamicEllipsoidGeometryUpdater(
 
 if (defined(Object.create)) {
   DynamicEllipsoidGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
-  DynamicEllipsoidGeometryUpdater.prototype.constructor = DynamicEllipsoidGeometryUpdater;
+  DynamicEllipsoidGeometryUpdater.prototype.constructor =
+    DynamicEllipsoidGeometryUpdater;
 }
 
 DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
@@ -406,15 +408,15 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
   const radii = Property.getValueOrUndefined(
     ellipsoid.radii,
     time,
-    radiiScratch
+    radiiScratch,
   );
   let modelMatrix = defined(radii)
     ? entity.computeModelMatrixForHeightReference(
         time,
         ellipsoid.heightReference,
         radii.z * 0.5,
-        this._scene.mapProjection.ellipsoid,
-        this._modelMatrix
+        this._scene.ellipsoid,
+        this._modelMatrix,
       )
     : undefined;
   if (!defined(modelMatrix) || !defined(radii)) {
@@ -433,57 +435,57 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
   const showOutline = Property.getValueOrDefault(
     ellipsoid.outline,
     time,
-    false
+    false,
   );
   const outlineColor = Property.getValueOrClonedDefault(
     ellipsoid.outlineColor,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
   const material = MaterialProperty.getValue(
     time,
-    defaultValue(ellipsoid.material, defaultMaterial),
-    this._material
+    ellipsoid.material ?? defaultMaterial,
+    this._material,
   );
 
   // Check properties that could trigger a primitive rebuild.
   const innerRadii = Property.getValueOrUndefined(
     ellipsoid.innerRadii,
     time,
-    innerRadiiScratch
+    innerRadiiScratch,
   );
   const minimumClock = Property.getValueOrUndefined(
     ellipsoid.minimumClock,
-    time
+    time,
   );
   const maximumClock = Property.getValueOrUndefined(
     ellipsoid.maximumClock,
-    time
+    time,
   );
   const minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
   const maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
   const stackPartitions = Property.getValueOrUndefined(
     ellipsoid.stackPartitions,
-    time
+    time,
   );
   const slicePartitions = Property.getValueOrUndefined(
     ellipsoid.slicePartitions,
-    time
+    time,
   );
   const subdivisions = Property.getValueOrUndefined(
     ellipsoid.subdivisions,
-    time
+    time,
   );
   const outlineWidth = Property.getValueOrDefault(
     ellipsoid.outlineWidth,
     time,
-    1.0
+    1.0,
   );
   const heightReference = Property.getValueOrDefault(
     ellipsoid.heightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   const offsetAttribute =
     heightReference !== HeightReference.NONE
@@ -500,17 +502,16 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
 
   const shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
-  const distanceDisplayConditionProperty = this._geometryUpdater
-    .distanceDisplayConditionProperty;
-  const distanceDisplayCondition = distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayConditionProperty =
+    this._geometryUpdater.distanceDisplayConditionProperty;
+  const distanceDisplayCondition =
+    distanceDisplayConditionProperty.getValue(time);
 
   const offset = Property.getValueOrDefault(
     this._geometryUpdater.terrainOffsetProperty,
     time,
     defaultOffset,
-    offsetScratch
+    offsetScratch,
   );
 
   //We only rebuild the primitive if something other than the radii has changed
@@ -551,7 +552,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
           innerRadii.x / radii.x,
           innerRadii.y / radii.y,
           innerRadii.z / radii.z,
-          options.innerRadii
+          options.innerRadii,
         );
       } else {
         options.innerRadii = Cartesian3.clone(innerRadii, options.innerRadii);
@@ -574,7 +575,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     const fillInstance = this._geometryUpdater.createFillGeometryInstance(
       time,
       in3D,
-      this._modelMatrix
+      this._modelMatrix,
     );
 
     this._primitive = primitives.add(
@@ -583,13 +584,13 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
         appearance: appearance,
         asynchronous: false,
         shadows: shadows,
-      })
+      }),
     );
 
     const outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(
       time,
       in3D,
-      this._modelMatrix
+      this._modelMatrix,
     );
     this._outlinePrimitive = primitives.add(
       new Primitive({
@@ -598,14 +599,13 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
           flat: true,
           translucent: outlineInstance.attributes.color.value[3] !== 255,
           renderState: {
-            lineWidth: this._geometryUpdater._scene.clampLineWidth(
-              outlineWidth
-            ),
+            lineWidth:
+              this._geometryUpdater._scene.clampLineWidth(outlineWidth),
           },
         }),
         asynchronous: false,
         shadows: shadows,
-      })
+      }),
     );
 
     this._lastShow = showFill;
@@ -630,7 +630,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     if (showFill !== this._lastShow) {
       attributes.show = ShowGeometryInstanceAttribute.toValue(
         showFill,
-        attributes.show
+        attributes.show,
       );
       this._lastShow = showFill;
     }
@@ -638,16 +638,15 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     let outlineAttributes = this._outlineAttributes;
 
     if (!defined(outlineAttributes)) {
-      outlineAttributes = outlinePrimitive.getGeometryInstanceAttributes(
-        entity
-      );
+      outlineAttributes =
+        outlinePrimitive.getGeometryInstanceAttributes(entity);
       this._outlineAttributes = outlineAttributes;
     }
 
     if (showOutline !== this._lastOutlineShow) {
       outlineAttributes.show = ShowGeometryInstanceAttribute.toValue(
         showOutline,
-        outlineAttributes.show
+        outlineAttributes.show,
       );
       this._lastOutlineShow = showOutline;
     }
@@ -655,7 +654,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     if (!Color.equals(outlineColor, this._lastOutlineColor)) {
       outlineAttributes.color = ColorGeometryInstanceAttribute.toValue(
         outlineColor,
-        outlineAttributes.color
+        outlineAttributes.color,
       );
       Color.clone(outlineColor, this._lastOutlineColor);
     }
@@ -663,31 +662,33 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     if (
       !DistanceDisplayCondition.equals(
         distanceDisplayCondition,
-        this._lastDistanceDisplayCondition
+        this._lastDistanceDisplayCondition,
       )
     ) {
-      attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-        distanceDisplayCondition,
-        attributes.distanceDisplayCondition
-      );
-      outlineAttributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-        distanceDisplayCondition,
-        outlineAttributes.distanceDisplayCondition
-      );
+      attributes.distanceDisplayCondition =
+        DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+          distanceDisplayCondition,
+          attributes.distanceDisplayCondition,
+        );
+      outlineAttributes.distanceDisplayCondition =
+        DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+          distanceDisplayCondition,
+          outlineAttributes.distanceDisplayCondition,
+        );
       DistanceDisplayCondition.clone(
         distanceDisplayCondition,
-        this._lastDistanceDisplayCondition
+        this._lastDistanceDisplayCondition,
       );
     }
 
     if (!Cartesian3.equals(offset, this._lastOffset)) {
       attributes.offset = OffsetGeometryInstanceAttribute.toValue(
         offset,
-        attributes.offset
+        attributes.offset,
       );
       outlineAttributes.offset = OffsetGeometryInstanceAttribute.toValue(
         offset,
-        attributes.offset
+        attributes.offset,
       );
       Cartesian3.clone(offset, this._lastOffset);
     }

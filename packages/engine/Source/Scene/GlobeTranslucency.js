@@ -123,13 +123,13 @@ Object.defineProperties(GlobeTranslucency.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far < value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
       this._frontFaceAlphaByDistance = NearFarScalar.clone(
         value,
-        this._frontFaceAlphaByDistance
+        this._frontFaceAlphaByDistance,
       );
     },
   },
@@ -203,13 +203,13 @@ Object.defineProperties(GlobeTranslucency.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far < value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
       this._backFaceAlphaByDistance = NearFarScalar.clone(
         value,
-        this._backFaceAlphaByDistance
+        this._backFaceAlphaByDistance,
       );
     },
   },

@@ -1,5 +1,4 @@
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import srgbToLinear from "../Core/srgbToLinear.js";
 
@@ -73,7 +72,7 @@ function parseSymbol(symbol, isColorCaptured) {
           if (defined(edges.color)) {
             symbology.edges.color = convertColor(
               edges.color,
-              edges.transparency
+              edges.transparency,
             );
           }
         } else if (defined(outline)) {
@@ -81,7 +80,7 @@ function parseSymbol(symbol, isColorCaptured) {
           if (defined(outline.color)) {
             symbology.edges.color = convertColor(
               outline.color,
-              outline.transparency
+              outline.transparency,
             );
           }
         }
@@ -95,7 +94,7 @@ function parseSymbol(symbol, isColorCaptured) {
             if (defined(material.color)) {
               symbology.material.color = convertColor(
                 material.color,
-                material.transparency
+                material.transparency,
               );
             }
           }
@@ -120,7 +119,7 @@ function buildUniqueValueHash(renderer, isColorCaptured) {
         for (let classIndex = 0; classIndex < classes.length; classIndex++) {
           const classSymbology = parseSymbol(
             classes[classIndex].symbol,
-            isColorCaptured
+            isColorCaptured,
           );
           const values = classes[classIndex].values;
           for (let valueIndex = 0; valueIndex < values.length; valueIndex++) {
@@ -166,8 +165,8 @@ function buildClassBreaksHash(renderer, isColorCaptured) {
   if (defined(renderer.classBreakInfos)) {
     const classBreakInfos = [...renderer.classBreakInfos];
     classBreakInfos.sort(function (a, b) {
-      const aMax = defaultValue(a.classMaxValue, a.classMinValue);
-      const bMax = defaultValue(b.classMaxValue, b.classMinValue);
+      const aMax = a.classMaxValue ?? a.classMinValue;
+      const bMax = b.classMaxValue ?? b.classMinValue;
       return aMax - bMax;
     });
     const valueHash = {
@@ -222,7 +221,7 @@ I3SSymbology.prototype._parseLayerSymbology = function () {
     } else if (renderer.type === "uniqueValue") {
       this._defaultSymbology = parseSymbol(
         renderer.defaultSymbol,
-        isColorCaptured
+        isColorCaptured,
       );
       this._valueFields.push(renderer.field1);
       if (defined(renderer.field2)) {
@@ -235,7 +234,7 @@ I3SSymbology.prototype._parseLayerSymbology = function () {
     } else if (renderer.type === "classBreaks") {
       this._defaultSymbology = parseSymbol(
         renderer.defaultSymbol,
-        isColorCaptured
+        isColorCaptured,
       );
       this._valueFields.push(renderer.field);
       this._classBreaksHash = buildClassBreaksHash(renderer, isColorCaptured);
@@ -305,14 +304,14 @@ I3SSymbology.prototype._getSymbology = async function (node) {
           this._uniqueValueHash,
           fieldsValues,
           0,
-          featureIndex
+          featureIndex,
         );
     } else if (defined(this._classBreaksHash)) {
       featureHashFn = (featureIndex) =>
         findHashForClassBreaks(
           this._classBreaksHash,
           fieldsValues[0],
-          featureIndex
+          featureIndex,
         );
     }
 

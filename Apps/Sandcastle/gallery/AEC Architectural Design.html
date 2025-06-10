@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <!-- Use Chrome Frame in IE -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="An architectural design model with layer visibility toggles and metadata picking."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+
+      #toolbar .cesium-button {
+        display: block;
+        width: 100%;
+        text-align: left;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        // A demo of an multi-layer Architectural Design with site clipping,
+        // metadata picking and layer visibility toggling.
+        // Snowdon Towers sample data courtesy of Autodesk Revit.
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          globe: false,
+        });
+
+        // Enable rendering the sky
+        viewer.scene.skyAtmosphere.show = true;
+
+        // Configure Ambient Occlusion
+        if (Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
+          const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
+          ambientOcclusion.enabled = true;
+          ambientOcclusion.uniforms.intensity = 2.0;
+          ambientOcclusion.uniforms.bias = 0.1;
+          ambientOcclusion.uniforms.lengthCap = 0.5;
+          ambientOcclusion.uniforms.directionCount = 16;
+          ambientOcclusion.uniforms.stepCount = 32;
+        }
+
+        // Set to 1 PM Philadelphia time in UTC
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2024-11-22T18:00:00Z");
+
+        // Set the initial camera view
+        viewer.camera.setView({
+          destination: Cesium.Cartesian3.fromDegrees(-79.886626, 40.021649, 235.65),
+          orientation: {
+            heading: 0,
+            pitch: Cesium.Math.toRadians(-20),
+            roll: 0,
+          },
+        });
+
+        // Add Photorealistic 3D tiles
+        let googleTileset;
+        try {
+          googleTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207);
+          viewer.scene.primitives.add(googleTileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
+
+        // Add clipping for the site
+        const positions = Cesium.Cartesian3.fromDegreesArray([
+          -79.887735, 40.022564, -79.886341, 40.023087, -79.886161, 40.023087, -79.885493,
+          40.022032, -79.88703, 40.021456, -79.887735, 40.022564,
+        ]);
+
+        const polygon = new Cesium.ClippingPolygon({
+          positions: positions,
+        });
+
+        const polygons = new Cesium.ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        googleTileset.clippingPolygons = polygons;
+
+        // The Architectural Design is comprised of multiple tilesets
+        const tilesetData = [
+          { title: "Architecture", assetId: 2887123, visible: true },
+          { title: "Facade", assetId: 2887125, visible: true },
+          { title: "Structural", assetId: 2887130, visible: false },
+          { title: "Electrical", assetId: 2887124, visible: true },
+          { title: "HVAC", assetId: 2887126, visible: true },
+          { title: "Plumbing", assetId: 2887127, visible: true },
+          { title: "Site", assetId: 2887129, visible: true },
+        ];
+
+        // Load each tileset and create a corresponding visibility toggle button
+        for (const { title, assetId, visible } of tilesetData) {
+          try {
+            const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
+            viewer.scene.primitives.add(tileset);
+            tileset.show = visible;
+
+            const toggleBtn = Sandcastle.addToggleButton(
+              title,
+              visible,
+              function (checked) {
+                tileset.show = checked;
+              },
+            );
+          } catch (error) {
+            console.log(`Error loading tileset (${title}): ${error}`);
+          }
+        }
+
+        // Get default left click handler for when a feature is not picked on left click
+        const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
+          Cesium.ScreenSpaceEventType.LEFT_CLICK,
+        );
+
+        // Create the HTML that will be put into the info box that shows
+        // information about the currently selected feature
+        function createPickedFeatureDescription(pickedFeature) {
+          let description = `${'<table class="cesium-infoBox-defaultTable"><tbody>'}`;
+
+          const propertyIds = pickedFeature.getPropertyIds();
+
+          // Sort properties alphabetically
+          propertyIds.sort((a, b) => a.localeCompare(b));
+
+          const length = propertyIds.length;
+          for (let i = 0; i < length; ++i) {
+            const propertyId = propertyIds[i];
+            const propertyValue = pickedFeature.getProperty(propertyId);
+
+            // Reject properties with default values
+            if (Cesium.defined(propertyValue) && propertyValue !== "") {
+              description += `<tr><th>${propertyId}</th><td>${propertyValue}</td></tr>`;
+            }
+          }
+
+          description += `</tbody></table>`;
+
+          return description;
+        }
+
+        // An entity object which will hold info about the currently selected feature for infobox display
+        const selectedEntity = new Cesium.Entity();
+
+        // Information about the currently selected feature
+        const selected = {
+          feature: undefined,
+          originalColor: new Cesium.Color(),
+        };
+
+        // Information about the currently highlighted feature
+        const highlighted = {
+          feature: undefined,
+          originalColor: new Cesium.Color(),
+        };
+
+        // Color a feature yellow on hover.
+        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
+          // If a feature was previously highlighted, undo the highlight
+          if (Cesium.defined(highlighted.feature)) {
+            highlighted.feature.color = highlighted.originalColor;
+            highlighted.feature = undefined;
+          }
+          // Pick a new feature
+          const pickedFeature = viewer.scene.pick(movement.endPosition);
+
+          if (
+            !Cesium.defined(pickedFeature) ||
+            !(pickedFeature instanceof Cesium.Cesium3DTileFeature)
+          ) {
+            return;
+          }
+
+          // Highlight the feature if it's not already selected.
+          if (pickedFeature !== selected.feature) {
+            highlighted.feature = pickedFeature;
+            Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
+            pickedFeature.color = Cesium.Color.YELLOW;
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        // Color a feature on selection and show metadata in the InfoBox.
+        viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+          // If a feature was previously selected, undo the highlight
+          if (Cesium.defined(selected.feature)) {
+            selected.feature.color = selected.originalColor;
+            selected.feature = undefined;
+          }
+          // Pick a new feature
+          const pickedFeature = viewer.scene.pick(movement.position);
+          if (
+            !Cesium.defined(pickedFeature) ||
+            !(pickedFeature instanceof Cesium.Cesium3DTileFeature)
+          ) {
+            clickHandler(movement);
+            return;
+          }
+          // Select the feature if it's not already selected
+          if (selected.feature === pickedFeature) {
+            return;
+          }
+          selected.feature = pickedFeature;
+          // Save the selected feature's original color
+          if (pickedFeature === highlighted.feature) {
+            Cesium.Color.clone(highlighted.originalColor, selected.originalColor);
+            highlighted.feature = undefined;
+          } else {
+            Cesium.Color.clone(pickedFeature.color, selected.originalColor);
+          }
+          // Highlight newly selected feature
+          pickedFeature.color = Cesium.Color.LIME;
+
+          // Set feature infobox description
+          viewer.selectedEntity = selectedEntity;
+          selectedEntity.description = createPickedFeatureDescription(pickedFeature);
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

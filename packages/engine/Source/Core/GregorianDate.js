@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import DeveloperError from "./DeveloperError.js";
 import isLeapYear from "./isLeapYear.js";
 
@@ -30,7 +29,7 @@ function GregorianDate(
   minute,
   second,
   millisecond,
-  isLeapSecond
+  isLeapSecond,
 ) {
   const minimumYear = 1;
   const minimumMonth = 1;
@@ -40,14 +39,14 @@ function GregorianDate(
   const minimumSecond = 0;
   const minimumMillisecond = 0;
 
-  year = defaultValue(year, minimumYear);
-  month = defaultValue(month, minimumMonth);
-  day = defaultValue(day, minimumDay);
-  hour = defaultValue(hour, minimumHour);
-  minute = defaultValue(minute, minimumMinute);
-  second = defaultValue(second, minimumSecond);
-  millisecond = defaultValue(millisecond, minimumMillisecond);
-  isLeapSecond = defaultValue(isLeapSecond, false);
+  year = year ?? minimumYear;
+  month = month ?? minimumMonth;
+  day = day ?? minimumDay;
+  hour = hour ?? minimumHour;
+  minute = minute ?? minimumMinute;
+  second = second ?? minimumSecond;
+  millisecond = millisecond ?? minimumMillisecond;
+  isLeapSecond = isLeapSecond ?? false;
   //>>includeStart('debug', pragmas.debug);
   validateRange();
   validateDate();
@@ -124,18 +123,18 @@ function GregorianDate(
     Check.typeOf.number.lessThanOrEquals(
       "Second",
       second,
-      isLeapSecond ? maximumSecond + 1 : maximumSecond
+      isLeapSecond ? maximumSecond + 1 : maximumSecond,
     );
 
     Check.typeOf.number.greaterThanOrEquals(
       "Millisecond",
       millisecond,
-      minimumMillisecond
+      minimumMillisecond,
     );
     Check.typeOf.number.lessThan(
       "Millisecond",
       millisecond,
-      excludedMaximumMilisecond
+      excludedMaximumMilisecond,
     );
   }
 

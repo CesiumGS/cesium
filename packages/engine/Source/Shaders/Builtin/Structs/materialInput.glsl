@@ -10,9 +10,10 @@
  * @property {vec3} normalEC Unperturbed surface normal in eye coordinates.
  * @property {mat3} tangentToEyeMatrix Matrix for converting a tangent space normal to eye space.
  * @property {vec3} positionToEyeEC Vector from the fragment to the eye in eye coordinates.  The magnitude is the distance in meters from the fragment to the eye.
- * @property {float} height The height of the terrain in meters above or below the WGS84 ellipsoid.  Only available for globe materials.
+ * @property {float} height The height of the terrain in meters above or below the ellipsoid.  Only available for globe materials.
  * @property {float} slope The slope of the terrain in radians.  0 is flat; pi/2 is vertical.  Only available for globe materials.
  * @property {float} aspect The aspect of the terrain in radians.  0 is East, pi/2 is North, pi is West, 3pi/2 is South.  Only available for globe materials.
+* @property {float} waterMask The value of the water mask. 0 is land, 1 is water. Only available for globe materials.
  */
 struct czm_materialInput
 {
@@ -25,4 +26,5 @@ struct czm_materialInput
     float height;
     float slope;
     float aspect;
+    float waterMask;
 };

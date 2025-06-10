@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -24,7 +24,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function BufferLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const typedArray = options.typedArray;
   const resource = options.resource;
   const cacheKey = options.cacheKey;
@@ -32,7 +32,7 @@ function BufferLoader(options) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(typedArray) === defined(resource)) {
     throw new DeveloperError(
-      "One of options.typedArray and options.resource must be defined."
+      "One of options.typedArray and options.resource must be defined.",
     );
   }
   //>>includeEnd('debug');

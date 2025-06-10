@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Spline from "./Spline.js";
@@ -40,7 +40,7 @@ import Spline from "./Spline.js";
  * @see QuaternionSpline
  */
 function MorphWeightSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const weights = options.weights;
   const times = options.times;
@@ -51,7 +51,7 @@ function MorphWeightSpline(options) {
   Check.typeOf.number.greaterThanOrEquals("weights.length", weights.length, 3);
   if (weights.length % times.length !== 0) {
     throw new DeveloperError(
-      "times.length must be a factor of weights.length."
+      "times.length must be a factor of weights.length.",
     );
   }
   //>>includeEnd('debug');
@@ -143,7 +143,7 @@ MorphWeightSpline.prototype.evaluate = function (time, result) {
 
   const i = (this._lastTimeIndex = this.findTimeInterval(
     time,
-    this._lastTimeIndex
+    this._lastTimeIndex,
   ));
   const u = (time - times[i]) / (times[i + 1] - times[i]);
 

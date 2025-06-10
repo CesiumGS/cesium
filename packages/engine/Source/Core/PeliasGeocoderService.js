@@ -87,7 +87,7 @@ PeliasGeocoderService.prototype.geocode = async function (query, type) {
           bboxDegrees[0],
           bboxDegrees[1],
           bboxDegrees[2],
-          bboxDegrees[3]
+          bboxDegrees[3],
         );
       } else {
         const lon = resultObject.geometry.coordinates[0];

@@ -25,7 +25,7 @@ function Batch(
   depthFailAppearanceType,
   depthFailMaterialProperty,
   closed,
-  shadows
+  shadows,
 ) {
   this.primitives = primitives;
   this.appearanceType = appearanceType;
@@ -44,10 +44,11 @@ function Batch(
   this.updatersWithAttributes = new AssociativeArray();
   this.attributes = new AssociativeArray();
   this.invalidated = false;
-  this.removeMaterialSubscription = materialProperty.definitionChanged.addEventListener(
-    Batch.prototype.onMaterialChanged,
-    this
-  );
+  this.removeMaterialSubscription =
+    materialProperty.definitionChanged.addEventListener(
+      Batch.prototype.onMaterialChanged,
+      this,
+    );
   this.subscriptions = new AssociativeArray();
   this.showsUpdated = new AssociativeArray();
 }
@@ -92,16 +93,13 @@ Batch.prototype.add = function (time, updater) {
     const that = this;
     this.subscriptions.set(
       id,
-      updater.entity.definitionChanged.addEventListener(function (
-        entity,
-        propertyName,
-        newValue,
-        oldValue
-      ) {
-        if (propertyName === "isShowing") {
-          that.showsUpdated.set(updater.id, updater);
-        }
-      })
+      updater.entity.definitionChanged.addEventListener(
+        function (entity, propertyName, newValue, oldValue) {
+          if (propertyName === "isShowing") {
+            that.showsUpdated.set(updater.id, updater);
+          }
+        },
+      ),
     );
   }
   this.createPrimitive = true;
@@ -146,7 +144,7 @@ Batch.prototype.update = function (time) {
       this.material = MaterialProperty.getValue(
         time,
         this.materialProperty,
-        this.material
+        this.material,
       );
 
       let depthFailAppearance;
@@ -154,7 +152,7 @@ Batch.prototype.update = function (time) {
         this.depthFailMaterial = MaterialProperty.getValue(
           time,
           this.depthFailMaterialProperty,
-          this.depthFailMaterial
+          this.depthFailMaterial,
         );
         depthFailAppearance = new this.depthFailAppearanceType({
           material: this.depthFailMaterial,
@@ -203,7 +201,7 @@ Batch.prototype.update = function (time) {
     this.material = MaterialProperty.getValue(
       time,
       this.materialProperty,
-      this.material
+      this.material,
     );
     this.primitive.appearance.material = this.material;
 
@@ -214,7 +212,7 @@ Batch.prototype.update = function (time) {
       this.depthFailMaterial = MaterialProperty.getValue(
         time,
         this.depthFailMaterialProperty,
-        this.depthFailMaterial
+        this.depthFailMaterial,
       );
       this.primitive.depthFailAppearance.material = this.depthFailMaterial;
     }
@@ -242,16 +240,16 @@ Batch.prototype.update = function (time) {
           depthFailColorProperty,
           time,
           Color.WHITE,
-          colorScratch
+          colorScratch,
         );
         if (!Color.equals(attributes._lastDepthFailColor, depthFailColor)) {
           attributes._lastDepthFailColor = Color.clone(
             depthFailColor,
-            attributes._lastDepthFailColor
+            attributes._lastDepthFailColor,
           );
           attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(
             depthFailColor,
-            attributes.depthFailColor
+            attributes.depthFailColor,
           );
         }
       }
@@ -262,7 +260,7 @@ Batch.prototype.update = function (time) {
       if (show !== currentShow) {
         attributes.show = ShowGeometryInstanceAttribute.toValue(
           show,
-          attributes.show
+          attributes.show,
         );
       }
 
@@ -273,22 +271,24 @@ Batch.prototype.update = function (time) {
           distanceDisplayConditionProperty,
           time,
           defaultDistanceDisplayCondition,
-          distanceDisplayConditionScratch
+          distanceDisplayConditionScratch,
         );
         if (
           !DistanceDisplayCondition.equals(
             distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
+            attributes._lastDistanceDisplayCondition,
           )
         ) {
-          attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(
-            distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
-          );
-          attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-            distanceDisplayCondition,
-            attributes.distanceDisplayCondition
-          );
+          attributes._lastDistanceDisplayCondition =
+            DistanceDisplayCondition.clone(
+              distanceDisplayCondition,
+              attributes._lastDistanceDisplayCondition,
+            );
+          attributes.distanceDisplayCondition =
+            DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+              distanceDisplayCondition,
+              attributes.distanceDisplayCondition,
+            );
         }
       }
 
@@ -298,16 +298,16 @@ Batch.prototype.update = function (time) {
           offsetProperty,
           time,
           defaultOffset,
-          offsetScratch
+          offsetScratch,
         );
         if (!Cartesian3.equals(offset, attributes._lastOffset)) {
           attributes._lastOffset = Cartesian3.clone(
             offset,
-            attributes._lastOffset
+            attributes._lastOffset,
           );
           attributes.offset = OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
         }
       }
@@ -339,7 +339,7 @@ Batch.prototype.updateShows = function (primitive) {
     if (show !== currentShow) {
       attributes.show = ShowGeometryInstanceAttribute.toValue(
         show,
-        attributes.show
+        attributes.show,
       );
       instance.attributes.show.value[0] = attributes.show[0];
     }
@@ -389,7 +389,7 @@ function StaticGeometryPerMaterialBatch(
   appearanceType,
   depthFailAppearanceType,
   closed,
-  shadows
+  shadows,
 ) {
   this._items = [];
   this._primitives = primitives;
@@ -416,7 +416,7 @@ StaticGeometryPerMaterialBatch.prototype.add = function (time, updater) {
     this._depthFailAppearanceType,
     updater.depthFailMaterialProperty,
     this._closed,
-    this._shadows
+    this._shadows,
   );
   batch.add(time, updater);
   items.push(batch);
@@ -464,7 +464,7 @@ StaticGeometryPerMaterialBatch.prototype.update = function (time) {
 
 StaticGeometryPerMaterialBatch.prototype.getBoundingSphere = function (
   updater,
-  result
+  result,
 ) {
   const items = this._items;
   const length = items.length;

@@ -1,7 +1,7 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import PositionProperty from "./PositionProperty.js";
@@ -20,9 +20,9 @@ function TimeIntervalCollectionPositionProperty(referenceFrame) {
   this._intervals = new TimeIntervalCollection();
   this._intervals.changedEvent.addEventListener(
     TimeIntervalCollectionPositionProperty.prototype._intervalsChanged,
-    this
+    this,
   );
-  this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+  this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
 }
 
 Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
@@ -78,17 +78,22 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time in the fixed frame.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 TimeIntervalCollectionPositionProperty.prototype.getValue = function (
   time,
-  result
+  result,
 ) {
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
 };
 
@@ -100,32 +105,29 @@ TimeIntervalCollectionPositionProperty.prototype.getValue = function (
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
-TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = function (
-  time,
-  referenceFrame,
-  result
-) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(time)) {
-    throw new DeveloperError("time is required.");
-  }
-  if (!defined(referenceFrame)) {
-    throw new DeveloperError("referenceFrame is required.");
-  }
-  //>>includeEnd('debug');
+TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame =
+  function (time, referenceFrame, result) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(time)) {
+      throw new DeveloperError("time is required.");
+    }
+    if (!defined(referenceFrame)) {
+      throw new DeveloperError("referenceFrame is required.");
+    }
+    //>>includeEnd('debug');
 
-  const position = this._intervals.findDataForIntervalContainingDate(time);
-  if (defined(position)) {
-    return PositionProperty.convertToReferenceFrame(
-      time,
-      position,
-      this._referenceFrame,
-      referenceFrame,
-      result
-    );
-  }
-  return undefined;
-};
+    const position = this._intervals.findDataForIntervalContainingDate(time);
+    if (defined(position)) {
+      return PositionProperty.convertToReferenceFrame(
+        time,
+        position,
+        this._referenceFrame,
+        referenceFrame,
+        result,
+      );
+    }
+    return undefined;
+  };
 
 /**
  * Compares this property to the provided property and returns
@@ -146,7 +148,8 @@ TimeIntervalCollectionPositionProperty.prototype.equals = function (other) {
 /**
  * @private
  */
-TimeIntervalCollectionPositionProperty.prototype._intervalsChanged = function () {
-  this._definitionChanged.raiseEvent(this);
-};
+TimeIntervalCollectionPositionProperty.prototype._intervalsChanged =
+  function () {
+    this._definitionChanged.raiseEvent(this);
+  };
 export default TimeIntervalCollectionPositionProperty;

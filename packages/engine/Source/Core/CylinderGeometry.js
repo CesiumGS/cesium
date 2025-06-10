@@ -3,7 +3,7 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CylinderGeometryLibrary from "./CylinderGeometryLibrary.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Geometry from "./Geometry.js";
@@ -48,13 +48,13 @@ const positionScratch = new Cartesian3();
  * const geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
  */
 function CylinderGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const length = options.length;
   const topRadius = options.topRadius;
   const bottomRadius = options.bottomRadius;
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-  const slices = defaultValue(options.slices, 128);
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
+  const slices = options.slices ?? 128;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(length)) {
@@ -68,7 +68,7 @@ function CylinderGeometry(options) {
   }
   if (slices < 3) {
     throw new DeveloperError(
-      "options.slices must be greater than or equal to 3."
+      "options.slices must be greater than or equal to 3.",
     );
   }
   if (
@@ -76,7 +76,7 @@ function CylinderGeometry(options) {
     options.offsetAttribute === GeometryOffsetAttribute.TOP
   ) {
     throw new DeveloperError(
-      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry."
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -115,7 +115,7 @@ CylinderGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   VertexFormat.pack(value._vertexFormat, array, startingIndex);
   startingIndex += VertexFormat.packedLength;
@@ -124,7 +124,7 @@ CylinderGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._topRadius;
   array[startingIndex++] = value._bottomRadius;
   array[startingIndex++] = value._slices;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -154,12 +154,12 @@ CylinderGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
 
@@ -221,7 +221,7 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
     topRadius,
     bottomRadius,
     slices,
-    true
+    true,
   );
 
   const st = vertexFormat.st ? new Float32Array(numVertices * 2) : undefined;
@@ -264,7 +264,7 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
         if (computeTangent) {
           tangent = Cartesian3.normalize(
             Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent),
-            tangent
+            tangent,
           );
         }
 
@@ -289,7 +289,7 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
         if (vertexFormat.bitangent) {
           bitangent = Cartesian3.normalize(
             Cartesian3.cross(normal, tangent, bitangent),
-            bitangent
+            bitangent,
           );
           bitangents[bitangentIndex++] = bitangent.x;
           bitangents[bitangentIndex++] = bitangent.y;
@@ -429,7 +429,7 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
 
   const boundingSphere = new BoundingSphere(
     Cartesian3.ZERO,
-    Cartesian2.magnitude(radiusScratch)
+    Cartesian2.magnitude(radiusScratch),
   );
 
   if (defined(cylinderGeometry._offsetAttribute)) {
@@ -471,7 +471,7 @@ CylinderGeometry.getUnitCylinder = function () {
         bottomRadius: 1.0,
         length: 1.0,
         vertexFormat: VertexFormat.POSITION_ONLY,
-      })
+      }),
     );
   }
   return unitCylinderGeometry;

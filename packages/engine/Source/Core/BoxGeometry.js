@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Geometry from "./Geometry.js";
@@ -40,7 +40,7 @@ const diffScratch = new Cartesian3();
  * const geometry = Cesium.BoxGeometry.createGeometry(box);
  */
 function BoxGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const min = options.minimum;
   const max = options.maximum;
@@ -53,12 +53,12 @@ function BoxGeometry(options) {
     options.offsetAttribute === GeometryOffsetAttribute.TOP
   ) {
     throw new DeveloperError(
-      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry."
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
     );
   }
   //>>includeEnd('debug');
 
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
   this._minimum = Cartesian3.clone(min);
   this._maximum = Cartesian3.clone(max);
@@ -88,7 +88,7 @@ function BoxGeometry(options) {
  * @see BoxGeometry.createGeometry
  */
 BoxGeometry.fromDimensions = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const dimensions = options.dimensions;
 
   //>>includeStart('debug', pragmas.debug);
@@ -161,22 +161,22 @@ BoxGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value._minimum, array, startingIndex);
   Cartesian3.pack(
     value._maximum,
     array,
-    startingIndex + Cartesian3.packedLength
+    startingIndex + Cartesian3.packedLength,
   );
   VertexFormat.pack(
     value._vertexFormat,
     array,
-    startingIndex + 2 * Cartesian3.packedLength
+    startingIndex + 2 * Cartesian3.packedLength,
   );
   array[
     startingIndex + 2 * Cartesian3.packedLength + VertexFormat.packedLength
-  ] = defaultValue(value._offsetAttribute, -1);
+  ] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -204,18 +204,18 @@ BoxGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const min = Cartesian3.unpack(array, startingIndex, scratchMin);
   const max = Cartesian3.unpack(
     array,
     startingIndex + Cartesian3.packedLength,
-    scratchMax
+    scratchMax,
   );
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex + 2 * Cartesian3.packedLength,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   const offsetAttribute =
     array[
@@ -885,7 +885,7 @@ BoxGeometry.getUnitBox = function () {
       BoxGeometry.fromDimensions({
         dimensions: new Cartesian3(1.0, 1.0, 1.0),
         vertexFormat: VertexFormat.POSITION_ONLY,
-      })
+      }),
     );
   }
   return unitBoxGeometry;

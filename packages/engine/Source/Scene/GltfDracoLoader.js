@@ -1,9 +1,11 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DracoLoader from "./DracoLoader.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
  * Load a draco buffer from a glTF.
@@ -18,6 +20,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.primitive The primitive containing the Draco extension.
  * @param {object} options.draco The Draco extension object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
@@ -26,9 +29,10 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function GltfDracoLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
+  const primitive = options.primitive;
   const draco = options.draco;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
@@ -37,6 +41,7 @@ function GltfDracoLoader(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.primitive", primitive);
   Check.typeOf.object("options.draco", draco);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
@@ -46,6 +51,7 @@ function GltfDracoLoader(options) {
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._gltf = gltf;
+  this._primitive = primitive;
   this._draco = draco;
   this._cacheKey = cacheKey;
   this._bufferViewLoader = undefined;
@@ -169,6 +175,24 @@ async function processDecode(loader, decodePromise) {
   }
 }
 
+const SemanticToDracoAttributeType = {};
+SemanticToDracoAttributeType[VertexAttributeSemantic.POSITION] = "POSITION";
+SemanticToDracoAttributeType[VertexAttributeSemantic.NORMAL] = "NORMAL";
+SemanticToDracoAttributeType[VertexAttributeSemantic.COLOR] = "COLOR";
+SemanticToDracoAttributeType[VertexAttributeSemantic.TEXCOORD] = "TEX_COORD";
+
+function getDracoAttributeType(attribute) {
+  for (const semantic in SemanticToDracoAttributeType) {
+    if (SemanticToDracoAttributeType.hasOwnProperty(semantic)) {
+      if (attribute.startsWith(semantic)) {
+        return SemanticToDracoAttributeType[semantic];
+      }
+    }
+  }
+
+  return undefined;
+}
+
 /**
  * Processes the resource until it becomes ready.
  *
@@ -203,11 +227,30 @@ GltfDracoLoader.prototype.process = function (frameState) {
   }
 
   const draco = this._draco;
+  const primitive = this._primitive;
   const gltf = this._gltf;
   const bufferViews = gltf.bufferViews;
   const bufferViewId = draco.bufferView;
   const bufferView = bufferViews[bufferViewId];
   const compressedAttributes = draco.attributes;
+
+  // Skip de-quantization transform if present for floating point attributes.
+  // They will stay quantized in memory and be dequantized in the shader.
+  const attributesToSkipTransform = [];
+
+  for (const attribute in primitive.attributes) {
+    if (primitive.attributes.hasOwnProperty(attribute)) {
+      const dracoAttributeType = getDracoAttributeType(attribute);
+      if (defined(dracoAttributeType)) {
+        const accessor = gltf.accessors[primitive.attributes[attribute]];
+        if (accessor.componentType === ComponentDatatype.FLOAT) {
+          if (!attributesToSkipTransform.includes(dracoAttributeType)) {
+            attributesToSkipTransform.push(dracoAttributeType);
+          }
+        }
+      }
+    }
+  }
 
   const decodeOptions = {
     // Need to make a copy of the typed array otherwise the underlying
@@ -218,6 +261,7 @@ GltfDracoLoader.prototype.process = function (frameState) {
     bufferView: bufferView,
     compressedAttributes: compressedAttributes,
     dequantizeInShader: true,
+    attributesToSkipTransform: attributesToSkipTransform,
   };
 
   const decodePromise = DracoLoader.decodeBufferView(decodeOptions);
@@ -243,6 +287,7 @@ GltfDracoLoader.prototype.unload = function () {
   this._bufferViewTypedArray = undefined;
   this._decodedData = undefined;
   this._gltf = undefined;
+  this._primitive = undefined;
 };
 
 export default GltfDracoLoader;

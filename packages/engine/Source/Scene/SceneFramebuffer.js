@@ -54,7 +54,7 @@ SceneFramebuffer.prototype.update = function (
   context,
   viewport,
   hdr,
-  numSamples
+  numSamples,
 ) {
   const width = viewport.width;
   const height = viewport.height;
@@ -69,7 +69,7 @@ SceneFramebuffer.prototype.update = function (
     width,
     height,
     numSamples,
-    pixelDatatype
+    pixelDatatype,
   );
   this._idFramebuffer.update(context, width, height);
 };

@@ -3,13 +3,12 @@ import {
   Cartesian3,
   Cartographic,
   Ellipsoid,
+  Math as CesiumMath,
   Rectangle,
   Cesium3DTileBatchTable,
   ColorBlendMode,
   Vector3DTilePolylines,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -73,7 +72,7 @@ describe(
       rectangle,
       minimumHeight,
       maximumHeight,
-      positions
+      positions,
     ) {
       const length = positions.length;
       const buffer = new Uint16Array(length * 3);
@@ -121,14 +120,14 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       batchTable.update(mockTileset, scene.frameState);
 
       const center = ellipsoid.cartographicToCartesian(
-        Rectangle.center(rectangle)
+        Rectangle.center(rectangle),
       );
 
       polylines = scene.primitives.add(
@@ -144,12 +143,12 @@ describe(
           boundingVolume: new BoundingSphere(center, 1000000.0),
           batchTable: batchTable,
           keepDecodedPositions: false,
-        })
+        }),
       );
       return loadPolylines(polylines).then(function () {
         scene.camera.lookAt(
           Cartesian3.fromDegrees(0.5, 0.0, 1.5),
-          new Cartesian3(0.0, 0.0, 1.0)
+          new Cartesian3(0.0, 0.0, 1.0),
         );
         expect(scene).toRender([255, 255, 255, 255]);
       });
@@ -172,14 +171,14 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       batchTable.update(mockTileset, scene.frameState);
 
       const center = ellipsoid.cartographicToCartesian(
-        Rectangle.center(rectangle)
+        Rectangle.center(rectangle),
       );
 
       polylines = scene.primitives.add(
@@ -195,7 +194,7 @@ describe(
           boundingVolume: new BoundingSphere(center, 1000000.0),
           batchTable: batchTable,
           keepDecodedPositions: false,
-        })
+        }),
       );
       return loadPolylines(polylines).then(function () {
         for (let i = 0; i < cartoPositions.length; i += 2) {
@@ -223,13 +222,13 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
       const center = ellipsoid.cartographicToCartesian(
-        Rectangle.center(rectangle)
+        Rectangle.center(rectangle),
       );
 
       polylines = scene.primitives.add(
@@ -245,12 +244,12 @@ describe(
           boundingVolume: new BoundingSphere(center, 1000000.0),
           batchTable: batchTable,
           keepDecodedPositions: false,
-        })
+        }),
       );
       return loadPolylines(polylines).then(function () {
         scene.camera.lookAt(
           Cartesian3.fromDegrees(0.5, 0.0, 1.5),
-          new Cartesian3(0.0, 0.0, 1.0)
+          new Cartesian3(0.0, 0.0, 1.0),
         );
 
         const features = [];
@@ -278,5 +277,5 @@ describe(
       expect(polylines.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

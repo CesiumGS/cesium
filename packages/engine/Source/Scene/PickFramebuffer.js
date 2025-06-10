@@ -1,6 +1,5 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
@@ -34,7 +33,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
 
   BoundingRectangle.clone(
     screenSpaceRectangle,
-    this._passState.scissorTest.rectangle
+    this._passState.scissorTest.rectangle,
   );
 
   // Create or recreate renderbuffers and framebuffer used for picking
@@ -49,7 +48,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   return this._passState;
 };
 
-const colorScratch = new Color();
+const colorScratchForPickFramebuffer = new Color();
 
 /**
  * Return the picked object rendered within a given rectangle.
@@ -58,8 +57,8 @@ const colorScratch = new Color();
  * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
  */
 PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
-  const width = defaultValue(screenSpaceRectangle.width, 1.0);
-  const height = defaultValue(screenSpaceRectangle.height, 1.0);
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
 
   const context = this._context;
   const pixels = context.readPixels({
@@ -94,12 +93,20 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
     ) {
       const index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
-      colorScratch.red = Color.byteToFloat(pixels[index]);
-      colorScratch.green = Color.byteToFloat(pixels[index + 1]);
-      colorScratch.blue = Color.byteToFloat(pixels[index + 2]);
-      colorScratch.alpha = Color.byteToFloat(pixels[index + 3]);
+      colorScratchForPickFramebuffer.red = Color.byteToFloat(pixels[index]);
+      colorScratchForPickFramebuffer.green = Color.byteToFloat(
+        pixels[index + 1],
+      );
+      colorScratchForPickFramebuffer.blue = Color.byteToFloat(
+        pixels[index + 2],
+      );
+      colorScratchForPickFramebuffer.alpha = Color.byteToFloat(
+        pixels[index + 3],
+      );
 
-      const object = context.getObjectByPickColor(colorScratch);
+      const object = context.getObjectByPickColor(
+        colorScratchForPickFramebuffer,
+      );
       if (defined(object)) {
         return object;
       }
@@ -121,15 +128,19 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
 };
 
 /**
- * Return voxel tile and sample information as rendered by a pickVoxel pass,
- * within a given rectangle.
+ * Return a typed array containing the RGBA (byte) components of the
+ * pixel that is at the center of the given rectangle.
+ *
+ * This may, for example, be voxel tile and sample information as rendered
+ * by a pickVoxel pass, within a given rectangle. Or it may be the result
+ * of a metadata picking rendering pass.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
- * @returns {TypedArray}
+ * @returns {Uint8Array} The RGBA components
  */
-PickFramebuffer.prototype.readVoxelInfo = function (screenSpaceRectangle) {
-  const width = defaultValue(screenSpaceRectangle.width, 1.0);
-  const height = defaultValue(screenSpaceRectangle.height, 1.0);
+PickFramebuffer.prototype.readCenterPixel = function (screenSpaceRectangle) {
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
 
   const context = this._context;
   const pixels = context.readPixels({

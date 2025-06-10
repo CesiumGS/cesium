@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="An example for the visualization of NGA_gpm_local extension data"
+    />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+      <h1>Loading...</h1>
+    </div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td colspan="3">
+              <h4>Cesium GPM Visualization</h4>
+            </td>
+          </tr>
+          <tr>
+            <td>Data set</td>
+            <td>
+              <select data-bind="options: dataSetNames, value: dataSetName"></select>
+            </td>
+            <td style="text-align: right">
+              <button type="button" data-bind="click: zoomToCurrentTileset">Zoom</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Anchor point ellipsoid</td>
+            <td colspan="2">
+              <input
+                type="range"
+                min="1.0"
+                max="500"
+                step="1"
+                data-bind="value: anchorPointEllipsoidScaling, valueUpdate: 'input'"
+              />
+              <input
+                type="text"
+                size="5"
+                data-bind="value: anchorPointEllipsoidScaling"
+              />
+              <label
+                ><input
+                  type="checkbox"
+                  data-bind="checked: anchorPointLabelsVisible"
+                />Labels</label
+              >
+            </td>
+          </tr>
+          <tr>
+            <td>Shader mode</td>
+            <td colspan="2">
+              <select data-bind="options: shaderModes, value: shaderMode"></select>
+            </td>
+          </tr>
+          <tr id="texture-threshold-control" class="hidden">
+            <td>Texture threshold (m)</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="16.0"
+                step="0.01"
+                data-bind="value: textureThreshold, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: textureThreshold" />
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3">
+              <br />
+              Uncertainty information is stored as GPM metadata in the tiles.<br />
+              <br />
+              The <i>anchor points</i> provide information about the low-frequency
+              error.<br />
+              This error is visualized as ellipsoids.<br />
+              <br />
+              The high-frequency error is represented as
+              <i>Per-Point Error</i> textures.<br />
+              This error can be visualized with custom shaders. The 'uncertainty'<br />
+              shaders visualize the horizontal or vertical uncertainty with a color<br />
+              scale. The 'threshold' shaders highlight areas where the selected<br />
+              error threshold is exceeded. Picking a point on the tileset will show<br />
+              a label with the actual error values.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        // Basic setup
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          timeline: false,
+          animation: false,
+          depthPlaneEllipsoidOffset: 10000,
+        });
+
+        const maxarCredit = new Cesium.Credit(
+          "<span>Provided by Maxar for GPM v1.2 evaluation purposes</span>",
+          true,
+        );
+        viewer.creditDisplay.addStaticCredit(maxarCredit);
+
+        // The options that will be passed to all Cesium3DTileset.from ... functions
+        const defaultTilesetOptions = {
+          maximumScreenSpaceError: 4,
+          cacheBytes: 536870912 * 4,
+        };
+
+        // The set of data sets that are available in the UI
+        const dataSetOptions = [
+          {
+            name: "Port Canaveral",
+            assetId: 2772481,
+            initialCameraConfiguration: {
+              destination: new Cesium.Cartesian3(
+                918010.2634368961,
+                -5538948.372542206,
+                3016855.1270222967,
+              ),
+              orientation: new Cesium.HeadingPitchRoll(
+                4.316957618964909,
+                -0.36573164980955686,
+                6.283174173076164,
+              ),
+            },
+          },
+          {
+            name: "Lajes",
+            assetId: 2772479,
+            initialCameraConfiguration: {
+              destination: new Cesium.Cartesian3(
+                4436474.736810458,
+                -2279634.446362909,
+                3962861.396769178,
+              ),
+              orientation: new Cesium.HeadingPitchRoll(
+                5.214554743456651,
+                -0.5265190154471187,
+                0.000008735845947960286,
+              ),
+            },
+          },
+        ];
+
+        /**
+         * Create a tileset from the given data set option
+         *
+         * @param {object} dataSetOption The data set option
+         * @returns A promise to wait for
+         */
+        async function createTileset(dataSetOption) {
+          const assetId = dataSetOption.assetId;
+          return viewer.scene.primitives.add(
+            await Cesium.Cesium3DTileset.fromIonAssetId(assetId, defaultTilesetOptions),
+          );
+        }
+
+        //============================================================================
+        // Application state
+
+        class App {
+          constructor() {
+            // The name of the current data set, as of the
+            // dataSetOptions[i].name
+            this._currentDataSetName = undefined;
+
+            // The current tileset
+            this._currentTileset = undefined;
+
+            // The current custom shader, or undefined
+            this._currentCustomShader = undefined;
+
+            // The current value of the `u_textureThreshold` uniform that indicates
+            // whether fragments should be highlighted in the `currentCustomShader`.
+            this._textureThreshold = 3.0;
+
+            // The scaling factor for the anchor point ellipsoids
+            this.anchorPointEllipsoidScaling = 100.0;
+
+            // A set of functions that will be called whenever
+            // the `currentTileset` changed, and receive the
+            // oldCurrentTileset and newCurrentTileset
+            this._currentTilesetChangedListeners = [];
+          }
+
+          async selectCurrentDataSet(dataSetName) {
+            if (this._currentDataSetName === dataSetName) {
+              return;
+            }
+            for (const dataSetOption of dataSetOptions) {
+              if (dataSetOption.name === dataSetName) {
+                this._currentDataSetName = dataSetName;
+                await this.createCurrentTileset(dataSetOption);
+              }
+            }
+          }
+
+          get currentTileset() {
+            return this._currentTileset;
+          }
+          set currentTileset(value) {
+            const oldCurrentTileset = this._currentTileset;
+            this._currentTileset = value;
+            this.updateCustomShaderInTileset();
+            this.notifyCurrentTilesetChanged(oldCurrentTileset, this.currentTileset);
+          }
+
+          /**
+           * Add the given function to be called when the current tileset
+           * changed, receiving the "old" and the "new" current tileset.
+           *
+           * @param {object} listener The listener
+           */
+          addCurrentTilesetChangedListener(listener) {
+            this._currentTilesetChangedListeners.push(listener);
+          }
+
+          /**
+           * Notify all registered listeners that the current tileset changed
+           *
+           * @param {Cesium3DTileset} oldCurrentTileset
+           * @param {Cesium3DTileset} newCurrentTileset
+           *
+           * @private
+           */
+          notifyCurrentTilesetChanged(oldCurrentTileset, newCurrentTileset) {
+            for (const listener of this._currentTilesetChangedListeners) {
+              listener(oldCurrentTileset, newCurrentTileset);
+            }
+          }
+
+          get currentCustomShader() {
+            return this._currentCustomShader;
+          }
+          set currentCustomShader(value) {
+            this._currentCustomShader = value;
+            this.updateTextureThresholdInShader();
+            this.updateCustomShaderInTileset();
+          }
+
+          /**
+           * If the currentTileset is defined, then assign the currentCustomShader
+           * to it.
+           *
+           * @private
+           */
+          updateCustomShaderInTileset() {
+            if (!Cesium.defined(this.currentTileset)) {
+              return;
+            }
+            this.currentTileset.customShader = this.currentCustomShader;
+          }
+
+          get textureThreshold() {
+            return this._textureThreshold;
+          }
+
+          set textureThreshold(value) {
+            this._textureThreshold = value;
+            this.updateTextureThresholdInShader();
+          }
+
+          /**
+           * If the currentCustomShader is defined and has a `u_textureThreshold`
+           * uniform, then set its value to the current `textureThreshold`
+           *
+           * @private
+           */
+          updateTextureThresholdInShader() {
+            if (!Cesium.defined(this.currentCustomShader)) {
+              return;
+            }
+            const hasTextureThreshold = Object.keys(
+              this.currentCustomShader.uniforms,
+            ).includes("u_textureThreshold");
+            if (!hasTextureThreshold) {
+              return;
+            }
+            this.currentCustomShader.setUniform(
+              "u_textureThreshold",
+              this.textureThreshold,
+            );
+          }
+
+          /**
+           * Load the tileset that is described in the given data
+           * set option, and set it as the current tileset.
+           *
+           * @param {object} dataSetOption The data set option
+           * @returns A promise to wait for...
+           */
+          async createCurrentTileset(dataSetOption) {
+            if (Cesium.defined(this.currentTileset)) {
+              viewer.scene.primitives.remove(this.currentTileset);
+              this.currentTileset = undefined;
+            }
+
+            this.currentTileset = await createTileset(dataSetOption);
+            if (Cesium.defined(dataSetOption.initialCameraConfiguration)) {
+              viewer.scene.camera.setView(dataSetOption.initialCameraConfiguration);
+            } else {
+              this.zoomToCurrentTileset();
+            }
+          }
+
+          /**
+           * Zoom to the current tileset, with a small, unspecified offset...
+           */
+          zoomToCurrentTileset() {
+            if (!Cesium.defined(this.currentTileset)) {
+              return;
+            }
+            const offset = new Cesium.HeadingPitchRange(
+              Cesium.Math.toRadians(0.0),
+              Cesium.Math.toRadians(-22.5),
+              10000.0,
+            );
+            viewer.zoomTo(this.currentTileset, offset);
+          }
+        }
+
+        const app = new App();
+
+        //============================================================================
+
+        /**
+         * Pick the local uncertainty information from the texture at the given
+         * window position.
+         *
+         * This makes assumptions about the structure of the metadata that is
+         * contained in the underlying data sets.
+         *
+         * It assumes that the data contains two PPE (Per-Point-Error) textures
+         * that are internally converted into structural metadata property
+         * texture properties.
+         *
+         * The first PPE texture uses the SIGZ trait (sigma/standard deviation in
+         * z-direction, in meters). This will be the `y`-component of the result.
+         *
+         * The second PPE texture uses the SIGR trait (sigma/standard deviation in
+         * radial direction in meters). This will be the x-component of the result.
+         *
+         * (Both values are in the range of [0...16], with 16 being the noData value)
+         *
+         * @param {Cartesian2} windowPosition The position in the window
+         * @returns {Cartesian2} The local uncertainty, with `x` being
+         * the radial uncertainty and `y` being the vertical uncertainty
+         */
+        function pickUncertaintyFromTexture(windowPosition) {
+          const schemaId = undefined;
+          const classNameX = "ppeTexture_1";
+          const propertyNameX = "SIGR";
+          const classNameY = "ppeTexture_0";
+          const propertyNameY = "SIGZ";
+          const result = new Cesium.Cartesian2();
+
+          let metadataValueX = viewer.scene.pickMetadata(
+            windowPosition,
+            schemaId,
+            classNameX,
+            propertyNameX,
+          );
+          let metadataValueY = viewer.scene.pickMetadata(
+            windowPosition,
+            schemaId,
+            classNameY,
+            propertyNameY,
+          );
+
+          if (!Cesium.defined(metadataValueX)) {
+            metadataValueX = 0;
+          }
+          if (!Cesium.defined(metadataValueY)) {
+            metadataValueY = 0;
+          }
+          result.x = metadataValueX;
+          result.y = metadataValueY;
+          return result;
+        }
+
+        //============================================================================
+        // Property texture shaders
+
+        class PropertyTextureShaders {
+          /**
+           * Create a custom (fragment) shader for the specified property.
+           *
+           * It accesses the metadata value with the given property name and
+           * normalizes it to a value in [0,1] based on the given source range.
+           * If the resulting value is less than 1.0, this value is used
+           * as the brightness for the fragment.
+           *
+           * @param {string} propertyName The property name
+           * @param {number} sourceMin The minimum source value
+           * @param {number} sourceMax The maximum source value
+           * @returns The `CustomShader`
+           * @private
+           */
+          static createShader1D(propertyName, sourceMin, sourceMax) {
+            const shader = new Cesium.CustomShader({
+              fragmentShaderText: `
+                void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+                {
+                  float value = float(fsInput.metadata.${propertyName});
+                  float range = float(${sourceMax}) - float(${sourceMin});
+                  float brightness = (value - float(${sourceMin})) / range;
+
+                  if (value < float(${sourceMax})) {
+                    material.diffuse = vec3(brightness);
+                  }
+                }
+              `,
+            });
+            return shader;
+          }
+
+          /**
+           * Create a custom (fragment) shader for the specified properties.
+           *
+           * It accesses the metadata values with the given property names and
+           * normalizes them to a value in [0,1] based on the given source ranges.
+           * If the resulting values are both less than 1.0, the values are used
+           * as the red- and green components of the fragment.
+           *
+           * @param {string} propertyName0 The property name 0
+           * @param {number} sourceMin0 The minimum source value 0
+           * @param {number} sourceMax0 The maximum source value 0
+           * @param {string} propertyName1 The property name 1
+           * @param {number} sourceMin1 The minimum source value 1
+           * @param {number} sourceMax1 The maximum source value 1
+           * @returns The `CustomShader`
+           * @private
+           */
+          static createShader2D(
+            propertyName0,
+            sourceMin0,
+            sourceMax0,
+            propertyName1,
+            sourceMin1,
+            sourceMax1,
+          ) {
+            const shader = new Cesium.CustomShader({
+              fragmentShaderText: `
+                void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+                {
+                  float value0 = float(fsInput.metadata.${propertyName0});
+                  float range0 = float(${sourceMax0}) - float(${sourceMin0});
+                  float brightness0 = (value0 - float(${sourceMin0})) / range0;
+
+                  float value1 = float(fsInput.metadata.${propertyName1});
+                  float range1 = float(${sourceMax1}) - float(${sourceMin1});
+                  float brightness1 = (value1 - float(${sourceMin1})) / range1;
+
+                  if (value0 < float(${sourceMax0}) && value1 < float(${sourceMax1})) {
+                    material.diffuse = vec3(brightness0, brightness1, 0.0);
+                  }
+                }
+              `,
+            });
+            return shader;
+          }
+
+          /**
+           * Create a custom (fragment) shader for a threshold visualization of
+           * the specified property.
+           *
+           * It defines a `u_textureThreshold` FLOAT uniform for the threshold
+           * value. It accesses the metadata value with the given property name.
+           * If the resulting value is less than 1.0 but larger than
+           * the threshold, then the fragment will be shown in a highlighting
+           * color. Otherwise, the fragment will be shown with its original
+           * color with lower saturation and lightness.
+           *
+           * @param {string} propertyName The property name
+           * @param {number} sourceMin The minimum source value
+           * @param {number} sourceMax The maximum source value
+           * @returns The `CustomShader`
+           * @private
+           */
+          static createThresholdShader1D(propertyName, sourceMin, sourceMax) {
+            const shader = new Cesium.CustomShader({
+              uniforms: {
+                // A threshold value for the texture: When this
+                // is exceeded, then the fragment will be highlighted
+                u_textureThreshold: {
+                  type: Cesium.UniformType.FLOAT,
+                  value: 3.0,
+                },
+              },
+              fragmentShaderText: `
+                void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+                {
+                  float value = float(fsInput.metadata.${propertyName});
+                  float range = float(${sourceMax}) - float(${sourceMin});
+                  float brightness = (value - float(${sourceMin})) / range;
+
+                  if (value < float(${sourceMax}) && value > u_textureThreshold) {
+                    material.diffuse = vec3(1.0, 1.0, 0.0);
+                  } else {
+                    vec3 diffuseHsl = czm_RGBToHSL(material.diffuse);
+                    diffuseHsl.y *= 0.25;
+                    diffuseHsl.z *= 0.25;
+                    material.diffuse = czm_HSLToRGB(diffuseHsl);
+                  }
+                }
+              `,
+            });
+            return shader;
+          }
+
+          /**
+           * Create a custom (fragment) shader for a threshold visualization of
+           * the specified property.
+           *
+           * It defines a `u_textureThreshold` FLOAT uniform for the threshold
+           * value. It accesses the metadata values with the given property names.
+           * If the resulting value is less than 1.0 but larger than
+           * the threshold, then the fragment will be shown in a highlighting
+           * color. Otherwise, the fragment will be shown with its original
+           * color with lower saturation and lightness.
+           *
+           * @param {string} propertyName0 The property name 0
+           * @param {number} sourceMin0 The minimum source value 0
+           * @param {number} sourceMax0 The maximum source value 0
+           * @param {string} propertyName1 The property name 1
+           * @param {number} sourceMin1 The minimum source value 1
+           * @param {number} sourceMax1 The maximum source value 1
+           * @returns The `CustomShader`
+           * @private
+           */
+          static createThresholdShader2D(
+            propertyName0,
+            sourceMin0,
+            sourceMax0,
+            propertyName1,
+            sourceMin1,
+            sourceMax1,
+          ) {
+            const shader = new Cesium.CustomShader({
+              uniforms: {
+                // A threshold value for the texture: When this
+                // is exceeded, then the fragment will be highlighted
+                u_textureThreshold: {
+                  type: Cesium.UniformType.FLOAT,
+                  value: 3.0,
+                },
+              },
+              fragmentShaderText: `
+                void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+                {
+                  float value0 = float(fsInput.metadata.${propertyName0});
+                  float range0 = float(${sourceMax0}) - float(${sourceMin0});
+                  float brightness0 = (value0 - float(${sourceMin0})) / range0;
+
+                  float value1 = float(fsInput.metadata.${propertyName1});
+                  float range1 = float(${sourceMax1}) - float(${sourceMin1});
+                  float brightness1 = (value1 - float(${sourceMin1})) / range1;
+        
+                  vec3 diffuseHsl = czm_RGBToHSL(material.diffuse);
+                  diffuseHsl.y *= 0.25;
+                  diffuseHsl.z *= 0.25;
+                  vec3 diffuseResult = czm_HSLToRGB(diffuseHsl);
+
+                  if (value0 < float(${sourceMax0}) && value0 > u_textureThreshold) {
+                    diffuseResult.x = 1.0;
+                    diffuseResult.y = 1.0;
+                  }
+                  if (value1 < float(${sourceMax1}) && value1 > u_textureThreshold) {
+                    diffuseResult.x = 1.0;
+                    diffuseResult.z = 1.0;
+                  }
+                  material.diffuse = diffuseResult;
+                }
+              `,
+            });
+            return shader;
+          }
+
+          /**
+           * Creates a object that can be used as one entry in the options
+           * of a Sandcastle toolbar menu.
+           *
+           * Depending on which property names are defined, this will
+           * create an option to select default shading, a 1D shader,
+           * or a 2D shader
+           *
+           * @param {string} title The title to be displayed in the combo box
+           * @param {string|undefined} propertyName0 The property name 0
+           * @param {number} sourceMin0 The minimum source value 0
+           * @param {number} sourceMax0 The maximum source value 0
+           * @param {string|undefined} propertyName1 The property name 1
+           * @param {number} sourceMin1 The minimum source value 1
+           * @param {number} sourceMax1 The maximum source value 1
+           * @returns The shader option
+           * @private
+           */
+          static createShaderOption(
+            title,
+            propertyName0,
+            sourceMin0,
+            sourceMax0,
+            propertyName1,
+            sourceMin1,
+            sourceMax1,
+          ) {
+            return {
+              text: title,
+              onselect: function () {
+                if (Cesium.defined(propertyName0) && Cesium.defined(propertyName1)) {
+                  app.currentCustomShader = PropertyTextureShaders.createShader2D(
+                    propertyName0,
+                    sourceMin0,
+                    sourceMax0,
+                    propertyName1,
+                    sourceMin1,
+                    sourceMax1,
+                  );
+                } else if (Cesium.defined(propertyName0)) {
+                  app.currentCustomShader = PropertyTextureShaders.createShader1D(
+                    propertyName0,
+                    sourceMin0,
+                    sourceMax0,
+                  );
+                } else {
+                  app.currentCustomShader = undefined;
+                }
+
+                document.getElementById("texture-threshold-control").className = "hidden";
+              },
+            };
+          }
+
+          /**
+           * Creates a object that can be used as one entry in the options
+           * of a Sandcastle toolbar menu.
+           *
+           * It will allow selecting a "threshold shader" for the specified
+           * properties.
+           *
+           * @param {string} title The title to be displayed in the combo box
+           * @param {string|undefined} propertyName0 The property name 0
+           * @param {number} sourceMin0 The minimum source value 0
+           * @param {number} sourceMax0 The maximum source value 0
+           * @param {string|undefined} propertyName1 The property name 1
+           * @param {number} sourceMin1 The minimum source value 1
+           * @param {number} sourceMax1 The maximum source value 1
+           * @returns The shader option
+           * @private
+           */
+          static createThresholdShaderOption(
+            title,
+            propertyName0,
+            sourceMin0,
+            sourceMax0,
+            propertyName1,
+            sourceMin1,
+            sourceMax1,
+          ) {
+            return {
+              text: title,
+              onselect: function () {
+                if (Cesium.defined(propertyName0) && Cesium.defined(propertyName1)) {
+                  app.currentCustomShader =
+                    PropertyTextureShaders.createThresholdShader2D(
+                      propertyName0,
+                      sourceMin0,
+                      sourceMax0,
+                      propertyName1,
+                      sourceMin1,
+                      sourceMax1,
+                    );
+                } else if (Cesium.defined(propertyName0)) {
+                  app.currentCustomShader =
+                    PropertyTextureShaders.createThresholdShader1D(
+                      propertyName0,
+                      sourceMin0,
+                      sourceMax0,
+                    );
+                } else {
+                  app.currentCustomShader = undefined;
+                }
+
+                document.getElementById("texture-threshold-control").className = "";
+              },
+            };
+          }
+
+          /**
+           * Create the shader options for the Sandcastle toolbar menu
+           */
+          static createShaderOptions() {
+            // Note: The value of `16.0` that appears here corresponds
+            // to the "ppeTextures[i].traits.max" value that is found
+            // in the NGA_gpm_local extension object that is contained
+            // in the meshPrimitive objects
+
+            const shaderOptions = [
+              PropertyTextureShaders.createShaderOption(
+                "Default Shading",
+                undefined,
+                0.0,
+                16.0,
+                undefined,
+                0.0,
+                16.0,
+              ),
+              PropertyTextureShaders.createShaderOption(
+                "Local Vertical Uncertainty",
+                "SIGZ",
+                0.0,
+                16.0,
+                undefined,
+                0.0,
+                16.0,
+              ),
+              PropertyTextureShaders.createShaderOption(
+                "Local Radial Uncertainty",
+                "SIGR",
+                0.0,
+                16.0,
+                undefined,
+                0.0,
+                16.0,
+              ),
+              PropertyTextureShaders.createShaderOption(
+                "Local Combined Uncertainty",
+                "SIGZ",
+                0.0,
+                16.0,
+                "SIGR",
+                0.0,
+                16.0,
+              ),
+              PropertyTextureShaders.createThresholdShaderOption(
+                "Local Vertical Threshold",
+                "SIGZ",
+                0.0,
+                16.0,
+                undefined,
+                0.0,
+                16.0,
+              ),
+              PropertyTextureShaders.createThresholdShaderOption(
+                "Local Radial Threshold",
+                "SIGR",
+                0.0,
+                16.0,
+                undefined,
+                0.0,
+                16.0,
+              ),
+              PropertyTextureShaders.createThresholdShaderOption(
+                "Local Combined Threshold",
+                "SIGZ",
+                0.0,
+                16.0,
+                "SIGR",
+                0.0,
+                16.0,
+              ),
+            ];
+            return shaderOptions;
+          }
+        }
+
+        //============================================================================
+        // Texture picking: A label and an ellipsoid for the local uncertainty at
+        // the picked position
+
+        class TexturePickingHandler {
+          constructor() {
+            // Whether texture picking is currently enabled
+            this.enabled = false;
+
+            // The current ellipsoid primitive showing the uncertainty radii
+            this.errorEllipsoidPrimitive = undefined;
+
+            const errorLabels = viewer.scene.primitives.add(new Cesium.LabelCollection());
+            // The label showing the uncertainty values
+            this.errorLabel = errorLabels.add({
+              position: Cesium.Cartesian3.fromDegrees(0, 0),
+              show: false,
+              text: "",
+              font: "20px sans-serif",
+              showBackground: true,
+              disableDepthTestDistance: 1e15,
+              horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              pixelOffset: new Cesium.Cartesian2(0.0, 5.0),
+              pixelOffsetScaleByDistance: new Cesium.NearFarScalar(50, 0.0, 2000, -2.0),
+            });
+
+            // Install the handler that will pick the uncertainty values
+            // from the texture, and update the error ellipsoid and label
+            const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+            const that = this;
+            handler.setInputAction(function (movement) {
+              if (!that.enabled) {
+                return;
+              }
+              const worldPosition = viewer.scene.pickPosition(movement.position);
+              if (!Cesium.defined(worldPosition)) {
+                that.clear();
+              } else {
+                const uncertainty = pickUncertaintyFromTexture(movement.position);
+                that.update(worldPosition, uncertainty.x, uncertainty.y);
+              }
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            handler.setInputAction(function () {
+              if (!that.enabled) {
+                return;
+              }
+              that.clear();
+            }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+          }
+
+          /**
+           * Set whether texture uncertainty picking is currently enabled
+           *
+           * @param {boolean} enabled The state
+           */
+          setEnabled(enabled) {
+            this.enabled = enabled;
+            if (!enabled) {
+              this.clear();
+            }
+          }
+
+          /**
+           * Hide the error label, and remove the error ellipsoid
+           */
+          clear() {
+            viewer.scene.primitives.remove(this.errorEllipsoidPrimitive);
+            this.errorEllipsoidPrimitive = undefined;
+            this.errorLabel.show = false;
+          }
+
+          /**
+           * Update the error label and ellipsoid primitive for the
+           * given parameters.
+           *
+           * @param {Cartesian3} worldPosition The position for the label
+           * and ellipsoid
+           * @param {number} sizeX The radial size (uncertainty)
+           * @param {number} sizeY The vertical size (uncertainty)
+           * @private
+           */
+          update(center, sizeX, sizeY) {
+            this.updateErrorLabel(center, sizeX, sizeY);
+            this.updateErrorEllipsoidPrimitive(center, sizeX, sizeY);
+          }
+
+          /**
+           * Update the error label for the given parameters.
+           *
+           * @param {Cartesian3} worldPosition The position for the label
+           * @param {number} sizeX The radial size (uncertainty)
+           * @param {number} sizeY The vertical size (uncertainty)
+           * @private
+           */
+          updateErrorLabel(center, sizeX, sizeY) {
+            const cartographic = Cesium.Cartographic.fromCartesian(center);
+            cartographic.height += sizeY + 1.0;
+            const labelPosition = Cesium.Cartographic.toCartesian(cartographic);
+            this.errorLabel.position = labelPosition;
+            this.errorLabel.show = true;
+            const radialString = sizeX === 16.0 ? "(unknown)" : `${sizeX.toFixed(4)}m`;
+            const verticalString = sizeY === 16.0 ? "(unknown)" : `${sizeY.toFixed(4)}m`;
+            this.errorLabel.text =
+              `Local Radial Uncertainty: ${radialString}\n` +
+              `Local Vertical Uncertainty: ${verticalString}`;
+          }
+
+          /**
+           * Update the error ellipsoid primitive for the given parameters.
+           *
+           * @param {Cartesian3} worldPosition The position for the ellipsoid
+           * @param {number} sizeX The radial size (uncertainty)
+           * @param {number} sizeY The vertical size (uncertainty)
+           * @private
+           */
+          updateErrorEllipsoidPrimitive(center, sizeX, sizeY) {
+            viewer.scene.primitives.remove(this.errorEllipsoidPrimitive);
+            const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+            const ellipsoidGeometry = new Cesium.EllipsoidGeometry({
+              radii: new Cesium.Cartesian3(sizeX, sizeX, sizeY),
+              vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            });
+            const ellipsoid = new Cesium.GeometryInstance({
+              geometry: ellipsoidGeometry,
+              modelMatrix: modelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.BLUE.withAlpha(0.6),
+                ),
+                depthFailColor: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.BLUE.withAlpha(0.2),
+                ),
+              },
+            });
+            this.errorEllipsoidPrimitive = new Cesium.Primitive({
+              geometryInstances: [ellipsoid],
+              appearance: new Cesium.PerInstanceColorAppearance({
+                closed: true,
+                translucent: true,
+              }),
+              depthFailAppearance: new Cesium.PerInstanceColorAppearance({
+                closed: true,
+                translucent: true,
+              }),
+              asynchronous: false,
+            });
+            viewer.scene.primitives.add(this.errorEllipsoidPrimitive);
+          }
+        }
+
+        const texturePickingHandler = new TexturePickingHandler();
+        app.addCurrentTilesetChangedListener(function () {
+          texturePickingHandler.clear();
+        });
+
+        //============================================================================
+        // Anchor point visualization
+
+        class AnchorPointVisualizer {
+          constructor() {
+            // A mapping from anchor point JSON objects to their entities
+            this.anchorPointEntities = new Map();
+
+            // The labels showing the uncertainty values for the anchor points
+            this.anchorPointLabelCollection = viewer.scene.primitives.add(
+              new Cesium.LabelCollection(),
+            );
+
+            // Whether the labels at the anchor points (containing the
+            // standard deviations) are visible
+            this.anchorPointLabelsVisible = false;
+
+            // A mapping from anchor point JSON objects to their labels
+            this.anchorPointLabels = new Map();
+
+            // The set of anchor point JSON object whose entities and labels
+            // should be added to the anchorPointEntities in the next frame
+            this.anchorPointsForNextFrame = new Set();
+
+            // For each file that is visible, obtain its anchor points
+            // and add them to the set of anchorPointsForNextFrame
+            const that = this;
+            this.tileVisibleListener = function (tile) {
+              const anchorPointsIndirect = that.obtainAnchorPoints(tile);
+              if (Cesium.defined(anchorPointsIndirect)) {
+                for (const anchorPoint of anchorPointsIndirect) {
+                  that.anchorPointsForNextFrame.add(anchorPoint);
+                }
+              }
+            };
+
+            this.initialize();
+          }
+
+          /**
+           * Initialize the anchor point visualization by attaching the
+           * required listeners to the scene and tileset
+           *
+           * @private
+           */
+          initialize() {
+            const that = this;
+
+            // Before rendering, clear the set of anchor points that
+            // should be shown in the next frame. The set will be
+            // filled with the ones that should be rendered, during
+            // the rendering process of the tileset, using the
+            // tileVisibleListener that was attached to the
+            // tileset.
+            viewer.scene.preRender.addEventListener(function () {
+              that.anchorPointsForNextFrame.clear();
+            });
+
+            // Trigger an update to attach the tileVisibleListener
+            // to the current tileset (if it is defined)
+            this.updateForCurrentTilesetChanged(undefined, app.currentTileset);
+
+            // After rendering, update the anchor point visualization
+            // by adding/removing elements from the anchorPointEntities
+            // as necessary
+            viewer.scene.postRender.addEventListener(function () {
+              // For all anchor points that should be visible in the next
+              // frame but are NOT yet visible: Create an entity in the
+              // viewer, and add it to the anchorPointEntities, and
+              // create a label and add it to the anchorPointLabelCollection
+              // and anchorPointLabels
+              for (const anchorPoint of that.anchorPointsForNextFrame) {
+                if (
+                  !that.anchorPointEntities.has(anchorPoint) ||
+                  !that.anchorPointLabels.has(anchorPoint)
+                ) {
+                  const anchorPointVisualizationData =
+                    that.createAnchorPointVisualizationData(anchorPoint);
+                  if (!that.anchorPointEntities.has(anchorPoint)) {
+                    const anchorPointEntity = that.createAnchorPointEntity(
+                      anchorPointVisualizationData,
+                    );
+                    that.anchorPointEntities.set(anchorPoint, anchorPointEntity);
+                  }
+
+                  if (!that.anchorPointLabels.has(anchorPoint)) {
+                    const anchorPointLabel = that.createAnchorPointLabel(
+                      anchorPointVisualizationData,
+                    );
+                    that.anchorPointLabels.set(anchorPoint, anchorPointLabel);
+                  }
+                }
+              }
+
+              // For all anchor points that currently ARE visible, but should
+              // not be visible in the next frame: Remove the entity from the
+              // viewer and the anchorPointEntities, and remove the label
+              // from the anchorPointLabelCollection and the anchorPointLabels
+              for (const anchorPoint of that.anchorPointEntities.keys()) {
+                if (!that.anchorPointsForNextFrame.has(anchorPoint)) {
+                  const anchorPointEntity = that.anchorPointEntities.get(anchorPoint);
+                  viewer.entities.remove(anchorPointEntity);
+                  that.anchorPointEntities.delete(anchorPoint);
+                }
+              }
+              for (const anchorPoint of that.anchorPointLabels.keys()) {
+                if (!that.anchorPointsForNextFrame.has(anchorPoint)) {
+                  const anchorPointLabel = that.anchorPointLabels.get(anchorPoint);
+                  that.anchorPointLabelCollection.remove(anchorPointLabel);
+                  that.anchorPointLabels.delete(anchorPoint);
+                }
+              }
+            });
+          }
+
+          /**
+           * Set whether the labels that show the standard deviation at the
+           * anchor points are currently visible.
+           *
+           * @param {boolean} anchorPointLabelsVisible
+           */
+          setAnchorPointLabelsVisible(anchorPointLabelsVisible) {
+            if (this.anchorPointLabelsVisible === anchorPointLabelsVisible) {
+              return;
+            }
+            this.anchorPointLabelsVisible = anchorPointLabelsVisible;
+            // Apparently, switching the `show` flag on/off sometimes causes the
+            // background to no longer be shown. This may be a CesiumJS issue,
+            // and has to be investigated. For now, just remove all labels when
+            // the flag was changed, which will cause them to be re-created
+            // in the next frame...
+            const labels = this.anchorPointLabels.values();
+            for (const label of labels) {
+              this.anchorPointLabelCollection.remove(label);
+            }
+            this.anchorPointLabels.clear();
+          }
+
+          /**
+           * Creates the data for the visualization of the given anchor point.
+           *
+           * The result will be an object with the following properties:
+           * - anchorPoint: The given anchorPoint
+           * - position: A Cartesian3 of the position
+           * - orientation: A Quaternion for the ellipsoid orientation
+           * - standardDeviations: A Cartesian3 containing the standard
+           *   deviations, serving as a basis for the ellipsoid radii
+           *
+           * @param {AnchorPointIndirect} anchorPoint The anchor point, as found in
+           * the `NGA_gpm_local` `anchorPointsIndirect` array
+           * @returns The visualization data
+           */
+          createAnchorPointVisualizationData(anchorPoint) {
+            const position = anchorPoint.position;
+
+            // Compute the eigen decomposition of the covariance matrix
+            const covarianceMatrix = anchorPoint.covarianceMatrix;
+            const eigenDecomposition = {
+              unitary: new Cesium.Matrix3(),
+              diagonal: new Cesium.Matrix3(),
+            };
+            Cesium.Matrix3.computeEigenDecomposition(
+              covarianceMatrix,
+              eigenDecomposition,
+            );
+
+            // The eigenvalues are the elements on the diagonal of the diagonal matrix
+            const eigenValue0 = eigenDecomposition.diagonal[0];
+            const eigenValue1 = eigenDecomposition.diagonal[4];
+            const eigenValue2 = eigenDecomposition.diagonal[8];
+
+            // The eigenvectors are the columns of the unitary matrix. The orientation
+            // is computed directly from this matrix.
+            const orientation = Cesium.Quaternion.fromRotationMatrix(
+              eigenDecomposition.unitary,
+              new Cesium.Quaternion(),
+            );
+
+            // The eigenvalues contain the variance. The square root of that
+            // is the standard deviation in meters, and used for the radii
+            // of the anchor point ellipsoid (multipled by the
+            // anchorPointEllipsoidScaling)
+            const standardDeviations = new Cesium.Cartesian3(
+              Math.sqrt(eigenValue0),
+              Math.sqrt(eigenValue1),
+              Math.sqrt(eigenValue2),
+            );
+
+            return {
+              anchorPoint: anchorPoint,
+              position: position,
+              orientation: orientation,
+              standardDeviations: standardDeviations,
+            };
+          }
+
+          /**
+           * Create a label showing the standard deviations from the given
+           * visualization data, at the position of the anchor point.
+           *
+           * @param {object} anchorPointVisualizationData The anchor point
+           * visualization data (see createAnchorPointVisualizationData)
+           * @returns The label
+           */
+          createAnchorPointLabel(anchorPointVisualizationData) {
+            const standardDeviations = anchorPointVisualizationData.standardDeviations;
+            const x = standardDeviations.x;
+            const y = standardDeviations.y;
+            const z = standardDeviations.z;
+            const text = `${x.toFixed(3)}m, ${y.toFixed(3)}m, ${z.toFixed(3)}m`;
+
+            const labelPosition = anchorPointVisualizationData.position;
+            const anchorPointLabel = this.anchorPointLabelCollection.add({
+              position: labelPosition,
+              show: this.anchorPointLabelsVisible,
+              text: text,
+              font: "12px sans-serif",
+              showBackground: true,
+              disableDepthTestDistance: 1e15,
+              horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              pixelOffset: new Cesium.Cartesian2(0.0, 5.0),
+              pixelOffsetScaleByDistance: new Cesium.NearFarScalar(50, 0.0, 2000, -2.0),
+            });
+            return anchorPointLabel;
+          }
+
+          /**
+           * Creates the CesiumJS Entity for the given anchor point
+           *
+           * @param {object} anchorPointVisualizationData The anchor point
+           * visualization data (see createAnchorPointVisualizationData)
+           * @returns The entity
+           * @private
+           */
+          createAnchorPointEntity(anchorPointVisualizationData) {
+            const position = anchorPointVisualizationData.position;
+            const orientation = anchorPointVisualizationData.orientation;
+            const standardDeviations = anchorPointVisualizationData.standardDeviations;
+
+            const radii = new Cesium.Cartesian3();
+            const radiiProperty = new Cesium.CallbackProperty(function () {
+              const baseRadius = app.anchorPointEllipsoidScaling;
+              Cesium.Cartesian3.multiplyByScalar(standardDeviations, baseRadius, radii);
+              return radii;
+            }, false);
+
+            const anchorPointEntity = viewer.entities.add({
+              position: position,
+              orientation: orientation,
+              ellipsoid: {
+                radii: radiiProperty,
+                material: Cesium.Color.BLUE.withAlpha(0.5),
+                outline: true,
+                outlineColor: Cesium.Color.BLACK,
+              },
+            });
+            return anchorPointEntity;
+          }
+
+          /**
+           * Obtain the content from the given tile, and the `NGA_gpm_local` extension
+           * object from that content, and return the `anchorPointsIndirect`, or
+           * `undefined` if any element is `undefined`.
+           *
+           * @param {Tile} tile The tile
+           * @returns The anchor points, or undefined
+           */
+          obtainAnchorPoints(tile) {
+            const content = tile?.content;
+            const modelContent =
+              content instanceof Cesium.Model3DTileContent ? content : undefined;
+            if (!Cesium.defined(modelContent)) {
+              return undefined;
+            }
+
+            const extensionObject = modelContent.getExtension("NGA_gpm_local");
+            if (!Cesium.defined(extensionObject)) {
+              return undefined;
+            }
+            return extensionObject.anchorPointsIndirect;
+          }
+
+          /**
+           * Will be called via the "App" currentTilesetChangedListener, whenever
+           * the selected tileset changes.
+           *
+           * @param {Cesium3DTileset|undefined} oldCurrentTileset The old tileset
+           * @param {Cesium3DTileset|undefined} newCurrentTileset The new tileset
+           */
+          updateForCurrentTilesetChanged(oldCurrentTileset, newCurrentTileset) {
+            if (Cesium.defined(oldCurrentTileset)) {
+              oldCurrentTileset.tileVisible.removeEventListener(this.tileVisibleListener);
+            }
+            if (Cesium.defined(newCurrentTileset)) {
+              newCurrentTileset.tileVisible.addEventListener(this.tileVisibleListener);
+            }
+          }
+        }
+
+        const anchorPointVisualizer = new AnchorPointVisualizer();
+        app.addCurrentTilesetChangedListener(
+          function (oldCurrentTileset, newCurrentTileset) {
+            anchorPointVisualizer.updateForCurrentTilesetChanged(
+              oldCurrentTileset,
+              newCurrentTileset,
+            );
+          },
+        );
+
+        //============================================================================
+        // ViewModel for Sandcastle UI
+
+        const interactionOptions = [
+          {
+            text: "View",
+            onselect: function () {
+              texturePickingHandler.setEnabled(false);
+            },
+          },
+          {
+            text: "Pick",
+            onselect: function () {
+              texturePickingHandler.setEnabled(true);
+            },
+          },
+        ];
+
+        const shaderOptions = PropertyTextureShaders.createShaderOptions();
+
+        const viewModel = {
+          textureThreshold: 3.0,
+          anchorPointEllipsoidScaling: app.anchorPointEllipsoidScaling,
+          anchorPointLabelsVisible: app.anchorPointLabelsVisible,
+          dataSetNames: dataSetOptions.map((e) => e.name),
+          dataSetName: "Port Canaveral",
+          zoomToCurrentTileset: function () {
+            app.zoomToCurrentTileset();
+          },
+          interactionModes: interactionOptions.map((e) => e.text),
+          interactionMode: "Pick",
+          shaderModes: shaderOptions.map((e) => e.text),
+          shaderMode: "Default Shading",
+        };
+
+        // enable texture picking mode by default
+        texturePickingHandler.setEnabled(true);
+
+        async function updateModelFromView() {
+          app.anchorPointEllipsoidScaling = Number(viewModel.anchorPointEllipsoidScaling);
+          const anchorPointLabelsVisible = Boolean(viewModel.anchorPointLabelsVisible);
+          anchorPointVisualizer.setAnchorPointLabelsVisible(anchorPointLabelsVisible);
+          app.textureThreshold = Number(viewModel.textureThreshold);
+          await app.selectCurrentDataSet(viewModel.dataSetName);
+          for (const interactionOption of interactionOptions) {
+            if (interactionOption.text === viewModel.interactionMode) {
+              interactionOption.onselect();
+            }
+          }
+          for (const shaderOption of shaderOptions) {
+            if (shaderOption.text === viewModel.shaderMode) {
+              shaderOption.onselect();
+            }
+          }
+        }
+
+        Cesium.knockout.track(viewModel);
+        const toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+        for (const name in viewModel) {
+          if (viewModel.hasOwnProperty(name)) {
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updateModelFromView);
+          }
+        }
+
+        await app.selectCurrentDataSet(dataSetOptions[0].name);
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

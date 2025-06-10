@@ -79,7 +79,7 @@ describe(
       expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
       expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
       expect(va.getAttribute(0).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(va.getAttribute(0).normalize).toEqual(false);
       expect(va.getAttribute(0).offsetInBytes).toEqual(0);
@@ -190,7 +190,7 @@ describe(
       expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
       expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
       expect(va.getAttribute(0).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(va.getAttribute(0).normalize).toEqual(false);
       expect(va.getAttribute(0).offsetInBytes).toEqual(0);
@@ -908,5 +908,5 @@ describe(
       contextWithoutInstancing.destroyForSpecs();
     });
   },
-  "WebGL"
+  "WebGL",
 );

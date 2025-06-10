@@ -3,7 +3,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Color from "../../Core/Color.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -48,10 +48,10 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
  * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
 function PntsLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const arrayBuffer = options.arrayBuffer;
-  const byteOffset = defaultValue(options.byteOffset, 0);
+  const byteOffset = options.byteOffset ?? 0;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.arrayBuffer", arrayBuffer);
@@ -59,7 +59,7 @@ function PntsLoader(options) {
 
   this._arrayBuffer = arrayBuffer;
   this._byteOffset = byteOffset;
-  this._loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
+  this._loadAttributesFor2D = options.loadAttributesFor2D ?? false;
 
   this._parsedContent = undefined;
   this._decodePromise = undefined;
@@ -350,7 +350,7 @@ function transcodeAttributeType(componentsPerAttribute) {
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(
-        "componentsPerAttribute must be a number from 1-4"
+        "componentsPerAttribute must be a number from 1-4",
       );
     //>>includeEnd('debug');
   }
@@ -404,7 +404,7 @@ function makeAttribute(loader, attributeInfo, context) {
     quantization.quantizedVolumeStepSize = Cartesian3.divideByScalar(
       quantizedVolumeDimensions,
       normalizationRange,
-      new Cartesian3()
+      new Cartesian3(),
     );
     quantization.componentDatatype = attributeInfo.quantizedComponentDatatype;
     quantization.type = attributeInfo.quantizedType;
@@ -416,7 +416,7 @@ function makeAttribute(loader, attributeInfo, context) {
   attribute.setIndex = attributeInfo.setIndex;
   attribute.componentDatatype = attributeInfo.componentDatatype;
   attribute.type = attributeInfo.type;
-  attribute.normalized = defaultValue(attributeInfo.normalized, false);
+  attribute.normalized = attributeInfo.normalized ?? false;
   attribute.min = attributeInfo.min;
   attribute.max = attributeInfo.max;
   attribute.quantization = quantization;
@@ -556,7 +556,7 @@ function makeStructuralMetadata(parsedContent, customAttributeOutput) {
   const parseAsPropertyAttributes = !defined(parsedContent.batchIds);
 
   if (defined(batchTableBinary) || parsedContent.hasDracoBatchTable) {
-    const count = defaultValue(batchLength, pointsLength);
+    const count = batchLength ?? pointsLength;
     return parseBatchTable({
       count: count,
       batchTable: parsedContent.batchTableJson,
@@ -628,7 +628,7 @@ function makeComponents(loader, context) {
   const customAttributeOutput = [];
   components.structuralMetadata = makeStructuralMetadata(
     parsedContent,
-    customAttributeOutput
+    customAttributeOutput,
   );
 
   if (customAttributeOutput.length > 0) {
@@ -636,7 +636,7 @@ function makeComponents(loader, context) {
       loader,
       primitive,
       customAttributeOutput,
-      context
+      context,
     );
   }
 
@@ -644,7 +644,7 @@ function makeComponents(loader, context) {
     components.transform = Matrix4.multiplyByTranslation(
       components.transform,
       parsedContent.rtcCenter,
-      components.transform
+      components.transform,
     );
   }
 
@@ -655,7 +655,7 @@ function makeComponents(loader, context) {
     components.transform = Matrix4.multiplyByTranslation(
       components.transform,
       positions.quantizedVolumeOffset,
-      components.transform
+      components.transform,
     );
   }
 
@@ -670,7 +670,7 @@ function addPropertyAttributesToPrimitive(
   loader,
   primitive,
   customAttributes,
-  context
+  context,
 ) {
   const attributes = primitive.attributes;
 

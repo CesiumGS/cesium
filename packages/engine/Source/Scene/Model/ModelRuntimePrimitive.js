@@ -1,5 +1,5 @@
 import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import SceneMode from "../SceneMode.js";
@@ -14,6 +14,7 @@ import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import MetadataPickingPipelineStage from "./MetadataPickingPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelUtility from "./ModelUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
@@ -42,7 +43,7 @@ import WireframePipelineStage from "./WireframePipelineStage.js";
  * @private
  */
 function ModelRuntimePrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const primitive = options.primitive;
   const node = options.node;
@@ -199,7 +200,8 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const mode = frameState.mode;
   const use2D =
     mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
-  const exaggerateTerrain = frameState.verticalExaggeration !== 1.0;
+  const hasVerticalExaggeration =
+    frameState.verticalExaggeration !== 1.0 && model.hasVerticalExaggeration;
 
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
@@ -211,7 +213,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
     !hasCustomFragmentShader ||
     customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
   const hasQuantization = ModelUtility.hasQuantizedAttributes(
-    primitive.attributes
+    primitive.attributes,
   );
   const generateWireframeIndices =
     model.debugWireframe &&
@@ -276,6 +278,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   // are declared to avoid compilation errors.
   pipelineStages.push(FeatureIdPipelineStage);
   pipelineStages.push(MetadataPipelineStage);
+  pipelineStages.push(MetadataPickingPipelineStage);
 
   if (featureIdFlags.hasPropertyTable) {
     pipelineStages.push(SelectedFeatureIdPipelineStage);
@@ -283,7 +286,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
     pipelineStages.push(CPUStylingPipelineStage);
   }
 
-  if (exaggerateTerrain) {
+  if (hasVerticalExaggeration) {
     pipelineStages.push(VerticalExaggerationPipelineStage);
   }
 
@@ -315,7 +318,7 @@ function inspectFeatureIds(model, node, primitive) {
   if (defined(node.instances)) {
     featureIds = ModelUtility.getFeatureIdsByLabel(
       node.instances.featureIds,
-      model.instanceFeatureIdLabel
+      model.instanceFeatureIdLabel,
     );
 
     if (defined(featureIds)) {
@@ -328,7 +331,7 @@ function inspectFeatureIds(model, node, primitive) {
 
   featureIds = ModelUtility.getFeatureIdsByLabel(
     primitive.featureIds,
-    model.featureIdLabel
+    model.featureIdLabel,
   );
   if (defined(featureIds)) {
     return {

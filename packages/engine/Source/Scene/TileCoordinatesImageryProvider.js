@@ -1,5 +1,5 @@
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -29,15 +29,15 @@ import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
  * @param {TileCoordinatesImageryProvider.ConstructorOptions} [options] Object describing initialization options
  */
 function TileCoordinatesImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme
     : new GeographicTilingScheme({ ellipsoid: options.ellipsoid });
-  this._color = defaultValue(options.color, Color.YELLOW);
+  this._color = options.color ?? Color.YELLOW;
   this._errorEvent = new Event();
-  this._tileWidth = defaultValue(options.tileWidth, 256);
-  this._tileHeight = defaultValue(options.tileHeight, 256);
+  this._tileWidth = options.tileWidth ?? 256;
+  this._tileHeight = options.tileHeight ?? 256;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -205,7 +205,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
 TileCoordinatesImageryProvider.prototype.getTileCredits = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
@@ -223,7 +223,7 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
@@ -262,7 +262,7 @@ TileCoordinatesImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };

@@ -23,11 +23,8 @@ function buildVoxelDrawCommands(primitive, context) {
 
   processVoxelProperties(renderResources, primitive);
 
-  const {
-    shaderBuilder,
-    clippingPlanes,
-    clippingPlanesLength,
-  } = renderResources;
+  const { shaderBuilder, clippingPlanes, clippingPlanesLength } =
+    renderResources;
 
   if (clippingPlanesLength > 0) {
     // Extract the getClippingPlane function from the getClippingFunction string.
@@ -41,16 +38,16 @@ function buildVoxelDrawCommands(primitive, context) {
     const functionBodyEnd = entireFunction.indexOf("}", functionBodyBegin);
     const functionSignature = entireFunction.slice(
       functionSignatureBegin,
-      functionSignatureEnd
+      functionSignatureEnd,
     );
     const functionBody = entireFunction.slice(
       functionBodyBegin,
-      functionBodyEnd
+      functionBodyEnd,
     );
     shaderBuilder.addFunction(
       functionId,
       functionSignature,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFunctionLines(functionId, [functionBody]);
   }
@@ -62,13 +59,12 @@ function buildVoxelDrawCommands(primitive, context) {
   shaderBuilderPickVoxel.addDefine(
     "PICKING_VOXEL",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   const shaderProgram = shaderBuilder.buildShaderProgram(context);
   const shaderProgramPick = shaderBuilderPick.buildShaderProgram(context);
-  const shaderProgramPickVoxel = shaderBuilderPickVoxel.buildShaderProgram(
-    context
-  );
+  const shaderProgramPickVoxel =
+    shaderBuilderPickVoxel.buildShaderProgram(context);
   const renderState = RenderState.fromCache({
     cull: {
       enabled: true,
@@ -102,7 +98,7 @@ function buildVoxelDrawCommands(primitive, context) {
   // Create the pick draw command
   const drawCommandPick = DrawCommand.shallowClone(
     drawCommand,
-    new DrawCommand()
+    new DrawCommand(),
   );
   drawCommandPick.shaderProgram = shaderProgramPick;
   drawCommandPick.pickOnly = true;
@@ -110,7 +106,7 @@ function buildVoxelDrawCommands(primitive, context) {
   // Create the pick voxels draw command
   const drawCommandPickVoxel = DrawCommand.shallowClone(
     drawCommand,
-    new DrawCommand()
+    new DrawCommand(),
   );
   drawCommandPickVoxel.shaderProgram = shaderProgramPickVoxel;
   drawCommandPickVoxel.pickOnly = true;

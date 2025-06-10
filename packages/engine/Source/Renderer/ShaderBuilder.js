@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ShaderDestination from "./ShaderDestination.js";
 import ShaderProgram from "./ShaderProgram.js";
@@ -122,7 +121,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  destination = defaultValue(destination, ShaderDestination.BOTH);
+  destination = destination ?? ShaderDestination.BOTH;
 
   // The ShaderSource created in build() will add the #define part
   let line = identifier;
@@ -155,7 +154,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
 ShaderBuilder.prototype.addStruct = function (
   structId,
   structName,
-  destination
+  destination,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("structId", structId);
@@ -213,7 +212,7 @@ ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
 ShaderBuilder.prototype.addFunction = function (
   functionName,
   signature,
-  destination
+  destination,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("functionName", functionName);
@@ -254,7 +253,7 @@ ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
   Check.typeOf.string("functionName", functionName);
   if (typeof lines !== "string" && !Array.isArray(lines)) {
     throw new DeveloperError(
-      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
     );
   }
   //>>includeEnd('debug');
@@ -281,7 +280,7 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  destination = defaultValue(destination, ShaderDestination.BOTH);
+  destination = destination ?? ShaderDestination.BOTH;
   const line = `uniform ${type} ${identifier};`;
 
   if (ShaderDestination.includesVertexShader(destination)) {
@@ -317,7 +316,7 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
 
   if (defined(this._positionAttributeLine)) {
     throw new DeveloperError(
-      "setPositionAttribute() must be called exactly once for the attribute used for gl_Position. For other attributes, use addAttribute()"
+      "setPositionAttribute() must be called exactly once for the attribute used for gl_Position. For other attributes, use addAttribute()",
     );
   }
   //>>includeEnd('debug');
@@ -369,21 +368,24 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
  *
  * @param {string} type The GLSL type of the varying
  * @param {string} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
+ * @param {string} [qualifier] A qualifier for the varying, such as <code>flat</code>.
  *
  * @example
  * // creates the line "in vec3 v_color;" in the vertex shader
  * // creates the line "out vec3 v_color;" in the fragment shader
  * shaderBuilder.addVarying("vec3", "v_color");
  */
-ShaderBuilder.prototype.addVarying = function (type, identifier) {
+ShaderBuilder.prototype.addVarying = function (type, identifier, qualifier) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("type", type);
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
+  qualifier = defined(qualifier) ? `${qualifier} ` : "";
+
   const line = `${type} ${identifier};`;
-  this._vertexShaderParts.varyingLines.push(`out ${line}`);
-  this._fragmentShaderParts.varyingLines.push(`in ${line}`);
+  this._vertexShaderParts.varyingLines.push(`${qualifier}out ${line}`);
+  this._fragmentShaderParts.varyingLines.push(`${qualifier}in ${line}`);
 };
 
 /**
@@ -404,7 +406,7 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
   if (typeof lines !== "string" && !Array.isArray(lines)) {
     throw new DeveloperError(
-      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
     );
   }
   //>>includeEnd('debug');
@@ -439,7 +441,7 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
   if (typeof lines !== "string" && !Array.isArray(lines)) {
     throw new DeveloperError(
-      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
     );
   }
   //>>includeEnd('debug');
@@ -485,7 +487,7 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
       this._vertexShaderParts.varyingLines,
       structLines.vertexLines,
       functionLines.vertexLines,
-      this._vertexShaderParts.shaderLines
+      this._vertexShaderParts.shaderLines,
     )
     .join("\n");
   const vertexShaderSource = new ShaderSource({
@@ -498,7 +500,7 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
       this._fragmentShaderParts.varyingLines,
       structLines.fragmentLines,
       functionLines.fragmentLines,
-      this._fragmentShaderParts.shaderLines
+      this._fragmentShaderParts.shaderLines,
     )
     .join("\n");
   const fragmentShaderSource = new ShaderSource({

@@ -1,4 +1,5 @@
 import defined from "../Core/defined.js";
+import Model3DTileContent from "./Model/Model3DTileContent.js";
 
 /**
  * @private
@@ -29,6 +30,7 @@ function Cesium3DTilesetStatistics() {
   // Memory statistics
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
+  this.texturesReferenceCounterById = {};
   this.batchTableByteLength = 0; // batch textures and any binary metadata properties not otherwise accounted for
 }
 
@@ -45,68 +47,129 @@ Cesium3DTilesetStatistics.prototype.clear = function () {
   this.numberOfTilesCulledWithChildrenUnion = 0;
 };
 
-function updatePointAndFeatureCounts(statistics, content, decrement, load) {
+/**
+ * Increment the counters for the points, triangles, and features
+ * that are currently selected for rendering.
+ *
+ * This will be called recursively for the given content and
+ * all its inner contents
+ *
+ * @param {Cesium3DTileContent} content
+ */
+Cesium3DTilesetStatistics.prototype.incrementSelectionCounts = function (
+  content,
+) {
+  this.numberOfFeaturesSelected += content.featuresLength;
+  this.numberOfPointsSelected += content.pointsLength;
+  this.numberOfTrianglesSelected += content.trianglesLength;
+
+  // Recursive calls on all inner contents
   const contents = content.innerContents;
-  const pointsLength = content.pointsLength;
-  const trianglesLength = content.trianglesLength;
-  const featuresLength = content.featuresLength;
-  const geometryByteLength = content.geometryByteLength;
-  const texturesByteLength = content.texturesByteLength;
-  const batchTableByteLength = content.batchTableByteLength;
-
-  if (load) {
-    statistics.numberOfFeaturesLoaded += decrement
-      ? -featuresLength
-      : featuresLength;
-    statistics.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
-    statistics.geometryByteLength += decrement
-      ? -geometryByteLength
-      : geometryByteLength;
-    statistics.texturesByteLength += decrement
-      ? -texturesByteLength
-      : texturesByteLength;
-    statistics.batchTableByteLength += decrement
-      ? -batchTableByteLength
-      : batchTableByteLength;
-  } else {
-    statistics.numberOfFeaturesSelected += decrement
-      ? -featuresLength
-      : featuresLength;
-    statistics.numberOfPointsSelected += decrement
-      ? -pointsLength
-      : pointsLength;
-    statistics.numberOfTrianglesSelected += decrement
-      ? -trianglesLength
-      : trianglesLength;
-  }
-
   if (defined(contents)) {
     const length = contents.length;
     for (let i = 0; i < length; ++i) {
-      updatePointAndFeatureCounts(statistics, contents[i], decrement, load);
+      this.incrementSelectionCounts(contents[i]);
     }
   }
-}
-
-Cesium3DTilesetStatistics.prototype.incrementSelectionCounts = function (
-  content
-) {
-  updatePointAndFeatureCounts(this, content, false, false);
 };
 
+/**
+ * Increment the counters for the number of features and points that
+ * are currently loaded, and the lengths (size in bytes) of the
+ * occupied memory.
+ *
+ * This will be called recursively for the given content and
+ * all its inner contents
+ *
+ * @param {Cesium3DTileContent} content
+ */
 Cesium3DTilesetStatistics.prototype.incrementLoadCounts = function (content) {
-  updatePointAndFeatureCounts(this, content, false, true);
+  this.numberOfFeaturesLoaded += content.featuresLength;
+  this.numberOfPointsLoaded += content.pointsLength;
+  this.geometryByteLength += content.geometryByteLength;
+  this.batchTableByteLength += content.batchTableByteLength;
+
+  // When the content is not a `Model3DTileContent`, then its
+  // textures byte length is added directly
+  if (!(content instanceof Model3DTileContent)) {
+    this.texturesByteLength += content.texturesByteLength;
+  } else {
+    // When the content is a `Model3DTileContent`, then increment the
+    // reference counter for all its textures. The byte length of any
+    // newly tracked texture to the total textures byte length
+    const textureIds = content.getTextureIds();
+    for (const textureId of textureIds) {
+      const referenceCounter =
+        this.texturesReferenceCounterById[textureId] ?? 0;
+      if (referenceCounter === 0) {
+        const textureByteLength = content.getTextureByteLengthById(textureId);
+        this.texturesByteLength += textureByteLength;
+      }
+      this.texturesReferenceCounterById[textureId] = referenceCounter + 1;
+    }
+  }
+
+  // Recursive calls on all inner contents
+  const contents = content.innerContents;
+  if (defined(contents)) {
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      this.incrementLoadCounts(contents[i]);
+    }
+  }
 };
 
+/**
+ * Decrement the counters for the number of features and points that
+ * are currently loaded, and the lengths (size in bytes) of the
+ * occupied memory.
+ *
+ * This will be called recursively for the given content and
+ * all its inner contents
+ *
+ * @param {Cesium3DTileContent} content
+ */
 Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
-  updatePointAndFeatureCounts(this, content, true, true);
+  this.numberOfFeaturesLoaded -= content.featuresLength;
+  this.numberOfPointsLoaded -= content.pointsLength;
+  this.geometryByteLength -= content.geometryByteLength;
+  this.batchTableByteLength -= content.batchTableByteLength;
+
+  // When the content is not a `Model3DTileContent`, then its
+  // textures byte length is subtracted directly
+  if (!(content instanceof Model3DTileContent)) {
+    this.texturesByteLength -= content.texturesByteLength;
+  } else {
+    // When the content is a `Model3DTileContent`, then decrement the
+    // reference counter for all its textures. The byte length of any
+    // texture that is no longer references is subtracted from the
+    // total textures byte length
+    const textureIds = content.getTextureIds();
+    for (const textureId of textureIds) {
+      const referenceCounter = this.texturesReferenceCounterById[textureId];
+      if (referenceCounter === 1) {
+        delete this.texturesReferenceCounterById[textureId];
+        const textureByteLength = content.getTextureByteLengthById(textureId);
+        this.texturesByteLength -= textureByteLength;
+      } else {
+        this.texturesReferenceCounterById[textureId] = referenceCounter - 1;
+      }
+    }
+  }
+  // Recursive calls on all inner contents
+  const contents = content.innerContents;
+  if (defined(contents)) {
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      this.decrementLoadCounts(contents[i]);
+    }
+  }
 };
 
 Cesium3DTilesetStatistics.clone = function (statistics, result) {
   result.selected = statistics.selected;
   result.visited = statistics.visited;
   result.numberOfCommands = statistics.numberOfCommands;
-  result.selected = statistics.selected;
   result.numberOfAttemptedRequests = statistics.numberOfAttemptedRequests;
   result.numberOfPendingRequests = statistics.numberOfPendingRequests;
   result.numberOfTilesProcessing = statistics.numberOfTilesProcessing;
@@ -124,6 +187,9 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
     statistics.numberOfTilesCulledWithChildrenUnion;
   result.geometryByteLength = statistics.geometryByteLength;
   result.texturesByteLength = statistics.texturesByteLength;
+  result.texturesReferenceCounterById = {
+    ...statistics.texturesReferenceCounterById,
+  };
   result.batchTableByteLength = statistics.batchTableByteLength;
 };
 export default Cesium3DTilesetStatistics;
