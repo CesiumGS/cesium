@@ -4,7 +4,7 @@ import Resource from "./Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjNjVkZDYxOC01NmEwLTQ1ZmEtOGE2ZS1lYWUyODM4ZWQxYzQiLCJpZCI6MjU5LCJpYXQiOjE3NDYxMTA0Njl9.uyhPpCQKB1dodfbqTx0ZUPOLhnrSXd-qWixDxc4GYXk";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZTlhZTM1MC1lNjM0LTRkNTQtYTE3OC02NWI0YjQ3NTAxNzgiLCJpZCI6MjU5LCJpYXQiOjE3NDg4ODUxMzV9.8mGFxgmp1QW0MIdArET4EVn5c7DKlt_HHA_Gnnu7eF4";
 
 const defaultTokenMessage =
   '<b> \
