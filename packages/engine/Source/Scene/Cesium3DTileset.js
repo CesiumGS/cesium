@@ -102,7 +102,7 @@ import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
  * @property {ClippingPolygonCollection} [clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the tileset.
  * @property {ClassificationType} [classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
  * @property {HeightReference} [heightReference] Sets the {@link HeightReference} for point features in vector tilesets.
- * @property {Scene} [scene] The {@link CesiumWidget#scene}. Must be passed in for tilesets that use {@link HeightReference} to clamp billboards and labels of vector tiles.
+ * @property {Scene} [scene] The {@link CesiumWidget#scene} that the tileset will be rendered in, required for tilesets that specify a {@link heightReference} value for clamping 3D Tiles vector data content- like points, lines, and labels- to terrain or 3D tiles.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
  * @property {object} [pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @property {Cartesian3} [lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
@@ -1756,7 +1756,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * A Property specifying if the height is relative to terrain, 3D Tiles, or both.
+   * Specifies if the height is relative to terrain, 3D Tiles, or both.
    * <p>
    * This option is only applied to point features in tilesets containing vector data.
    * This option requires the Viewer's scene to be passed in through options.scene.
@@ -1764,7 +1764,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {HeightReference}
+   * @type {HeightReference | undefined}
    * @default undefined
    *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -1777,11 +1777,12 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * The CesiumWidget scene, used with heightReference for clamping vector tile points to terrain or 3D tiles.
+   * The {@link CesiumWidget#scene} that the tileset will be rendered in, required for tilesets that specify a {@link heightReference} value for clamping 3D Tiles vector data content- like points, lines, and labels- to terrain or 3D tiles.
    *
    * @member of Cesium3DTileset.prototype
    *
-   * @type {Scene}
+   * @type {Scene | undefined}
+   * @default undefined
    * @readonly
    *
    */
