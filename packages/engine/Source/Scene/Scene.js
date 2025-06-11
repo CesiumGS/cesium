@@ -9,7 +9,7 @@ import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import createGuid from "../Core/createGuid.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -127,7 +127,7 @@ const requestRenderAfterFrame = function (scene) {
  * });
  */
 function Scene(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const canvas = options.canvas;
   let creditContainer = options.creditContainer;
   let creditViewport = options.creditViewport;
@@ -162,7 +162,7 @@ function Scene(options) {
     new CreditDisplay(creditContainer, "•", creditViewport),
     this._jobScheduler,
   );
-  this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
+  this._frameState.scene3DOnly = options.scene3DOnly ?? false;
   this._removeCreditContainer = !hasCreditContainer;
   this._creditContainer = creditContainer;
 
@@ -170,7 +170,7 @@ function Scene(options) {
   this._context = context;
   this._computeEngine = new ComputeEngine(context);
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
@@ -193,7 +193,7 @@ function Scene(options) {
   this._computeCommandList = [];
   this._overlayCommandList = [];
 
-  this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
+  this._useOIT = options.orderIndependentTranslucency ?? true;
   /**
    * The function that will be used for executing translucent commands when
    * useOIT is true. This is created once in
@@ -237,7 +237,7 @@ function Scene(options) {
   this._minimumDisableDepthTestDistance = 0.0;
   this._debugInspector = new DebugInspector();
 
-  this._msaaSamples = defaultValue(options.msaaSamples, 4);
+  this._msaaSamples = options.msaaSamples ?? 4;
 
   /**
    * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -569,7 +569,7 @@ function Scene(options) {
   this.shadowMap = new ShadowMap({
     context: context,
     lightCamera: this._shadowMapCamera,
-    enabled: defaultValue(options.shadows, false),
+    enabled: options.shadows ?? false,
   });
 
   /**
@@ -619,7 +619,7 @@ function Scene(options) {
 
   this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
   this._cameraUnderground = false;
-  this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
+  this._mapMode2D = options.mapMode2D ?? MapMode2D.INFINITE_SCROLL;
 
   // Keeps track of the state of a frame. FrameState is the state across
   // the primitives of the scene. This state is for internally keeping track
@@ -667,7 +667,7 @@ function Scene(options) {
    * @type {boolean}
    * @default false
    */
-  this.requestRenderMode = defaultValue(options.requestRenderMode, false);
+  this.requestRenderMode = options.requestRenderMode ?? false;
   this._renderRequested = true;
 
   /**
@@ -684,10 +684,7 @@ function Scene(options) {
    * @type {number}
    * @default 0.0
    */
-  this.maximumRenderTimeChange = defaultValue(
-    options.maximumRenderTimeChange,
-    0.0,
-  );
+  this.maximumRenderTimeChange = options.maximumRenderTimeChange ?? 0.0;
   this._lastRenderTime = undefined;
   this._frameRateMonitor = undefined;
 
@@ -3105,8 +3102,8 @@ function executeWebVRCommands(scene, passState) {
   savedCamera.frustum = camera.frustum;
 
   const near = camera.frustum.near;
-  const fo = near * defaultValue(scene.focalLength, 5.0);
-  const eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
+  const fo = near * (scene.focalLength ?? 5.0);
+  const eyeSeparation = scene.eyeSeparation ?? fo / 30.0;
   const eyeTranslation = Cartesian3.multiplyByScalar(
     savedCamera.right,
     eyeSeparation * 0.5,
@@ -3769,9 +3766,8 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     const postProcess = this.postProcessStages;
     const colorTexture = inputFramebuffer.getColorTexture(0);
     const idTexture = idFramebuffer.getColorTexture(0);
-    const depthTexture = defaultValue(
-      globeFramebuffer,
-      sceneFramebuffer,
+    const depthTexture = (
+      globeFramebuffer ?? sceneFramebuffer
     ).getDepthStencilTexture();
     postProcess.execute(context, colorTexture, depthTexture, idTexture);
     postProcess.copy(context, originalFramebuffer);
@@ -3805,6 +3801,38 @@ function getGlobeHeight(scene) {
   return scene.getHeight(cartographic);
 }
 
+function getMaxPrimitiveHeight(primitive, cartographic, scene) {
+  let maxHeight = Number.NEGATIVE_INFINITY;
+
+  if (primitive instanceof PrimitiveCollection) {
+    // If it's a PrimitiveCollection, iterate through its children
+    const length = primitive.length;
+    for (let i = 0; i < length; ++i) {
+      const subPrimitive = primitive.get(i);
+      const subHeight = getMaxPrimitiveHeight(
+        subPrimitive,
+        cartographic,
+        scene,
+      );
+      if (defined(subHeight) && subHeight > maxHeight) {
+        maxHeight = subHeight;
+      }
+    }
+  } else if (
+    primitive.isCesium3DTileset &&
+    primitive.show &&
+    primitive.enableCollision
+  ) {
+    // If it's an individual primitive, check its height
+    const result = primitive.getHeight(cartographic, scene);
+    if (defined(result) && result > maxHeight) {
+      return result;
+    }
+  }
+
+  return maxHeight;
+}
+
 /**
  * Gets the height of the loaded surface at the cartographic position.
  * @param {Cartographic} cartographic The cartographic position.
@@ -3831,21 +3859,13 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
   let maxHeight = Number.NEGATIVE_INFINITY;
 
   if (!ignore3dTiles) {
-    const length = this.primitives.length;
-    for (let i = 0; i < length; ++i) {
-      const primitive = this.primitives.get(i);
-      if (
-        !primitive.isCesium3DTileset ||
-        !primitive.show ||
-        !primitive.enableCollision
-      ) {
-        continue;
-      }
-
-      const result = primitive.getHeight(cartographic, this);
-      if (defined(result) && result > maxHeight) {
-        maxHeight = result;
-      }
+    const maxPrimitiveHeight = getMaxPrimitiveHeight(
+      this.primitives,
+      cartographic,
+      this,
+    );
+    if (defined(maxPrimitiveHeight) && maxPrimitiveHeight > maxHeight) {
+      maxHeight = maxPrimitiveHeight;
     }
   }
 
@@ -3885,10 +3905,17 @@ Scene.prototype.updateHeight = function (
   Check.typeOf.func("callback", callback);
   //>>includeEnd('debug');
 
-  const callbackWrapper = () => {
+  const ellipsoid = this._ellipsoid;
+  const callbackWrapper = (clampedCartographic) => {
     Cartographic.clone(cartographic, updateHeightScratchCartographic);
 
-    const height = this.getHeight(cartographic, heightReference);
+    let height;
+    if (defined(clampedCartographic)) {
+      height = clampedCartographic.height;
+    }
+    if (!defined(height)) {
+      height = this.getHeight(cartographic, heightReference);
+    }
     if (defined(height)) {
       updateHeightScratchCartographic.height = height;
       callback(updateHeightScratchCartographic);
@@ -3912,7 +3939,6 @@ Scene.prototype.updateHeight = function (
   }
 
   let tilesetRemoveCallbacks = {};
-  const ellipsoid = this._ellipsoid;
   const createPrimitiveEventListener = (primitive) => {
     if (
       ignore3dTiles ||
@@ -4102,7 +4128,7 @@ function render(scene) {
   frameState.passes.postProcess = scene.postProcessStages.hasSelected;
   frameState.tilesetPassState = renderTilesetPassState;
 
-  let backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+  let backgroundColor = scene.backgroundColor ?? Color.BLACK;
   if (scene._hdr) {
     backgroundColor = Color.clone(backgroundColor, scratchBackgroundColor);
     backgroundColor.red = Math.pow(backgroundColor.red, scene.gamma);
@@ -4895,7 +4921,7 @@ Scene.prototype.completeMorph = function () {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphTo2D = function (duration) {
-  duration = defaultValue(duration, 2.0);
+  duration = duration ?? 2.0;
   this._transitioner.morphTo2D(duration, this._ellipsoid);
 };
 
@@ -4904,7 +4930,7 @@ Scene.prototype.morphTo2D = function (duration) {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphToColumbusView = function (duration) {
-  duration = defaultValue(duration, 2.0);
+  duration = duration ?? 2.0;
   this._transitioner.morphToColumbusView(duration, this._ellipsoid);
 };
 
@@ -4913,7 +4939,7 @@ Scene.prototype.morphToColumbusView = function (duration) {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphTo3D = function (duration) {
-  duration = defaultValue(duration, 2.0);
+  duration = duration ?? 2.0;
   this._transitioner.morphTo3D(duration, this._ellipsoid);
 };
 

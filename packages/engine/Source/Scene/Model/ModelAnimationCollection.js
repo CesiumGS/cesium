@@ -1,4 +1,4 @@
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Event from "../../Core/Event.js";
@@ -167,7 +167,7 @@ function addAnimation(collection, animation, options) {
  * });
  */
 ModelAnimationCollection.prototype.add = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const model = this._model;
 
@@ -251,7 +251,7 @@ ModelAnimationCollection.prototype.add = function (options) {
  * });
  */
 ModelAnimationCollection.prototype.addAll = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const model = this._model;
 
@@ -426,7 +426,7 @@ ModelAnimationCollection.prototype.update = function (frameState) {
 
     if (!defined(runtimeAnimation._computedStartTime)) {
       runtimeAnimation._computedStartTime = JulianDate.addSeconds(
-        defaultValue(runtimeAnimation.startTime, sceneTime),
+        runtimeAnimation.startTime ?? sceneTime,
         runtimeAnimation.delay,
         new JulianDate(),
       );

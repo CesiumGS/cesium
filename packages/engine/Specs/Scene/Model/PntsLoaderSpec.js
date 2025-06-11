@@ -2,7 +2,7 @@ import {
   AttributeType,
   Color,
   ComponentDatatype,
-  defaultValue,
+  Frozen,
   DracoLoader,
   Matrix4,
   MetadataClass,
@@ -80,7 +80,7 @@ describe(
     });
 
     async function loadPntsArrayBuffer(arrayBuffer, options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
       const loader = new PntsLoader({
         arrayBuffer: arrayBuffer,
         loadAttributesFor2D: options.loadAttributesFor2D,

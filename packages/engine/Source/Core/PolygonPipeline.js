@@ -4,7 +4,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
@@ -106,7 +105,7 @@ PolygonPipeline.computeSubdivision = function (
   texcoords,
   granularity,
 ) {
-  granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+  granularity = granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
   const hasTexcoords = defined(texcoords);
 
@@ -341,7 +340,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
   texcoords,
   granularity,
 ) {
-  granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+  granularity = granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
   const hasTexcoords = defined(texcoords);
 
@@ -597,13 +596,13 @@ PolygonPipeline.scaleToGeodeticHeight = function (
   ellipsoid,
   scaleToSurface,
 ) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   let n = scaleToGeodeticHeightN;
   let p = scaleToGeodeticHeightP;
 
-  height = defaultValue(height, 0.0);
-  scaleToSurface = defaultValue(scaleToSurface, true);
+  height = height ?? 0.0;
+  scaleToSurface = scaleToSurface ?? true;
 
   if (defined(positions)) {
     const length = positions.length;

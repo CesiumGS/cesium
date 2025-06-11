@@ -1,7 +1,7 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import HermiteSpline from "./HermiteSpline.js";
 import Matrix4 from "./Matrix4.js";
@@ -148,7 +148,7 @@ const lastTangentScratch = new Cartesian3();
  * @see MorphWeightSpline
  */
 function CatmullRomSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;

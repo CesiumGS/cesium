@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -273,12 +272,12 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   width,
   height,
 ) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
-  framebufferXOffset = defaultValue(framebufferXOffset, 0);
-  framebufferYOffset = defaultValue(framebufferYOffset, 0);
-  width = defaultValue(width, this._size);
-  height = defaultValue(height, this._size);
+  xOffset = xOffset ?? 0;
+  yOffset = yOffset ?? 0;
+  framebufferXOffset = framebufferXOffset ?? 0;
+  framebufferYOffset = framebufferYOffset ?? 0;
+  width = width ?? this._size;
+  height = height ?? this._size;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
@@ -363,11 +362,11 @@ CubeMapFace.prototype.copyMipmapFromFramebuffer = function (
   height,
   level,
 ) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
-  width = defaultValue(width, this._size);
-  height = defaultValue(height, this._size);
-  level = defaultValue(level, 0);
+  xOffset = xOffset ?? 0;
+  yOffset = yOffset ?? 0;
+  width = width ?? this._size;
+  height = height ?? this._size;
+  level = level ?? 0;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);

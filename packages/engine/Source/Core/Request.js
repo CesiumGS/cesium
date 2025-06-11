@@ -1,4 +1,4 @@
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
@@ -21,10 +21,10 @@ import RequestType from "./RequestType.js";
  * @param {string} [options.serverKey] A key used to identify the server that a request is going to.
  */
 function Request(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const throttleByServer = defaultValue(options.throttleByServer, false);
-  const throttle = defaultValue(options.throttle, false);
+  const throttleByServer = options.throttleByServer ?? false;
+  const throttle = options.throttle ?? false;
 
   /**
    * The URL to request.
@@ -64,7 +64,7 @@ function Request(options) {
    * @type {number}
    * @default 0.0
    */
-  this.priority = defaultValue(options.priority, 0.0);
+  this.priority = options.priority ?? 0.0;
 
   /**
    * Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the
@@ -97,7 +97,7 @@ function Request(options) {
    *
    * @default RequestType.OTHER
    */
-  this.type = defaultValue(options.type, RequestType.OTHER);
+  this.type = options.type ?? RequestType.OTHER;
 
   /**
    * A key used to identify the server that a request is going to. It is derived from the url's authority and scheme.

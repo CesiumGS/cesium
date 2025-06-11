@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -28,7 +28,7 @@ import OrthographicOffCenterFrustum from "./OrthographicOffCenterFrustum.js";
  * frustum.far = 50.0 * maxRadii;
  */
 function OrthographicFrustum(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._offCenterFrustum = new OrthographicOffCenterFrustum();
 
@@ -53,7 +53,7 @@ function OrthographicFrustum(options) {
    * @type {number}
    * @default 1.0
    */
-  this.near = defaultValue(options.near, 1.0);
+  this.near = options.near ?? 1.0;
   this._near = this.near;
 
   /**
@@ -61,7 +61,7 @@ function OrthographicFrustum(options) {
    * @type {number}
    * @default 500000000.0;
    */
-  this.far = defaultValue(options.far, 500000000.0);
+  this.far = options.far ?? 500000000.0;
   this._far = this.far;
 }
 
@@ -86,7 +86,7 @@ OrthographicFrustum.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.width;
   array[startingIndex++] = value.aspectRatio;
@@ -109,7 +109,7 @@ OrthographicFrustum.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new OrthographicFrustum();

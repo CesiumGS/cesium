@@ -1,6 +1,5 @@
 import {
   Cartesian2,
-  defaultValue,
   defined,
   DeveloperError,
   EasingFunction,
@@ -37,13 +36,13 @@ function SelectionIndicatorViewModel(
   if (!defined(container)) {
     throw new DeveloperError("container is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._screenPositionX = offScreen;
   this._screenPositionY = offScreen;
   this._tweens = scene.tweens;
-  this._container = defaultValue(container, document.body);
+  this._container = container ?? document.body;
   this._selectionIndicatorElement = selectionIndicatorElement;
   this._scale = 1;
 

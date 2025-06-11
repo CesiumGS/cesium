@@ -1,6 +1,6 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
@@ -89,122 +89,93 @@ function validateStencilOperation(stencilOperation) {
  * @private
  */
 function RenderState(renderState) {
-  const rs = defaultValue(renderState, defaultValue.EMPTY_OBJECT);
-  const cull = defaultValue(rs.cull, defaultValue.EMPTY_OBJECT);
-  const polygonOffset = defaultValue(
-    rs.polygonOffset,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const scissorTest = defaultValue(rs.scissorTest, defaultValue.EMPTY_OBJECT);
-  const scissorTestRectangle = defaultValue(
-    scissorTest.rectangle,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const depthRange = defaultValue(rs.depthRange, defaultValue.EMPTY_OBJECT);
-  const depthTest = defaultValue(rs.depthTest, defaultValue.EMPTY_OBJECT);
-  const colorMask = defaultValue(rs.colorMask, defaultValue.EMPTY_OBJECT);
-  const blending = defaultValue(rs.blending, defaultValue.EMPTY_OBJECT);
-  const blendingColor = defaultValue(blending.color, defaultValue.EMPTY_OBJECT);
-  const stencilTest = defaultValue(rs.stencilTest, defaultValue.EMPTY_OBJECT);
-  const stencilTestFrontOperation = defaultValue(
-    stencilTest.frontOperation,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const stencilTestBackOperation = defaultValue(
-    stencilTest.backOperation,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const sampleCoverage = defaultValue(
-    rs.sampleCoverage,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const rs = renderState ?? Frozen.EMPTY_OBJECT;
+  const cull = rs.cull ?? Frozen.EMPTY_OBJECT;
+  const polygonOffset = rs.polygonOffset ?? Frozen.EMPTY_OBJECT;
+  const scissorTest = rs.scissorTest ?? Frozen.EMPTY_OBJECT;
+  const scissorTestRectangle = scissorTest.rectangle ?? Frozen.EMPTY_OBJECT;
+  const depthRange = rs.depthRange ?? Frozen.EMPTY_OBJECT;
+  const depthTest = rs.depthTest ?? Frozen.EMPTY_OBJECT;
+  const colorMask = rs.colorMask ?? Frozen.EMPTY_OBJECT;
+  const blending = rs.blending ?? Frozen.EMPTY_OBJECT;
+  const blendingColor = blending.color ?? Frozen.EMPTY_OBJECT;
+  const stencilTest = rs.stencilTest ?? Frozen.EMPTY_OBJECT;
+  const stencilTestFrontOperation =
+    stencilTest.frontOperation ?? Frozen.EMPTY_OBJECT;
+  const stencilTestBackOperation =
+    stencilTest.backOperation ?? Frozen.EMPTY_OBJECT;
+  const sampleCoverage = rs.sampleCoverage ?? Frozen.EMPTY_OBJECT;
   const viewport = rs.viewport;
 
-  this.frontFace = defaultValue(rs.frontFace, WindingOrder.COUNTER_CLOCKWISE);
+  this.frontFace = rs.frontFace ?? WindingOrder.COUNTER_CLOCKWISE;
   this.cull = {
-    enabled: defaultValue(cull.enabled, false),
-    face: defaultValue(cull.face, WebGLConstants.BACK),
+    enabled: cull.enabled ?? false,
+    face: cull.face ?? WebGLConstants.BACK,
   };
-  this.lineWidth = defaultValue(rs.lineWidth, 1.0);
+  this.lineWidth = rs.lineWidth ?? 1.0;
   this.polygonOffset = {
-    enabled: defaultValue(polygonOffset.enabled, false),
-    factor: defaultValue(polygonOffset.factor, 0),
-    units: defaultValue(polygonOffset.units, 0),
+    enabled: polygonOffset.enabled ?? false,
+    factor: polygonOffset.factor ?? 0,
+    units: polygonOffset.units ?? 0,
   };
   this.scissorTest = {
-    enabled: defaultValue(scissorTest.enabled, false),
+    enabled: scissorTest.enabled ?? false,
     rectangle: BoundingRectangle.clone(scissorTestRectangle),
   };
   this.depthRange = {
-    near: defaultValue(depthRange.near, 0),
-    far: defaultValue(depthRange.far, 1),
+    near: depthRange.near ?? 0,
+    far: depthRange.far ?? 1,
   };
   this.depthTest = {
-    enabled: defaultValue(depthTest.enabled, false),
-    func: defaultValue(depthTest.func, WebGLConstants.LESS), // func, because function is a JavaScript keyword
+    enabled: depthTest.enabled ?? false,
+    func: depthTest.func ?? WebGLConstants.LESS, // func, because function is a JavaScript keyword
   };
   this.colorMask = {
-    red: defaultValue(colorMask.red, true),
-    green: defaultValue(colorMask.green, true),
-    blue: defaultValue(colorMask.blue, true),
-    alpha: defaultValue(colorMask.alpha, true),
+    red: colorMask.red ?? true,
+    green: colorMask.green ?? true,
+    blue: colorMask.blue ?? true,
+    alpha: colorMask.alpha ?? true,
   };
-  this.depthMask = defaultValue(rs.depthMask, true);
-  this.stencilMask = defaultValue(rs.stencilMask, ~0);
+  this.depthMask = rs.depthMask ?? true;
+  this.stencilMask = rs.stencilMask ?? ~0;
   this.blending = {
-    enabled: defaultValue(blending.enabled, false),
+    enabled: blending.enabled ?? false,
     color: new Color(
-      defaultValue(blendingColor.red, 0.0),
-      defaultValue(blendingColor.green, 0.0),
-      defaultValue(blendingColor.blue, 0.0),
-      defaultValue(blendingColor.alpha, 0.0),
+      blendingColor.red ?? 0.0,
+      blendingColor.green ?? 0.0,
+      blendingColor.blue ?? 0.0,
+      blendingColor.alpha ?? 0.0,
     ),
-    equationRgb: defaultValue(blending.equationRgb, WebGLConstants.FUNC_ADD),
-    equationAlpha: defaultValue(
-      blending.equationAlpha,
-      WebGLConstants.FUNC_ADD,
-    ),
-    functionSourceRgb: defaultValue(
-      blending.functionSourceRgb,
-      WebGLConstants.ONE,
-    ),
-    functionSourceAlpha: defaultValue(
-      blending.functionSourceAlpha,
-      WebGLConstants.ONE,
-    ),
-    functionDestinationRgb: defaultValue(
-      blending.functionDestinationRgb,
-      WebGLConstants.ZERO,
-    ),
-    functionDestinationAlpha: defaultValue(
-      blending.functionDestinationAlpha,
-      WebGLConstants.ZERO,
-    ),
+    equationRgb: blending.equationRgb ?? WebGLConstants.FUNC_ADD,
+    equationAlpha: blending.equationAlpha ?? WebGLConstants.FUNC_ADD,
+    functionSourceRgb: blending.functionSourceRgb ?? WebGLConstants.ONE,
+    functionSourceAlpha: blending.functionSourceAlpha ?? WebGLConstants.ONE,
+    functionDestinationRgb:
+      blending.functionDestinationRgb ?? WebGLConstants.ZERO,
+    functionDestinationAlpha:
+      blending.functionDestinationAlpha ?? WebGLConstants.ZERO,
   };
   this.stencilTest = {
-    enabled: defaultValue(stencilTest.enabled, false),
-    frontFunction: defaultValue(
-      stencilTest.frontFunction,
-      WebGLConstants.ALWAYS,
-    ),
-    backFunction: defaultValue(stencilTest.backFunction, WebGLConstants.ALWAYS),
-    reference: defaultValue(stencilTest.reference, 0),
-    mask: defaultValue(stencilTest.mask, ~0),
+    enabled: stencilTest.enabled ?? false,
+    frontFunction: stencilTest.frontFunction ?? WebGLConstants.ALWAYS,
+    backFunction: stencilTest.backFunction ?? WebGLConstants.ALWAYS,
+    reference: stencilTest.reference ?? 0,
+    mask: stencilTest.mask ?? ~0,
     frontOperation: {
-      fail: defaultValue(stencilTestFrontOperation.fail, WebGLConstants.KEEP),
-      zFail: defaultValue(stencilTestFrontOperation.zFail, WebGLConstants.KEEP),
-      zPass: defaultValue(stencilTestFrontOperation.zPass, WebGLConstants.KEEP),
+      fail: stencilTestFrontOperation.fail ?? WebGLConstants.KEEP,
+      zFail: stencilTestFrontOperation.zFail ?? WebGLConstants.KEEP,
+      zPass: stencilTestFrontOperation.zPass ?? WebGLConstants.KEEP,
     },
     backOperation: {
-      fail: defaultValue(stencilTestBackOperation.fail, WebGLConstants.KEEP),
-      zFail: defaultValue(stencilTestBackOperation.zFail, WebGLConstants.KEEP),
-      zPass: defaultValue(stencilTestBackOperation.zPass, WebGLConstants.KEEP),
+      fail: stencilTestBackOperation.fail ?? WebGLConstants.KEEP,
+      zFail: stencilTestBackOperation.zFail ?? WebGLConstants.KEEP,
+      zPass: stencilTestBackOperation.zPass ?? WebGLConstants.KEEP,
     },
   };
   this.sampleCoverage = {
-    enabled: defaultValue(sampleCoverage.enabled, false),
-    value: defaultValue(sampleCoverage.value, 1.0),
-    invert: defaultValue(sampleCoverage.invert, false),
+    enabled: sampleCoverage.enabled ?? false,
+    value: sampleCoverage.value ?? 1.0,
+    invert: sampleCoverage.invert ?? false,
   };
   this.viewport = defined(viewport)
     ? new BoundingRectangle(
@@ -737,7 +708,7 @@ function applySampleCoverage(gl, renderState) {
 const scratchViewport = new BoundingRectangle();
 
 function applyViewport(gl, renderState, passState) {
-  let viewport = defaultValue(renderState.viewport, passState.viewport);
+  let viewport = renderState.viewport ?? passState.viewport;
   if (!defined(viewport)) {
     viewport = scratchViewport;
     viewport.width = passState.context.drawingBufferWidth;

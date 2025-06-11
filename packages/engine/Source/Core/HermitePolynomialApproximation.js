@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -83,7 +82,7 @@ HermitePolynomialApproximation.getRequiredDataPoints = function (
   degree,
   inputOrder,
 ) {
-  inputOrder = defaultValue(inputOrder, 0);
+  inputOrder = inputOrder ?? 0;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(degree)) {

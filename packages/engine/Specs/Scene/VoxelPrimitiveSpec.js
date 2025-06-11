@@ -85,6 +85,54 @@ describe(
       expect(spyUpdate2.calls.count()).toEqual(1);
     });
 
+    it("statistics are updated when event listeners are assigned", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      primitive.allTilesLoaded.addEventListener(spyUpdate1);
+      primitive.initialTilesLoaded.addEventListener(spyUpdate2);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
+      expect(primitive.statistics.visited).toEqual(1);
+      expect(primitive.statistics.texturesByteLength).toEqual(67108864);
+    });
+
+    it("statistics are updated when constructor option is true", async function () {
+      const primitive = new VoxelPrimitive({
+        provider,
+        calculateStatistics: true,
+      });
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
+      expect(primitive.statistics.visited).toEqual(1);
+    });
+
+    it("statistics are not updated when constructor option is false", async function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
+      for (let i = 0; i < 10; i++) {
+        scene.renderForSpecs();
+      }
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(0);
+      expect(primitive.statistics.visited).toEqual(0);
+    });
+
     it("tile load, load progress and tile visible events are raised", async function () {
       const spyUpdate1 = jasmine.createSpy("listener");
       const spyUpdate2 = jasmine.createSpy("listener");
@@ -206,6 +254,29 @@ describe(
       expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
     });
 
+    it("applies vertical exaggeration to cylinder-shaped voxels by scaling the model matrix", async function () {
+      const boxProvider = await Cesium3DTilesVoxelProvider.fromUrl(
+        "./Data/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
+      );
+      const primitive = new VoxelPrimitive({ provider: boxProvider });
+      scene.primitives.add(primitive);
+      scene.renderForSpecs();
+
+      const modelMatrix = primitive.modelMatrix.clone();
+      expect(primitive._exaggeratedModelMatrix).toEqual(modelMatrix);
+
+      const exaggerationFactor = 2.0;
+      scene.verticalExaggeration = exaggerationFactor;
+      scene.renderForSpecs();
+      const scalar = Cartesian3.fromElements(1.0, 1.0, exaggerationFactor);
+      const expectedModelMatrix = Matrix4.multiplyByScale(
+        modelMatrix,
+        scalar,
+        new Matrix4(),
+      );
+      expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
+    });
+
     it("uses default style", function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
@@ -263,6 +334,7 @@ describe(
       expect(primitive.isDestroyed()).toBe(true);
       expect(primitive._pickId).toBeUndefined();
       expect(primitive._traversal).toBeUndefined();
+      expect(primitive.statistics).toBeDefined();
     });
   },
   "WebGL",

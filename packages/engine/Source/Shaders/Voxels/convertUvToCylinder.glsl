@@ -37,7 +37,7 @@ PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     float angle = atan(position.y, position.x);
     vec3 east = normalize(vec3(-position.y, position.x, 0.0));
 
-    vec3 point = vec3(radius, height, angle);
+    vec3 point = vec3(radius, angle, height);
     mat3 jacobianT = mat3(radial, z, east / length(position.xy));
     return PointJacobianT(point, jacobianT);
 }
@@ -48,12 +48,7 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
         radius = radius * u_cylinderUvToShapeUvRadius.x + u_cylinderUvToShapeUvRadius.y;
     #endif
 
-    float height = positionShape.y;
-    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
-        height = height * u_cylinderUvToShapeUvHeight.x + u_cylinderUvToShapeUvHeight.y;
-    #endif
-
-    float angle = (positionShape.z + czm_pi) / czm_twoPi;
+    float angle = (positionShape.y + czm_pi) / czm_twoPi;
     #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
         #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
             // Comparing against u_cylinderShapeUvAngleMinMax has precision problems. u_cylinderShapeUvAngleRangeZeroMid is more conservative.
@@ -70,7 +65,12 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
         angle = angle * u_cylinderUvToShapeUvAngle.x + u_cylinderUvToShapeUvAngle.y;
     #endif
 
-    return vec3(radius, height, angle);
+    float height = positionShape.z;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        height = height * u_cylinderUvToShapeUvHeight.x + u_cylinderUvToShapeUvHeight.y;
+    #endif
+
+    return vec3(radius, angle, height);
 }
 
 PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
@@ -85,15 +85,15 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
         radius /= u_cylinderUvToShapeUvRadius.x;
     #endif
 
-    float height = shapeUv.y;
-    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
-        height /= u_cylinderUvToShapeUvHeight.x;
-    #endif
-
-    float angle = shapeUv.z * czm_twoPi;
+    float angle = shapeUv.y * czm_twoPi;
     #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
         angle /= u_cylinderUvToShapeUvAngle.x;
     #endif
 
-    return vec3(radius, height, angle);
+    float height = shapeUv.z;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        height /= u_cylinderUvToShapeUvHeight.x;
+    #endif
+
+    return vec3(radius, angle, height);
 }

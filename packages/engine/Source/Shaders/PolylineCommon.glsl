@@ -160,7 +160,7 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
         vec2 u = -thisSegmentForwardWC;
         vec2 v = leftWC;
         float sinAngle = abs(u.x * v.y - u.y * v.x);
-        expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 0.5);
+        expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
     vec2 offset = leftWC * expandDirection * expandWidth * czm_pixelRatio;

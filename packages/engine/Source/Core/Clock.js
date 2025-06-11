@@ -1,6 +1,6 @@
 import ClockRange from "./ClockRange.js";
 import ClockStep from "./ClockStep.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -41,7 +41,7 @@ import JulianDate from "./JulianDate.js";
  * @see JulianDate
  */
 function Clock(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let currentTime = options.currentTime;
   let startTime = options.startTime;
@@ -103,7 +103,7 @@ function Clock(options) {
    * @type {ClockRange}
    * @default {@link ClockRange.UNBOUNDED}
    */
-  this.clockRange = defaultValue(options.clockRange, ClockRange.UNBOUNDED);
+  this.clockRange = options.clockRange ?? ClockRange.UNBOUNDED;
 
   /**
    * Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered,
@@ -112,7 +112,7 @@ function Clock(options) {
    * @type {boolean}
    * @default true
    */
-  this.canAnimate = defaultValue(options.canAnimate, true);
+  this.canAnimate = options.canAnimate ?? true;
 
   /**
    * An {@link Event} that is fired whenever {@link Clock#tick} is called.
@@ -135,12 +135,9 @@ function Clock(options) {
   // make values consistent.
 
   this.currentTime = currentTime;
-  this.multiplier = defaultValue(options.multiplier, 1.0);
-  this.shouldAnimate = defaultValue(options.shouldAnimate, false);
-  this.clockStep = defaultValue(
-    options.clockStep,
-    ClockStep.SYSTEM_CLOCK_MULTIPLIER,
-  );
+  this.multiplier = options.multiplier ?? 1.0;
+  this.shouldAnimate = options.shouldAnimate ?? false;
+  this.clockStep = options.clockStep ?? ClockStep.SYSTEM_CLOCK_MULTIPLIER;
 }
 
 Object.defineProperties(Clock.prototype, {

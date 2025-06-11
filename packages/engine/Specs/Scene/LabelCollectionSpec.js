@@ -5,7 +5,6 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defined,
   DistanceDisplayCondition,
   Math as CesiumMath,
   NearFarScalar,
@@ -23,354 +22,531 @@ import {
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
-describe(
-  "Scene/LabelCollection",
-  function () {
-    let scene;
-    let camera;
-    let labels;
-    let labelsWithHeight;
+describe("Scene/LabelCollection", function () {
+  let labels;
+  beforeEach(function () {
+    labels = new LabelCollection();
+  });
 
-    // This Unicode square block will more reliably cover the center pixel than an 'x' or a 'w' char.
-    const solidBox = "\u25a0";
+  it("has default values when adding a label", function () {
+    const label = labels.add();
+    expect(label.show).toEqual(true);
+    expect(label.position).toEqual(Cartesian3.ZERO);
+    expect(label.text).toEqual("");
+    expect(label.font).toEqual("30px sans-serif");
+    expect(label.fillColor).toEqual(Color.WHITE);
+    expect(label.outlineColor).toEqual(Color.BLACK);
+    expect(label.outlineWidth).toEqual(1);
+    expect(label.showBackground).toEqual(false);
+    expect(label.backgroundColor).toEqual(new Color(0.165, 0.165, 0.165, 0.8));
+    expect(label.backgroundPadding).toEqual(new Cartesian2(7, 5));
+    expect(label.style).toEqual(LabelStyle.FILL);
+    expect(label.pixelOffset).toEqual(Cartesian2.ZERO);
+    expect(label.eyeOffset).toEqual(Cartesian3.ZERO);
+    expect(label.heightReference).toEqual(HeightReference.NONE);
+    expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
+    expect(label.verticalOrigin).toEqual(VerticalOrigin.BASELINE);
+    expect(label.scale).toEqual(1.0);
+    expect(label.id).toBeUndefined();
+    expect(label.translucencyByDistance).toBeUndefined();
+    expect(label.pixelOffsetScaleByDistance).toBeUndefined();
+    expect(label.scaleByDistance).toBeUndefined();
+    expect(label.distanceDisplayCondition).toBeUndefined();
+    expect(label.disableDepthTestDistance).toBeUndefined();
+  });
 
-    beforeAll(function () {
-      scene = createScene();
-      camera = scene.camera;
+  it("can add a label with specified values", function () {
+    const show = false;
+    const position = new Cartesian3(1.0, 2.0, 3.0);
+    const text = "abc";
+    const font = '24px "Open Sans"';
+    const fillColor = {
+      red: 2.0,
+      green: 3.0,
+      blue: 4.0,
+      alpha: 1.0,
+    };
+    const outlineColor = {
+      red: 3.0,
+      green: 4.0,
+      blue: 2.0,
+      alpha: 1.0,
+    };
+    const outlineWidth = 2;
+
+    const style = LabelStyle.FILL_AND_OUTLINE;
+    const pixelOffset = new Cartesian2(4.0, 5.0);
+    const eyeOffset = new Cartesian3(6.0, 7.0, 8.0);
+    const horizontalOrigin = HorizontalOrigin.LEFT;
+    const verticalOrigin = VerticalOrigin.BOTTOM;
+    const scale = 2.0;
+    const showBackground = true;
+    const backgroundColor = Color.BLUE;
+    const backgroundPadding = new Cartesian2(11, 12);
+    const translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+    const pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+    const scaleByDistance = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+    const distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+    const disableDepthTestDistance = 10.0;
+    const label = labels.add({
+      show: show,
+      position: position,
+      text: text,
+      font: font,
+      fillColor: fillColor,
+      outlineColor: outlineColor,
+      outlineWidth: outlineWidth,
+      style: style,
+      showBackground: showBackground,
+      backgroundColor: backgroundColor,
+      backgroundPadding: backgroundPadding,
+      pixelOffset: pixelOffset,
+      eyeOffset: eyeOffset,
+      horizontalOrigin: horizontalOrigin,
+      verticalOrigin: verticalOrigin,
+      scale: scale,
+      id: "id",
+      translucencyByDistance: translucency,
+      pixelOffsetScaleByDistance: pixelOffsetScale,
+      scaleByDistance: scaleByDistance,
+      distanceDisplayCondition: distanceDisplayCondition,
+      disableDepthTestDistance: disableDepthTestDistance,
     });
 
-    afterAll(function () {
-      scene.destroyForSpecs();
+    expect(label.show).toEqual(show);
+    expect(label.position).toEqual(position);
+    expect(label.text).toEqual(text);
+    expect(label.font).toEqual(font);
+    expect(label.fillColor).toEqual(fillColor);
+    expect(label.outlineColor).toEqual(outlineColor);
+    expect(label.outlineWidth).toEqual(outlineWidth);
+    expect(label.style).toEqual(style);
+    expect(label.showBackground).toEqual(showBackground);
+    expect(label.backgroundColor).toEqual(backgroundColor);
+    expect(label.backgroundPadding).toEqual(backgroundPadding);
+    expect(label.pixelOffset).toEqual(pixelOffset);
+    expect(label.eyeOffset).toEqual(eyeOffset);
+    expect(label.horizontalOrigin).toEqual(horizontalOrigin);
+    expect(label.verticalOrigin).toEqual(verticalOrigin);
+    expect(label.scale).toEqual(scale);
+    expect(label.id).toEqual("id");
+    expect(label.translucencyByDistance).toEqual(translucency);
+    expect(label.pixelOffsetScaleByDistance).toEqual(pixelOffsetScale);
+    expect(label.scaleByDistance).toEqual(scaleByDistance);
+    expect(label.distanceDisplayCondition).toEqual(distanceDisplayCondition);
+    expect(label.disableDepthTestDistance).toEqual(disableDepthTestDistance);
+  });
+
+  it("has zero labels when constructed", function () {
+    expect(labels.length).toEqual(0);
+  });
+
+  it("can add a label", function () {
+    const label = labels.add();
+
+    expect(labels.length).toEqual(1);
+    expect(labels.get(0)).toBe(label);
+  });
+
+  it("can remove the first label", function () {
+    const one = labels.add();
+    const two = labels.add();
+
+    expect(labels.contains(one)).toEqual(true);
+    expect(labels.contains(two)).toEqual(true);
+
+    expect(labels.remove(one)).toEqual(true);
+
+    expect(labels.contains(one)).toEqual(false);
+    expect(labels.contains(two)).toEqual(true);
+  });
+
+  it("can remove the last label", function () {
+    const one = labels.add();
+    const two = labels.add();
+
+    expect(labels.contains(one)).toEqual(true);
+    expect(labels.contains(two)).toEqual(true);
+
+    expect(labels.remove(two)).toEqual(true);
+
+    expect(labels.contains(one)).toEqual(true);
+    expect(labels.contains(two)).toEqual(false);
+  });
+
+  it("returns false when removing undefined", function () {
+    labels.add();
+    expect(labels.length).toEqual(1);
+    expect(labels.remove(undefined)).toEqual(false);
+    expect(labels.length).toEqual(1);
+  });
+
+  it("returns false when removing a previously removed label", function () {
+    const label = labels.add();
+    expect(labels.length).toEqual(1);
+    expect(labels.remove(label)).toEqual(true);
+    expect(labels.remove(label)).toEqual(false);
+    expect(labels.length).toEqual(0);
+  });
+
+  it("is not destroyed", function () {
+    expect(labels.isDestroyed()).toEqual(false);
+  });
+
+  it("can add and remove multiple labels", function () {
+    const one = labels.add();
+    const two = labels.add();
+    const three = labels.add();
+
+    expect(labels.remove(one)).toEqual(true);
+    expect(labels.remove(two)).toEqual(true);
+
+    expect(one.isDestroyed()).toEqual(true);
+    expect(two.isDestroyed()).toEqual(true);
+    expect(three.isDestroyed()).toEqual(false);
+
+    expect(labels.contains(one)).toEqual(false);
+    expect(labels.contains(two)).toEqual(false);
+    expect(labels.contains(three)).toEqual(true);
+
+    expect(labels.length).toEqual(1);
+    expect(labels.get(0)).toBe(three);
+
+    const four = labels.add();
+    expect(labels.length).toEqual(2);
+    expect(labels.get(0)).toBe(three);
+    expect(labels.get(1)).toBe(four);
+    expect(labels.contains(three)).toEqual(true);
+    expect(labels.contains(four)).toEqual(true);
+  });
+
+  it("can remove all labels", function () {
+    labels.add({
+      position: new Cartesian3(1.0, 2.0, 3.0),
     });
-
-    beforeEach(function () {
-      scene.morphTo3D(0);
-
-      camera.position = new Cartesian3(10.0, 0.0, 0.0);
-      camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
-      camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-
-      labels = new LabelCollection();
-      scene.primitives.add(labels);
+    labels.add({
+      position: new Cartesian3(4.0, 5.0, 6.0),
     });
+    expect(labels.length).toEqual(2);
 
-    afterEach(function () {
-      // labels are destroyed by removeAll().
-      scene.primitives.removeAll();
-    });
+    labels.removeAll();
+    expect(labels.length).toEqual(0);
+  });
 
-    it("has default values when adding a label", function () {
-      const label = labels.add();
-      expect(label.show).toEqual(true);
-      expect(label.position).toEqual(Cartesian3.ZERO);
-      expect(label.text).toEqual("");
-      expect(label.font).toEqual("30px sans-serif");
-      expect(label.fillColor).toEqual(Color.WHITE);
-      expect(label.outlineColor).toEqual(Color.BLACK);
-      expect(label.outlineWidth).toEqual(1);
-      expect(label.showBackground).toEqual(false);
-      expect(label.backgroundColor).toEqual(
-        new Color(0.165, 0.165, 0.165, 0.8),
-      );
-      expect(label.backgroundPadding).toEqual(new Cartesian2(7, 5));
-      expect(label.style).toEqual(LabelStyle.FILL);
-      expect(label.pixelOffset).toEqual(Cartesian2.ZERO);
-      expect(label.eyeOffset).toEqual(Cartesian3.ZERO);
-      expect(label.heightReference).toEqual(HeightReference.NONE);
-      expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
-      expect(label.verticalOrigin).toEqual(VerticalOrigin.BASELINE);
-      expect(label.scale).toEqual(1.0);
-      expect(label.id).toBeUndefined();
-      expect(label.translucencyByDistance).toBeUndefined();
-      expect(label.pixelOffsetScaleByDistance).toBeUndefined();
-      expect(label.scaleByDistance).toBeUndefined();
-      expect(label.distanceDisplayCondition).toBeUndefined();
-      expect(label.disableDepthTestDistance).toBeUndefined();
-    });
+  it("can check if it contains a label", function () {
+    const label = labels.add();
 
-    it("can add a label with specified values", function () {
-      const show = false;
-      const position = new Cartesian3(1.0, 2.0, 3.0);
-      const text = "abc";
-      const font = '24px "Open Sans"';
-      const fillColor = {
-        red: 2.0,
-        green: 3.0,
-        blue: 4.0,
-        alpha: 1.0,
-      };
-      const outlineColor = {
-        red: 3.0,
-        green: 4.0,
-        blue: 2.0,
-        alpha: 1.0,
-      };
-      const outlineWidth = 2;
+    expect(labels.contains(label)).toEqual(true);
+  });
 
-      const style = LabelStyle.FILL_AND_OUTLINE;
-      const pixelOffset = new Cartesian2(4.0, 5.0);
-      const eyeOffset = new Cartesian3(6.0, 7.0, 8.0);
-      const horizontalOrigin = HorizontalOrigin.LEFT;
-      const verticalOrigin = VerticalOrigin.BOTTOM;
-      const scale = 2.0;
-      const showBackground = true;
-      const backgroundColor = Color.BLUE;
-      const backgroundPadding = new Cartesian2(11, 12);
-      const translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
-      const pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
-      const scaleByDistance = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
-      const distanceDisplayCondition = new DistanceDisplayCondition(
-        10.0,
-        100.0,
-      );
-      const disableDepthTestDistance = 10.0;
-      const label = labels.add({
-        show: show,
-        position: position,
-        text: text,
-        font: font,
-        fillColor: fillColor,
-        outlineColor: outlineColor,
-        outlineWidth: outlineWidth,
-        style: style,
-        showBackground: showBackground,
-        backgroundColor: backgroundColor,
-        backgroundPadding: backgroundPadding,
-        pixelOffset: pixelOffset,
-        eyeOffset: eyeOffset,
-        horizontalOrigin: horizontalOrigin,
-        verticalOrigin: verticalOrigin,
-        scale: scale,
-        id: "id",
+  it("returns false when checking if it contains a label it does not contain", function () {
+    const label = labels.add();
+    labels.remove(label);
+
+    expect(labels.contains(label)).toEqual(false);
+  });
+
+  it("does not contain undefined", function () {
+    expect(labels.contains(undefined)).toEqual(false);
+  });
+
+  it("does not contain random other objects", function () {
+    expect(labels.contains({})).toEqual(false);
+    expect(labels.contains(new Cartesian2())).toEqual(false);
+  });
+
+  it("throws when calling get without an index", function () {
+    expect(function () {
+      labels.get();
+    }).toThrowDeveloperError();
+  });
+
+  it("label is destroyed after being removed", function () {
+    const label = labels.add();
+
+    expect(label.isDestroyed()).toEqual(false);
+
+    labels.remove(label);
+
+    expect(label.isDestroyed()).toEqual(true);
+  });
+
+  it("label throws after being removed", function () {
+    const label = labels.add();
+    labels.remove(label);
+    expect(function () {
+      label.equals(label);
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.show throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.show = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.position throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.position = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.text throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.text = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.font throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.font = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.fillColor throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.fillColor = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.outlineColor throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.outlineColor = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.outlineWidth throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.outlineWidth = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.style throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.style = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.pixelOffset throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.pixelOffset = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.eyeOffset throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.eyeOffset = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.horizontalOrigin throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.horizontalOrigin = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.verticalOrigin throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.verticalOrigin = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.scale throws with undefined", function () {
+    const label = labels.add();
+    expect(function () {
+      label.scale = undefined;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.computeScreenSpacePosition throws with undefined scene", function () {
+    const label = labels.add();
+    expect(function () {
+      label.computeScreenSpacePosition();
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.translucencyByDistance throws with nearDistance === farDistance", function () {
+    const label = labels.add();
+    const translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+    expect(function () {
+      label.translucencyByDistance = translucency;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.pixelOffsetScaleByDistance throws with nearDistance === farDistance", function () {
+    const label = labels.add();
+    const pixelOffsetScale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+    expect(function () {
+      label.pixelOffsetScaleByDistance = pixelOffsetScale;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.scaleByDistance throws with nearDistance === farDistance", function () {
+    const label = labels.add();
+    const scaleByDistance = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+    expect(function () {
+      label.scaleByDistance = scaleByDistance;
+    }).toThrowDeveloperError();
+  });
+
+  it("new label throws with invalid translucencyByDistance (nearDistance === farDistance)", function () {
+    const translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+    expect(function () {
+      labels.add({
         translucencyByDistance: translucency,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("new label throws with invalid pixelOffsetScaleByDistance (nearDistance === farDistance)", function () {
+    const pixelOffsetScale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+    expect(function () {
+      labels.add({
         pixelOffsetScaleByDistance: pixelOffsetScale,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("new label throws with invalid scaleByDistance (nearDistance === farDistance)", function () {
+    const scaleByDistance = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+    expect(function () {
+      labels.add({
         scaleByDistance: scaleByDistance,
-        distanceDisplayCondition: distanceDisplayCondition,
-        disableDepthTestDistance: disableDepthTestDistance,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.translucencyByDistance throws with nearDistance > farDistance", function () {
+    const label = labels.add();
+    const translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+    expect(function () {
+      label.translucencyByDistance = translucency;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.pixelOffsetScaleByDistance throws with nearDistance > farDistance", function () {
+    const label = labels.add();
+    const pixelOffsetScale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+    expect(function () {
+      label.pixelOffsetScaleByDistance = pixelOffsetScale;
+    }).toThrowDeveloperError();
+  });
+
+  it("Label.scaleByDistance throws with nearDistance > farDistance", function () {
+    const label = labels.add();
+    const scaleByDistance = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+    expect(function () {
+      label.scaleByDistance = scaleByDistance;
+    }).toThrowDeveloperError();
+  });
+
+  describe(
+    "with WebGL context",
+    function () {
+      let scene;
+      let camera;
+      beforeAll(function () {
+        scene = createScene();
+        camera = scene.camera;
       });
 
-      expect(label.show).toEqual(show);
-      expect(label.position).toEqual(position);
-      expect(label.text).toEqual(text);
-      expect(label.font).toEqual(font);
-      expect(label.fillColor).toEqual(fillColor);
-      expect(label.outlineColor).toEqual(outlineColor);
-      expect(label.outlineWidth).toEqual(outlineWidth);
-      expect(label.style).toEqual(style);
-      expect(label.showBackground).toEqual(showBackground);
-      expect(label.backgroundColor).toEqual(backgroundColor);
-      expect(label.backgroundPadding).toEqual(backgroundPadding);
-      expect(label.pixelOffset).toEqual(pixelOffset);
-      expect(label.eyeOffset).toEqual(eyeOffset);
-      expect(label.horizontalOrigin).toEqual(horizontalOrigin);
-      expect(label.verticalOrigin).toEqual(verticalOrigin);
-      expect(label.scale).toEqual(scale);
-      expect(label.id).toEqual("id");
-      expect(label.translucencyByDistance).toEqual(translucency);
-      expect(label.pixelOffsetScaleByDistance).toEqual(pixelOffsetScale);
-      expect(label.scaleByDistance).toEqual(scaleByDistance);
-      expect(label.distanceDisplayCondition).toEqual(distanceDisplayCondition);
-      expect(label.disableDepthTestDistance).toEqual(disableDepthTestDistance);
-    });
-
-    it("can specify font using units other than pixels", function () {
-      const label = labels.add({
-        font: '12pt "Open Sans"',
-        text: "Hello there",
+      afterAll(function () {
+        scene.destroyForSpecs();
       });
-      return allLabelsReady().then(function () {
-        scene.renderForSpecs();
 
-        const dimensions = label._glyphs[0].dimensions;
-        expect(dimensions.height).toBeGreaterThan(0);
-      });
-    });
+      beforeEach(function () {
+        scene.morphTo3D(0);
 
-    it("has zero labels when constructed", function () {
-      expect(labels.length).toEqual(0);
-    });
-
-    it("can add a label", function () {
-      const label = labels.add();
-
-      expect(labels.length).toEqual(1);
-      expect(labels.get(0)).toBe(label);
-    });
-
-    it("can remove the first label", function () {
-      const one = labels.add();
-      const two = labels.add();
-
-      expect(labels.contains(one)).toEqual(true);
-      expect(labels.contains(two)).toEqual(true);
-
-      expect(labels.remove(one)).toEqual(true);
-
-      expect(labels.contains(one)).toEqual(false);
-      expect(labels.contains(two)).toEqual(true);
-    });
-
-    it("can remove the last label", function () {
-      const one = labels.add();
-      const two = labels.add();
-
-      expect(labels.contains(one)).toEqual(true);
-      expect(labels.contains(two)).toEqual(true);
-
-      expect(labels.remove(two)).toEqual(true);
-
-      expect(labels.contains(one)).toEqual(true);
-      expect(labels.contains(two)).toEqual(false);
-    });
-
-    it("returns false when removing undefined", function () {
-      labels.add();
-      expect(labels.length).toEqual(1);
-      expect(labels.remove(undefined)).toEqual(false);
-      expect(labels.length).toEqual(1);
-    });
-
-    it("returns false when removing a previously removed label", function () {
-      const label = labels.add();
-      expect(labels.length).toEqual(1);
-      expect(labels.remove(label)).toEqual(true);
-      expect(labels.remove(label)).toEqual(false);
-      expect(labels.length).toEqual(0);
-    });
-
-    it("is not destroyed", function () {
-      expect(labels.isDestroyed()).toEqual(false);
-    });
-
-    it("can add and remove multiple labels", function () {
-      const one = labels.add();
-      const two = labels.add();
-      const three = labels.add();
-
-      expect(labels.remove(one)).toEqual(true);
-      expect(labels.remove(two)).toEqual(true);
-
-      expect(one.isDestroyed()).toEqual(true);
-      expect(two.isDestroyed()).toEqual(true);
-      expect(three.isDestroyed()).toEqual(false);
-
-      expect(labels.contains(one)).toEqual(false);
-      expect(labels.contains(two)).toEqual(false);
-      expect(labels.contains(three)).toEqual(true);
-
-      expect(labels.length).toEqual(1);
-      expect(labels.get(0)).toBe(three);
-
-      const four = labels.add();
-      expect(labels.length).toEqual(2);
-      expect(labels.get(0)).toBe(three);
-      expect(labels.get(1)).toBe(four);
-      expect(labels.contains(three)).toEqual(true);
-      expect(labels.contains(four)).toEqual(true);
-    });
-
-    it("can remove all labels", function () {
-      labels.add({
-        position: new Cartesian3(1.0, 2.0, 3.0),
-      });
-      labels.add({
-        position: new Cartesian3(4.0, 5.0, 6.0),
-      });
-      expect(labels.length).toEqual(2);
-
-      labels.removeAll();
-      expect(labels.length).toEqual(0);
-    });
-
-    it("can check if it contains a label", function () {
-      const label = labels.add();
-
-      expect(labels.contains(label)).toEqual(true);
-    });
-
-    it("returns false when checking if it contains a label it does not contain", function () {
-      const label = labels.add();
-      labels.remove(label);
-
-      expect(labels.contains(label)).toEqual(false);
-    });
-
-    it("does not contain undefined", function () {
-      expect(labels.contains(undefined)).toEqual(false);
-    });
-
-    it("does not contain random other objects", function () {
-      expect(labels.contains({})).toEqual(false);
-      expect(labels.contains(new Cartesian2())).toEqual(false);
-    });
-
-    it("does not render when constructed", function () {
-      expect(scene).toRender([0, 0, 0, 255]);
-    });
-
-    function allLabelsReady() {
-      // render until all labels have been updated
-      return pollToPromise(function () {
-        scene.renderForSpecs();
-        const backgroundBillboard =
-          labels._backgroundBillboardCollection.get(0);
-        return (
-          (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
-          labels._labelsToUpdate.length === 0
+        camera.position = new Cartesian3(10.0, 0.0, 0.0);
+        camera.direction = Cartesian3.negate(
+          Cartesian3.UNIT_X,
+          new Cartesian3(),
         );
-      });
-    }
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
-    it("can render after modifying and removing a label", function () {
-      const labelOne = labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
+        scene.primitives.add(labels);
       });
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: "o",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
+
+      afterEach(function () {
+        // labels are destroyed by removeAll().
+        scene.primitives.removeAll();
       });
-      return allLabelsReady().then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
+
+      it("does not render when constructed", function () {
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
+
+      function allLabelsReady() {
+        // render until all labels have been updated
+        return pollToPromise(function () {
+          scene.renderForSpecs();
+          return labels.ready;
         });
+      }
+
+      it("can render a label", async function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: "x",
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+
+        expect(scene).toRender([255, 255, 255, 255]);
+      });
+
+      // This Unicode square block will more reliably cover the center pixel than an 'x' or a 'w' char.
+      const solidBox = "\u25a0";
+      it("can render after modifying and removing a label", async function () {
+        const labelOne = labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+
+        expect(scene).toRender([255, 255, 255, 255]);
 
         labelOne.scale = 2.0;
         labels.remove(labelOne);
 
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("can render a label", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
+        expect(scene).toRender([255, 255, 255, 255]);
       });
 
-      return allLabelsReady().then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
+      it("renders in multiple passes", async function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: "x",
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
         });
-      });
-    });
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
 
-    it("renders in multiple passes", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-      camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        await allLabelsReady();
 
-      return allLabelsReady().then(function () {
         const frameState = scene.frameState;
         frameState.commandList.length = 0;
         labels.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
@@ -387,620 +563,579 @@ describe(
         labels.update(frameState);
         expect(frameState.commandList.length).toEqual(1);
       });
-    });
 
-    it("can render after adding a label", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
+      it("can render after adding a label", async function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+        expect(scene).toRender([255, 255, 255, 255]);
+
+        labels.add({
+          position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
+          text: solidBox,
+          fillColor: {
+            red: 1.0,
+            green: 0.0,
+            blue: 0.0,
+            alpha: 1.0,
+          },
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+        expect(scene).toRender([255, 0, 0, 255]);
       });
 
-      return allLabelsReady()
-        .then(function () {
+      it("can render after removing a label", async function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+        expect(scene).toRender([255, 255, 255, 255]);
+
+        labels.remove(label);
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
+
+      it("can render after removing and adding a label", async function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+        expect(scene).toRender([255, 255, 255, 255]);
+
+        labels.remove(label);
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+        expect(scene).toRender([255, 255, 255, 255]);
+      });
+
+      it("can render after removing all labels", async function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+        expect(scene).toRender([255, 255, 255, 255]);
+
+        labels.removeAll();
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
+
+      it("can render after removing all labels and adding a label", async function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+        expect(scene).toRender([255, 255, 255, 255]);
+
+        labels.removeAll();
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        await allLabelsReady();
+        expect(scene).toRender([255, 255, 255, 255]);
+      });
+
+      it("can render a label background", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: "_",
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+          showBackground: true,
+          backgroundColor: Color.BLUE,
+        });
+
+        return allLabelsReady().then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+
+          labels.remove(label);
+          expect(scene).toRender([0, 0, 0, 255]);
+        });
+      });
+
+      it("does not render labels with show set to false", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: "x",
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        return allLabelsReady().then(function () {
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+          });
+
+          label.show = false;
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          label.show = true;
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+          });
+        });
+      });
+
+      it("does not render label background with show set to false", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: "_",
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+          showBackground: true,
+          backgroundColor: Color.BLUE,
+        });
+
+        return allLabelsReady().then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+
+          label.show = false;
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          label.show = true;
+          expect(scene).toRender([0, 0, 255, 255]);
+        });
+      });
+
+      it("does not render labels that are behind the viewer", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO, // in front of the camera
+          text: "x",
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        return allLabelsReady().then(function () {
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+          });
+
+          label.position = new Cartesian3(20.0, 0.0, 0.0); // Behind camera
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          label.position = new Cartesian3(1.0, 0.0, 0.0); // Back in front of camera
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+          });
+        });
+      });
+
+      it("does not render labels with a scale of zero", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: "x",
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        label.scale = 0.0;
+        return allLabelsReady().then(function () {
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          label.scale = 2.0;
+          scene.render();
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+          });
+        });
+      });
+
+      it("renders label with translucencyByDistance", function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: "x",
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+          translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+        });
+
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        return allLabelsReady().then(function () {
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+          });
+
+          camera.position = new Cartesian3(4.0, 0.0, 0.0);
+          expect(scene).toRender([0, 0, 0, 255]);
+        });
+      });
+
+      it("renders label with pixelOffsetScaleByDistance", function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          pixelOffset: new Cartesian2(1.0, 0.0),
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+          pixelOffsetScaleByDistance: new NearFarScalar(2.0, 0.0, 4.0, 1000.0),
+        });
+
+        return allLabelsReady().then(function () {
+          camera.position = new Cartesian3(2.0, 0.0, 0.0);
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+          });
+
+          camera.position = new Cartesian3(4.0, 0.0, 0.0);
+          expect(scene).toRender([0, 0, 0, 255]);
+        });
+      });
+
+      it("renders label with scaleByDistance", function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+          scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+        });
+
+        return allLabelsReady().then(function () {
+          camera.position = new Cartesian3(2.0, 0.0, 0.0);
+          expect(scene).toRender([255, 255, 255, 255]);
+
+          camera.position = new Cartesian3(4.0, 0.0, 0.0);
+          expect(scene).toRender([0, 0, 0, 255]);
+        });
+      });
+
+      it("renders label with distanceDisplayCondition", function () {
+        labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+        return allLabelsReady().then(function () {
+          camera.position = new Cartesian3(200.0, 0.0, 0.0);
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          camera.position = new Cartesian3(50.0, 0.0, 0.0);
           expect(scene).toRenderAndCall(function (rgba) {
             expect(rgba[0]).toBeGreaterThan(200);
             expect(rgba[1]).toBeGreaterThan(200);
             expect(rgba[2]).toBeGreaterThan(200);
           });
 
-          labels.add({
-            position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            text: solidBox,
-            fillColor: {
-              red: 1.0,
-              green: 0.0,
-              blue: 0.0,
-              alpha: 1.0,
-            },
-            horizontalOrigin: HorizontalOrigin.CENTER,
-            verticalOrigin: VerticalOrigin.CENTER,
-          });
-
-          return allLabelsReady();
-        })
-        .then(function () {
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(200);
-            expect(rgba[1]).toBeLessThan(10);
-            expect(rgba[2]).toBeLessThan(10);
-          });
-        });
-    });
-
-    it("can render after removing a label", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
-        });
-
-        labels.remove(label);
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("can render after removing and adding a label", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady()
-        .then(function () {
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(10);
-          });
-
-          labels.remove(label);
-          labels.add({
-            position: Cartesian3.ZERO,
-            text: "x",
-            horizontalOrigin: HorizontalOrigin.CENTER,
-            verticalOrigin: VerticalOrigin.CENTER,
-          });
-          return allLabelsReady();
-        })
-        .then(function () {
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(10);
-          });
-        });
-    });
-
-    it("can render after removing all labels", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
-        });
-
-        labels.removeAll();
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("can render after removing all labels and adding a label", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady()
-        .then(function () {
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(10);
-          });
-
-          labels.removeAll();
-          labels.add({
-            position: Cartesian3.ZERO,
-            text: "x",
-            horizontalOrigin: HorizontalOrigin.CENTER,
-            verticalOrigin: VerticalOrigin.CENTER,
-          });
-
-          return allLabelsReady();
-        })
-        .then(function () {
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(10);
-          });
-        });
-    });
-
-    it("can render a label background", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: "_",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-        showBackground: true,
-        backgroundColor: Color.BLUE,
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).toRender([0, 0, 255, 255]);
-
-        labels.remove(label);
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("does not render labels with show set to false", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
-        });
-
-        label.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        label.show = true;
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
+          camera.position = new Cartesian3(5.0, 0.0, 0.0);
+          expect(scene).toRender([0, 0, 0, 255]);
         });
       });
-    });
 
-    it("does not render label background with show set to false", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: "_",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-        showBackground: true,
-        backgroundColor: Color.BLUE,
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).toRender([0, 0, 255, 255]);
-
-        label.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        label.show = true;
-        expect(scene).toRender([0, 0, 255, 255]);
-      });
-    });
-
-    it("does not render labels that are behind the viewer", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO, // in front of the camera
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
-        });
-
-        label.position = new Cartesian3(20.0, 0.0, 0.0); // Behind camera
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        label.position = new Cartesian3(1.0, 0.0, 0.0); // Back in front of camera
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
-        });
-      });
-    });
-
-    it("does not render labels with a scale of zero", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      label.scale = 0.0;
-      return allLabelsReady().then(function () {
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        label.scale = 2.0;
-        scene.render();
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
-        });
-      });
-    });
-
-    it("renders label with translucencyByDistance", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: "x",
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-        translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
-      });
-
-      camera.position = new Cartesian3(2.0, 0.0, 0.0);
-      return allLabelsReady().then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
-        });
-
-        camera.position = new Cartesian3(4.0, 0.0, 0.0);
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("renders label with pixelOffsetScaleByDistance", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        pixelOffset: new Cartesian2(1.0, 0.0),
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-        pixelOffsetScaleByDistance: new NearFarScalar(2.0, 0.0, 4.0, 1000.0),
-      });
-
-      return allLabelsReady().then(function () {
-        camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(10);
-        });
-
-        camera.position = new Cartesian3(4.0, 0.0, 0.0);
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("renders label with scaleByDistance", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-        scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
-      });
-
-      return allLabelsReady().then(function () {
-        camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        expect(scene).toRender([255, 255, 255, 255]);
-
-        camera.position = new Cartesian3(4.0, 0.0, 0.0);
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("renders label with distanceDisplayCondition", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-      return allLabelsReady().then(function () {
-        camera.position = new Cartesian3(200.0, 0.0, 0.0);
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        camera.position = new Cartesian3(50.0, 0.0, 0.0);
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(200);
-          expect(rgba[1]).toBeGreaterThan(200);
-          expect(rgba[2]).toBeGreaterThan(200);
-        });
-
-        camera.position = new Cartesian3(5.0, 0.0, 0.0);
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("does not render label if show is false", function () {
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-        scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
-      });
-
-      return allLabelsReady().then(function () {
-        camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        expect(scene).toRender([255, 255, 255, 255]);
-
-        labels.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-      });
-    });
-
-    it("throws new label with invalid distanceDisplayCondition (near >= far)", function () {
-      const dc = new DistanceDisplayCondition(100.0, 10.0);
-      expect(function () {
+      it("does not render label if show is false", function () {
         labels.add({
-          distanceDisplayCondition: dc,
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+          scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
         });
-      }).toThrowDeveloperError();
-    });
 
-    it("throws distanceDisplayCondition with near >= far", function () {
-      const l = labels.add();
-      const dc = new DistanceDisplayCondition(100.0, 10.0);
-      expect(function () {
-        l.distanceDisplayCondition = dc;
-      }).toThrowDeveloperError();
-    });
+        return allLabelsReady().then(function () {
+          camera.position = new Cartesian3(2.0, 0.0, 0.0);
+          expect(scene).toRender([255, 255, 255, 255]);
 
-    it("renders with disableDepthTestDistance", function () {
-      const l = labels.add({
-        position: new Cartesian3(-1.0, 0.0, 0.0),
-        text: solidBox,
-        fillColor: Color.LIME,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
+          labels.show = false;
+          expect(scene).toRender([0, 0, 0, 255]);
+        });
       });
-      labels.add({
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        fillColor: Color.BLUE,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-      return allLabelsReady().then(function () {
-        expect(scene).toRender([0, 0, 255, 255]);
 
-        l.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-        expect(scene).toRender([0, 255, 0, 255]);
+      it("throws new label with invalid distanceDisplayCondition (near >= far)", function () {
+        const dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function () {
+          labels.add({
+            distanceDisplayCondition: dc,
+          });
+        }).toThrowDeveloperError();
       });
-    });
 
-    it("throws with new label with disableDepthTestDistance less than 0.0", function () {
-      expect(function () {
+      it("throws distanceDisplayCondition with near >= far", function () {
+        const l = labels.add();
+        const dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function () {
+          l.distanceDisplayCondition = dc;
+        }).toThrowDeveloperError();
+      });
+
+      it("renders with disableDepthTestDistance", function () {
+        const l = labels.add({
+          position: new Cartesian3(-1.0, 0.0, 0.0),
+          text: solidBox,
+          fillColor: Color.LIME,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
         labels.add({
-          disableDepthTestDistance: -1.0,
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          fillColor: Color.BLUE,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
         });
-      }).toThrowDeveloperError();
-    });
+        return allLabelsReady().then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
 
-    it("throws with disableDepthTestDistance set less than 0.0", function () {
-      const l = labels.add();
-      expect(function () {
-        l.disableDepthTestDistance = -1.0;
-      }).toThrowDeveloperError();
-    });
-
-    it("can pick a label", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-        id: "id",
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).toPickAndCall(function (result) {
-          expect(result.primitive).toEqual(label);
-          expect(result.id).toEqual("id");
+          l.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+          expect(scene).toRender([0, 255, 0, 255]);
         });
       });
-    });
 
-    it("can change pick id", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-        id: "id",
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).toPickAndCall(function (result) {
-          expect(result.primitive).toEqual(label);
-          expect(result.id).toEqual("id");
-        });
-
-        label.id = "id2";
-
-        expect(scene).toPickAndCall(function (result) {
-          expect(result.primitive).toEqual(label);
-          expect(result.id).toEqual("id2");
-        });
-      });
-    });
-
-    it("does not pick a label with show set to false", function () {
-      labels.add({
-        show: false,
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady().then(function () {
-        expect(scene).notToPick();
-      });
-    });
-
-    it("picks a label using translucencyByDistance", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady().then(function () {
-        const translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
-        label.translucencyByDistance = translucency;
-
-        expect(scene).toPickPrimitive(label);
-
-        translucency.nearValue = 0.0;
-        translucency.farValue = 0.0;
-        label.translucencyByDistance = translucency;
-
-        expect(scene).notToPick();
-      });
-    });
-
-    it("picks a label using pixelOffsetScaleByDistance", function () {
-      const label = labels.add({
-        position: Cartesian3.ZERO,
-        pixelOffset: new Cartesian2(0.0, 100.0),
-        text: solidBox,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        verticalOrigin: VerticalOrigin.CENTER,
-      });
-
-      return allLabelsReady().then(function () {
-        const pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
-        label.pixelOffsetScaleByDistance = pixelOffsetScale;
-
-        expect(scene).toPickPrimitive(label);
-
-        pixelOffsetScale.nearValue = 10.0;
-        pixelOffsetScale.farValue = 10.0;
-        label.pixelOffsetScaleByDistance = pixelOffsetScale;
-
-        expect(scene).notToPick();
-      });
-    });
-
-    it("throws when calling get without an index", function () {
-      expect(function () {
-        labels.get();
-      }).toThrowDeveloperError();
-    });
-
-    it("should reuse canvases for letters, but only if other settings are the same", function () {
-      labels.add({
-        text: "a",
-      });
-      let label;
-      return allLabelsReady()
-        .then(function () {
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(1);
-
+      it("throws with new label with disableDepthTestDistance less than 0.0", function () {
+        expect(function () {
           labels.add({
-            text: "a",
+            disableDepthTestDistance: -1.0,
           });
-          return allLabelsReady();
-        })
-        .then(function () {
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(1);
-
-          labels.add({
-            text: "abcd",
-          });
-          return allLabelsReady();
-        })
-        .then(function () {
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(4);
-
-          labels.add({
-            text: "abc",
-          });
-          return allLabelsReady();
-        })
-        .then(function () {
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(4);
-
-          label = labels.add({
-            text: "de",
-          });
-          return allLabelsReady();
-        })
-        .then(function () {
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(5);
-
-          const originalFont = label.font;
-          label.font = '30px "Open Sans"';
-          expect(label.font).not.toEqual(originalFont); // otherwise this test needs fixing.
-          scene.renderForSpecs();
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
-
-          // Changing the outline doesn't cause new glyphs to be generated.
-          label.style = LabelStyle.OUTLINE;
-          scene.renderForSpecs();
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
-
-          // Changing fill color doesn't cause new glyphs to be generated.
-          label.fillColor = new Color(1.0, 165.0 / 255.0, 0.0, 1.0);
-          scene.renderForSpecs();
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
-
-          // Changing outline color doesn't cause new glyphs to be generated.
-          label.outlineColor = new Color(1.0, 1.0, 1.0, 1.0);
-          scene.renderForSpecs();
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
-
-          // vertical origin only affects glyph positions, not glyphs themselves.
-          label.verticalOrigin = VerticalOrigin.CENTER;
-          scene.renderForSpecs();
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
-          label.verticalOrigin = VerticalOrigin.TOP;
-          scene.renderForSpecs();
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
-
-          //even though we're resetting to the original font, other properties used to create the id have changed
-          label.font = originalFont;
-          scene.renderForSpecs();
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(9);
-
-          //Changing thickness doesn't requires new glyphs
-          label.outlineWidth = 3;
-          scene.renderForSpecs();
-          expect(Object.keys(labels._glyphTextureCache).length).toEqual(9);
-        });
-    });
-
-    it("should reuse billboards that are not needed any more", function () {
-      const label = labels.add({
-        text: "abc",
+        }).toThrowDeveloperError();
       });
-      return allLabelsReady().then(function () {
-        expect(labels._billboardCollection.length).toEqual(3);
+
+      it("throws with disableDepthTestDistance set less than 0.0", function () {
+        const l = labels.add();
+        expect(function () {
+          l.disableDepthTestDistance = -1.0;
+        }).toThrowDeveloperError();
+      });
+
+      it("can pick a label", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+          id: "id",
+        });
+
+        return allLabelsReady().then(function () {
+          expect(scene).toPickAndCall(function (result) {
+            expect(result.primitive).toEqual(label);
+            expect(result.id).toEqual("id");
+          });
+        });
+      });
+
+      it("can change pick id", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+          id: "id",
+        });
+
+        return allLabelsReady().then(function () {
+          expect(scene).toPickAndCall(function (result) {
+            expect(result.primitive).toEqual(label);
+            expect(result.id).toEqual("id");
+          });
+
+          label.id = "id2";
+
+          expect(scene).toPickAndCall(function (result) {
+            expect(result.primitive).toEqual(label);
+            expect(result.id).toEqual("id2");
+          });
+        });
+      });
+
+      it("does not pick a label with show set to false", function () {
+        labels.add({
+          show: false,
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        return allLabelsReady().then(function () {
+          expect(scene).notToPick();
+        });
+      });
+
+      it("picks a label using translucencyByDistance", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        return allLabelsReady().then(function () {
+          const translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
+          label.translucencyByDistance = translucency;
+
+          expect(scene).toPickPrimitive(label);
+
+          translucency.nearValue = 0.0;
+          translucency.farValue = 0.0;
+          label.translucencyByDistance = translucency;
+
+          expect(scene).notToPick();
+        });
+      });
+
+      it("picks a label using pixelOffsetScaleByDistance", function () {
+        const label = labels.add({
+          position: Cartesian3.ZERO,
+          pixelOffset: new Cartesian2(0.0, 100.0),
+          text: solidBox,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          verticalOrigin: VerticalOrigin.CENTER,
+        });
+
+        return allLabelsReady().then(function () {
+          const pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
+          label.pixelOffsetScaleByDistance = pixelOffsetScale;
+
+          expect(scene).toPickPrimitive(label);
+
+          pixelOffsetScale.nearValue = 10.0;
+          pixelOffsetScale.farValue = 10.0;
+          label.pixelOffsetScaleByDistance = pixelOffsetScale;
+
+          expect(scene).notToPick();
+        });
+      });
+
+      it("should reuse canvases for letters, but only if other settings are the same", async function () {
+        labels.add({
+          text: "a",
+        });
+
+        const cache = labels._glyphBillboardCollection.billboardTextureCache;
+
+        await allLabelsReady();
+        expect(cache.size).toEqual(1);
+
+        labels.add({
+          text: "a",
+        });
+
+        await allLabelsReady();
+        expect(cache.size).toEqual(1);
+
+        labels.add({
+          text: "abcd",
+        });
+
+        await allLabelsReady();
+        expect(cache.size).toEqual(4);
+
+        labels.add({
+          text: "abc",
+        });
+
+        await allLabelsReady();
+        expect(cache.size).toEqual(4);
+
+        const label = labels.add({
+          text: "de",
+        });
+
+        await allLabelsReady();
+        expect(cache.size).toEqual(5);
+
+        const originalFont = label.font;
+        label.font = '30px "Open Sans"';
+        expect(label.font).not.toEqual(originalFont); // otherwise this test needs fixing.
+        scene.renderForSpecs();
+        expect(cache.size).toEqual(7);
+
+        // Changing the outline doesn't cause new glyphs to be generated.
+        label.style = LabelStyle.OUTLINE;
+        scene.renderForSpecs();
+        expect(cache.size).toEqual(7);
+
+        // Changing fill color doesn't cause new glyphs to be generated.
+        label.fillColor = new Color(1.0, 165.0 / 255.0, 0.0, 1.0);
+        scene.renderForSpecs();
+        expect(cache.size).toEqual(7);
+
+        // Changing outline color doesn't cause new glyphs to be generated.
+        label.outlineColor = new Color(1.0, 1.0, 1.0, 1.0);
+        scene.renderForSpecs();
+        expect(cache.size).toEqual(7);
+
+        // vertical origin only affects glyph positions, not glyphs themselves.
+        label.verticalOrigin = VerticalOrigin.CENTER;
+        scene.renderForSpecs();
+        expect(cache.size).toEqual(7);
+        label.verticalOrigin = VerticalOrigin.TOP;
+        scene.renderForSpecs();
+        expect(cache.size).toEqual(7);
+
+        //even though we're resetting to the original font, other properties used to create the id have changed
+        label.font = originalFont;
+        scene.renderForSpecs();
+        expect(cache.size).toEqual(9);
+
+        //Changing thickness doesn't requires new glyphs
+        label.outlineWidth = 3;
+        scene.renderForSpecs();
+        expect(cache.size).toEqual(9);
+      });
+
+      it("should reuse billboards that are not needed any more", async function () {
+        const label = labels.add({
+          text: "abc",
+        });
+
+        await allLabelsReady();
+
+        const glyphs = labels._glyphBillboardCollection;
+        expect(glyphs.length).toEqual(3);
         expect(labels._spareBillboards.length).toEqual(0);
 
         label.text = "a";
-        scene.renderForSpecs();
-        expect(labels._billboardCollection.length).toEqual(3);
+        await allLabelsReady();
+        expect(glyphs.length).toEqual(3);
         expect(labels._spareBillboards.length).toEqual(2);
 
         label.text = "def";
-        scene.renderForSpecs();
-        expect(labels._billboardCollection.length).toEqual(3);
+        await allLabelsReady();
+        expect(glyphs.length).toEqual(3);
         expect(labels._spareBillboards.length).toEqual(0);
       });
-    });
 
-    it("should not reuse background billboards that are not needed any more", function () {
-      const label = labels.add({
-        text: "abc",
-        showBackground: true,
-      });
-      return allLabelsReady().then(function () {
+      it("should not reuse background billboards that are not needed any more", async function () {
+        const label = labels.add({
+          text: "abc",
+          showBackground: true,
+        });
+
+        await allLabelsReady();
         expect(labels._backgroundBillboardCollection.length).toEqual(1);
 
         label.showBackground = false;
@@ -1011,94 +1146,8 @@ describe(
         scene.renderForSpecs();
         expect(labels._backgroundBillboardCollection.length).toEqual(1);
       });
-    });
 
-    describe(
-      "Label",
-      function () {
-        it("can set properties after being added", function () {
-          const label = labels.add();
-
-          const show = false;
-          const position = new Cartesian3(1.0, 2.0, 3.0);
-          const text = "abc";
-          const font = '24px "Open Sans"';
-          const fillColor = {
-            red: 2.0,
-            green: 3.0,
-            blue: 4.0,
-            alpha: 1.0,
-          };
-          const outlineColor = {
-            red: 3.0,
-            green: 4.0,
-            blue: 2.0,
-            alpha: 1.0,
-          };
-          const outlineWidth = 2;
-          const style = LabelStyle.FILL_AND_OUTLINE;
-          const pixelOffset = new Cartesian2(4.0, 5.0);
-          const eyeOffset = new Cartesian3(6.0, 7.0, 8.0);
-          const horizontalOrigin = HorizontalOrigin.LEFT;
-          const verticalOrigin = VerticalOrigin.BOTTOM;
-          const scale = 2.0;
-          const translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
-          const pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
-          const scaleByDistance = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
-
-          label.show = show;
-          label.position = position;
-          label.text = text;
-          label.font = font;
-          label.fillColor = fillColor;
-          label.outlineColor = outlineColor;
-          label.outlineWidth = outlineWidth;
-          label.style = style;
-          label.pixelOffset = pixelOffset;
-          label.eyeOffset = eyeOffset;
-          label.horizontalOrigin = horizontalOrigin;
-          label.verticalOrigin = verticalOrigin;
-          label.scale = scale;
-          label.translucencyByDistance = translucency;
-          label.pixelOffsetScaleByDistance = pixelOffsetScale;
-          label.scaleByDistance = scaleByDistance;
-
-          expect(label.show).toEqual(show);
-          expect(label.position).toEqual(position);
-          expect(label.text).toEqual(text);
-          expect(label.font).toEqual(font);
-          expect(label.fillColor).toEqual(fillColor);
-          expect(label.outlineColor).toEqual(outlineColor);
-          expect(label.outlineWidth).toEqual(outlineWidth);
-          expect(label.style).toEqual(style);
-          expect(label.pixelOffset).toEqual(pixelOffset);
-          expect(label.eyeOffset).toEqual(eyeOffset);
-          expect(label.horizontalOrigin).toEqual(horizontalOrigin);
-          expect(label.verticalOrigin).toEqual(verticalOrigin);
-          expect(label.scale).toEqual(scale);
-          expect(label.translucencyByDistance).toEqual(translucency);
-          expect(label.pixelOffsetScaleByDistance).toEqual(pixelOffsetScale);
-          expect(label.scaleByDistance).toEqual(scaleByDistance);
-        });
-
-        it("is destroyed after being removed", function () {
-          const label = labels.add();
-
-          expect(label.isDestroyed()).toEqual(false);
-
-          labels.remove(label);
-
-          expect(label.isDestroyed()).toEqual(true);
-        });
-
-        it("throws after being removed", function () {
-          const label = labels.add();
-          labels.remove(label);
-          expect(function () {
-            label.equals(label);
-          }).toThrowDeveloperError();
-        });
-
+      describe("Label", function () {
         it("can compute screen space position", function () {
           labels.clampToPixel = false;
           const label = labels.add({
@@ -1316,72 +1365,55 @@ describe(
           });
         });
 
-        it("can equal another label", function () {
+        it("can specify font using units other than pixels", async function () {
           const label = labels.add({
-            position: new Cartesian3(1.0, 2.0, 3.0),
-            text: "equals",
-          });
-          const otherLabel = labels.add({
-            position: new Cartesian3(1.0, 2.0, 3.0),
-            text: "equals",
+            font: '12pt "Open Sans"',
+            text: "Hello there",
           });
 
-          // This tests the `LabelCollection.equals` function itself, not simple equality.
-          expect(label.equals(otherLabel)).toEqual(true);
+          await allLabelsReady();
+
+          const dimensions = label._glyphs[0].dimensions;
+          expect(dimensions.height).toBeGreaterThan(0);
         });
 
-        it("can differ from another label", function () {
-          const label = labels.add({
-            position: new Cartesian3(1.0, 2.0, 3.0),
-          });
-          const otherLabel = labels.add({
-            position: new Cartesian3(4.0, 5.0, 6.0),
-          });
-
-          // This tests the `LabelCollection.equals` function itself, not simple equality.
-          expect(label.equals(otherLabel)).toEqual(false);
-        });
-
-        it("does not equal undefined", function () {
-          // This tests the `LabelCollection.equals` function itself, not simple equality.
-          const label = labels.add();
-          expect(label.equals(undefined)).toEqual(false);
-        });
-
-        it("should have a number of glyphs equal to the number of characters", function () {
+        it("should have a number of glyphs equal to the number of characters", async function () {
           let label = labels.add({
             text: "abc",
           });
-          return allLabelsReady().then(function () {
-            expect(label._glyphs.length).toEqual(3);
 
-            label.text = "abcd";
-            scene.renderForSpecs();
-            expect(label._glyphs.length).toEqual(4);
+          await allLabelsReady();
+          expect(label._glyphs.length).toEqual(3);
 
-            label.text = "";
-            scene.renderForSpecs();
-            expect(label._glyphs.length).toEqual(0);
+          label.text = "abcd";
+          scene.renderForSpecs();
+          expect(label._glyphs.length).toEqual(4);
 
-            label = labels.add();
-            scene.renderForSpecs();
-            expect(label._glyphs.length).toEqual(0);
-          });
+          label.text = "";
+          scene.renderForSpecs();
+          expect(label._glyphs.length).toEqual(0);
+
+          label = labels.add();
+          scene.renderForSpecs();
+          expect(label._glyphs.length).toEqual(0);
         });
 
-        it("does not create billboards for spaces", function () {
+        it("does not create billboards for whitespace", async function () {
           const label = labels.add({
             text: "abc",
           });
-          return allLabelsReady().then(function () {
-            expect(label._glyphs.length).toEqual(3);
-            expect(labels._billboardCollection.length).toEqual(3);
 
-            label.text = " ab c";
-            scene.renderForSpecs();
-            expect(label._glyphs.length).toEqual(5);
-            expect(labels._billboardCollection.length).toEqual(3);
-          });
+          await allLabelsReady();
+
+          const glyphs = labels._glyphBillboardCollection;
+
+          expect(label._glyphs.length).toEqual(3);
+          expect(glyphs.length).toEqual(3);
+
+          label.text = " ab c";
+          scene.renderForSpecs();
+          expect(label._glyphs.length).toEqual(5);
+          expect(glyphs.length).toEqual(3);
         });
 
         function getGlyphBillboardVertexTranslate(label, index) {
@@ -1912,7 +1944,7 @@ describe(
           });
         });
 
-        it("Correctly updates billboard position when height reference changes", function () {
+        it("Correctly updates billboard position when height reference changes", async function () {
           scene.globe = new Globe();
           const labelsWithScene = new LabelCollection({ scene: scene });
           scene.primitives.add(labelsWithScene);
@@ -1924,17 +1956,20 @@ describe(
             heightReference: HeightReference.CLAMP_TO_GROUND,
           });
 
-          return allLabelsReady().then(function () {
-            const glyph = label._glyphs[0];
-            const billboard = glyph.billboard;
-            expect(billboard.position).toEqual(label.position);
-
-            label.heightReference = HeightReference.NONE;
+          await pollToPromise(() => {
             scene.renderForSpecs();
-
-            expect(billboard.position).toEqual(label.position);
-            scene.primitives.remove(labelsWithScene);
+            return labelsWithScene.ready;
           });
+
+          const glyph = label._glyphs[0];
+          const billboard = glyph.billboard;
+          expect(billboard.position).toEqual(label.position);
+
+          label.heightReference = HeightReference.NONE;
+          scene.renderForSpecs();
+
+          expect(billboard.position).toEqual(label.position);
+          scene.primitives.remove(labelsWithScene);
         });
 
         it("should set vertexTranslate of billboards correctly when font size changes", function () {
@@ -2104,16 +2139,6 @@ describe(
           });
         });
 
-        it("should not modify text when rightToLeft is false", function () {
-          const text = "bla bla bla";
-          const label = labels.add({
-            text: text,
-          });
-          return allLabelsReady().then(function () {
-            expect(label.text).toEqual(text);
-          });
-        });
-
         it("filters out soft hyphens from input strings", function () {
           const softHyphen = String.fromCharCode(0xad);
           const text = `test string${softHyphen}`;
@@ -2125,682 +2150,301 @@ describe(
             expect(label._renderedText).toEqual("test string");
           });
         });
-      },
-      "WebGL",
-    );
-
-    describe("right to left detection", function () {
-      beforeAll(function () {
-        Label.enableRightToLeftDetection = true;
       });
 
-      afterAll(function () {
-        Label.enableRightToLeftDetection = false;
-      });
-
-      it("should not modify text when rightToLeft is true and there are no RTL characters", function () {
-        const text = "bla bla bla";
-        const label = labels.add({
-          text: text,
+      it("computes bounding sphere in 3D", function () {
+        const one = labels.add({
+          position: Cartesian3.fromDegrees(-50.0, -50.0, 0.0),
+          text: "one",
+        });
+        const two = labels.add({
+          position: Cartesian3.fromDegrees(-50.0, 50.0, 0.0),
+          text: "two",
         });
 
-        expect(label.text).toEqual(text);
+        return allLabelsReady().then(function () {
+          const actual = scene.frameState.commandList[0].boundingVolume;
+
+          const positions = [one.position, two.position];
+          const expected = BoundingSphere.fromPoints(positions);
+          expect(actual.center).toEqual(expected.center);
+          expect(actual.radius).toEqual(expected.radius);
+        });
       });
 
-      it("should reverse text when there are only hebrew characters and rightToLeft is true", function () {
-        const text = "שלום";
-        const expectedText = "םולש";
-        const label = labels.add({
-          text: text,
+      it("computes bounding sphere in Columbus view", function () {
+        // Disable collision detection to allow controlled camera position,
+        // hence predictable bounding sphere size
+        const originalEnableCollisionDetection =
+          scene.screenSpaceCameraController.enableCollisionDetection;
+        scene.screenSpaceCameraController.enableCollisionDetection = false;
+
+        const projection = scene.mapProjection;
+        const ellipsoid = projection.ellipsoid;
+
+        const one = labels.add({
+          position: Cartesian3.fromDegrees(-50.0, -50.0, 0.0),
+          text: "one",
+        });
+        const two = labels.add({
+          position: Cartesian3.fromDegrees(-50.0, 50.0, 0.0),
+          text: "two",
         });
 
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
+        // Update scene state
+        scene.morphToColumbusView(0);
+        return allLabelsReady().then(function () {
+          const actual = scene.frameState.commandList[0].boundingVolume;
+
+          const projectedPositions = [
+            projection.project(ellipsoid.cartesianToCartographic(one.position)),
+            projection.project(ellipsoid.cartesianToCartographic(two.position)),
+          ];
+          const expected = BoundingSphere.fromPoints(projectedPositions);
+          expected.center = new Cartesian3(
+            0.0,
+            expected.center.x,
+            expected.center.y,
+          );
+          expect(actual.center).toEqualEpsilon(
+            expected.center,
+            CesiumMath.EPSILON8,
+          );
+          expect(actual.radius).toBeGreaterThanOrEqual(expected.radius);
+          scene.screenSpaceCameraController.enableCollisionDetection =
+            originalEnableCollisionDetection;
+        });
       });
 
-      it("should reverse text when there are only arabic characters and rightToLeft is true", function () {
-        const text = "مرحبا";
-        const expectedText = "ابحرم";
-        const label = labels.add({
-          text: text,
+      it("computes bounding sphere in 2D", function () {
+        const projection = scene.mapProjection;
+        const ellipsoid = projection.ellipsoid;
+
+        const one = labels.add({
+          position: Cartesian3.fromDegrees(-50.0, -50.0),
+          text: "one",
+        });
+        const two = labels.add({
+          position: Cartesian3.fromDegrees(-50.0, 50.0),
+          text: "two",
         });
 
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
-      });
-
-      it("should reverse part of text when there is mix of right-to-left and other kind of characters and rightToLeft is true", function () {
-        const text = 'Master (אדון): "Hello"\nתלמיד (student): "שלום"';
-        const expectedText = 'Master (ןודא): "Hello"\n"םולש" :(student) דימלת';
-        const label = labels.add({
-          text: text,
+        camera.setView({
+          destination: Rectangle.fromDegrees(-60.0, -60.0, -40.0, 60.0),
         });
 
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
-      });
+        scene.morphTo2D(0);
+        return allLabelsReady().then(function () {
+          const actual = scene.frameState.commandList[0].boundingVolume;
 
-      it("should reverse all text and replace brackets when there is right-to-left characters and rightToLeft is true", function () {
-        const text = "משפט [מורכב] {עם} תווים <מיוחדים special>";
-        const expectedText = "<special םידחוימ> םיוות {םע} [בכרומ] טפשמ";
-        const label = labels.add({
-          text: text,
+          const projectedPositions = [
+            projection.project(ellipsoid.cartesianToCartographic(one.position)),
+            projection.project(ellipsoid.cartesianToCartographic(two.position)),
+          ];
+          const expected = BoundingSphere.fromPoints(projectedPositions);
+          expected.center = new Cartesian3(
+            0.0,
+            expected.center.x,
+            expected.center.y,
+          );
+          expect(actual.center).toEqualEpsilon(
+            expected.center,
+            CesiumMath.EPSILON8,
+          );
+          expect(actual.radius).toBeGreaterThan(expected.radius);
         });
-
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
       });
 
-      it("should reverse only text that detected as rtl text when it begin with non rtl characters when rightToLeft is true", function () {
-        const text =
-          "(interesting sentence with hebrew characters) שלום(עליך)חביבי.";
-        const expectedText =
-          "(interesting sentence with hebrew characters) יביבח(ךילע)םולש.";
-        const label = labels.add({
-          text: text,
-        });
-
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
-      });
-
-      it("should not change nothing if it only non alphanumeric characters when rightToLeft is true", function () {
-        const text = "([{- -}])";
-        const expectedText = "([{- -}])";
-        const label = labels.add({
-          text: text,
-        });
-
-        expect(label.text).toEqual(expectedText);
-      });
-
-      it("detects characters in the range \\u05D0-\\u05EA", function () {
-        const text = "\u05D1\u05D2";
-        const expectedText = "\u05D2\u05D1";
-        const label = labels.add({
-          text: text,
-        });
-
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
-      });
-
-      it("detects characters in the range \\u0600-\\u06FF", function () {
-        const text = "\u0601\u0602";
-        const expectedText = "\u0602\u0601";
-        const label = labels.add({
-          text: text,
-        });
-
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
-      });
-
-      it("detects characters in the range \\u0750-\\u077F", function () {
-        const text = "\u0751\u0752";
-        const expectedText = "\u0752\u0751";
-        const label = labels.add({
-          text: text,
-        });
-
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
-      });
-
-      it("detects characters in the range \\u08A0-\\u08FF", function () {
-        const text = "\u08A1\u08A2";
-        const expectedText = "\u08A2\u08A1";
-        const label = labels.add({
-          text: text,
-        });
-
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
-      });
-
-      it("should reversing correctly non alphabetic characters", function () {
-        const text = "A אב: ג\nאב: ג";
-        const expectedText = "A ג :בא\nג :בא";
-        const label = labels.add({
-          text: text,
-        });
-
-        expect(label.text).toEqual(text);
-        expect(label._renderedText).toEqual(expectedText);
-      });
-    });
-
-    it("computes bounding sphere in 3D", function () {
-      const one = labels.add({
-        position: Cartesian3.fromDegrees(-50.0, -50.0, 0.0),
-        text: "one",
-      });
-      const two = labels.add({
-        position: Cartesian3.fromDegrees(-50.0, 50.0, 0.0),
-        text: "two",
-      });
-
-      return allLabelsReady().then(function () {
-        const actual = scene.frameState.commandList[0].boundingVolume;
-
-        const positions = [one.position, two.position];
-        const expected = BoundingSphere.fromPoints(positions);
-        expect(actual.center).toEqual(expected.center);
-        expect(actual.radius).toEqual(expected.radius);
-      });
-    });
-
-    it("computes bounding sphere in Columbus view", function () {
-      // Disable collision detection to allow controlled camera position,
-      // hence predictable bounding sphere size
-      const originalEnableCollisionDetection =
-        scene.screenSpaceCameraController.enableCollisionDetection;
-      scene.screenSpaceCameraController.enableCollisionDetection = false;
-
-      const projection = scene.mapProjection;
-      const ellipsoid = projection.ellipsoid;
-
-      const one = labels.add({
-        position: Cartesian3.fromDegrees(-50.0, -50.0, 0.0),
-        text: "one",
-      });
-      const two = labels.add({
-        position: Cartesian3.fromDegrees(-50.0, 50.0, 0.0),
-        text: "two",
-      });
-
-      // Update scene state
-      scene.morphToColumbusView(0);
-      return allLabelsReady().then(function () {
-        const actual = scene.frameState.commandList[0].boundingVolume;
-
-        const projectedPositions = [
-          projection.project(ellipsoid.cartesianToCartographic(one.position)),
-          projection.project(ellipsoid.cartesianToCartographic(two.position)),
-        ];
-        const expected = BoundingSphere.fromPoints(projectedPositions);
-        expected.center = new Cartesian3(
-          0.0,
-          expected.center.x,
-          expected.center.y,
-        );
-        expect(actual.center).toEqualEpsilon(
-          expected.center,
-          CesiumMath.EPSILON8,
-        );
-        expect(actual.radius).toBeGreaterThanOrEqual(expected.radius);
-        scene.screenSpaceCameraController.enableCollisionDetection =
-          originalEnableCollisionDetection;
-      });
-    });
-
-    it("computes bounding sphere in 2D", function () {
-      const projection = scene.mapProjection;
-      const ellipsoid = projection.ellipsoid;
-
-      const one = labels.add({
-        position: Cartesian3.fromDegrees(-50.0, -50.0),
-        text: "one",
-      });
-      const two = labels.add({
-        position: Cartesian3.fromDegrees(-50.0, 50.0),
-        text: "two",
-      });
-
-      camera.setView({
-        destination: Rectangle.fromDegrees(-60.0, -60.0, -40.0, 60.0),
-      });
-
-      scene.morphTo2D(0);
-      return allLabelsReady().then(function () {
-        const actual = scene.frameState.commandList[0].boundingVolume;
-
-        const projectedPositions = [
-          projection.project(ellipsoid.cartesianToCartographic(one.position)),
-          projection.project(ellipsoid.cartesianToCartographic(two.position)),
-        ];
-        const expected = BoundingSphere.fromPoints(projectedPositions);
-        expected.center = new Cartesian3(
-          0.0,
-          expected.center.x,
-          expected.center.y,
-        );
-        expect(actual.center).toEqualEpsilon(
-          expected.center,
-          CesiumMath.EPSILON8,
-        );
-        expect(actual.radius).toBeGreaterThan(expected.radius);
-      });
-    });
-
-    it("Label.show throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.show = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.position throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.position = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.text throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.text = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.font throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.font = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.fillColor throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.fillColor = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.outlineColor throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.outlineColor = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.outlineWidth throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.outlineWidth = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.style throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.style = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.pixelOffset throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.pixelOffset = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.eyeOffset throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.eyeOffset = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.horizontalOrigin throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.horizontalOrigin = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.verticalOrigin throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.verticalOrigin = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.scale throws with undefined", function () {
-      const label = labels.add();
-      expect(function () {
-        label.scale = undefined;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.computeScreenSpacePosition throws with undefined scene", function () {
-      const label = labels.add();
-      expect(function () {
-        label.computeScreenSpacePosition();
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.translucencyByDistance throws with nearDistance === farDistance", function () {
-      const label = labels.add();
-      const translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
-      expect(function () {
-        label.translucencyByDistance = translucency;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.pixelOffsetScaleByDistance throws with nearDistance === farDistance", function () {
-      const label = labels.add();
-      const pixelOffsetScale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
-      expect(function () {
-        label.pixelOffsetScaleByDistance = pixelOffsetScale;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.scaleByDistance throws with nearDistance === farDistance", function () {
-      const label = labels.add();
-      const scaleByDistance = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
-      expect(function () {
-        label.scaleByDistance = scaleByDistance;
-      }).toThrowDeveloperError();
-    });
-
-    it("new label throws with invalid translucencyByDistance (nearDistance === farDistance)", function () {
-      const translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
-      expect(function () {
+      it("destroys texture atlas when destroying", async function () {
         labels.add({
-          translucencyByDistance: translucency,
+          text: "a",
         });
-      }).toThrowDeveloperError();
-    });
+        await allLabelsReady();
 
-    it("new label throws with invalid pixelOffsetScaleByDistance (nearDistance === farDistance)", function () {
-      const pixelOffsetScale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
-      expect(function () {
-        labels.add({
-          pixelOffsetScaleByDistance: pixelOffsetScale,
-        });
-      }).toThrowDeveloperError();
-    });
+        const glyphs = labels._glyphBillboardCollection.textureAtlas;
+        const background = labels._backgroundBillboardCollection.textureAtlas;
 
-    it("new label throws with invalid scaleByDistance (nearDistance === farDistance)", function () {
-      const scaleByDistance = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
-      expect(function () {
-        labels.add({
-          scaleByDistance: scaleByDistance,
-        });
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.translucencyByDistance throws with nearDistance > farDistance", function () {
-      const label = labels.add();
-      const translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
-      expect(function () {
-        label.translucencyByDistance = translucency;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.pixelOffsetScaleByDistance throws with nearDistance > farDistance", function () {
-      const label = labels.add();
-      const pixelOffsetScale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
-      expect(function () {
-        label.pixelOffsetScaleByDistance = pixelOffsetScale;
-      }).toThrowDeveloperError();
-    });
-
-    it("Label.scaleByDistance throws with nearDistance > farDistance", function () {
-      const label = labels.add();
-      const scaleByDistance = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
-      expect(function () {
-        label.scaleByDistance = scaleByDistance;
-      }).toThrowDeveloperError();
-    });
-
-    it("destroys texture atlas when destroying", function () {
-      labels.add({
-        text: "a",
-      });
-      return allLabelsReady().then(function () {
-        const textureAtlas = labels._textureAtlas;
-        expect(textureAtlas.isDestroyed()).toBe(false);
+        expect(glyphs.isDestroyed()).toBe(false);
+        expect(background.isDestroyed()).toBe(false);
 
         scene.primitives.removeAll();
 
-        expect(textureAtlas.isDestroyed()).toBe(true);
-      });
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "a😀b";
-      const expectedText = "a😀b";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "awe2!$34f❤️b";
-      const expectedText = "awe2!$34f❤️b";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "lakneklf\u200fsldknfklf";
-      const expectedText = "lakneklfsldknfklf";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test \u200f - with Right-to-Left Mark (RLM)";
-      const expectedText = "test  - with Right-to-Left Mark (RLM)";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test \u200b - with Zero-Width Space";
-      const expectedText = "test  - with Zero-Width Space";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test \u202a - with Left-to-Right Embedding";
-      const expectedText = "test  - with Left-to-Right Embedding";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test 😀 - Emoji";
-      const expectedText = "test 😀 - Emoji";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test ❤️ - Emoji";
-      const expectedText = "test ❤️ - Emoji";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test 🌍 - Emoji";
-      const expectedText = "test 🌍 - Emoji";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test \u2060 - with Word Joiner";
-      const expectedText = "test  - with Word Joiner";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test \u0000 - with Null Character";
-      const expectedText = "test  - with Null Character";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test \u000E - with Shift Out (SO)";
-      const expectedText = "test  - with Shift Out (SO)";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test \u001F - with Unit Separator (US)";
-      const expectedText = "test  - with Unit Separator (US)";
-      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
-    });
-
-    describe("height referenced labels", function () {
-      beforeEach(function () {
-        scene.globe = new Globe();
-        labelsWithHeight = new LabelCollection({
-          scene: scene,
-        });
-        scene.primitives.add(labelsWithHeight);
+        expect(glyphs.isDestroyed()).toBe(true);
+        expect(background.isDestroyed()).toBe(true);
       });
 
-      it("explicitly constructs a label with height reference", function () {
-        const l = labelsWithHeight.add({
-          text: "test",
-          heightReference: HeightReference.CLAMP_TO_GROUND,
+      describe("height referenced labels", function () {
+        let labelsWithHeight;
+        beforeEach(function () {
+          scene.globe = new Globe();
+          labelsWithHeight = new LabelCollection({
+            scene: scene,
+          });
+          scene.primitives.add(labelsWithHeight);
         });
 
-        expect(l.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
-      });
+        it("explicitly constructs a label with height reference", function () {
+          const l = labelsWithHeight.add({
+            text: "test",
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+          });
 
-      it("set label height reference property", function () {
-        const l = labelsWithHeight.add({
-          text: "test",
-        });
-        l.heightReference = HeightReference.CLAMP_TO_GROUND;
-
-        expect(l.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
-      });
-
-      it("creating with a height reference creates a height update callback", function () {
-        spyOn(scene, "updateHeight");
-
-        const position = Cartesian3.fromDegrees(-72.0, 40.0);
-        labelsWithHeight.add({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: position,
+          expect(l.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
         });
 
-        expect(scene.updateHeight).toHaveBeenCalledWith(
-          Cartographic.fromCartesian(position),
-          jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND,
-        );
-      });
+        it("set label height reference property", function () {
+          const l = labelsWithHeight.add({
+            text: "test",
+          });
+          l.heightReference = HeightReference.CLAMP_TO_GROUND;
 
-      it("set height reference property creates a height update callback", function () {
-        spyOn(scene, "updateHeight");
-
-        const position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const l = labelsWithHeight.add({
-          position: position,
-        });
-        l.heightReference = HeightReference.CLAMP_TO_GROUND;
-
-        expect(scene.updateHeight).toHaveBeenCalledWith(
-          Cartographic.fromCartesian(position),
-          jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND,
-        );
-      });
-
-      it("updates the callback when the height reference changes", function () {
-        spyOn(scene, "updateHeight");
-
-        const position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const l = labelsWithHeight.add({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: position,
+          expect(l.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
         });
 
-        expect(scene.updateHeight).toHaveBeenCalledWith(
-          Cartographic.fromCartesian(position),
-          jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND,
-        );
+        it("creating with a height reference creates a height update callback", function () {
+          spyOn(scene, "updateHeight");
 
-        l.heightReference = HeightReference.RELATIVE_TO_GROUND;
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
 
-        expect(scene.updateHeight).toHaveBeenCalledWith(
-          Cartographic.fromCartesian(position),
-          jasmine.any(Function),
-          HeightReference.RELATIVE_TO_GROUND,
-        );
-      });
-
-      it("removes the callback when the height reference changes", function () {
-        const removeCallback = jasmine.createSpy();
-        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
-
-        const position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const l = labelsWithHeight.add({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: position,
+          expect(scene.updateHeight).toHaveBeenCalledWith(
+            Cartographic.fromCartesian(position),
+            jasmine.any(Function),
+            HeightReference.CLAMP_TO_GROUND,
+          );
         });
 
-        l.heightReference = HeightReference.NONE;
+        it("set height reference property creates a height update callback", function () {
+          spyOn(scene, "updateHeight");
 
-        expect(removeCallback).toHaveBeenCalled();
-      });
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const l = labelsWithHeight.add({
+            position: position,
+          });
+          l.heightReference = HeightReference.CLAMP_TO_GROUND;
 
-      it("changing the position updates the callback", function () {
-        const removeCallback = jasmine.createSpy();
-        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
-
-        let position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const l = labelsWithHeight.add({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: position,
+          expect(scene.updateHeight).toHaveBeenCalledWith(
+            Cartographic.fromCartesian(position),
+            jasmine.any(Function),
+            HeightReference.CLAMP_TO_GROUND,
+          );
         });
 
-        expect(scene.updateHeight).toHaveBeenCalledWith(
-          Cartographic.fromCartesian(position),
-          jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND,
-        );
+        it("updates the callback when the height reference changes", function () {
+          spyOn(scene, "updateHeight");
 
-        position = l.position = Cartesian3.fromDegrees(-73.0, 40.0);
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
 
-        expect(removeCallback).toHaveBeenCalled();
-        expect(scene.updateHeight).toHaveBeenCalledWith(
-          Cartographic.fromCartesian(position),
-          jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND,
-        );
-      });
+          expect(scene.updateHeight).toHaveBeenCalledWith(
+            Cartographic.fromCartesian(position),
+            jasmine.any(Function),
+            HeightReference.CLAMP_TO_GROUND,
+          );
 
-      it("callback updates the position", function () {
-        let invokeCallback;
-        spyOn(scene, "updateHeight").and.callFake(
-          (cartographic, updateCallback) => {
-            invokeCallback = (height) => {
-              cartographic.height = height;
-              updateCallback(cartographic);
-            };
-          },
-        );
+          l.heightReference = HeightReference.RELATIVE_TO_GROUND;
 
-        const position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const l = labelsWithHeight.add({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: position,
+          expect(scene.updateHeight).toHaveBeenCalledWith(
+            Cartographic.fromCartesian(position),
+            jasmine.any(Function),
+            HeightReference.RELATIVE_TO_GROUND,
+          );
         });
-        expect(scene.updateHeight).toHaveBeenCalled();
 
-        let cartographic = scene.globe.ellipsoid.cartesianToCartographic(
-          l._clampedPosition,
-        );
-        expect(cartographic.height).toEqual(0.0);
+        it("removes the callback when the height reference changes", function () {
+          const removeCallback = jasmine.createSpy();
+          spyOn(scene, "updateHeight").and.returnValue(removeCallback);
 
-        invokeCallback(100.0);
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
 
-        cartographic = scene.globe.ellipsoid.cartesianToCartographic(
-          l._clampedPosition,
-        );
-        expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
-      });
+          l.heightReference = HeightReference.NONE;
 
-      it("resets the clamped position when HeightReference.NONE", function () {
-        spyOn(scene.camera, "update");
-        const l = labelsWithHeight.add({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          text: "t",
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          expect(removeCallback).toHaveBeenCalled();
         });
-        return allLabelsReady().then(function () {
+
+        it("changing the position updates the callback", function () {
+          const removeCallback = jasmine.createSpy();
+          spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+          let position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
+
+          expect(scene.updateHeight).toHaveBeenCalledWith(
+            Cartographic.fromCartesian(position),
+            jasmine.any(Function),
+            HeightReference.CLAMP_TO_GROUND,
+          );
+
+          position = l.position = Cartesian3.fromDegrees(-73.0, 40.0);
+
+          expect(removeCallback).toHaveBeenCalled();
+          expect(scene.updateHeight).toHaveBeenCalledWith(
+            Cartographic.fromCartesian(position),
+            jasmine.any(Function),
+            HeightReference.CLAMP_TO_GROUND,
+          );
+        });
+
+        it("callback updates the position", function () {
+          let invokeCallback;
+          spyOn(scene, "updateHeight").and.callFake(
+            (cartographic, updateCallback) => {
+              invokeCallback = (height) => {
+                cartographic.height = height;
+                updateCallback(cartographic);
+              };
+            },
+          );
+
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
+          expect(scene.updateHeight).toHaveBeenCalled();
+
+          let cartographic = scene.globe.ellipsoid.cartesianToCartographic(
+            l._clampedPosition,
+          );
+          expect(cartographic.height).toEqual(0.0);
+
+          invokeCallback(100.0);
+
+          cartographic = scene.globe.ellipsoid.cartesianToCartographic(
+            l._clampedPosition,
+          );
+          expect(cartographic.height).toEqualEpsilon(
+            100.0,
+            CesiumMath.EPSILON9,
+          );
+        });
+
+        it("resets the clamped position when HeightReference.NONE", async function () {
+          spyOn(scene.camera, "update");
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            text: "t",
+            position: Cartesian3.fromDegrees(-72.0, 40.0),
+          });
+
+          await pollToPromise(() => {
+            scene.renderForSpecs();
+            return labelsWithHeight.ready;
+          });
+
           expect(l._clampedPosition).toBeDefined();
           expect(l._glyphs[0].billboard._clampedPosition).toBeDefined();
 
@@ -2808,16 +2452,19 @@ describe(
           expect(l._clampedPosition).toBeUndefined();
           expect(l._glyphs[0].billboard._clampedPosition).toBeUndefined();
         });
-      });
 
-      it("clears the billboard height reference callback when the label is removed", function () {
-        spyOn(scene.camera, "update");
-        const l = labelsWithHeight.add({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          text: "t",
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
-        });
-        return allLabelsReady().then(function () {
+        it("clears the billboard height reference callback when the label is removed", async function () {
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            text: "t",
+            position: Cartesian3.fromDegrees(-72.0, 40.0),
+          });
+
+          await pollToPromise(() => {
+            scene.renderForSpecs();
+            return labelsWithHeight.ready;
+          });
+
           const billboard = l._glyphs[0].billboard;
           expect(billboard._removeCallbackFunc).toBeDefined();
           const spy = spyOn(billboard, "_removeCallbackFunc");
@@ -2828,7 +2475,7 @@ describe(
           ).toBeUndefined();
         });
       });
-    });
-  },
-  "WebGL",
-);
+    },
+    "WebGL",
+  );
+});

@@ -19,10 +19,11 @@ function VoxelProvider() {
 
 Object.defineProperties(VoxelProvider.prototype, {
   /**
-   * A transform from local space to global space. If undefined, the identity matrix will be used instead.
+   * A transform from local space to global space.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Matrix4|undefined}
+   * @type {Matrix4}
+   * @default Matrix4.IDENTITY
    * @readonly
    */
   globalTransform: {
@@ -30,10 +31,11 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * A transform from shape space to local space. If undefined, the identity matrix will be used instead.
+   * A transform from shape space to local space.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Matrix4|undefined}
+   * @type {Matrix4}
+   * @default Matrix4.IDENTITY
    * @readonly
    */
   shapeTransform: {
@@ -42,7 +44,6 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the {@link VoxelShapeType}
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {VoxelShapeType}
@@ -55,7 +56,6 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the minimum bounds.
    * If undefined, the shape's default minimum bounds will be used instead.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {Cartesian3|undefined}
@@ -68,7 +68,6 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the maximum bounds.
    * If undefined, the shape's default maximum bounds will be used instead.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {Cartesian3|undefined}
@@ -80,7 +79,6 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the number of voxels per dimension of a tile. This is the same for all tiles in the dataset.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {Cartesian3}
@@ -92,10 +90,10 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the number of padding voxels before the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Cartesian3|undefined}
+   * @type {Cartesian3}
+   * @default Cartesian3.ZERO
    * @readonly
    */
   paddingBefore: {
@@ -104,10 +102,10 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the number of padding voxels after the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Cartesian3|undefined}
+   * @type {Cartesian3}
+   * @default Cartesian3.ZERO
    * @readonly
    */
   paddingAfter: {
@@ -116,7 +114,6 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata names.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {string[]}
@@ -128,7 +125,6 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata types.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {MetadataType[]}
@@ -140,7 +136,6 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata component types.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {MetadataComponentType[]}
@@ -152,7 +147,6 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata minimum values.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {number[][]|undefined}
@@ -164,7 +158,6 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata maximum values.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {number[][]|undefined}
@@ -175,8 +168,9 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * The maximum number of tiles that exist for this provider. This value is used as a hint to the voxel renderer to allocate an appropriate amount of GPU memory. If this value is not known it can be undefined.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
+   * The maximum number of tiles that exist for this provider.
+   * This value is used as a hint to the voxel renderer to allocate an appropriate amount of GPU memory.
+   * If this value is not known it can be undefined.
    *
    * @memberof VoxelProvider.prototype
    * @type {number|undefined}
@@ -198,10 +192,9 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the number of keyframes in the dataset.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
-   * @type {number}
+   * @type {number|undefined}
    * @readonly
    * @private
    */
@@ -210,11 +203,11 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * Gets the {@link TimeIntervalCollection} for the dataset, or undefined if it doesn't have timestamps.
-   * This should not be called before {@link VoxelProvider#ready} returns true.
+   * Gets the {@link TimeIntervalCollection} for the dataset,
+   * or undefined if it doesn't have timestamps.
    *
    * @memberof VoxelProvider.prototype
-   * @type {TimeIntervalCollection}
+   * @type {TimeIntervalCollection|undefined}
    * @readonly
    * @private
    */
@@ -224,9 +217,7 @@ Object.defineProperties(VoxelProvider.prototype, {
 });
 
 /**
- * Requests the data for a given tile. The data is a flattened 3D array ordered by X, then Y, then Z.
- * This function should not be called before {@link VoxelProvider#ready} returns true.
- * @function
+ * Requests the data for a given tile.
  *
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.tileLevel=0] The tile's level.
@@ -234,8 +225,10 @@ Object.defineProperties(VoxelProvider.prototype, {
  * @param {number} [options.tileY=0] The tile's Y coordinate.
  * @param {number} [options.tileZ=0] The tile's Z coordinate.
  * @privateparam {number} [options.keyframe=0] The requested keyframe.
- * @returns {Promise<Array[]>|undefined} A promise to an array of typed arrays containing the requested voxel data or undefined if there was a problem loading the data.
+ * @returns {Promise<VoxelContent>|undefined} A promise resolving to a VoxelContent containing the data for the tile, or undefined if the request could not be scheduled this frame.
  */
-VoxelProvider.prototype.requestData = DeveloperError.throwInstantiationError;
+VoxelProvider.prototype.requestData = function (options) {
+  DeveloperError.throwInstantiationError();
+};
 
 export default VoxelProvider;

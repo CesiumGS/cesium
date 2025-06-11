@@ -1,4 +1,4 @@
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Resource from "../../Core/Resource.js";
@@ -29,7 +29,7 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function TextureUniform(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   const hasTypedArray = defined(options.typedArray);
   const hasUrl = defined(options.url);
@@ -48,11 +48,8 @@ function TextureUniform(options) {
   this.typedArray = options.typedArray;
   this.width = options.width;
   this.height = options.height;
-  this.pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
-  this.pixelDatatype = defaultValue(
-    options.pixelDatatype,
-    PixelDatatype.UNSIGNED_BYTE,
-  );
+  this.pixelFormat = options.pixelFormat ?? PixelFormat.RGBA;
+  this.pixelDatatype = options.pixelDatatype ?? PixelDatatype.UNSIGNED_BYTE;
 
   let resource = options.url;
   if (typeof resource === "string") {
@@ -60,7 +57,7 @@ function TextureUniform(options) {
   }
   this.resource = resource;
 
-  const repeat = defaultValue(options.repeat, true);
+  const repeat = options.repeat ?? true;
   const wrap = repeat ? TextureWrap.REPEAT : TextureWrap.CLAMP_TO_EDGE;
   this.sampler = new Sampler({
     wrapS: wrap,

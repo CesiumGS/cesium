@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import IndexDatatype from "./IndexDatatype.js";
@@ -199,9 +199,9 @@ function QuantizedMeshTerrainData(options) {
   this._eastSkirtHeight = options.eastSkirtHeight;
   this._northSkirtHeight = options.northSkirtHeight;
 
-  this._childTileMask = defaultValue(options.childTileMask, 15);
+  this._childTileMask = options.childTileMask ?? 15;
 
-  this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
+  this._createdByUpsampling = options.createdByUpsampling ?? false;
   this._waterMask = options.waterMask;
 
   this._mesh = undefined;
@@ -223,7 +223,7 @@ Object.defineProperties(QuantizedMeshTerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof QuantizedMeshTerrainData.prototype
-   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|undefined}
    */
   waterMask: {
     get: function () {
@@ -288,7 +288,7 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
  *          be retried later.
  */
 QuantizedMeshTerrainData.prototype.createMesh = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);
@@ -301,12 +301,9 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
   const x = options.x;
   const y = options.y;
   const level = options.level;
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0,
-  );
-  const throttle = defaultValue(options.throttle, true);
+  const exaggeration = options.exaggeration ?? 1.0;
+  const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
+  const throttle = options.throttle ?? true;
 
   const ellipsoid = tilingScheme.ellipsoid;
   const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
@@ -362,10 +359,9 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     const maximumHeight = result.maximumHeight;
     const boundingSphere = that._boundingSphere;
     const obb = that._orientedBoundingBox;
-    const occludeePointInScaledSpace = defaultValue(
-      Cartesian3.clone(result.occludeePointInScaledSpace),
-      that._horizonOcclusionPoint,
-    );
+    const occludeePointInScaledSpace =
+      Cartesian3.clone(result.occludeePointInScaledSpace) ??
+      that._horizonOcclusionPoint;
     const stride = result.vertexStride;
     const terrainEncoding = TerrainEncoding.clone(result.encoding);
 
@@ -716,7 +712,7 @@ function interpolateHeight(terrainData, u, v) {
 
 /**
  * Determines if a given child tile is available, based on the
- * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
+ * {@link QuantizedMeshTerrainData.childTileMask}.  The given child tile coordinates are assumed
  * to be one of the four children of this tile.  If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
  *

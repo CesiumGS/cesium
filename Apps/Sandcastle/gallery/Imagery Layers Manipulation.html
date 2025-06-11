@@ -169,12 +169,14 @@
           );
           addBaseLayerOption("OpenStreetMaps", new Cesium.OpenStreetMapImageryProvider());
           addBaseLayerOption(
-            "Stamen Maps",
+            "Stadia x Stamen Watercolor",
             new Cesium.OpenStreetMapImageryProvider({
-              url: "https://stamen-tiles.a.ssl.fastly.net/watercolor/",
+              url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/",
               fileExtension: "jpg",
-              credit:
-                "Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.",
+              credit: `&copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a>
+               &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
+               &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
+               &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
             }),
           );
           addBaseLayerOption(
@@ -269,8 +271,8 @@
           try {
             const imageryProvider = await Promise.resolve(imageryProviderPromise);
             const layer = new Cesium.ImageryLayer(imageryProvider);
-            layer.alpha = Cesium.defaultValue(alpha, 0.5);
-            layer.show = Cesium.defaultValue(show, true);
+            layer.alpha = alpha ?? 0.5;
+            layer.show = show ?? true;
             layer.name = name;
             imageryLayers.add(layer);
             Cesium.knockout.track(layer, ["alpha", "show", "name"]);

@@ -5,7 +5,6 @@ import {
   Color,
   Credit,
   CreditDisplay,
-  defaultValue,
   defined,
   Ellipsoid,
   EllipsoidTerrainProvider,
@@ -175,10 +174,9 @@ describe(
             function (tile) {
               expect(tile.data.imagery.length).toBeGreaterThan(0);
               for (let i = 0; i < tile.data.imagery.length; ++i) {
-                const imagery = defaultValue(
-                  tile.data.imagery[i].readyImagery,
-                  tile.data.imagery[i].loadingImagery,
-                );
+                const imagery =
+                  tile.data.imagery[i].readyImagery ??
+                  tile.data.imagery[i].loadingImagery;
                 expect(imagery.imageryLayer).toEqual(layer);
               }
             },
@@ -254,10 +252,9 @@ describe(
               let indexOfLastLayer1 = -1;
               let indexOfFirstLayer2 = tile.data.imagery.length;
               for (let i = 0; i < tile.data.imagery.length; ++i) {
-                const imagery = defaultValue(
-                  tile.data.imagery[i].readyImagery,
-                  tile.data.imagery[i].loadingImagery,
-                );
+                const imagery =
+                  tile.data.imagery[i].readyImagery ??
+                  tile.data.imagery[i].loadingImagery;
                 if (imagery.imageryLayer === layer1) {
                   indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
                   indexOfLastLayer1 = i;

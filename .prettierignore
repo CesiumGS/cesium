@@ -3,12 +3,12 @@
 *
 
 # Unignore directories (to all depths) and unignore code and style files in these directories
-!.concierge/**/
 !.github/**/
 !.vscode/**/
 !Apps/**/
 !Documentation/**/
 !packages/**/
+!scripts/**/
 !Specs/**/
 !Tools/**/
 

@@ -1,7 +1,6 @@
 import Uri from "urijs";
 import {
   DefaultProxy,
-  defaultValue,
   defer,
   defined,
   queryToObject,
@@ -1967,7 +1966,7 @@ describe("Core/Resource", function () {
       return resource._makeRequest({
         responseType: options.responseType,
         overrideMimeType: options.overrideMimeType,
-        method: defaultValue(options.method, "GET"),
+        method: options.method ?? "GET",
         data: options.data,
       });
     };

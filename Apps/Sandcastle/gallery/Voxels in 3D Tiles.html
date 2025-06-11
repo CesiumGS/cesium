@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Load voxel datasets as 3D tiles." />
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles, Voxels" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+            Cesium.TileMapServiceImageryProvider.fromUrl(
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            ),
+          ),
+          baseLayerPicker: false,
+          geocoder: false,
+          animation: false,
+          timeline: false,
+        });
+
+        viewer.extend(Cesium.viewerVoxelInspectorMixin);
+        viewer.scene.debugShowFramesPerSecond = true;
+
+        const customShaderColor = new Cesium.CustomShader({
+          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+  {
+      material.diffuse = fsInput.metadata.a.rgb;
+      material.alpha = fsInput.metadata.a.a;
+  }`,
+        });
+
+        function createPrimitive(provider) {
+          viewer.scene.primitives.removeAll();
+
+          const voxelPrimitive = viewer.scene.primitives.add(
+            new Cesium.VoxelPrimitive({
+              provider: provider,
+              customShader: customShaderColor,
+            }),
+          );
+
+          voxelPrimitive.nearestSampling = true;
+
+          viewer.voxelInspector.viewModel.voxelPrimitive = voxelPrimitive;
+          viewer.camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
+            duration: 0.0,
+          });
+
+          return voxelPrimitive;
+        }
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Box - 3D Tiles",
+            onselect: async function () {
+              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
+              );
+              const primitive = createPrimitive(provider);
+            },
+          },
+          {
+            text: "Cylinder - 3D Tiles",
+            onselect: async function () {
+              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
+              );
+              const primitive = createPrimitive(provider);
+            },
+          },
+          {
+            text: "Ellipsoid - 3D Tiles",
+            onselect: async function () {
+              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
+              );
+              const primitive = createPrimitive(provider);
+            },
+          },
+        ]);
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

@@ -1,5 +1,3 @@
-import defaultValue from "./defaultValue.js";
-
 /**
  * Represents the closed interval [start, stop].
  * @alias Interval
@@ -14,12 +12,12 @@ function Interval(start, stop) {
    * @type {number}
    * @default 0.0
    */
-  this.start = defaultValue(start, 0.0);
+  this.start = start ?? 0.0;
   /**
    * The end of the interval.
    * @type {number}
    * @default 0.0
    */
-  this.stop = defaultValue(stop, 0.0);
+  this.stop = stop ?? 0.0;
 }
 export default Interval;

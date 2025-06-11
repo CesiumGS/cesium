@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import PropertyTextureProperty from "./PropertyTextureProperty.js";
 
@@ -24,7 +24,7 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PropertyTexture(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const propertyTexture = options.propertyTexture;
   const classDefinition = options.class;
   const textures = options.textures;

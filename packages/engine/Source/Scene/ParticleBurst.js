@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 
 /**
  * Represents a burst of {@link Particle}s from a {@link ParticleSystem} at a given time in the systems lifetime.
@@ -12,26 +12,26 @@ import defaultValue from "../Core/defaultValue.js";
  * @param {number} [options.maximum=50.0] The maximum number of particles emitted in the burst.
  */
 function ParticleBurst(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The time in seconds after the beginning of the particle system's lifetime that the burst will occur.
    * @type {number}
    * @default 0.0
    */
-  this.time = defaultValue(options.time, 0.0);
+  this.time = options.time ?? 0.0;
   /**
    * The minimum number of particles emitted.
    * @type {number}
    * @default 0.0
    */
-  this.minimum = defaultValue(options.minimum, 0.0);
+  this.minimum = options.minimum ?? 0.0;
   /**
    * The maximum number of particles emitted.
    * @type {number}
    * @default 50.0
    */
-  this.maximum = defaultValue(options.maximum, 50.0);
+  this.maximum = options.maximum ?? 50.0;
 
   this._complete = false;
 }

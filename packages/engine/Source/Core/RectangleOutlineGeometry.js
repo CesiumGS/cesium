@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -270,15 +270,12 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
  * const geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
  */
 function RectangleOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const rectangle = options.rectangle;
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  const rotation = defaultValue(options.rotation, 0.0);
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  const rotation = options.rotation ?? 0.0;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(rectangle)) {
@@ -292,8 +289,8 @@ function RectangleOutlineGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  const height = defaultValue(options.height, 0.0);
-  const extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = options.height ?? 0.0;
+  const extrudedHeight = options.extrudedHeight ?? height;
 
   this._rectangle = Rectangle.clone(rectangle);
   this._granularity = granularity;
@@ -332,7 +329,7 @@ RectangleOutlineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Rectangle.pack(value._rectangle, array, startingIndex);
   startingIndex += Rectangle.packedLength;
@@ -344,7 +341,7 @@ RectangleOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._surfaceHeight;
   array[startingIndex++] = value._rotation;
   array[startingIndex++] = value._extrudedHeight;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -367,7 +364,7 @@ const scratchOptions = {
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {RectangleOutlineGeometry} [result] The object into which to store the result.
- * @returns {RectangleOutlineGeometry} The modified result parameter or a new Quaternion instance if one was not provided.
+ * @returns {RectangleOutlineGeometry} The modified result parameter or a new RectangleOutlineGeometry instance if one was not provided.
  */
 RectangleOutlineGeometry.unpack = function (array, startingIndex, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -376,7 +373,7 @@ RectangleOutlineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
   startingIndex += Rectangle.packedLength;
