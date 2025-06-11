@@ -77,7 +77,8 @@ function BillboardVisualizer(entityCluster, entityCollection) {
  * Entity counterpart at the given time.
  *
  * @param {JulianDate} time The time to update to.
- * @returns {boolean} This function always returns true.
+ * @returns {boolean} True if the visualizer successfully updated to the provided time,
+ * false if the visualizer is waiting for asynchronous image textures to be created.
  */
 BillboardVisualizer.prototype.update = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -89,6 +90,7 @@ BillboardVisualizer.prototype.update = function (time) {
   const items = this._items.values;
   const cluster = this._cluster;
 
+  let ready = true;
   for (let i = 0, len = items.length; i < len; i++) {
     const item = items[i];
     const entity = item.entity;
@@ -226,6 +228,7 @@ BillboardVisualizer.prototype.update = function (time) {
       time,
       defaultSplitDirection,
     );
+    ready = billboard.ready && ready;
 
     const subRegion = Property.getValueOrUndefined(
       billboardGraphics._imageSubRegion,
@@ -236,7 +239,7 @@ BillboardVisualizer.prototype.update = function (time) {
       billboard.setImageSubRegion(billboard.image, subRegion);
     }
   }
-  return true;
+  return ready;
 };
 
 /**
