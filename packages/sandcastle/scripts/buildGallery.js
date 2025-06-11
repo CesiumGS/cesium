@@ -3,7 +3,7 @@ import { parse } from "yaml";
 import { globbySync } from "globby";
 import { basename, dirname, join } from "path";
 import { exit } from "process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // TODO: probably need to find a way to integrate this into the vite process to make sure it's
 // built during build
@@ -128,7 +128,7 @@ export function buildGalleryList(galleryDirectory) {
 
 // if running the script directly using node
 /* global process */
-if (import.meta.url.endsWith(process.argv[1])) {
+if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const defaultGalleryDirectory = join(__dirname, "../gallery");
   const { output, hasErrors } = buildGalleryList(defaultGalleryDirectory);
