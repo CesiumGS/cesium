@@ -420,4 +420,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Andrew Dassonville](https://github.com/andrewda)
 - [Cody Butler](https://github.com/CodyBu)
 - [Hiwen](https://github.com/Hiwen)
+- [Matt Schwartz](https://github.com/mzschwartz5)
 - [Adam Beili](https://github.com/Beilinson)

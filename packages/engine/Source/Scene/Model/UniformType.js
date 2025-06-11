@@ -106,7 +106,7 @@ const UniformType = {
    */
   MAT3: "mat3",
   /**
-   * A 3x3 matrix of floating point values.
+   * A 4x4 matrix of floating point values.
    *
    * @type {string}
    * @constant
