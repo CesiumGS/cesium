@@ -614,17 +614,20 @@ describe(
         });
       });
 
-      it("sets the heightReference for Vector3DTilePoints", () => {
+      it("sets the heightReference for Vector3DTilePoints", async () => {
         const heightReference = HeightReference.CLAMP_TO_3D_TILE;
-        return Cesium3DTilesTester.loadTileset(scene, vectorTilePointsTileset, {
-          heightReference: heightReference,
+        const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
-        }).then((tileset) => {
-          const vectorTile = tileset._root.children[0];
-          const vectorTilePoint = vectorTile._content._points;
+          vectorTilePointsTileset,
+          {
+            heightReference: heightReference,
+            scene,
+          },
+        );
+        const vectorTile = tileset._root.children[0];
+        const vectorTilePoint = vectorTile._content._points;
 
-          expect(vectorTilePoint._heightReference).toEqual(heightReference);
-        });
+        expect(vectorTilePoint._heightReference).toEqual(heightReference);
       });
     });
 
