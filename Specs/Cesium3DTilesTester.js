@@ -107,7 +107,7 @@ Cesium3DTilesTester.waitForTilesLoaded = function (scene, tileset) {
 Cesium3DTilesTester.waitForTileContent = function (scene, tile) {
   return pollToPromise(function () {
     scene.renderForSpecs();
-    return tile.content !== undefined;
+    return !tile.contentUnloaded;
   }).then(function () {
     scene.renderForSpecs();
     return tile;
@@ -117,7 +117,7 @@ Cesium3DTilesTester.waitForTileContent = function (scene, tile) {
 Cesium3DTilesTester.waitForTileContentReady = function (scene, tile) {
   return pollToPromise(function () {
     scene.renderForSpecs();
-    return tile.content.ready;
+    return tile.contentReady;
   }).then(function () {
     scene.renderForSpecs();
     return tile;
