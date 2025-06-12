@@ -197,11 +197,8 @@ function GaussianSplatPrimitive(options) {
 
   this._tileset = options.tileset;
 
-  this._baseTilesetUpdate = this._tileset.update.bind(this._tileset);
-  this._tileset.update = (frameState) => {
-    this._baseTilesetUpdate(frameState);
-    this.update(frameState);
-  };
+  this._baseTilesetUpdate = this._tileset.update;
+  this._tileset.update = this._wrappedUpdate.bind(this);
 
   this._tileset.tileLoad.addEventListener(this.onTileLoad, this);
   this._tileset.tileVisible.addEventListener(this.onTileVisible, this);
@@ -344,6 +341,18 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 });
 
 /**
+ * Since we aren't visible at the scene level, we need to wrap the tileset update
+ * so we not only get called but ensure we update immediately after the tileset.
+ * @param {FrameState} frameState
+ * @private
+ *
+ */
+GaussianSplatPrimitive.prototype._wrappedUpdate = function (frameState) {
+  this._baseTilesetUpdate.call(this._tileset, frameState);
+  this.update(frameState);
+};
+
+/**
  * Destroys the primitive and releases its resources in a deterministic manner.
  * @private
  */
@@ -368,6 +377,8 @@ GaussianSplatPrimitive.prototype.destroy = function () {
     this._vertexArray.destroy();
     this._vertexArray = undefined;
   }
+
+  this._tileset.update = this._baseTilesetUpdate.bind(this._tileset);
 
   return destroyObject(this);
 };
