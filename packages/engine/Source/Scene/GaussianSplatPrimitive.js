@@ -73,6 +73,7 @@ function createGaussianSplatTexture(context, splatTextureData) {
  * @param {boolean} [options.debugShowBoundingVolume=false] Whether to show the bounding volume of the primitive for debugging purposes.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @private
  */
 
 function GaussianSplatPrimitive(options) {
