@@ -61,14 +61,14 @@ function createGaussianSplatTexture(context, splatTextureData) {
   });
 }
 
-/** * A primitive that renders Gaussian splats.
+/** A primitive that renders Gaussian splats.
  * <p>
  * This primitive is used to render Gaussian splats in a 3D Tileset.
  * It is designed to work with the KHR_spz_gaussian_splats_compression extension.
  * </p>
  * @alias GaussianSplatPrimitive
  * @constructor
- * @param {Object} [options] An object with the following properties:
+ * @param {Object} options An object with the following properties:
  * @param {Cesium3DTileset} options.tileset The tileset that this primitive belongs to.
  * @param {boolean} [options.debugShowBoundingVolume=false] Whether to show the bounding volume of the primitive for debugging purposes.
  *
@@ -81,32 +81,32 @@ function GaussianSplatPrimitive(options) {
 
   /**
    * The positions of the Gaussian splats in the primitive.
-   * @type {Float32Array}
+   * @type {undefined|Float32Array}
    * @private
    */
   this._positions = undefined;
   /**
    * The rotations of the Gaussian splats in the primitive.
-   * @type {Float32Array}
+   * @type {undefined|Float32Array}
    * @private
    */
   this._rotations = undefined;
   /**
    * The scales of the Gaussian splats in the primitive.
-   * @type {Float32Array}
+   * @type {undefined|Float32Array}
    * @private
    */
   this._scales = undefined;
   /**
    * The colors of the Gaussian splats in the primitive.
-   * @type {Uint8Array}
+   * @type {undefined|Uint8Array}
    * @private
    */
   this._colors = undefined;
   /**
    * The indexes of the Gaussian splats in the primitive.
    * Used to index into the splat attribute texture in the vertex shader.
-   * @type {Uint32Array}
+   * @type {undefined|Uint32Array}
    * @private
    */
   this._indexes = undefined;
@@ -151,7 +151,7 @@ function GaussianSplatPrimitive(options) {
    * The texture used to store the Gaussian splat attributes.
    * This texture is created from the splat attributes (positions, scales, rotations, colors)
    * and is used in the vertex shader to render the splats.
-   * @type {Texture}
+   * @type {undefined|Texture}
    * @private
    * @see {@link GaussianSplatTextureGenerator}
    */
@@ -173,7 +173,7 @@ function GaussianSplatPrimitive(options) {
   /**
    * The vertex array used to render the Gaussian splats.
    * This vertex array contains the attributes needed to render the splats, such as positions and indexes.
-   * @type {VertexArray}
+   * @type {undefined|VertexArray}
    * @private
    */
   this._vertexArray = undefined;
@@ -234,14 +234,14 @@ function GaussianSplatPrimitive(options) {
 
   /**
    * The draw command used to render the Gaussian splats.
-   * @type {DrawCommand}
+   * @type {undefined|DrawCommand}
    * @private
    */
   this._drawCommand = undefined;
   /**
    * The root transform of the tileset.
    * This is used to transform the splats into world space.
-   * @type {Matrix4}
+   * @type {undefined|Matrix4}
    * @private
    */
   this._rootTransform = undefined;
@@ -274,7 +274,7 @@ function GaussianSplatPrimitive(options) {
   /**
    * A promise that resolves when the Gaussian splat sorting operation is complete.
    * This is used to track the progress of the sorting operation.
-   * @type {Promise}
+   * @type {undefined|Promise}
    * @private
    */
   this._sorterPromise = undefined;
@@ -385,7 +385,7 @@ GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
 
 /**
  * Transforms the tile's splat primitive attributes into world space.
- *  * <br /><br />
+ * <br /><br />
  * This method applies the computed transform of the tile and the tileset's bounding sphere
  * to the splat primitive's position, rotation, and scale attributes.
  * It modifies the attributes in place, transforming them from local space to world space.
