@@ -208,7 +208,7 @@ function GaussianSplatPrimitive(options) {
    * @type {number}
    * @private
    */
-  this.selectedTileLen = 0;
+  this.selectedTileLength = 0;
 
   /**
    * Indicates whether or not the primitive is ready for use.
@@ -736,7 +736,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
     if (
       tileset._selectedTiles.length !== 0 &&
-      tileset._selectedTiles.length !== this.selectedTileLen
+      tileset._selectedTiles.length !== this.selectedTileLength
     ) {
       this._numSplats = 0;
       this._positions = undefined;
@@ -811,7 +811,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       );
 
       this._numSplats = totalElements;
-      this.selectedTileLen = tileset._selectedTiles.length;
+      this.selectedTileLength = tileset._selectedTiles.length;
     }
 
     if (this._numSplats === 0) {
