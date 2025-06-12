@@ -133,7 +133,6 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
  * @property {boolean} [debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
  * @property {boolean} [debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
- * @property {boolean} [debugTreatTilesetAsGaussianSplats=false] For debugging only. When true, treats the tileset as a Gaussian splat tileset.
  */
 
 /**
