@@ -34,4 +34,7 @@
         "--ignore-revs-file",
         "${workspaceFolder}/.git-blame-ignore-revs"
     ],
+    "yaml.schemas": {
+        "packages/sandcastle/scripts/sandcastle-schema.json": "packages/sandcastle/gallery/**/*"
+    }
 }

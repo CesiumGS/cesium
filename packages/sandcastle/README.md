@@ -55,8 +55,6 @@ gallery
 Below is a sample metadata yaml file. This data is used in the `scripts/buildGallery.js` file to create the full `gallery-list.json` information. That script also does some validation on these values.
 
 ```yaml
-# The id of this sandcastle. Should match the sub-directory name and not contain spaces
-id: 3d-models-coloring
 # Used to map this sandcastle to a legacy html identifier. New sandcastles should NOT include this
 legacyId: 3D Models Coloring.html
 # Title for this sandcastle

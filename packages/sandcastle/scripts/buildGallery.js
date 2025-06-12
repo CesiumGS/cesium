@@ -3,6 +3,10 @@ import { access, cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import Ajv from "ajv";
+import { prettify } from "awesome-ajv-errors";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -161,6 +165,18 @@ export async function buildGalleryList(options = {}) {
   const yamlFiles = galleryFiles.filter((path) =>
     basename(path).match(galleryItemConfig),
   );
+  const ajv = new Ajv({
+    // logger: {
+    //   log: console.log.bind(console),
+    //   warn: console.warn.bind(console),
+    //   error: console.error.bind(console),
+    // },
+    allErrors: true,
+  });
+  const schema = JSON.parse(
+    readFileSync(join(__dirname, "sandcastle-schema.json"), "utf-8"),
+  );
+  const validate = ajv.compile(schema);
 
   for (const filePath of yamlFiles) {
     let metadata;
@@ -208,6 +224,23 @@ export async function buildGalleryList(options = {}) {
       metadata;
 
     // Validate metadata
+
+    const valid = validate(metadata);
+    if (!valid) {
+      const name = basename(filePath);
+      const dir = basename(dirname(filePath));
+      console.log("Validation errors for", `${dir}/${name}`);
+      console.log(
+        prettify(validate, {
+          data: metadata,
+          location: false,
+          bigNumbers: false,
+        }),
+      );
+      // console.log(validate.errors);
+      errors.push(`Validation failed for ${slug}`);
+      continue;
+    }
 
     if (
       check(!/^[a-zA-Z0-9-.]+$/.test(slug), `"${slug}" is not a valid slug`) ||
