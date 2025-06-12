@@ -69,7 +69,7 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
 
 Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   /**
-   * Gets the number of features in the tile.
+   * Gets the number of features in the tile. Currently this is always zero.
    *
    * @memberof GaussianSplat3DTileContent.prototype
    *
@@ -97,7 +97,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
     },
   },
   /**
-   * Gets the number of triangles in the tile.
+   * Gets the number of triangles in the tile. Currently this is always zero because Gaussian splats are not represented as triangles in the tile content.
    * <p>
    * @memberof GaussianSplat3DTileContent.prototype
    *
