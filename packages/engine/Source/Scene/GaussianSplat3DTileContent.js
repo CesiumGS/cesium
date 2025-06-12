@@ -21,7 +21,7 @@ function GaussianSplat3DTileContent(tileset, tile, resource, gltf) {
   this._tile = tile;
   this._resource = resource;
 
-  if (this._tileset.gaussianSplatPrimitive === undefined) {
+  if (!defined(this._tileset.gaussianSplatPrimitive)) {
     this._tileset.gaussianSplatPrimitive = new GaussianSplatPrimitive({
       tileset: this._tileset,
     });
@@ -129,7 +129,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
       const texture = this._tileset.gaussianSplatPrimitive.gaussianSplatTexture;
       const selectedTileLen =
         this._tileset.gaussianSplatPrimitive.selectedTileLen;
-      if (texture === undefined || selectedTileLen === 0) {
+      if (!defined(texture) || selectedTileLen === 0) {
         return 0;
       }
       return texture.sizeInBytes / selectedTileLen;
