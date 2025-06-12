@@ -98,8 +98,8 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
   /**
    * Gets the number of triangles in the tile.
-   *
-   * @memberof Cesium3DTileContent.prototype
+   * <p>
+   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {number}
    * @readonly
@@ -111,6 +111,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
   /**
    * The number of bytes used by the geometry attributes of this content.
+   * <p>
    * @memberof GaussianSplat3DTileContent.prototype
    * @type {number}
    * @readonly
@@ -124,6 +125,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
   /**
    * The number of bytes used by the textures of this content.
+   * <p>
    * @memberof GaussianSplat3DTileContent.prototype
    * @type {number}
    * @readonly
@@ -143,8 +145,8 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    * Gets the amount of memory used by the batch table textures and any binary
    * metadata properties not accounted for in geometryByteLength or
    * texturesByteLength
-   *
-   * @memberof Cesium3DTileContent.prototype
+   * <p>
+   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {number}
    * @readonly
@@ -160,7 +162,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Composite|Composite specification}
    *
-   * @memberof Cesium3DTileContent.prototype
+   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {Array}
    * @readonly
@@ -188,6 +190,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is transformed to world coordinates; otherwise false
+   * <p>
    * @memberof GaussianSplat3DTileContent.prototype
    * @type {boolean}
    * @readonly
@@ -200,6 +203,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
 
   /**
    * The tileset that this content belongs to.
+   * <p>
    * @memberof GaussianSplat3DTileContent.prototype
    * @type {Cesium3DTileset}
    * @readonly
@@ -211,6 +215,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
   /**
    * The tile that this content belongs to.
+   * <p>
    * @memberof GaussianSplat3DTileContent.prototype
    * @type {Cesium3DTile}
    * @readonly
@@ -222,6 +227,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
   /**
    * The resource that this content was loaded from.
+   * <p>
    * @memberof GaussianSplat3DTileContent.prototype
    * @type {Resource}
    * @readonly
