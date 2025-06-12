@@ -282,10 +282,10 @@ function GaussianSplatPrimitive(options) {
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
   /**
-   * Gets a value indicating whether or not the primitive is ready for use.
-   @memberof GaussianSplatPrimitive.prototype
-   @type {boolean}
-   @readonly
+   * Indicates whether the primitive is ready for use.
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {boolean}
+   * @readonly
    */
   ready: {
     get: function () {
