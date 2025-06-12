@@ -1,5 +1,16 @@
 # Change Log
 
+## 1.131 - TBD
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Add support for Gaussian Splats with SPZ compression. [#12582](https://github.com/CesiumGS/cesium/pull/12582)
+  - Supported through the draft glTF extension `KHR_spz_gaussian_splats_compression` [#2490](https://github.com/KhronosGroup/glTF/pull/2490)
+  - Added new Sandcastle demo for Gaussian Splats with SPZ compression
+- Add support for integral texture formats: R32I, RG32I, RGB32I, RGBA32I, R32UI, RG32UI, RGB32UI, RGBA32UI
+
 ## 1.130 - 2025-06-02
 
 ### @cesium/engine
@@ -21,10 +32,6 @@ vec3 voxelNormal = fsInput.attributes.normalEC;
 
 - Add basic support for draping imagery on 3D Tiles. [#12567](https://github.com/CesiumGS/cesium/pull/12567)
 - Add support for 3D Textures and add Volume Cloud sandcastle example. [#12661](https://github.com/CesiumGS/cesium/pull/12611)
-- Add support for Gaussian Splats with SPZ compression. [#12582](https://github.com/CesiumGS/cesium/pull/12582)
-  - Supported through the draft glTF extension `KHR_spz_gaussian_splats_compression` [#2490](https://github.com/KhronosGroup/glTF/pull/2490)
-  - Added new Sandcastle demo for Gaussian Splats with SPZ compression
-- Add support for integral texture formats: R32I, RG32I, RGB32I, RGBA32I, R32UI, RG32UI, RGB32UI, RGBA32UI
 
 #### Fixes :wrench:
 
