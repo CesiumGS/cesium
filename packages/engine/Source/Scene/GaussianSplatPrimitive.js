@@ -560,9 +560,15 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
       primitive._needsGaussianSplatTexture = false;
       primitive._gaussianSplatTexturePending = false;
 
-      primitive._indexes = new Uint32Array([
-        ...Array(primitive._numSplats).keys(),
-      ]);
+      if (
+        !defined(primitive._indexes) ||
+        primitive._indexes.length < primitive._numSplats
+      ) {
+        primitive._indexes = new Uint32Array(primitive._numSplats);
+      }
+      for (let i = 0; i < primitive._numSplats; ++i) {
+        primitive._indexes[i] = i;
+      }
     })
     .catch((error) => {
       console.error("Error generating Gaussian splat texture:", error);
