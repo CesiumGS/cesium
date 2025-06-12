@@ -309,12 +309,15 @@ GaussianSplat3DTileContent.prototype.destroy = function () {
   this._tile = undefined;
   this._tileset = undefined;
   this._resource = undefined;
-  this._loader.destroy();
-  this._loader = undefined;
   this._ready = false;
   this._group = undefined;
   this._metadata = undefined;
   this._resourcesLoaded = false;
+
+  if (defined(this._loader)) {
+    this._loader.destroy();
+    this._loader = undefined;
+  }
 
   return destroyObject(this);
 };
