@@ -281,6 +281,14 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._sorterPromise = undefined;
+
+  /**
+   * An error that occurred during the Gaussian splat sorting operation.
+   * Thrown when state is ERROR.
+   * @type {undefined|Error}
+   * @private
+   */
+  this._sorterError = undefined;
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -860,7 +868,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
     this._sorterPromise.catch((err) => {
       this._sorterState = GaussianSplatSortingState.ERROR;
-      throw err;
+      this._sorterError = err;
     });
     this._sorterPromise.then((sortedData) => {
       this._indexes = sortedData;
@@ -883,7 +891,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
     this._sorterPromise.catch((err) => {
       this._sorterState = GaussianSplatSortingState.ERROR;
-      throw err;
+      this._sorterError = err;
     });
     this._sorterPromise.then((sortedData) => {
       this._indexes = sortedData;
@@ -900,7 +908,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._dirty = false;
     this._sorterPromise = undefined; //reset promise for next frame
   } else if (this._sorterState === GaussianSplatSortingState.ERROR) {
-    console.error("Error in Gaussian Splat sorting state.");
+    throw this._sorterError;
   }
 
   this._dirty = false;
