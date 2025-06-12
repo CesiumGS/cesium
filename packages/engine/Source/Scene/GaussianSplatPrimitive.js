@@ -502,7 +502,7 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
     },
     count: primitive._numSplats,
   });
-  if (promise === undefined) {
+  if (!defined(promise)) {
     primitive._gaussianSplatTexturePending = false;
     return;
   }
@@ -709,7 +709,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
-  if (this._rootTransform === undefined) {
+  if (!defined(this._rootTransform)) {
     this._rootTransform = tileset.root.computedTransform;
   }
 
@@ -761,7 +761,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         for (const tile of tiles) {
           const primitive = tile.content.splatPrimitive;
           const attribute = getAttributeCallback(primitive);
-          if (aggregate === undefined) {
+          if (!defined(aggregate)) {
             aggregate = ComponentDatatype.createTypedArray(
               componentDatatype,
               totalElements *
@@ -832,7 +832,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       scratchSplatMatrix,
     );
 
-    if (this._sorterPromise === undefined) {
+    if (!defined(this._sorterPromise)) {
       this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
           positions: new Float32Array(this._positions),
@@ -843,7 +843,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       });
     }
 
-    if (this._sorterPromise === undefined) {
+    if (!defined(this._sorterPromise)) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
@@ -856,7 +856,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
-    if (this._sorterPromise === undefined) {
+    if (!defined(this._sorterPromise)) {
       this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
           positions: new Float32Array(this._positions),
@@ -866,7 +866,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         sortType: "Index",
       });
     }
-    if (this._sorterPromise === undefined) {
+    if (!defined(this._sorterPromise)) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
