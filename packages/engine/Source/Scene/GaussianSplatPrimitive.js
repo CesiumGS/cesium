@@ -34,7 +34,9 @@ import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
 
-const scratchSplatMatrix = new Matrix4();
+const scratchMatrix4A = new Matrix4();
+const scratchMatrix4B = new Matrix4();
+const scratchMatrix4C = new Matrix4();
 
 const GaussianSplatSortingState = {
   IDLE: 0,
@@ -194,6 +196,7 @@ function GaussianSplatPrimitive(options) {
   this._dirty = false;
 
   this._tileset = options.tileset;
+
   this._baseTilesetUpdate = this._tileset.update.bind(this._tileset);
   this._tileset.update = (frameState) => {
     this._baseTilesetUpdate(frameState);
@@ -409,7 +412,7 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const computedModelMatrix = Matrix4.multiplyTransformation(
     computedTransform,
     gaussianSplatPrimitive._axisCorrectionMatrix,
-    new Matrix4(),
+    scratchMatrix4A,
   );
 
   Matrix4.multiplyTransformation(
@@ -420,12 +423,12 @@ GaussianSplatPrimitive.transformTile = function (tile) {
 
   const center = tile.tileset.boundingSphere.center;
   const toGlobal = Transforms.eastNorthUpToFixedFrame(center);
-  const toLocal = Matrix4.inverse(toGlobal, new Matrix4());
+  const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4B);
 
   const transform = Matrix4.multiplyTransformation(
     toLocal,
     computedModelMatrix,
-    new Matrix4(),
+    scratchMatrix4A,
   );
 
   const positions = ModelUtility.getAttributeBySemantic(
@@ -443,7 +446,6 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     VertexAttributeSemantic.SCALE,
   ).typedArray;
 
-  const mat = new Matrix4();
   const position = new Cartesian3();
   const rotation = new Quaternion();
   const scale = new Cartesian3();
@@ -465,14 +467,14 @@ GaussianSplatPrimitive.transformTile = function (tile) {
       position,
       rotation,
       scale,
-      mat,
+      scratchMatrix4C,
     );
 
-    Matrix4.multiplyTransformation(transform, mat, mat);
+    Matrix4.multiplyTransformation(transform, scratchMatrix4C, scratchMatrix4C);
 
-    Matrix4.getTranslation(mat, position);
-    Matrix4.getRotation(mat, rotation);
-    Matrix4.getScale(mat, scale);
+    Matrix4.getTranslation(scratchMatrix4C, position);
+    Matrix4.getRotation(scratchMatrix4C, rotation);
+    Matrix4.getScale(scratchMatrix4C, scale);
 
     positions[i * 3] = position.x;
     positions[i * 3 + 1] = position.y;
@@ -838,14 +840,14 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     Matrix4.multiply(
       frameState.camera.viewMatrix,
       this._rootTransform,
-      scratchSplatMatrix,
+      scratchMatrix4A,
     );
 
     if (!defined(this._sorterPromise)) {
       this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
           positions: new Float32Array(this._positions),
-          modelView: Float32Array.from(scratchSplatMatrix),
+          modelView: Float32Array.from(scratchMatrix4A),
           count: this._numSplats,
         },
         sortType: "Index",
@@ -869,7 +871,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
           positions: new Float32Array(this._positions),
-          modelView: Float32Array.from(scratchSplatMatrix),
+          modelView: Float32Array.from(scratchMatrix4A),
           count: this._numSplats,
         },
         sortType: "Index",
