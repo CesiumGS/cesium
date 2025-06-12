@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sandcastle-schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The id for this sandcastle used in the url. Should match the directory name and only use lowercase letters, numbers and the '-' character",
+      "pattern": "^([a-z\\d]|-)+$"
+    },
+    "legacyId": {
+      "type": "string",
+      "description": "Used to map this sandcastle to a legacy html identifier. New sandcastles should not include this"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title for this sandcastle"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description for this sandcastle"
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "Showcases",
+          "Tutorial",
+          "Beginner",
+          "ion Assets",
+          "3D Tiles"
+        ]
+      }
+    },
+    "thumbnail": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "description",
+    "labels",
+    "thumbnail"
+  ]
+}

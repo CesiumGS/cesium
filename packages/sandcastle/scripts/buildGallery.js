@@ -4,6 +4,10 @@ import { globbySync } from "globby";
 import { basename, dirname, join } from "path";
 import { exit } from "process";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import Ajv from "ajv";
+import { prettify } from "awesome-ajv-errors";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // TODO: probably need to find a way to integrate this into the vite process to make sure it's
 // built during build
@@ -42,6 +46,19 @@ export function buildGalleryList(galleryDirectory) {
     return condition;
   };
 
+  const ajv = new Ajv({
+    // logger: {
+    //   log: console.log.bind(console),
+    //   warn: console.warn.bind(console),
+    //   error: console.error.bind(console),
+    // },
+    allErrors: true,
+  });
+  const schema = JSON.parse(
+    readFileSync(join(__dirname, "sandcastle-schema.json"), "utf-8"),
+  );
+  const validate = ajv.compile(schema);
+
   for (const filePath of yamlFiles) {
     const file = readFileSync(filePath, { encoding: "utf-8" });
     let metadata;
@@ -75,6 +92,23 @@ export function buildGalleryList(galleryDirectory) {
     const { id, title, description, thumbnail } = metadata;
 
     // Validate metadata
+
+    const valid = validate(metadata);
+    if (!valid) {
+      const name = basename(filePath);
+      const dir = basename(dirname(filePath));
+      console.log("Validation errors for", `${dir}/${name}`);
+      console.log(
+        prettify(validate, {
+          data: metadata,
+          location: false,
+          bigNumbers: false,
+        }),
+      );
+      // console.log(validate.errors);
+      hasErrors = true;
+      continue;
+    }
 
     const slug = basename(dirname(filePath));
     if (
@@ -129,7 +163,6 @@ export function buildGalleryList(galleryDirectory) {
 // if running the script directly using node
 /* global process */
 if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
-  const __dirname = dirname(fileURLToPath(import.meta.url));
   const defaultGalleryDirectory = join(__dirname, "../gallery");
   const { output, hasErrors } = buildGalleryList(defaultGalleryDirectory);
   console.log("processed", output.entries.length, "sandcastles");

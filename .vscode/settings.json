@@ -29,5 +29,8 @@
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
     "javascript.format.placeOpenBraceOnNewLineForFunctions": false,
     "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false,
-    "glTF.defaultV2Engine": "Cesium"
+    "glTF.defaultV2Engine": "Cesium",
+    "yaml.schemas": {
+        "packages/sandcastle/scripts/sandcastle-schema.json": "packages/sandcastle/gallery/**/*"
+    }
 }
