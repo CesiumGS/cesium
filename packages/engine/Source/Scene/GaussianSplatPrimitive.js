@@ -292,6 +292,14 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
       return this._ready;
     },
   },
+  /**
+   * Scaling factor applied to the Gaussian splats indepdendent of the
+   * Gaussian splat scale attribute. Applied uniformly to all splats.
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {number}
+   * @default 1.0
+   */
+
   splatScale: {
     get: function () {
       return this._splatScale;
