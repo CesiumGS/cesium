@@ -73,9 +73,11 @@ describe(
       tileAvailability: {
         constant: 1,
       },
-      contentAvailability: {
-        constant: 1,
-      },
+      contentAvailability: [
+        {
+          constant: 1,
+        },
+      ],
       childSubtreeAvailability: {
         constant: 0,
       },
