@@ -57,46 +57,41 @@ describe(
             new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
           );
 
-          return Cesium3DTilesTester.waitForTileContent(
+          return Cesium3DTilesTester.waitForTileContentReady(
             scene,
             tileset.root,
           ).then(function (tile) {
-            return Cesium3DTilesTester.waitForTileContentReady(
-              scene,
-              tile,
-            ).then(function (tile) {
-              const content = tile.content;
-              expect(content).toBeDefined();
-              expect(content instanceof GaussianSplat3DTileContent).toBe(true);
+            const content = tile.content;
+            expect(content).toBeDefined();
+            expect(content instanceof GaussianSplat3DTileContent).toBe(true);
 
-              const splatPrimitive = content.splatPrimitive;
-              expect(splatPrimitive).toBeDefined();
-              expect(splatPrimitive.attributes.length).toBeGreaterThan(0);
-              const positions = ModelUtility.getAttributeBySemantic(
-                splatPrimitive,
-                VertexAttributeSemantic.POSITION,
-              ).typedArray;
+            const splatPrimitive = content.splatPrimitive;
+            expect(splatPrimitive).toBeDefined();
+            expect(splatPrimitive.attributes.length).toBeGreaterThan(0);
+            const positions = ModelUtility.getAttributeBySemantic(
+              splatPrimitive,
+              VertexAttributeSemantic.POSITION,
+            ).typedArray;
 
-              const rotations = ModelUtility.getAttributeBySemantic(
-                splatPrimitive,
-                VertexAttributeSemantic.ROTATION,
-              ).typedArray;
+            const rotations = ModelUtility.getAttributeBySemantic(
+              splatPrimitive,
+              VertexAttributeSemantic.ROTATION,
+            ).typedArray;
 
-              const scales = ModelUtility.getAttributeBySemantic(
-                splatPrimitive,
-                VertexAttributeSemantic.SCALE,
-              ).typedArray;
+            const scales = ModelUtility.getAttributeBySemantic(
+              splatPrimitive,
+              VertexAttributeSemantic.SCALE,
+            ).typedArray;
 
-              const colors = ModelUtility.getAttributeBySemantic(
-                splatPrimitive,
-                VertexAttributeSemantic.COLOR,
-              ).typedArray;
+            const colors = ModelUtility.getAttributeBySemantic(
+              splatPrimitive,
+              VertexAttributeSemantic.COLOR,
+            ).typedArray;
 
-              expect(positions.length).toBeGreaterThan(0);
-              expect(rotations.length).toBeGreaterThan(0);
-              expect(scales.length).toBeGreaterThan(0);
-              expect(colors.length).toBeGreaterThan(0);
-            });
+            expect(positions.length).toBeGreaterThan(0);
+            expect(rotations.length).toBeGreaterThan(0);
+            expect(scales.length).toBeGreaterThan(0);
+            expect(colors.length).toBeGreaterThan(0);
           });
         },
       );

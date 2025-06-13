@@ -64,7 +64,7 @@ describe(
             ),
           ).toBe(true);
 
-          return Cesium3DTilesTester.waitForTileContent(
+          return Cesium3DTilesTester.waitForTileContentReady(
             scene,
             tileset.root,
           ).then(function (tile) {
