@@ -1,4 +1,5 @@
 import { defineConfig, UserConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 import baseConfig, { cesiumPathReplace } from "./vite.config.ts";
 
@@ -12,18 +13,26 @@ export default defineConfig(() => {
   // based on the ci branch path
   config.base = `${process.env.BASE_URL}Apps/Sandcastle2`;
 
-  config.define = {
-    ...config.define,
-    __PAGE_BASE_URL__: JSON.stringify(process.env.BASE_URL),
-  };
-
   config.build = {
     ...config.build,
     outDir: "../../Apps/Sandcastle2",
   };
 
+  config.define = {
+    ...config.define,
+    __PAGE_BASE_URL__: JSON.stringify(process.env.BASE_URL),
+    __GALLERY_BASE_URL__: JSON.stringify(`${config.base}/gallery`),
+  };
+
+  const copyPlugin = viteStaticCopy({
+    targets: [
+      { src: "templates/Sandcastle.(d.ts|js)", dest: "templates" },
+      { src: "gallery", dest: "" },
+    ],
+  });
+
   const plugins = config.plugins ?? [];
-  config.plugins = [...plugins, cesiumPathReplace(cesiumBaseUrl)];
+  config.plugins = [...plugins, copyPlugin, cesiumPathReplace(cesiumBaseUrl)];
 
   return config;
 });

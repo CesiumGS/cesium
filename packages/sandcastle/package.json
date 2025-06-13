@@ -3,11 +3,15 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "files": [
+    "scripts/buildGallery.js"
+  ],
   "scripts": {
-    "dev": "vite --config vite.config.dev.ts",
+    "dev": "npm run build-gallery && vite --config vite.config.dev.ts",
     "build": "npm run build-app",
     "build-app": "tsc -b && vite build --config vite.config.app.ts",
-    "build-ci": "tsc -b && vite build --config vite.config.ci.ts"
+    "build-ci": "tsc -b && vite build --config vite.config.ci.ts",
+    "build-gallery": "node scripts/buildGallery.js"
   },
   "dependencies": {
     "@itwin/itwinui-react": "^5.0.0-alpha.14",
@@ -23,8 +27,10 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "globals": "^15.15.0",
+    "globby": "^14.1.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.0",
-    "vite-plugin-static-copy": "^2.3.1"
+    "vite-plugin-static-copy": "^2.3.1",
+    "yaml": "^2.8.0"
   }
 }

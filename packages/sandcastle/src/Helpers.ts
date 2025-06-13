@@ -1,20 +1,20 @@
 import Pako from "pako";
 
 export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
-  return `window.startup = async function (Cesium, Sandcastle) {
-  'use strict';
-  //Sandcastle_Begin
-  ${addExtraLine ? "\n" : ""}${code}
-  //Sandcastle_End
-  Sandcastle.finishedLoading();
-  };
-  if (typeof Cesium !== 'undefined' && typeof Sandcastle !== 'undefined') {
-      window.startupCalled = true;
-    window.startup(Cesium, Sandcastle).catch((error) => {
-        "use strict";
-      console.error(error);
-    });
-}
+  let imports = "";
+
+  if (!/^import\s+\*\s+as\s+Cesium\s+from\s+(['"])cesium\1;?$/m.test(code)) {
+    imports += `import * as Cesium from "cesium";\n`;
+  }
+  if (!/^import\s+Sandcastle\s+from\s+(['"])Sandcastle\1;?$/m.test(code)) {
+    imports += `import Sandcastle from "Sandcastle";\n`;
+  }
+
+  return `${imports}${addExtraLine ? "\n" : ""}${code}
+// Call default actions that might have been set up
+Sandcastle.finishedLoading();
+// Set Cesium on the window for use in DevTools
+window.Cesium = Cesium;
 `;
 }
 
