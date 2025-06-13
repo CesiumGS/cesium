@@ -10,7 +10,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // May also want to move this out of the sandcastle project so we don't have to duplicate
 // files for the local build, need to think about deploying too...
 
-export function buildGalleryList(galleryDirectory) {
+export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
   const yamlFiles = globbySync([
     `${galleryDirectory}/*/sandcastle.(yml|yaml)`,
     `!${galleryDirectory}/list.json`,
@@ -22,6 +22,7 @@ export function buildGalleryList(galleryDirectory) {
    * @property {string} title
    * @property {string} thumbnail
    * @property {string} description
+   * @property {string[]} labels
    * @property {boolean} isNew
    */
 
@@ -64,6 +65,7 @@ export function buildGalleryList(galleryDirectory) {
       "description",
       "thumbnail",
       "labels",
+      "development",
     ];
     // Check that all keys in a yaml file are values we expect
     for (const key of Object.keys(metadata)) {
@@ -72,7 +74,7 @@ export function buildGalleryList(galleryDirectory) {
       }
     }
 
-    const { id, title, description, thumbnail } = metadata;
+    const { id, title, description, thumbnail, labels, development } = metadata;
 
     // Validate metadata
 
@@ -101,11 +103,16 @@ export function buildGalleryList(galleryDirectory) {
       hasErrors = true;
     }
 
+    if (development && !includeDevelopment) {
+      continue;
+    }
+
     output.entries.push({
       id: id,
       title: title,
       thumbnail: thumbnail,
       description: description,
+      labels: labels,
       isNew: false,
     });
     const legacyId = metadata.legacyId;
@@ -116,10 +123,7 @@ export function buildGalleryList(galleryDirectory) {
 
   if (!hasErrors) {
     console.log("Gallery list built");
-    writeFileSync(
-      join(galleryDirectory, "list.json"),
-      JSON.stringify(output, null, 2),
-    );
+    writeFileSync(join(galleryDirectory, "list.json"), JSON.stringify(output));
   } else {
     console.error("Something is wrong with the gallery, see above");
   }
