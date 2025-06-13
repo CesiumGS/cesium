@@ -5,11 +5,6 @@ import { basename, dirname, join } from "path";
 import { exit } from "process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-// TODO: probably need to find a way to integrate this into the vite process to make sure it's
-// built during build
-// May also want to move this out of the sandcastle project so we don't have to duplicate
-// files for the local build, need to think about deploying too...
-
 export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
   const yamlFiles = globbySync([
     `${galleryDirectory}/*/sandcastle.(yml|yaml)`,
