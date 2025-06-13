@@ -29,11 +29,18 @@ export default defineConfig(({ command }) => {
       { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
       { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
       { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
-      { src: `../../Source/Cesium.d.ts`, dest: "Source" },
       { src: "../../Apps/SampleData", dest: "Apps" },
       { src: "../../Apps/SampleData", dest: "" },
-      { src: "templates/Sandcastle.d.ts", dest: "templates" },
       { src: "gallery", dest: "" },
+    ],
+  });
+  // If any of the src files are missing the plugin fails to load others
+  // these 2 files are potentially very common to be missing so try loading them
+  // separately to avoid breaking other stuff like the gallery
+  const typesCopyPlugin = viteStaticCopy({
+    targets: [
+      { src: `../../Source/Cesium.d.ts`, dest: "Source" },
+      { src: "templates/Sandcastle.d.ts", dest: "templates" },
     ],
   });
 
@@ -41,6 +48,7 @@ export default defineConfig(({ command }) => {
   config.plugins = [
     ...plugins,
     copyPlugin,
+    typesCopyPlugin,
     cesiumPathReplace(`/${cesiumBaseUrl}`),
   ];
 
