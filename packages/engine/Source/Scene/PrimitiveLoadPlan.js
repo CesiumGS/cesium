@@ -7,6 +7,8 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import ModelUtility from "./Model/ModelUtility.js";
 
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
@@ -157,6 +159,15 @@ function PrimitiveLoadPlan(primitive) {
    * @private
    */
   this.outlineIndices = undefined;
+
+  /**
+   * Set this true to indicate that the primitive has the
+   * KHR_gaussian_splatting extension and needs to be post-processed
+   *
+   * @type {boolean}
+   * @private
+   */
+  this.needsGaussianSplats = false;
 }
 
 /**
@@ -173,6 +184,11 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
   if (this.needsOutlines) {
     generateOutlines(this);
     generateBuffers(this, context);
+  }
+
+  if (this.needsGaussianSplats) {
+    prepareSpzData(this, context);
+    setupGaussianSplatBuffers(this, context);
   }
 };
 
@@ -224,6 +240,49 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   attribute.count = outlineCoordinatesTypedArray.length / 3;
 
   return attribute;
+}
+
+function prepareSpzData(loadPlan, context) {
+  const position = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.POSITION,
+  );
+
+  for (let i = 0; i < position.typedArray.length; i += 3) {
+    position.typedArray[i + 1] = -position.typedArray[i + 1];
+    position.typedArray[i + 2] = -position.typedArray[i + 2];
+  }
+
+  const rotations = ModelUtility.getAttributeBySemantic(
+    loadPlan.primitive,
+    VertexAttributeSemantic.ROTATION,
+  );
+
+  //180* rotation around X.
+  //Temporary until we can get SPZ supporting Z-up assets natively
+  const rots = rotations.typedArray;
+  for (let q = 0; q < rots.length; q += 4) {
+    const w = rots[q];
+    const x = -rots[q + 3];
+    const y = rots[q + 2];
+    const z = -rots[q + 1];
+
+    rots[q] = y;
+    rots[q + 1] = -x;
+    rots[q + 2] = w;
+    rots[q + 3] = -z;
+  }
+  rotations.typedArray = rots;
+}
+
+function setupGaussianSplatBuffers(loadPlan, context) {
+  const attributePlans = loadPlan.attributePlans;
+  const attrLen = attributePlans.length;
+  for (let i = 0; i < attrLen; i++) {
+    const attributePlan = attributePlans[i];
+    attributePlan.loadBuffer = false;
+    attributePlan.loadTypedArray = true;
+  }
 }
 
 function generateBuffers(loadPlan, context) {

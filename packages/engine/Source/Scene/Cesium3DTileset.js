@@ -1047,6 +1047,18 @@ function Cesium3DTileset(options) {
   this.debugShowUrl = options.debugShowUrl ?? false;
 
   /**
+   * This property is for debugging only; it is not optimized for production use.
+   * <p>
+   * When true, treats the tileset content as Gaussian splats instead of meshes.
+   * </p>
+   *
+   * @type {*|boolean}
+   * @default false
+   */
+  this.debugTreatTilesetAsGaussianSplats =
+    options.debugTreatTilesetAsGaussianSplats ?? false;
+
+  /**
    * Function for examining vector lines as they are being streamed.
    *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -2757,6 +2769,7 @@ function filterProcessingQueue(tileset) {
 const scratchUpdateHeightCartographic = new Cartographic();
 const scratchUpdateHeightCartographic2 = new Cartographic();
 const scratchUpdateHeightCartesian = new Cartesian3();
+
 function processUpdateHeight(tileset, tile, frameState) {
   if (!tileset.enableCollision || !tileset.show) {
     return;
@@ -3817,6 +3830,63 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
       return intersection;
     }
   }
+};
+
+/**
+ * Returns true if the given glTF extension is used by this tileset.
+ * <br/><br/>
+ * Relies on the <code>3DTILES_content_gltf</code> extension and will return
+ * false if that extension is not used.
+ *
+ * @param {string} gltfExtensionName The name of the glTF extension to check.
+ * @returns {boolean} <code>true</code> if the glTF extension is used by this tileset; otherwise, <code>false</code>.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.isGltfExtensionUsed = function (gltfExtensionName) {
+  if (this.hasExtension("3DTILES_content_gltf")) {
+    if (!defined(this.extensions)) {
+      return false;
+    }
+    const extensionsUsed =
+      this.extensions["3DTILES_content_gltf"].extensionsUsed;
+
+    if (!defined(extensionsUsed)) {
+      return false;
+    }
+
+    return extensionsUsed.indexOf(gltfExtensionName) > -1;
+  }
+
+  return false;
+};
+
+/**
+ * Returns true if the given glTF extension is used and required by this tileset.
+ * <br/><br/>
+ * Relies on the <code>3DTILES_content_gltf</code> extension and will return
+ * <code>false</code> if that extension is not used.
+ *
+ * @param {string} gltfExtensionName The name of the glTF extension to check.
+ * @returns {boolean} <code>true</code> if the glTF extension is required by this tileset; otherwise, <code>false</code>.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.isGltfExtensionRequired = function (
+  gltfExtensionName,
+) {
+  if (this.isGltfExtensionUsed(gltfExtensionName)) {
+    const extensionsRequired =
+      this.extensions["3DTILES_content_gltf"].extensionsRequired;
+
+    if (!defined(extensionsRequired)) {
+      return false;
+    }
+
+    return extensionsRequired.indexOf(gltfExtensionName) > -1;
+  }
+
+  return false;
 };
 
 /**
