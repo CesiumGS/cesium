@@ -59,7 +59,7 @@ describe("Core/loadImageFromTypedArray", function () {
         })
         .then(function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-            imageOrientation: "none",
+            imageOrientation: "from-image",
             premultiplyAlpha: "none",
             colorSpaceConversion: "default",
           });
@@ -91,7 +91,7 @@ describe("Core/loadImageFromTypedArray", function () {
       return loadImageFromTypedArray(options)
         .then(function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-            imageOrientation: "none",
+            imageOrientation: "from-image",
             premultiplyAlpha: "none",
             colorSpaceConversion: "none",
           });
@@ -102,7 +102,7 @@ describe("Core/loadImageFromTypedArray", function () {
         })
         .then(function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-            imageOrientation: "none",
+            imageOrientation: "from-image",
             premultiplyAlpha: "none",
             colorSpaceConversion: "default",
           });

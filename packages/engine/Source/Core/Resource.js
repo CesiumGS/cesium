@@ -231,7 +231,7 @@ Resource.supportsImageBitmapOptions = function () {
   })
     .then(function (blob) {
       const imageBitmapOptions = {
-        imageOrientation: "flipY", // default is "none"
+        imageOrientation: "flipY", // default is "from-image"
         premultiplyAlpha: "none", // default is "default"
         colorSpaceConversion: "none", // default is "default"
       };
@@ -2036,7 +2036,7 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   );
 
   return createImageBitmap(blob, {
-    imageOrientation: options.flipY ? "flipY" : "none",
+    imageOrientation: options.flipY ? "flipY" : "from-image",
     premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none",
     colorSpaceConversion: options.skipColorSpaceConversion ? "none" : "default",
   });
