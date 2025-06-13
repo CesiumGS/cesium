@@ -8,7 +8,10 @@ import { Button, Root } from "@itwin/itwinui-react/bricks";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Bucket from "./Bucket.tsx";
 
-const defaultJsCode = 'const viewer = new Cesium.Viewer("cesiumContainer");\n';
+const defaultJsCode = `import * as Cesium from "cesium";
+
+const viewer = new Cesium.Viewer("cesiumContainer");
+`;
 const defaultHtmlCode = `<style>
   @import url(../templates/bucket.css);
 </style>

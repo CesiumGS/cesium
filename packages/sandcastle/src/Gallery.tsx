@@ -39,11 +39,14 @@ function Gallery({ demos, loadDemo }: GalleryProps) {
   return (
     <>
       {demos.map((demo) => {
+        const thumbnailPath = demo.thumbnail
+          ? `${GALLERY_BASE}/${demo.id}/${demo.thumbnail}`
+          : `./images/placeholder-thumbnail.jpg`;
         return (
           <GalleryCard
             key={demo.id}
             name={demo.title}
-            imageSrc={`${GALLERY_BASE}/${demo.id}/${demo.thumbnail}`}
+            imageSrc={thumbnailPath}
             cardClickHandler={() => loadDemo(demo)}
           ></GalleryCard>
         );

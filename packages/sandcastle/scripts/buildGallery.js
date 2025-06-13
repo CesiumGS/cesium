@@ -3,14 +3,14 @@ import { parse } from "yaml";
 import { globbySync } from "globby";
 import { basename, dirname, join } from "path";
 import { exit } from "process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // TODO: probably need to find a way to integrate this into the vite process to make sure it's
 // built during build
 // May also want to move this out of the sandcastle project so we don't have to duplicate
 // files for the local build, need to think about deploying too...
 
-export function buildGalleryList(galleryDirectory) {
+export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
   const yamlFiles = globbySync([
     `${galleryDirectory}/*/sandcastle.(yml|yaml)`,
     `!${galleryDirectory}/list.json`,
@@ -22,6 +22,7 @@ export function buildGalleryList(galleryDirectory) {
    * @property {string} title
    * @property {string} thumbnail
    * @property {string} description
+   * @property {string[]} labels
    * @property {boolean} isNew
    */
 
@@ -45,6 +46,7 @@ export function buildGalleryList(galleryDirectory) {
   for (const filePath of yamlFiles) {
     const file = readFileSync(filePath, { encoding: "utf-8" });
     let metadata;
+
     try {
       metadata = parse(file);
     } catch (error) {
@@ -63,6 +65,7 @@ export function buildGalleryList(galleryDirectory) {
       "description",
       "thumbnail",
       "labels",
+      "development",
     ];
     // Check that all keys in a yaml file are values we expect
     for (const key of Object.keys(metadata)) {
@@ -71,7 +74,7 @@ export function buildGalleryList(galleryDirectory) {
       }
     }
 
-    const { id, title, description, thumbnail } = metadata;
+    const { id, title, description, thumbnail, labels, development } = metadata;
 
     // Validate metadata
 
@@ -87,9 +90,6 @@ export function buildGalleryList(galleryDirectory) {
 
     const galleryBase = `${galleryDirectory}/${metadata.id}`;
 
-    // const galleryFiles = globbySync(galleryBase);
-    // console.log("gallery files", galleryFiles);
-
     if (!existsSync(`${galleryBase}/index.html`)) {
       console.error(id, "- Missing index.html");
       hasErrors = true;
@@ -103,11 +103,16 @@ export function buildGalleryList(galleryDirectory) {
       hasErrors = true;
     }
 
+    if (development && !includeDevelopment) {
+      continue;
+    }
+
     output.entries.push({
       id: id,
       title: title,
       thumbnail: thumbnail,
       description: description,
+      labels: labels,
       isNew: false,
     });
     const legacyId = metadata.legacyId;
@@ -118,10 +123,7 @@ export function buildGalleryList(galleryDirectory) {
 
   if (!hasErrors) {
     console.log("Gallery list built");
-    writeFileSync(
-      join(galleryDirectory, "list.json"),
-      JSON.stringify(output, null, 2),
-    );
+    writeFileSync(join(galleryDirectory, "list.json"), JSON.stringify(output));
   } else {
     console.error("Something is wrong with the gallery, see above");
   }
@@ -130,7 +132,7 @@ export function buildGalleryList(galleryDirectory) {
 
 // if running the script directly using node
 /* global process */
-if (import.meta.url.endsWith(process.argv[1])) {
+if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const defaultGalleryDirectory = join(__dirname, "../gallery");
   const { output, hasErrors } = buildGalleryList(defaultGalleryDirectory);

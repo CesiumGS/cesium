@@ -3,14 +3,18 @@
   display: flex;
   gap: 1rem;
   padding: 0.5rem;
+  overflow-x: auto;
 
   .card {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    flex: 0 0 150px;
     background: var(--ids-color-bg-info-muted);
     padding: 0.5rem;
     border-radius: 5px;
     cursor: pointer;
+    text-wrap: nowrap;
 
     img {
       height: 80%;
