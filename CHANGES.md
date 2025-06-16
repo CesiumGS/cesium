@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.131 - 2025-07-01
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
+
 ## 1.130 - 2025-06-02
 
 ### @cesium/engine
@@ -25,7 +33,6 @@ vec3 voxelNormal = fsInput.attributes.normalEC;
 #### Fixes :wrench:
 
 - Fixed voxel rendering with orthographic cameras. [#12629](https://github.com/CesiumGS/cesium/pull/12629)
-- Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
 
 ## 1.129 - 2025-05-01
 
