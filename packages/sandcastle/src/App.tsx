@@ -30,17 +30,17 @@ const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
 function App() {
-  const [jsIsActive, setJsIsActive] = useState(true);
+  const [activeTab, setActiveTab] = useState<"js" | "html">("js");
   const [darkTheme, setDarkTheme] = useState(false);
 
   const editorRef = useRef<editor.IStandaloneCodeEditor>(null);
 
-  type Action =
+  type SandcastleAction =
     | { type: "reset" }
     | { type: "setCode"; code: string }
     | { type: "setHtml"; html: string }
-    | { type: "commitCode" }
-    | { type: "setAndCommit"; code?: string; html?: string };
+    | { type: "runSandcastle" }
+    | { type: "setAndRun"; code?: string; html?: string };
   type CodeState = {
     code: string;
     html: string;
@@ -49,64 +49,60 @@ function App() {
     runNumber: number;
   };
 
-  const [codeState, dispatch] = useReducer(
-    function reducer(state: CodeState, action: Action): CodeState {
-      switch (action.type) {
-        case "reset": {
-          return {
-            code: defaultJsCode,
-            html: defaultHtmlCode,
-            committedCode: defaultJsCode,
-            committedHtml: defaultHtmlCode,
-            runNumber: 0,
-          };
-        }
-        case "setCode": {
-          return {
-            ...state,
-            code: action.code,
-          };
-        }
-        case "setHtml": {
-          return {
-            ...state,
-            html: action.html,
-          };
-        }
-        case "commitCode": {
-          return {
-            ...state,
-            committedCode: state.code,
-            committedHtml: state.html,
-            runNumber: state.runNumber + 1,
-          };
-        }
-        case "setAndCommit": {
-          return {
-            code: action.code ?? state.code,
-            html: action.html ?? state.html,
-            committedCode: action.code ?? state.code,
-            committedHtml: action.html ?? state.html,
-            runNumber: state.runNumber + 1,
-          };
-        }
+  const initialState: CodeState = {
+    code: defaultJsCode,
+    html: defaultHtmlCode,
+    committedCode: defaultJsCode,
+    committedHtml: defaultHtmlCode,
+    runNumber: 0,
+  };
+
+  const [codeState, dispatch] = useReducer(function reducer(
+    state: CodeState,
+    action: SandcastleAction,
+  ): CodeState {
+    switch (action.type) {
+      case "reset": {
+        return { ...initialState };
       }
-    },
-    {
-      code: defaultJsCode,
-      html: defaultHtmlCode,
-      committedCode: defaultJsCode,
-      committedHtml: defaultHtmlCode,
-      runNumber: 0,
-    } as CodeState,
-  );
+      case "setCode": {
+        return {
+          ...state,
+          code: action.code,
+        };
+      }
+      case "setHtml": {
+        return {
+          ...state,
+          html: action.html,
+        };
+      }
+      case "runSandcastle": {
+        return {
+          ...state,
+          committedCode: state.code,
+          committedHtml: state.html,
+          runNumber: state.runNumber + 1,
+        };
+      }
+      case "setAndRun": {
+        return {
+          code: action.code ?? state.code,
+          html: action.html ?? state.html,
+          committedCode: action.code ?? state.code,
+          committedHtml: action.html ?? state.html,
+          runNumber: state.runNumber + 1,
+        };
+      }
+    }
+  }, initialState);
 
   const [legacyIdMap, setLegacyIdMap] = useState<Record<string, string>>({});
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [galleryLoaded, setGalleryLoaded] = useState(false);
 
   function runSandcastle() {
-    dispatch({ type: "commitCode" });
+    dispatch({ type: "runSandcastle" });
   }
 
   function handleEditorDidMount(
@@ -118,7 +114,7 @@ function App() {
     monaco.editor.addCommand({
       id: "run-cesium",
       run: () => {
-        dispatch({ type: "commitCode" });
+        dispatch({ type: "runSandcastle" });
       },
     });
 
@@ -152,7 +148,7 @@ function App() {
   }
 
   function handleChange(value: string = "") {
-    if (jsIsActive) {
+    if (activeTab === "js") {
       dispatch({ type: "setCode", code: value });
     } else {
       dispatch({ type: "setHtml", html: value });
@@ -204,7 +200,7 @@ function App() {
     }
     const newCode = `${codeState.code}${spacerNewline}\n${snippet.trim()}\n`;
     dispatch({
-      type: run ? "setAndCommit" : "setCode",
+      type: run ? "setAndRun" : "setCode",
       code: newCode,
     });
   }
@@ -302,7 +298,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
       const html = await (await htmlReq).text();
 
       dispatch({
-        type: "setAndCommit",
+        type: "setAndRun",
         code: code,
         html: html,
       });
@@ -340,7 +336,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
           const data = decodeBase64Data(base64String);
 
           dispatch({
-            type: "setAndCommit",
+            type: "setAndRun",
             code: data.code,
             html: data.html,
           });
@@ -383,19 +379,25 @@ Sandcastle.addToolbarMenu(${variableName});`,
       </div>
       <div className="editor-container">
         <div className="tabs">
-          <Button disabled={jsIsActive} onClick={() => setJsIsActive(true)}>
+          <Button
+            disabled={activeTab === "js"}
+            onClick={() => setActiveTab("js")}
+          >
             Javascript
           </Button>
-          <Button disabled={!jsIsActive} onClick={() => setJsIsActive(false)}>
+          <Button
+            disabled={activeTab !== "js"}
+            onClick={() => setActiveTab("html")}
+          >
             HTML/CSS
           </Button>
         </div>
         <Editor
           height="100%"
           theme={darkTheme ? "vs-dark" : "light"}
-          path={jsIsActive ? "script.js" : "index.html"}
-          language={jsIsActive ? "javascript" : "html"}
-          value={jsIsActive ? codeState.code : codeState.html}
+          path={activeTab === "js" ? "script.js" : "index.html"}
+          language={activeTab === "js" ? "javascript" : "html"}
+          value={activeTab === "js" ? codeState.code : codeState.html}
           defaultValue={defaultJsCode}
           onMount={handleEditorDidMount}
           beforeMount={handleEditorWillMount}

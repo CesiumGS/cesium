@@ -24,6 +24,10 @@
   }
 }
 
+.tabs {
+  background: var(--ids-color-bg-page-base);
+}
+
 .editor-container {
   grid-area: code;
   display: flex;
