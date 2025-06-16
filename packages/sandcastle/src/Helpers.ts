@@ -10,7 +10,9 @@ export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
     imports += `import Sandcastle from "Sandcastle";\n`;
   }
 
-  return `${imports}${addExtraLine ? "\n" : ""}${code}
+  return `${addExtraLine ? "\n" : ""}${code}
+// Imports are hoisted. Adding them here preserves line numbers with the editor
+${imports}
 // Call default actions that might have been set up
 Sandcastle.finishedLoading();
 // Set Cesium on the window for use in DevTools
