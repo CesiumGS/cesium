@@ -75,10 +75,13 @@ function computeTopBottomAttributes(positions, options, extrude) {
   let bitangent = scratchBitangent;
 
   const projection = new GeographicProjection(ellipsoid);
-  const projectedCenter = projection.project(
-    ellipsoid.cartesianToCartographic(center, scratchCartographic),
-    projectedCenterScratch,
+  const cartographic = ellipsoid.cartesianToCartographic(
+    center,
+    scratchCartographic,
   );
+  const projectedCenter = defined(cartographic)
+    ? projection.project(cartographic, projectedCenterScratch)
+    : Cartesian3.ZERO;
 
   const geodeticNormal = ellipsoid.scaleToGeodeticSurface(
     center,
@@ -132,10 +135,13 @@ function computeTopBottomAttributes(positions, options, extrude) {
         position,
         scratchCartesian2,
       );
-      const projectedPoint = projection.project(
-        ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic),
-        scratchCartesian3,
+      const cartographic = ellipsoid.cartesianToCartographic(
+        rotatedPoint,
+        scratchCartographic,
       );
+      const projectedPoint = defined(cartographic)
+        ? projection.project(cartographic, scratchCartesian3)
+        : Cartesian3.ZERO;
       Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
       texCoordScratch.x =
@@ -482,10 +488,13 @@ function computeWallAttributes(positions, options) {
   let bitangent = scratchBitangent;
 
   const projection = new GeographicProjection(ellipsoid);
-  const projectedCenter = projection.project(
-    ellipsoid.cartesianToCartographic(center, scratchCartographic),
-    projectedCenterScratch,
+  const cartographic = ellipsoid.cartesianToCartographic(
+    center,
+    scratchCartographic,
   );
+  const projectedCenter = defined(cartographic)
+    ? projection.project(cartographic, projectedCenterScratch)
+    : Cartesian3.ZERO;
 
   const geodeticNormal = ellipsoid.scaleToGeodeticSurface(
     center,
@@ -524,10 +533,13 @@ function computeWallAttributes(positions, options) {
         position,
         scratchCartesian2,
       );
-      const projectedPoint = projection.project(
-        ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic),
-        scratchCartesian3,
+      const cartographic = ellipsoid.cartesianToCartographic(
+        rotatedPoint,
+        scratchCartographic,
       );
+      const projectedPoint = defined(cartographic)
+        ? projection.project(cartographic, scratchCartesian3)
+        : Cartesian3.ZERO;
       Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
       texCoordScratch.x =

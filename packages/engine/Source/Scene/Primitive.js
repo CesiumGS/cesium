@@ -1521,10 +1521,9 @@ function updateBatchTableBoundingSpheres(primitive, frameState) {
         center,
         scratchBoundingSphereCartographic,
       );
-      const center2D = projection.project(
-        cartographic,
-        scratchBoundingSphereCenter2D,
-      );
+      const center2D = defined(cartographic)
+        ? projection.project(cartographic, scratchBoundingSphereCenter2D)
+        : Cartesian3.ZERO;
       encodedCenter = EncodedCartesian3.fromCartesian(
         center2D,
         scratchBoundingSphereCenterEncoded,
@@ -1589,18 +1588,17 @@ function updateBatchTableOffsets(primitive, frameState) {
       center,
       scratchBoundingSphereCartographic,
     );
-    const center2D = projection.project(
-      cartographic,
-      scratchBoundingSphereCenter2D,
-    );
+
+    const center2D = defined(cartographic)
+      ? projection.project(cartographic, scratchBoundingSphereCenter2D)
+      : Cartesian3.ZERO;
 
     const newPoint = Cartesian3.add(offset, center, offsetScratchCartesian);
     cartographic = ellipsoid.cartesianToCartographic(newPoint, cartographic);
 
-    const newPointProjected = projection.project(
-      cartographic,
-      offsetScratchCartesian,
-    );
+    const newPointProjected = defined(cartographic)
+      ? projection.project(cartographic, offsetScratchCartesian)
+      : Cartesian3.ZERO;
 
     const newVector = Cartesian3.subtract(
       newPointProjected,

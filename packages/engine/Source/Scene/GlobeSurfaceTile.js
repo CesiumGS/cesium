@@ -137,7 +137,10 @@ function getPosition(encoding, mode, projection, vertices, index, result) {
       position,
       scratchCartographic,
     );
-    position = projection.project(positionCartographic, result);
+    position = defined(positionCartographic)
+      ? projection.project(positionCartographic, result)
+      : Cartesian3.ZERO;
+
     position = Cartesian3.fromElements(
       position.z,
       position.x,

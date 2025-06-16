@@ -1367,6 +1367,42 @@ describe(
       primitive.destroy();
       expect(primitive.isDestroyed()).toEqual(true);
     });
+
+    it("does not throw an error when rendering a primitive at the origin", function () {
+      const modelMat = Matrix4.fromTranslation(Cartesian3.ZERO);
+
+      const boxInstance = new GeometryInstance({
+        geometry: BoxGeometry.fromDimensions({
+          vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
+          dimensions: new Cartesian3(500000.0, 500000.0, 500000.0),
+        }),
+        id: "box",
+        attributes: {
+          color: new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5),
+          // This triggers batching to run, which is the code path where an origin-centered object needs special treatment.
+          distanceDisplayCondition:
+            new DistanceDisplayConditionGeometryInstanceAttribute(
+              0,
+              10000000.0,
+            ),
+        },
+        modelMatrix: modelMat,
+      });
+
+      primitive = new Primitive({
+        geometryInstances: boxInstance,
+        appearance: new PerInstanceColorAppearance({
+          closed: true,
+        }),
+        asynchronous: false,
+      });
+
+      expect(function () {
+        primitive.update(frameState);
+      }).not.toThrow();
+
+      expect(frameState.commandList.length).toEqual(1);
+    });
   },
   "WebGL",
 );
