@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tsbuildinfo
 
 gallery/list.json
 templates/Sandcastle.d.ts

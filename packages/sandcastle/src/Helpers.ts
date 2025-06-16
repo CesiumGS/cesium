@@ -3,10 +3,10 @@ import Pako from "pako";
 export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
   let imports = "";
 
-  if (!/import.*Cesium.*from.*;?$/m.test(code)) {
+  if (!/^import\s+\*\s+as\s+Cesium\s+from\s+(['"])cesium\1;?$/m.test(code)) {
     imports += `import * as Cesium from "cesium";\n`;
   }
-  if (!/import.*Sandcastle.*from.*;?$/m.test(code)) {
+  if (!/^import\s+Sandcastle\s+from\s+(['"])Sandcastle\1;?$/m.test(code)) {
     imports += `import Sandcastle from "Sandcastle";\n`;
   }
 
