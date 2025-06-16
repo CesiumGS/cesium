@@ -54,7 +54,6 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
     }
 
     const expectedKeys = [
-      "id",
       "legacyId",
       "title",
       "description",
@@ -69,32 +68,32 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
       }
     }
 
-    const { id, title, description, thumbnail, labels, development } = metadata;
+    const slug = basename(dirname(filePath));
+    const { legacyId, title, description, thumbnail, labels, development } =
+      metadata;
 
     // Validate metadata
 
-    const slug = basename(dirname(filePath));
     if (
-      check(!id, `${filePath} - Missing id`) ||
-      check(id !== slug, `${id} - Id does not match slug: ${slug}`) ||
-      check(!title, `${id} - Missing title`) ||
-      check(!description, `${id} - Missing description`)
+      check(!/^[a-zA-Z0-9-]+$/.test(slug), `"${slug}" is not a valid slug`) ||
+      check(!title, `${slug} - Missing title`) ||
+      check(!description, `${slug} - Missing description`)
     ) {
       continue;
     }
 
-    const galleryBase = `${galleryDirectory}/${metadata.id}`;
+    const galleryBase = `${galleryDirectory}/${slug}`;
 
     if (!existsSync(`${galleryBase}/index.html`)) {
-      console.error(id, "- Missing index.html");
+      console.error(slug, "- Missing index.html");
       hasErrors = true;
     }
     if (!existsSync(`${galleryBase}/main.js`)) {
-      console.error(id, "- Missing main.js");
+      console.error(slug, "- Missing main.js");
       hasErrors = true;
     }
     if (thumbnail && !existsSync(join(galleryBase, thumbnail))) {
-      console.error(id, "- Missing thumbnail", thumbnail);
+      console.error(slug, "- Missing thumbnail", thumbnail);
       hasErrors = true;
     }
 
@@ -103,16 +102,15 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
     }
 
     output.entries.push({
-      id: id,
+      id: slug,
       title: title,
       thumbnail: thumbnail,
       description: description,
       labels: labels,
       isNew: false,
     });
-    const legacyId = metadata.legacyId;
     if (legacyId) {
-      output.legacyIdMap[legacyId] = id;
+      output.legacyIdMap[legacyId] = slug;
     }
   }
 
