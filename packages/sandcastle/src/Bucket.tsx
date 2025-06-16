@@ -154,7 +154,7 @@ function Bucket({
 
   function scriptLineToEditorLine(line: number) {
     // editor lines are zero-indexed, plus 3 lines of boilerplate
-    return line - 4;
+    return line - 1;
   }
 
   useEffect(() => {
