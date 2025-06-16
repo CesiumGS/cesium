@@ -156,7 +156,6 @@ function App() {
   }
 
   async function setTypes(monaco: Monaco) {
-    console.log("setTypes");
     // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
 
     const cesiumTypes = await (await fetch(TYPES_URL)).text();
@@ -179,6 +178,10 @@ function App() {
       sandcastleModuleTypes,
       "ts:sandcastle.d.ts",
     );
+  }
+
+  function highlightLine(lineNumber: number) {
+    console.log("would highlight line", lineNumber, "but not implemented yet");
   }
 
   function formatJs() {
@@ -327,8 +330,6 @@ Sandcastle.addToolbarMenu(${variableName});`,
   useEffect(
     function loadFromUrl() {
       if (galleryLoaded) {
-        console.log("gallery loaded, try loading from url");
-
         const searchParams = new URLSearchParams(window.location.search);
 
         if (window.location.hash.indexOf("#c=") === 0) {
@@ -347,7 +348,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
           }
           const galleryId = legacyIdMap[legacyId];
           if (!galleryId) {
-            console.log("Unable to map legacy id to new id");
+            console.warn("Unable to map legacy id to new id");
             return;
           }
           loadGalleryItem(galleryId);
@@ -386,7 +387,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
             Javascript
           </Button>
           <Button
-            disabled={activeTab !== "js"}
+            disabled={activeTab === "html"}
             onClick={() => setActiveTab("html")}
           >
             HTML/CSS
@@ -409,6 +410,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
           code={codeState.committedCode}
           html={codeState.committedHtml}
           runNumber={codeState.runNumber}
+          highlightLine={(lineNumber) => highlightLine(lineNumber)}
         />
       </div>
       <div className="gallery">

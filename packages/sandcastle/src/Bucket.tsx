@@ -1,22 +1,16 @@
 import { useEffect, useRef } from "react";
 import { embedInSandcastleTemplate } from "./Helpers";
 
-// TODO: I don't think this will correctly track calls between state?
-// I need to figure what this is even here for and whether we need it still...
-const local = {
-  docTypes: [],
-  headers: "<html><head></head><body>",
-  bucketName: "starter bucket",
-  emptyBucket: "",
-};
-
 function activateBucketScripts(
-  bucketDoc: Document,
   bucketFrame: HTMLIFrameElement,
   code: string,
   html: string,
 ) {
-  console.log("activateBucketScripts");
+  const bucketDoc = bucketFrame.contentDocument;
+  if (!bucketDoc) {
+    return;
+  }
+
   const headNodes = bucketDoc.head.childNodes;
   let node;
   const nodes: HTMLScriptElement[] = [];
@@ -45,16 +39,13 @@ function activateBucketScripts(
   const onScriptTagError = function () {
     if (bucketFrame.contentDocument === bucketDoc) {
       // @ts-expect-error this has type any because it's from anywhere inside the bucket
-      appendConsole("consoleError", `Error loading ${this.src}`, true);
+      appendConsole("consoleError", `Error loading ${this.src}`);
       appendConsole(
         "consoleError",
         "Make sure Cesium is built, see the Contributor's Guide for details.",
-        true,
       );
     }
   };
-
-  console.log("nodes", nodes);
 
   // Load each script after the previous one has loaded.
   const loadScript = function () {
@@ -105,84 +96,32 @@ function activateBucketScripts(
 }
 
 function appendConsole(
-  type: "consoleError" | "",
+  type: "consoleLog" | "consoleWarn" | "consoleError",
   message: string,
-  focusPanel: boolean,
 ) {
-  // TODO:
   if (type === "consoleError") {
-    console.error(message);
+    console.error("temp console interface:", message);
     return;
   }
-  console.log(message);
-  if (focusPanel) {
-    // TODO:
+  if (type === "consoleWarn") {
+    console.warn("temp console interface:", message);
+    return;
   }
+  console.log("temp console interface:", message);
 }
 
-// let bucketWaiting = false;
-
-function applyBucket(
-  bucketFrame: HTMLIFrameElement,
-  code: string,
-  html: string,
-) {
-  console.log("applyBucket");
-  if (
-    // local.emptyBucket &&
-    // local.bucketName &&
-    // typeof bucketTypes[local.bucketName] === "string"
-    // eslint-disable-next-line no-constant-condition
-    true
-  ) {
-    // bucketWaiting = false;
-    const bucketDoc = bucketFrame.contentDocument;
-    if (!bucketDoc) {
-      console.warn(
-        "tried to applyBucket before the bucket content document existed",
-      );
-      return;
-    }
-    if (
-      local.headers.substring(0, local.emptyBucket.length) !== local.emptyBucket
-    ) {
-      appendConsole(
-        "consoleError",
-        `Error, first part of ${local.bucketName} must match first part of bucket.html exactly.`,
-        true,
-      );
-    } else {
-      const bodyAttributes = local.headers.match(/<body([^>]*?)>/)?.[1] ?? "";
-      const attributeRegex = /([-a-z_]+)\s*="([^"]*?)"/gi;
-      //group 1 attribute name, group 2 attribute value.  Assumes double-quoted attributes.
-      let attributeMatch;
-      while ((attributeMatch = attributeRegex.exec(bodyAttributes)) !== null) {
-        const attributeName = attributeMatch[1];
-        const attributeValue = attributeMatch[2];
-        if (attributeName === "class") {
-          bucketDoc.body.className = attributeValue;
-        } else {
-          bucketDoc.body.setAttribute(attributeName, attributeValue);
-        }
-      }
-
-      const pos = local.headers.indexOf("</head>");
-      const extraHeaders = local.headers.substring(
-        local.emptyBucket.length,
-        pos,
-      );
-      bucketDoc.head.innerHTML += extraHeaders;
-      activateBucketScripts(bucketDoc, bucketFrame, code, html);
-    }
-  } else {
-    // bucketWaiting = true;
-  }
-}
+type SandcastleMessage =
+  | { type: "reload" }
+  | { type: "consoleLog"; log: string }
+  | { type: "consoleWarn"; warn: string }
+  | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
+  | { type: "highlight"; highlight: number };
 
 function Bucket({
   code,
   html,
   runNumber,
+  highlightLine,
 }: {
   /** The JS code for the Sandcastle */
   code: string;
@@ -190,90 +129,88 @@ function Bucket({
   html: string;
   /** If this value changes the bucket will reload which allows us to force a re-run even if the JS/HTML hasn't changed */
   runNumber: number;
+  /**
+   * Function called when the bucket page requests to highlight a specific line of the code
+   * @param lineNumber Line to highlight
+   */
+  highlightLine: (lineNumber: number) => void;
 }) {
   const bucket = useRef<HTMLIFrameElement>(null);
+  const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
 
   useEffect(() => {
-    console.log("Viewer updated", runNumber, { code, html });
-    if (bucket.current && bucket.current.contentWindow) {
+    if (
+      runNumber !== lastRunNumber.current &&
+      bucket.current &&
+      bucket.current.contentWindow
+    ) {
+      // When we want to run sandcastle code we just need to reload the bucket
+      // it sends a message when loaded which triggers the message handler below
+      // to load the actual code
       bucket.current.contentWindow.location.reload();
     }
+    lastRunNumber.current = runNumber;
   }, [code, html, runNumber]);
 
+  function scriptLineToEditorLine(line: number) {
+    // editor lines are zero-indexed, plus 3 lines of boilerplate
+    return line - 4;
+  }
+
   useEffect(() => {
-    const messageHandler = function (e: MessageEvent) {
+    const messageHandler = function (e: MessageEvent<SandcastleMessage>) {
       // The iframe (bucket.html) sends this message on load.
       // This triggers the code to be injected into the iframe.
-      if (e.data === "reload") {
-        console.log("message reload");
-        if (!local.bucketName || !bucket.current) {
+      if (e.data.type === "reload") {
+        if (!bucket.current || !bucket.current.contentDocument) {
           // Reload fired, bucket not specified yet.
           return;
         }
         const bucketDoc = bucket.current.contentDocument;
-        if (!bucketDoc) {
-          // TODO: this whole handler probably needs to be set up better for things like this
-          console.warn("bucket not set up yet");
-          return;
-        }
-        // if (!jsEditorRef.current || !htmlEditorRef.current) {
-        //   console.warn("editors not set up yet");
-        //   return;
-        // }
-        if (bucketDoc.body.getAttribute("data-sandcastle-loaded") !== "yes") {
-          bucketDoc.body.setAttribute("data-sandcastle-loaded", "yes");
-          // logOutput.innerHTML = "";
-          // numberOfNewConsoleMessages = 0;
-          // registry.byId("logContainer").set("title", "Console");
-          // This happens after a Run (F8) reloads bucket.html, to inject the editor code
+        if (bucketDoc.body.dataset.sandcastleLoaded !== "yes") {
+          bucketDoc.body.dataset.sandcastleLoaded = "yes";
+          // This happens after the bucket.html reloads, to inject the editor code
           // into the iframe, causing the demo to run there.
-          applyBucket(bucket.current, code, html);
-          // if (docError) {
-          //   appendConsole(
-          //     "consoleError",
-          //     'Documentation not available.  Please run the "build-docs" build script to generate Cesium documentation.',
-          //     true,
-          //   );
-          //   // showGallery();
-          // }
-          // if (galleryError) {
-          //   appendConsole(
-          //     "consoleError",
-          //     "Error loading gallery, please run the build script.",
-          //     true,
-          //   );
-          // }
-          // if (deferredLoadError) {
-          //   appendConsole(
-          //     "consoleLog",
-          //     `Unable to load demo named ${queryObject.src.replace(
-          //       ".html",
-          //       "",
-          //     )}. Redirecting to HelloWorld.\n`,
-          //     true,
-          //   );
-          // }
+          activateBucketScripts(bucket.current, code, html);
         }
+      } else if (e.data.type === "consoleLog") {
+        // Console log messages from the iframe display in Sandcastle.
+        appendConsole("consoleLog", e.data.log);
+      } else if (e.data.type === "consoleError") {
+        // Console error messages from the iframe display in Sandcastle
+        let errorMsg = e.data.error;
+        let lineNumber = e.data.lineNumber;
+        if (lineNumber) {
+          errorMsg += " (on line ";
+
+          if (e.data.url) {
+            errorMsg += `${lineNumber} of ${e.data.url})`;
+          } else {
+            lineNumber = scriptLineToEditorLine(lineNumber);
+            errorMsg += `${lineNumber + 1})`;
+          }
+        }
+        appendConsole("consoleError", errorMsg);
+      } else if (e.data.type === "consoleWarn") {
+        // Console warning messages from the iframe display in Sandcastle.
+        appendConsole("consoleWarn", e.data.warn);
+      } else if (e.data.type === "highlight") {
+        // Hovering objects in the embedded Cesium window.
+        highlightLine(e.data.highlight);
       }
     };
     window.addEventListener("message", messageHandler);
     return () => window.removeEventListener("message", messageHandler);
-  }, [code, html]);
+  }, [code, html, highlightLine]);
 
   return (
-    <>
-      <iframe
-        ref={bucket}
-        id="bucketFrame"
-        src="templates/bucket.html"
-        className="fullFrame"
-        allowFullScreen
-      ></iframe>
-      {/* <div className="debug">
-        <pre>{code}</pre>
-        <pre>{html}</pre>
-      </div> */}
-    </>
+    <iframe
+      ref={bucket}
+      id="bucketFrame"
+      src="templates/bucket.html"
+      className="fullFrame"
+      allowFullScreen
+    ></iframe>
   );
 }
 
