@@ -327,7 +327,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
     };
   }, []);
 
-  useEffect(
+  const loadFromUrl = useCallback(
     function loadFromUrl() {
       if (galleryLoaded) {
         const searchParams = new URLSearchParams(window.location.search);
@@ -351,6 +351,11 @@ Sandcastle.addToolbarMenu(${variableName});`,
             console.warn("Unable to map legacy id to new id");
             return;
           }
+          window.history.replaceState(
+            {},
+            "",
+            `${getBaseUrl()}?id=${galleryId}`,
+          );
           loadGalleryItem(galleryId);
         } else if (searchParams.has("id")) {
           const galleryId = searchParams.get("id");
@@ -361,8 +366,19 @@ Sandcastle.addToolbarMenu(${variableName});`,
         }
       }
     },
-    [galleryLoaded, galleryItems, legacyIdMap, loadGalleryItem],
+    [galleryLoaded, legacyIdMap, loadGalleryItem],
   );
+
+  useEffect(() => loadFromUrl(), [galleryLoaded, galleryItems, loadFromUrl]);
+  useEffect(() => {
+    // Listen to browser forward/back navigation and try to load from URL
+    // this is necessary because of the pushState used for faster gallery loading
+    function pushStateListener() {
+      loadFromUrl();
+    }
+    window.addEventListener("popstate", pushStateListener);
+    return () => window.removeEventListener("popstate", pushStateListener);
+  }, [loadFromUrl]);
 
   return (
     <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
@@ -417,11 +433,14 @@ Sandcastle.addToolbarMenu(${variableName});`,
         <Gallery
           demos={galleryItems}
           loadDemo={(item) => {
+            // Load the gallery item every time it's clicked
             loadGalleryItem(item.id);
-            // TODO: I like this method for history but we need to actually react to the user
-            // hitting forward or back, right now it does nothing. Need to look into how that works
-            // Might need to involve React-Router but I'd like to try and avoid if we don't need it
-            window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.has("id") && searchParams.get("id") !== item.id) {
+              // only push state if it's not the current url to prevent duplicated in history
+              window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+            }
           }}
         />
       </div>
