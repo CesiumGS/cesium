@@ -34,17 +34,17 @@ const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
 function App() {
-  const [jsIsActive, setJsIsActive] = useState(true);
+  const [activeTab, setActiveTab] = useState<"js" | "html">("js");
   const [darkTheme, setDarkTheme] = useState(false);
 
   const editorRef = useRef<editor.IStandaloneCodeEditor>(null);
 
-  type Action =
+  type SandcastleAction =
     | { type: "reset" }
     | { type: "setCode"; code: string }
     | { type: "setHtml"; html: string }
-    | { type: "commitCode" }
-    | { type: "setAndCommit"; code?: string; html?: string };
+    | { type: "runSandcastle" }
+    | { type: "setAndRun"; code?: string; html?: string };
   type CodeState = {
     code: string;
     html: string;
@@ -53,64 +53,60 @@ function App() {
     runNumber: number;
   };
 
-  const [codeState, dispatch] = useReducer(
-    function reducer(state: CodeState, action: Action): CodeState {
-      switch (action.type) {
-        case "reset": {
-          return {
-            code: defaultJsCode,
-            html: defaultHtmlCode,
-            committedCode: defaultJsCode,
-            committedHtml: defaultHtmlCode,
-            runNumber: 0,
-          };
-        }
-        case "setCode": {
-          return {
-            ...state,
-            code: action.code,
-          };
-        }
-        case "setHtml": {
-          return {
-            ...state,
-            html: action.html,
-          };
-        }
-        case "commitCode": {
-          return {
-            ...state,
-            committedCode: state.code,
-            committedHtml: state.html,
-            runNumber: state.runNumber + 1,
-          };
-        }
-        case "setAndCommit": {
-          return {
-            code: action.code ?? state.code,
-            html: action.html ?? state.html,
-            committedCode: action.code ?? state.code,
-            committedHtml: action.html ?? state.html,
-            runNumber: state.runNumber + 1,
-          };
-        }
+  const initialState: CodeState = {
+    code: defaultJsCode,
+    html: defaultHtmlCode,
+    committedCode: defaultJsCode,
+    committedHtml: defaultHtmlCode,
+    runNumber: 0,
+  };
+
+  const [codeState, dispatch] = useReducer(function reducer(
+    state: CodeState,
+    action: SandcastleAction,
+  ): CodeState {
+    switch (action.type) {
+      case "reset": {
+        return { ...initialState };
       }
-    },
-    {
-      code: defaultJsCode,
-      html: defaultHtmlCode,
-      committedCode: defaultJsCode,
-      committedHtml: defaultHtmlCode,
-      runNumber: 0,
-    } as CodeState,
-  );
+      case "setCode": {
+        return {
+          ...state,
+          code: action.code,
+        };
+      }
+      case "setHtml": {
+        return {
+          ...state,
+          html: action.html,
+        };
+      }
+      case "runSandcastle": {
+        return {
+          ...state,
+          committedCode: state.code,
+          committedHtml: state.html,
+          runNumber: state.runNumber + 1,
+        };
+      }
+      case "setAndRun": {
+        return {
+          code: action.code ?? state.code,
+          html: action.html ?? state.html,
+          committedCode: action.code ?? state.code,
+          committedHtml: action.html ?? state.html,
+          runNumber: state.runNumber + 1,
+        };
+      }
+    }
+  }, initialState);
 
   const [legacyIdMap, setLegacyIdMap] = useState<Record<string, string>>({});
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [galleryLoaded, setGalleryLoaded] = useState(false);
 
   function runSandcastle() {
-    dispatch({ type: "commitCode" });
+    dispatch({ type: "runSandcastle" });
   }
 
   function handleEditorDidMount(
@@ -122,7 +118,7 @@ function App() {
     monaco.editor.addCommand({
       id: "run-cesium",
       run: () => {
-        dispatch({ type: "commitCode" });
+        dispatch({ type: "runSandcastle" });
       },
     });
 
@@ -184,7 +180,7 @@ function App() {
   }
 
   function handleChange(value: string = "") {
-    if (jsIsActive) {
+    if (activeTab === "js") {
       dispatch({ type: "setCode", code: value });
     } else {
       dispatch({ type: "setHtml", html: value });
@@ -192,7 +188,6 @@ function App() {
   }
 
   async function setTypes(monaco: Monaco) {
-    console.log("setTypes");
     // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
 
     const cesiumTypes = await (await fetch(TYPES_URL)).text();
@@ -217,6 +212,10 @@ function App() {
     );
   }
 
+  function highlightLine(lineNumber: number) {
+    console.log("would highlight line", lineNumber, "but not implemented yet");
+  }
+
   function formatJs() {
     editorRef.current?.getAction("editor.action.formatDocument")?.run();
   }
@@ -236,7 +235,7 @@ function App() {
     }
     const newCode = `${codeState.code}${spacerNewline}\n${snippet.trim()}\n`;
     dispatch({
-      type: run ? "setAndCommit" : "setCode",
+      type: run ? "setAndRun" : "setCode",
       code: newCode,
     });
   }
@@ -334,7 +333,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
       const html = await (await htmlReq).text();
 
       dispatch({
-        type: "setAndCommit",
+        type: "setAndRun",
         code: code,
         html: html,
       });
@@ -360,11 +359,9 @@ Sandcastle.addToolbarMenu(${variableName});`,
     };
   }, []);
 
-  useEffect(
+  const loadFromUrl = useCallback(
     function loadFromUrl() {
       if (galleryLoaded) {
-        console.log("gallery loaded, try loading from url");
-
         const searchParams = new URLSearchParams(window.location.search);
 
         if (window.location.hash.indexOf("#c=") === 0) {
@@ -372,7 +369,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
           const data = decodeBase64Data(base64String);
 
           dispatch({
-            type: "setAndCommit",
+            type: "setAndRun",
             code: data.code,
             html: data.html,
           });
@@ -383,9 +380,14 @@ Sandcastle.addToolbarMenu(${variableName});`,
           }
           const galleryId = legacyIdMap[legacyId];
           if (!galleryId) {
-            console.log("Unable to map legacy id to new id");
+            console.warn("Unable to map legacy id to new id");
             return;
           }
+          window.history.replaceState(
+            {},
+            "",
+            `${getBaseUrl()}?id=${galleryId}`,
+          );
           loadGalleryItem(galleryId);
         } else if (searchParams.has("id")) {
           const galleryId = searchParams.get("id");
@@ -396,8 +398,19 @@ Sandcastle.addToolbarMenu(${variableName});`,
         }
       }
     },
-    [galleryLoaded, galleryItems, legacyIdMap, loadGalleryItem],
+    [galleryLoaded, legacyIdMap, loadGalleryItem],
   );
+
+  useEffect(() => loadFromUrl(), [galleryLoaded, galleryItems, loadFromUrl]);
+  useEffect(() => {
+    // Listen to browser forward/back navigation and try to load from URL
+    // this is necessary because of the pushState used for faster gallery loading
+    function pushStateListener() {
+      loadFromUrl();
+    }
+    window.addEventListener("popstate", pushStateListener);
+    return () => window.removeEventListener("popstate", pushStateListener);
+  }, [loadFromUrl]);
 
   return (
     <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
@@ -415,19 +428,21 @@ Sandcastle.addToolbarMenu(${variableName});`,
       </div>
       <div className="editor-container">
         <div className="tabs">
-          <Button disabled={jsIsActive} onClick={() => setJsIsActive(true)}>
+          <Button
+            disabled={activeTab === "js"}
+            onClick={() => setActiveTab("js")}
+          >
             Javascript
           </Button>
-          <Button disabled={!jsIsActive} onClick={() => setJsIsActive(false)}>
+          <Button
+            disabled={activeTab === "html"}
+            onClick={() => setActiveTab("html")}
+          >
             HTML/CSS
           </Button>
         </div>
         <Editor
-          height="100%"
           theme={darkTheme ? "vs-dark" : "light"}
-          path={jsIsActive ? "script.js" : "index.html"}
-          language={jsIsActive ? "javascript" : "html"}
-          value={jsIsActive ? codeState.code : codeState.html}
           options={{
             automaticLayout: true,
             bracketPairColorization: {
@@ -441,6 +456,10 @@ Sandcastle.addToolbarMenu(${variableName});`,
             renderWhitespace: "trailing",
             tabSize: 2,
           }}
+          path={activeTab === "js" ? "script.js" : "index.html"}
+          language={activeTab === "js" ? "javascript" : "html"}
+          value={activeTab === "js" ? codeState.code : codeState.html}
+          defaultValue={defaultJsCode}
           onMount={handleEditorDidMount}
           beforeMount={handleEditorWillMount}
           onChange={handleChange}
@@ -451,17 +470,21 @@ Sandcastle.addToolbarMenu(${variableName});`,
           code={codeState.committedCode}
           html={codeState.committedHtml}
           runNumber={codeState.runNumber}
+          highlightLine={(lineNumber) => highlightLine(lineNumber)}
         />
       </div>
       <div className="gallery">
         <Gallery
           demos={galleryItems}
           loadDemo={(item) => {
+            // Load the gallery item every time it's clicked
             loadGalleryItem(item.id);
-            // TODO: I like this method for history but we need to actually react to the user
-            // hitting forward or back, right now it does nothing. Need to look into how that works
-            // Might need to involve React-Router but I'd like to try and avoid if we don't need it
-            window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.has("id") && searchParams.get("id") !== item.id) {
+              // only push state if it's not the current url to prevent duplicated in history
+              window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+            }
           }}
         />
       </div>

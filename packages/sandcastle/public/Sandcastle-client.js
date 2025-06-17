@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  window.parent.postMessage("reload", "*");
+  window.parent.postMessage({ type: "reload" }, "*");
 
   function defined(value) {
     return value !== undefined;
@@ -20,6 +20,7 @@
     originalLog.apply(console, arguments);
     window.parent.postMessage(
       {
+        type: "consoleLog",
         log: print(d1),
       },
       "*",
@@ -31,6 +32,7 @@
     originalWarn.apply(console, arguments);
     window.parent.postMessage(
       {
+        type: "consoleWarn",
         warn: defined(d1) ? d1.toString() : "undefined",
       },
       "*",
@@ -49,6 +51,7 @@
     if (!defined(d1)) {
       window.parent.postMessage(
         {
+          type: "consoleError",
           error: "undefined",
         },
         "*",
@@ -93,6 +96,7 @@
     if (lineNumber >= 0) {
       window.parent.postMessage(
         {
+          type: "consoleError",
           error: errorMsg,
           lineNumber: lineNumber,
         },
@@ -101,6 +105,7 @@
     } else {
       window.parent.postMessage(
         {
+          type: "consoleError",
           error: errorMsg,
         },
         "*",
@@ -131,6 +136,7 @@
       }
       window.parent.postMessage(
         {
+          type: "consoleError",
           error: errorMsg,
           url: url,
           lineNumber: lineNumber,
@@ -140,6 +146,7 @@
     } else {
       window.parent.postMessage(
         {
+          type: "consoleError",
           error: errorMsg,
           url: url,
         },
