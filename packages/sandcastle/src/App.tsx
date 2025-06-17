@@ -410,7 +410,6 @@ Sandcastle.addToolbarMenu(${variableName});`,
           </Button>
         </div>
         <Editor
-          height="100%"
           theme={darkTheme ? "vs-dark" : "light"}
           path={activeTab === "js" ? "script.js" : "index.html"}
           language={activeTab === "js" ? "javascript" : "html"}
