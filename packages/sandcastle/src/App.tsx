@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { Allotment } from "allotment";
+import "allotment/dist/style.css";
 import "./App.css";
 
 import { Button, Root } from "@itwin/itwinui-react/bricks";
@@ -316,27 +318,33 @@ Sandcastle.addToolbarMenu(${variableName});`,
         <div className="spacer"></div>
         <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
       </div>
-      <SandcastleEditor
-        ref={editorRef}
-        darkTheme={darkTheme}
-        onJsChange={(value: string = "") =>
-          dispatch({ type: "setCode", code: value })
-        }
-        onHtmlChange={(value: string = "") =>
-          dispatch({ type: "setHtml", html: value })
-        }
-        onRun={() => dispatch({ type: "runSandcastle" })}
-        js={codeState.code}
-        html={codeState.html}
-      />
-      <div className="viewer-bucket">
-        <Bucket
-          code={codeState.committedCode}
-          html={codeState.committedHtml}
-          runNumber={codeState.runNumber}
-          highlightLine={(lineNumber) => highlightLine(lineNumber)}
-        />
-      </div>
+      <Allotment>
+        <Allotment.Pane minSize={400}>
+          <SandcastleEditor
+            ref={editorRef}
+            darkTheme={darkTheme}
+            onJsChange={(value: string = "") =>
+              dispatch({ type: "setCode", code: value })
+            }
+            onHtmlChange={(value: string = "") =>
+              dispatch({ type: "setHtml", html: value })
+            }
+            onRun={() => dispatch({ type: "runSandcastle" })}
+            js={codeState.code}
+            html={codeState.html}
+          />
+        </Allotment.Pane>
+        <Allotment.Pane minSize={400}>
+          <div className="viewer-bucket">
+            <Bucket
+              code={codeState.committedCode}
+              html={codeState.committedHtml}
+              runNumber={codeState.runNumber}
+              highlightLine={(lineNumber) => highlightLine(lineNumber)}
+            />
+          </div>
+        </Allotment.Pane>
+      </Allotment>
       <div className="gallery">
         <Gallery
           demos={galleryItems}
