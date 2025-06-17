@@ -562,9 +562,10 @@ function convertTransformFor2D(camera) {
     scratchCartographic,
   );
 
-  let projectedPosition = defined(cartographic)
-    ? projection.project(cartographic, scratchCartesian3Projection)
-    : Cartesian3.ZERO;
+  const projectedPosition = projection.safeProject(
+    cartographic,
+    scratchCartesian3Projection,
+  );
 
   const newOrigin = scratchCartesian4NewOrigin;
   newOrigin.x = projectedPosition.z;
@@ -584,9 +585,7 @@ function convertTransformFor2D(camera) {
   );
   ellipsoid.cartesianToCartographic(xAxis, cartographic);
 
-  projectedPosition = defined(cartographic)
-    ? projection.project(cartographic, projectedPosition)
-    : Cartesian3.ZERO;
+  projection.safeProject(cartographic, projectedPosition);
 
   const newXAxis = scratchCartesian4NewXAxis;
   newXAxis.x = projectedPosition.z;
@@ -608,9 +607,7 @@ function convertTransformFor2D(camera) {
     );
     ellipsoid.cartesianToCartographic(yAxis, cartographic);
 
-    projectedPosition = defined(cartographic)
-      ? projection.project(cartographic, projectedPosition)
-      : Cartesian3.ZERO;
+    projection.safeProject(cartographic, projectedPosition);
 
     newYAxis.x = projectedPosition.z;
     newYAxis.y = projectedPosition.x;
@@ -1319,9 +1316,7 @@ function setViewCV(camera, position, hpr, convert) {
         position,
         scratchSetViewCartographic,
       );
-      position = defined(cartographic)
-        ? projection.project(cartographic, scratchSetViewCartesian)
-        : Cartesian3.ZERO;
+      position = projection.safeProject(cartographic, scratchSetViewCartesian);
     }
     Cartesian3.clone(position, camera.position);
   }
@@ -1356,9 +1351,7 @@ function setView2D(camera, position, hpr, convert) {
         position,
         scratchSetViewCartographic,
       );
-      position = defined(cartographic)
-        ? projection.project(cartographic, scratchSetViewCartesian)
-        : Cartesian3.ZERO;
+      position = projection.safeProject(cartographic, scratchSetViewCartesian);
     }
 
     Cartesian2.clone(position, camera.position);

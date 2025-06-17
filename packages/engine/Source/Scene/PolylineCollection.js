@@ -1778,14 +1778,10 @@ PolylineBucket.prototype.getSegments = function (polyline, projection) {
   for (let n = 0; n < length; ++n) {
     position = positions[n];
     p = Matrix4.multiplyByPoint(modelMatrix, position, p);
-    const cartographic = ellipsoid.cartesianToCartographic(
-      p,
-      scratchCartographic,
-    );
     newPositions.push(
-      defined(cartographic)
-        ? projection.project(cartographic)
-        : Cartesian3.ZERO,
+      projection.safeProject(
+        ellipsoid.cartesianToCartographic(p, scratchCartographic),
+      ),
     );
   }
 

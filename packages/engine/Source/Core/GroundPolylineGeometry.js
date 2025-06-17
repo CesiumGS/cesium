@@ -872,10 +872,11 @@ function projectNormal(
     );
   }
 
-  const normalEndpointProjected = defined(normalEndpointCartographic)
-    ? projection.project(normalEndpointCartographic, result)
-    : Cartesian3.ZERO;
-  normalEndpointProjected.height = 0.0;
+  normalEndpointCartographic.height = 0.0;
+  const normalEndpointProjected = projection.safeProject(
+    normalEndpointCartographic,
+    result,
+  );
 
   result = Cartesian3.subtract(
     normalEndpointProjected,
