@@ -114,13 +114,13 @@ function SandcastleEditor({
     );
   }
 
-  function createDependencyProposals(range: Range) {
+  function createDependencyProposals(range: Range): languages.CompletionItem[] {
     // returning a static list of proposals, not even looking at the prefix (filtering is done by the Monaco editor)
     return [
       {
         label: "scbutton",
         kind: languages.CompletionItemKind.Function,
-        documentation: "Create a Sancastle button",
+        documentation: "Create a Sandcastle button",
         insertText: `Sandcastle.addToolbarButton(\${1:"New Button"}, function () {
     \${0:// your code here}
   });`,
@@ -130,7 +130,7 @@ function SandcastleEditor({
       {
         label: "sctoggle",
         kind: languages.CompletionItemKind.Function,
-        documentation: "Create a Sancastle toggle button",
+        documentation: "Create a Sandcastle toggle button",
         insertText: `let \${2:toggleValue} = \${3:true};
   Sandcastle.addToggleButton(\${1:"Toggle"}, \${2:toggleValue}, function (checked) {
     \${2:toggleValue} = checked;$0
@@ -141,7 +141,7 @@ function SandcastleEditor({
       {
         label: "scmenu",
         kind: languages.CompletionItemKind.Function,
-        documentation: "Create a Sancastle select menu",
+        documentation: "Create a Sandcastle select menu",
         insertText: `const \${1:options} = [
     {
       text: \${2:"Option 1"},
@@ -157,7 +157,7 @@ function SandcastleEditor({
       {
         label: "scmenuitem",
         kind: languages.CompletionItemKind.Function,
-        documentation: "Create a Sancastle select menu item",
+        documentation: "Create a Sandcastle select menu item",
         insertText: `{
     text: \${1:"New Option"},
     onselect: function () {
