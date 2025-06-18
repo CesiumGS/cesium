@@ -495,6 +495,8 @@ function Model(options) {
    * @private
    */
   this.pickObject = options.pickObject;
+
+  this._pickCache = new Map(); // Cache for picking results with Model.pick to avoid recomputing the same pick multiple times
 }
 
 function handleError(model, error) {
@@ -2743,16 +2745,38 @@ Model.prototype.pick = function (
   frameState,
   verticalExaggeration,
   relativeHeight,
+  ellipsoid,
   result,
 ) {
-  return pickModel(
-    this,
-    ray,
-    frameState,
-    verticalExaggeration,
-    relativeHeight,
-    result,
-  );
+  const cache = this._pickCache;
+  // TODO: Invalidate cache when vertical exaggeration or relative height changes
+  const cacheKey = `${ray.origin.x.toFixed(12)},${ray.origin.y.toFixed(12)},${ray.origin.z.toFixed(12)}-${ray.direction.x.toFixed(8)},${ray.direction.y.toFixed(8)},${ray.direction.z.toFixed(8)}`;
+
+  let value = cache.get(cacheKey);
+  if (!cache.has(cacheKey)) {
+    value = pickModel(
+      this,
+      ray,
+      frameState,
+      verticalExaggeration,
+      relativeHeight,
+      ellipsoid,
+      result,
+    );
+
+    if (defined(value)) {
+      value = Cartesian3.clone(value);
+    }
+
+    cache.set(cacheKey, value);
+  }
+
+  if (!defined(value)) {
+    return undefined;
+  }
+
+  Cartesian3.clone(value, result);
+  return result;
 };
 
 /**
@@ -2868,6 +2892,8 @@ Model.prototype.destroy = function () {
     environmentMapManager.destroy();
   }
   this._environmentMapManager = undefined;
+
+  this._pickCache.clear();
 
   destroyObject(this);
 };
