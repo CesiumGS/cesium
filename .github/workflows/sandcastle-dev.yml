@@ -41,6 +41,10 @@ jobs:
         run: npm install
       - name: build website release
         run: npm run website-release
+      - name: build apps
+        run: npm run build-apps
+      - name: build types
+        run: npm run build-ts
       - name: build prod sandcastle
         run: npm run build-prod -w packages/sandcastle -- -l warn
       - name: deploy to dev-sandcastle.cesium.com
