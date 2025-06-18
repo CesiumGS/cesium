@@ -8,6 +8,10 @@
 
 - Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
 
+#### Additions :tada:
+
+- Added `HeightReference` to `Cesium3DTileset.ConstructorOptions` to allow clamping point features in 3D Tile vector data to terrain or 3D Tiles [#11710](https://github.com/CesiumGS/cesium/pull/11710)
+
 ## 1.130 - 2025-06-02
 
 ### @cesium/engine

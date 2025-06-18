@@ -206,6 +206,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [IKangXu](https://github.com/IKangXu)
   - [EMapGIS](https://github.com/EMapGIS)
   - [CandyACE](https://github.com/CandyACE)
+- [EARTHBRAIN, Ltd.](https://www.earthbrain.com/en/)
+  - [Gregory Diehl](https://github.com/gdiehleb)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
