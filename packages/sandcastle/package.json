@@ -11,6 +11,7 @@
     "build": "npm run build-app",
     "build-app": "tsc -b && vite build --config vite.config.app.ts",
     "build-ci": "tsc -b && vite build --config vite.config.ci.ts",
+    "build-prod": "npm run build-gallery && tsc -b && vite build --config vite.config.prod.ts",
     "build-gallery": "node scripts/buildGallery.js"
   },
   "dependencies": {

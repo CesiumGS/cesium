@@ -1,0 +1,51 @@
+name: sandcastle-dev
+on:
+  push:
+    branches:
+      - 'sandcastle-dev-deployment'
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: npm install
+        run: npm install
+      - name: lint *.js
+        run: npm run eslint
+      - name: lint *.md
+        run: npm run markdownlint
+      - name: format code
+        run: npm run prettier-check
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROD: true
+      AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
+      BRANCH: ${{ github.ref_name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPO: ${{ github.repository }}
+      GITHUB_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: npm install
+        run: npm install
+      - name: build website release
+        run: npm run website-release
+      - name: build prod sandcastle
+        run: npm run build-prod -w packages/sandcastle -- -l warn
+      - name: deploy to dev-sandcastle.cesium.com
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: |
+          curl -LO $(curl https://api.github.com/repos/CesiumGS/cesium/releases/latest -H "Authorization: ${GITHUB_TOKEN}" | jq -r '.assets[0].browser_download_url')
+          unzip Cesium-$(cat package.json | jq -r '.version' | sed 's/\.0$//').zip -d Build/release/ -x "Apps"
+          aws s3 sync Build/Sandcastle2/ s3://cesium-dev-sandcastle-website/ --cache-control "public, max-age=1800" --delete
