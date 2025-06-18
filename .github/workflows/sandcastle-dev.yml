@@ -2,7 +2,7 @@ name: sandcastle-dev
 on:
   push:
     branches:
-      - 'sandcastle-dev-deployment'
+      - 'sandcastle-v2'
 jobs:
   lint:
     runs-on: ubuntu-latest
