@@ -1,5 +1,5 @@
 import { Editor, Monaco, OnChange } from "@monaco-editor/react";
-import { editor, KeyCode, KeyMod, languages, Range } from "monaco-editor";
+import { editor, KeyCode, KeyMod } from "monaco-editor";
 import { RefObject, useImperativeHandle, useRef, useState } from "react";
 import { Button } from "@itwin/itwinui-react/bricks";
 
@@ -84,8 +84,6 @@ function SandcastleEditor({
       allowNonTsExtensions: true,
     });
 
-    setSnippets(monaco);
-
     setTypes(monaco);
   }
 
@@ -112,80 +110,6 @@ function SandcastleEditor({
       sandcastleModuleTypes,
       "ts:sandcastle.d.ts",
     );
-  }
-
-  function createDependencyProposals(range: Range) {
-    // returning a static list of proposals, not even looking at the prefix (filtering is done by the Monaco editor),
-    // here you could do a server side lookup
-    return [
-      {
-        label: "scbutton",
-        kind: languages.CompletionItemKind.Function,
-        documentation: "Create a Sancastle button",
-        insertText: `Sandcastle.addToolbarButton(\${1:"New Button"}, function () {
-    \${0:// your code here}
-  });`,
-        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        range: range,
-      },
-      {
-        label: "sctoggle",
-        kind: languages.CompletionItemKind.Function,
-        documentation: "Create a Sancastle toggle button",
-        insertText: `let \${2:toggleValue} = \${3:true};
-  Sandcastle.addToggleButton(\${1:"Toggle"}, \${2:toggleValue}, function (checked) {
-    \${2:toggleValue} = checked;$0
-  });`,
-        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        range: range,
-      },
-      {
-        label: "scmenu",
-        kind: languages.CompletionItemKind.Function,
-        documentation: "Create a Sancastle select menu",
-        insertText: `const \${1:options} = [
-    {
-      text: \${2:"Option 1"},
-      onselect: function () {
-        \${0:// your code here, the first option is always run at load}
-      },
-    },
-  ];
-  Sandcastle.addToolbarMenu(\${1:options});`,
-        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        range: range,
-      },
-      {
-        label: "scmenuitem",
-        kind: languages.CompletionItemKind.Function,
-        documentation: "Create a Sancastle select menu item",
-        insertText: `{
-    text: \${1:"New Option"},
-    onselect: function () {
-      \${0:// your code here, the first option is always run at load}
-    },
-  },`,
-        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        range: range,
-      },
-    ];
-  }
-
-  function setSnippets(monaco: Monaco) {
-    monaco.languages.registerCompletionItemProvider("javascript", {
-      provideCompletionItems(model, position) {
-        const word = model.getWordUntilPosition(position);
-        const range = new Range(
-          position.lineNumber,
-          word.startColumn,
-          position.lineNumber,
-          word.endColumn,
-        );
-        return {
-          suggestions: createDependencyProposals(range),
-        };
-      },
-    });
   }
 
   return (
