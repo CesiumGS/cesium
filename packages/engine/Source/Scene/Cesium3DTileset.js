@@ -3849,7 +3849,7 @@ Cesium3DTileset.prototype.isGltfExtensionUsed = function (gltfExtensionName) {
       return false;
     }
     const extensionsUsed =
-      this.extensions["3DTILES_content_gltf"].extensionsUsed;
+      this.extensions["3DTILES_content_gltf"]?.extensionsUsed;
 
     if (!defined(extensionsUsed)) {
       return false;
