@@ -181,7 +181,6 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    * @type {boolean}
    * @readonly
    */
-
   ready: {
     get: function () {
       return this._ready;

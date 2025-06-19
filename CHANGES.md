@@ -1,6 +1,5 @@
 # Change Log
 
-
 ## 1.131 - 2025-07-01
 
 ### @cesium/engine
@@ -19,10 +18,8 @@
 
 #### Additions :tada:
 
-- Add support for Gaussian Splats with SPZ compression. [#12582](https://github.com/CesiumGS/cesium/pull/12582)
-  - Supported through the draft glTF extension `KHR_spz_gaussian_splats_compression` [#2490](https://github.com/KhronosGroup/glTF/pull/2490)
-  - Added new Sandcastle demo for Gaussian Splats with SPZ compression
-- Add support for integral texture formats: R32I, RG32I, RGB32I, RGBA32I, R32UI, RG32UI, RGB32UI, RGBA32UI
+- Added experimental support for loading 3D Tiles with Gaussian splats encoded with SPZ compression using the draft glTF extension [`KHR_spz_gaussian_splats_compression`](https://github.com/KhronosGroup/glTF/pull/2490). [#12582](https://github.com/CesiumGS/cesium/pull/12582)
+- Added support for integral texture formats: R32I, RG32I, RGB32I, RGBA32I, R32UI, RG32UI, RGB32UI, RGBA32UI [#12582](https://github.com/CesiumGS/cesium/pull/12582)
 
 ## 1.130 - 2025-06-02
 

@@ -73,8 +73,6 @@ function createGaussianSplatTexture(context, splatTextureData) {
  * @param {Object} options An object with the following properties:
  * @param {Cesium3DTileset} options.tileset The tileset that this primitive belongs to.
  * @param {boolean} [options.debugShowBoundingVolume=false] Whether to show the bounding volume of the primitive for debugging purposes.
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @private
  */
 

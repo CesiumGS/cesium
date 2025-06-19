@@ -93,15 +93,13 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
-    const forceGaussianSplats =
-      tileset.debugTreatTilesetAsGaussianSplats ?? false;
     let hasGaussianSplatExtension = false;
     if (tileset.isGltfExtensionRequired instanceof Function) {
       hasGaussianSplatExtension = tileset.isGltfExtensionRequired(
         "KHR_spz_gaussian_splats_compression",
       );
     }
-    if (forceGaussianSplats || hasGaussianSplatExtension) {
+    if (hasGaussianSplatExtension) {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
