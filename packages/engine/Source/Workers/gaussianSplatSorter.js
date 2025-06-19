@@ -8,7 +8,7 @@ async function initWorker(parameters, transferableObjects) {
   // Require and compile WebAssembly module, or use fallback if not supported
   const wasmConfig = parameters.webAssemblyConfig;
   if (defined(wasmConfig) && defined(wasmConfig.wasmBinary)) {
-    initSync(wasmConfig.wasmBinary);
+    initSync({ module: wasmConfig.wasmBinary });
     return true;
   }
 }
