@@ -306,6 +306,19 @@ async function loadFromSpz(vertexBufferLoader) {
   }
 }
 
+function extractSHDegreeAndCoef(attribute) {
+  const prefix = "_SH_DEGREE_";
+  const separator = "_COEF_";
+
+  const lStart = prefix.length;
+  const coefIndex = attribute.indexOf(separator, lStart);
+
+  const l = parseInt(attribute.slice(lStart, coefIndex), 10);
+  const n = parseInt(attribute.slice(coefIndex + separator.length), 10);
+
+  return { l, n };
+}
+
 function processSpz(vertexBufferLoader) {
   vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
   const spzLoader = vertexBufferLoader._spzLoader;
@@ -343,6 +356,33 @@ function processSpz(vertexBufferLoader) {
         0.0,
         255.0,
       );
+    }
+  } else if (vertexBufferLoader._attributeSemantic.startsWith("_SH_DEGREE_")) {
+    const { l, n } = extractSHDegreeAndCoef(
+      vertexBufferLoader._attributeSemantic,
+    );
+    const shDegree = gcloudData.shDegree;
+    let stride = 0;
+    const base = [0, 9, 24];
+    switch (shDegree) {
+      case 1:
+        stride = 9;
+        break;
+      case 2:
+        stride = 24;
+        break;
+      case 3:
+        stride = 45;
+        break;
+    }
+    const count = gcloudData.numPoints;
+    const sh = gcloudData.sh;
+    vertexBufferLoader._typedArray = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const idx = i * stride + base[l - 1] + n;
+      vertexBufferLoader._typedArray[i * 3] = sh[idx];
+      vertexBufferLoader._typedArray[i * 3 + 1] = sh[idx + 1];
+      vertexBufferLoader._typedArray[i * 3 + 2] = sh[idx + 2];
     }
   }
 }
