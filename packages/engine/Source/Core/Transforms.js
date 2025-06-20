@@ -1189,10 +1189,9 @@ Transforms.basisTo2D = function (projection, matrix, result) {
       scratchCartographic,
     );
 
-    projectedPosition = projection.safeProject(
-      cartographic,
-      scratchCartesian3Projection,
-    );
+    projectedPosition = defined(cartographic)
+      ? projection.project(cartographic, scratchCartesian3Projection)
+      : Cartesian3.ZERO;
 
     Cartesian3.fromElements(
       projectedPosition.z,
@@ -1246,10 +1245,9 @@ Transforms.ellipsoidTo2DModelMatrix = function (projection, center, result) {
     center,
     scratchCartographic,
   );
-  const projectedPosition = projection.safeProject(
-    cartographic,
-    scratchCartesian3Projection,
-  );
+  const projectedPosition = defined(cartographic)
+    ? projection.project(cartographic, scratchCartesian3Projection)
+    : Cartesian3.ZERO;
 
   Cartesian3.fromElements(
     projectedPosition.z,

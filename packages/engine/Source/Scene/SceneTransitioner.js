@@ -161,10 +161,14 @@ SceneTransitioner.prototype.morphToColumbusView = function (
       );
       Matrix4.inverseTransformation(toENU, toENU);
 
-      scene.mapProjection.safeProject(
-        ellipsoid.cartesianToCartographic(position, scratchToCVCartographic),
+      const cartographic = ellipsoid.cartesianToCartographic(
         position,
+        scratchToCVCartographic,
       );
+      position = defined(cartographic)
+        ? scene.mapProjection.project(cartographic, position)
+        : Cartesian3.ZERO;
+
       Matrix4.multiplyByPointAsVector(toENU, direction, direction);
       Matrix4.multiplyByPointAsVector(toENU, up, up);
     }

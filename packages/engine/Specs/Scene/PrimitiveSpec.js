@@ -1400,6 +1400,8 @@ describe(
       expect(function () {
         primitive.update(frameState);
       }).not.toThrow();
+
+      expect(frameState.commandList.length).toEqual(1);
     });
   },
   "WebGL",

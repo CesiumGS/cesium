@@ -1345,10 +1345,9 @@ function setSunAndMoonDirections(uniformState, frameState) {
     sunCartographicScratch,
   );
 
-  projection.safeProject(
-    sunCartographic,
-    uniformState._sunPositionColumbusView,
-  );
+  uniformState._sunPositionColumbusView = defined(sunCartographic)
+    ? projection.project(sunCartographic, uniformState._sunPositionColumbusView)
+    : Cartesian3.ZERO;
 }
 
 /**

@@ -69,29 +69,6 @@ GeographicProjection.prototype.project = function (cartographic, result) {
 };
 
 /**
- * Projects a set of {@link Cartographic} coordinates, in radians, to map coordinates, in meters.
- * X and Y are the longitude and latitude, respectively, multiplied by the maximum radius of the
- * ellipsoid.  Z is the unmodified height.
- * This method safely handles undefined inputs for the cartographic parameter.
- *
- * @param {Cartographic} cartographic The coordinates to project.
- * @param {Cartesian3} [result] An instance into which to copy the result.  If this parameter is
- *        undefined, a new instance is created and returned.
- * @returns {Cartesian3} The projected coordinates.  If the result parameter is not undefined, the
- *          coordinates are copied there and that instance is returned.  Otherwise, a new instance is
- *          created and returned. If the cartographic parameter is undefined, this method returns a copy of {@link Cartesian3.ZERO}.
- *
- * @see {@link GeographicProjection#project}
- */
-GeographicProjection.prototype.safeProject = function (cartographic, result) {
-  if (!defined(cartographic)) {
-    return Cartesian3.ZERO.clone(result);
-  }
-
-  return this.project(cartographic, result);
-};
-
-/**
  * Unprojects a set of projected {@link Cartesian3} coordinates, in meters, to {@link Cartographic}
  * coordinates, in radians.  Longitude and Latitude are the X and Y coordinates, respectively,
  * divided by the maximum radius of the ellipsoid.  Height is the unmodified Z coordinate.
