@@ -630,7 +630,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const uniformMap = renderResources.uniformMap;
 
   uniformMap.u_splatScale = function () {
-    return primitive.splatScale;
+    return tileset?.style?.splatScale ?? 1.0;
   };
 
   uniformMap.u_splatAttributeTexture = function () {
