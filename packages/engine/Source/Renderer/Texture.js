@@ -340,6 +340,7 @@ function loadBufferSource(texture, source) {
     pixelDatatype,
     width,
   );
+
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);

@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import * as prettier from "prettier";
-import * as babelPlugin from "prettier/plugins/babel";
-import * as estreePlugin from "prettier/plugins/estree";
-import * as htmlPlugin from "prettier/plugins/html";
 import "./App.css";
 
-import Editor, { Monaco } from "@monaco-editor/react";
-import { editor, KeyCode } from "monaco-editor";
-import Gallery, { GalleryItem } from "./Gallery.js";
 import { Button, Root } from "@itwin/itwinui-react/bricks";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
+import Gallery, { GalleryItem } from "./Gallery.js";
 import Bucket from "./Bucket.tsx";
+import SandcastleEditor, { SandcastleEditorRef } from "./SandcastleEditor.tsx";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -29,22 +24,20 @@ function getBaseUrl() {
   return `${location.protocol}//${location.host}${location.pathname}`;
 }
 
-const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
-const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
+export type SandcastleAction =
+  | { type: "reset" }
+  | { type: "setCode"; code: string }
+  | { type: "setHtml"; html: string }
+  | { type: "runSandcastle" }
+  | { type: "setAndRun"; code?: string; html?: string };
+
 function App() {
-  const [activeTab, setActiveTab] = useState<"js" | "html">("js");
   const [darkTheme, setDarkTheme] = useState(false);
 
-  const editorRef = useRef<editor.IStandaloneCodeEditor>(null);
+  const editorRef = useRef<SandcastleEditorRef>(null);
 
-  type SandcastleAction =
-    | { type: "reset" }
-    | { type: "setCode"; code: string }
-    | { type: "setHtml"; html: string }
-    | { type: "runSandcastle" }
-    | { type: "setAndRun"; code?: string; html?: string };
   type CodeState = {
     code: string;
     html: string;
@@ -109,115 +102,12 @@ function App() {
     dispatch({ type: "runSandcastle" });
   }
 
-  function handleEditorDidMount(
-    editor: editor.IStandaloneCodeEditor,
-    monaco: Monaco,
-  ) {
-    editorRef.current = editor;
-
-    monaco.editor.addCommand({
-      id: "run-cesium",
-      run: () => {
-        dispatch({ type: "runSandcastle" });
-      },
-    });
-
-    monaco.editor.addKeybindingRules([
-      // Remove some default keybindings that get in the way
-      // https://github.com/microsoft/monaco-editor/issues/102
-      // disable show command center
-      { keybinding: KeyCode.F1, command: null },
-      // disable show error command
-      { keybinding: KeyCode.F8, command: null },
-      // disable toggle debugger breakpoint
-      { keybinding: KeyCode.F9, command: null },
-      // disable go to definition to allow opening dev console
-      { keybinding: KeyCode.F12, command: null },
-      // Set up our custom run command
-      { keybinding: KeyCode.F8, command: "run-cesium" },
-    ]);
-  }
-
-  function handleEditorWillMount(monaco: Monaco) {
-    // here is the monaco instance
-    // do something before editor is mounted
-
-    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      target: monaco.languages.typescript.ScriptTarget.ESNext,
-      allowNonTsExtensions: true,
-    });
-
-    monaco.languages.registerDocumentFormattingEditProvider("javascript", {
-      async provideDocumentFormattingEdits(model) {
-        const formatted = await prettier.format(model.getValue(), {
-          parser: "babel",
-          // need to force type because the estree plugin has no type https://github.com/prettier/prettier/issues/16501
-          plugins: [babelPlugin, estreePlugin as prettier.Plugin],
-        });
-
-        return [{ range: model.getFullModelRange(), text: formatted }];
-      },
-    });
-
-    monaco.languages.html.htmlDefaults.setModeConfiguration({
-      ...monaco.languages.html.htmlDefaults,
-      // we have to disable the defaults for html for our custom prettier formatter to be run
-      documentFormattingEdits: false,
-      documentRangeFormattingEdits: false,
-    });
-    monaco.languages.registerDocumentFormattingEditProvider("html", {
-      async provideDocumentFormattingEdits(model) {
-        const formatted = await prettier.format(model.getValue(), {
-          parser: "html",
-          plugins: [htmlPlugin],
-        });
-
-        return [{ range: model.getFullModelRange(), text: formatted }];
-      },
-    });
-
-    setTypes(monaco);
-  }
-
-  function handleChange(value: string = "") {
-    if (activeTab === "js") {
-      dispatch({ type: "setCode", code: value });
-    } else {
-      dispatch({ type: "setHtml", html: value });
-    }
-  }
-
-  async function setTypes(monaco: Monaco) {
-    // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
-
-    const cesiumTypes = await (await fetch(TYPES_URL)).text();
-    // define a "global" variable so types work even with out the import statement
-    const cesiumTypesWithGlobal = `${cesiumTypes}\nvar Cesium: typeof import('cesium');`;
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      cesiumTypesWithGlobal,
-      "ts:cesium.d.ts",
-    );
-
-    const sandcastleTypes = await (await fetch(SANDCASTLE_TYPES_URL)).text();
-    // surround in a module so the import statement works nicely
-    // also define a "global" so types show even if you don't have the import
-    const sandcastleModuleTypes = `declare module 'Sandcastle' {
-      ${sandcastleTypes}
-    }
-      var Sandcastle: typeof import('Sandcastle').default;`;
-
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      sandcastleModuleTypes,
-      "ts:sandcastle.d.ts",
-    );
-  }
-
   function highlightLine(lineNumber: number) {
     console.log("would highlight line", lineNumber, "but not implemented yet");
   }
 
   function formatJs() {
-    editorRef.current?.getAction("editor.action.formatDocument")?.run();
+    editorRef.current?.formatCode();
   }
 
   function nextHighestVariableName(code: string, name: string) {
@@ -426,45 +316,19 @@ Sandcastle.addToolbarMenu(${variableName});`,
         <div className="spacer"></div>
         <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
       </div>
-      <div className="editor-container">
-        <div className="tabs">
-          <Button
-            disabled={activeTab === "js"}
-            onClick={() => setActiveTab("js")}
-          >
-            Javascript
-          </Button>
-          <Button
-            disabled={activeTab === "html"}
-            onClick={() => setActiveTab("html")}
-          >
-            HTML/CSS
-          </Button>
-        </div>
-        <Editor
-          theme={darkTheme ? "vs-dark" : "light"}
-          options={{
-            automaticLayout: true,
-            bracketPairColorization: {
-              enabled: false,
-            },
-            guides: {
-              bracketPairs: "active",
-            },
-            minimap: { size: "fill" },
-            placeholder: "// Select a demo from the gallery to load.",
-            renderWhitespace: "trailing",
-            tabSize: 2,
-          }}
-          path={activeTab === "js" ? "script.js" : "index.html"}
-          language={activeTab === "js" ? "javascript" : "html"}
-          value={activeTab === "js" ? codeState.code : codeState.html}
-          defaultValue={defaultJsCode}
-          onMount={handleEditorDidMount}
-          beforeMount={handleEditorWillMount}
-          onChange={handleChange}
-        />
-      </div>
+      <SandcastleEditor
+        ref={editorRef}
+        darkTheme={darkTheme}
+        onJsChange={(value: string = "") =>
+          dispatch({ type: "setCode", code: value })
+        }
+        onHtmlChange={(value: string = "") =>
+          dispatch({ type: "setHtml", html: value })
+        }
+        onRun={() => dispatch({ type: "runSandcastle" })}
+        js={codeState.code}
+        html={codeState.html}
+      />
       <div className="viewer-bucket">
         <Bucket
           code={codeState.committedCode}
@@ -481,7 +345,10 @@ Sandcastle.addToolbarMenu(${variableName});`,
             loadGalleryItem(item.id);
 
             const searchParams = new URLSearchParams(window.location.search);
-            if (searchParams.has("id") && searchParams.get("id") !== item.id) {
+            if (
+              !searchParams.has("id") ||
+              (searchParams.has("id") && searchParams.get("id") !== item.id)
+            ) {
               // only push state if it's not the current url to prevent duplicated in history
               window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
             }

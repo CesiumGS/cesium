@@ -66,7 +66,6 @@ function ClippingPolygonCollection(options) {
   /**
    * If true, clipping will be enabled.
    *
-   * @memberof ClippingPolygonCollection.prototype
    * @type {boolean}
    * @default true
    */
@@ -77,7 +76,6 @@ function ClippingPolygonCollection(options) {
    * collection. Otherwise, a region will only be clipped if it is
    * inside of any polygon.
    *
-   * @memberof ClippingPolygonCollection.prototype
    * @type {boolean}
    * @default false
    */
