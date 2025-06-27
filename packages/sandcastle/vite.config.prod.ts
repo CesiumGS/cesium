@@ -1,5 +1,6 @@
 import { defineConfig, UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { env } from "process";
 
 import baseConfig, { cesiumPathReplace } from "./vite.config.ts";
 
@@ -23,6 +24,7 @@ export default defineConfig(() => {
     ...config.define,
     __PAGE_BASE_URL__: JSON.stringify(""),
     __GALLERY_BASE_URL__: JSON.stringify(`${config.base}/gallery`),
+    __COMMIT_SHA__: JSON.stringify(env.GITHUB_SHA),
   };
 
   const copyPlugin = viteStaticCopy({
