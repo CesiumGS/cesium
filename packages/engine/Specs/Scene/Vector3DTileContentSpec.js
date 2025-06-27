@@ -7,6 +7,7 @@ import {
   Cesium3DTileset,
   Cesium3DTileStyle,
   ClassificationType,
+  HeightReference,
   Color,
   ColorGeometryInstanceAttribute,
   destroyObject,
@@ -612,6 +613,22 @@ describe(
           );
           expect(scene).toRender(whitePixel);
         });
+      });
+
+      it("sets the heightReference for Vector3DTilePoints", async () => {
+        const heightReference = HeightReference.CLAMP_TO_3D_TILE;
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsTileset,
+          {
+            heightReference: heightReference,
+            scene,
+          },
+        );
+        const vectorTile = tileset._root.children[0];
+        const vectorTilePoint = vectorTile._content._points;
+
+        expect(vectorTilePoint._heightReference).toEqual(heightReference);
       });
     });
 

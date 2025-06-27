@@ -348,7 +348,11 @@ export async function prepare() {
     "node_modules/draco3d/draco_decoder.wasm",
     "packages/engine/Source/ThirdParty/draco_decoder.wasm",
   );
-
+  // Copy Gaussian Splatting utilities into Source
+  copyFileSync(
+    "node_modules/@cesium/wasm-splats/wasm_splats_bg.wasm",
+    "packages/engine/Source/ThirdParty/wasm_splats_bg.wasm",
+  );
   // Copy pako and zip.js worker files to Source/ThirdParty
   copyFileSync(
     "node_modules/pako/dist/pako_inflate.min.js",
@@ -1707,7 +1711,7 @@ async function buildSandcastle() {
     streams.push(dataStream);
   }
 
-  const standaloneStream = gulp
+  let standaloneStream = gulp
     .src(["Apps/Sandcastle/standalone.html"])
     .pipe(gulpReplace("../../../", "."))
     .pipe(
@@ -1717,8 +1721,14 @@ async function buildSandcastle() {
           '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>',
       ),
     )
-    .pipe(gulpReplace("../../Build", "."))
-    .pipe(gulp.dest("Build/Sandcastle"));
+    .pipe(gulpReplace("../../Build", "."));
+  if (isProduction) {
+    standaloneStream = standaloneStream.pipe(gulp.dest("Build/Sandcastle"));
+  } else {
+    standaloneStream = standaloneStream.pipe(
+      gulp.dest("Build/Apps/Sandcastle"),
+    );
+  }
   streams.push(standaloneStream);
 
   return Promise.all(streams.map((s) => finished(s)));

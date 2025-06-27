@@ -139,7 +139,7 @@
         const customShader = new Cesium.CustomShader({
           fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
     {
-      vec3 voxelNormal = normalize(czm_normal * fsInput.voxel.surfaceNormal);
+      vec3 voxelNormal = fsInput.attributes.normalEC;
       float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
       float lighting = 0.5 + 0.5 * diffuse;
 
