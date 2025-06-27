@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - 'sandcastle-v2'
-      - 'sandcastle-dev-deployment'
 jobs:
   deploy:
     runs-on: ubuntu-latest
