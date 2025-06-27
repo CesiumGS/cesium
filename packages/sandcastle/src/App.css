@@ -17,6 +17,7 @@
 .toolbar {
   grid-area: toolbar;
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
   background: var(--ids-color-bg-page-base);
