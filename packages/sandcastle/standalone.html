@@ -8,7 +8,14 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <title>Cesium Demo</title>
-    <script src="__CESIUM_BASE_URL__/Cesium.js" vite-ignore></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "cesium": "__CESIUM_BASE_URL__/index.js",
+          "Sandcastle": "./templates/Sandcastle.js"
+        }
+      }
+    </script>
     <script>
       window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
     </script>
@@ -42,9 +49,6 @@
         decodeBase64Data,
       } from "/src/Helpers.ts";
 
-      import Sandcastle from "/templates/Sandcastle.js";
-      window.Sandcastle = Sandcastle;
-
       let base64String;
       let data;
 
@@ -52,9 +56,11 @@
       // upfront so that the value is correct. It gets cached for future calls.
       // This is only a problem when using combined Cesium, which is the only time Cesium
       // will be defined below.
-      if (typeof window.Cesium !== "undefined") {
-        window.Cesium.buildModuleUrl.getCesiumBaseUrl();
-      }
+      // TODO: I don't think this is needed anymore after switching to ESM modules but
+      // I need to verify that
+      // if (typeof window.Cesium !== "undefined") {
+      //   window.Cesium.buildModuleUrl.getCesiumBaseUrl();
+      // }
 
       if (window.location.hash.indexOf("#c=") === 0) {
         base64String = window.location.hash.substr(3);
@@ -83,6 +89,7 @@
 
         // Add the JavaScript
         const scriptElement = document.createElement("script");
+        scriptElement.type = "module";
         const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
         document.head.appendChild(scriptElement);
         scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);

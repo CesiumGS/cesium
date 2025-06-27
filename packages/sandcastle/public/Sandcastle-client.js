@@ -37,6 +37,12 @@
     );
   };
 
+  let bucket = window.location.href;
+  const pos = bucket.lastIndexOf("/");
+  if (pos > 0 && pos < bucket.length - 1) {
+    bucket = bucket.substring(pos + 1);
+  }
+
   const originalError = console.error;
   console.error = function (d1) {
     originalError.apply(console, arguments);
@@ -55,7 +61,7 @@
     const errorMsg = d1.toString();
     if (typeof d1.stack === "string") {
       const stack = d1.stack;
-      let pos = stack.indexOf(Sandcastle.bucket);
+      let pos = stack.indexOf(bucket);
       if (pos < 0) {
         pos = stack.indexOf("<anonymous>");
       }
@@ -104,7 +110,7 @@
 
   window.onerror = function (errorMsg, url, lineNumber) {
     if (defined(lineNumber)) {
-      if (defined(url) && url.indexOf(Sandcastle.bucket) > -1) {
+      if (defined(url) && url.indexOf(bucket) > -1) {
         // if the URL is the bucket itself, ignore it
         url = "";
       }
@@ -112,7 +118,7 @@
         // Change lineNumber to the local one for highlighting.
         /*eslint-disable no-empty*/
         try {
-          let pos = errorMsg.indexOf(`${Sandcastle.bucket}:`);
+          let pos = errorMsg.indexOf(`${bucket}:`);
           if (pos < 0) {
             pos = errorMsg.indexOf("<anonymous>");
           }
