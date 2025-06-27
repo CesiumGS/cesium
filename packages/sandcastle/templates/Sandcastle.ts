@@ -56,7 +56,6 @@ const Sandcastle = {
         pos += needle.length;
         const lineNumber = parseInt(stack.substring(pos), 10);
         registered.set(key, lineNumber);
-        console.log("registered", key, "to", lineNumber);
       }
     } catch {}
   },
@@ -68,17 +67,18 @@ const Sandcastle = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- we don't care what the keys are
   highlight(key: any) {
-    console.log("highlight", key);
-    console.log("registered", registered);
     if (key !== undefined) {
       const lineNumber = registered.get(key) ?? registered.get(key.primitive);
       if (lineNumber !== undefined) {
-        window.parent.postMessage({ highlight: lineNumber }, "*");
+        window.parent.postMessage(
+          { type: "highlight", highlight: lineNumber },
+          "*",
+        );
         return;
       }
     }
 
-    window.parent.postMessage({ highlight: 0 }, "*");
+    window.parent.postMessage({ type: "highlight", highlight: 0 }, "*");
   },
 
   /**
@@ -88,8 +88,6 @@ const Sandcastle = {
    * to call this yourself.
    */
   finishedLoading() {
-    console.log("finishedLoading");
-
     Sandcastle.reset();
 
     if (defaultAction) {

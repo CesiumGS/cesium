@@ -7,9 +7,11 @@
     "code viewer"
     "gallery gallery";
   grid-template-columns: 50% 50%;
-  grid-template-rows: max-content auto 150px;
-  /* TODO: this shouldn't be needed but it works for hacky code */
-  overflow: hidden;
+  /* Monaco needs a defined height for dynamic resizing to work */
+  --toolbar-height: 2.5rem;
+  grid-template-rows:
+    var(--toolbar-height) calc(100% - var(--toolbar-height) - 150px)
+    150px;
 }
 
 .toolbar {
@@ -24,11 +26,21 @@
   }
 }
 
+.tabs {
+  background: var(--ids-color-bg-page-base);
+}
+
 .editor-container {
   grid-area: code;
+  display: flex;
+  flex-direction: column;
 
   section {
     border-top: 1px solid grey;
+    flex-shrink: 1;
+    /* Monaco needs a defined height for dynamic resizing to work */
+    --tabs-height: 1.5rem;
+    height: calc(100% - var(--tabs-height)) !important;
   }
 }
 
