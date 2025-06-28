@@ -4,7 +4,6 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import ImageryProvider from "./ImageryProvider.js";
