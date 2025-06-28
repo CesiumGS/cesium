@@ -18,6 +18,10 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  *
  * @property {Context} context
  * @property {object} [source] The source for texel values to be loaded into the texture3D.
+ * @param {number} [source.width] The width of the 3D Texture.
+ * @param {number} [source.height] The width of the 3D Texture.
+ * @param {number} [source.depth] The width of the 3D Texture.
+ * @param {number} [source.arrayBufferView] The TypedArray data of the 3D Texture. The type needs to match the pixelDatatype.
  * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
@@ -503,6 +507,7 @@ function setupSampler(texture3D, sampler) {
   gl.bindTexture(target, texture3D._texture);
   gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minificationFilter);
   gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magnificationFilter);
+  gl.texParameteri(target, gl.TEXTURE_WRAP_R, sampler.wrapR);
   gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
   gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
   if (defined(texture3D._textureFilterAnisotropic)) {

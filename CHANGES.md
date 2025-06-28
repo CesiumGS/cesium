@@ -1,5 +1,7 @@
 # Change Log
 
+- Add wrapR property to Sampler and Texture3D, to support the newly added third dimension wrap.[#12701](https://github.com/CesiumGS/cesium/pull/12701)
+
 ## 1.131 - 2025-07-01
 
 ### @cesium/engine
