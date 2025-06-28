@@ -1521,7 +1521,7 @@ function updateBatchTableBoundingSpheres(primitive, frameState) {
         center,
         scratchBoundingSphereCartographic,
       );
-      const center2D = projection.project(
+      const center2D = projection.safeProject(
         cartographic,
         scratchBoundingSphereCenter2D,
       );
@@ -1589,15 +1589,15 @@ function updateBatchTableOffsets(primitive, frameState) {
       center,
       scratchBoundingSphereCartographic,
     );
-    const center2D = projection.project(
+
+    const center2D = projection.safeProject(
       cartographic,
       scratchBoundingSphereCenter2D,
     );
-
     const newPoint = Cartesian3.add(offset, center, offsetScratchCartesian);
     cartographic = ellipsoid.cartesianToCartographic(newPoint, cartographic);
 
-    const newPointProjected = projection.project(
+    const newPointProjected = projection.safeProject(
       cartographic,
       offsetScratchCartesian,
     );

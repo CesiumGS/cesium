@@ -562,10 +562,11 @@ function convertTransformFor2D(camera) {
     scratchCartographic,
   );
 
-  const projectedPosition = projection.project(
+  const projectedPosition = projection.safeProject(
     cartographic,
     scratchCartesian3Projection,
   );
+
   const newOrigin = scratchCartesian4NewOrigin;
   newOrigin.x = projectedPosition.z;
   newOrigin.y = projectedPosition.x;
@@ -584,7 +585,8 @@ function convertTransformFor2D(camera) {
   );
   ellipsoid.cartesianToCartographic(xAxis, cartographic);
 
-  projection.project(cartographic, projectedPosition);
+  projection.safeProject(cartographic, projectedPosition);
+
   const newXAxis = scratchCartesian4NewXAxis;
   newXAxis.x = projectedPosition.z;
   newXAxis.y = projectedPosition.x;
@@ -605,7 +607,8 @@ function convertTransformFor2D(camera) {
     );
     ellipsoid.cartesianToCartographic(yAxis, cartographic);
 
-    projection.project(cartographic, projectedPosition);
+    projection.safeProject(cartographic, projectedPosition);
+
     newYAxis.x = projectedPosition.z;
     newYAxis.y = projectedPosition.x;
     newYAxis.z = projectedPosition.y;
@@ -1313,7 +1316,7 @@ function setViewCV(camera, position, hpr, convert) {
         position,
         scratchSetViewCartographic,
       );
-      position = projection.project(cartographic, scratchSetViewCartesian);
+      position = projection.safeProject(cartographic, scratchSetViewCartesian);
     }
     Cartesian3.clone(position, camera.position);
   }
@@ -1348,7 +1351,7 @@ function setView2D(camera, position, hpr, convert) {
         position,
         scratchSetViewCartographic,
       );
-      position = projection.project(cartographic, scratchSetViewCartesian);
+      position = projection.safeProject(cartographic, scratchSetViewCartesian);
     }
 
     Cartesian2.clone(position, camera.position);
