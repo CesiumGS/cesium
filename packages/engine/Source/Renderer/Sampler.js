@@ -13,6 +13,7 @@ function Sampler(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const {
+    wrapR = TextureWrap.CLAMP_TO_EDGE,
     wrapS = TextureWrap.CLAMP_TO_EDGE,
     wrapT = TextureWrap.CLAMP_TO_EDGE,
     minificationFilter = TextureMinificationFilter.LINEAR,
@@ -21,6 +22,10 @@ function Sampler(options) {
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
+  if (!TextureWrap.validate(wrapR)) {
+    throw new DeveloperError("Invalid sampler.wrapR.");
+  }
+
   if (!TextureWrap.validate(wrapS)) {
     throw new DeveloperError("Invalid sampler.wrapS.");
   }
@@ -44,6 +49,7 @@ function Sampler(options) {
   );
   //>>includeEnd('debug');
 
+  this._wrapR = wrapR;
   this._wrapS = wrapS;
   this._wrapT = wrapT;
   this._minificationFilter = minificationFilter;
@@ -52,6 +58,11 @@ function Sampler(options) {
 }
 
 Object.defineProperties(Sampler.prototype, {
+  wrapR: {
+    get: function () {
+      return this._wrapR;
+    },
+  },
   wrapS: {
     get: function () {
       return this._wrapS;
@@ -84,6 +95,7 @@ Sampler.equals = function (left, right) {
     left === right ||
     (defined(left) &&
       defined(right) &&
+      left._wrapR === right._wrapR &&
       left._wrapS === right._wrapS &&
       left._wrapT === right._wrapT &&
       left._minificationFilter === right._minificationFilter &&
