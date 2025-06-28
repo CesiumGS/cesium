@@ -208,27 +208,6 @@ function WebMapTileServiceImageryProvider(options) {
     });
   }
 
-  // Check the number of tiles at the minimum level.  If it's more than four,
-  // throw an exception, because starting at the higher minimum
-  // level will cause too many tiles to be downloaded and rendered.
-  const swTile = this._tilingScheme.positionToTileXY(
-    Rectangle.southwest(this._rectangle),
-    this._minimumLevel,
-  );
-  const neTile = this._tilingScheme.positionToTileXY(
-    Rectangle.northeast(this._rectangle),
-    this._minimumLevel,
-  );
-  const tileCount =
-    (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
-  //>>includeStart('debug', pragmas.debug);
-  if (tileCount > 4) {
-    throw new DeveloperError(
-      `The imagery provider's rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`,
-    );
-  }
-  //>>includeEnd('debug');
-
   this._errorEvent = new Event();
 
   const credit = options.credit;
