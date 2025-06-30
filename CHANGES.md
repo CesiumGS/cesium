@@ -7,6 +7,7 @@
 ### Fixes :wrench:
 
 - Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
+- Fixed raymarching step size for cylindrical voxels. [#12681](https://github.com/CesiumGS/cesium/pull/12681)
 
 #### Additions :tada:
 
