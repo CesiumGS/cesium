@@ -12,7 +12,7 @@ const HeightReference = {
   NONE: 0,
 
   /**
-   * The position is clamped to the terrain and 3D Tiles.
+   * The position is clamped to the terrain and 3D Tiles. When clamping to 3D Tilesets such as photorealistic 3D Tiles, ensure the tileset has {@link Cesium3DTileset#enableCollision} set to <code>true</code>. Otherwise, the entity may not be correctly clamped to the tileset surface.
    * @type {number}
    * @constant
    */

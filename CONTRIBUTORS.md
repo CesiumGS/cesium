@@ -424,3 +424,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Cody Butler](https://github.com/CodyBu)
 - [Hiwen](https://github.com/Hiwen)
 - [Matt Schwartz](https://github.com/mzschwartz5)
+- [Pamela Augustine](https://github.com/pamelaAugustine)
