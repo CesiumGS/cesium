@@ -50,7 +50,7 @@ There is no release manager; instead, our community shares the responsibility. A
 21. Make sure [Hello World](http://localhost:8080/Apps/HelloWorld.html) loads.
 22. Make sure [Cesium Viewer](http://localhost:8080/Apps/CesiumViewer/index.html) loads.
 23. Run [Sandcastle](http://localhost:8080/Apps/Sandcastle/index.html) on the browser of your choice (or multiple browsers if you are up for it). Switch to the `All` tab and spot test more complicated demos. Actually play with each of the buttons and sliders on each demo to ensure everything works as expected.
-24. If any of the above steps fail, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be fixed before we can release. **Do NOT proceed to the next step until issues are resolved.**
+24. If any of the above steps fail, post a message to the `CesiumJS` channel in Teams to figure out what needs to be fixed before we can release. **Do NOT proceed to the next step until issues are resolved.**
 25. Push your commits to main
     - `git push`
 26. Create and push a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), e.g.,
