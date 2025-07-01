@@ -8,8 +8,7 @@
 
 - Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
 - Fixed raymarching step size for cylindrical voxels. [#12681](https://github.com/CesiumGS/cesium/pull/12681)
-
-- Fixes handling of tileset modelMatrix changes for translations and rotations in GaussianSplatPrimitive. [#12706](https://github.com/CesiumGS/cesium/pull/12706)
+- Fixes handling of tileset `modelMatrix` changes for translations and rotations in `GaussianSplatPrimitive`. [#12706](https://github.com/CesiumGS/cesium/pull/12706)
 
 #### Additions :tada:
 
