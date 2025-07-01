@@ -18,7 +18,7 @@ There is no release manager; instead, our community shares the responsibility. A
 **Follow these instructions exactly. Do not switch branches or otherwise manipulate your local clone at any point in the process unless instructed to do so. If you need to switch branches for whatever reason, you must start the entire process over again.**
 
 1. Verify there are no [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).
-2. Verify there are no [`remove in [this version number]` issues](https://github.com/CesiumGS/cesium/labels). Delete the label. Create a new label with the next highest `remove in [version]` relative to the existing labels.
+2. Verify there are no [`remove in [this version number]` issues](https://github.com/CesiumGS/cesium/labels?q=remove). Delete the label. Create a new label with the next highest `remove in [version]` relative to the existing labels.
 3. Make sure you are using the latest drivers for your video card.
 4. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 5. Pull down the latest `main` branch and run `npm install`.
@@ -50,7 +50,7 @@ There is no release manager; instead, our community shares the responsibility. A
 21. Make sure [Hello World](http://localhost:8080/Apps/HelloWorld.html) loads.
 22. Make sure [Cesium Viewer](http://localhost:8080/Apps/CesiumViewer/index.html) loads.
 23. Run [Sandcastle](http://localhost:8080/Apps/Sandcastle/index.html) on the browser of your choice (or multiple browsers if you are up for it). Switch to the `All` tab and spot test more complicated demos. Actually play with each of the buttons and sliders on each demo to ensure everything works as expected.
-24. If any of the above steps fail, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be fixed before we can release. **Do NOT proceed to the next step until issues are resolved.**
+24. If any of the above steps fail, post a message to the `CesiumJS` channel in Teams to figure out what needs to be fixed before we can release. **Do NOT proceed to the next step until issues are resolved.**
 25. Push your commits to main
     - `git push`
 26. Create and push a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), e.g.,

@@ -102,6 +102,8 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {ClippingPlaneCollection} [clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
  * @property {ClippingPolygonCollection} [clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the tileset.
  * @property {ClassificationType} [classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
+ * @property {HeightReference} [heightReference] Sets the {@link HeightReference} for point features in vector tilesets.
+ * @property {Scene} [scene] The {@link CesiumWidget#scene} that the tileset will be rendered in, required for tilesets that specify a {@link heightReference} value for clamping 3D Tiles vector data content- like points, lines, and labels- to terrain or 3D tiles.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
  * @property {object} [pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @property {Cartesian3} [lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
@@ -336,6 +338,8 @@ function Cesium3DTileset(options) {
   this._tileDebugLabels = undefined;
 
   this._classificationType = options.classificationType;
+  this._heightReference = options.heightReference;
+  this._scene = options.scene;
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
 
@@ -1804,6 +1808,43 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   classificationType: {
     get: function () {
       return this._classificationType;
+    },
+  },
+
+  /**
+   * Specifies if the height is relative to terrain, 3D Tiles, or both.
+   * <p>
+   * This option is only applied to point features in tilesets containing vector data.
+   * This option requires the Viewer's scene to be passed in through options.scene.
+   * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {HeightReference | undefined}
+   * @default undefined
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   * @readonly
+   */
+  heightReference: {
+    get: function () {
+      return this._heightReference;
+    },
+  },
+
+  /**
+   * The {@link CesiumWidget#scene} that the tileset will be rendered in, required for tilesets that specify a {@link heightReference} value for clamping 3D Tiles vector data content- like points, lines, and labels- to terrain or 3D tiles.
+   *
+   * @member of Cesium3DTileset.prototype
+   *
+   * @type {Scene | undefined}
+   * @default undefined
+   * @readonly
+   *
+   */
+  scene: {
+    get: function () {
+      return this._scene;
     },
   },
 

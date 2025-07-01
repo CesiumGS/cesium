@@ -5,6 +5,8 @@ import RuntimeError from "../Core/RuntimeError.js";
 import Axis from "./Axis.js";
 import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
 import destroyObject from "../Core/destroyObject.js";
+import ModelUtility from "./Model/ModelUtility.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
  * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-spz-splat-compression/extensions/2.0/Khronos/KHR_spz_gaussian_splats_compression|KHR_spz_gaussian_splats_compression} extension.
@@ -27,6 +29,17 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
       tileset: this._tileset,
     });
   }
+
+  /**
+   * Original position, scale and rotation values for splats. Used to maintain
+   * consistency when multiple transforms may occur. Downstream consumers otherwise may not know
+   * the underlying data was modified.
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  this._originalPositions = undefined;
+  this._originalRotations = undefined;
+  this._originalScales = undefined;
 
   /**
    * glTF primitive data that contains the Gaussian splat data needed for rendering.
@@ -152,7 +165,6 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    * @readonly
    */
   batchTableByteLength: {
-    // eslint-disable-next-line getter-return
     get: function () {
       return 0;
     },
@@ -350,7 +362,7 @@ GaussianSplat3DTileContent.fromGltf = async function (
 
 /**
  * Updates the content of the tile and prepares it for rendering.
- * @param {Cesium3DTileset}
+ * @param {Cesium3DTileset}￼Data attribution
  * @param {FrameState} frameState - The current frame state.
  * @private
  */
@@ -358,11 +370,7 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   const loader = this._loader;
 
   if (this._ready) {
-    if (
-      !this._transformed &&
-      this._tile !== primitive.root &&
-      primitive.root.content.ready
-    ) {
+    if (!this._transformed && primitive.root.content.ready) {
       GaussianSplatPrimitive.transformTile(this._tile);
       this._transformed = true;
     }
@@ -381,6 +389,27 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     this.splatPrimitive = loader.components.scene.nodes[0].primitives[0];
     this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
+
+    this._originalPositions = new Float32Array(
+      ModelUtility.getAttributeBySemantic(
+        this.splatPrimitive,
+        VertexAttributeSemantic.POSITION,
+      ).typedArray,
+    );
+
+    this._originalRotations = new Float32Array(
+      ModelUtility.getAttributeBySemantic(
+        this.splatPrimitive,
+        VertexAttributeSemantic.ROTATION,
+      ).typedArray,
+    );
+
+    this._originalScales = new Float32Array(
+      ModelUtility.getAttributeBySemantic(
+        this.splatPrimitive,
+        VertexAttributeSemantic.SCALE,
+      ).typedArray,
+    );
 
     return;
   }

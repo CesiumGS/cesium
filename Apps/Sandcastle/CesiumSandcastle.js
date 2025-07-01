@@ -621,7 +621,10 @@ require({
 
     // Apply user HTML to bucket.
     const htmlElement = bucketDoc.createElement("div");
-    htmlElement.innerHTML = htmlEditor.getValue();
+    // Stylesheet imports are weirdly broken in Firefox 140. This is a hacky workaround
+    // https://github.com/CesiumGS/cesium/issues/12700
+    const htmlCode = htmlEditor.getValue().replace(/@import/, "@import ");
+    htmlElement.innerHTML = htmlCode;
     bucketDoc.body.appendChild(htmlElement);
 
     const onScriptTagError = function () {
@@ -1179,7 +1182,9 @@ require({
     baseHref = `${baseHref.substring(0, pos)}/gallery/`;
 
     const code = jsEditor.getValue();
-    const html = htmlEditor.getValue();
+    // Stylesheet imports are weirdly broken in Firefox 140. This is a hacky workaround
+    // https://github.com/CesiumGS/cesium/issues/12700
+    const html = htmlEditor.getValue().replace(/@import/, "@import ");
     const data = makeCompressedBase64String([code, html, baseHref]);
 
     let url = getBaseUrl();
