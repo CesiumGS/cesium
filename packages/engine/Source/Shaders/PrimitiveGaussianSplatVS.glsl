@@ -22,24 +22,11 @@ vec4 calcCovVectors(vec3 viewPos, mat3 Vrk) {
         0.0, 0.0, 0.0
     );
 
-    //We need to take our view and remove the scale component
-    //quantized models can have a scaled matrix which will throw our splat size off
     mat3 R = mat3(czm_modelView);
-    vec3 scale;
-    scale.x = length(R[0].xyz);
-    scale.y = length(R[1].xyz);
-    scale.z = length(R[2].xyz);
-
-    mat3 Rs = mat3(
-    R[0].xyz / scale.x,
-    R[1].xyz / scale.y,
-    R[2].xyz / scale.z
-    );
 
     //transform our covariance into view space
     //ensures orientation is correct
-    mat3 Vrk_view = Rs * Vrk * transpose(Rs);
-
+    mat3 Vrk_view = R * Vrk * transpose(R);
     mat3 cov = transpose(J) * Vrk_view * J;
 
     float diagonal1 = cov[0][0] + .3;
@@ -85,9 +72,6 @@ void main() {
     vec2 u2 = unpackHalf2x16(covariance.y);
     vec2 u3 = unpackHalf2x16(covariance.z);
     mat3 Vrk = mat3(u1.x, u1.y, u2.x, u1.y, u2.y, u3.x, u2.x, u3.x, u3.y);
-
-    //we can still apply scale here even though cov3d is pre-computed
-    Vrk *= u_splatScale;
 
     vec4 covVectors = calcCovVectors(splatViewPos.xyz, Vrk);
 
