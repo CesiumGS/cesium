@@ -97,4 +97,17 @@ describe("Core/GeographicProjection", function () {
       return projection.unproject();
     }).toThrowDeveloperError();
   });
+
+  it("safeProject handles undefined cartographic", function () {
+    const projection = new GeographicProjection();
+    const result = projection.safeProject(undefined);
+    expect(result).toEqual(Cartesian3.ZERO);
+  });
+
+  it("safeProject handles defined cartographic", function () {
+    const projection = new GeographicProjection();
+    const cartographic = new Cartographic(0.0, 0.0, 10.0);
+    const result = projection.safeProject(cartographic);
+    expect(result).toEqual(new Cartesian3(0.0, 0.0, 10.0));
+  });
 });

@@ -117,6 +117,27 @@ WebMercatorProjection.prototype.project = function (cartographic, result) {
 };
 
 /**
+ * Converts geodetic ellipsoid coordinates, in radians, to the equivalent Web Mercator
+ * X, Y, Z coordinates expressed in meters and returned in a {@link Cartesian3}.  The height
+ * is copied unmodified to the Z coordinate.
+ * This method safely handles undefined inputs for the cartographic parameter.
+ *
+ * @param {Cartographic} cartographic The cartographic coordinates in radians.
+ * @param {Cartesian3} [result] The instance to which to copy the result, or undefined if a
+ *        new instance should be created.
+ * @returns {Cartesian3} The equivalent web mercator X, Y, Z coordinates, in meters.
+ *
+ * @see {@link WebMercatorProjection#project}
+ */
+WebMercatorProjection.prototype.safeProject = function (cartographic, result) {
+  if (!defined(cartographic)) {
+    return Cartesian3.ZERO.clone(result);
+  }
+
+  return this.project(cartographic, result);
+};
+
+/**
  * Converts Web Mercator X, Y coordinates, expressed in meters, to a {@link Cartographic}
  * containing geodetic ellipsoid coordinates.  The Z coordinate is copied unmodified to the
  * height.

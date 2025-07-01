@@ -75,7 +75,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
   let bitangent = scratchBitangent;
 
   const projection = new GeographicProjection(ellipsoid);
-  const projectedCenter = projection.project(
+  const projectedCenter = projection.safeProject(
     ellipsoid.cartesianToCartographic(center, scratchCartographic),
     projectedCenterScratch,
   );
@@ -132,7 +132,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
         position,
         scratchCartesian2,
       );
-      const projectedPoint = projection.project(
+      const projectedPoint = projection.safeProject(
         ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic),
         scratchCartesian3,
       );
@@ -482,7 +482,7 @@ function computeWallAttributes(positions, options) {
   let bitangent = scratchBitangent;
 
   const projection = new GeographicProjection(ellipsoid);
-  const projectedCenter = projection.project(
+  const projectedCenter = projection.safeProject(
     ellipsoid.cartesianToCartographic(center, scratchCartographic),
     projectedCenterScratch,
   );
@@ -524,7 +524,7 @@ function computeWallAttributes(positions, options) {
         position,
         scratchCartesian2,
       );
-      const projectedPoint = projection.project(
+      const projectedPoint = projection.safeProject(
         ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic),
         scratchCartesian3,
       );
