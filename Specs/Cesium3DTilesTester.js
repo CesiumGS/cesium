@@ -104,6 +104,26 @@ Cesium3DTilesTester.waitForTilesLoaded = function (scene, tileset) {
   });
 };
 
+Cesium3DTilesTester.waitForTileContent = function (scene, tile) {
+  return pollToPromise(function () {
+    scene.renderForSpecs();
+    return !tile.contentUnloaded;
+  }).then(function () {
+    scene.renderForSpecs();
+    return tile;
+  });
+};
+
+Cesium3DTilesTester.waitForTileContentReady = function (scene, tile) {
+  return pollToPromise(function () {
+    scene.renderForSpecs();
+    return tile.contentReady;
+  }).then(function () {
+    scene.renderForSpecs();
+    return tile;
+  });
+};
+
 // A white ambient light with low intensity
 const defaultIbl = new ImageBasedLighting({
   sphericalHarmonicCoefficients: [
