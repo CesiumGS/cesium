@@ -266,6 +266,8 @@ function ScreenSpaceCameraController(scene) {
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
    * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
+   * Also used in conjunction with {@link Cesium3DTileset#enableCollision} to prevent the camera from moving through or below a 3D Tileset surface.
+   * This may also affect clamping behavior when using {@link HeightReference.CLAMP_TO_GROUND} on 3D Tiles.
    * @type {boolean}
    * @default true
    */
