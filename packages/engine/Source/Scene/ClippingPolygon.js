@@ -46,7 +46,90 @@ function ClippingPolygon(options) {
   //>>includeEnd('debug');
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
-  this._positions = [...options.positions];
+  this._positions = copyArrayCartesian3(options.positions);
+
+  /**
+   * A copy of the input positions.
+   *
+   * This is used to detect modifications of the positions in
+   * <code>coputeRectangle</code>: The rectangle only has
+   * to be re-computed when these positions have changed.
+   *
+   * @type {Cartesian3[]|undefined}
+   * @private
+   */
+  this._cachedPositions = undefined;
+
+  /**
+   * A cached version of the rectangle that is computed in
+   * <code>computeRectangle</code>.
+   *
+   * This is only re-computed when the positions have changed, as
+   * determined  by comparing the <code>_positions</code> to the
+   * <code>_cachedPositions</code>
+   *
+   * @type {Rectangle|undefined}
+   * @private
+   */
+  this._cachedRectangle = undefined;
+}
+
+/**
+ * Returns a deep copy of the given array.
+ *
+ * If the input is undefined, then <code>undefined</code> is returned.
+ *
+ * Otherwise, the result will be a copy of the given array, where
+ * each element is copied with <code>Cartesian3.clone</code>.
+ *
+ * @param {Cartesian3[]|undefined} input The input array
+ * @returns {Cartesian3[]|undefined} The copy
+ */
+function copyArrayCartesian3(input) {
+  if (!defined(input)) {
+    return undefined;
+  }
+  const n = input.length;
+  const output = Array(n);
+  for (let i = 0; i < n; i++) {
+    output[i] = Cartesian3.clone(input[i]);
+  }
+  return output;
+}
+
+/**
+ * Returns whether the given arrays are component-wise equal.
+ *
+ * When both arrays are undefined, then <code>true</code> is returned.
+ * When only one array is defined, or they are both defined but have
+ * different lengths, then <code>false</code> is returned.
+ *
+ * Otherwise, returns whether the corresponding elements of the arrays
+ * are equal, as of <code>Cartesian3.equals</code>.
+ *
+ * @param {Cartesian3[]|undefined} a The first array
+ * @param {Cartesian3[]|undefined} b The second array
+ * @returns {boolean} Whether the arrays are equal
+ */
+function equalsArrayCartesian3(a, b) {
+  if (!defined(a) && !defined(b)) {
+    return true;
+  }
+  if (defined(a) !== defined(b)) {
+    return false;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
+  const n = a.length;
+  for (let i = 0; i < n; i++) {
+    const ca = a[i];
+    const cb = b[i];
+    if (!Cartesian3.equals(ca, cb)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 Object.defineProperties(ClippingPolygon.prototype, {
@@ -138,12 +221,18 @@ ClippingPolygon.equals = function (left, right) {
  * @returns {Rectangle} The result rectangle
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
-  return PolygonGeometry.computeRectangleFromPositions(
+  if (equalsArrayCartesian3(this._positions, this._cachedPositions)) {
+    return Rectangle.clone(this._cachedRectangle, result);
+  }
+  const rectangle = PolygonGeometry.computeRectangleFromPositions(
     this.positions,
     this.ellipsoid,
     undefined,
     result,
   );
+  this._cachedPositions = copyArrayCartesian3(this._positions);
+  this._cachedRectangle = Rectangle.clone(rectangle);
+  return rectangle;
 };
 
 const scratchRectangle = new Rectangle();
