@@ -2,7 +2,6 @@ import { DeveloperError, Math, PerspectiveFrustum } from "@cesium/engine";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -12,6 +11,11 @@ import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Event from "../Core/Event.js";
 
 const defaultOrthoFrustumWidth = 10;
+const defaultViewportWidth = 50;
+const defaultViewportHeight = 50;
+const defaultNear = 0.1;
+const defaultFar = 500000000.0;
+const defaultPerspectiveFov = Math.PI_OVER_THREE; // 60 degrees
 
 const pickTilesetPassState = new Cesium3DTilePassState({
   pass: Cesium3DTilePass.PICK,
@@ -24,7 +28,7 @@ const scratchUp = new Cartesian3();
 const scratchForward = new Cartesian3();
 const scratchProj = new Cartesian3();
 
-function ArbitraryRenders(scene) {
+function ArbitraryRenders(scene, isOrtho = false) {
   this._scene = scene;
   this._arView = undefined;
   this.pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
@@ -33,6 +37,12 @@ function ArbitraryRenders(scene) {
   this._postUpdate = new Event();
   this._preRender = new Event();
   this._postRender = new Event();
+
+  if (isOrtho) {
+    this.setupDefaultOrthoView();
+  } else {
+    this.setupDefaultPerspectiveView();
+  }
 }
 
 Object.defineProperties(ArbitraryRenders.prototype, {
@@ -56,80 +66,185 @@ Object.defineProperties(ArbitraryRenders.prototype, {
       return this._postRender;
     },
   },
+  viewportWidth: {
+    get: function () {
+      return this._arView.viewport.width;
+    },
+    set: function (value) {
+      this._arView.viewport.width = value;
+      this._arView.camera.frustum.aspectRatio =
+        value / this._arView.viewport.height;
+    },
+  },
+  viewportHeight: {
+    get: function () {
+      return this._arView.viewport.height;
+    },
+    set: function (value) {
+      this._arView.viewport.height = value;
+      this._arView.camera.frustum.aspectRatio =
+        this._arView.viewport.width / value;
+    },
+  },
+  camera: {
+    get: function () {
+      return this._arView.camera;
+    },
+  },
+  near: {
+    get: function () {
+      return this._arView.camera.frustum.near;
+    },
+    set: function (value) {
+      this._arView.camera.frustum.near = value;
+    },
+  },
+  far: {
+    get: function () {
+      return this._arView.camera.frustum.far;
+    },
+    set: function (value) {
+      this._arView.camera.frustum.far = value;
+    },
+  },
+  frustumWidth: {
+    get: function () {
+      if (this._arView.camera.frustum instanceof OrthographicFrustum) {
+        return this._arView.camera.frustum.width;
+      }
+
+      console.log(
+        "BBB Cannot get frustumWidth on a non-orthographic frustum.",
+        this._arView,
+        this._arView.camera.frustum,
+      );
+
+      throw new DeveloperError(
+        "Cannot get frustumWidth on a non-orthographic frustum.",
+      );
+    },
+    set: function (value) {
+      if (this._arView.camera.frustum instanceof OrthographicFrustum) {
+        this._arView.camera.frustum.width = value;
+      } else {
+        throw new DeveloperError(
+          "Cannot set frustumWidth on a non-orthographic frustum.",
+        );
+      }
+    },
+  },
+  fov: {
+    get: function () {
+      if (this._arView.camera.frustum instanceof PerspectiveFrustum) {
+        return this._arView.camera.frustum.fov;
+      }
+
+      throw new DeveloperError("Cannot get fov on a non-perspective frustum.");
+    },
+    set: function (value) {
+      if (this._arView.camera.frustum instanceof PerspectiveFrustum) {
+        this._arView.camera.frustum.fov = value;
+      } else {
+        throw new DeveloperError(
+          "Cannot set fov on a non-perspective frustum.",
+        );
+      }
+    },
+  },
+  isOrthographic: {
+    get: function () {
+      return this._arView.camera.frustum instanceof OrthographicFrustum;
+    },
+  },
 });
+
+ArbitraryRenders.prototype.switchToOrthographicFrustum = function () {
+  if (!this._arView) {
+    this.setupDefaultOrthoView();
+  } else if (!(this._arView.camera.frustum instanceof OrthographicFrustum)) {
+    this.setupNewOrthoFrustum(
+      this.viewportWidth,
+      this.viewportHeight,
+      defaultOrthoFrustumWidth,
+      this.near,
+      this.far,
+    );
+  }
+};
+
+ArbitraryRenders.prototype.switchToPerspectiveFrustum = function () {
+  if (!this._arView) {
+    this.setupDefaultPerspectiveView();
+  } else if (!(this._arView.camera.frustum instanceof PerspectiveFrustum)) {
+    this.setupNewPerspectiveFrustum(
+      this.viewportWidth,
+      this.viewportHeight,
+      defaultPerspectiveFov,
+      this.near,
+      this.far,
+    );
+  }
+};
+
+ArbitraryRenders.prototype.setupDefaultOrthoView = function () {
+  this.setupNewOrthoFrustum(
+    defaultViewportWidth,
+    defaultViewportHeight,
+    defaultOrthoFrustumWidth,
+    defaultNear,
+    defaultFar,
+  );
+};
+
+ArbitraryRenders.prototype.setupDefaultPerspectiveView = function () {
+  this.setupNewPerspectiveFrustum(
+    defaultViewportWidth,
+    defaultViewportHeight,
+    defaultPerspectiveFov,
+    defaultNear,
+    defaultFar,
+  );
+};
 
 ArbitraryRenders.prototype.destroy = function () {
   this._arView = this._arView && this._arView.destroy();
   this._scene = undefined;
 };
 
-ArbitraryRenders.prototype.setupOrthoFrustum = function (
+ArbitraryRenders.prototype.setupNewOrthoFrustum = function (
   viewportWidth,
   viewportHeight,
-  frustumWidth = undefined,
-  near = undefined,
-  far = undefined,
+  frustumWidth,
+  near,
+  far,
 ) {
-  frustumWidth = defaultValue(frustumWidth, defaultOrthoFrustumWidth);
-  near = defaultValue(near, 0.1);
-  far = defaultValue(far, 500000000.0);
+  const orthoCamera = new Camera(this._scene);
+  orthoCamera.frustum = new OrthographicFrustum({
+    width: frustumWidth,
+    aspectRatio: viewportWidth / viewportHeight,
+    near: near,
+    far: far,
+  });
 
-  if (
-    this._arView &&
-    this._arView.camera.frustum instanceof OrthographicFrustum
-  ) {
-    // Change existing
-    this._updateFrustumViewCommon(viewportWidth, viewportHeight, near, far);
-
-    const view = this._arView;
-    if (view.camera.frustum.width !== frustumWidth) {
-      view.camera.frustum.width = frustumWidth;
-    }
-  } else {
-    const orthoCamera = new Camera(this._scene);
-    orthoCamera.frustum = new OrthographicFrustum({
-      width: frustumWidth,
-      aspectRatio: viewportWidth / viewportHeight,
-      near: near,
-      far: far,
-    });
-
-    this._setupView(orthoCamera, viewportWidth, viewportHeight);
-  }
+  this._setupView(orthoCamera, viewportWidth, viewportHeight);
 };
 
-ArbitraryRenders.prototype.setupPerspectiveFrustum = function (
+ArbitraryRenders.prototype.setupNewPerspectiveFrustum = function (
   viewportWidth,
   viewportHeight,
-  fov = undefined,
-  near = undefined,
-  far = undefined,
+  fov,
+  near,
+  far,
 ) {
-  fov = defaultValue(fov, Math.PI_OVER_THREE);
-  near = defaultValue(near, 0.1);
-  far = defaultValue(far, 500000000.0);
-
-  if (
-    this._arView &&
-    this._arView.camera.frustum instanceof PerspectiveFrustum
-  ) {
-    this._updateFrustumViewCommon(viewportWidth, viewportHeight, near, far);
-
-    const view = this._arView;
-    if (view.camera.frustum.fov !== fov) {
-      view.camera.frustum.fov = fov;
-    }
-  } else {
-    // Create new
-    const perspectiveCamera = new Camera(this._scene);
-    perspectiveCamera.frustum = new PerspectiveFrustum({
-      fov: fov,
-      aspectRatio: viewportWidth / viewportHeight,
-      near: near,
-      far: far,
-    });
-    this._setupView(perspectiveCamera, viewportWidth, viewportHeight);
-  }
+  // Create new
+  const perspectiveCamera = new Camera(this._scene);
+  perspectiveCamera.frustum = new PerspectiveFrustum({
+    fov: fov,
+    aspectRatio: viewportWidth / viewportHeight,
+    near: near,
+    far: far,
+  });
+  this._setupView(perspectiveCamera, viewportWidth, viewportHeight);
 };
 
 ArbitraryRenders.prototype._setupView = function (
@@ -205,13 +320,10 @@ ArbitraryRenders.getSnapshotFromRay = function (
 ArbitraryRenders.getSnapshotFromCamera = function (
   arbitraryRenderer,
   scene,
-  cameraToClone,
+  cameraToClone = undefined,
 ) {
   const updateCameraBehavior = () =>
-    updateOffscreenCameraFromClone(
-      arbitraryRenderer._arView.camera,
-      cameraToClone,
-    );
+    updateOffscreenCamera(arbitraryRenderer._arView.camera, cameraToClone);
   return ArbitraryRenders._getSnapshot(
     arbitraryRenderer,
     scene,
@@ -299,8 +411,11 @@ ArbitraryRenders._getSnapshot = function (
   return output;
 };
 
-function updateOffscreenCameraFromClone(camera, cameraToClone) {
-  Camera.clone(cameraToClone, camera);
+function updateOffscreenCamera(camera, cameraToClone = undefined) {
+  if (!cameraToClone) {
+    Camera.clone(cameraToClone, camera);
+  }
+
   camera.frustum.computeCullingVolume(
     camera.positionWC,
     camera.directionWC,

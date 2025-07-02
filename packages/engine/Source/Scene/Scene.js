@@ -4677,11 +4677,17 @@ Scene.prototype.getArbitraryRenderInstance = function (key) {
   return this._arbitraryRenders[key];
 };
 
-Scene.prototype.setupArbitraryRenderInstance = function (key) {
+Scene.prototype.setupArbitraryRenderInstance = function (
+  key,
+  isOrthographic = false,
+) {
   if (this._arbitraryRenders[key]) {
     this._arbitraryRenders[key].destroy();
   }
-  return (this._arbitraryRenders[key] = new ArbitraryRenders(this));
+  return (this._arbitraryRenders[key] = new ArbitraryRenders(
+    this,
+    isOrthographic,
+  ));
 };
 
 /**
@@ -4717,17 +4723,15 @@ Scene.prototype.generateArbitraryRenderFromRay = function (
 
 Scene.prototype.generateArbitraryRenderFromCamera = function (
   key,
-  camera,
   snapshotTransforms,
+  cameraToClone = undefined, // Optional camera to clone from
 ) {
-  Check.defined("camera", camera);
-
   const arbRen = this._arbitraryRenders[key];
   Check.defined("arbRen", arbRen);
 
   // Generate render output
   const renderFunction = (scn) =>
-    ArbitraryRenders.getSnapshotFromCamera(arbRen, scn, camera);
+    ArbitraryRenders.getSnapshotFromCamera(arbRen, scn, cameraToClone);
   return this._generateArbitraryRender(
     arbRen,
     snapshotTransforms,
