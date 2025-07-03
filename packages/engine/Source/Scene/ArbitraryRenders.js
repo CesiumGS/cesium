@@ -71,9 +71,11 @@ Object.defineProperties(ArbitraryRenders.prototype, {
       return this._arView.viewport.width;
     },
     set: function (value) {
-      this._arView.viewport.width = value;
-      this._arView.camera.frustum.aspectRatio =
-        value / this._arView.viewport.height;
+      if (value !== this._arView.viewport.width) {
+        this._arView.viewport.width = value;
+        this._arView.camera.frustum.aspectRatio =
+          value / this._arView.viewport.height;
+      }
     },
   },
   viewportHeight: {
@@ -81,9 +83,11 @@ Object.defineProperties(ArbitraryRenders.prototype, {
       return this._arView.viewport.height;
     },
     set: function (value) {
-      this._arView.viewport.height = value;
-      this._arView.camera.frustum.aspectRatio =
-        this._arView.viewport.width / value;
+      if (value !== this._arView.viewport.height) {
+        this._arView.viewport.height = value;
+        this._arView.camera.frustum.aspectRatio =
+          this._arView.viewport.width / value;
+      }
     },
   },
   camera: {
@@ -112,13 +116,6 @@ Object.defineProperties(ArbitraryRenders.prototype, {
       if (this._arView.camera.frustum instanceof OrthographicFrustum) {
         return this._arView.camera.frustum.width;
       }
-
-      console.log(
-        "BBB Cannot get frustumWidth on a non-orthographic frustum.",
-        this._arView,
-        this._arView.camera.frustum,
-      );
-
       throw new DeveloperError(
         "Cannot get frustumWidth on a non-orthographic frustum.",
       );
@@ -157,6 +154,35 @@ Object.defineProperties(ArbitraryRenders.prototype, {
     },
   },
 });
+
+ArbitraryRenders.prototype.generateRenderFromRay = function (
+  ray,
+  snapshotTransforms,
+  overrideUp = undefined,
+) {
+  // Generate render output
+  const renderFunction = (scn) =>
+    ArbitraryRenders.getSnapshotFromRay(this, scn, ray, overrideUp);
+  return this._scene._generateArbitraryRender(
+    this,
+    snapshotTransforms,
+    renderFunction,
+  );
+};
+
+ArbitraryRenders.prototype.generateRenderFromCamera = function (
+  snapshotTransforms,
+  cameraToClone = undefined, // Optional camera to clone from
+) {
+  // Generate render output
+  const renderFunction = (scn) =>
+    ArbitraryRenders.getSnapshotFromCamera(this, scn, cameraToClone);
+  return this._scene._generateArbitraryRender(
+    this,
+    snapshotTransforms,
+    renderFunction,
+  );
+};
 
 ArbitraryRenders.prototype.switchToOrthographicFrustum = function () {
   if (!this._arView) {
@@ -408,11 +434,27 @@ ArbitraryRenders._getSnapshot = function (
 
   context.endFrame();
 
-  return output;
+  return assignRenderOutputTyping(output);
 };
 
+function assignRenderOutputTyping(render) {
+  if (!render) {
+    return undefined;
+  }
+
+  if (render.pixels instanceof Uint8Array) {
+    return { kind: "uint8", ...render };
+  } else if (render.pixels instanceof Float32Array) {
+    return { kind: "float32", ...render };
+  }
+
+  throw new DeveloperError(
+    "Invalid arbitrary render output, pixels must be Uint8 or Float32",
+  );
+}
+
 function updateOffscreenCamera(camera, cameraToClone = undefined) {
-  if (!cameraToClone) {
+  if (cameraToClone) {
     Camera.clone(cameraToClone, camera);
   }
 

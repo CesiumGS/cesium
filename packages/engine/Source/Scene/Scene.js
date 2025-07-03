@@ -4690,55 +4690,6 @@ Scene.prototype.setupArbitraryRenderInstance = function (
   ));
 };
 
-/**
- *
- * @param {string} key Key for the arbitrary render instance to use.
- * @param {Ray} ray Ray projection symbolizing camera location and angle.
- * @param {Function[]} snapshotTransforms Array of functions that modify cesium state and return functions that undo their changes.
- * @returns {object} An object containing the resulting pixel data as well as metadata
- *
- * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
- * @exception {DeveloperError} Arbitrary render instance doesn't exist or isn't setup properly
- */
-Scene.prototype.generateArbitraryRenderFromRay = function (
-  key,
-  ray,
-  snapshotTransforms,
-  overrideUp = undefined,
-) {
-  Check.defined("ray", ray);
-
-  const arbRen = this._arbitraryRenders[key];
-  Check.defined("arbRen", arbRen);
-
-  // Generate render output
-  const renderFunction = (scn) =>
-    ArbitraryRenders.getSnapshotFromRay(arbRen, scn, ray, overrideUp);
-  return this._generateArbitraryRender(
-    arbRen,
-    snapshotTransforms,
-    renderFunction,
-  );
-};
-
-Scene.prototype.generateArbitraryRenderFromCamera = function (
-  key,
-  snapshotTransforms,
-  cameraToClone = undefined, // Optional camera to clone from
-) {
-  const arbRen = this._arbitraryRenders[key];
-  Check.defined("arbRen", arbRen);
-
-  // Generate render output
-  const renderFunction = (scn) =>
-    ArbitraryRenders.getSnapshotFromCamera(arbRen, scn, cameraToClone);
-  return this._generateArbitraryRender(
-    arbRen,
-    snapshotTransforms,
-    renderFunction,
-  );
-};
-
 Scene.prototype._generateArbitraryRender = function (
   arbRen,
   snapshotTransforms,
