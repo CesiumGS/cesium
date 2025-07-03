@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import "./App.css";
 
-import { Button, Root } from "@itwin/itwinui-react/bricks";
+import { Button } from "@stratakit/bricks";
+import { Root } from "@stratakit/foundations";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Gallery, { GalleryItem } from "./Gallery.js";
 import Bucket from "./Bucket.tsx";

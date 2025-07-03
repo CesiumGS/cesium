@@ -1,7 +1,7 @@
 import { Editor, Monaco, OnChange } from "@monaco-editor/react";
 import { editor, KeyCode, KeyMod } from "monaco-editor";
 import { RefObject, useImperativeHandle, useRef, useState } from "react";
-import { Button } from "@itwin/itwinui-react/bricks";
+import { Button } from "@stratakit/bricks";
 import * as prettier from "prettier";
 import * as babelPlugin from "prettier/plugins/babel";
 import * as estreePlugin from "prettier/plugins/estree";
