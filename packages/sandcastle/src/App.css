@@ -11,8 +11,8 @@
 
 .split-view {
   /* These control the styling of the Allotment dividers */
-  --focus-border: var(--ids-color-border-accent-base);
-  --separator-border: var(--ids-color-border-neutral-base);
+  --focus-border: var(--stratakit-color-border-accent-base);
+  --separator-border: var(--stratakit-color-border-neutral-base);
 }
 
 .toolbar {
@@ -21,25 +21,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: var(--ids-color-bg-page-base);
 
   .spacer {
     flex-grow: 10;
-  }
-}
-
-.tabs {
-  background: var(--ids-color-bg-page-base);
-}
-
-.editor-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-
-  section {
-    border-top: 1px solid var(--ids-color-border-neutral-base);
-    flex-shrink: 1;
   }
 }
 
@@ -49,15 +33,15 @@
   background-image: var(--_rings), var(--_gradient);
   --_rings: repeating-radial-gradient(
     circle at center,
-    var(--ids-color-border-neutral-muted) 1px,
-    var(--ids-color-border-neutral-muted) 3px,
+    var(--stratakit-color-border-neutral-muted) 1px,
+    var(--stratakit-color-border-neutral-muted) 3px,
     transparent 3px,
     transparent 10px
   );
   --_gradient: linear-gradient(
     180deg,
-    var(--ids-color-bg-page-base) 0%,
-    var(--ids-color-bg-page-depth) 100%
+    var(--stratakit-color-bg-page-base) 0%,
+    var(--stratakit-color-bg-page-depth) 100%
   );
 
   .fullFrame {
@@ -68,6 +52,6 @@
 
 .gallery {
   grid-area: gallery;
-  border-top: 1px solid var(--ids-color-border-neutral-base);
-  background: var(--ids-color-bg-page-depth);
+  border-top: 1px solid var(--stratakit-color-border-neutral-base);
+  background: var(--stratakit-color-bg-page-depth);
 }

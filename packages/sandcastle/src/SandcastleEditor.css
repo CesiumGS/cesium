@@ -1,0 +1,14 @@
+.editor-container {
+  grid-area: code;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  section {
+    border-top: 1px solid grey;
+    flex-shrink: 1;
+    /* Monaco needs a defined height for dynamic resizing to work */
+    --tabs-height: 1.5rem;
+    height: calc(100% - var(--tabs-height)) !important;
+  }
+}

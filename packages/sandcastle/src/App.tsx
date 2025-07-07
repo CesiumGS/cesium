@@ -4,11 +4,12 @@ import "allotment/dist/style.css";
 import "./App.css";
 
 import { Button } from "@stratakit/bricks";
-import { Root } from "@stratakit/foundations";
+import { Icon, Root } from "@stratakit/foundations";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Gallery, { GalleryItem } from "./Gallery.js";
 import Bucket from "./Bucket.tsx";
 import SandcastleEditor, { SandcastleEditorRef } from "./SandcastleEditor.tsx";
+import { addIcon, placeholderIcon } from "./icons.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -305,6 +306,11 @@ Sandcastle.addToolbarMenu(${variableName});`,
     return () => window.removeEventListener("popstate", pushStateListener);
   }, [loadFromUrl]);
 
+  useEffect(() => {
+    // This is required for the stratakit variables to be defined at the root
+    document.documentElement.dataset.colorScheme = darkTheme ? "dark" : "light";
+  }, [darkTheme]);
+
   const versionString = __COMMIT_SHA__;
 
   return (
@@ -317,10 +323,15 @@ Sandcastle.addToolbarMenu(${variableName});`,
         <Button onClick={() => addToggle()}>Add toggle</Button>
         <Button onClick={() => addMenu()}>Add menu</Button>
         <Button onClick={() => share()}>Share</Button>
-        <Button onClick={() => openStandalone()}>Standalone</Button>
+        <Button onClick={() => openStandalone()}>
+          Standalone <Icon href={addIcon} />
+        </Button>
         <div className="spacer"></div>
         {versionString && <pre>Commit: {versionString.substring(0, 7)}</pre>}
-        <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
+        <Button onClick={() => setDarkTheme(!darkTheme)}>
+          <Icon href={placeholderIcon} />
+          Swap Theme
+        </Button>
       </div>
       <Allotment>
         <Allotment.Pane minSize={400}>

@@ -1,11 +1,12 @@
 import { Editor, Monaco, OnChange } from "@monaco-editor/react";
 import { editor, KeyCode, KeyMod } from "monaco-editor";
 import { RefObject, useImperativeHandle, useRef, useState } from "react";
-import { Button } from "@stratakit/bricks";
 import * as prettier from "prettier";
 import * as babelPlugin from "prettier/plugins/babel";
 import * as estreePlugin from "prettier/plugins/estree";
 import * as htmlPlugin from "prettier/plugins/html";
+import { Tabs } from "@stratakit/structures";
+import "./SandcastleEditor.css";
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
@@ -146,20 +147,16 @@ function SandcastleEditor({
 
   return (
     <div className="editor-container">
-      <div className="tabs">
-        <Button
-          disabled={activeTab === "js"}
-          onClick={() => setActiveTab("js")}
-        >
-          Javascript
-        </Button>
-        <Button
-          disabled={activeTab === "html"}
-          onClick={() => setActiveTab("html")}
-        >
-          HTML/CSS
-        </Button>
-      </div>
+      <Tabs.Root>
+        <Tabs.TabList>
+          <Tabs.Tab id="js" onClick={() => setActiveTab("js")}>
+            Javascript
+          </Tabs.Tab>
+          <Tabs.Tab id="html" onClick={() => setActiveTab("html")}>
+            HTML/CSS
+          </Tabs.Tab>
+        </Tabs.TabList>
+      </Tabs.Root>
       <Editor
         theme={darkTheme ? "vs-dark" : "light"}
         options={{

@@ -27,6 +27,12 @@ const baseConfig: UserConfig = {
         ),
       },
     },
+    assetsInlineLimit: (filePath) => {
+      if (filePath.includes("@stratakit") && filePath.endsWith(".svg")) {
+        return false;
+      }
+      return undefined;
+    },
   },
 };
 export default baseConfig;

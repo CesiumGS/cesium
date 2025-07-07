@@ -10,7 +10,7 @@
     flex-direction: column;
     align-items: center;
     flex: 0 0 150px;
-    background: var(--ids-color-bg-info-muted);
+    background: var(--stratakit-color-bg-info-muted);
     padding: 0.5rem;
     border-radius: 5px;
     cursor: pointer;

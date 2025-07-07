@@ -20,21 +20,21 @@ body {
   background-image: var(--_rings), var(--_gradient);
 
   /* TODO: these should pull from the stratakit directly somehow eventually */
-  --ids-color-border-neutral-muted: oklch(91.52% 0.005 258.33);
-  --ids-color-bg-page-base: oklch(99.06% 0.002 247.84);
-  --ids-color-bg-page-depth: oklch(94.86% 0.002 247.84);
+  --stratakit-color-border-neutral-muted: oklch(91.52% 0.005 258.33);
+  --stratakit-color-bg-page-base: oklch(99.06% 0.002 247.84);
+  --stratakit-color-bg-page-depth: oklch(94.86% 0.002 247.84);
 
   --_rings: repeating-radial-gradient(
     circle at center,
-    var(--ids-color-border-neutral-muted) 1px,
-    var(--ids-color-border-neutral-muted) 3px,
+    var(--stratakit-color-border-neutral-muted) 1px,
+    var(--stratakit-color-border-neutral-muted) 3px,
     transparent 3px,
     transparent 10px
   );
   --_gradient: linear-gradient(
     180deg,
-    var(--ids-color-bg-page-base) 0%,
-    var(--ids-color-bg-page-depth) 100%
+    var(--stratakit-color-bg-page-base) 0%,
+    var(--stratakit-color-bg-page-depth) 100%
   );
 }
 
