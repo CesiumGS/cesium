@@ -18,7 +18,9 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @typedef {object} Texture.ConstructorOptions
  *
  * @property {Context} context
- * @property {object} [source] The source for texel values to be loaded into the texture.
+ * @property {object} [source] The source for texel values to be loaded into the texture. A {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement},
+ *                        {@link HTMLVideoElement}, {@link OffscreenCanvas}, or {@link ImageBitmap},
+ *                        or an object with width, height, and arrayBufferView properties.
  * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
@@ -340,6 +342,7 @@ function loadBufferSource(texture, source) {
     pixelDatatype,
     width,
   );
+
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -483,7 +486,7 @@ function loadFramebufferSource(texture, source) {
  * Load texel data from an Image into a texture.
  *
  * @param {Texture} texture The texture to which texel values will be loaded.
- * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} source The source for texel values to be loaded into the texture.
+ * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|OffscreenCanvas|ImageBitmap} source The source for texel values to be loaded into the texture.
  *
  * @private
  */
@@ -829,7 +832,8 @@ function setupSampler(texture, sampler) {
  * Copy new image data into this texture, from a source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement}.
  * or an object with width, height, and arrayBufferView properties.
  * @param {object} options Object with the following properties:
- * @param {object} options.source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement},
+ * @param {object} options.source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, {@link HTMLVideoElement},
+ *                        {@link OffscreenCanvas}, or {@link ImageBitmap},
  *                        or an object with width, height, and arrayBufferView properties.
  * @param {number} [options.xOffset=0] The offset in the x direction within the texture to copy into.
  * @param {number} [options.yOffset=0] The offset in the y direction within the texture to copy into.

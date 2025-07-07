@@ -53,7 +53,7 @@ body {
   width: 40%;
 }
 
-#bottomPanel {
+#bottomSection {
   height: 225px;
 }
 
@@ -184,6 +184,25 @@ a.linkButton:hover {
 .bottomPanel #innerPanel_tablist {
   max-height: 28px;
   overflow: auto !important;
+}
+
+.feedback {
+  width: 250px;
+
+  .future-banner {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    text-align: center;
+    flex-direction: column;
+
+    h3 {
+      margin: 0 1em;
+    }
+    p {
+      margin: 1em 1.5em;
+    }
+  }
 }
 
 .claro .dijitTabContainerTop-tabs .dijitTabChecked .dijitTabContent {

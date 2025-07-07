@@ -2326,6 +2326,23 @@ function backToFront(a, b, position) {
   );
 }
 
+const scratchCart3 = new Cartesian3();
+function distanceSquaredToCenter(center, position) {
+  const diff = Cartesian3.subtract(center, position, scratchCart3);
+  const distance = Math.max(0.0, Cartesian3.magnitude(diff));
+  return distance * distance;
+}
+
+function backToFrontSplats(a, b, position) {
+  const boxA = a.boundingVolume;
+  const boxB = b.boundingVolume;
+
+  return (
+    distanceSquaredToCenter(boxB.center, position) -
+    distanceSquaredToCenter(boxA.center, position)
+  );
+}
+
 function frontToBack(a, b, position) {
   // When distances are equal equal favor sorting b before a. This gives render priority to commands later in the list.
   return (
@@ -2370,7 +2387,6 @@ function executeTranslucentCommandsFrontToBack(
     executeFunction(commands[i], scene, passState);
   }
 }
-
 /**
  * Execute commands to render voxels in the scene.
  *
@@ -2387,6 +2403,19 @@ function performVoxelsPass(scene, passState, frustumCommands) {
   commands.length = frustumCommands.indices[Pass.VOXELS];
 
   mergeSort(commands, backToFront, scene.camera.positionWC);
+
+  for (let i = 0; i < commands.length; ++i) {
+    executeCommand(commands[i], scene, passState);
+  }
+}
+
+function performGaussianSplatPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.GAUSSIAN_SPLATS);
+
+  const commands = frustumCommands.commands[Pass.GAUSSIAN_SPLATS];
+  commands.length = frustumCommands.indices[Pass.GAUSSIAN_SPLATS];
+
+  mergeSort(commands, backToFrontSplats, scene.camera.positionWC);
 
   for (let i = 0; i < commands.length; ++i) {
     executeCommand(commands[i], scene, passState);
@@ -2789,6 +2818,8 @@ function executeCommands(scene, passState) {
     performVoxelsPass(scene, passState, frustumCommands);
 
     performPass(frustumCommands, Pass.OPAQUE);
+
+    performGaussianSplatPass(scene, passState, frustumCommands);
 
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
       // Do not overlap frustums in the translucent pass to avoid blending artifacts
