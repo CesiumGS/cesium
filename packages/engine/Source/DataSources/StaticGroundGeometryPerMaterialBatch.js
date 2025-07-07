@@ -100,7 +100,7 @@ Batch.prototype.add = function (time, updater, geometryInstance) {
  * Remove an updater from the Batch, and potentially signals for a new Primitive to be created
  * on the next update.
  * @param {GeometryUpdater} updater
- * @returns
+ * @returns true if the updater was removed, false if it was not found.
  */
 Batch.prototype.remove = function (updater) {
   const id = updater.id;
@@ -340,7 +340,7 @@ function StaticGroundGeometryPerMaterialBatch(
  *
  * @param {JulianDate} time
  * @param {GeometryUpdater} updater A GeometryUpdater that manages the visual representation of a primitive.
- * @returns
+ * @returns {void}
  */
 StaticGroundGeometryPerMaterialBatch.prototype.add = function (time, updater) {
   const items = this._items;
