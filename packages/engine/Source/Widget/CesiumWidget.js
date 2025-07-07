@@ -159,7 +159,7 @@ function configureCameraFrustum(widget) {
  * @param {number} [options.targetFrameRate] The target frame rate when using the default render loop.
  * @param {boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
  * @param {boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
- * @param {ContextOptions | SharedContext} [options.contextOptions] Context and WebGL creation properties passed to {@link Scene}.
+ * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties passed to {@link Scene}.
  * @param {Element|string} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
  *        to the bottom of the widget itself.
  * @param {Element|string} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
