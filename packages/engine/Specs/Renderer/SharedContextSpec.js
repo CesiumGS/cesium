@@ -4,6 +4,12 @@ import SharedContext from "../../Source/Renderer/SharedContext";
 describe(
   "Renderer/SharedContext",
   function () {
+    // All of these tests require a real WebGL context. Skip them if WebGL is stubbed.
+    const webglStub = !!window.webglStub;
+    if (webglStub) {
+      return;
+    }
+
     let sharedContext;
     beforeEach(function () {
       sharedContext = new SharedContext();

@@ -800,44 +800,51 @@ describe(
         expect(scene).toRender([0, 0, 255, 255]);
       });
 
-      it("accepts a SharedContext in place of ContextOptions", function () {
-        const sharedContext = new SharedContext();
-        const s = new Scene({
-          canvas: createCanvas(5, 5),
-          contextOptions: sharedContext,
+      describe("with shared context", () => {
+        if (!!window.webglStub) {
+          // All of these tests require a real WebGL context.
+          return;
+        }
+
+        it("accepts a SharedContext in place of ContextOptions", function () {
+          const sharedContext = new SharedContext();
+          const s = new Scene({
+            canvas: createCanvas(5, 5),
+            contextOptions: sharedContext,
+          });
+
+          expect(s._context._gl).toBe(sharedContext._context._gl);
+          s.destroy();
         });
 
-        expect(s._context._gl).toBe(sharedContext._context._gl);
-        s.destroy();
-      });
+        it("draws background color with SharedContext", function () {
+          const sharedContext = new SharedContext();
+          const s1 = new Scene({
+            canvas: createCanvas(1, 1),
+            contextOptions: sharedContext,
+          });
+          const s2 = new Scene({
+            canvas: createCanvas(1, 1),
+            contextOptions: sharedContext,
+          });
 
-      it("draws background color with SharedContext", function () {
-        const sharedContext = new SharedContext();
-        const s1 = new Scene({
-          canvas: createCanvas(1, 1),
-          contextOptions: sharedContext,
+          expect(s1).toRender([0, 0, 0, 255]);
+          expect(s2).toRender([0, 0, 0, 255]);
+
+          s1.backgroundColor = Color.BLUE;
+          s2.backgroundColor = Color.RED;
+          expect(s1).toRender([0, 0, 255, 255]);
+          expect(s2).toRender([255, 0, 0, 255]);
         });
-        const s2 = new Scene({
-          canvas: createCanvas(1, 1),
-          contextOptions: sharedContext,
+
+        it("reference-counts primitives IFF using a SharedContext", function () {
+          expect(scene.primitives._countReferences).toBe(false);
+          const s = new Scene({
+            canvas: createCanvas(5, 5),
+            contextOptions: new SharedContext(),
+          });
+          expect(s.primitives._countReferences).toBe(true);
         });
-
-        expect(s1).toRender([0, 0, 0, 255]);
-        expect(s2).toRender([0, 0, 0, 255]);
-
-        s1.backgroundColor = Color.BLUE;
-        s2.backgroundColor = Color.RED;
-        expect(s1).toRender([0, 0, 255, 255]);
-        expect(s2).toRender([255, 0, 0, 255]);
-      });
-
-      it("reference-counts primitives IFF using a SharedContext", function () {
-        expect(scene.primitives._countReferences).toBe(false);
-        const s = new Scene({
-          canvas: createCanvas(5, 5),
-          contextOptions: new SharedContext(),
-        });
-        expect(s.primitives._countReferences).toBe(true);
       });
     });
 
