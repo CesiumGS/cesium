@@ -8,11 +8,13 @@ describe(
     const webglStub = !!window.webglStub;
     let sharedContext;
     beforeEach(function () {
-      sharedContext = new SharedContext();
+      if (!webglStub) {
+        sharedContext = new SharedContext();
+      }
     });
 
     afterEach(function () {
-      if (!sharedContext.isDestroyed()) {
+      if (!webglStub && !sharedContext.isDestroyed()) {
         sharedContext.destroy();
       }
     });

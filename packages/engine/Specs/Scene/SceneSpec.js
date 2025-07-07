@@ -801,12 +801,14 @@ describe(
       });
 
       describe("with shared context", () => {
-        if (!!window.webglStub) {
-          // All of these tests require a real WebGL context.
-          return;
-        }
+        // All of these tests require a real WebGL context. Skip them if WebGL is being stubbed.
+        const webglStub = !!window.webglStub;
 
         it("accepts a SharedContext in place of ContextOptions", function () {
+          if (webglStub) {
+            return;
+          }
+
           const sharedContext = new SharedContext();
           const s = new Scene({
             canvas: createCanvas(5, 5),
@@ -818,6 +820,10 @@ describe(
         });
 
         it("draws background color with SharedContext", function () {
+          if (webglStub) {
+            return;
+          }
+
           const sharedContext = new SharedContext();
           const s1 = new Scene({
             canvas: createCanvas(1, 1),
@@ -838,6 +844,10 @@ describe(
         });
 
         it("reference-counts primitives IFF using a SharedContext", function () {
+          if (webglStub) {
+            return;
+          }
+
           expect(scene.primitives._countReferences).toBe(false);
           const s = new Scene({
             canvas: createCanvas(5, 5),
