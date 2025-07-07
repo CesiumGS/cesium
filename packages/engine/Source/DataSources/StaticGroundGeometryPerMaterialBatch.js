@@ -319,9 +319,9 @@ Batch.prototype.destroy = function () {
 };
 
 /**
- * @private
  * A container of Batch objects of ground geometry primitives, where a Batch is grouped by material,
  * texture coordinate type, and spatial overlap.
+ * @private
  */
 function StaticGroundGeometryPerMaterialBatch(
   primitives,
