@@ -1,5 +1,7 @@
 # Change Log
 
+- Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
+
 ## 1.131 - 2025-07-01
 
 ### @cesium/engine
@@ -8,8 +10,7 @@
 
 - Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
 - Fixed raymarching step size for cylindrical voxels. [#12681](https://github.com/CesiumGS/cesium/pull/12681)
-
-- Fixes handling of tileset modelMatrix changes for translations and rotations in GaussianSplatPrimitive. [#12706](https://github.com/CesiumGS/cesium/pull/12706)
+- Fixes handling of tileset `modelMatrix` changes for translations and rotations in `GaussianSplatPrimitive`. [#12706](https://github.com/CesiumGS/cesium/pull/12706)
 
 #### Additions :tada:
 
