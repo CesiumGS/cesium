@@ -7,6 +7,11 @@ describe(
     // All of these tests require a real WebGL context. Skip them if WebGL is stubbed.
     const webglStub = !!window.webglStub;
     if (webglStub) {
+      it("skips tests if WebGL is stubbed", () => {
+        // jasmine will produce an error about a `describe` with no children if we return here.
+        // Silence it with this empty test rather than having to check `webglStub` at the start of every single test.
+      });
+
       return;
     }
 
