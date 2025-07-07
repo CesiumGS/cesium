@@ -21,6 +21,13 @@
             "type": "chrome",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
+        },
+        {
+            "request": "attach",
+            "name": "Attach to Karma",
+            "type": "chrome",
+            "port": 9333, // This is the remote debugging port specified in karma.conf.cjs
+            "webRoot": "${workspaceFolder}"
         }
     ]
 }

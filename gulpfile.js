@@ -999,7 +999,7 @@ export async function test() {
   const release = argv.release ? argv.release : false;
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  const debug = argv.debug ? false : true;
+  const debug = argv.debug ? true : false;
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
   const includeName = argv.includeName ? argv.includeName : "";
@@ -1017,7 +1017,7 @@ export async function test() {
     });
   }
 
-  let browsers = ["Chrome"];
+  let browsers = debug ? ["ChromeDebugging"] : ["Chrome"];
   if (argv.browsers) {
     browsers = argv.browsers.split(",");
   }
@@ -1087,7 +1087,7 @@ export async function test() {
     karmaConfigFile,
     {
       port: 9876,
-      singleRun: debug,
+      singleRun: !debug,
       browsers: browsers,
       specReporter: {
         suppressErrorSummary: false,
