@@ -51,6 +51,7 @@ vec3 voxelNormal = fsInput.attributes.normalEC;
 #### Fixes :wrench:
 
 - Fixed voxel rendering with orthographic cameras. [#12629](https://github.com/CesiumGS/cesium/pull/12629)
+- Fix render issues when updating entities with `requestRenderMode=true`. [#12543](https://github.com/CesiumGS/cesium/issues/12543)
 
 ## 1.129 - 2025-05-01
 
