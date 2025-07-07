@@ -10,6 +10,9 @@ const baseConfig: UserConfig = {
     // The state of the editor could also be lost when developing if the page refreshes unexpectedly
     hmr: false,
   },
+  define: {
+    __COMMIT_SHA__: JSON.stringify(undefined),
+  },
   build: {
     // "the outDir may not be inside project root and will not be emptied without this setting
     emptyOutDir: true,
