@@ -96,6 +96,25 @@ describe(
         },
       );
     });
+    // it("Create and destroy GaussianSplat3DTileContent", function () {
+    //     return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(
+    //       function (tileset) {
+    //         scene.camera.lookAt(
+    //           tileset.boundingSphere.center,
+    //           new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+    //         );
+
+    //         return Cesium3DTilesTester.waitForTileContentReady(
+    //           scene,
+    //           tileset.root,
+    //         ).then(function (tile) {
+    //           tileset.destroy();
+    //         //  expect(tile.content.isDestroyed()).toBe(true);
+    //         //  expect(tile.content.splatPrimitive).toBeUndefined();
+    //         });
+    //       },
+    //     );
+    //   });
   },
   "WebGL",
 );
