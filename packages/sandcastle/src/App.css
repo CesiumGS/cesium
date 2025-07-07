@@ -3,20 +3,22 @@
   height: 100vh;
   display: grid;
   grid-template:
-    "toolbar toolbar"
-    "code viewer"
-    "gallery gallery";
-  grid-template-columns: 50% 50%;
-  /* Monaco needs a defined height for dynamic resizing to work */
-  --toolbar-height: 2.5rem;
-  grid-template-rows:
-    var(--toolbar-height) calc(100% - var(--toolbar-height) - 150px)
-    150px;
+    "toolbar"
+    "center"
+    "gallery";
+  grid-template-rows: max-content auto 150px;
+}
+
+.split-view {
+  /* These control the styling of the Allotment dividers */
+  --focus-border: var(--ids-color-border-accent-base);
+  --separator-border: var(--ids-color-border-neutral-base);
 }
 
 .toolbar {
   grid-area: toolbar;
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
   background: var(--ids-color-bg-page-base);
@@ -31,22 +33,18 @@
 }
 
 .editor-container {
-  grid-area: code;
   display: flex;
   flex-direction: column;
+  height: 100%;
 
   section {
-    border-top: 1px solid grey;
+    border-top: 1px solid var(--ids-color-border-neutral-base);
     flex-shrink: 1;
-    /* Monaco needs a defined height for dynamic resizing to work */
-    --tabs-height: 1.5rem;
-    height: calc(100% - var(--tabs-height)) !important;
   }
 }
 
 .viewer-bucket {
-  grid-area: viewer;
-  width: 50vw;
+  height: 100%;
   background-color: white;
   background-image: var(--_rings), var(--_gradient);
   --_rings: repeating-radial-gradient(
@@ -70,6 +68,6 @@
 
 .gallery {
   grid-area: gallery;
-  border-top: 1px solid grey;
+  border-top: 1px solid var(--ids-color-border-neutral-base);
   background: var(--ids-color-bg-page-depth);
 }
