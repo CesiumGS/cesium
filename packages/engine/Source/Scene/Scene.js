@@ -139,10 +139,9 @@ function Scene(options) {
   }
   //>>includeEnd('debug');
 
-  let destroyPrimitives;
-  if (options.contextOptions instanceof SharedContext) {
+  const countReferences = options.contextOptions instanceof SharedContext;
+  if (countReferences) {
     this._context = options.contextOptions._createSceneContext(canvas);
-    destroyPrimitives = "reference-counted";
   } else {
     const contextOptions = clone(options.contextOptions);
     this._context = new Context(canvas, contextOptions);
@@ -181,8 +180,8 @@ function Scene(options) {
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
-  this._primitives = new PrimitiveCollection({ destroyPrimitives });
-  this._groundPrimitives = new PrimitiveCollection({ destroyPrimitives });
+  this._primitives = new PrimitiveCollection({ countReferences });
+  this._groundPrimitives = new PrimitiveCollection({ countReferences });
 
   this._globeHeight = undefined;
   this._globeHeightDirty = true;

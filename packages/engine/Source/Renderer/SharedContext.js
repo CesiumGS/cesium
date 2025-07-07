@@ -9,6 +9,7 @@ import Context from "./Context";
  * {@link Primitive}s associated with the shared WebGL context can be displayed in any Scene that uses the same context.
  * The context renders each Scene to an off-screen canvas, then blits the result to that Scene's on-screen canvas.
  *
+ * @private
  * @alias SharedContext
  * @constructor
  *

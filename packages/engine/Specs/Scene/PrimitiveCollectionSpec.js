@@ -693,7 +693,7 @@ describe(
       expect(primitives._countReferences).toEqual(false);
 
       let collection = new PrimitiveCollection({
-        destroyPrimitives: "reference-counted",
+        countReferences: true,
       });
       expect(collection.destroyPrimitives).toEqual(true);
       expect(collection._countReferences).toEqual(true);
@@ -705,7 +705,7 @@ describe(
 
     it("does not change reference-counting behavior after construction", function () {
       const collection = new PrimitiveCollection({
-        destroyPrimitives: "reference-counted",
+        countReferences: true,
       });
       expect(collection._countReferences).toEqual(true);
 
@@ -728,14 +728,14 @@ describe(
       expectRefCount(p, undefined);
 
       const rc1 = new PrimitiveCollection({
-        destroyPrimitives: "reference-counted",
+        countReferences: true,
       });
       rc1.add(p);
       rc1.destroyPrimitives = false;
       expectRefCount(p, 1);
 
       const rc2 = new PrimitiveCollection({
-        destroyPrimitives: "reference-counted",
+        countReferences: true,
       });
       rc2.destroyPrimitives = false;
       rc2.add(p);
@@ -751,7 +751,7 @@ describe(
     it("destroys primitives on removal IFF reference count is zero and destroyPrimitives is true", function () {
       const p1 = createLabels();
       const rc1 = new PrimitiveCollection({
-        destroyPrimitives: "reference-counted",
+        countReferences: true,
       });
       rc1.add(p1);
       expect(p1.isDestroyed()).toEqual(false);
@@ -771,7 +771,7 @@ describe(
       expectRefCount(p3, 0);
 
       const rc2 = new PrimitiveCollection({
-        destroyPrimitives: "reference-counted",
+        countReferences: true,
       });
       const p4 = createLabels();
       rc1.add(p4);
@@ -800,7 +800,7 @@ describe(
       primitives.add(p);
 
       const rc = new PrimitiveCollection({
-        destroyPrimitives: "reference-counted",
+        countReferences: true,
       });
       rc.add(p);
       expectRefCount(p, 1);
