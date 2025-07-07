@@ -1,7 +1,7 @@
 import clone from "../Core/clone.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import Context from "./Context";
+import Context from "./Context.js";
 
 /**
  * Enables a single WebGL context to be used by any number of {@link Scene}s.
