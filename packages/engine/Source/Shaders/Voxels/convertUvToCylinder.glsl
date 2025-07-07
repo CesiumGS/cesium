@@ -38,7 +38,7 @@ PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     vec3 east = normalize(vec3(-position.y, position.x, 0.0));
 
     vec3 point = vec3(radius, angle, height);
-    mat3 jacobianT = mat3(radial, z, east / length(position.xy));
+    mat3 jacobianT = mat3(radial, east / length(position.xy), z);
     return PointJacobianT(point, jacobianT);
 }
 

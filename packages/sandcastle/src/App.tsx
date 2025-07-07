@@ -304,6 +304,8 @@ Sandcastle.addToolbarMenu(${variableName});`,
     return () => window.removeEventListener("popstate", pushStateListener);
   }, [loadFromUrl]);
 
+  const versionString = __COMMIT_SHA__;
+
   return (
     <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
       <div className="toolbar">
@@ -316,6 +318,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
         <Button onClick={() => share()}>Share</Button>
         <Button onClick={() => openStandalone()}>Standalone</Button>
         <div className="spacer"></div>
+        {versionString && <pre>Commit: {versionString.substring(0, 7)}</pre>}
         <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
       </div>
       <Allotment>
