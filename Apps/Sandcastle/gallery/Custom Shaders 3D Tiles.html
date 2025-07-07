@@ -18,7 +18,6 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-
   <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
@@ -36,28 +35,29 @@
       }
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
-    <div id="loadingOverlay">
-      <h1>Loading...</h1>
-    </div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
-        let tileset = null;
-        try {
-          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {
-            customShader: new Cesium.CustomShader({
-              lightingModel: Cesium.LightingModel.UNLIT,
-              fragmentShaderText: `
+
+        const colorShader = new Cesium.CustomShader({
+          lightingModel: Cesium.LightingModel.UNLIT,
+          fragmentShaderText: `
             // Color tiles by distance to the camera
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 material.diffuse = vec3(0.0, 0.0, 1.0);
                 material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
             }`,
-            }),
+        });
+
+        let tileset = null;
+        try {
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {
+            customShader: colorShader,
           });
           viewer.scene.primitives.add(tileset);
         } catch (error) {
@@ -80,23 +80,11 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        function changeCustomShader(tileset, customShader) {
-          tileset.customShader = customShader;
-        }
-
         const options = [
           {
             text: "Color",
             onselect: function () {
-              tileset.customShader = new Cesium.CustomShader({
-                lightingModel: Cesium.LightingModel.UNLIT,
-                fragmentShaderText: `
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                  material.diffuse = vec3(0.0, 0.0, 1.0);
-                  material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
-              }`,
-              });
+              tileset.customShader = colorShader;
             },
           },
           {
@@ -120,12 +108,11 @@
                 // Apply the texture to the model, but move the texture coordinates
                 // a bit over time so it's animated.
                 fragmentShaderText: `
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                  vec2 texCoord = vec2(fsInput.attributes.positionMC.y / 100., 0.) + 0.01 * vec2(czm_frameNumber, 0.0);
-                  material.diffuse = texture(u_stripes, texCoord).rgb;
-              }
-              `,
+                  void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+                  {
+                      vec2 texCoord = vec2(fsInput.attributes.positionMC.y / 100., 0.) + 0.01 * vec2(czm_frameNumber, 0.0);
+                      material.diffuse = texture(u_stripes, texCoord).rgb;
+                  }`,
               });
             },
           },
