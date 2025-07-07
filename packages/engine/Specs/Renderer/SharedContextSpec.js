@@ -6,15 +6,6 @@ describe(
   function () {
     // All of these tests require a real WebGL context. Skip them if WebGL is stubbed.
     const webglStub = !!window.webglStub;
-    if (webglStub) {
-      it("skips tests if WebGL is stubbed", () => {
-        // jasmine will produce an error about a `describe` with no children if we return here.
-        // Silence it with this empty test rather than having to check `webglStub` at the start of every single test.
-      });
-
-      return;
-    }
-
     let sharedContext;
     beforeEach(function () {
       sharedContext = new SharedContext();
@@ -28,6 +19,10 @@ describe(
 
     describe("scene context", function () {
       it("forwards to shared Context", function () {
+        if (webglStub) {
+          return;
+        }
+
         const sceneContext = sharedContext._createSceneContext(
           document.createElement("canvas"),
         );
@@ -42,6 +37,10 @@ describe(
       });
 
       it("canvas returns scene canvas", function () {
+        if (webglStub) {
+          return;
+        }
+
         const sceneCanvas = document.createElement("canvas");
         const sceneContext = sharedContext._createSceneContext(sceneCanvas);
         expect(sceneContext.canvas).toBe(sceneCanvas);
@@ -49,6 +48,10 @@ describe(
       });
 
       it("throws if attempting to create multiple scene contexts for same canvas", function () {
+        if (webglStub) {
+          return;
+        }
+
         const canvas = document.createElement("canvas");
         sharedContext._createSceneContext(canvas);
         expect(function () {
@@ -57,6 +60,10 @@ describe(
       });
 
       it("throws upon failure to obtain 2d context", function () {
+        if (webglStub) {
+          return;
+        }
+
         const canvas = document.createElement("canvas");
         const gl = canvas.getContext("webgl");
         expect(gl).not.toBeNull();
@@ -66,6 +73,10 @@ describe(
       });
 
       it("obtains drawing buffer width+height from scene canvas", function () {
+        if (webglStub) {
+          return;
+        }
+
         const c = createCanvas(5, 10);
         const sc = sharedContext._createSceneContext(c);
         expect(sc.drawingBufferWidth).toEqual(c.width);
@@ -79,6 +90,10 @@ describe(
       });
 
       it("resizes off-screen canvas to be at least as large as on-screen canvas", function () {
+        if (webglStub) {
+          return;
+        }
+
         const c = createCanvas(5, 10);
         const ctx = sharedContext._createSceneContext(c);
         const sharedCanvas = sharedContext._context.canvas;
@@ -111,6 +126,9 @@ describe(
     });
 
     it("destroys shared Context after all scene contexts are destroyed", function () {
+      if (webglStub) {
+        return;
+      }
       const sc = sharedContext._context;
       expect(sc.isDestroyed()).toEqual(false);
       expect(sharedContext._canvases).toEqual([]);
@@ -139,6 +157,9 @@ describe(
     });
 
     it("does not auto-destroy after all scene context are destroyed if so specified", function () {
+      if (webglStub) {
+        return;
+      }
       const sc = new SharedContext({ autoDestroy: false });
       const ctxt = sc._createSceneContext(document.createElement("canvas"));
       ctxt.destroy();
