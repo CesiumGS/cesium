@@ -7,7 +7,6 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
-import getFilenameFromUri from "../Core/getFilenameFromUri.js";
 import PinBuilder from "../Core/PinBuilder.js";
 import PolygonHierarchy from "../Core/PolygonHierarchy.js";
 import Resource from "../Core/Resource.js";
@@ -554,7 +553,6 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  *
  * Initialization options for the <code>load</code> method.
  *
- * @property {string} [sourceUri] Overrides the url to use for resolving relative links.
  * @property {GeoJsonDataSource.describe} [describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string).
  * @property {number} [markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
  * @property {string} [markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
@@ -924,11 +922,9 @@ function preload(that, data, options, clear) {
   that._credit = credit;
 
   let promise = data;
-  let sourceUri = options.sourceUri;
   if (typeof data === "string" || data instanceof Resource) {
     data = Resource.createIfNeeded(data);
     promise = data.fetchJson();
-    sourceUri = sourceUri ?? data.getUrlComponent();
 
     // Add resource credits to our list of credits to display
     const resourceCredits = that._resourceCredits;
@@ -960,7 +956,7 @@ function preload(that, data, options, clear) {
 
   return Promise.resolve(promise)
     .then(function (geoJson) {
-      return load(that, geoJson, options, sourceUri, clear);
+      return load(that, geoJson, options, clear);
     })
     .catch(function (error) {
       DataSource.setLoading(that, false);
@@ -982,10 +978,10 @@ GeoJsonDataSource.prototype.update = function (time) {
   return true;
 };
 
-function load(that, geoJson, options, sourceUri, clear) {
+function load(that, geoJson, options, clear) {
   let name;
-  if (defined(sourceUri)) {
-    name = getFilenameFromUri(sourceUri);
+  if (defined(geoJson.name)) {
+    name = geoJson.name;
   }
 
   if (defined(name) && that._name !== name) {
