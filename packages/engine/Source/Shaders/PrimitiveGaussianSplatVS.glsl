@@ -158,7 +158,9 @@ void main() {
     v_vertPos = corner ;
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
 
-    vec3 viewDir = normalize(-splatViewPos.xyz);
-    v_splatColor.rgb *= evaluateSHLighting(texIdx, viewDir);
+    if(u_shDegree > 0) {
+        vec3 viewDir = normalize(-splatViewPos.xyz);
+        v_splatColor.rgb *= evaluateSHLighting(texIdx, viewDir);
+    }
     v_splitDirection = u_splitDirection;
 }
