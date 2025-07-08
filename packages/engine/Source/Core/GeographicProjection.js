@@ -3,6 +3,7 @@ import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
+import Check from "./Check.js";
 
 /**
  * A simple map projection where longitude and latitude are linearly mapped to X and Y by multiplying
@@ -52,6 +53,10 @@ Object.defineProperties(GeographicProjection.prototype, {
  *          created and returned.
  */
 GeographicProjection.prototype.project = function (cartographic, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartographic", cartographic);
+  //>>includeEnd('debug');
+
   // Actually this is the special case of equidistant cylindrical called the plate carree
   const semimajorAxis = this._semimajorAxis;
   const x = cartographic.longitude * semimajorAxis;

@@ -81,7 +81,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
   );
   const projectedCenter = defined(cartographic)
     ? projection.project(cartographic, projectedCenterScratch)
-    : Cartesian3.ZERO;
+    : Cartesian3.clone(Cartesian3.ZERO, projectedCenterScratch);
 
   const geodeticNormal = ellipsoid.scaleToGeodeticSurface(
     center,
@@ -141,7 +141,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
       );
       const projectedPoint = defined(cartographic)
         ? projection.project(cartographic, scratchCartesian3)
-        : Cartesian3.ZERO;
+        : Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3);
       Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
       texCoordScratch.x =
@@ -494,7 +494,7 @@ function computeWallAttributes(positions, options) {
   );
   const projectedCenter = defined(cartographic)
     ? projection.project(cartographic, projectedCenterScratch)
-    : Cartesian3.ZERO;
+    : Cartesian3.clone(Cartesian3.ZERO, projectedCenterScratch);
 
   const geodeticNormal = ellipsoid.scaleToGeodeticSurface(
     center,
@@ -539,7 +539,7 @@ function computeWallAttributes(positions, options) {
       );
       const projectedPoint = defined(cartographic)
         ? projection.project(cartographic, scratchCartesian3)
-        : Cartesian3.ZERO;
+        : Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3);
       Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
       texCoordScratch.x =

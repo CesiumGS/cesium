@@ -167,7 +167,7 @@ SceneTransitioner.prototype.morphToColumbusView = function (
       );
       position = defined(cartographic)
         ? scene.mapProjection.project(cartographic, position)
-        : Cartesian3.ZERO;
+        : Cartesian3.clone(Cartesian3.ZERO, position);
 
       Matrix4.multiplyByPointAsVector(toENU, direction, direction);
       Matrix4.multiplyByPointAsVector(toENU, up, up);

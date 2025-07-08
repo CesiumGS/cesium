@@ -139,7 +139,7 @@ function getPosition(encoding, mode, projection, vertices, index, result) {
     );
     position = defined(positionCartographic)
       ? projection.project(positionCartographic, result)
-      : Cartesian3.ZERO;
+      : Cartesian3.clone(Cartesian3.ZERO, result);
 
     position = Cartesian3.fromElements(
       position.z,

@@ -4,6 +4,7 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
+import Check from "./Check.js";
 
 /**
  * The map projection used by Google Maps, Bing Maps, and most of ArcGIS Online, EPSG:3857.  This
@@ -98,6 +99,10 @@ WebMercatorProjection.MaximumLatitude =
  * @returns {Cartesian3} The equivalent web mercator X, Y, Z coordinates, in meters.
  */
 WebMercatorProjection.prototype.project = function (cartographic, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartographic", cartographic);
+  //>>includeEnd('debug');
+
   const semimajorAxis = this._semimajorAxis;
   const x = cartographic.longitude * semimajorAxis;
   const y =

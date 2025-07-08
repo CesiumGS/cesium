@@ -874,7 +874,7 @@ function projectNormal(
 
   const normalEndpointProjected = defined(normalEndpointCartographic)
     ? projection.project(normalEndpointCartographic, result)
-    : Cartesian3.ZERO;
+    : Cartesian3.clone(Cartesian3.ZERO, result);
   normalEndpointProjected.height = 0.0;
 
   result = Cartesian3.subtract(

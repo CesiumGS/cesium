@@ -564,7 +564,7 @@ function convertTransformFor2D(camera) {
 
   let projectedPosition = defined(cartographic)
     ? projection.project(cartographic, scratchCartesian3Projection)
-    : Cartesian3.ZERO;
+    : Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3Projection);
 
   const newOrigin = scratchCartesian4NewOrigin;
   newOrigin.x = projectedPosition.z;
@@ -586,7 +586,7 @@ function convertTransformFor2D(camera) {
 
   projectedPosition = defined(cartographic)
     ? projection.project(cartographic, projectedPosition)
-    : Cartesian3.ZERO;
+    : Cartesian3.clone(Cartesian3.ZERO, projectedPosition);
 
   const newXAxis = scratchCartesian4NewXAxis;
   newXAxis.x = projectedPosition.z;
@@ -610,7 +610,7 @@ function convertTransformFor2D(camera) {
 
     projectedPosition = defined(cartographic)
       ? projection.project(cartographic, projectedPosition)
-      : Cartesian3.ZERO;
+      : Cartesian3.clone(Cartesian3.ZERO, projectedPosition);
 
     newYAxis.x = projectedPosition.z;
     newYAxis.y = projectedPosition.x;
@@ -1321,7 +1321,7 @@ function setViewCV(camera, position, hpr, convert) {
       );
       position = defined(cartographic)
         ? projection.project(cartographic, scratchSetViewCartesian)
-        : Cartesian3.ZERO;
+        : Cartesian3.clone(Cartesian3.ZERO, scratchSetViewCartesian);
     }
     Cartesian3.clone(position, camera.position);
   }
@@ -1358,7 +1358,7 @@ function setView2D(camera, position, hpr, convert) {
       );
       position = defined(cartographic)
         ? projection.project(cartographic, scratchSetViewCartesian)
-        : Cartesian3.ZERO;
+        : Cartesian3.clone(Cartesian3.ZERO, scratchSetViewCartesian);
     }
 
     Cartesian2.clone(position, camera.position);
