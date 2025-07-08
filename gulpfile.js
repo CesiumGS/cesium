@@ -1002,8 +1002,10 @@ export async function test() {
   const debug = argv.debug ? true : false;
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
-  const includeName = argv.includeName ? argv.includeName : "";
   const isProduction = argv.production;
+  const includeName = argv.includeName
+    ? argv.includeName.replace(/Spec$/, "")
+    : "";
 
   let workspace = argv.workspace;
   if (workspace) {

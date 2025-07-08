@@ -128,7 +128,7 @@ If it is helpful to step through a unit test in a browser debugger or your IDE, 
 
 `npm run test -- --debug`
 
-The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code. Alternatively, after Chrome launches, run the "Attach to Karma" launch configuration in VS Code to be able to set breakpoints directly in your IDE, and then click "Debug" in Chrome to run the tests. The same may be possible in other IDEs by attaching to port 9333 (Karma's configured remote debugging port).
+The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code. Alternatively, run the "Launch Test Suite and Debug in VSCode" launch configuration (which opens chrome, attaches VSCode, and prepares the test suite of the current file), set breakpoints directly in the Spec file, and then click "Debug" in Chrome to run the tests. Similar behavior may be possible in other IDEs by attaching to port 9333 (Karma's configured remote debugging port) after running the npm test command above.
 
 ![Karma](8.jpg)
 
