@@ -504,7 +504,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
    * because doing so caused a batch to be destroyed and recreated prematurely which, in turn, caused the associated
    * material (and primitive) to be destroyed and recreated.
    */
-  it("doesn't immediately remove an empty batch that may be reused before the next update", function () {
+  it("doesn't immediately remove an empty batch that may be reused before the next update", async function () {
     if (
       !GroundPrimitive.isSupported(scene) ||
       !GroundPrimitive.supportsMaterials(scene)
@@ -533,35 +533,32 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     const updater = new EllipseGeometryUpdater(entity, scene);
     batch.add(time, updater);
 
-    let materialBefore;
-    return pollToPromise(function () {
+    await pollToPromise(function () {
       scene.initializeFrame();
       const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
-    })
-      .then(function () {
-        // Remove and add back the updater before the next batch update
-        // Removal should defer deletion of the batch, and the updater should find the old batch still works upon re-adding
-        // Thus, the material should not be destroyed and recreated (and will have the same guid / be the same object)
-        materialBefore = scene.groundPrimitives.get(0).appearance.material;
-        batch.remove(updater);
-        batch.add(time, updater);
+    });
 
-        return pollToPromise(function () {
-          scene.initializeFrame();
-          const isUpdated = batch.update(time);
-          scene.render(time);
-          return isUpdated;
-        });
-      })
-      .then(function () {
-        const groundPrimitives = scene.groundPrimitives;
-        const materialAfter = groundPrimitives.get(0).appearance.material;
-        expect(materialBefore).toEqual(materialAfter);
-        expect(groundPrimitives.length).toEqual(1);
+    // Remove and add back the updater before the next batch update
+    // Removal should defer deletion of the batch, and the updater should find the old batch still works upon re-adding
+    // Thus, the material should not be destroyed and recreated (and will have the same guid / be the same object)
+    const materialBefore = scene.groundPrimitives.get(0).appearance.material;
+    batch.remove(updater);
+    batch.add(time, updater);
 
-        batch.removeAllPrimitives();
-      });
+    await pollToPromise(function () {
+      scene.initializeFrame();
+      const isUpdated = batch.update(time);
+      scene.render(time);
+      return isUpdated;
+    });
+
+    const groundPrimitives = scene.groundPrimitives;
+    const materialAfter = groundPrimitives.get(0).appearance.material;
+    expect(materialBefore).toEqual(materialAfter);
+    expect(groundPrimitives.length).toEqual(1);
+
+    batch.removeAllPrimitives();
   });
 });

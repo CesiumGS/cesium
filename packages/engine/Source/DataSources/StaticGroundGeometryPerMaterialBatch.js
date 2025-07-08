@@ -66,6 +66,7 @@ Batch.prototype.isMaterial = function (updater) {
  * @param {JulianDate} time
  * @param {GeometryUpdater} updater
  * @param {GeometryInstance} geometryInstance
+ * @private
  */
 Batch.prototype.add = function (time, updater, geometryInstance) {
   const id = updater.id;
@@ -101,6 +102,7 @@ Batch.prototype.add = function (time, updater, geometryInstance) {
  * on the next update.
  * @param {GeometryUpdater} updater
  * @returns true if the updater was removed, false if it was not found.
+ * @private
  */
 Batch.prototype.remove = function (updater) {
   const id = updater.id;
@@ -127,6 +129,7 @@ Batch.prototype.remove = function (updater) {
  * A new primitive is created whenever an updater is added to or removed from a Batch.
  * @param {JulianDate} time
  * @returns a boolean indicating whether the Batch was updated.
+ * @private
  */
 Batch.prototype.update = function (time) {
   let isUpdated = true;
@@ -305,6 +308,7 @@ Batch.prototype.getBoundingSphere = function (updater, result) {
 
 /**
  * Removes a Batch's primitive (and oldPrimitive, if it exists).
+ * @private
  */
 Batch.prototype.destroy = function () {
   const primitive = this.primitive;
@@ -340,7 +344,7 @@ function StaticGroundGeometryPerMaterialBatch(
  *
  * @param {JulianDate} time
  * @param {GeometryUpdater} updater A GeometryUpdater that manages the visual representation of a primitive.
- * @returns {void}
+ * @private
  */
 StaticGroundGeometryPerMaterialBatch.prototype.add = function (time, updater) {
   const items = this._items;
@@ -384,6 +388,7 @@ StaticGroundGeometryPerMaterialBatch.prototype.add = function (time, updater) {
 /**
  * Removes an updater from a Batch. Defers potential deletion until the next update.
  * @param {GeometryUpdater} updater A GeometryUpdater that manages the visual representation of a primitive.
+ * @private
  */
 StaticGroundGeometryPerMaterialBatch.prototype.remove = function (updater) {
   const items = this._items;
@@ -402,6 +407,7 @@ StaticGroundGeometryPerMaterialBatch.prototype.remove = function (updater) {
  * Updates all the items (Batches) in the collection, and deletes any that are empty.
  * @param {JulianDate} time
  * @returns a boolean indicating whether any of the items (Batches) were updated.
+ * @private
  */
 StaticGroundGeometryPerMaterialBatch.prototype.update = function (time) {
   let i;

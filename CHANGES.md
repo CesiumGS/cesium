@@ -6,7 +6,7 @@
 
 ### Fixes :wrench:
 
-- Fixes material flashing when changing properties [#12722](https://github.com/CesiumGS/cesium/pull/12722)
+- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [12716](https://github.com/CesiumGS/cesium/issues/12716)
 
 #### Additions :tada:
 
