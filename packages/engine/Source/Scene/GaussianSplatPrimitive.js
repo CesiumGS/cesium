@@ -45,6 +45,23 @@ const GaussianSplatSortingState = {
   ERROR: 4,
 };
 
+function createGaussianSplatSHTexture(context, shData) {
+  return new Texture({
+    context: context,
+    source: {
+      width: shData.width,
+      height: shData.height,
+      arrayBufferView: shData.data,
+    },
+    preMultiplyAlpha: false,
+    skipColorSpaceConversion: true,
+    pixelFormat: PixelFormat.RGB,
+    pixelDatatype: PixelDatatype.FLOAT16,
+    flipY: false,
+    sampler: Sampler.NEAREST,
+  });
+}
+
 function createGaussianSplatTexture(context, splatTextureData) {
   return new Texture({
     context: context,
@@ -155,6 +172,7 @@ function GaussianSplatPrimitive(options) {
    * @see {@link GaussianSplatTextureGenerator}
    */
   this.gaussianSplatTexture = undefined;
+  this.gaussianSplatSHTexture = undefined;
   /**
    * The last width of the Gaussian splat texture.
    * This is used to track changes in the texture size and update the primitive accordingly.
@@ -627,6 +645,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     "u_splatAttributeTexture",
     ShaderDestination.VERTEX,
   );
+  shaderBuilder.addUniform(
+    "highp usampler2D",
+    "u_gaussianSplatSHTexture",
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addUniform("float", "u_shDegree", ShaderDestination.VERTEX);
 
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
 
@@ -638,6 +662,14 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
+  };
+
+  uniformMap.u_gaussianSplatSHTexture = function () {
+    return primitive.gaussianSplatSHTexture;
+  };
+
+  uniformMap.u_shDegree = function () {
+    return primitive._shDegree;
   };
 
   uniformMap.u_splitDirection = function () {
@@ -789,6 +821,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._scales = undefined;
       this._colors = undefined;
       this._indexes = undefined;
+      this._shData = undefined;
       this._needsGaussianSplatTexture = true;
       this._gaussianSplatTexturePending = false;
 
@@ -817,6 +850,31 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           offset += attribute.typedArray.length;
         }
         return aggregate;
+      };
+
+      const aggregateShData = () => {
+        let offset = 0;
+        for (const tile of tiles) {
+          const shData = tile.content._packedShData;
+          if (defined(shData)) {
+            if (!defined(this._shData)) {
+              let coefs;
+              switch (tile.content.shDegree) {
+                case 1:
+                  coefs = 9;
+                  break;
+                case 2:
+                  coefs = 24;
+                  break;
+                case 3:
+                  coefs = 45;
+              }
+              this._shData = new Float32Array(totalElements * coefs);
+            }
+            this._shData.data.set(shData.data, offset);
+            offset += shData.data.length;
+          }
+        }
       };
 
       this._positions = aggregateAttributeValues(
@@ -855,6 +913,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           ),
       );
 
+      aggregateShData();
+      this._shDegree = tiles[0].content.shDegree;
+
       this._numSplats = totalElements;
       this.selectedTileLength = tileset._selectedTiles.length;
     }
@@ -866,6 +927,20 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     if (this._needsGaussianSplatTexture) {
       if (!this._gaussianSplatTexturePending) {
         GaussianSplatPrimitive.generateSplatTexture(this, frameState);
+        if (defined(this._shData)) {
+          const oldTex = this.gaussianSplatSHTexture;
+          if (defined(oldTex)) {
+            oldTex.destroy();
+          }
+          this.gaussianSplatSHTexture = createGaussianSplatSHTexture(
+            frameState.context,
+            {
+              data: this._shData,
+              width: tileset._selectedTiles[0].content.shCoefficientCount * 40, //1800 wide if degree 3
+              height: this._numSplats / 40,
+            },
+          );
+        }
       }
       return;
     }

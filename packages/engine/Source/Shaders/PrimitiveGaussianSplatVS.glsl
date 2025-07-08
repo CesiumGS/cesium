@@ -8,6 +8,60 @@
 // Discards splats outside the view frustum or with negligible screen size.
 //
 
+const float SH_C1 = 0.4886025119029199f;
+const float SH_C2[5] = float[5](
+    1.092548, 1.092548, 0.315392, 1.092548, 0.546274
+);
+
+const float SH_C3[7] = float[7](
+    0.590044, 2.890611, 0.457046, 0.373176, 0.457046, 1.445306, 0.590044
+);
+
+vec3 loadSHCoeff(int splatID, int index) {
+    ivec2 texCoord = ivec2(splatID, index);
+    return texelFetch(u_gaussianSplatSHTexture, texCoord, 0).rgb;
+}
+
+vec3 evaluateSHLighting(int splatID, vec3 viewDir) {
+    vec3 result = vec3(0.0);
+    int coeffIndex = 0;
+    float x = viewDir.x, y = viewDir.y, z = viewDir.z;
+
+    if (u_shDegree >= 1) {
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * y * -1.0);
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * z);
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * x * -1.0);
+    }
+
+    if (u_shDegree >= 2) {
+        float xx = x * x, yy = y * y, zz = z * z;
+        float xy = x * y, yz = y * z, xz = x * z;
+
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[0] * xy);
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[1] * yz);
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[2] * (2.0 * zz - xx - yy));
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[3] * xz);
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[4] * (xx - yy));
+    }
+
+    if (u_shDegree >= 3) {
+        float xx = x * x, yy = y * y, zz = z * z;
+        float xxy = x * x * y;
+        float xyy = x * y * y;
+        float x3  = x * xx;
+        float y3  = y * yy;
+
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[0] * y * (3.0 * xx - yy));
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[1] * x * y * z);
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[2] * y * (5.0 * zz - 1.0));
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[3] * z * (5.0 * zz - 3.0));
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[4] * x * (5.0 * zz - 1.0));
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[5] * z * (xx - yy));
+        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[6] * x * (xx - 3.0 * yy));
+    }
+
+    return result;
+}
 // Transforms and projects splat covariance into screen space and extracts the major and minor axes of the Gaussian ellipsoid
 // which is used to calculate the vertex position in clip space.
 vec4 calcCovVectors(vec3 viewPos, mat3 Vrk) {
@@ -104,5 +158,7 @@ void main() {
     v_vertPos = corner ;
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
 
+    vec3 viewDir = normalize(-splatViewPos.xyz);
+    v_splatColor.rgb *= evaluateSHLighting(texIdx, viewDir);
     v_splitDirection = u_splitDirection;
 }
