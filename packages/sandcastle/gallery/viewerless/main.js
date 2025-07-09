@@ -4,5 +4,5 @@
 
 console.log("Sandcastle loaded");
 document.body.style.background = `
-  no-repeat center/30% url(../images/cesium-logomark-192.png),
+  no-repeat center/30% url(../images/cesium-logomark.svg),
   linear-gradient(to bottom, lightskyblue, lightgreen)`;

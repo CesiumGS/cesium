@@ -148,7 +148,7 @@ function SandcastleEditor({
   return (
     <div className="editor-container">
       <Tabs.Root>
-        <Tabs.TabList>
+        <Tabs.TabList tone="accent">
           <Tabs.Tab id="js" onClick={() => setActiveTab("js")}>
             Javascript
           </Tabs.Tab>
@@ -167,7 +167,10 @@ function SandcastleEditor({
           guides: {
             bracketPairs: "active",
           },
-          minimap: { size: "fill" },
+          minimap: {
+            // This can lag pretty bad with the resizing panel, disable instead
+            enabled: false,
+          },
           placeholder: "// Select a demo from the gallery to load.",
           renderWhitespace: "trailing",
           tabSize: 2,
