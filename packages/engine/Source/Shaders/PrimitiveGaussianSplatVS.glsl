@@ -17,23 +17,25 @@ const float SH_C3[7] = float[7](
     0.590044, 2.890611, 0.457046, 0.373176, 0.457046, 1.445306, 0.590044
 );
 
-vec3 loadSHCoeff(int splatID, int index) {
-    ivec2 texCoord = ivec2(splatID, index);
-    return texelFetch(u_gaussianSplatSHTexture, texCoord, 0).rgb;
+vec3 loadSHCoeff(uint splatID, int index) {
+    ivec2 shTexSize = textureSize(u_gaussianSplatSHTexture, 0);
+    uint wm1 = uint(shTexSize.x - 1);
+    ivec2 shPosCoord = ivec2(splatID & wm1, splatID / uint(shTexSize.x));
+    return texelFetch(u_gaussianSplatSHTexture, shPosCoord, 0).rgb;
 }
 
-vec3 evaluateSHLighting(int splatID, vec3 viewDir) {
+vec3 evaluateSHLighting(uint splatID, vec3 viewDir) {
     vec3 result = vec3(0.0);
     int coeffIndex = 0;
     float x = viewDir.x, y = viewDir.y, z = viewDir.z;
 
-    if (u_shDegree >= 1) {
+    if (u_shDegree >= 1.) {
         result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * y * -1.0);
         result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * z);
         result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * x * -1.0);
     }
 
-    if (u_shDegree >= 2) {
+    if (u_shDegree >= 2.) {
         float xx = x * x, yy = y * y, zz = z * z;
         float xy = x * y, yz = y * z, xz = x * z;
 
@@ -44,7 +46,7 @@ vec3 evaluateSHLighting(int splatID, vec3 viewDir) {
         result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[4] * (xx - yy));
     }
 
-    if (u_shDegree >= 3) {
+    if (u_shDegree >= 3.) {
         float xx = x * x, yy = y * y, zz = z * z;
         float xxy = x * x * y;
         float xyy = x * y * y;
@@ -158,9 +160,9 @@ void main() {
     v_vertPos = corner ;
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
 
-    if(u_shDegree > 0) {
-        vec3 viewDir = normalize(-splatViewPos.xyz);
-        v_splatColor.rgb *= evaluateSHLighting(texIdx, viewDir);
+    if(u_shDegree > 0.) {
+        vec3 viewDir = normalize(splatViewPos.xyz);
+        v_splatColor.rgb *= evaluateSHLighting(texIdx, viewDir).rgb;
     }
     v_splitDirection = u_splitDirection;
 }

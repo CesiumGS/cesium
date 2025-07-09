@@ -391,10 +391,10 @@ function extractSHDegreeAndCoef(attribute) {
 function packSphericalHarmonicData(tileContent) {
   const degree = tileContent.shDegree;
   const coefs = tileContent.shCoefficientCount;
-  const totalLength = tileContent.pointsLength * coefs * 3; //splats * coefs * rgb
+  const totalLength = tileContent.pointsLength * coefs;
   const packedData = new Float16Array(totalLength);
 
-  const shAttributes = tileContent.splatPrimitive.filter((attr) =>
+  const shAttributes = tileContent.splatPrimitive.attributes.filter((attr) =>
     attr.name.startsWith("_SH_DEGREE_"),
   );
   let stride = 0;
@@ -633,8 +633,10 @@ GaussianSplat3DTileContent.prototype.isDestroyed = function () {
  */
 GaussianSplat3DTileContent.prototype.destroy = function () {
   this.splatPrimitive = undefined;
-  this._tileset.gaussianSplatPrimitive.destroy();
-  this._tileset.gaussianSplatPrimitive = undefined;
+  if (this._tileset.gaussianSplatPrimitive.isDestroyed() === false) {
+    this._tileset.gaussianSplatPrimitive.destroy();
+  }
+  //this._tileset.gaussianSplatPrimitive = undefined;
   this._tile = undefined;
   this._tileset = undefined;
   this._resource = undefined;

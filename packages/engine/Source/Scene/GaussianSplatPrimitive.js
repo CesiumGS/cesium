@@ -646,7 +646,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
   shaderBuilder.addUniform(
-    "highp usampler2D",
+    "highp sampler2D",
     "u_gaussianSplatSHTexture",
     ShaderDestination.VERTEX,
   );
@@ -869,10 +869,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
                 case 3:
                   coefs = 45;
               }
-              this._shData = new Float32Array(totalElements * coefs);
+              this._shData = new Float16Array(totalElements * coefs);
             }
-            this._shData.data.set(shData.data, offset);
-            offset += shData.data.length;
+            this._shData.set(shData, offset);
+            offset += shData.length;
           }
         }
       };
@@ -932,12 +932,16 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           if (defined(oldTex)) {
             oldTex.destroy();
           }
+          const splatsPerRow =
+            8192 / tileset._selectedTiles[0].content.shCoefficientCount;
           this.gaussianSplatSHTexture = createGaussianSplatSHTexture(
             frameState.context,
             {
               data: this._shData,
-              width: tileset._selectedTiles[0].content.shCoefficientCount * 40, //1800 wide if degree 3
-              height: this._numSplats / 40,
+              width:
+                splatsPerRow *
+                tileset._selectedTiles[0].content.shCoefficientCount, //1800 wide if degree 3
+              height: this._numSplats / splatsPerRow,
             },
           );
         }
