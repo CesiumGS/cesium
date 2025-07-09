@@ -33,11 +33,10 @@ function forEachTextureInMaterial(material, handler) {
     }
   }
 
-  const { extensions } = material;
-  if (defined(extensions)) {
+  if (defined(material.extensions)) {
     // Spec gloss extension
     const pbrSpecularGlossiness =
-      extensions.KHR_materials_pbrSpecularGlossiness;
+      material.extensions.KHR_materials_pbrSpecularGlossiness;
     if (defined(pbrSpecularGlossiness)) {
       if (defined(pbrSpecularGlossiness.diffuseTexture)) {
         const textureInfo = pbrSpecularGlossiness.diffuseTexture;
@@ -55,28 +54,13 @@ function forEachTextureInMaterial(material, handler) {
       }
     }
 
-    // Specular extension
-    const specular = extensions.KHR_materials_specular;
-    if (defined(specular)) {
-      const { specularTexture, specularColorTexture } = specular;
-      if (defined(specularTexture)) {
-        const value = handler(specularTexture.index, specularTexture);
-        if (defined(value)) {
-          return value;
-        }
-      }
-      if (defined(specularColorTexture)) {
-        const value = handler(specularColorTexture.index, specularColorTexture);
-        if (defined(value)) {
-          return value;
-        }
-      }
-    }
-
     // Materials common extension (may be present in models converted from glTF 1.0)
-    const materialsCommon = extensions.KHR_materials_common;
+    const materialsCommon = material.extensions.KHR_materials_common;
     if (defined(materialsCommon) && defined(materialsCommon.values)) {
-      const { diffuse, ambient, emission, specular } = materialsCommon.values;
+      const diffuse = materialsCommon.values.diffuse;
+      const ambient = materialsCommon.values.ambient;
+      const emission = materialsCommon.values.emission;
+      const specular = materialsCommon.values.specular;
       if (defined(diffuse) && defined(diffuse.index)) {
         const value = handler(diffuse.index, diffuse);
         if (defined(value)) {
