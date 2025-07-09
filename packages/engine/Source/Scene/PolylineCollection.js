@@ -1784,8 +1784,8 @@ PolylineBucket.prototype.getSegments = function (polyline, projection) {
     );
     newPositions.push(
       defined(cartographic)
-        ? projection.project(cartographic, scratchCartographic)
-        : Cartesian3.clone(Cartesian3.ZERO, scratchCartographic),
+        ? projection.project(cartographic)
+        : Cartesian3.clone(Cartesian3.ZERO),
     );
   }
 
