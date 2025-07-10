@@ -44,9 +44,9 @@ const GaussianSplatSortingState = {
   SORTED: 3,
   ERROR: 4,
 };
-
+//switch to RGBA
 function createGaussianSplatSHTexture(context, shData) {
-  return new Texture({
+  const texture = new Texture({
     context: context,
     source: {
       width: shData.width,
@@ -56,10 +56,22 @@ function createGaussianSplatSHTexture(context, shData) {
     preMultiplyAlpha: false,
     skipColorSpaceConversion: true,
     pixelFormat: PixelFormat.RGB,
-    pixelDatatype: PixelDatatype.FLOAT16,
+    pixelDatatype: PixelDatatype.FLOAT,
     flipY: false,
     sampler: Sampler.NEAREST,
   });
+
+  // // Verify texture creation
+  //   const gl = context._gl; // Access raw WebGL context
+  //   gl.bindTexture(gl.TEXTURE_2D, texture._texture); // Access internal WebGL texture
+  //   const width = gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_WIDTH);
+  //   const height = gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_HEIGHT);
+  //   console.log('Created texture size:', width, height);
+  //   if (width !== 8192 || height !== 3322) {
+  //       console.error('Texture size mismatch');
+  //   }
+
+  return texture;
 }
 
 function createGaussianSplatTexture(context, splatTextureData) {
@@ -654,6 +666,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
 
+  shaderBuilder.addUniform(
+    "vec3",
+    "u_cameraPositionWC",
+    ShaderDestination.VERTEX,
+  );
+
   const uniformMap = renderResources.uniformMap;
 
   uniformMap.u_splatScale = function () {
@@ -674,6 +692,10 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   uniformMap.u_splitDirection = function () {
     return primitive.splitDirection;
+  };
+
+  uniformMap.u_cameraPositionWC = function () {
+    return Cartesian3.clone(frameState.camera.positionWC);
   };
 
   renderResources.instanceCount = primitive._numSplats;
@@ -869,7 +891,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
                 case 3:
                   coefs = 45;
               }
-              this._shData = new Float16Array(totalElements * coefs);
+              this._shData = new Float32Array(totalElements * coefs);
             }
             this._shData.set(shData, offset);
             offset += shData.length;
@@ -929,21 +951,29 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         GaussianSplatPrimitive.generateSplatTexture(this, frameState);
         if (defined(this._shData)) {
           const oldTex = this.gaussianSplatSHTexture;
-          if (defined(oldTex)) {
-            oldTex.destroy();
+          const dims = tileset._selectedTiles[0].content.shCoefficientCount / 3;
+          const splatsPerRow = Math.floor(8192 / dims);
+          const texBuf = new Float32Array(
+            8192 * Math.ceil(this._numSplats / splatsPerRow) * 3,
+          );
+          for (let i = 0; i < this._shData.length; i += 3) {
+            texBuf[i] = this._shData[i];
+            texBuf[i + 1] = this._shData[i + 1];
+            texBuf[i + 2] = this._shData[i + 2];
           }
-          const splatsPerRow =
-            8192 / tileset._selectedTiles[0].content.shCoefficientCount;
           this.gaussianSplatSHTexture = createGaussianSplatSHTexture(
             frameState.context,
             {
-              data: this._shData,
-              width:
-                splatsPerRow *
-                tileset._selectedTiles[0].content.shCoefficientCount, //1800 wide if degree 3
-              height: this._numSplats / splatsPerRow,
+              data: texBuf,
+              width: 8192,
+              // splatsPerRow *
+              // dims,
+              height: Math.ceil(this._numSplats / splatsPerRow),
             },
           );
+          if (defined(oldTex)) {
+            oldTex.destroy();
+          }
         }
       }
       return;

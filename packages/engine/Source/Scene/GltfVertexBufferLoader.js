@@ -379,7 +379,7 @@ function processSpz(vertexBufferLoader) {
     const sh = gcloudData.sh;
     vertexBufferLoader._typedArray = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      const idx = i * stride + base[l - 1] + n;
+      const idx = i * stride + base[l - 1] + n * 3;
       vertexBufferLoader._typedArray[i * 3] = sh[idx];
       vertexBufferLoader._typedArray[i * 3 + 1] = sh[idx + 1];
       vertexBufferLoader._typedArray[i * 3 + 2] = sh[idx + 2];

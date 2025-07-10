@@ -8,21 +8,35 @@
 // Discards splats outside the view frustum or with negligible screen size.
 //
 
+const uint coefficientCount[3] = uint[3](3u,8u,15u);
 const float SH_C1 = 0.4886025119029199f;
 const float SH_C2[5] = float[5](
-    1.092548, 1.092548, 0.315392, 1.092548, 0.546274
+         1.092548430,
+        -1.09254843,
+        0.315391565,
+        -1.09254843,
+        0.546274215
 );
 
 const float SH_C3[7] = float[7](
-    0.590044, 2.890611, 0.457046, 0.373176, 0.457046, 1.445306, 0.590044
+         -0.59004358,
+        2.890611442,
+        -0.45704579,
+        0.373176332,
+        -0.45704579,
+        1.445305721,
+        -0.59004358
 );
 
 vec3 loadSHCoeff(uint splatID, int index) {
     ivec2 shTexSize = textureSize(u_gaussianSplatSHTexture, 0);
-    uint wm1 = uint(shTexSize.x - 1);
-    ivec2 shPosCoord = ivec2(splatID & wm1, splatID / uint(shTexSize.x));
+    uint dims = coefficientCount[uint(u_shDegree)-1u];
+    uint splatsPerRow = uint(shTexSize.x) / dims;
+    uint shIndex = (splatID%splatsPerRow) * dims + uint(index);
+    ivec2 shPosCoord = ivec2(shIndex, splatID / splatsPerRow);
     return texelFetch(u_gaussianSplatSHTexture, shPosCoord, 0).rgb;
 }
+
 
 vec3 evaluateSHLighting(uint splatID, vec3 viewDir) {
     vec3 result = vec3(0.0);
@@ -30,36 +44,49 @@ vec3 evaluateSHLighting(uint splatID, vec3 viewDir) {
     float x = viewDir.x, y = viewDir.y, z = viewDir.z;
 
     if (u_shDegree >= 1.) {
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * y * -1.0);
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * z);
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C1 * x * -1.0);
-    }
+        vec3 sh1 = loadSHCoeff(splatID, coeffIndex++);
+        vec3 sh2 = loadSHCoeff(splatID, coeffIndex++);
+        vec3 sh3 = loadSHCoeff(splatID, coeffIndex++);
+        result += -SH_C1 * y * sh1 + SH_C1 * z * sh2 - SH_C1 * x * sh3;
 
-    if (u_shDegree >= 2.) {
-        float xx = x * x, yy = y * y, zz = z * z;
-        float xy = x * y, yz = y * z, xz = x * z;
+        if (u_shDegree >= 2.) {
+            float xx = x * x, yy = y * y, zz = z * z;
+            float xy = x * y, yz = y * z, xz = x * z;
 
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[0] * xy);
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[1] * yz);
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[2] * (2.0 * zz - xx - yy));
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[3] * xz);
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C2[4] * (xx - yy));
-    }
+            vec3 sh4 = loadSHCoeff(splatID, coeffIndex++);
+            vec3 sh5 = loadSHCoeff(splatID, coeffIndex++);
+            vec3 sh6 = loadSHCoeff(splatID, coeffIndex++);
+            vec3 sh7 = loadSHCoeff(splatID, coeffIndex++);
+            vec3 sh8 = loadSHCoeff(splatID, coeffIndex++);
+            result += SH_C2[0] * xy * sh4 +
+                    SH_C2[1] * yz * sh5 +
+                    SH_C2[2] * (2.0f * zz - xx - yy) * sh6 +
+                    SH_C2[3] * xz * sh7 +
+                    SH_C2[4] * (xx - yy) * sh8;
 
-    if (u_shDegree >= 3.) {
-        float xx = x * x, yy = y * y, zz = z * z;
-        float xxy = x * x * y;
-        float xyy = x * y * y;
-        float x3  = x * xx;
-        float y3  = y * yy;
+            if (u_shDegree >= 3.) {
+                float xx = x * x, yy = y * y, zz = z * z;
+                float xxy = x * x * y;
+                float xyy = x * y * y;
+                float x3  = x * xx;
+                float y3  = y * yy;
 
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[0] * y * (3.0 * xx - yy));
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[1] * x * y * z);
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[2] * y * (5.0 * zz - 1.0));
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[3] * z * (5.0 * zz - 3.0));
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[4] * x * (5.0 * zz - 1.0));
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[5] * z * (xx - yy));
-        result += loadSHCoeff(splatID, coeffIndex++) * (SH_C3[6] * x * (xx - 3.0 * yy));
+                vec3 sh9 = loadSHCoeff(splatID, coeffIndex++);
+                vec3 sh10 = loadSHCoeff(splatID, coeffIndex++);
+                vec3 sh11 = loadSHCoeff(splatID, coeffIndex++);
+                vec3 sh12 = loadSHCoeff(splatID, coeffIndex++);
+                vec3 sh13 = loadSHCoeff(splatID, coeffIndex++);
+                vec3 sh14 = loadSHCoeff(splatID, coeffIndex++);
+                vec3 sh15 = loadSHCoeff(splatID, coeffIndex++);
+                result += SH_C3[0] * y * (3.0f * xx - yy) * sh9 +
+                        SH_C3[1] * xy * z * sh10 +
+                        SH_C3[2] * y * (4.0f * zz - xx - yy) * sh11 +
+                        SH_C3[3] * z * (2.0f * zz - 3.0f * xx - 3.0f * yy) * sh12 +
+                        SH_C3[4] * x * (4.0f * zz - xx - yy) * sh13 +
+                        SH_C3[5] * z * (xx - yy) * sh14 +
+                        SH_C3[6] * x * (xx - 3.0f * yy) * sh15;
+            }
+        }
     }
 
     return result;
@@ -161,8 +188,9 @@ void main() {
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
 
     if(u_shDegree > 0.) {
-        vec3 viewDir = normalize(splatViewPos.xyz);
-        v_splatColor.rgb *= evaluateSHLighting(texIdx, viewDir).rgb;
+        vec4 splatWC = czm_inverseView * splatViewPos;
+        vec3 viewDir = normalize((u_cameraPositionWC.xyz - splatWC.xyz));
+        v_splatColor.rgb += evaluateSHLighting(texIdx, viewDir).rgb;
     }
     v_splitDirection = u_splitDirection;
 }

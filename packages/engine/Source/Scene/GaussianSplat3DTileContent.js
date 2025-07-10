@@ -336,37 +336,37 @@ function degreeAndCoefFromAttributes(attributes) {
   }
 }
 
-const buffer = new ArrayBuffer(4);
-const floatView = new Float32Array(buffer);
-const intView = new Uint32Array(buffer);
+// const buffer = new ArrayBuffer(4);
+// const floatView = new Float32Array(buffer);
+// const intView = new Uint32Array(buffer);
 
-function float32ToFloat16(float32) {
-  floatView[0] = float32;
-  const bits = intView[0];
+// function float32ToFloat16(float32) {
+//   floatView[0] = float32;
+//   const bits = intView[0];
 
-  const sign = (bits >> 31) & 0x1;
-  const exponent = (bits >> 23) & 0xff;
-  const mantissa = bits & 0x7fffff;
+//   const sign = (bits >> 31) & 0x1;
+//   const exponent = (bits >> 23) & 0xff;
+//   const mantissa = bits & 0x7fffff;
 
-  let half;
+//   let half;
 
-  if (exponent === 0xff) {
-    half = (sign << 15) | (0x1f << 10) | (mantissa ? 0x200 : 0);
-  } else if (exponent === 0) {
-    half = sign << 15;
-  } else {
-    const newExponent = exponent - 127 + 15;
-    if (newExponent >= 31) {
-      half = (sign << 15) | (0x1f << 10);
-    } else if (newExponent <= 0) {
-      half = sign << 15;
-    } else {
-      half = (sign << 15) | (newExponent << 10) | (mantissa >>> 13);
-    }
-  }
+//   if (exponent === 0xff) {
+//     half = (sign << 15) | (0x1f << 10) | (mantissa ? 0x200 : 0);
+//   } else if (exponent === 0) {
+//     half = sign << 15;
+//   } else {
+//     const newExponent = exponent - 127 + 15;
+//     if (newExponent >= 31) {
+//       half = (sign << 15) | (0x1f << 10);
+//     } else if (newExponent <= 0) {
+//       half = sign << 15;
+//     } else {
+//       half = (sign << 15) | (newExponent << 10) | (mantissa >>> 13);
+//     }
+//   }
 
-  return half;
-}
+//   return half;
+// }
 
 //duplicated from vertexbufferloader. new splat utils?
 function extractSHDegreeAndCoef(attribute) {
@@ -392,7 +392,7 @@ function packSphericalHarmonicData(tileContent) {
   const degree = tileContent.shDegree;
   const coefs = tileContent.shCoefficientCount;
   const totalLength = tileContent.pointsLength * coefs;
-  const packedData = new Float16Array(totalLength);
+  const packedData = new Float32Array(totalLength);
 
   const shAttributes = tileContent.splatPrimitive.attributes.filter((attr) =>
     attr.name.startsWith("_SH_DEGREE_"),
@@ -410,14 +410,28 @@ function packSphericalHarmonicData(tileContent) {
       stride = 45;
       break;
   }
+  shAttributes.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+
+    return 0;
+  });
+
   for (let i = 0; i < shAttributes.length; i++) {
     const { l, n } = extractSHDegreeAndCoef(shAttributes[i].name);
     for (let j = 0; j < tileContent.pointsLength; j++) {
       //interleave the data
-      const idx = j * stride + base[l - 1] + n;
-      packedData[idx] = float32ToFloat16(shAttributes[i].typedArray[j]);
-      packedData[idx + 1] = float32ToFloat16(shAttributes[i].typedArray[j + 1]);
-      packedData[idx + 2] = float32ToFloat16(shAttributes[i].typedArray[j + 2]);
+      const idx = j * stride + base[l - 1] + n * 3;
+      // packedData[idx] = float32ToFloat16(shAttributes[i].typedArray[j]);
+      // packedData[idx + 1] = float32ToFloat16(shAttributes[i].typedArray[j + 1]);
+      // packedData[idx + 2] = float32ToFloat16(shAttributes[i].typedArray[j + 2]);
+      packedData[idx] = shAttributes[i].typedArray[j];
+      packedData[idx + 1] = shAttributes[i].typedArray[j + 1];
+      packedData[idx + 2] = shAttributes[i].typedArray[j + 2];
     }
   }
   return packedData;
