@@ -1,114 +1,7 @@
 import { useEffect, useRef } from "react";
 import { embedInSandcastleTemplate } from "./Helpers";
-
-function activateBucketScripts(
-  bucketFrame: HTMLIFrameElement,
-  code: string,
-  html: string,
-) {
-  const bucketDoc = bucketFrame.contentDocument;
-  if (!bucketDoc) {
-    return;
-  }
-
-  const headNodes = bucketDoc.head.childNodes;
-  let node;
-  const nodes: HTMLScriptElement[] = [];
-  let i, len;
-  for (i = 0, len = headNodes.length; i < len; ++i) {
-    node = headNodes[i];
-    // header is included in blank frame.
-    if (
-      node instanceof HTMLScriptElement &&
-      node.src.indexOf("Sandcastle-header.js") < 0 &&
-      node.src.indexOf("Cesium.js") < 0
-    ) {
-      nodes.push(node);
-    }
-  }
-
-  for (i = 0, len = nodes.length; i < len; ++i) {
-    bucketDoc.head.removeChild(nodes[i]);
-  }
-
-  // Apply user HTML to bucket.
-  const htmlElement = bucketDoc.createElement("div");
-  htmlElement.innerHTML = html;
-  bucketDoc.body.appendChild(htmlElement);
-
-  const onScriptTagError = function () {
-    if (bucketFrame.contentDocument === bucketDoc) {
-      // @ts-expect-error this has type any because it's from anywhere inside the bucket
-      appendConsole("consoleError", `Error loading ${this.src}`);
-      appendConsole(
-        "consoleError",
-        "Make sure Cesium is built, see the Contributor's Guide for details.",
-      );
-    }
-  };
-
-  // Load each script after the previous one has loaded.
-  const loadScript = function () {
-    if (bucketFrame.contentDocument !== bucketDoc) {
-      // A newer reload has happened, abort this.
-      return;
-    }
-    if (nodes.length > 0) {
-      while (nodes.length > 0) {
-        node = nodes.shift();
-        if (!node) {
-          continue;
-        }
-        const scriptElement = bucketDoc.createElement("script");
-        let hasSrc = false;
-        for (let j = 0, numAttrs = node.attributes.length; j < numAttrs; ++j) {
-          const name = node.attributes[j].name;
-          const val = node.attributes[j].value;
-          scriptElement.setAttribute(name, val);
-          if (name === "src" && val) {
-            hasSrc = true;
-          }
-        }
-        scriptElement.innerHTML = node.innerHTML;
-        if (hasSrc) {
-          scriptElement.onload = loadScript;
-          scriptElement.onerror = onScriptTagError;
-          bucketDoc.head.appendChild(scriptElement);
-        } else {
-          bucketDoc.head.appendChild(scriptElement);
-          loadScript();
-        }
-      }
-    } else {
-      // Apply user JS to bucket
-      const element = bucketDoc.createElement("script");
-      element.type = "module";
-
-      // Firefox line numbers are zero-based, not one-based.
-      const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
-
-      element.textContent = embedInSandcastleTemplate(code, isFirefox);
-      bucketDoc.body.appendChild(element);
-    }
-  };
-
-  loadScript();
-}
-
-function appendConsole(
-  type: "consoleLog" | "consoleWarn" | "consoleError",
-  message: string,
-) {
-  if (type === "consoleError") {
-    console.error("temp console interface:", message);
-    return;
-  }
-  if (type === "consoleWarn") {
-    console.warn("temp console interface:", message);
-    return;
-  }
-  console.log("temp console interface:", message);
-}
+import "./Bucket.css";
+import { ConsoleMessageType } from "./ConsoleMirror";
 
 type SandcastleMessage =
   | { type: "reload" }
@@ -122,6 +15,7 @@ function Bucket({
   html,
   runNumber,
   highlightLine,
+  appendConsole,
 }: {
   /** The JS code for the Sandcastle */
   code: string;
@@ -134,9 +28,108 @@ function Bucket({
    * @param lineNumber Line to highlight
    */
   highlightLine: (lineNumber: number) => void;
+  appendConsole: (type: ConsoleMessageType, message: string) => void;
 }) {
   const bucket = useRef<HTMLIFrameElement>(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
+
+  function activateBucketScripts(
+    bucketFrame: HTMLIFrameElement,
+    code: string,
+    html: string,
+  ) {
+    const bucketDoc = bucketFrame.contentDocument;
+    if (!bucketDoc) {
+      return;
+    }
+
+    const headNodes = bucketDoc.head.childNodes;
+    let node;
+    const nodes: HTMLScriptElement[] = [];
+    let i, len;
+    for (i = 0, len = headNodes.length; i < len; ++i) {
+      node = headNodes[i];
+      // header is included in blank frame.
+      if (
+        node instanceof HTMLScriptElement &&
+        node.src.indexOf("Sandcastle-header.js") < 0 &&
+        node.src.indexOf("Cesium.js") < 0
+      ) {
+        nodes.push(node);
+      }
+    }
+
+    for (i = 0, len = nodes.length; i < len; ++i) {
+      bucketDoc.head.removeChild(nodes[i]);
+    }
+
+    // Apply user HTML to bucket.
+    const htmlElement = bucketDoc.createElement("div");
+    htmlElement.innerHTML = html;
+    bucketDoc.body.appendChild(htmlElement);
+
+    const onScriptTagError = function () {
+      if (bucketFrame.contentDocument === bucketDoc) {
+        // @ts-expect-error this has type any because it's from anywhere inside the bucket
+        appendConsole("error", `Error loading ${this.src}`);
+        appendConsole(
+          "error",
+          "Make sure Cesium is built, see the Contributor's Guide for details.",
+        );
+      }
+    };
+
+    // Load each script after the previous one has loaded.
+    const loadScript = function () {
+      if (bucketFrame.contentDocument !== bucketDoc) {
+        // A newer reload has happened, abort this.
+        return;
+      }
+      if (nodes.length > 0) {
+        while (nodes.length > 0) {
+          node = nodes.shift();
+          if (!node) {
+            continue;
+          }
+          const scriptElement = bucketDoc.createElement("script");
+          let hasSrc = false;
+          for (
+            let j = 0, numAttrs = node.attributes.length;
+            j < numAttrs;
+            ++j
+          ) {
+            const name = node.attributes[j].name;
+            const val = node.attributes[j].value;
+            scriptElement.setAttribute(name, val);
+            if (name === "src" && val) {
+              hasSrc = true;
+            }
+          }
+          scriptElement.innerHTML = node.innerHTML;
+          if (hasSrc) {
+            scriptElement.onload = loadScript;
+            scriptElement.onerror = onScriptTagError;
+            bucketDoc.head.appendChild(scriptElement);
+          } else {
+            bucketDoc.head.appendChild(scriptElement);
+            loadScript();
+          }
+        }
+      } else {
+        // Apply user JS to bucket
+        const element = bucketDoc.createElement("script");
+        element.type = "module";
+
+        // Firefox line numbers are zero-based, not one-based.
+        const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
+
+        element.textContent = embedInSandcastleTemplate(code, isFirefox);
+        bucketDoc.body.appendChild(element);
+      }
+    };
+
+    loadScript();
+  }
 
   useEffect(() => {
     if (
@@ -175,7 +168,7 @@ function Bucket({
         }
       } else if (e.data.type === "consoleLog") {
         // Console log messages from the iframe display in Sandcastle.
-        appendConsole("consoleLog", e.data.log);
+        appendConsole("log", e.data.log);
       } else if (e.data.type === "consoleError") {
         // Console error messages from the iframe display in Sandcastle
         let errorMsg = e.data.error;
@@ -190,10 +183,10 @@ function Bucket({
             errorMsg += `${lineNumber + 1})`;
           }
         }
-        appendConsole("consoleError", errorMsg);
+        appendConsole("error", errorMsg);
       } else if (e.data.type === "consoleWarn") {
         // Console warning messages from the iframe display in Sandcastle.
-        appendConsole("consoleWarn", e.data.warn);
+        appendConsole("warn", e.data.warn);
       } else if (e.data.type === "highlight") {
         // Hovering objects in the embedded Cesium window.
         highlightLine(e.data.highlight);
@@ -204,13 +197,15 @@ function Bucket({
   }, [code, html, highlightLine]);
 
   return (
-    <iframe
-      ref={bucket}
-      id="bucketFrame"
-      src="templates/bucket.html"
-      className="fullFrame"
-      allowFullScreen
-    ></iframe>
+    <div className="bucket-container">
+      <iframe
+        ref={bucket}
+        id="bucketFrame"
+        src="templates/bucket.html"
+        className="fullFrame"
+        allowFullScreen
+      ></iframe>
+    </div>
   );
 }
 

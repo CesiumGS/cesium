@@ -1,15 +1,30 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { Allotment } from "allotment";
+import {
+  ReactElement,
+  RefObject,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
 
-import { Button } from "@stratakit/bricks";
+import { Button, Divider } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Gallery, { GalleryItem } from "./Gallery.js";
 import Bucket from "./Bucket.tsx";
 import SandcastleEditor, { SandcastleEditorRef } from "./SandcastleEditor.tsx";
-import { addIcon, placeholderIcon } from "./icons.ts";
+import { addIcon } from "./icons.ts";
+import {
+  ConsoleMessage,
+  ConsoleMessageType,
+  ConsoleMirror,
+} from "./ConsoleMirror.tsx";
+import { useLocalStorage } from "./util/useLocalStorage.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -30,6 +45,89 @@ function getBaseUrl() {
 
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
+type RightSideRef = {
+  toggleExpanded: () => void;
+};
+
+function RightSideAllotment({
+  ref,
+  children,
+  consoleCollapsedHeight,
+  consoleExpanded,
+  setConsoleExpanded,
+}: {
+  ref: RefObject<RightSideRef | null>;
+  children: ReactElement<typeof Allotment.Pane>[];
+  consoleCollapsedHeight: number;
+  consoleExpanded: boolean;
+  setConsoleExpanded: (expanded: boolean) => void;
+}) {
+  const rightSideRef = useRef<AllotmentHandle>(null);
+  const rightSideSizes = useRef<number[]>([0, 0]);
+
+  useImperativeHandle(ref, () => {
+    return {
+      toggleExpanded: () => toggleExpanded(),
+    };
+  });
+
+  const [previousConsoleHeight, setPreviousConsoleHeight] = useState<
+    number | undefined
+  >(undefined);
+
+  function toggleExpanded() {
+    console.log(rightSideRef?.current);
+    const [top, bottom] = rightSideSizes.current;
+    const totalHeight = top + bottom;
+    console.log("current sizes", rightSideSizes.current, totalHeight);
+    if (!consoleExpanded) {
+      const targetHeight = previousConsoleHeight ?? 200;
+      rightSideRef.current?.resize([totalHeight - targetHeight, targetHeight]);
+    } else {
+      setPreviousConsoleHeight(bottom);
+      rightSideRef.current?.resize([
+        totalHeight - consoleCollapsedHeight,
+        consoleCollapsedHeight,
+      ]);
+    }
+    setConsoleExpanded(!consoleExpanded);
+  }
+
+  return (
+    <Allotment
+      vertical
+      ref={rightSideRef}
+      onChange={(sizes) => {
+        if (previousConsoleHeight) {
+          // Unset this because we just dragged
+          setPreviousConsoleHeight(undefined);
+        }
+        console.log("change", sizes);
+        rightSideSizes.current = sizes;
+      }}
+      onDragEnd={(sizes) => {
+        const [, consoleSize] = sizes;
+        if (consoleSize <= consoleCollapsedHeight && consoleExpanded) {
+          setConsoleExpanded(false);
+        } else if (consoleSize > consoleCollapsedHeight && !consoleExpanded) {
+          setConsoleExpanded(true);
+        }
+      }}
+      onReset={() => {
+        const [top, bottom] = rightSideSizes.current;
+        const totalHeight = top + bottom;
+        rightSideRef.current?.resize([
+          totalHeight - consoleCollapsedHeight,
+          consoleCollapsedHeight,
+        ]);
+        setConsoleExpanded(false);
+      }}
+    >
+      {children}
+    </Allotment>
+  );
+}
+
 export type SandcastleAction =
   | { type: "reset" }
   | { type: "setCode"; code: string }
@@ -38,9 +136,20 @@ export type SandcastleAction =
   | { type: "setAndRun"; code?: string; html?: string };
 
 function App() {
-  const [darkTheme, setDarkTheme] = useState(false);
-
+  const [theme, setTheme] = useLocalStorage<"dark" | "light">(
+    "sandcastle/theme",
+    "dark",
+  );
   const editorRef = useRef<SandcastleEditorRef>(null);
+  const rightSideRef = useRef<RightSideRef>(null);
+  const consoleCollapsedHeight = 26;
+  const [consoleExpanded, setConsoleExpanded] = useState(false);
+
+  const cesiumVersion = __CESIUM_VERSION__;
+  const versionString = __COMMIT_SHA__ ? `Commit: ${__COMMIT_SHA__}` : "";
+
+  const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">("gallery");
+  const [title, setTitle] = useState("New Sandcastle");
 
   type CodeState = {
     code: string;
@@ -102,7 +211,16 @@ function App() {
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [galleryLoaded, setGalleryLoaded] = useState(false);
 
+  const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
+  function appendConsole(type: ConsoleMessageType, message: string) {
+    setConsoleMessages((prevConsoleMessages) => [
+      ...prevConsoleMessages,
+      { type, message, id: crypto.randomUUID() },
+    ]);
+  }
+
   function runSandcastle() {
+    setConsoleMessages([]);
     dispatch({ type: "runSandcastle" });
   }
 
@@ -179,6 +297,9 @@ Sandcastle.addToolbarMenu(${variableName});`,
     dispatch({ type: "reset" });
 
     window.history.pushState({}, "", getBaseUrl());
+
+    setTitle("New Sandcastle");
+    setConsoleMessages([]);
   }
 
   function share() {
@@ -231,6 +352,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
         code: code,
         html: html,
       });
+      setTitle(galleryItem.title);
     },
     [galleryItems],
   );
@@ -267,6 +389,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
             code: data.code,
             html: data.html,
           });
+          setLeftPanel("editor");
         } else if (searchParams.has("src")) {
           const legacyId = searchParams.get("src");
           if (!legacyId) {
@@ -283,12 +406,14 @@ Sandcastle.addToolbarMenu(${variableName});`,
             `${getBaseUrl()}?id=${galleryId}`,
           );
           loadGalleryItem(galleryId);
+          setLeftPanel("editor");
         } else if (searchParams.has("id")) {
           const galleryId = searchParams.get("id");
           if (!galleryId) {
             return;
           }
           loadGalleryItem(galleryId);
+          setLeftPanel("editor");
         }
       }
     },
@@ -306,78 +431,155 @@ Sandcastle.addToolbarMenu(${variableName});`,
     return () => window.removeEventListener("popstate", pushStateListener);
   }, [loadFromUrl]);
 
-  useEffect(() => {
-    // This is required for the stratakit variables to be defined at the root
-    document.documentElement.dataset.colorScheme = darkTheme ? "dark" : "light";
-  }, [darkTheme]);
-
-  const versionString = __COMMIT_SHA__;
-
   return (
-    <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
-      <div className="toolbar">
-        <Button onClick={() => resetSandcastle()}>New</Button>
-        <Button onClick={() => runSandcastle()}>Run (F8)</Button>
-        <Button onClick={() => formatJs()}>Format</Button>
-        <Button onClick={() => addButton()}>Add button</Button>
-        <Button onClick={() => addToggle()}>Add toggle</Button>
-        <Button onClick={() => addMenu()}>Add menu</Button>
-        <Button onClick={() => share()}>Share</Button>
-        <Button onClick={() => openStandalone()}>
-          Standalone <Icon href={addIcon} />
+    <Root
+      id="root"
+      className="sandcastle-root"
+      density="dense"
+      colorScheme={theme}
+      synchronizeColorScheme
+    >
+      <header className="header">
+        <a className="logo" href="/">
+          <img
+            src={
+              theme === "dark"
+                ? "./images/Cesium_Logo_overlay.png"
+                : "./images/Cesium_Logo_Color_Overlay.png"
+            }
+            style={{ width: "118px" }}
+          />
+        </a>
+        <div className="metadata">{title}</div>
+        <Button tone="accent" onClick={() => share()}>
+          Share
         </Button>
-        <div className="spacer"></div>
-        {versionString && <pre>Commit: {versionString.substring(0, 7)}</pre>}
-        <Button onClick={() => setDarkTheme(!darkTheme)}>
-          <Icon href={placeholderIcon} />
-          Swap Theme
+        <Divider aria-orientation="vertical" />
+        <Button
+          disabled={leftPanel !== "editor"}
+          onClick={() => runSandcastle()}
+        >
+          Run (F8)
         </Button>
+        <Button disabled={leftPanel !== "editor"} onClick={() => formatJs()}>
+          Format
+        </Button>
+        <Button disabled={leftPanel !== "editor"} onClick={() => addButton()}>
+          Add button
+        </Button>
+        <Button disabled={leftPanel !== "editor"} onClick={() => addToggle()}>
+          Add toggle
+        </Button>
+        <Button disabled={leftPanel !== "editor"} onClick={() => addMenu()}>
+          Add menu
+        </Button>
+        <Button onClick={() => openStandalone()}>Standalone</Button>
+        <div className="flex-spacer"></div>
+        <div className="version">
+          {versionString && <pre>{versionString.substring(0, 7)} - </pre>}
+          <pre>{cesiumVersion}</pre>
+        </div>
+      </header>
+      <div className="application-bar">
+        <Button
+          onClick={() => setLeftPanel("gallery")}
+          tone={leftPanel === "gallery" ? "accent" : "neutral"}
+        >
+          Gallery
+        </Button>
+        <Button
+          onClick={() => setLeftPanel("editor")}
+          tone={leftPanel === "editor" ? "accent" : "neutral"}
+        >
+          Code
+        </Button>
+        <Divider />
+        <Button
+          onClick={() => {
+            resetSandcastle();
+            setLeftPanel("editor");
+          }}
+        >
+          <Icon href={addIcon} /> New
+        </Button>
+        <div className="flex-spacer"></div>
+        <Button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+          Theme
+        </Button>
+        <Button>Settings</Button>
       </div>
       <Allotment>
-        <Allotment.Pane minSize={400}>
-          <SandcastleEditor
-            ref={editorRef}
-            darkTheme={darkTheme}
-            onJsChange={(value: string = "") =>
-              dispatch({ type: "setCode", code: value })
-            }
-            onHtmlChange={(value: string = "") =>
-              dispatch({ type: "setHtml", html: value })
-            }
-            onRun={() => dispatch({ type: "runSandcastle" })}
-            js={codeState.code}
-            html={codeState.html}
-          />
-        </Allotment.Pane>
-        <Allotment.Pane minSize={400}>
-          <div className="viewer-bucket">
-            <Bucket
-              code={codeState.committedCode}
-              html={codeState.committedHtml}
-              runNumber={codeState.runNumber}
-              highlightLine={(lineNumber) => highlightLine(lineNumber)}
+        <Allotment.Pane minSize={400} className="left-panel">
+          {leftPanel === "editor" && (
+            <SandcastleEditor
+              ref={editorRef}
+              darkTheme={theme === "dark"}
+              onJsChange={(value: string = "") =>
+                dispatch({ type: "setCode", code: value })
+              }
+              onHtmlChange={(value: string = "") =>
+                dispatch({ type: "setHtml", html: value })
+              }
+              onRun={() => runSandcastle()}
+              js={codeState.code}
+              html={codeState.html}
             />
-          </div>
+          )}
+          {leftPanel === "gallery" && (
+            <Gallery
+              demos={galleryItems}
+              loadDemo={(item) => {
+                // Load the gallery item every time it's clicked
+                loadGalleryItem(item.id);
+
+                const searchParams = new URLSearchParams(
+                  window.location.search,
+                );
+                if (
+                  !searchParams.has("id") ||
+                  (searchParams.has("id") && searchParams.get("id") !== item.id)
+                ) {
+                  // only push state if it's not the current url to prevent duplicated in history
+                  window.history.pushState(
+                    {},
+                    "",
+                    `${getBaseUrl()}?id=${item.id}`,
+                  );
+                }
+                setLeftPanel("editor");
+              }}
+            />
+          )}
+        </Allotment.Pane>
+        <Allotment.Pane className="right-panel">
+          <RightSideAllotment
+            ref={rightSideRef}
+            consoleCollapsedHeight={consoleCollapsedHeight}
+            consoleExpanded={consoleExpanded}
+            setConsoleExpanded={setConsoleExpanded}
+          >
+            <Allotment.Pane minSize={200}>
+              <Bucket
+                code={codeState.committedCode}
+                html={codeState.committedHtml}
+                runNumber={codeState.runNumber}
+                highlightLine={(lineNumber) => highlightLine(lineNumber)}
+                appendConsole={appendConsole}
+              />
+            </Allotment.Pane>
+            <Allotment.Pane
+              preferredSize={consoleCollapsedHeight}
+              minSize={consoleCollapsedHeight}
+            >
+              <ConsoleMirror
+                logs={consoleMessages}
+                expanded={consoleExpanded}
+                toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
+              />
+            </Allotment.Pane>
+          </RightSideAllotment>
         </Allotment.Pane>
       </Allotment>
-      <div className="gallery">
-        <Gallery
-          demos={galleryItems}
-          loadDemo={(item) => {
-            // Load the gallery item every time it's clicked
-            loadGalleryItem(item.id);
-
-            const searchParams = new URLSearchParams(window.location.search);
-            if (
-              !searchParams.has("id") ||
-              (searchParams.has("id") && searchParams.get("id") !== item.id)
-            ) {
-              // only push state if it's not the current url to prevent duplicated in history
-              window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
-            }
-          }}
-        />
-      </div>
     </Root>
   );
 }

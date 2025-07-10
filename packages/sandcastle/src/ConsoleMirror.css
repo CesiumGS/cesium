@@ -1,0 +1,31 @@
+.console-mirror {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .console-snapshot {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    padding: 0.3em;
+    cursor: pointer;
+    user-select: none;
+
+    span {
+      /* Match the height of the badge to avoid flow shifts when adding it */
+      height: 20px;
+      align-content: center;
+    }
+  }
+  .logs {
+    overflow: auto;
+    padding: 0.5em;
+
+    .message.warning {
+      color: var(--stratakit-color-text-attention-base);
+    }
+    .message.error {
+      color: var(--stratakit-color-text-critical-base);
+    }
+  }
+}

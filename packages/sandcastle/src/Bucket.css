@@ -1,0 +1,23 @@
+.bucket-container {
+  height: 100%;
+  background-color: var(--stratakit-color-bg-page-base);
+  background-image: var(--_rings), var(--_gradient);
+  --_rings: repeating-radial-gradient(
+    circle at center,
+    var(--stratakit-color-border-neutral-muted) 1px,
+    var(--stratakit-color-border-neutral-muted) 3px,
+    transparent 3px,
+    transparent 10px
+  );
+  --_gradient: linear-gradient(
+    180deg,
+    var(--stratakit-color-bg-page-base) 0%,
+    var(--stratakit-color-bg-page-depth) 100%
+  );
+
+  .fullFrame {
+    border: none;
+    width: 100%;
+    height: 100%;
+  }
+}
