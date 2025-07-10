@@ -657,11 +657,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     "u_splatAttributeTexture",
     ShaderDestination.VERTEX,
   );
-  shaderBuilder.addUniform(
-    "highp sampler2D",
-    "u_gaussianSplatSHTexture",
-    ShaderDestination.VERTEX,
-  );
+
   shaderBuilder.addUniform("float", "u_shDegree", ShaderDestination.VERTEX);
 
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
@@ -682,10 +678,21 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     return primitive.gaussianSplatTexture;
   };
 
-  uniformMap.u_gaussianSplatSHTexture = function () {
-    return primitive.gaussianSplatSHTexture;
-  };
-
+  if (primitive._shDegree > 0) {
+    shaderBuilder.addDefine(
+      "HAS_SPHERICAL_HARMONICS",
+      "1",
+      ShaderDestination.VERTEX,
+    );
+    shaderBuilder.addUniform(
+      "highp sampler2D",
+      "u_gaussianSplatSHTexture",
+      ShaderDestination.VERTEX,
+    );
+    uniformMap.u_gaussianSplatSHTexture = function () {
+      return primitive.gaussianSplatSHTexture;
+    };
+  }
   uniformMap.u_shDegree = function () {
     return primitive._shDegree;
   };
@@ -878,7 +885,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         let offset = 0;
         for (const tile of tiles) {
           const shData = tile.content._packedShData;
-          if (defined(shData)) {
+          if (tile.content.shDegree > 0) {
             if (!defined(this._shData)) {
               let coefs;
               switch (tile.content.shDegree) {

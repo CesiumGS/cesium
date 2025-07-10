@@ -8,6 +8,7 @@
 // Discards splats outside the view frustum or with negligible screen size.
 //
 
+#if defined(HAS_SPHERICAL_HARMONICS)
 const uint coefficientCount[3] = uint[3](3u,8u,15u);
 const float SH_C1 = 0.4886025119029199f;
 const float SH_C2[5] = float[5](
@@ -91,6 +92,8 @@ vec3 evaluateSHLighting(uint splatID, vec3 viewDir) {
 
     return result;
 }
+#endif
+
 // Transforms and projects splat covariance into screen space and extracts the major and minor axes of the Gaussian ellipsoid
 // which is used to calculate the vertex position in clip space.
 vec4 calcCovVectors(vec3 viewPos, mat3 Vrk) {
@@ -187,10 +190,10 @@ void main() {
     v_vertPos = corner ;
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
 
-    if(u_shDegree > 0.) {
-        vec4 splatWC = czm_inverseView * splatViewPos;
-        vec3 viewDir = normalize((u_cameraPositionWC.xyz - splatWC.xyz));
-        v_splatColor.rgb += evaluateSHLighting(texIdx, viewDir).rgb;
-    }
+#if defined(HAS_SPHERICAL_HARMONICS)
+    vec4 splatWC = czm_inverseView * splatViewPos;
+    vec3 viewDir = normalize((u_cameraPositionWC.xyz - splatWC.xyz));
+    v_splatColor.rgb += evaluateSHLighting(texIdx, viewDir).rgb;
+#endif
     v_splitDirection = u_splitDirection;
 }
