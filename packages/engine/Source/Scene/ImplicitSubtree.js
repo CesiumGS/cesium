@@ -66,7 +66,7 @@ function ImplicitSubtree(resource, implicitTileset, implicitCoordinates) {
   this._tileJumpBuffer = undefined;
   this._contentJumpBuffers = [];
 
-  // Offsets for the content metadata when using the CONTENT_COUNT semantic
+  // Offsets for the content metadata when using the TILE_CONTENT_COUNT semantic
   this._innerContentJumpBuffer = undefined;
 
   this._ready = false;
@@ -439,7 +439,9 @@ ImplicitSubtree.fromSubtreeJson = async function (
     parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8);
     makeTileJumpBuffer(subtree);
 
-    if (subtree._tileMetadataTable.hasPropertyBySemantic("CONTENT_COUNT")) {
+    if (
+      subtree._tileMetadataTable.hasPropertyBySemantic("TILE_CONTENT_COUNT")
+    ) {
       makeInnerContentJumpBuffer(subtree);
     }
   }
@@ -1004,7 +1006,7 @@ function makeInnerContentJumpBuffer(subtree) {
   for (let i = 0; i < tileMetadataCount; ++i) {
     totalContentCount += tileMetadataTable.getPropertyBySemantic(
       i,
-      "CONTENT_COUNT",
+      "TILE_CONTENT_COUNT",
     );
   }
 
@@ -1021,7 +1023,10 @@ function makeInnerContentJumpBuffer(subtree) {
 
   for (let i = 0; i < tileMetadataCount; ++i) {
     jumpBuffer[i] = contentIndex;
-    contentIndex += tileMetadataTable.getPropertyBySemantic(i, "CONTENT_COUNT");
+    contentIndex += tileMetadataTable.getPropertyBySemantic(
+      i,
+      "TILE_CONTENT_COUNT",
+    );
   }
 
   subtree._innerContentJumpBuffer = jumpBuffer;
@@ -1101,7 +1106,7 @@ function getTileEntityId(subtree, implicitCoordinates) {
  * @param {ImplicitSubtree} subtree The subtree
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a content
  * @param {number} contentIndex The content index, for distinguishing between multiple contents.
- * @param {number} innerContentIndex The inner content index, when using the CONTENT_COUNT semantic.
+ * @param {number} innerContentIndex The inner content index, when using the TILE_CONTENT_COUNT semantic.
  * @return {number} The entity ID for this content for accessing content metadata, or <code>undefined</code> if not applicable.
  *
  * @private
@@ -1123,7 +1128,7 @@ function getContentEntityId(
   }
 
   const tileMetadataView = subtree.getTileMetadataView(implicitCoordinates);
-  if (tileMetadataView.hasPropertyBySemantic("CONTENT_COUNT")) {
+  if (tileMetadataView.hasPropertyBySemantic("TILE_CONTENT_COUNT")) {
     const tileEntityId = getTileEntityId(subtree, implicitCoordinates);
     return subtree._innerContentJumpBuffer[tileEntityId] + innerContentIndex;
   }
@@ -1164,7 +1169,7 @@ ImplicitSubtree.prototype.getTileMetadataView = function (implicitCoordinates) {
  * Create and return a metadata table view for a content within this subtree.
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a content
  * @param {number} contentIndex The index of the content used to distinguish between multiple contents
- * @param {number} innerContentIndex The inner content index, when using the CONTENT_COUNT semantic.
+ * @param {number} innerContentIndex The inner content index, when using the TILE_CONTENT_COUNT semantic.
  * @return {ImplicitMetadataView} The metadata view for this content, or <code>undefined</code> if not applicable.
  *
  * @private
