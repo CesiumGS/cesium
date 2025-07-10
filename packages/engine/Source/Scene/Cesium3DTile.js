@@ -367,7 +367,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.implicitContentIndex = 0;
 
   /**
-   * The index of the content when using the implicit tiling <code>CONTENT_COUNT</code> semantic. This value is set
+   * The index of the content when using the implicit tiling <code>TILE_CONTENT_COUNT</code> semantic. This value is set
    * for tiles transcoded by <code>Implicit3DTileContent</code>.
    * <p>
    * This is <code>0</code> until the tile's content is loaded.
