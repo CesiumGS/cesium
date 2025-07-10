@@ -78,16 +78,18 @@ function timestampInRange(tile, frameState) {
   }
 
   if (
-    !contentMetadata.hasPropertyBySemantic("_TIMESTAMP_START") ||
-    !contentMetadata.hasPropertyBySemantic("_TIMESTAMP_STOP")
+    !contentMetadata.hasPropertyBySemantic("CONTENT_TIMESTAMP_START") ||
+    !contentMetadata.hasPropertyBySemantic("CONTENT_TIMESTAMP_STOP")
   ) {
     return true;
   }
 
-  const timestampStart =
-    contentMetadata.getPropertyBySemantic("_TIMESTAMP_START");
-  const timestampStop =
-    contentMetadata.getPropertyBySemantic("_TIMESTAMP_STOP");
+  const timestampStart = contentMetadata.getPropertyBySemantic(
+    "CONTENT_TIMESTAMP_START",
+  );
+  const timestampStop = contentMetadata.getPropertyBySemantic(
+    "CONTENT_TIMESTAMP_STOP",
+  );
 
   const time = Math.floor(
     JulianDate.daysDifference(frameState.time, startTime),

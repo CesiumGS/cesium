@@ -498,9 +498,10 @@ function deriveChildTile(
 
     if (
       defined(tileMetadata) &&
-      tileMetadata.hasPropertyBySemantic("CONTENT_COUNT")
+      tileMetadata.hasPropertyBySemantic("TILE_CONTENT_COUNT")
     ) {
-      innerContentCount = tileMetadata.getPropertyBySemantic("CONTENT_COUNT");
+      innerContentCount =
+        tileMetadata.getPropertyBySemantic("TILE_CONTENT_COUNT");
     }
 
     for (let j = 0; j < innerContentCount; ++j) {
