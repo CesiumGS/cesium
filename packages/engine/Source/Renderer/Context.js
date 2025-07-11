@@ -1456,7 +1456,10 @@ Context.prototype.endFrame = function () {
  * @param {Framebuffer} [readState.framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
  * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
  */
-Context.prototype.readPixels = function (readState) {
+Context.prototype.readPixels = function (
+  readState,
+  getPixelsArray = undefined,
+) {
   const gl = this._gl;
 
   readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
@@ -1476,12 +1479,11 @@ Context.prototype.readPixels = function (readState) {
     pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
   }
 
-  const pixels = PixelFormat.createTypedArray(
-    PixelFormat.RGBA,
-    pixelDatatype,
-    width,
-    height,
-  );
+  if (!defined(getPixelsArray)) {
+    getPixelsArray = PixelFormat.createTypedArray;
+  }
+
+  const pixels = getPixelsArray(PixelFormat.RGBA, pixelDatatype, width, height);
 
   bindFramebuffer(this, framebuffer);
 

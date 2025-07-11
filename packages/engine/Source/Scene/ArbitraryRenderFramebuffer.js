@@ -1,6 +1,7 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
+import PixelFormat from "../Core/PixelFormat.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
@@ -33,6 +34,7 @@ function ArbitraryRenderFrameBuffer(context) {
   this._passState = passState;
   this._width = 0;
   this._height = 0;
+  this._pixelBufferCache = new Map();
 }
 
 ArbitraryRenderFrameBuffer.prototype.begin = function (
@@ -72,19 +74,38 @@ ArbitraryRenderFrameBuffer.prototype.end = function (screenSpaceRectangle) {
 
   const context = this._context;
 
-  const pixels = context.readPixels({
-    x: screenSpaceRectangle.x,
-    y: screenSpaceRectangle.y,
-    width: width,
-    height: height,
-    framebuffer: this._fb.framebuffer,
-  });
+  const pixels = context.readPixels(
+    {
+      x: screenSpaceRectangle.x,
+      y: screenSpaceRectangle.y,
+      width: width,
+      height: height,
+      framebuffer: this._fb.framebuffer,
+    },
+    this.getCachedPixelArray.bind(this),
+  );
 
   return {
     pixels: pixels,
     width: width,
     height: height,
   };
+};
+
+ArbitraryRenderFrameBuffer.prototype.getCachedPixelArray = function (
+  format,
+  datatype,
+  width,
+  height,
+) {
+  const key = `${format}:${datatype}:${width}x${height}`;
+  let arr = this._pixelBufferCache.get(key);
+  if (!arr) {
+    // allocate the right type and size
+    arr = PixelFormat.createTypedArray(format, datatype, width, height);
+    this._pixelBufferCache.set(key, arr);
+  }
+  return arr;
 };
 
 ArbitraryRenderFrameBuffer.prototype.isDestroyed = function () {
