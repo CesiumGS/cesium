@@ -25,6 +25,7 @@ import {
   ConsoleMirror,
 } from "./ConsoleMirror.tsx";
 import { useLocalStorage } from "./util/useLocalStorage.ts";
+import { getBaseUrl } from "./util/getBaseUrl.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -37,11 +38,6 @@ const defaultHtmlCode = `<style>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 `;
-
-function getBaseUrl() {
-  // omits query string and hash
-  return `${location.protocol}//${location.host}${location.pathname}`;
-}
 
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
@@ -76,10 +72,8 @@ function RightSideAllotment({
   >(undefined);
 
   function toggleExpanded() {
-    console.log(rightSideRef?.current);
     const [top, bottom] = rightSideSizes.current;
     const totalHeight = top + bottom;
-    console.log("current sizes", rightSideSizes.current, totalHeight);
     if (!consoleExpanded) {
       const targetHeight = previousConsoleHeight ?? 200;
       rightSideRef.current?.resize([totalHeight - targetHeight, targetHeight]);
@@ -103,7 +97,6 @@ function RightSideAllotment({
           // Unset this because we just dragged
           setPreviousConsoleHeight(undefined);
         }
-        console.log("change", sizes);
         rightSideSizes.current = sizes;
       }}
       onDragEnd={(sizes) => {

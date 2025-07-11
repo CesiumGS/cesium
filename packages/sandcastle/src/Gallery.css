@@ -2,8 +2,6 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* border-top: 1px solid var(--stratakit-color-border-neutral-base); */
-  /* background: var(--stratakit-color-bg-page-base); */
 
   .filters {
     display: flex;
@@ -27,23 +25,50 @@
   .card {
     display: flex;
     align-items: center;
-    flex: 0 0 150px;
+    flex: 1 0 116px;
     background: var(--stratakit-color-bg-elevation-level-1);
     padding: 0.5rem;
     gap: 0.5rem;
     border-radius: 5px;
     cursor: pointer;
     box-shadow: var(--stratakit-shadow-surface-sm);
+    color: inherit;
+    text-decoration: none;
 
     img {
-      width: 200px;
+      width: 150px;
+    }
+
+    .details {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
     }
 
     .title {
       font-size: x-large;
+      text-wrap: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
+
     .description {
+      display: -webkit-box;
+      flex-grow: 1;
       text-wrap: wrap;
+      max-height: 3lh;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+    }
+
+    .labels {
+      display: flex;
+      justify-items: start;
+      gap: 0.3rem;
     }
   }
 }
