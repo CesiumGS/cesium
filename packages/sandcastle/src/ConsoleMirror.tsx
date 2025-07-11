@@ -3,7 +3,7 @@ import "./ConsoleMirror.css";
 import { useLayoutEffect, useRef } from "react";
 import useStayScrolled from "react-stay-scrolled";
 import { Badge } from "@stratakit/bricks";
-import { caretDown, caretUp } from "./icons";
+import { caretDown, caretUp, statusError, statusWarning } from "./icons";
 import { Icon } from "@stratakit/foundations";
 
 export type ConsoleMessageType = "log" | "warn" | "error";
@@ -42,7 +42,9 @@ export function ConsoleMirror({
     >
       <div className="console-snapshot" onClick={toggleExpanded}>
         <Icon href={consoleExpanded ? caretDown : caretUp} />
-        <span onClick={toggleExpanded}>Console</span>
+        <span onClick={toggleExpanded} className="title">
+          Console
+        </span>
         {normalLogs.length > 0 && (
           <Badge label={normalLogs.length} variant="muted" />
         )}
@@ -54,18 +56,34 @@ export function ConsoleMirror({
         )}
       </div>
       <div className="logs" ref={logsRef}>
-        {logs.length === 0 && "Console logs will be mirrored here"}
-        {logs.map((log, i) => (
-          <pre
-            key={i}
-            className={classNames("message", {
-              warning: log.type === "warn",
-              error: log.type === "error",
-            })}
-          >
-            {i + 1}: {log.message}
-          </pre>
-        ))}
+        {logs.length === 0 && (
+          <div className="message info">
+            <Icon />
+            <pre>Any console messages will be mirrored here</pre>
+          </div>
+        )}
+        {logs.map((log, i) => {
+          let icon = "";
+          if (log.type === "warn") {
+            icon = statusWarning;
+          } else if (log.type === "error") {
+            icon = statusError;
+          }
+          return (
+            <div
+              key={i}
+              className={classNames("message", {
+                warning: log.type === "warn",
+                error: log.type === "error",
+              })}
+            >
+              <Icon href={icon} />
+              <pre className="content">
+                {i + 1}: {log.message}
+              </pre>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -217,6 +217,9 @@ function App() {
       ...prevConsoleMessages,
       { type, message, id: crypto.randomUUID() },
     ]);
+    if (!consoleExpanded && type !== "log") {
+      rightSideRef.current?.toggleExpanded();
+    }
   }
 
   function runSandcastle() {
