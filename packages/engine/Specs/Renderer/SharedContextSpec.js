@@ -25,7 +25,7 @@ describe(
           return;
         }
 
-        const sceneContext = sharedContext._createSceneContext(
+        const sceneContext = sharedContext.createSceneContext(
           document.createElement("canvas"),
         );
         expect(sceneContext.gl).toEqual(sharedContext._context.gl);
@@ -44,7 +44,7 @@ describe(
         }
 
         const sceneCanvas = document.createElement("canvas");
-        const sceneContext = sharedContext._createSceneContext(sceneCanvas);
+        const sceneContext = sharedContext.createSceneContext(sceneCanvas);
         expect(sceneContext.canvas).toBe(sceneCanvas);
         expect(sharedContext._context.canvas).not.toBe(sceneCanvas);
       });
@@ -55,9 +55,9 @@ describe(
         }
 
         const canvas = document.createElement("canvas");
-        sharedContext._createSceneContext(canvas);
+        sharedContext.createSceneContext(canvas);
         expect(function () {
-          sharedContext._createSceneContext(canvas);
+          sharedContext.createSceneContext(canvas);
         }).toThrowDeveloperError();
       });
 
@@ -70,7 +70,7 @@ describe(
         const gl = canvas.getContext("webgl");
         expect(gl).not.toBeNull();
         expect(function () {
-          sharedContext._createSceneContext(canvas);
+          sharedContext.createSceneContext(canvas);
         }).toThrowDeveloperError();
       });
 
@@ -80,7 +80,7 @@ describe(
         }
 
         const c = createCanvas(5, 10);
-        const sc = sharedContext._createSceneContext(c);
+        const sc = sharedContext.createSceneContext(c);
         expect(sc.drawingBufferWidth).toEqual(c.width);
         expect(sc.drawingBufferHeight).toEqual(c.height);
         expect(sc.drawingBufferWidth).not.toEqual(
@@ -97,7 +97,7 @@ describe(
         }
 
         const c = createCanvas(5, 10);
-        const ctx = sharedContext._createSceneContext(c);
+        const ctx = sharedContext.createSceneContext(c);
         const sharedCanvas = sharedContext._context.canvas;
         const startWidth = sharedCanvas.width;
         const startHeight = sharedCanvas.height;
@@ -140,7 +140,7 @@ describe(
         document.createElement("canvas"),
       ];
       const contexts = canvases.map((canvas) =>
-        sharedContext._createSceneContext(canvas),
+        sharedContext.createSceneContext(canvas),
       );
       expect(sharedContext._canvases).toEqual(canvases);
 
@@ -163,7 +163,7 @@ describe(
         return;
       }
       const sc = new SharedContext({ autoDestroy: false });
-      const ctxt = sc._createSceneContext(document.createElement("canvas"));
+      const ctxt = sc.createSceneContext(document.createElement("canvas"));
       ctxt.destroy();
       expect(sc._canvases).toEqual([]);
       expect(ctxt.isDestroyed()).toBe(true);

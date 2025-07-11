@@ -40,7 +40,7 @@ function SharedContext(options) {
 
 /**
  * Creates an instance of {@link Context} that manages the shared WebGL context for a specific canvas.
- * @type {HTMLCanvasElement} canvas The canvas element to which the context will be associated
+ * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
  * @returns {Context} The created context instance
  * @private
  */

@@ -73,9 +73,9 @@ function PrimitiveCollection(options) {
    * const b = labels.isDestroyed(); // false
    * labels = labels.destroy();    // explicitly destroy
    */
-  this.destroyPrimitives = false !== options.destroyPrimitives;
+  this.destroyPrimitives = options.destroyPrimitives ?? true;
 
-  this._countReferences = true === options.countReferences;
+  this._countReferences = options.countReferences ?? false;
 }
 
 Object.defineProperties(PrimitiveCollection.prototype, {
@@ -223,7 +223,7 @@ PrimitiveCollection.prototype.remove = function (primitive) {
 };
 
 /**
- * Removes and destroys a primitive, regardless of destroyPrimitives setting.
+ * Removes and destroys a primitive, regardless of destroyPrimitives or countReferences setting.
  * @private
  */
 PrimitiveCollection.prototype.removeAndDestroy = function (primitive) {
