@@ -97,6 +97,7 @@ function RightSideAllotment({
     <Allotment
       vertical
       ref={rightSideRef}
+      defaultSizes={[100, 0]}
       onChange={(sizes) => {
         if (previousConsoleHeight) {
           // Unset this because we just dragged
@@ -148,8 +149,14 @@ function App() {
   const cesiumVersion = __CESIUM_VERSION__;
   const versionString = __COMMIT_SHA__ ? `Commit: ${__COMMIT_SHA__}` : "";
 
-  const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">("gallery");
+  const startOnEditor = !!(window.location.search || window.location.hash);
+  const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">(
+    startOnEditor ? "editor" : "gallery",
+  );
   const [title, setTitle] = useState("New Sandcastle");
+
+  // This is used to avoid a "double render" when loading from the URL
+  const [readyForViewer, setReadyForViewer] = useState(false);
 
   type CodeState = {
     code: string;
@@ -356,6 +363,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
         html: html,
       });
       setTitle(galleryItem.title);
+      setReadyForViewer(true);
     },
     [galleryItems],
   );
@@ -392,7 +400,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
             code: data.code,
             html: data.html,
           });
-          setLeftPanel("editor");
+          setReadyForViewer(true);
         } else if (searchParams.has("src")) {
           const legacyId = searchParams.get("src");
           if (!legacyId) {
@@ -409,14 +417,14 @@ Sandcastle.addToolbarMenu(${variableName});`,
             `${getBaseUrl()}?id=${galleryId}`,
           );
           loadGalleryItem(galleryId);
-          setLeftPanel("editor");
         } else if (searchParams.has("id")) {
           const galleryId = searchParams.get("id");
           if (!galleryId) {
             return;
           }
           loadGalleryItem(galleryId);
-          setLeftPanel("editor");
+        } else {
+          setReadyForViewer(true);
         }
       }
     },
@@ -562,13 +570,15 @@ Sandcastle.addToolbarMenu(${variableName});`,
             setConsoleExpanded={setConsoleExpanded}
           >
             <Allotment.Pane minSize={200}>
-              <Bucket
-                code={codeState.committedCode}
-                html={codeState.committedHtml}
-                runNumber={codeState.runNumber}
-                highlightLine={(lineNumber) => highlightLine(lineNumber)}
-                appendConsole={appendConsole}
-              />
+              {readyForViewer && (
+                <Bucket
+                  code={codeState.committedCode}
+                  html={codeState.committedHtml}
+                  runNumber={codeState.runNumber}
+                  highlightLine={(lineNumber) => highlightLine(lineNumber)}
+                  appendConsole={appendConsole}
+                />
+              )}
             </Allotment.Pane>
             <Allotment.Pane
               preferredSize={consoleCollapsedHeight}

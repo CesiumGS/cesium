@@ -40,9 +40,13 @@
       vite-ignore
     />
     <style>
-      /* TODO: these styles were inlined here to try and avoid a bright
-       * white flash on running sandcastles. FOUC? Need to look into it more
-       */
+      /*
+      * Minimal styles copied from the bucket.css styleshee to avoid FOUC reflow
+      */
+      html {
+        height: 100%;
+      }
+
       body {
         background: #000;
         color: #eee;
@@ -54,7 +58,6 @@
         height: 100%;
         overflow: hidden;
 
-        /* background-color: white; */
         background-image: var(--_rings), var(--_gradient);
 
         /* TODO: these should pull from the stratakit directly somehow eventually */
@@ -71,7 +74,7 @@
           var(--stratakit-color-border-neutral-muted) 1px,
           var(--stratakit-color-border-neutral-muted) 3px,
           transparent 3px,
-          transparent 10px
+          transparent 25px
         );
         --_gradient: linear-gradient(
           180deg,
@@ -79,12 +82,37 @@
           var(--stratakit-color-bg-page-depth) 100%
         );
       }
+
+      #loadingOverlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0.9;
+        width: 100%;
+        height: 100%;
+        display: none;
+      }
+
+      #loadingOverlay h1 {
+        text-align: center;
+        position: relative;
+        top: 50%;
+        margin-top: -0.5em;
+      }
+
+      .sandcastle-loading #loadingOverlay {
+        display: block;
+      }
+
+      .sandcastle-loading #toolbar {
+        display: none;
+      }
     </style>
     <script>
       window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
     </script>
   </head>
-  <body>
+  <body class="sandcastle-loading">
     <script
       type="text/javascript"
       src="../Sandcastle-client.js"

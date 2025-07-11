@@ -7,7 +7,7 @@
     var(--stratakit-color-border-neutral-muted) 1px,
     var(--stratakit-color-border-neutral-muted) 3px,
     transparent 3px,
-    transparent 10px
+    transparent 25px
   );
   --_gradient: linear-gradient(
     180deg,
