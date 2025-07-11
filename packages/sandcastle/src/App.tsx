@@ -418,7 +418,7 @@ function App() {
       synchronizeColorScheme
     >
       <header className="header">
-        <a className="logo" href="/">
+        <a className="logo" href={getBaseUrl()}>
           <img
             src={
               theme === "dark"
