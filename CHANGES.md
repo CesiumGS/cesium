@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.132 - 2025-07-02
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Fixes incorrect polygon culling in 2D scene mode [#1552](https://github.com/CesiumGS/cesium/issues/1552)
+
+#### Additions :tada:
+
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
 
 ## 1.131 - 2025-07-01
