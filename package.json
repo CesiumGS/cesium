@@ -52,7 +52,8 @@
   ],
   "dependencies": {
     "@cesium/engine": "^18.3.0",
-    "@cesium/widgets": "^12.3.0"
+    "@cesium/widgets": "^12.3.0",
+    "@spz-loader-cesium/core": "file:../spz-loader/packages/core/spz-loader-cesium-core-1.2.0.tgz"
   },
   "devDependencies": {
     "@cesium/eslint-config": "^12.0.0",

@@ -11,23 +11,26 @@
 #if defined(HAS_SPHERICAL_HARMONICS)
 const uint coefficientCount[3] = uint[3](3u,8u,15u);
 const float SH_C1 = 0.4886025119029199f;
-const float SH_C2[5] = float[5](
-         1.092548430,
-        -1.09254843,
-        0.315391565,
-        -1.09254843,
-        0.546274215
-);
+// const float SH_C2[5] = float[5](
+//          1.092548430,
+//         -1.09254843,
+//         0.315391565,
+//         -1.09254843,
+//         0.546274215
+// );
 
-const float SH_C3[7] = float[7](
-         -0.59004358,
-        2.890611442,
-        -0.45704579,
-        0.373176332,
-        -0.45704579,
-        1.445305721,
-        -0.59004358
-);
+// const float SH_C3[7] = float[7](
+//          -0.59004358,
+//         2.890611442,
+//         -0.45704579,
+//         0.373176332,
+//         -0.45704579,
+//         1.445305721,
+//         -0.59004358
+// );
+const float SH_C2[5] = float[5]( 1.092548, 1.092548, 0.315392, 1.092548, 0.546274 );
+const float SH_C3[7] = float[7]( 0.590044, 2.890611, 0.457046, 0.373176,
+                                 0.457046, 1.445306, 0.590044 );
 
 vec3 loadSHCoeff(uint splatID, int index) {
     ivec2 shTexSize = textureSize(u_gaussianSplatSHTexture, 0);
@@ -191,9 +194,15 @@ void main() {
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
 
 #if defined(HAS_SPHERICAL_HARMONICS)
+
     vec4 splatWC = czm_inverseView * splatViewPos;
-    vec3 viewDir = normalize((u_cameraPositionWC.xyz - splatWC.xyz));
-    v_splatColor.rgb += evaluateSHLighting(texIdx, viewDir).rgb;
+    vec3 viewDir = normalize( (u_cameraPositionWC.xyz - splatWC.xyz));
+// Extract model rotation (world → model local)
+vec3 viewDirModel = u_inverseModelRotation * viewDir;
+
+    v_splatColor.rgb += evaluateSHLighting(texIdx, viewDirModel).rgb;
+    //v_splatColor.rgb = 0.5 + 0.5 * normalize(czm_inverseViewRotation * (u_cameraPositionWC.xyz - splatWC.xyz));
+
 #endif
     v_splitDirection = u_splitDirection;
 }

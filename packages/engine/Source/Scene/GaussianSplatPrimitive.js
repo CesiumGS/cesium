@@ -36,6 +36,7 @@ import destroyObject from "../Core/destroyObject.js";
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
+const scratchMatrix4D = new Matrix4();
 
 const GaussianSplatSortingState = {
   IDLE: 0,
@@ -453,11 +454,11 @@ GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
 GaussianSplatPrimitive.transformTile = function (tile) {
   const computedTransform = tile.computedTransform;
   const splatPrimitive = tile.content.splatPrimitive;
-  const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
+  // const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
   const computedModelMatrix = Matrix4.multiplyTransformation(
     computedTransform,
-    gaussianSplatPrimitive._axisCorrectionMatrix,
+    Axis.Y_UP_TO_Z_UP, //gaussianSplatPrimitive._axisCorrectionMatrix,
     scratchMatrix4A,
   );
 
@@ -668,6 +669,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
 
+  shaderBuilder.addUniform(
+    "mat3",
+    "u_inverseModelRotation",
+    ShaderDestination.VERTEX,
+  );
+
   const uniformMap = renderResources.uniformMap;
 
   uniformMap.u_splatScale = function () {
@@ -703,6 +710,20 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   uniformMap.u_cameraPositionWC = function () {
     return Cartesian3.clone(frameState.camera.positionWC);
+  };
+
+  uniformMap.u_inverseModelRotation = function () {
+    const tileset = primitive._tileset;
+    const modelMatrix = Matrix4.multiply(
+      tileset.modelMatrix,
+      Matrix4.fromArray(tileset.root.transform),
+      scratchMatrix4A,
+    );
+    const inverseModelRotation = Matrix4.getRotation(
+      Matrix4.inverse(modelMatrix, scratchMatrix4C),
+      scratchMatrix4D,
+    );
+    return inverseModelRotation;
   };
 
   renderResources.instanceCount = primitive._numSplats;

@@ -194,7 +194,9 @@ GltfSpzLoader.prototype.process = function (frameState) {
     return false;
   }
 
-  const decodePromise = loadSpz(this._bufferViewTypedArray);
+  const decodePromise = loadSpz(this._bufferViewTypedArray, {
+    colorScaleFactor: 0.28209479,
+  });
 
   if (!defined(decodePromise)) {
     return false;
