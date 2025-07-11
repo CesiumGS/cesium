@@ -91,6 +91,9 @@ describe("Scene/BingMapsImageryProvider", function () {
       ).absoluteTo(baseUri);
       metadataResponse =
         response ?? createFakeBingMapsMetadataResponse(mapStyle);
+      if (typeof metadataResponse === "object") {
+        metadataResponse = JSON.stringify(metadataResponse);
+      }
     }
 
     Resource._Implementations.createImage = function (
@@ -147,12 +150,11 @@ describe("Scene/BingMapsImageryProvider", function () {
       let { expectedUrl, expectedParams } = imageOptions;
 
       // Load metadata
-      if (url.incudes("REST/")) {
+      if (url.includes("REST/")) {
         expectedUrl = metadataExpectedUri;
         expectedParams = {};
         const { mapLayer, culture } = metadataOptions;
 
-        expect(query.jsonp).toBeDefined();
         expect(query.incl).toEqual("ImageryProviders");
         expect(query.key).toBeDefined();
 

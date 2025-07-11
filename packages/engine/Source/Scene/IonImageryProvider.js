@@ -54,8 +54,6 @@ const ImageryProviderAsyncMapping = {
   },
 };
 
-const ProxiedProviders = ["BING"];
-
 /**
  * @typedef {object} IonImageryProvider.ConstructorOptions
  *
@@ -294,9 +292,10 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
 
   let imageryProvider;
   const externalType = endpoint.externalType;
-  const ionResource = new IonResource(endpoint, endpointResource);
   if (!defined(externalType)) {
-    imageryProvider = await TileMapServiceImageryProvider.fromUrl(ionResource);
+    imageryProvider = await TileMapServiceImageryProvider.fromUrl(
+      new IonResource(endpoint, endpointResource),
+    );
   } else {
     const factory = ImageryProviderAsyncMapping[externalType];
 
@@ -311,8 +310,11 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
     const url = endPointOptions.url;
     delete endPointOptions.url;
 
-    if (ProxiedProviders.includes(externalType)) {
-      imageryProvider = await factory(ionResource, endPointOptions);
+    if (IonResource.ProxiedExternalProviders.includes(externalType)) {
+      imageryProvider = await factory(
+        new IonResource(endpoint, endpointResource),
+        endPointOptions,
+      );
     } else {
       imageryProvider = await factory(url, endPointOptions);
     }

@@ -31,11 +31,13 @@ function IonResource(endpoint, endpointResource) {
 
   let options;
   const externalType = endpoint.externalType;
-  const isExternal = defined(externalType);
-
+  const isExternal =
+    defined(externalType) &&
+    !IonResource.ProxiedExternalProviders.includes(externalType);
+  const url = endpoint.url ?? endpoint.options.url;
   if (!isExternal) {
     options = {
-      url: endpoint.url,
+      url,
       retryAttempts: 1,
       retryCallback: retryCallback,
     };
@@ -44,7 +46,7 @@ function IonResource(endpoint, endpointResource) {
     externalType === "STK_TERRAIN_SERVER"
   ) {
     // 3D Tiles and STK Terrain Server external assets can still be represented as an IonResource
-    options = { url: endpoint.options.url };
+    options = { url };
   } else {
     //External imagery assets have additional configuration that can't be represented as a Resource
     throw new RuntimeError(
@@ -56,9 +58,7 @@ function IonResource(endpoint, endpointResource) {
 
   // The asset endpoint data returned from ion.
   this._ionEndpoint = endpoint;
-  this._ionEndpointDomain = isExternal
-    ? undefined
-    : new Uri(endpoint.url).authority();
+  this._ionEndpointDomain = isExternal ? undefined : new Uri(url).authority();
 
   // The endpoint resource to fetch when a new token is needed
   this._ionEndpointResource = endpointResource;
@@ -284,4 +284,7 @@ function retryCallback(that, error) {
     return true;
   });
 }
+
+IonResource.ProxiedExternalProviders = ["BING"];
+
 export default IonResource;
