@@ -13,7 +13,7 @@ import Context from "./Context.js";
  * @alias SharedContext
  * @constructor
  *
- * @param {object} options Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties.
  * @param {boolean} [options.autoDestroy=true] Destroys this context and all of its WebGL resources after all Scenes using the context are destroyed.
 
@@ -38,8 +38,13 @@ function SharedContext(options) {
   this._canvases = [];
 }
 
-/** @private */
-SharedContext.prototype._createSceneContext = function (canvas) {
+/**
+ * Creates an instance of {@link Context} that manages the shared WebGL context for a specific canvas.
+ * @type {HTMLCanvasElement} canvas The canvas element to which the context will be associated
+ * @returns {Context} The created context instance
+ * @private
+ */
+SharedContext.prototype.createSceneContext = function (canvas) {
   const context2d = canvas.getContext("2d", { alpha: true });
 
   //>>includeStart('debug', pragmas.debug);

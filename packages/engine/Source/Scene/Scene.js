@@ -141,7 +141,7 @@ function Scene(options) {
 
   const countReferences = options.contextOptions instanceof SharedContext;
   if (countReferences) {
-    this._context = options.contextOptions._createSceneContext(canvas);
+    this._context = options.contextOptions.createSceneContext(canvas);
   } else {
     const contextOptions = clone(options.contextOptions);
     this._context = new Context(canvas, contextOptions);
