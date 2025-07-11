@@ -4,6 +4,21 @@
   flex-direction: column;
   height: 100%;
 
+  .header {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .editor-actions {
+    display: flex;
+    gap: 0.3rem;
+    padding: 0.3rem;
+
+    .icon-button {
+      padding: 4px;
+    }
+  }
+
   section {
     border-top: 1px solid grey;
     flex-shrink: 1;

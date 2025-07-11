@@ -1,5 +1,7 @@
 import {
+  MouseEventHandler,
   ReactElement,
+  ReactNode,
   RefObject,
   useCallback,
   useEffect,
@@ -12,13 +14,22 @@ import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
 
-import { Button, Divider } from "@stratakit/bricks";
+import { Button, Divider, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Gallery, { GalleryItem } from "./Gallery.js";
 import Bucket from "./Bucket.tsx";
-import SandcastleEditor, { SandcastleEditorRef } from "./SandcastleEditor.tsx";
-import { addIcon } from "./icons.ts";
+import SandcastleEditor from "./SandcastleEditor.tsx";
+import {
+  add,
+  image,
+  moon,
+  share as shareIcon,
+  script,
+  settings,
+  sun,
+  windowPopout,
+} from "./icons.ts";
 import {
   ConsoleMessage,
   ConsoleMessageType,
@@ -122,6 +133,35 @@ function RightSideAllotment({
   );
 }
 
+function AppBarButton({
+  children,
+  onClick,
+  active = false,
+  label,
+}: {
+  children: ReactNode;
+  onClick: MouseEventHandler;
+  active?: boolean;
+  label: string;
+}) {
+  if (active) {
+    return (
+      <Tooltip content={label} type="label" placement="right">
+        <Button tone="accent" onClick={onClick}>
+          {children}
+        </Button>
+      </Tooltip>
+    );
+  }
+  return (
+    <Tooltip content={label} type="label" placement="right">
+      <Button variant="ghost" onClick={onClick}>
+        {children}
+      </Button>
+    </Tooltip>
+  );
+}
+
 export type SandcastleAction =
   | { type: "reset" }
   | { type: "setCode"; code: string }
@@ -134,7 +174,6 @@ function App() {
     "sandcastle/theme",
     "dark",
   );
-  const editorRef = useRef<SandcastleEditorRef>(null);
   const rightSideRef = useRef<RightSideRef>(null);
   const consoleCollapsedHeight = 26;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
@@ -229,71 +268,6 @@ function App() {
 
   function highlightLine(lineNumber: number) {
     console.log("would highlight line", lineNumber, "but not implemented yet");
-  }
-
-  function formatJs() {
-    editorRef.current?.formatCode();
-  }
-
-  function nextHighestVariableName(code: string, name: string) {
-    const otherDeclarations = [
-      ...code.matchAll(new RegExp(`(const|let|var)\\s+${name}\\d*\\s=`, "g")),
-    ].length;
-    const variableName = `${name}${otherDeclarations + 1}`;
-    return variableName;
-  }
-
-  function appendCode(snippet: string, run = false) {
-    let spacerNewline = "\n";
-    if (codeState.code.endsWith("\n")) {
-      spacerNewline = "";
-    }
-    const newCode = `${codeState.code}${spacerNewline}\n${snippet.trim()}\n`;
-    dispatch({
-      type: run ? "setAndRun" : "setCode",
-      code: newCode,
-    });
-  }
-
-  function addButton() {
-    appendCode(
-      `
-Sandcastle.addToolbarButton("New Button", function () {
-  // your code here
-});`,
-      false,
-    );
-  }
-
-  function addToggle() {
-    const variableName = nextHighestVariableName(codeState.code, "toggleValue");
-
-    appendCode(
-      `
-let ${variableName} = true;
-Sandcastle.addToggleButton("Toggle", ${variableName}, function (checked) {
-  ${variableName} = checked;
-});`,
-      false,
-    );
-  }
-
-  function addMenu() {
-    const variableName = nextHighestVariableName(codeState.code, "options");
-
-    appendCode(
-      `
-const ${variableName} = [
-  {
-    text: "Option 1",
-    onselect: function () {
-      // your code here, the first option is always run at load
-    },
-  },
-];
-Sandcastle.addToolbarMenu(${variableName});`,
-      false,
-    );
   }
 
   function resetSandcastle() {
@@ -456,28 +430,12 @@ Sandcastle.addToolbarMenu(${variableName});`,
         </a>
         <div className="metadata">{title}</div>
         <Button tone="accent" onClick={() => share()}>
-          Share
+          <Icon href={shareIcon} /> Share
         </Button>
         <Divider aria-orientation="vertical" />
-        <Button
-          disabled={leftPanel !== "editor"}
-          onClick={() => runSandcastle()}
-        >
-          Run (F8)
+        <Button onClick={() => openStandalone()}>
+          Standalone <Icon href={windowPopout} />
         </Button>
-        <Button disabled={leftPanel !== "editor"} onClick={() => formatJs()}>
-          Format
-        </Button>
-        <Button disabled={leftPanel !== "editor"} onClick={() => addButton()}>
-          Add button
-        </Button>
-        <Button disabled={leftPanel !== "editor"} onClick={() => addToggle()}>
-          Add toggle
-        </Button>
-        <Button disabled={leftPanel !== "editor"} onClick={() => addMenu()}>
-          Add menu
-        </Button>
-        <Button onClick={() => openStandalone()}>Standalone</Button>
         <div className="flex-spacer"></div>
         <div className="version">
           {versionString && <pre>{versionString.substring(0, 7)} - </pre>}
@@ -485,38 +443,46 @@ Sandcastle.addToolbarMenu(${variableName});`,
         </div>
       </header>
       <div className="application-bar">
-        <Button
+        <AppBarButton
           onClick={() => setLeftPanel("gallery")}
-          tone={leftPanel === "gallery" ? "accent" : "neutral"}
+          active={leftPanel === "gallery"}
+          label="Gallery"
         >
-          Gallery
-        </Button>
-        <Button
+          <Icon href={image} size="large" />
+        </AppBarButton>
+        <AppBarButton
           onClick={() => setLeftPanel("editor")}
-          tone={leftPanel === "editor" ? "accent" : "neutral"}
+          active={leftPanel === "editor"}
+          label="Editor"
         >
-          Code
-        </Button>
+          <Icon href={script} size="large" />
+        </AppBarButton>
         <Divider />
-        <Button
+        <AppBarButton
           onClick={() => {
             resetSandcastle();
             setLeftPanel("editor");
           }}
+          label="New Sandcastle"
         >
-          <Icon href={addIcon} /> New
-        </Button>
+          <Icon href={add} size="large" />
+        </AppBarButton>
         <div className="flex-spacer"></div>
-        <Button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-          Theme
-        </Button>
-        <Button>Settings</Button>
+        <Divider />
+        <AppBarButton
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          label="Toggle Theme"
+        >
+          <Icon href={theme === "dark" ? moon : sun} size="large" />
+        </AppBarButton>
+        <AppBarButton label="Settings" onClick={() => {}}>
+          <Icon href={settings} size="large" />
+        </AppBarButton>
       </div>
-      <Allotment>
+      <Allotment defaultSizes={[40, 60]}>
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
-              ref={editorRef}
               darkTheme={theme === "dark"}
               onJsChange={(value: string = "") =>
                 dispatch({ type: "setCode", code: value })
@@ -527,6 +493,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
               onRun={() => runSandcastle()}
               js={codeState.code}
               html={codeState.html}
+              setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
             />
           )}
           {leftPanel === "gallery" && (

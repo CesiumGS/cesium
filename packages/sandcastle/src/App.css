@@ -3,12 +3,12 @@
   width: 100vw;
   height: 100vh;
   --header-height: min-content;
-  --app-bar-width: 80px;
+  --app-bar-width: 52px;
   grid-template-rows: var(--header-height) auto;
   grid-template-columns: var(--app-bar-width) auto;
   grid-template-areas: "header header" "app-bar content";
 
-  .header {
+  header {
     grid-area: header;
     display: flex;
     align-items: center;
@@ -31,8 +31,13 @@
     display: flex;
     flex-direction: column;
     padding: 0.5em;
-    gap: 0.3em;
+    gap: 0.5em;
     background: var(--stratakit-color-bg-page-depth);
+
+    button {
+      /* Force buttons to be square */
+      padding: 8px;
+    }
   }
 
   .content {
