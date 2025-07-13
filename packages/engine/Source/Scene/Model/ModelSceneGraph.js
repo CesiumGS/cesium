@@ -530,6 +530,7 @@ const scratchModelPositionMin = new Cartesian3();
 const scratchModelPositionMax = new Cartesian3();
 const scratchPrimitivePositionMin = new Cartesian3();
 const scratchPrimitivePositionMax = new Cartesian3();
+
 /**
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
  * If the model is used for classification, a {@link ClassificationModelDrawCommand}
@@ -542,6 +543,32 @@ const scratchPrimitivePositionMax = new Cartesian3();
  * @private
  */
 ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
+  const modelRenderResources = this.buildRenderResources(frameState);
+  this.computeBoundingVolumes(modelRenderResources);
+  this.createDrawCommands(modelRenderResources, frameState);
+};
+
+/**
+ * Generates the {@link ModelRenderResources} for the model.
+ *
+ * This will traverse the model, nodes and primitives of the scene graph,
+ * and perform the following tasks:
+ *
+ * - configure the pipeline stages by calling `configurePipeline`,
+ *   `runtimeNode.configurePipeline`, and `runtimePrimitive.configurePipeline`
+ * - create the `ModelRenderResources`, `NodeRenderResources`, and
+ *   `PrimitiveRenderResources`
+ * - Process the render resources with the respective pipelines
+ *
+ * @param {FrameState} frameState The current frame state. This is needed to
+ * allocate GPU resources as needed.
+ * @returns {ModelRenderResources} The model render resources
+ *
+ * @private
+ */
+ModelSceneGraph.prototype.buildRenderResources = function (frameState) {
+  const model = this._model;
+  
   const modelRenderResources = new ModelRenderResources(model);
 
   // Reset the memory counts before running the pipeline
@@ -550,13 +577,11 @@ ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
   this.configurePipeline(model, frameState);
   const modelPipelineStages = this.modelPipelineStages;
 
-  let i, j, k;
-  for (i = 0; i < modelPipelineStages.length; i++) {
+  for (let i = 0; i < modelPipelineStages.length; i++) {
     const modelPipelineStage = modelPipelineStages[i];
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
-  // Positions are in local glTF scene coordinates
   const scenePositionMin = Cartesian3.fromElements(
     Number.MAX_VALUE,
     Number.MAX_VALUE,
@@ -570,7 +595,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
     scratchModelPositionMax,
   );
 
-  for (i = 0; i < this._runtimeNodes.length; i++) {
+  for (let i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
 
     // If a node in the model was unreachable from the scene graph, there will
@@ -594,8 +619,9 @@ ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
       modelRenderResources,
       runtimeNode,
     );
+    modelRenderResources.nodeRenderResources[i] = nodeRenderResources;
 
-    for (j = 0; j < nodePipelineStages.length; j++) {
+    for (let j = 0; j < nodePipelineStages.length; j++) {
       const nodePipelineStage = nodePipelineStages[j];
 
       nodePipelineStage.process(
@@ -605,8 +631,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
       );
     }
 
-    const nodeTransform = runtimeNode.computedTransform;
-    for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
       runtimePrimitive.configurePipeline(frameState);
@@ -616,16 +641,76 @@ ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
         nodeRenderResources,
         runtimePrimitive,
       );
+      nodeRenderResources.primitiveRenderResources[j] =
+        primitiveRenderResources;
 
-      for (k = 0; k < primitivePipelineStages.length; k++) {
+      for (let k = 0; k < primitivePipelineStages.length; k++) {
         const primitivePipelineStage = primitivePipelineStages[k];
-
         primitivePipelineStage.process(
           primitiveRenderResources,
           runtimePrimitive.primitive,
           frameState,
         );
       }
+    }
+  }
+  return modelRenderResources;
+};
+
+/**
+ * Computes the bounding volumes for the scene graph and the model.
+ *
+ * This will traverse the model, nodes and primitives of the scene graph,
+ * and compute the bounding volumes. Specifically, it will compute
+ *
+ * - this._boundingSphere
+ * - model._boundingSphere
+ *
+ * With the latter being modified as of
+ *
+ * - model._initialRadius = model._boundingSphere.radius;
+ * - model._boundingSphere.radius *= model._clampedScale;
+ *
+ * NOTE: This contains some bugs. See https://github.com/CesiumGS/cesium/issues/12108
+ *
+ * @param {ModelRenderResources} modelRenderResources The model render resources
+ *
+ * @private
+ */
+ModelSceneGraph.prototype.computeBoundingVolumes = function (
+  modelRenderResources,
+) {
+  const model = this._model;
+
+  const modelPositionMin = Cartesian3.fromElements(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    scratchModelPositionMin,
+  );
+  const modelPositionMax = Cartesian3.fromElements(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    scratchModelPositionMax,
+  );
+
+  for (let i = 0; i < this._runtimeNodes.length; i++) {
+    const runtimeNode = this._runtimeNodes[i];
+
+    // If a node in the model was unreachable from the scene graph, there will
+    // be no corresponding runtime node and therefore should be skipped.
+    if (!defined(runtimeNode)) {
+      continue;
+    }
+
+    const nodeRenderResources = modelRenderResources.nodeRenderResources[i];
+    const nodeTransform = runtimeNode.computedTransform;
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+
+      const primitiveRenderResources =
+        nodeRenderResources.primitiveRenderResources[j];
 
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
         primitiveRenderResources.boundingSphere,
@@ -653,12 +738,6 @@ ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
         primitivePositionMax,
         scenePositionMax,
       );
-
-      const drawCommand = ModelDrawCommands.buildModelDrawCommand(
-        primitiveRenderResources,
-        frameState,
-      );
-      runtimePrimitive.drawCommand = drawCommand;
     }
   }
 
@@ -684,6 +763,47 @@ ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
   this._rootBoundingSphere = boundingSphere;
   // TODO: resolve model space bounding sphere
   this._boundingSphere = BoundingSphere.clone(boundingSphere);
+};
+
+/**
+ * Creates the draw commands for the primitives in the scene graph.
+ *
+ * This will traverse the model, nodes and primitives of the scene graph,
+ * and create the respective draw commands for the primitives, storing
+ * them as the `runtimePrimitive.drawCommand`, respectively.
+ *
+ * @param {ModelRenderResources} modelRenderResources The model render resources
+ *
+ * @private
+ */
+ModelSceneGraph.prototype.createDrawCommands = function (
+  modelRenderResources,
+  frameState,
+) {
+  for (let i = 0; i < this._runtimeNodes.length; i++) {
+    const runtimeNode = this._runtimeNodes[i];
+
+    // If a node in the model was unreachable from the scene graph, there will
+    // be no corresponding runtime node and therefore should be skipped.
+    if (!defined(runtimeNode)) {
+      continue;
+    }
+
+    const nodeRenderResources = modelRenderResources.nodeRenderResources[i];
+
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+
+      const primitiveRenderResources =
+        nodeRenderResources.primitiveRenderResources[j];
+
+      const drawCommand = ModelDrawCommands.buildModelDrawCommand(
+        primitiveRenderResources,
+        frameState,
+      );
+      runtimePrimitive.drawCommand = drawCommand;
+    }
+  }
 };
 
 /**

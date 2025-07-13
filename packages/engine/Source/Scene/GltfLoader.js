@@ -507,8 +507,7 @@ function postProcessGeometry(loader, context) {
   for (let i = 0; i < loadPlans.length; i++) {
     const loadPlan = loadPlans[i];
     loadPlan.postProcess(context);
-
-    if (loadPlan.needsOutlines) {
+    if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
       // The glTF loader takes ownership of any buffers generated in the
       // post-process stage since they were created after the geometry loaders
       // finished. This way they can be destroyed when the loader is destroyed.
@@ -687,6 +686,7 @@ function getVertexBufferLoader(
   semantic,
   primitive,
   draco,
+  spzExtension,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -703,6 +703,7 @@ function getVertexBufferLoader(
     bufferViewId: bufferViewId,
     primitive: primitive,
     draco: draco,
+    spz: spzExtension,
     attributeSemantic: semantic,
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
@@ -1032,7 +1033,10 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
     attribute.semantic === VertexAttributeSemantic.POSITION ||
     attribute.semantic === VertexAttributeSemantic.NORMAL ||
     attribute.semantic === VertexAttributeSemantic.TANGENT ||
-    attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+    attribute.semantic === VertexAttributeSemantic.TEXCOORD ||
+    attribute.semantic === VertexAttributeSemantic.FEATURE_ID ||
+    attribute.semantic === VertexAttributeSemantic.SCALE ||
+    attribute.semantic === VertexAttributeSemantic.ROTATION;
 
   // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
   // However, for KHR_mesh_quantization, min and max must be dequantized for
@@ -1124,6 +1128,58 @@ function finalizeDracoAttribute(
   }
 }
 
+function finalizeSpzAttribute(
+  attribute,
+  vertexBufferLoader,
+  loadBuffer,
+  loadTypedArray,
+) {
+  attribute.byteOffset = 0;
+  attribute.byteStride = undefined;
+
+  if (loadBuffer) {
+    attribute.buffer = vertexBufferLoader.buffer;
+  }
+
+  if (loadTypedArray && defined(vertexBufferLoader.typedArray)) {
+    attribute.typedArray = ComponentDatatype.createArrayBufferView(
+      attribute.componentDatatype,
+      vertexBufferLoader.typedArray.buffer,
+    );
+  }
+
+  if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+    const findMinMaxXY = (flatArray) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+
+      for (let i = 0; i < flatArray.length; i += 3) {
+        const x = flatArray[i];
+        const y = flatArray[i + 1];
+        const z = flatArray[i + 2];
+
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+      }
+
+      return [
+        new Cartesian3(minX, minY, minZ),
+        new Cartesian3(maxX, maxY, maxZ),
+      ];
+    };
+    const buffer = attribute.typedArray;
+    [attribute.min, attribute.max] = findMinMaxXY(buffer);
+  }
+}
+
 function finalizeAttribute(
   gltf,
   accessor,
@@ -1160,6 +1216,7 @@ function loadAttribute(
   semanticInfo,
   primitive,
   draco,
+  spz,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -1185,7 +1242,7 @@ function loadAttribute(
     setIndex,
   );
 
-  if (!defined(draco) && !defined(bufferViewId)) {
+  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
     return attribute;
   }
 
@@ -1195,6 +1252,7 @@ function loadAttribute(
     gltfSemantic,
     primitive,
     draco,
+    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1204,6 +1262,7 @@ function loadAttribute(
   loader._geometryLoaders.push(vertexBufferLoader);
   const promise = vertexBufferLoader.load();
   loader._loaderPromises.push(promise);
+
   // This can only execute once vertexBufferLoader.process() has run and returns true
   // Save this finish callback by the loader index so it can be called
   // in process().
@@ -1214,6 +1273,13 @@ function loadAttribute(
       defined(draco.attributes[gltfSemantic])
     ) {
       finalizeDracoAttribute(
+        attribute,
+        vertexBufferLoader,
+        loadBuffer,
+        loadTypedArray,
+      );
+    } else if (defined(spz)) {
+      finalizeSpzAttribute(
         attribute,
         vertexBufferLoader,
         loadBuffer,
@@ -1240,6 +1306,7 @@ function loadVertexAttribute(
   semanticInfo,
   primitive,
   draco,
+  spz,
   hasInstances,
   needsPostProcessing,
   frameState,
@@ -1287,6 +1354,7 @@ function loadVertexAttribute(
     semanticInfo,
     primitive,
     draco,
+    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1358,6 +1426,7 @@ function loadInstancedAttribute(
     loader,
     accessorId,
     semanticInfo,
+    undefined,
     undefined,
     undefined,
     loadBuffer,
@@ -1876,6 +1945,7 @@ function loadMorphTarget(
   // Don't pass in primitive or draco object since morph targets can't be draco compressed
   const primitive = undefined;
   const draco = undefined;
+  const spz = undefined;
   const hasInstances = false;
 
   for (const semantic in target) {
@@ -1896,6 +1966,7 @@ function loadMorphTarget(
       semanticInfo,
       primitive,
       draco,
+      spz,
       hasInstances,
       needsPostProcessing,
       frameState,
@@ -1947,6 +2018,12 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
+  const spzExtension = extensions.KHR_spz_gaussian_splats_compression;
+  if (defined(spzExtension)) {
+    needsPostProcessing = true;
+    primitivePlan.needsGaussianSplats = true;
+  }
+
   const loadForClassification = loader._loadForClassification;
   const draco = extensions.KHR_draco_mesh_compression;
 
@@ -1979,6 +2056,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
         semanticInfo,
         gltfPrimitive,
         draco,
+        spzExtension,
         hasInstances,
         needsPostProcessing,
         frameState,

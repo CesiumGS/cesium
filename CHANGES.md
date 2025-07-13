@@ -1,5 +1,31 @@
 # Change Log
 
+- Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
+
+## 1.131 - 2025-07-01
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
+- Fixed raymarching step size for cylindrical voxels. [#12681](https://github.com/CesiumGS/cesium/pull/12681)
+- Fixes handling of tileset `modelMatrix` changes for translations and rotations in `GaussianSplatPrimitive`. [#12706](https://github.com/CesiumGS/cesium/pull/12706)
+
+#### Additions :tada:
+
+- Added `HeightReference` to `Cesium3DTileset.ConstructorOptions` to allow clamping point features in 3D Tile vector data to terrain or 3D Tiles [#11710](https://github.com/CesiumGS/cesium/pull/11710)
+- Added the ability to pass `OffscreenCanvas` & `ImageBitmap` directly to `Material` uniforms. [#12558](https://github.com/CesiumGS/cesium/pull/12558)
+
+## 1.130.1 - 2025-06-16
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added experimental support for loading 3D Tiles with Gaussian splats encoded with SPZ compression using the draft glTF extension [`KHR_spz_gaussian_splats_compression`](https://github.com/KhronosGroup/glTF/pull/2490). [#12582](https://github.com/CesiumGS/cesium/pull/12582)
+- Added support for integral texture formats: R32I, RG32I, RGB32I, RGBA32I, R32UI, RG32UI, RGB32UI, RGBA32UI [#12582](https://github.com/CesiumGS/cesium/pull/12582)
+
 ## 1.130 - 2025-06-02
 
 ### @cesium/engine
@@ -12,14 +38,44 @@
 
 #### Fixes :wrench:
 
+=======
+- The `FragmentInput` struct for voxel shaders has been updated to be more consistent with the `CustomShader` documentation. Remaining differences in `CustomShader` usage between `VoxelPrimitive` and `Cesium3DTileset` or `Model` are now documented in the Custom Shader Guide. [#12636](https://github.com/CesiumGS/cesium/pull/12636). Key changes include:
+  - The non-standard position attributes `fsInput.voxel.positionUv`, `fsInput.voxel.positionShapeUv`, and `fsInput.voxel.positionLocal` have been removed, and replaced by a single eye coordinate position `fsInput.attributes.positionEC`.
+  - The normal in model coordinates `fsInput.voxel.surfaceNormal` has been replaced by a normal in eye coordinates `fsInput.attributes.normalEC`. Example:
+
+```glsl
+// Replace this:
+// vec3 voxelNormal = normalize(czm_normal * fsInput.voxel.surfaceNormal);
+// with this:
+vec3 voxelNormal = fsInput.attributes.normalEC;
+```
+
+#### Additions :tada:
+
+- Add basic support for draping imagery on 3D Tiles. [#12567](https://github.com/CesiumGS/cesium/pull/12567)
+- Add support for 3D Textures and add Volume Cloud sandcastle example. [#12661](https://github.com/CesiumGS/cesium/pull/12611)
+
+#### Fixes :wrench:
+
+- Fixed voxel rendering with orthographic cameras. [#12629](https://github.com/CesiumGS/cesium/pull/12629)
+
 ## 1.129 - 2025-05-01
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- `VoxelProvider.minimumBounds` and `.maximumBounds` are now specified as physical values, rather than shape space values. [#12592](https://github.com/CesiumGS/cesium/pull/12592)
+
+#### Additions :tada:
+
+- Added `Material with Custom GLSL` Sandbox Demo. [#12549](https://github.com/CesiumGS/cesium/issues/12549)
+
 #### Fixes :wrench:
 
 - `QuadtreePrimitive.updateHeights` now converts position to Cartographic before invoking the callback, ensuring compatibility with change introduced by [commit 53889cb](https://github.com/CesiumGS/cesium/commit/53889cb) and preventing unnecessary computation. [#12555](https://github.com/CesiumGS/cesium/pull/12555)
-- `Check.typeOf.object` now asserts `Record<string|number|symbol, any>` intead of `object` to allow property checks after assertion. [#12572](https://github.com/CesiumGS/cesium/issues/12572)
+- Fixed `Polyline*MaterialProperty` width artifacts (reverted [#12434](https://github.com/CesiumGS/cesium/pull/12434)). [#12506](https://github.com/CesiumGS/cesium/issues/12506)
+- `Check.typeOf.object` now asserts `Record<string|number|symbol, any>` instead of `object` to allow property checks after assertion. [#12572](https://github.com/CesiumGS/cesium/issues/12572)
 
 ## 1.128 - 2025-04-01
 
@@ -4024,10 +4080,8 @@ _This is an npm-only release to fix a publishing issue_.
 ## 1.0 - 2014-08-01
 
 - Breaking changes ([why so many?](https://community.cesium.com/t/moving-towards-cesium-1-0/1209))
-
   - All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter, except functions starting with `from`.
   - Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`.
-
     - Code that looked like:
 
             var billboards = new Cesium.BillboardCollection();
@@ -4164,7 +4218,6 @@ _This is an npm-only release to fix a publishing issue_.
 ## b30 - 2014-07-01
 
 - Breaking changes ([why so many?](https://community.cesium.com/t/moving-towards-cesium-1-0/1209))
-
   - CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`.
   - All `Cartesian2`, `Cartesian3`, `Cartesian4`, `TimeInterval`, and `JulianDate` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   - Modified `Transforms.pointToWindowCoordinates` and `SceneTransforms.wgs84ToWindowCoordinates` to return window coordinates with origin at the top left corner.
@@ -4213,7 +4266,6 @@ _This is an npm-only release to fix a publishing issue_.
     - `date.greaterThan(right)` -> `JulianDate.greaterThan(left, right)`
     - `date.greaterThanOrEquals(right)` -> `JulianDate.greaterThanOrEquals(left, right)`
   - Refactored `TimeInterval` to be in line with other Core types.
-
     - The constructor no longer requires parameters and now takes a single options parameter. Code that looked like:
 
             new TimeInterval(startTime, stopTime, true, true, data);
@@ -4227,7 +4279,6 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
-
     - `TimeInterval.fromIso8601` now takes a single options parameter. Code that looked like:
 
             TimeInterval.fromIso8601(intervalString, true, true, data);
@@ -4240,7 +4291,6 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
-
     - `interval.intersect(otherInterval)` -> `TimeInterval.intersect(interval, otherInterval)`
     - `interval.contains(date)` -> `TimeInterval.contains(interval, date)`
 
@@ -4297,7 +4347,6 @@ _This is an npm-only release to fix a publishing issue_.
 ## b29 - 2014-06-02
 
 - Breaking changes ([why so many?](https://community.cesium.com/t/moving-towards-cesium-1-0/1209))
-
   - Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
   - Removed `CameraFlightPath.createAnimationCartographic`. Code that looked like:
 
@@ -4415,7 +4464,6 @@ _This is an npm-only release to fix a publishing issue_.
 ## b27 - 2014-04-01
 
 - Breaking changes:
-
   - All `CameraController` functions have been moved up to the `Camera`. Removed `CameraController`. For example, code that looked like:
 
            scene.camera.controller.viewExtent(extent);
@@ -4725,7 +4773,6 @@ _This is an npm-only release to fix a publishing issue_.
 ## b24 - 2014-01-06
 
 - Breaking changes:
-
   - Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOptions` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property. For example, code that looked like:
 
            var viewer = new Viewer('cesiumContainer', {
@@ -4773,7 +4820,6 @@ _This is an npm-only release to fix a publishing issue_.
 ## b23 - 2013-12-02
 
 - Breaking changes:
-
   - Changed the `CatmullRomSpline` and `HermiteSpline` constructors from taking an array of structures to a structure of arrays. For example, code that looked like:
 
            var controlPoints = [
@@ -4887,7 +4933,6 @@ _This is an npm-only release to fix a publishing issue_.
 ## b21 - 2013-10-01
 
 - Breaking changes:
-
   - Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application. This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment. You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/). Set the `BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
 
            BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
@@ -4909,7 +4954,6 @@ _This is an npm-only release to fix a publishing issue_.
   - Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
   - Removed `getProjectionMatrix` and `getInfiniteProjectionMatrix` from `PerspectiveFrustum`, `PerspectiveOffCenterFrustum` and `OrthographicFrustum`. Instead, use the `projectionMatrix` and `infiniteProjectionMatrix` properties.
   - The following prototype functions were removed:
-
     - From `Quaternion`: `conjugate`, `magnitudeSquared`, `magnitude`, `normalize`, `inverse`, `add`, `subtract`, `negate`, `dot`, `multiply`, `multiplyByScalar`, `divideByScalar`, `getAxis`, `getAngle`, `lerp`, `slerp`, `equals`, `equalsEpsilon`
     - From `Cartesian2`, `Cartesian3`, and `Cartesian4`: `getMaximumComponent`, `getMinimumComponent`, `magnitudeSquared`, `magnitude`, `normalize`, `dot`, `multiplyComponents`, `add`, `subtract`, `multiplyByScalar`, `divideByScalar`, `negate`, `abs`, `lerp`, `angleBetween`, `mostOrthogonalAxis`, `equals`, and `equalsEpsilon`.
     - From `Cartesian3`: `cross`
@@ -4964,7 +5008,6 @@ _This is an npm-only release to fix a publishing issue_.
 _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/CesiumGS/cesium/issues/1002) and [#1047](https://github.com/CesiumGS/cesium/issues/1047))._
 
 - Breaking changes:
-
   - The `CameraFlightPath` functions `createAnimation`, `createAnimationCartographic`, and `createAnimationExtent` now take `scene` as their first parameter instead of `frameState`.
   - Completely refactored the `DynamicScene` property system to vastly improve the API. See [#1080](https://github.com/CesiumGS/cesium/pull/1080) for complete details.
     - Removed `CzmlBoolean`, `CzmlCartesian2`, `CzmlCartesian3`, `CzmlColor`, `CzmlDefaults`, `CzmlDirection`, `CzmlHorizontalOrigin`, `CzmlImage`, `CzmlLabelStyle`, `CzmlNumber`, `CzmlPosition`, `CzmlString`, `CzmlUnitCartesian3`, `CzmlUnitQuaternion`, `CzmlUnitSpherical`, and `CzmlVerticalOrigin` since they are no longer needed.
@@ -5142,7 +5185,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 ## b16 - 2013-05-01
 
 - Breaking changes:
-
   - Removed the color, outline color, and outline width properties of polylines. Instead, use materials for polyline color and outline properties. Code that looked like:
 
            var polyline = polylineCollection.add({
@@ -5260,7 +5302,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 ## b12a - 2013-01-18
 
 - Breaking changes:
-
   - Renamed the `server` property to `url` when constructing a `BingMapsImageryProvider`. Likewise, renamed `BingMapsImageryProvider.getServer` to `BingMapsImageryProvider.getUrl`. Code that looked like
 
            var bing = new BingMapsImageryProvider({
@@ -5388,7 +5429,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 ## b8 - 2012-09-05
 
 - Breaking changes:
-
   - Materials are now created through a centralized Material class using a JSON schema called [Fabric](https://github.com/CesiumGS/cesium/wiki/Fabric). For example, change:
 
           polygon.material = new BlobMaterial({repeat : 10.0});
@@ -5454,7 +5494,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 ## b7 - 2012-08-01
 
 - Breaking changes:
-
   - Removed keyboard input handling from `EventHandler`.
   - `TextureAtlas` takes an object literal in its constructor instead of separate parameters. Code that previously looked like:
 
@@ -5565,7 +5604,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 ## b5 - 2012-05-15
 
 - Breaking changes:
-
   - Renamed Geoscope to Cesium. To update your code, change all `Geoscope.*` references to `Cesium.*`, and reference Cesium.js instead of Geoscope.js.
   - `CompositePrimitive.addGround` was removed; use `CompositePrimitive.add` instead. For example, change
 
@@ -5626,7 +5664,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
   - TileProviders now take a proxy object instead of a string, to allow more control over how proxy URLs are built. Construct a DefaultProxy, passing the previous proxy URL, to get the previous behavior.
   - `Ellipsoid.getScaledWgs84()` has been removed since it is not needed.
   - `getXXX()` methods which returned a new instance of what should really be a constant are now exposed as frozen properties instead. This should improve performance and memory pressure.
-
     - `Cartsian2/3/4.getUnitX()` -> `Cartsian2/3/4.UNIT_X`
     - `Cartsian2/3/4.getUnitY()` -> `Cartsian2/3/4.UNIT_Y`
     - `Cartsian2/3/4.getUnitZ()` -> `Cartsian3/4.UNIT_Z`
@@ -5646,7 +5683,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 ## b4 - 2012-03-01
 
 - Breaking changes:
-
   - Replaced `Geoscope.SkyFromSpace` object with `CentralBody.showSkyAtmosphere` property.
   - For mouse click and double click events, replaced `event.x` and `event.y` with `event.position`.
   - For mouse move events, replaced `movement.startX` and `startY` with `movement.startPosition`. Replaced `movement.endX` and `movement.endY` with `movement.endPosition`.
@@ -5707,13 +5743,11 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 - Added CameraFlightController to zoom smoothly from one point to another. See the new camera examples in the Sandbox.
 - Added row and column assessors to Matrix2, Matrix3, and Matrix4.
 - Added Scene, which reduces the amount of code required to use Geoscope. See the Skeleton. We recommend using this instead of explicitly calling update() and render() for individual or composite primitives. Existing code will need minor changes:
-
   - Calls to Context.pick() should be replaced with Scene.pick().
   - Primitive constructors no longer require a context argument.
   - Primitive update() and render() functions now require a context argument. However, when using the new Scene object, these functions do not need to be called directly.
   - TextureAtlas should no longer be created directly; instead, call Scene.getContext().createTextureAtlas().
   - Other breaking changes:
-
     - Camera get/set functions, e.g., getPosition/setPosition were replaced with properties, e.g., position.
     - Replaced CompositePrimitive, Polygon, and Polyline getShow/setShow functions with a show property.
     - Replaced Polyline, Polygon, BillboardCollection, and LabelCollection getBufferUsage/setBufferUsage functions with a bufferUsage property.

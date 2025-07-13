@@ -45,6 +45,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
  * @see VoxelShapeType
+ * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -339,6 +340,12 @@ function VoxelPrimitive(options) {
   this._transformPositionWorldToUv = new Matrix4();
 
   /**
+   * @type {Matrix3}
+   * @private
+   */
+  this._transformDirectionWorldToUv = new Matrix3();
+
+  /**
    * @type {Matrix4}
    * @private
    */
@@ -349,12 +356,6 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._transformDirectionWorldToLocal = new Matrix3();
-
-  /**
-   * @type {Matrix3}
-   * @private
-   */
-  this._transformNormalLocalToWorld = new Matrix3();
 
   // Rendering
   /**
@@ -442,8 +443,8 @@ function VoxelPrimitive(options) {
     transformPositionViewToUv: new Matrix4(),
     transformPositionUvToView: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
-    transformNormalLocalToWorld: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
+    cameraDirectionUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
@@ -608,8 +609,8 @@ function initialize(primitive, provider) {
 
   primitive.minBounds = minBounds;
   primitive.maxBounds = maxBounds;
-  primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
-  primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
+  primitive.minClippingBounds = minBounds.clone();
+  primitive.maxClippingBounds = maxBounds.clone();
 
   // Initialize the exaggerated versions of bounds and model matrix
   primitive._exaggeratedMinBounds = Cartesian3.clone(
@@ -1075,6 +1076,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {CustomShader}
+   * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
    */
   customShader: {
     get: function () {
@@ -1135,10 +1137,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
-const scratchScale = new Cartesian3();
-const scratchLocalScale = new Cartesian3();
-const scratchRotation = new Matrix3();
-const scratchRotationAndLocalScale = new Matrix3();
 const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
 const scratchTransformPositionLocalToProjection = new Matrix4();
@@ -1306,15 +1304,19 @@ VoxelPrimitive.prototype.update = function (frameState) {
     transformDirectionViewToWorld,
     uniforms.transformDirectionViewToLocal,
   );
-  uniforms.transformNormalLocalToWorld = Matrix3.clone(
-    this._transformNormalLocalToWorld,
-    uniforms.transformNormalLocalToWorld,
-  );
-  const cameraPositionWorld = frameState.camera.positionWC;
   uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
     this._transformPositionWorldToUv,
-    cameraPositionWorld,
+    frameState.camera.positionWC,
     uniforms.cameraPositionUv,
+  );
+  uniforms.cameraDirectionUv = Matrix3.multiplyByVector(
+    this._transformDirectionWorldToUv,
+    frameState.camera.directionWC,
+    uniforms.cameraDirectionUv,
+  );
+  uniforms.cameraDirectionUv = Cartesian3.normalize(
+    uniforms.cameraDirectionUv,
+    uniforms.cameraDirectionUv,
   );
   uniforms.stepSize = this._stepSizeMultiplier;
 
@@ -1606,29 +1608,16 @@ function updateShapeAndTransforms(primitive, shape, provider) {
     transformPositionLocalToWorld,
     scratchTransformPositionWorldToLocal,
   );
-  const rotation = Matrix4.getRotation(
-    transformPositionLocalToWorld,
-    scratchRotation,
-  );
-  // Note that inverse(rotation) is the same as transpose(rotation)
-  const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
-  const maximumScaleComponent = Cartesian3.maximumComponent(scale);
-  const localScale = Cartesian3.divideByScalar(
-    scale,
-    maximumScaleComponent,
-    scratchLocalScale,
-  );
-  const rotationAndLocalScale = Matrix3.multiplyByScale(
-    rotation,
-    localScale,
-    scratchRotationAndLocalScale,
-  );
 
   // Set member variables when the shape is dirty
   primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
     transformPositionLocalToUv,
     transformPositionWorldToLocal,
     primitive._transformPositionWorldToUv,
+  );
+  primitive._transformDirectionWorldToUv = Matrix4.getMatrix3(
+    primitive._transformPositionWorldToUv,
+    primitive._transformDirectionWorldToUv,
   );
   primitive._transformPositionUvToWorld = Matrix4.multiplyTransformation(
     transformPositionLocalToWorld,
@@ -1638,10 +1627,6 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   primitive._transformDirectionWorldToLocal = Matrix4.getMatrix3(
     transformPositionWorldToLocal,
     primitive._transformDirectionWorldToLocal,
-  );
-  primitive._transformNormalLocalToWorld = Matrix3.inverseTranspose(
-    rotationAndLocalScale,
-    primitive._transformNormalLocalToWorld,
   );
 
   return true;

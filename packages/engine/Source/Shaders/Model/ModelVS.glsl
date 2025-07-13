@@ -14,6 +14,10 @@ void main()
     ProcessedAttributes attributes;
     initializeAttributes(attributes);
 
+    #ifdef HAS_IMAGERY
+    initializeImageryAttributes();
+    #endif
+
     // Dequantize the quantized ones and add them to the
     // attributes struct.
     #ifdef USE_DEQUANTIZATION
@@ -149,7 +153,7 @@ void main()
         #else
         gl_PointSize = 1.0;
         #endif
-
+        
         gl_PointSize *= show;
     #endif
 
