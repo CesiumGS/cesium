@@ -8,7 +8,7 @@
 
 ### Fixes :wrench:
 
-- Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`
+- Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
 
 ## 1.131 - 2025-07-01
 
