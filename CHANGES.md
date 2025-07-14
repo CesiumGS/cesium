@@ -2,6 +2,14 @@
 
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
 
+## 1.132 - 2025-08-01
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`
+
 ## 1.131 - 2025-07-01
 
 ### @cesium/engine
