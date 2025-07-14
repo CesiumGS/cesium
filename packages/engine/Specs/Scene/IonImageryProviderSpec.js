@@ -241,13 +241,17 @@ describe("Scene/IonImageryProvider", function () {
         deferred,
         overrideMimeType,
       ) {
-        deferred.resolve({
-          resourceSets: [
-            {
-              resources: [{ imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 }],
-            },
-          ],
-        });
+        deferred.resolve(
+          JSON.stringify({
+            resourceSets: [
+              {
+                resources: [
+                  { imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 },
+                ],
+              },
+            ],
+          }),
+        );
       },
     );
     return testExternalImagery(
