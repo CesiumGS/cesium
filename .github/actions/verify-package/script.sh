@@ -18,8 +18,6 @@ cd ../test
 npm install cesium-1.*.tgz
 npm install cesium-engine*.tgz
 npm install cesium-widgets*.tgz
-# TODO: figure out why installing sandcastle hangs infinitely
-# npm install cesium-sandcastle*.tgz
 NODE_ENV=development node test.cjs
 NODE_ENV=production node test.cjs
 node test.mjs

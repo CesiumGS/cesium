@@ -41,5 +41,13 @@
     "vite": "^6.2.0",
     "vite-plugin-static-copy": "^2.3.1",
     "yaml": "^2.8.0"
+  },
+  "overrides": {
+    "allotment": {
+      "use-resize-observer": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+      }
+    }
   }
 }
