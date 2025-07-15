@@ -13,7 +13,6 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
@@ -40,11 +39,13 @@ const updateFunctions = {
  * @private
  */
 function updateVersion(gltf, options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+  options = options ?? {};
   const targetVersion = options.targetVersion;
   let version = gltf.version;
 
-  gltf.asset = gltf.asset ?? { version: "1.0" };
+  gltf.asset = gltf.asset ?? {
+    version: "1.0",
+  };
 
   gltf.asset.version = gltf.asset.version ?? "1.0";
   version = (version ?? gltf.asset.version).toString();
@@ -176,7 +177,7 @@ function updateAnimations(gltf) {
               componentType,
               source.buffer,
               byteOffset,
-              length
+              length,
             );
 
             for (let j = 0; j < count; j++) {
@@ -416,7 +417,7 @@ function objectsToArrays(gltf) {
         primitive,
         function (accessorId, semantic) {
           primitive.attributes[semantic] = globalMapping.accessors[accessorId];
-        }
+        },
       );
       if (defined(primitive.material)) {
         primitive.material = globalMapping.materials[primitive.material];
@@ -636,7 +637,7 @@ function requireAttributeSetIndex(gltf) {
           } else if (semantic === "COLOR") {
             primitive.attributes.COLOR_0 = accessorId;
           }
-        }
+        },
       );
       delete primitive.attributes.TEXCOORD;
       delete primitive.attributes.COLOR;
@@ -695,7 +696,7 @@ function underscoreApplicationSpecificSemantics(gltf) {
               mappedSemantics[semantic] = newSemantic;
             }
           }
-        }
+        },
       );
       for (const semantic in mappedSemantics) {
         if (Object.prototype.hasOwnProperty.call(mappedSemantics, semantic)) {
@@ -756,7 +757,7 @@ function requireByteLength(gltf) {
         accessor.byteOffset + accessor.count * accessorByteStride;
       bufferView.byteLength = Math.max(
         bufferView.byteLength ?? 0,
-        accessorByteEnd
+        accessorByteEnd,
       );
     }
   });
@@ -861,7 +862,7 @@ function isNodeEmpty(node) {
       Cartesian3.fromArray(node.scale).equals(new Cartesian3(1.0, 1.0, 1.0))) &&
     (!defined(node.rotation) ||
       Cartesian4.fromArray(node.rotation).equals(
-        new Cartesian4(0.0, 0.0, 0.0, 1.0)
+        new Cartesian4(0.0, 0.0, 0.0, 1.0),
       )) &&
     (!defined(node.matrix) ||
       Matrix4.fromColumnMajorArray(node.matrix).equals(Matrix4.IDENTITY)) &&
@@ -1028,7 +1029,7 @@ function srgbToLinear(srgb) {
       linear[i] = Math.pow(
         // eslint-disable-next-line no-loss-of-precision
         (c + 0.055) * 0.94786729857819905213270142180095,
-        2.4
+        2.4,
       );
     }
   }
@@ -1037,7 +1038,7 @@ function srgbToLinear(srgb) {
 }
 
 function convertTechniquesToPbr(gltf, options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+  options = options ?? {};
   const baseColorTextureNames =
     options.baseColorTextureNames ?? defaultBaseColorTextureNames;
   const baseColorFactorNames =
@@ -1083,8 +1084,7 @@ function assignAsEmissive(material, emissive) {
 function convertMaterialsCommonToPbr(gltf) {
   // Future work: convert KHR_materials_common lights to KHR_lights_punctual
   ForEach.material(gltf, function (material) {
-    const materialsCommon = (material.extensions ?? Frozen.EMPTY_OBJECT)
-      .KHR_materials_common;
+    const materialsCommon = (material.extensions ?? {}).KHR_materials_common;
     if (!defined(materialsCommon)) {
       // Nothing to do
       return;
