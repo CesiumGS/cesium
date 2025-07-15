@@ -1367,6 +1367,42 @@ describe(
       primitive.destroy();
       expect(primitive.isDestroyed()).toEqual(true);
     });
+
+    // In 2D, the bounding sphere should still be centered at the 3D height, otherwise clipping issues can occur.
+    it("computes correct 2D bounding spheres", function () {
+      // Create a rectangle with non-zero height
+      const height = 10000000.0;
+      const rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
+      const rectangleInstance = new GeometryInstance({
+        geometry: new RectangleGeometry({
+          vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
+          ellipsoid: ellipsoid,
+          rectangle: rectangle,
+          height: height,
+        }),
+        id: "rect2D",
+        attributes: {
+          color: new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0),
+          show: new ShowGeometryInstanceAttribute(true),
+        },
+      });
+
+      primitive = new Primitive({
+        geometryInstances: rectangleInstance,
+        appearance: new PerInstanceColorAppearance(),
+        asynchronous: false,
+      });
+
+      frameState.scene3DOnly = false;
+      frameState.mode = SceneMode.SCENE2D;
+      frameState.commandList.length = 0;
+      primitive.update(frameState);
+
+      expect(frameState.commandList.length).toEqual(1);
+      const command = frameState.commandList[0];
+      expect(command.boundingVolume).toBeDefined();
+      expect(command.boundingVolume.center.x).toBeCloseTo(height, 1);
+    });
   },
   "WebGL",
 );
