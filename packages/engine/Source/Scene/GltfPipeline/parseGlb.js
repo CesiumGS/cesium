@@ -43,7 +43,7 @@ function readHeader(glb, byteOffset, count) {
   for (let i = 0; i < count; ++i) {
     header[i] = dataView.getUint32(
       glb.byteOffset + byteOffset + i * sizeOfUint32,
-      true
+      true,
     );
   }
   return header;

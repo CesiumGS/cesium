@@ -80,7 +80,7 @@ ForEach.accessorWithSemantic = function (gltf, semantic, handler) {
               return value;
             }
           }
-        }
+        },
       );
 
       if (defined(valueForEach)) {
@@ -102,7 +102,7 @@ ForEach.accessorWithSemantic = function (gltf, semantic, handler) {
                 return value;
               }
             }
-          }
+          },
         );
       });
     });
@@ -124,7 +124,7 @@ ForEach.accessorContainingVertexAttributeData = function (gltf, handler) {
               return value;
             }
           }
-        }
+        },
       );
 
       if (defined(valueForEach)) {
@@ -143,7 +143,7 @@ ForEach.accessorContainingVertexAttributeData = function (gltf, handler) {
                 return value;
               }
             }
-          }
+          },
         );
       });
     });
@@ -322,7 +322,7 @@ ForEach.program = function (gltf, handler) {
   if (usesExtension(gltf, "KHR_techniques_webgl")) {
     return ForEach.object(
       gltf.extensions.KHR_techniques_webgl.programs,
-      handler
+      handler,
     );
   }
 
@@ -341,7 +341,7 @@ ForEach.shader = function (gltf, handler) {
   if (usesExtension(gltf, "KHR_techniques_webgl")) {
     return ForEach.object(
       gltf.extensions.KHR_techniques_webgl.shaders,
-      handler
+      handler,
     );
   }
 
@@ -410,7 +410,7 @@ ForEach.technique = function (gltf, handler) {
   if (usesExtension(gltf, "KHR_techniques_webgl")) {
     return ForEach.object(
       gltf.extensions.KHR_techniques_webgl.techniques,
-      handler
+      handler,
     );
   }
 
