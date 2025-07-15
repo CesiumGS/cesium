@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.132 - 2025-07-02
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [12716](https://github.com/CesiumGS/cesium/issues/12716)
+
+#### Additions :tada:
+
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
 
 ## 1.132 - 2025-08-01
