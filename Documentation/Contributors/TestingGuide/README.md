@@ -16,7 +16,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
       - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
       - [Run a Single Test or Suite](#run-a-single-test-or-suite)
-      - [Using Browser Debugging Tools](#using-browser-debugging-tools)
+      - [Debugging Tests in the Browser or IDE](#debugging-tests-in-the-browser-or-ide)
     - [Running the Tests in the Browser](#running-the-tests-in-the-browser)
       - [Run All Tests](#run-all-tests)
       - [Run with WebGL validation](#run-with-webgl-validation)
@@ -122,13 +122,13 @@ Alternatively, test suites can be run from the command line with the `includeNam
 
 `npm run test -- --includeName Cartesian2`
 
-#### Using Browser Debugging Tools
+#### Debugging Tests in the Browser or IDE
 
-If it is helpful to step through a unit test in a browser debugger, run the tests with the `debug` flag:
+If it is helpful to step through a unit test in a browser debugger or your IDE, run the tests with the `debug` flag:
 
 `npm run test -- --debug`
 
-The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
+The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code. Alternatively, run the "Launch Test Suite and Debug in VSCode" launch configuration (which opens chrome, attaches VSCode, and prepares the test suite of the current file), set breakpoints directly in the Spec file, and then click "Debug" in Chrome to run the tests. Similar behavior may be possible in other IDEs by attaching to port 9333 (Karma's configured remote debugging port) after running the npm test command above.
 
 ![Karma](8.jpg)
 

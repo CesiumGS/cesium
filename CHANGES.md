@@ -1,12 +1,14 @@
 # Change Log
 
-## 1.132 - 2025-07-02
+## 1.132 - 2025-08-01
 
 ### @cesium/engine
 
 ### Fixes :wrench:
 
 - Fixes incorrect polygon culling in 2D scene mode [#1552](https://github.com/CesiumGS/cesium/issues/1552)
+- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [12716](https://github.com/CesiumGS/cesium/issues/12716)
+- Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
 
 #### Additions :tada:
 

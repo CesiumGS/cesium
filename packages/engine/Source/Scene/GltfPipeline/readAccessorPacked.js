@@ -16,7 +16,7 @@ import defined from "../../Core/defined.js";
 function readAccessorPacked(gltf, accessor) {
   const byteStride = getAccessorByteStride(gltf, accessor);
   const componentTypeByteLength = ComponentDatatype.getSizeInBytes(
-    accessor.componentType
+    accessor.componentType,
   );
   const numberOfComponents = numberOfComponentsForType(accessor.type);
   const count = accessor.count;
@@ -41,7 +41,7 @@ function readAccessorPacked(gltf, accessor) {
       byteOffset,
       numberOfComponents,
       componentTypeByteLength,
-      components
+      components,
     );
     for (let j = 0; j < numberOfComponents; ++j) {
       values[i * numberOfComponents + j] = components[j];
