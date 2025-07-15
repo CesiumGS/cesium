@@ -15,7 +15,9 @@ cp cesium*.tgz ../test
 cp Specs/test.*js ../test
 cd ../test
 
-npm install cesium*.tgz
+npm install cesium-1.*.tgz
+npm install cesium-engine*.tgz
+npm install cesium-widgets*.tgz
 NODE_ENV=development node test.cjs
 NODE_ENV=production node test.cjs
 node test.mjs

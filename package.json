@@ -163,5 +163,13 @@
     "packages/engine",
     "packages/widgets",
     "packages/sandcastle"
-  ]
+  ],
+  "overrides": {
+    "allotment": {
+      "use-resize-observer": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+      }
+    }
+  }
 }

@@ -1,0 +1,3 @@
+title: Viewerless Sandcastle
+description: A Sandcastle that does not construct the viewer for faster, easier development of Sandcastle itself
+development: true

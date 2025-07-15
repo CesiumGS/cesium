@@ -96,10 +96,7 @@ const Sandcastle = {
       defaultAction = undefined;
     }
 
-    document.body.className = document.body.className.replace(
-      /(?:\s|^)sandcastle-loading(?:\s|$)/,
-      " ",
-    );
+    document.body.classList.remove("sandcastle-loading");
   },
 
   /**

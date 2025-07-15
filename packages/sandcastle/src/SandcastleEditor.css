@@ -1,0 +1,29 @@
+.editor-container {
+  grid-area: code;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .header {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .editor-actions {
+    display: flex;
+    gap: 0.3rem;
+    padding: 0.3rem;
+
+    .icon-button {
+      padding: 4px;
+    }
+  }
+
+  section {
+    border-top: 1px solid grey;
+    flex-shrink: 1;
+    /* Monaco needs a defined height for dynamic resizing to work */
+    --tabs-height: 1.5rem;
+    height: calc(100% - var(--tabs-height)) !important;
+  }
+}

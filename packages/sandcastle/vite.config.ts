@@ -1,6 +1,7 @@
 import { fileURLToPath } from "url";
 import react from "@vitejs/plugin-react";
 import { PluginOption, UserConfig } from "vite";
+import rootPackageJson from "../../package.json";
 
 // https://vite.dev/config/
 const baseConfig: UserConfig = {
@@ -12,6 +13,7 @@ const baseConfig: UserConfig = {
   },
   define: {
     __COMMIT_SHA__: JSON.stringify(undefined),
+    __CESIUM_VERSION__: JSON.stringify(`Cesium ${rootPackageJson.version}`),
   },
   build: {
     // "the outDir may not be inside project root and will not be emptied without this setting
@@ -26,6 +28,12 @@ const baseConfig: UserConfig = {
           new URL("./standalone.html", import.meta.url),
         ),
       },
+    },
+    assetsInlineLimit: (filePath) => {
+      if (filePath.includes("@stratakit") && filePath.endsWith(".svg")) {
+        return false;
+      }
+      return undefined;
     },
   },
 };
