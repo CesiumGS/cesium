@@ -331,6 +331,7 @@ function App() {
       });
       setTitle(galleryItem.title);
       setReadyForViewer(true);
+      setConsoleMessages([]);
     },
     [galleryItems],
   );
