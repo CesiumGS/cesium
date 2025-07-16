@@ -87,7 +87,7 @@ function moveTechniqueRenderStates(gltf) {
               blendFunctions.blendEquationSeparate ?? defaultBlendEquation,
             blendFactors: getSupportedBlendFactors(
               blendFunctions.blendFuncSeparate,
-              defaultBlendFactors
+              defaultBlendFactors,
             ),
           };
         }
