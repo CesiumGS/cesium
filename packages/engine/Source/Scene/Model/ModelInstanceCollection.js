@@ -95,7 +95,7 @@ ModelInstanceCollection.prototype.add = function (transform) {
  * it to the left, changing their indices.
  *
  * @param {ModelInstance} instance The instance to remove.
- * @returns {ModelInstance} The model instance that was removed from the collection.
+ * @returns boolean if removed from the collection.
  *
  * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten at the next render cycle; this operations is <code>O(n)</code> and also incurs
@@ -105,12 +105,11 @@ ModelInstanceCollection.prototype.add = function (transform) {
  *
  *
  * @example
- * const i = collection.add(instance);
- * collection.remove(i);  // Returns true
+ * const instance = collection.add(transform);
+ * collection.remove(instance);  // Returns true
  *
  * @see ModelInstanceCollection#add
  * @see ModelInstanceCollection#removeAll
- * @see Label#show
  */
 ModelInstanceCollection.prototype.remove = function (instance) {
   //>>includeStart('debug', pragmas.debug);
