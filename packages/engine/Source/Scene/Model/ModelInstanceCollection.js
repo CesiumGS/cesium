@@ -112,15 +112,21 @@ ModelInstanceCollection.prototype.add = function (transform) {
  * @see ModelInstanceCollection#removeAll
  * @see Label#show
  */
-ModelInstanceCollection.prototype.remove = function (index) {
+ModelInstanceCollection.prototype.remove = function (instance) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(index)) {
+  if (!defined(instance)) {
     throw new DeveloperError("instance is required.");
   }
   //>>includeEnd('debug');
-  const instance = this._instances[index];
+  const index = this._instances.indexOf(instance);
+
+  if (index === -1) {
+    return false;
+  }
+
   this._instances.splice(index, 1);
-  return instance;
+
+  return true;
 };
 
 /**
