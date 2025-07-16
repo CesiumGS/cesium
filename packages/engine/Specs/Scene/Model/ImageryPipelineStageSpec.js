@@ -55,6 +55,14 @@ describe("Scene/Model/ImageryPipelineStage", function () {
   }
 
   it("does not create imagery inputs for imagery layers that are not shown", async function () {
+    // The prerequisites for computing the imagery inputs are not
+    // met without a GL context: The "mappedPositions" cannot be
+    // computed without fetching the primitive POSITION data from
+    // the GPU
+    if (!scene.context.webgl2) {
+      return;
+    }
+
     // Part of a "regression test" test against https://github.com/CesiumGS/cesium/issues/12742
     const tileset = await loadTilesetWithImagery(scene);
 
