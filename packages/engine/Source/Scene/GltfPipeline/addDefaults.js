@@ -1,7 +1,6 @@
 import addToArray from "./addToArray.js";
 import ForEach from "./ForEach.js";
 import getAccessorByteStride from "./getAccessorByteStride.js";
-import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 
@@ -62,7 +61,7 @@ function addDefaults(gltf) {
   });
 
   ForEach.material(gltf, function (material) {
-    const extensions = material.extensions ?? Frozen.EMPTY_OBJECT;
+    const extensions = material.extensions ?? {};
     const materialsCommon = extensions.KHR_materials_common;
     if (defined(materialsCommon)) {
       const technique = materialsCommon.technique;

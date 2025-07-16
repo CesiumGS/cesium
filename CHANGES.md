@@ -1,7 +1,25 @@
 # Change Log
 
+## 1.132 - 2025-07-02
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [12716](https://github.com/CesiumGS/cesium/issues/12716)
+
+#### Additions :tada:
+
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
 - Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix.
+
+## 1.132 - 2025-08-01
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
 
 ## 1.131 - 2025-07-01
 
