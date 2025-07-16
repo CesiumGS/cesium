@@ -109,7 +109,9 @@ class ImageryPipelineStage {
     );
 
     // This can happen when none of the imagery textures could
-    // be obtained, because they had all been INVALID/FAILED.
+    // be obtained, because they had all been INVALID/FAILED,
+    // or when none of the imagery layers is actually visible
+    // according to `show==true`
     // Bail out in this case
     if (imageryInputs.length === 0) {
       return;
@@ -758,7 +760,8 @@ class ImageryPipelineStage {
    * pipeline stage for draping the given imagery layers over the primitive
    * that is described by the given model primitive imagery.
    *
-   * This will obtain the <code>ImageryCoverage</code> objects that are provided by
+   * For each imagery layer that is currently visible (as of `show==true`), this
+   * will obtain the <code>ImageryCoverage</code> objects that are provided by
    * the given model primitive imagery (and that describe the imagery tiles
    * that are covered by the primitive), and create one <code>ImageryInput</code> for
    * each of them.
@@ -791,6 +794,9 @@ class ImageryPipelineStage {
 
     for (let i = 0; i < imageryLayers.length; i++) {
       const imageryLayer = imageryLayers.get(i);
+      if (!imageryLayer.show) {
+        continue;
+      }
       const imageryTexCoordAttributeSetIndex =
         imageryTexCoordAttributeSetIndices[i];
       const mappedPositions =
