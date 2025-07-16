@@ -11,18 +11,22 @@
     "build": "npm run build-app",
     "build-app": "tsc -b && vite build --config vite.config.app.ts",
     "build-ci": "tsc -b && vite build --config vite.config.ci.ts",
+    "build-prod": "npm run build-gallery && tsc -b && vite build --config vite.config.prod.ts",
     "build-gallery": "node scripts/buildGallery.js"
   },
   "dependencies": {
     "@itwin/itwinui-react": "^5.0.0-alpha.14",
     "@monaco-editor/react": "^4.7.0",
+    "allotment": "^1.20.4",
     "monaco-editor": "^0.52.2",
     "pako": "^2.1.0",
+    "prettier": "^3.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/pako": "^2.0.3",
+    "@types/prettier": "^2.7.3",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",

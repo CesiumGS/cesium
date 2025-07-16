@@ -272,7 +272,7 @@ function computePickingDrawingBufferRectangle(
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object} Object containing the picked primitive.
+ * @returns {object | undefined} Object containing the picked primitive.
  */
 Picking.prototype.pick = function (scene, windowPosition, width, height) {
   //>>includeStart('debug', pragmas.debug);
@@ -923,6 +923,16 @@ function getTilesets(primitives, objectsToExclude, tilesets) {
   }
 }
 
+/**
+ * @private
+ * @param {Picking} picking
+ * @param {Scene} scene
+ * @param {Ray} ray
+ * @param {Object[] | undefined} objectsToExclude
+ * @param {number | undefined} width
+ * @param {Function} callback
+ * @returns {Promise<Cartesian3 | undefined>}
+ */
 function launchMostDetailedRayPick(
   picking,
   scene,
@@ -1266,6 +1276,12 @@ const scratchSurfaceNormal = new Cartesian3();
 const scratchSurfaceRay = new Ray();
 const scratchCartographic = new Cartographic();
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {Cartographic} cartographic
+ * @returns {Ray}
+ */
 function getRayForSampleHeight(scene, cartographic) {
   const ellipsoid = scene.ellipsoid;
   const height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
@@ -1287,6 +1303,12 @@ function getRayForSampleHeight(scene, cartographic) {
   return ray;
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {Cartesian3} cartesian
+ * @returns {Ray}
+ */
 function getRayForClampToHeight(scene, cartesian) {
   const ellipsoid = scene.ellipsoid;
   const cartographic = Cartographic.fromCartesian(
@@ -1338,6 +1360,16 @@ function sampleHeightMostDetailed(
   );
 }
 
+/**
+ * @private
+ * @param {Picking} picking
+ * @param {Scene} scene
+ * @param {Cartesian3} cartesian
+ * @param {Object[]} [objectsToExclude]
+ * @param {number} [width]
+ * @param {Cartesian3} [result]
+ * @returns {Promise<Cartesian3 | undefined>}
+ */
 function clampToHeightMostDetailed(
   picking,
   scene,
@@ -1483,6 +1515,14 @@ Picking.prototype.sampleHeightMostDetailed = function (
   );
 };
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {Cartesian3[]} cartesians
+ * @param {Object[]} [objectsToExclude]
+ * @param {number} [width]
+ * @returns {Promise<Array<Cartesian3 | undefined>>}
+ */
 Picking.prototype.clampToHeightMostDetailed = function (
   scene,
   cartesians,

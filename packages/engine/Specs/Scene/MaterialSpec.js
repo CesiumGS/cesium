@@ -370,6 +370,44 @@ describe(
       renderMaterial(material);
     });
 
+    it("creates a material with an image offscreen canvas uniform", function () {
+      const canvas = new OffscreenCanvas(1, 1);
+      const context2D = canvas.getContext("2d");
+      context2D.fillStyle = "rgb(0,0,255)";
+      context2D.fillRect(0, 0, 1, 1);
+
+      const material = new Material({
+        strict: true,
+        fabric: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: canvas,
+          },
+        },
+      });
+
+      renderMaterial(material);
+    });
+
+    it("creates a material with an image bitmap", function () {
+      const canvas = new OffscreenCanvas(1, 1);
+      const context2D = canvas.getContext("2d");
+      context2D.fillStyle = "rgb(0,0,255)";
+      context2D.fillRect(0, 0, 1, 1);
+
+      const material = new Material({
+        strict: true,
+        fabric: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: canvas.transferToImageBitmap(),
+          },
+        },
+      });
+
+      renderMaterial(material);
+    });
+
     it("creates a material with an KTX2 compressed image uniform", function () {
       let compressedUrl;
       if (FeatureDetection.supportsBasis(scene)) {

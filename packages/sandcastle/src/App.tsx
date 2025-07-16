@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { Allotment } from "allotment";
+import "allotment/dist/style.css";
 import "./App.css";
 
 import { Button, Root } from "@itwin/itwinui-react/bricks";
@@ -302,6 +304,8 @@ Sandcastle.addToolbarMenu(${variableName});`,
     return () => window.removeEventListener("popstate", pushStateListener);
   }, [loadFromUrl]);
 
+  const versionString = __COMMIT_SHA__;
+
   return (
     <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
       <div className="toolbar">
@@ -314,29 +318,36 @@ Sandcastle.addToolbarMenu(${variableName});`,
         <Button onClick={() => share()}>Share</Button>
         <Button onClick={() => openStandalone()}>Standalone</Button>
         <div className="spacer"></div>
+        {versionString && <pre>Commit: {versionString.substring(0, 7)}</pre>}
         <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
       </div>
-      <SandcastleEditor
-        ref={editorRef}
-        darkTheme={darkTheme}
-        onJsChange={(value: string = "") =>
-          dispatch({ type: "setCode", code: value })
-        }
-        onHtmlChange={(value: string = "") =>
-          dispatch({ type: "setHtml", html: value })
-        }
-        onRun={() => dispatch({ type: "runSandcastle" })}
-        js={codeState.code}
-        html={codeState.html}
-      />
-      <div className="viewer-bucket">
-        <Bucket
-          code={codeState.committedCode}
-          html={codeState.committedHtml}
-          runNumber={codeState.runNumber}
-          highlightLine={(lineNumber) => highlightLine(lineNumber)}
-        />
-      </div>
+      <Allotment>
+        <Allotment.Pane minSize={400}>
+          <SandcastleEditor
+            ref={editorRef}
+            darkTheme={darkTheme}
+            onJsChange={(value: string = "") =>
+              dispatch({ type: "setCode", code: value })
+            }
+            onHtmlChange={(value: string = "") =>
+              dispatch({ type: "setHtml", html: value })
+            }
+            onRun={() => dispatch({ type: "runSandcastle" })}
+            js={codeState.code}
+            html={codeState.html}
+          />
+        </Allotment.Pane>
+        <Allotment.Pane minSize={400}>
+          <div className="viewer-bucket">
+            <Bucket
+              code={codeState.committedCode}
+              html={codeState.committedHtml}
+              runNumber={codeState.runNumber}
+              highlightLine={(lineNumber) => highlightLine(lineNumber)}
+            />
+          </div>
+        </Allotment.Pane>
+      </Allotment>
       <div className="gallery">
         <Gallery
           demos={galleryItems}

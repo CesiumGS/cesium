@@ -2,6 +2,10 @@ import { Editor, Monaco, OnChange } from "@monaco-editor/react";
 import { editor, KeyCode, KeyMod, languages, Range } from "monaco-editor";
 import { RefObject, useImperativeHandle, useRef, useState } from "react";
 import { Button } from "@itwin/itwinui-react/bricks";
+import * as prettier from "prettier";
+import * as babelPlugin from "prettier/plugins/babel";
+import * as estreePlugin from "prettier/plugins/estree";
+import * as htmlPlugin from "prettier/plugins/html";
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
@@ -79,13 +83,40 @@ function SandcastleEditor({
     // do something before editor is mounted
 
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      // TODO: pick what target we want, probably newer than ES2020 but TS was upset with that
-      target: monaco.languages.typescript.ScriptTarget.ES2020,
+      target: monaco.languages.typescript.ScriptTarget.ESNext,
       allowNonTsExtensions: true,
     });
 
-    setSnippets(monaco);
+    monaco.languages.registerDocumentFormattingEditProvider("javascript", {
+      async provideDocumentFormattingEdits(model) {
+        const formatted = await prettier.format(model.getValue(), {
+          parser: "babel",
+          // need to force type because the estree plugin has no type https://github.com/prettier/prettier/issues/16501
+          plugins: [babelPlugin, estreePlugin as prettier.Plugin],
+        });
 
+        return [{ range: model.getFullModelRange(), text: formatted }];
+      },
+    });
+
+    monaco.languages.html.htmlDefaults.setModeConfiguration({
+      ...monaco.languages.html.htmlDefaults,
+      // we have to disable the defaults for html for our custom prettier formatter to be run
+      documentFormattingEdits: false,
+      documentRangeFormattingEdits: false,
+    });
+    monaco.languages.registerDocumentFormattingEditProvider("html", {
+      async provideDocumentFormattingEdits(model) {
+        const formatted = await prettier.format(model.getValue(), {
+          parser: "html",
+          plugins: [htmlPlugin],
+        });
+
+        return [{ range: model.getFullModelRange(), text: formatted }];
+      },
+    });
+
+    setSnippets(monaco);
     setTypes(monaco);
   }
 
@@ -205,6 +236,19 @@ function SandcastleEditor({
       </div>
       <Editor
         theme={darkTheme ? "vs-dark" : "light"}
+        options={{
+          automaticLayout: true,
+          bracketPairColorization: {
+            enabled: false,
+          },
+          guides: {
+            bracketPairs: "active",
+          },
+          minimap: { size: "fill" },
+          placeholder: "// Select a demo from the gallery to load.",
+          renderWhitespace: "trailing",
+          tabSize: 2,
+        }}
         path={activeTab === "js" ? "script.js" : "index.html"}
         language={activeTab === "js" ? "javascript" : "html"}
         value={activeTab === "js" ? js : html}
