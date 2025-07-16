@@ -1,5 +1,5 @@
 ﻿<!doctype html>
-<html lang="en">
+<html lang="en" data-color-scheme="dark">
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -38,6 +38,12 @@
         content: "Loading...";
       }
     </style>
+    <!-- <link rel="stylesheet" href="../styles/stratakit.css" /> -->
+    <script type="module">
+      import { unstable_loadStyles } from "@stratakit/foundations";
+
+      unstable_loadStyles(document);
+    </script>
   </head>
   <body
     class="sandcastle-loading"

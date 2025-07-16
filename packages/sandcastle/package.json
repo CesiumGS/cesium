@@ -16,10 +16,10 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
-    "@stratakit/bricks": "^0.3.1",
-    "@stratakit/foundations": "^0.2.0",
+    "@stratakit/bricks": "^0.3.2",
+    "@stratakit/foundations": "^0.2.1",
     "@stratakit/icons": "^0.1.2",
-    "@stratakit/structures": "^0.2.3",
+    "@stratakit/structures": "^0.2.4",
     "allotment": "^1.20.4",
     "classnames": "^2.5.1",
     "monaco-editor": "^0.52.2",
