@@ -38,11 +38,11 @@ PickingPipelineStage.process = function (
   const runtimeNode = renderResources.runtimeNode;
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
-  const instances = runtimeNode.node.instances;
+  const instances = renderResources.instanceCount;
 
   if (renderResources.hasPropertyTable) {
     processPickTexture(renderResources, primitive, instances, context);
-  } else if (defined(instances)) {
+  } else if (defined(instances) && instances > 0) {
     // For instanced meshes, a pick color vertex attribute is used.
     processInstancedPickIds(renderResources, context);
   } else {
