@@ -3,7 +3,6 @@ import Matrix4 from "../Core/Matrix4.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
-import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -123,13 +122,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._needsGaussianSplatTexture = true;
-  /**
-   * The scale of the Gaussian splats.
-   * This is used to control the size of the splats when rendered.
-   * @type {number}
-   * @private
-   */
-  this._splatScale = 1.0;
+
   /**
    * The previous view matrix used to determine if the primitive needs to be updated.
    * This is used to avoid unnecessary updates when the view matrix hasn't changed.
@@ -295,26 +288,6 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-  /**
-   * Scaling factor applied to the Gaussian splats indepdendent of the
-   * Gaussian splat scale attribute. Applied uniformly to all splats.
-   * @memberof GaussianSplatPrimitive.prototype
-   * @type {number}
-   * @default 1.0
-   */
-
-  splatScale: {
-    get: function () {
-      return this._splatScale;
-    },
-    set: function (splatScale) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.number("splatScale", splatScale);
-      //>>includeEnd('debug');
-
-      this._splatScale = splatScale;
     },
   },
 
@@ -628,13 +601,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
 
-  shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
-
   const uniformMap = renderResources.uniformMap;
-
-  uniformMap.u_splatScale = function () {
-    return primitive.splatScale;
-  };
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
