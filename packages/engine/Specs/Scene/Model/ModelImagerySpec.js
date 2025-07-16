@@ -1,76 +1,7 @@
-import {
-  Cartesian3,
-  ResourceCache,
-  Transforms,
-  ModelImagery,
-  ImageryLayer,
-  TileCoordinatesImageryProvider,
-  HeadingPitchRoll,
-  WebMercatorTilingScheme,
-} from "../../../index.js";
+import { ResourceCache, ModelImagery } from "../../../index.js";
 
 import createScene from "../../../../../Specs/createScene.js";
-import pollToPromise from "../../../../../Specs/pollToPromise.js";
-import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
-
-const tileset_unitSquare_fourPrimitives_plain_url =
-  "./Data/Models/glTF-2.0/unitSquare/tileset_unitSquare_fourPrimitives_plain.json";
-
-/**
- * Wait until the root tile of the given tileset is loaded
- *
- * @param {Cesium3DTileset} tileset The tileset
- * @param {Scene} scene The scene
- */
-async function waitForRootLoaded(tileset, scene) {
-  scene.renderForSpecs();
-  const root = tileset.root;
-  await pollToPromise(() => {
-    scene.renderForSpecs();
-    return root.contentFailed || root.contentReady;
-  });
-}
-
-/**
- * Load and return a test tileset that defines an imagery layer,
- * waiting until the root of that tileset is loaded.
- *
- * This means that the resulting <code>tileset.root.content._model._modelImagery</code>
- * (including the <code>ModelPrimitiveImagery</code> instances) will be defined and ready.
- *
- * @param {Scene} scene The scene
- * @returns {Cesium3DTileset} The tileset
- */
-async function loadTestTilesetWithImagery(scene) {
-  const url = tileset_unitSquare_fourPrimitives_plain_url;
-  const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
-
-  // Create a non-trivial transform for the tileset
-  const transform = Transforms.eastNorthUpToFixedFrame(
-    Cartesian3.fromDegrees(-120.0, 40.0, 1.0),
-  );
-  tileset.modelMatrix = transform;
-
-  // Set a view that fully shows the tile content
-  // (a unit square at the position given above)
-  scene.camera.setView({
-    destination: new Cartesian3(
-      -2446354.452726738,
-      -4237211.248955036,
-      4077988.0921552004,
-    ),
-    orientation: new HeadingPitchRoll(Math.PI * 2, -Math.PI / 2, 0),
-  });
-
-  const imageryProvider = new TileCoordinatesImageryProvider({
-    tilingScheme: new WebMercatorTilingScheme(),
-  });
-  const imageryLayer = new ImageryLayer(imageryProvider);
-  tileset.imageryLayers.add(imageryLayer);
-
-  await waitForRootLoaded(tileset, scene);
-  return tileset;
-}
+import loadTilesetWithImagery from "../../../../../Specs/loadTilesetWithImagery.js";
 
 describe("Scene/Model/ModelImagery", function () {
   let scene;
@@ -96,7 +27,7 @@ describe("Scene/Model/ModelImagery", function () {
   });
 
   it("properly reports _hasImagery", async function () {
-    const tileset = await loadTestTilesetWithImagery(scene);
+    const tileset = await loadTilesetWithImagery(scene);
 
     const root = tileset.root;
     const content = root.content;
@@ -114,7 +45,7 @@ describe("Scene/Model/ModelImagery", function () {
   });
 
   it("properly reports _allImageryLayersReady", async function () {
-    const tileset = await loadTestTilesetWithImagery(scene);
+    const tileset = await loadTilesetWithImagery(scene);
 
     const root = tileset.root;
     const content = root.content;
@@ -137,7 +68,7 @@ describe("Scene/Model/ModelImagery", function () {
       return;
     }
 
-    const tileset = await loadTestTilesetWithImagery(scene);
+    const tileset = await loadTilesetWithImagery(scene);
 
     const root = tileset.root;
     const content = root.content;
@@ -161,8 +92,37 @@ describe("Scene/Model/ModelImagery", function () {
     expect(modelImagery._imageryConfigurationsModified()).toBeFalse();
   });
 
+  it("considers the show flag as part of the imageryConfigurations", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTilesetWithImagery(scene);
+
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+    const imageryLayer = tileset.imageryLayers.get(0);
+
+    // Initially, _imageryConfigurationsModified is false (it was just updated)
+    expect(modelImagery._imageryConfigurationsModified()).toBeFalse();
+
+    // For spec: Modify imagery configuration
+    imageryLayer.show = 0.5;
+
+    // Now, _imageryConfigurationsModified is true
+    expect(modelImagery._imageryConfigurationsModified()).toBeTrue();
+
+    // Trigger an update
+    modelImagery._checkForModifiedImageryConfigurations();
+
+    // Now, _imageryConfigurationsModified is false again
+    expect(modelImagery._imageryConfigurationsModified()).toBeFalse();
+  });
+
   it("creates one ModelPrimitiveImagery for each primitive", async function () {
-    const tileset = await loadTestTilesetWithImagery(scene);
+    const tileset = await loadTilesetWithImagery(scene);
 
     const root = tileset.root;
     const content = root.content;
