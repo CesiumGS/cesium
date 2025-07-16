@@ -6,12 +6,12 @@
 
 ### Fixes :wrench:
 
-- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [12716](https://github.com/CesiumGS/cesium/issues/12716)
+- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [#12716](https://github.com/CesiumGS/cesium/issues/12716)
+- Fixes an exception when removing a Gaussian splat tileset from the scene primitives when it has more than one tile. [#12726](https://github.com/CesiumGS/cesium/pull/12726)
 
 #### Additions :tada:
 
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
-- Fixes an exception when removing a Gaussian splat asset from the scene primitives when it has more than one tile.
 
 ## 1.132 - 2025-08-01
 
