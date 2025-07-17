@@ -1,7 +1,28 @@
 # Change Log
 
 - Add wrapR property to Sampler and Texture3D, to support the newly added third dimension wrap.[#12701](https://github.com/CesiumGS/cesium/pull/12701)
+
+## 1.132 - 2025-07-02
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [#12716](https://github.com/CesiumGS/cesium/issues/12716)
+- Fixes an exception when removing a Gaussian splat tileset from the scene primitives when it has more than one tile. [#12726](https://github.com/CesiumGS/cesium/pull/12726)
+- Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix. [#12721](https://github.com/CesiumGS/cesium/issues/12721), [#12718](https://github.com/CesiumGS/cesium/issues/12718)
+
+#### Additions :tada:
+
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
+
+## 1.132 - 2025-08-01
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
 
 ## 1.131 - 2025-07-01
 

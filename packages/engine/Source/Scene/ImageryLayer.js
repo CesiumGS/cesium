@@ -388,8 +388,8 @@ Object.defineProperties(ImageryLayer.prototype, {
    * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of the thrown error.
-   * @memberof Imagery.prototype
-   * @type {Event<Imagery.ErrorEventCallback>}
+   * @memberof ImageryLayer.prototype
+   * @type {Event<ImageryLayer.ErrorEventCallback>}
    * @readonly
    */
   errorEvent: {
@@ -518,7 +518,7 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  * viewer.imageryLayers.add(imageryLayer);
  *
  * imageryLayer.readyEvent.addEventListener(provider => {
- *   imageryLayer.provider.errorEvent.addEventListener(error => {
+ *   imageryLayer.imageryProvider.errorEvent.addEventListener(error => {
  *     alert(`Encountered an error while loading imagery tiles! ${error}`);
  *   });
  * });
@@ -527,9 +527,9 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  *   alert(`Encountered an error while creating an imagery layer! ${error}`);
  * });
  *
- * @see ImageryLayer.errorEvent
- * @see ImageryLayer.readyEvent
- * @see ImageryLayer.provider
+ * @see ImageryLayer#errorEvent
+ * @see ImageryLayer#readyEvent
+ * @see ImageryLayer#imageryProvider
  * @see ImageryLayer.fromWorldImagery
  */
 ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
@@ -576,7 +576,7 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  * viewer.imageryLayers.add(imageryLayer);
  *
  * imageryLayer.readyEvent.addEventListener(provider => {
- *   imageryLayer.provider.errorEvent.addEventListener(error => {
+ *   imageryLayer.imageryProvider.errorEvent.addEventListener(error => {
  *     alert(`Encountered an error while loading imagery tiles! ${error}`);
  *   });
  * });
@@ -585,9 +585,9 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  *   alert(`Encountered an error while creating an imagery layer! ${error}`);
  * });
  *
- * @see ImageryLayer.errorEvent
- * @see ImageryLayer.readyEvent
- * @see ImageryLayer.provider
+ * @see ImageryLayer#errorEvent
+ * @see ImageryLayer#readyEvent
+ * @see ImageryLayer#imageryProvider
  */
 ImageryLayer.fromWorldImagery = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
