@@ -21,11 +21,13 @@
   <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
+
       #toolbar {
         background: rgba(42, 42, 42, 0.8);
         padding: 4px;
         border-radius: 4px;
       }
+
       #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
@@ -41,19 +43,21 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
+        const colorShader = new Cesium.CustomShader({
+          lightingModel: Cesium.LightingModel.UNLIT,
+          fragmentShaderText: `
+            // Color tiles by distance to the camera
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
+                material.diffuse = vec3(0.0, 0.0, 1.0);
+                material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
+            }`,
+        });
+
+        let tileset = null;
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {
-            customShader: new Cesium.CustomShader({
-              lightingModel: Cesium.LightingModel.UNLIT,
-              fragmentShaderText: `
-                // Color tiles by distance to the camera
-                void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-                {
-                    material.diffuse = vec3(0.0, 0.0, 1.0);
-                    material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
-                }
-                `,
-            }),
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {
+            customShader: colorShader,
           });
           viewer.scene.primitives.add(tileset);
         } catch (error) {
@@ -75,6 +79,52 @@
           orientation: initialOrientation,
           endTransform: Cesium.Matrix4.IDENTITY,
         });
+
+        const options = [
+          {
+            text: "Color",
+            onselect: function () {
+              tileset.customShader = colorShader;
+            },
+          },
+          {
+            text: "Stripes",
+            onselect: function () {
+              tileset.customShader = new Cesium.CustomShader({
+                uniforms: {
+                  // elapsed time in seconds for animation
+                  u_time: {
+                    type: Cesium.UniformType.FLOAT,
+                    value: 0,
+                  },
+                  // user-defined texture
+                  u_stripes: {
+                    type: Cesium.UniformType.SAMPLER_2D,
+                    value: new Cesium.TextureUniform({
+                      url: "../../SampleData/cesium_stripes.png",
+                    }),
+                  },
+                },
+                // Apply the texture to the model, but move the texture coordinates
+                // a bit over time so it's animated.
+                fragmentShaderText: `
+                  void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+                  {
+                      vec2 texCoord = vec2(fsInput.attributes.positionMC.y / 100., 0.) + 0.01 * vec2(czm_frameNumber, 0.0);
+                      material.diffuse = texture(u_stripes, texCoord).rgb;
+                  }`,
+              });
+            },
+          },
+          {
+            text: "None",
+            onselect: function () {
+              tileset.customShader = null;
+            },
+          },
+        ];
+
+        Sandcastle.addToolbarMenu(options);
 
         //Sandcastle_End
       };

@@ -3,7 +3,6 @@ import Matrix4 from "../Core/Matrix4.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
-import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -29,7 +28,6 @@ import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import Axis from "./Axis.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Transforms from "../Core/Transforms.js";
 import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -124,13 +122,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._needsGaussianSplatTexture = true;
-  /**
-   * The scale of the Gaussian splats.
-   * This is used to control the size of the splats when rendered.
-   * @type {number}
-   * @private
-   */
-  this._splatScale = 1.0;
+
   /**
    * The previous view matrix used to determine if the primitive needs to be updated.
    * This is used to avoid unnecessary updates when the view matrix hasn't changed.
@@ -298,26 +290,6 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
       return this._ready;
     },
   },
-  /**
-   * Scaling factor applied to the Gaussian splats indepdendent of the
-   * Gaussian splat scale attribute. Applied uniformly to all splats.
-   * @memberof GaussianSplatPrimitive.prototype
-   * @type {number}
-   * @default 1.0
-   */
-
-  splatScale: {
-    get: function () {
-      return this._splatScale;
-    },
-    set: function (splatScale) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.number("splatScale", splatScale);
-      //>>includeEnd('debug');
-
-      this._splatScale = splatScale;
-    },
-  },
 
   /**
    * The {@link SplitDirection} to apply to this point.
@@ -438,27 +410,31 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     computedModelMatrix,
   );
 
-  const center = tile.tileset.boundingSphere.center;
-  const toGlobal = Transforms.eastNorthUpToFixedFrame(center);
-  const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4B);
-
+  const toGlobal = Matrix4.multiply(
+    tile.tileset.modelMatrix,
+    Matrix4.fromArray(tile.tileset.root.transform),
+    scratchMatrix4B,
+  );
+  const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
   const transform = Matrix4.multiplyTransformation(
     toLocal,
     computedModelMatrix,
     scratchMatrix4A,
   );
-
-  const positions = ModelUtility.getAttributeBySemantic(
+  const positions = tile.content._originalPositions;
+  const rotations = tile.content._originalRotations;
+  const scales = tile.content._originalScales;
+  const attributePositions = ModelUtility.getAttributeBySemantic(
     splatPrimitive,
     VertexAttributeSemantic.POSITION,
   ).typedArray;
 
-  const rotations = ModelUtility.getAttributeBySemantic(
+  const attributeRotations = ModelUtility.getAttributeBySemantic(
     splatPrimitive,
     VertexAttributeSemantic.ROTATION,
   ).typedArray;
 
-  const scales = ModelUtility.getAttributeBySemantic(
+  const attributeScales = ModelUtility.getAttributeBySemantic(
     splatPrimitive,
     VertexAttributeSemantic.SCALE,
   ).typedArray;
@@ -493,18 +469,18 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     Matrix4.getRotation(scratchMatrix4C, rotation);
     Matrix4.getScale(scratchMatrix4C, scale);
 
-    positions[i * 3] = position.x;
-    positions[i * 3 + 1] = position.y;
-    positions[i * 3 + 2] = position.z;
+    attributePositions[i * 3] = position.x;
+    attributePositions[i * 3 + 1] = position.y;
+    attributePositions[i * 3 + 2] = position.z;
 
-    rotations[i * 4] = rotation.x;
-    rotations[i * 4 + 1] = rotation.y;
-    rotations[i * 4 + 2] = rotation.z;
-    rotations[i * 4 + 3] = rotation.w;
+    attributeRotations[i * 4] = rotation.x;
+    attributeRotations[i * 4 + 1] = rotation.y;
+    attributeRotations[i * 4 + 2] = rotation.z;
+    attributeRotations[i * 4 + 3] = rotation.w;
 
-    scales[i * 3] = scale.x;
-    scales[i * 3 + 1] = scale.y;
-    scales[i * 3 + 2] = scale.z;
+    attributeScales[i * 3] = scale.x;
+    attributeScales[i * 3 + 1] = scale.y;
+    attributeScales[i * 3 + 2] = scale.z;
   }
 };
 
@@ -625,13 +601,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
 
-  shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
-
   const uniformMap = renderResources.uniformMap;
-
-  uniformMap.u_splatScale = function () {
-    return primitive.splatScale;
-  };
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
@@ -706,8 +676,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   primitive._vertexArrayLen = primitive._indexes.length;
 
-  const center = tileset.boundingSphere.center;
-  const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+  const modelMatrix = Matrix4.multiply(
+    tileset.modelMatrix,
+    Matrix4.fromArray(tileset.root.transform),
+    scratchMatrix4B,
+  );
 
   const command = new DrawCommand({
     boundingVolume: tileset.boundingSphere,
@@ -749,6 +722,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   if (this._drawCommand) {
     frameState.commandList.push(this._drawCommand);
+  }
+
+  if (tileset._modelMatrixChanged) {
+    this._dirty = true;
+    return;
   }
 
   if (frameState.passes.pick === true) {
