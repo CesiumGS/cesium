@@ -14,5 +14,6 @@ dist-ssr
 *.tsbuildinfo
 
 gallery/list.json
+pagefind
 templates/Sandcastle.d.ts
 templates/Sandcastle.js

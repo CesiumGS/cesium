@@ -28,6 +28,7 @@ const baseConfig: UserConfig = {
           new URL("./standalone.html", import.meta.url),
         ),
       },
+      external: ["../pagefind/pagefind.js"],
     },
     assetsInlineLimit: (filePath) => {
       if (filePath.includes("@stratakit") && filePath.endsWith(".svg")) {

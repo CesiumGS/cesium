@@ -28,6 +28,7 @@ export default defineConfig(() => {
     targets: [
       { src: "templates/Sandcastle.(d.ts|js)", dest: "templates" },
       { src: "gallery", dest: "" },
+      { src: "pagefind", dest: "" },
     ],
   });
 
