@@ -51,12 +51,34 @@ class ModelInstance {
     this._dirty = false;
   }
 
-  get transform() {
-    return this._transform;
-  }
-
-  set transform(value) {
-    //>>includeStart('debug', pragmas.debug);
+  /**
+   * The 4x4 transformation matrix that transforms the instance from model to world coordinates.
+   * The position, orientation, and scale of the instance is determined by the specified {@link Matrix4}.
+   *
+   * @type {Matrix4}
+   *
+   * @example
+   * const position = Cesium.Cartesian3.fromDegrees(-75.1652, 39.9526);
+   *
+   * const headingPositionRoll = new Cesium.HeadingPitchRoll();
+   * const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+   *   "north",
+   *   "west",
+   * );
+   * const instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
+   *   position,
+   *   headingPositionRoll,
+   *   Cesium.Ellipsoid.WGS84,
+   *   fixedFrameTransform,
+   * );
+   * modelInstance.transform = instanceModelMatrix;
+   */
+  transform: {
+    get: function () {
+      return this._transform;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("transform", value);
     //>>includeEnd('debug');
 
@@ -67,7 +89,8 @@ class ModelInstance {
     this._dirty = true;
     this._transform = value;
     this._updateTransform(value);
-  }
+    },
+  },
 
   /**
    * The center of the model instance in world space.
