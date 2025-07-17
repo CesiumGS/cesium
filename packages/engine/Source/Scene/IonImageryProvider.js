@@ -310,11 +310,8 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
     const url = endPointOptions.url;
     delete endPointOptions.url;
 
-    // If ion can proxy this external type and a proxy URL is returned, then treat it as an ion URL
-    if (
-      IonResource.ProxiedExternalProviders.includes(externalType) &&
-      url.includes("/proxy/")
-    ) {
+    // If ion is proxying the external asset then treat it as an ion URL
+    if (endPointOptions.proxy) {
       imageryProvider = await factory(
         new IonResource(endpoint, endpointResource),
         endPointOptions,
