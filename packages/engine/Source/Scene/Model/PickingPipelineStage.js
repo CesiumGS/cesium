@@ -179,6 +179,8 @@ function processInstancedPickIds(renderResources, context) {
     pickIdsTypedArray[i * 4 + 1] = Color.floatToByte(pickColor.green);
     pickIdsTypedArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
     pickIdsTypedArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
+
+    model.instances._instances[i]._pickId = pickId;
   }
 
   model._pickIds = pickIds;
