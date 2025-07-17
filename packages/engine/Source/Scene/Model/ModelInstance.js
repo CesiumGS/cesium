@@ -46,6 +46,7 @@ class ModelInstance {
     this._transform = transform;
     this._center = new Cartesian3();
     this._relativeTransform = new Matrix4();
+    this._pickId = undefined;
 
     this._updateTransform(transform);
     this._dirty = false;
@@ -56,6 +57,8 @@ class ModelInstance {
    * The position, orientation, and scale of the instance is determined by the specified {@link Matrix4}.
    *
    * @type {Matrix4}
+   *
+   * @default {@link Matrix4.IDENTITY}
    *
    * @example
    * const position = Cesium.Cartesian3.fromDegrees(-75.1652, 39.9526);
@@ -73,12 +76,12 @@ class ModelInstance {
    * );
    * modelInstance.transform = instanceModelMatrix;
    */
-  transform: {
-    get: function () {
-      return this._transform;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
+  get transform() {
+    return this._transform;
+  }
+
+  set transform(value) {
+    //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("transform", value);
     //>>includeEnd('debug');
 
@@ -89,8 +92,7 @@ class ModelInstance {
     this._dirty = true;
     this._transform = value;
     this._updateTransform(value);
-    },
-  },
+  }
 
   /**
    * The center of the model instance in world space.
@@ -108,6 +110,15 @@ class ModelInstance {
    */
   get relativeTransform() {
     return this._relativeTransform;
+  }
+
+  /**
+   * The Pick Id of the instance.
+   * @type {string|undefined}
+   * @readonly
+   */
+  get pickId() {
+    return this._pickId;
   }
 
   _updateTransform(transform) {
