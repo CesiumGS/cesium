@@ -21,15 +21,6 @@
             "type": "chrome",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
-        },
-         {
-      "name": "Attach to Chrome for Karma",
-      "type": "chrome",
-      "request": "attach",
-      "port": 9333,
-      "webRoot": "${workspaceFolder}",
-      "sourceMaps": true,
-      "timeout": 5000
-    }
+        }
     ]
 }
