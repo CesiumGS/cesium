@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.130.1-ion.0 - 2025-07-17
+
+### @cesium/engine
+
+### Fixes :wrench:
+
+- Fixes an exception when removing a Gaussian splat tileset from the scene primitives when it has more than one tile. [#12726](https://github.com/CesiumGS/cesium/pull/12726)
+- Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix. [#12721](https://github.com/CesiumGS/cesium/issues/12721), [#12718](https://github.com/CesiumGS/cesium/issues/12718)
+
 ## 1.131 - 2025-07-01
 
 ### @cesium/engine
@@ -9,8 +18,6 @@
 - Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
 - Fixed raymarching step size for cylindrical voxels. [#12681](https://github.com/CesiumGS/cesium/pull/12681)
 - Fixes handling of tileset `modelMatrix` changes for translations and rotations in `GaussianSplatPrimitive`. [#12706](https://github.com/CesiumGS/cesium/pull/12706)
-- Fixes an exception when removing a Gaussian splat asset from the scene primitives when it has more than one tile.
-- Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix.
 
 #### Additions :tada:
 
