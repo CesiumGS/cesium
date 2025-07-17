@@ -7,12 +7,13 @@
     "scripts/buildGallery.js"
   ],
   "scripts": {
-    "dev": "npm run build-gallery && vite --config vite.config.dev.ts",
+    "dev": "npm run pagefind && npm run build-gallery && vite --config vite.config.dev.ts",
     "build": "npm run build-app",
     "build-app": "tsc -b && vite build --config vite.config.app.ts",
-    "build-ci": "tsc -b && vite build --config vite.config.ci.ts",
+    "build-ci": "tsc -b && npm run build-gallery && npm run pagefind && vite build --config vite.config.ci.ts",
     "build-prod": "npm run build-gallery && tsc -b && vite build --config vite.config.prod.ts",
-    "build-gallery": "node scripts/buildGallery.js"
+    "build-gallery": "node scripts/buildGallery.js",
+    "pagefind": "node scripts/buildSearchIndex.js"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
