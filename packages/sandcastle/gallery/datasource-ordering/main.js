@@ -86,7 +86,6 @@ viewer.dataSources.add(promise2);
 Sandcastle.addToolbarButton("Swap", function () {
   Promise.all([promise1, promise2]).then(function (results) {
     const ds1 = results[0];
-    const ds2 = results[1];
     if (viewer.dataSources.indexOf(ds1) === 0) {
       viewer.dataSources.raise(ds1);
     } else {

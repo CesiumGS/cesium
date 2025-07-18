@@ -1,6 +1,8 @@
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
+/* eslint-disable no-unused-vars */
+
 const viewer = new Cesium.Viewer("cesiumContainer", {
   infoBox: false,
   selectionIndicator: false,

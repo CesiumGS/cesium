@@ -8,7 +8,6 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
-const inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
 try {
   const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {

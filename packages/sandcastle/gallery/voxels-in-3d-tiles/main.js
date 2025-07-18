@@ -51,7 +51,7 @@ Sandcastle.addToolbarMenu([
       const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
         "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
       );
-      const primitive = createPrimitive(provider);
+      createPrimitive(provider);
     },
   },
   {
@@ -60,7 +60,7 @@ Sandcastle.addToolbarMenu([
       const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
         "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
       );
-      const primitive = createPrimitive(provider);
+      createPrimitive(provider);
     },
   },
   {
@@ -69,7 +69,7 @@ Sandcastle.addToolbarMenu([
       const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
         "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       );
-      const primitive = createPrimitive(provider);
+      createPrimitive(provider);
     },
   },
 ]);

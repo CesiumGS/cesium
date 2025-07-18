@@ -14,8 +14,6 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
 const viewer = new Cesium.Viewer("cesiumContainer");
 const scene = viewer.scene;
 const camera = scene.camera;
-const globe = scene.globe;
-const statistics = Cesium.RequestScheduler.statistics;
 const Cartesian3 = Cesium.Cartesian3;
 
 let tourTime = 0;

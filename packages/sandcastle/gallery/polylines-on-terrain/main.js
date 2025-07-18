@@ -43,7 +43,7 @@ Cesium.knockout
 const scene = viewer.scene;
 
 // Add a Rectangle GroundPrimitive to demonstrate Z-indexing with GroundPrimitives
-const rectangleGroundPrimitive = scene.groundPrimitives.add(
+scene.groundPrimitives.add(
   new Cesium.GroundPrimitive({
     geometryInstances: new Cesium.GeometryInstance({
       geometry: new Cesium.RectangleGeometry({

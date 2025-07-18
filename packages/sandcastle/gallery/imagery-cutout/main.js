@@ -15,8 +15,6 @@ canvas.onclick = function () {
   canvas.focus();
 };
 
-const scene = viewer.scene;
-
 const defaultImageryLayerCutout = Cesium.Rectangle.fromDegrees(
   -90,
   20,

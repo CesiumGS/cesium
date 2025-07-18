@@ -72,7 +72,7 @@ const i2 = new Cesium.GeometryInstance({
   geometry: new Cesium.CylinderGeometry({
     length: length,
     topRadius: topRad,
-    bottomRadius: 200000.0,
+    bottomRadius: bottomRad,
     vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
     offsetAttribute: Cesium.GeometryOffsetAttribute.ALL,
   }),
@@ -90,7 +90,7 @@ const o2 = new Cesium.GeometryInstance({
   geometry: new Cesium.CylinderOutlineGeometry({
     length: length,
     topRadius: topRad,
-    bottomRadius: 200000.0,
+    bottomRadius: bottomRad,
     numberOfVerticalLines: 16,
     offsetAttribute: Cesium.GeometryOffsetAttribute.ALL,
   }),

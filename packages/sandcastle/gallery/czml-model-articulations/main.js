@@ -1,5 +1,4 @@
 import * as Cesium from "cesium";
-import Sandcastle from "Sandcastle";
 
 const czml = [
   {

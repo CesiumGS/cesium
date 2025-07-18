@@ -37,11 +37,6 @@ Cesium.knockout.track(viewModel);
 const toolbar = document.getElementById("toolbar");
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-const entityPosition = new Cesium.Cartesian3();
-const entityOrientation = new Cesium.Quaternion();
-const rotationMatrix = new Cesium.Matrix3();
-const modelMatrix = new Cesium.Matrix4();
-
 function computeModelMatrix(entity, time) {
   return entity.computeModelMatrix(time, new Cesium.Matrix4());
 }

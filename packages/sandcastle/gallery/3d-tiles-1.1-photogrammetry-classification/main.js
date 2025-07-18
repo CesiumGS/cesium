@@ -261,7 +261,7 @@ handler.setInputAction(function (movement) {
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 const clickHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-handler.setInputAction(function (movement) {
+clickHandler.setInputAction(function (movement) {
   if (enablePicking) {
     const pickedObject = scene.pick(movement.position);
     if (

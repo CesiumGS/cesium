@@ -83,6 +83,7 @@ const sineTerrainProvider = new Cesium.CustomHeightmapTerrainProvider({
 
     for (let yy = 0; yy < height; yy++) {
       for (let xx = 0; xx < width; xx++) {
+        /* eslint-disable-next-line no-unused-vars */
         const u = (x + xx / (width - 1)) / Math.pow(2, level);
         const v = (y + yy / (height - 1)) / Math.pow(2, level);
 

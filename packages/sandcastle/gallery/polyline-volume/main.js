@@ -1,5 +1,7 @@
 import * as Cesium from "cesium";
 
+/* eslint-disable no-unused-vars */
+
 const viewer = new Cesium.Viewer("cesiumContainer");
 
 function computeCircle(radius) {

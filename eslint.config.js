@@ -115,6 +115,12 @@ export default [
     },
   },
   {
+    files: ["packages/sandcastle/gallery/hello-world/main.js"],
+    rules: {
+      "no-unused-vars": "off",
+    },
+  },
+  {
     files: ["Specs/**/*", "packages/**/Specs/**/*"],
     languageOptions: {
       globals: {

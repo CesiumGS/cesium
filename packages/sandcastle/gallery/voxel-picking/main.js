@@ -69,9 +69,7 @@ function constructRandomTileData(dimensions, type, randomSeed) {
     for (let y = 0; y < dimensions.y; y++) {
       const indexZY = indexZ + y * dimensions.x;
       for (let x = 0; x < dimensions.x; x++) {
-        const lerperX = x / (dimensions.x - 1);
         const lerperY = y / (dimensions.y - 1);
-        const lerperZ = z / (dimensions.z - 1);
 
         const h = Cesium.Math.nextRandomNumber();
         const s = 1.0 - lerperY * 0.2;
@@ -147,7 +145,7 @@ Sandcastle.addToolbarMenu([
       const provider = new ProceduralMultiTileVoxelProvider(
         Cesium.VoxelShapeType.BOX,
       );
-      const primitive = createPrimitive(provider);
+      createPrimitive(provider);
     },
   },
   {
@@ -158,7 +156,7 @@ Sandcastle.addToolbarMenu([
       );
       provider.minBounds.z = 0.0;
       provider.maxBounds.z = 1000000.0;
-      const primitive = createPrimitive(provider);
+      createPrimitive(provider);
     },
   },
   {
@@ -167,7 +165,7 @@ Sandcastle.addToolbarMenu([
       const provider = new ProceduralMultiTileVoxelProvider(
         Cesium.VoxelShapeType.CYLINDER,
       );
-      const primitive = createPrimitive(provider);
+      createPrimitive(provider);
     },
   },
 ]);
