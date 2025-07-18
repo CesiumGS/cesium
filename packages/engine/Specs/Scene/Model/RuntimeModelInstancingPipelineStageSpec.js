@@ -40,7 +40,6 @@ describe(
     });
 
     afterAll(function () {
-      scene = createScene();
       scene2D.destroyForSpecs();
     });
 
@@ -124,170 +123,163 @@ describe(
       return gltfLoader;
     }
 
-    it("creates instancing matrices vertex attributes", function () {
-      return loadGltf(sampleGltfUrl).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const renderResources = mockRenderResources(node);
-        const runtimeNode = renderResources.runtimeNode;
+    it("creates instancing matrices vertex attributes", async function () {
+      const gltfLoader = await loadGltf(sampleGltfUrl);
+      const components = gltfLoader.components;
+      const node = components.nodes[0];
+      const renderResources = mockRenderResources(node);
+      const runtimeNode = renderResources.runtimeNode;
 
-        scene.renderForSpecs();
-        RuntimeModelInstancingPipelineStage.process(
-          renderResources,
-          node,
-          scene.frameState,
-        );
+      scene.renderForSpecs();
+      RuntimeModelInstancingPipelineStage.process(
+        renderResources,
+        node,
+        scene.frameState,
+      );
 
-        expect(renderResources.attributes.length).toBe(5);
+      expect(renderResources.attributes.length).toBe(5);
 
-        const shaderBuilder = renderResources.shaderBuilder;
-        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-          "HAS_INSTANCE_MATRICES",
-          "HAS_INSTANCING",
-          "USE_API_INSTANCING",
-        ]);
-        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-          "HAS_INSTANCE_MATRICES",
-          "HAS_INSTANCING",
-        ]);
-        ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "in vec4 a_instancingTransformRow0;",
-          "in vec4 a_instancingTransformRow1;",
-          "in vec4 a_instancingTransformRow2;",
-          "in vec3 a_instancingPositionHigh;",
-          "in vec3 a_instancingPositionLow;",
-        ]);
+      const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_INSTANCE_MATRICES",
+        "HAS_INSTANCING",
+        "USE_API_INSTANCING",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_INSTANCE_MATRICES",
+        "HAS_INSTANCING",
+      ]);
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "in vec4 a_instancingTransformRow0;",
+        "in vec4 a_instancingTransformRow1;",
+        "in vec4 a_instancingTransformRow2;",
+        "in vec3 a_instancingPositionHigh;",
+        "in vec3 a_instancingPositionLow;",
+      ]);
 
-        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-          "uniform mat4 u_instance_nodeTransform;",
-        ]);
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform mat4 u_instance_nodeTransform;",
+      ]);
 
-        expect(runtimeNode.instancingTransformsBuffer).toBeDefined();
-        // The resource will be counted by NodeStatisticsPipelineStage.
-        expect(renderResources.model.statistics.geometryByteLength).toBe(0);
-      });
+      expect(runtimeNode.instancingTransformsBuffer).toBeDefined();
+      // The resource will be counted by NodeStatisticsPipelineStage.
+      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
 
-    it("correctly creates transform matrices", function () {
-      return loadGltf(sampleGltfUrl).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const renderResources = mockRenderResources(node);
-        const modelInstances =
-          renderResources.model.sceneGraph.modelInstances._instances;
+    it("correctly creates transform matrices", async function () {
+      const gltfLoader = await loadGltf(sampleGltfUrl);
 
-        const expectedTransformsTypedArray = new Float32Array([
-          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
-          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
-          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 10, 10, 10,
-          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
-          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
-          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 20, 20, 20,
-        ]);
-        const transformsTypedArray =
-          RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
-            modelInstances,
-          );
+      const components = gltfLoader.components;
+      const node = components.nodes[0];
+      const renderResources = mockRenderResources(node);
+      const modelInstances =
+        renderResources.model.sceneGraph.modelInstances._instances;
 
-        expect(transformsTypedArray.length).toEqual(
-          expectedTransformsTypedArray.length,
+      const expectedTransformsTypedArray = new Float32Array([
+        -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+        -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+        0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 10, 10, 10,
+        -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+        -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+        0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 20, 20, 20,
+      ]);
+      const transformsTypedArray =
+        RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
+          modelInstances,
         );
-        for (let i = 0; i < expectedTransformsTypedArray.length; i++) {
-          expect(transformsTypedArray[i]).toEqualEpsilon(
-            expectedTransformsTypedArray[i],
-            CesiumMath.EPSILON10,
-          );
-        }
-      });
+
+      expect(transformsTypedArray.length).toEqual(
+        expectedTransformsTypedArray.length,
+      );
+      for (let i = 0; i < expectedTransformsTypedArray.length; i++) {
+        expect(transformsTypedArray[i]).toEqualEpsilon(
+          expectedTransformsTypedArray[i],
+          CesiumMath.EPSILON10,
+        );
+      }
     });
 
-    it("model instances update stage updates transform vertex attributes", function () {
-      return loadGltf(sampleGltfUrl).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const renderResources = mockRenderResources(node);
-        const runtimeNode = renderResources.runtimeNode;
-        const sceneGraph = renderResources.model.sceneGraph;
+    it("model instances update stage updates transform vertex attributes", async function () {
+      const gltfLoader = await loadGltf(sampleGltfUrl);
+      const components = gltfLoader.components;
+      const node = components.nodes[0];
+      const renderResources = mockRenderResources(node);
+      const runtimeNode = renderResources.runtimeNode;
+      const sceneGraph = renderResources.model.sceneGraph;
 
-        scene.renderForSpecs();
-        RuntimeModelInstancingPipelineStage.process(
-          renderResources,
-          node,
-          scene.frameState,
-        );
+      scene.renderForSpecs();
+      RuntimeModelInstancingPipelineStage.process(
+        renderResources,
+        node,
+        scene.frameState,
+      );
 
-        const context = scene.frameState.context;
-        const usage = BufferUsage.STATIC_DRAW;
+      const context = scene.frameState.context;
+      const usage = BufferUsage.STATIC_DRAW;
 
-        const expectedTransformsTypedArray = new Float32Array([
-          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
-          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
-          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 10, 10, 10,
-          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
-          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
-          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 20, 20, 20,
-        ]);
+      const expectedTransformsTypedArray = new Float32Array([
+        -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+        -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+        0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 10, 10, 10,
+        -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+        -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+        0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 20, 20, 20,
+      ]);
 
-        const expectedTransformsBuffer = Buffer.createVertexBuffer({
-          context,
-          usage,
-          typedArray: expectedTransformsTypedArray,
-        });
-        expect(runtimeNode.instancingTransformsBuffer._buffer).toEqual(
-          expectedTransformsBuffer._buffer,
-        );
-
-        const samplePosition3 = new Cartesian3(30, 30, 30);
-        const samplePosition4 = new Cartesian3(40, 40, 40);
-
-        const instanceModelMatrix3 =
-          new Transforms.headingPitchRollToFixedFrame(
-            samplePosition3,
-            headingPositionRoll,
-            Ellipsoid.WGS84,
-            fixedFrameTransform,
-          );
-
-        const instanceModelMatrix4 =
-          new Transforms.headingPitchRollToFixedFrame(
-            samplePosition4,
-            headingPositionRoll,
-            Ellipsoid.WGS84,
-            fixedFrameTransform,
-          );
-
-        const sampleInstance3 = new ModelInstance(instanceModelMatrix3);
-        const sampleInstance4 = new ModelInstance(instanceModelMatrix4);
-
-        sceneGraph.modelInstances._instances = [
-          sampleInstance3,
-          sampleInstance4,
-        ];
-        const frameState = {
-          mode: SceneMode.SCENE3D,
-        };
-
-        ModelInstancesUpdateStage.update(runtimeNode, sceneGraph, frameState);
-
-        const newExpectedTransformsTypedArray = new Float32Array([
-          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
-          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
-          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 30, 30, 30,
-          -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
-          -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
-          0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 40, 40, 40,
-        ]);
-
-        const newExpectedTransformsBuffer = Buffer.createVertexBuffer({
-          context,
-          usage,
-          typedArray: newExpectedTransformsTypedArray,
-        });
-
-        expect(runtimeNode.instancingTransformsBuffer._buffer).toEqual(
-          newExpectedTransformsBuffer._buffer,
-        );
+      const expectedTransformsBuffer = Buffer.createVertexBuffer({
+        context,
+        usage,
+        typedArray: expectedTransformsTypedArray,
       });
+      expect(runtimeNode.instancingTransformsBuffer._buffer).toEqual(
+        expectedTransformsBuffer._buffer,
+      );
+
+      const samplePosition3 = new Cartesian3(30, 30, 30);
+      const samplePosition4 = new Cartesian3(40, 40, 40);
+
+      const instanceModelMatrix3 = new Transforms.headingPitchRollToFixedFrame(
+        samplePosition3,
+        headingPositionRoll,
+        Ellipsoid.WGS84,
+        fixedFrameTransform,
+      );
+
+      const instanceModelMatrix4 = new Transforms.headingPitchRollToFixedFrame(
+        samplePosition4,
+        headingPositionRoll,
+        Ellipsoid.WGS84,
+        fixedFrameTransform,
+      );
+
+      const sampleInstance3 = new ModelInstance(instanceModelMatrix3);
+      const sampleInstance4 = new ModelInstance(instanceModelMatrix4);
+
+      sceneGraph.modelInstances._instances = [sampleInstance3, sampleInstance4];
+      const frameState = {
+        mode: SceneMode.SCENE3D,
+      };
+
+      ModelInstancesUpdateStage.update(runtimeNode, sceneGraph, frameState);
+
+      const newExpectedTransformsTypedArray = new Float32Array([
+        -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+        -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+        0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 30, 30, 30,
+        -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
+        -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
+        0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 40, 40, 40,
+      ]);
+
+      const newExpectedTransformsBuffer = Buffer.createVertexBuffer({
+        context,
+        usage,
+        typedArray: newExpectedTransformsTypedArray,
+      });
+
+      expect(runtimeNode.instancingTransformsBuffer._buffer).toEqual(
+        newExpectedTransformsBuffer._buffer,
+      );
     });
   },
   "WebGL",
