@@ -77,7 +77,11 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
     if (
       check(!/^[a-zA-Z0-9-]+$/.test(slug), `"${slug}" is not a valid slug`) ||
       check(!title, `${slug} - Missing title`) ||
-      check(!description, `${slug} - Missing description`)
+      check(!description, `${slug} - Missing description`) ||
+      check(
+        !labels || labels.length === 0,
+        `${slug} - Must have at least 1 label`,
+      )
     ) {
       continue;
     }
@@ -101,12 +105,16 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
       continue;
     }
 
+    if (development && !labels.includes("Development")) {
+      labels.push("Development");
+    }
+
     output.entries.push({
       id: slug,
       title: title,
       thumbnail: thumbnail,
       description: description,
-      labels: labels ?? [],
+      labels: labels,
       isNew: false,
     });
     if (legacyId) {

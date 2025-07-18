@@ -12,7 +12,6 @@ export async function buildSearchIndex(galleryDirectory, outputPath) {
     `!${galleryDirectory}/list.json`,
   ]);
 
-  // Create a Pagefind search index to work with
   const { index } = await pagefind.createIndex({
     verbose: true,
     logfile: "pagefind-debug.log",
@@ -41,7 +40,6 @@ export async function buildSearchIndex(galleryDirectory, outputPath) {
     const { title, description, labels = [] } = metadata;
 
     const galleryBase = `${galleryDirectory}/${slug}`;
-    // const htmlFile = readFileSync(`${galleryBase}/index.html`, "utf-8");
     const jsFile = readFileSync(`${galleryBase}/main.js`, "utf-8");
 
     await index.addCustomRecord({
@@ -60,22 +58,6 @@ export async function buildSearchIndex(galleryDirectory, outputPath) {
     });
   }
 
-  // Index all HTML files in a directory
-  // await index.addDirectory({
-  //   path: "public",
-  // });
-
-  // Add extra content
-  // await index.addCustomRecord({
-  //   url: "/resume.pdf",
-  //   content: "Aenean lacinia bibendum nulla sed consectetur",
-  //   language: "en",
-  // });
-
-  // Get the index files in-memory
-  // const { files } = await index.getFiles();
-
-  // Or, write the index to disk
   await index.writeFiles({
     outputPath,
   });
