@@ -1,6 +1,5 @@
 # Change Log
 
-<<<<<<< HEAD
 ## 1.132 - 2025-08-01
 
 ### @cesium/engine
