@@ -16,6 +16,7 @@ import {
   Transforms,
   HeadingPitchRoll,
   Ellipsoid,
+  ModelSceneGraph,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
@@ -91,11 +92,7 @@ describe(
           _modelResources: [],
           _pipelineResources: [],
           statistics: new ModelStatistics(),
-          sceneGraph: {
-            modelInstances: {
-              _instances: [sampleInstance1, sampleInstance2],
-            },
-          },
+          sceneGraph: new ModelSceneGraph(),
         },
         runtimeNode: {
           node: node,
@@ -128,6 +125,11 @@ describe(
       const components = gltfLoader.components;
       const node = components.nodes[0];
       const renderResources = mockRenderResources(node);
+      renderResources.model.sceneGraph.modelInstances._instances = [
+        sampleInstance1,
+        sampleInstance2,
+      ];
+      console.log(renderResources);
       const runtimeNode = renderResources.runtimeNode;
 
       scene.renderForSpecs();
@@ -172,6 +174,10 @@ describe(
       const components = gltfLoader.components;
       const node = components.nodes[0];
       const renderResources = mockRenderResources(node);
+      renderResources.model.sceneGraph.modelInstances._instances = [
+        sampleInstance1,
+        sampleInstance2,
+      ];
       const modelInstances =
         renderResources.model.sceneGraph.modelInstances._instances;
 
@@ -204,6 +210,10 @@ describe(
       const components = gltfLoader.components;
       const node = components.nodes[0];
       const renderResources = mockRenderResources(node);
+      renderResources.model.sceneGraph.modelInstances._instances = [
+        sampleInstance1,
+        sampleInstance2,
+      ];
       const runtimeNode = renderResources.runtimeNode;
       const sceneGraph = renderResources.model.sceneGraph;
 
@@ -271,15 +281,26 @@ describe(
         0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 40, 40, 40,
       ]);
 
-      const newExpectedTransformsBuffer = Buffer.createVertexBuffer({
-        context,
-        usage,
-        typedArray: newExpectedTransformsTypedArray,
-      });
+      const newTransformsTypedArray =
+        RuntimeModelInstancingPipelineStage._getTransformsTypedArray([
+          sampleInstance3,
+          sampleInstance4,
+        ]);
 
-      expect(runtimeNode.instancingTransformsBuffer._buffer).toEqual(
-        newExpectedTransformsBuffer._buffer,
+      expect(newTransformsTypedArray.length).toEqual(
+        newExpectedTransformsTypedArray.length,
       );
+      for (let i = 0; i < newExpectedTransformsTypedArray.length; i++) {
+        expect(newTransformsTypedArray[i]).toEqualEpsilon(
+          newExpectedTransformsTypedArray[i],
+          CesiumMath.EPSILON10,
+        );
+      }
+
+      expect(runtimeNode.instancingTransformsBuffer.usage).toEqual(
+        BufferUsage.STATIC_DRAW,
+      );
+      expect(runtimeNode.instancingTransformsBuffer.sizeInBytes).toEqual(144);
     });
   },
   "WebGL",
