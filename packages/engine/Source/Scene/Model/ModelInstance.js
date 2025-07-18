@@ -46,11 +46,36 @@ class ModelInstance {
     this._transform = transform;
     this._center = new Cartesian3();
     this._relativeTransform = new Matrix4();
+    this._pickId = undefined;
 
     this._updateTransform(transform);
     this._dirty = false;
   }
 
+  /**
+   * The 4x4 transformation matrix that transforms the instance from model to world coordinates.
+   * The position, orientation, and scale of the instance is determined by the specified {@link Matrix4}.
+   *
+   * @type {Matrix4}
+   *
+   * @default {@link Matrix4.IDENTITY}
+   *
+   * @example
+   * const position = Cesium.Cartesian3.fromDegrees(-75.1652, 39.9526);
+   *
+   * const headingPositionRoll = new Cesium.HeadingPitchRoll();
+   * const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+   *   "north",
+   *   "west",
+   * );
+   * const instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
+   *   position,
+   *   headingPositionRoll,
+   *   Cesium.Ellipsoid.WGS84,
+   *   fixedFrameTransform,
+   * );
+   * modelInstance.transform = instanceModelMatrix;
+   */
   get transform() {
     return this._transform;
   }
@@ -85,6 +110,15 @@ class ModelInstance {
    */
   get relativeTransform() {
     return this._relativeTransform;
+  }
+
+  /**
+   * The Pick Id of the instance.
+   * @type {string|undefined}
+   * @readonly
+   */
+  get pickId() {
+    return this._pickId;
   }
 
   _updateTransform(transform) {
