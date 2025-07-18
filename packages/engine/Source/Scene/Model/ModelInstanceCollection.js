@@ -95,7 +95,7 @@ ModelInstanceCollection.prototype.add = function (transform) {
  * it to the left, changing their indices.
  *
  * @param {ModelInstance} instance The instance to remove.
- * @returns boolean if removed from the collection.
+ * @returns {boolean} if removed from the collection.
  *
  * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten at the next render cycle; this operations is <code>O(n)</code> and also incurs
