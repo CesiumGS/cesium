@@ -5,7 +5,7 @@ import {
   ImageryPipelineStage,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
-import loadTilesetWithImagery from "../../../../../Specs/loadTilesetWithImagery.js";
+import loadTilesetWithImagery from "./loadTilesetWithImagery.js";
 
 describe("Scene/Model/ImageryPipelineStage", function () {
   let scene;

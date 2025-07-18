@@ -1,7 +1,7 @@
 import { ResourceCache, ModelImagery } from "../../../index.js";
 
 import createScene from "../../../../../Specs/createScene.js";
-import loadTilesetWithImagery from "../../../../../Specs/loadTilesetWithImagery.js";
+import loadTilesetWithImagery from "./loadTilesetWithImagery.js";
 
 describe("Scene/Model/ModelImagery", function () {
   let scene;
@@ -109,7 +109,7 @@ describe("Scene/Model/ModelImagery", function () {
     expect(modelImagery._imageryConfigurationsModified()).toBeFalse();
 
     // For spec: Modify imagery configuration
-    imageryLayer.show = 0.5;
+    imageryLayer.show = false;
 
     // Now, _imageryConfigurationsModified is true
     expect(modelImagery._imageryConfigurationsModified()).toBeTrue();

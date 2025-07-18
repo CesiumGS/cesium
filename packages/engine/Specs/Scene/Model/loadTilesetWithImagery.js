@@ -5,10 +5,9 @@ import {
   TileCoordinatesImageryProvider,
   Transforms,
   WebMercatorTilingScheme,
-} from "@cesium/engine";
-
-import pollToPromise from "./pollToPromise";
-import Cesium3DTilesTester from "./Cesium3DTilesTester";
+} from "../../../index.js";
+import pollToPromise from "../../../../../Specs/pollToPromise";
+import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 
 // A currently hard-wired tileset to be loaded for imagery draping tests
 const tileset_unitSquare_fourPrimitives_plain_url =
