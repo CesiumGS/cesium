@@ -268,7 +268,7 @@ CustomPrimitive.prototype.update = function (frameState) {
 };
 
 const position = new Cesium.Cartographic(0, 0, 1000.0);
-const primitive = viewer.scene.primitives.add(new CustomPrimitive(position));
+viewer.scene.primitives.add(new CustomPrimitive(position));
 viewer.camera.flyTo({
   destination: Cesium.Cartesian3.fromDegrees(0, 0, 50000),
   duration: 0.1,

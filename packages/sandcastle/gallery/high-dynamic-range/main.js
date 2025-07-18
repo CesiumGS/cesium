@@ -89,7 +89,7 @@ const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
 const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 const scale = 10.0;
 
-const entity = viewer.entities.add({
+viewer.entities.add({
   name: url,
   position: position,
   orientation: orientation,

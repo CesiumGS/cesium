@@ -108,7 +108,6 @@ metadataOverlay.style.fontSize = "16px";
 metadataOverlay.style.borderRadius = "4px";
 
 let tableHtmlScratch;
-let i;
 
 handler.setInputAction(function (movement) {
   if (enablePicking) {

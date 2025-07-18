@@ -7,7 +7,7 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   useBrowserRecommendedResolution: false,
 });
 
-const { scene, camera, clock } = viewer;
+const { scene, camera } = viewer;
 
 if (!scene.specularEnvironmentMapsSupported) {
   window.alert("This browser does not support specular environment maps.");

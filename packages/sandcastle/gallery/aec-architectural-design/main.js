@@ -80,13 +80,9 @@ for (const { title, assetId, visible } of tilesetData) {
     viewer.scene.primitives.add(tileset);
     tileset.show = visible;
 
-    const toggleBtn = Sandcastle.addToggleButton(
-      title,
-      visible,
-      function (checked) {
-        tileset.show = checked;
-      },
-    );
+    Sandcastle.addToggleButton(title, visible, function (checked) {
+      tileset.show = checked;
+    });
   } catch (error) {
     console.log(`Error loading tileset (${title}): ${error}`);
   }

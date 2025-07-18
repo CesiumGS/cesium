@@ -340,7 +340,6 @@ try {
     },
   );
   viewer.scene.primitives.add(buildingsTileset);
-  const center = Cesium.Cartesian3.fromDegrees(45.04192, 12.753525, 2000);
 
   viewer.camera.flyTo({
     duration: 0,

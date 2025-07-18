@@ -58,8 +58,7 @@ const fragmentShaderSource = `
           }
           `;
 
-const ellipsoid = viewer.scene.globe.ellipsoid;
-const postProcessStage = viewer.scene.postProcessStages.add(
+viewer.scene.postProcessStages.add(
   new Cesium.PostProcessStage({
     fragmentShader: fragmentShaderSource,
     uniforms: {

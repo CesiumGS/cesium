@@ -30,7 +30,7 @@ function createModel(url, height) {
     hpr,
   );
 
-  const entity = viewer.entities.add({
+  viewer.entities.add({
     name: url,
     position: position,
     orientation: orientation,

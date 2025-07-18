@@ -111,7 +111,6 @@ function createRandomClouds(
 }
 
 // manually position clouds in front
-const scratch = new Cesium.Cartesian3();
 function createFrontLayerClouds() {
   clouds.add({
     position: Cesium.Cartesian3.fromDegrees(-122.666, 45.5126, 97),

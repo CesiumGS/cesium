@@ -54,10 +54,6 @@ Cesium.knockout
     }
   });
 
-const scene = viewer.scene;
-const planeEntities = [];
-let selectedPlane;
-
 function updatePlanes() {
   for (let i = 0; i < clippingPlanes.length; i++) {
     const plane = clippingPlanes[i];

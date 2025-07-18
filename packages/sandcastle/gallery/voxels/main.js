@@ -234,7 +234,7 @@ Sandcastle.addToolbarMenu([
       );
       provider.minBounds.z = 0.0;
       provider.maxBounds.z = 1000000.0;
-      const primitive = createPrimitive(provider, customShaderColor);
+      createPrimitive(provider, customShaderColor);
     },
   },
   {
@@ -243,7 +243,7 @@ Sandcastle.addToolbarMenu([
       const provider = new ProceduralSingleTileVoxelProvider(
         Cesium.VoxelShapeType.CYLINDER,
       );
-      const primitive = createPrimitive(provider, customShaderColor);
+      createPrimitive(provider, customShaderColor);
     },
   },
   {
@@ -252,7 +252,7 @@ Sandcastle.addToolbarMenu([
       const provider = new ProceduralSingleTileVoxelProvider(
         Cesium.VoxelShapeType.BOX,
       );
-      const primitive = createPrimitive(provider, customShaderColor);
+      createPrimitive(provider, customShaderColor);
     },
   },
   {
@@ -261,7 +261,7 @@ Sandcastle.addToolbarMenu([
       const provider = new ProceduralMultiTileVoxelProvider(
         Cesium.VoxelShapeType.BOX,
       );
-      const primitive = createPrimitive(provider, customShaderColor);
+      createPrimitive(provider, customShaderColor);
     },
   },
   {
@@ -272,7 +272,7 @@ Sandcastle.addToolbarMenu([
       );
       provider.minBounds.z = 0.0;
       provider.maxBounds.z = 1000000.0;
-      const primitive = createPrimitive(provider, customShaderColor);
+      createPrimitive(provider, customShaderColor);
     },
   },
   {
@@ -281,7 +281,7 @@ Sandcastle.addToolbarMenu([
       const provider = new ProceduralMultiTileVoxelProvider(
         Cesium.VoxelShapeType.CYLINDER,
       );
-      const primitive = createPrimitive(provider, customShaderColor);
+      createPrimitive(provider, customShaderColor);
     },
   },
 ]);
@@ -289,7 +289,6 @@ Sandcastle.addToolbarMenu([
 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 handler.setInputAction(function (movement) {
   const scene = viewer.scene;
-  const camera = scene.camera;
   const mousePosition = movement.position;
   const pickedPrimitive = scene.pick(mousePosition);
   console.log(pickedPrimitive);

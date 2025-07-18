@@ -1,5 +1,7 @@
 import * as Cesium from "cesium";
 
+/* eslint-disable no-unused-vars */
+
 // An ArcGIS Access Token is required to authenticate requests to an ArcGIS Image Tile service.
 // To access secure ArcGIS resources, you need to create an ArcGIS developer account at https://developers.arcgis.com/,
 // then implement an authentication method to obtain an access token. See https://developers.arcgis.com/documentation/mapping-apis-and-services/security

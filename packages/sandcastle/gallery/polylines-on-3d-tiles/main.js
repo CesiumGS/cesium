@@ -43,7 +43,7 @@ function getElement(feature) {
 }
 
 function hideDuplicateFloor(feature) {
-  const element = parseInt(feature.getProperty("element"), 10);
+  const element = getElement(feature);
 
   if (element === duplicateFloor) {
     feature.show = false;

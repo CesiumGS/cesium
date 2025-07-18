@@ -7,13 +7,14 @@ const scene = viewer.scene;
 
 const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
 const url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
-const entity = (viewer.trackedEntity = viewer.entities.add({
+const entity = viewer.entities.add({
   name: url,
   position: position,
   model: {
     uri: url,
   },
-}));
+});
+viewer.trackedEntity = entity;
 
 // Shade selected model with highlight.
 const fragmentShaderSource = `

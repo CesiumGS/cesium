@@ -14,7 +14,7 @@ canvas.focus();
 const scene = viewer.scene;
 
 const pathPosition = new Cesium.SampledPositionProperty();
-const entityPath = viewer.entities.add({
+viewer.entities.add({
   position: pathPosition,
   name: "path",
   path: {

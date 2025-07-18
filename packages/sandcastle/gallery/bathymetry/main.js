@@ -61,7 +61,6 @@ let showElevationColorRamp = true;
 let invertContourLines = false;
 
 const minHeight = -10000.0;
-const seaLevel = 0.0;
 const maxHeight = 2000.0;
 const countourLineSpacing = 500.0;
 

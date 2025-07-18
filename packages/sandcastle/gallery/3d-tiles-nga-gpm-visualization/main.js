@@ -1,5 +1,4 @@
 import * as Cesium from "cesium";
-import Sandcastle from "Sandcastle";
 
 // Basic setup
 const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -469,7 +468,7 @@ class PropertyTextureShaders {
                   float value1 = float(fsInput.metadata.${propertyName1});
                   float range1 = float(${sourceMax1}) - float(${sourceMin1});
                   float brightness1 = (value1 - float(${sourceMin1})) / range1;
-        
+
                   vec3 diffuseHsl = czm_RGBToHSL(material.diffuse);
                   diffuseHsl.y *= 0.25;
                   diffuseHsl.z *= 0.25;

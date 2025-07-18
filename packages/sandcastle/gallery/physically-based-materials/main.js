@@ -37,7 +37,7 @@ const roll = Cesium.Math.toRadians(-6);
 const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
 const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
-const entity = viewer.entities.add({
+viewer.entities.add({
   name: "truck",
   position: position,
   orientation: orientation,

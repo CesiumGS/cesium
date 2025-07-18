@@ -43,7 +43,7 @@ const orientation = Cesium.Transforms.headingPitchRollQuaternion(
   planePosition,
   hpr,
 );
-const entity = viewer.entities.add({
+viewer.entities.add({
   model: {
     uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
     scale: 3.5,

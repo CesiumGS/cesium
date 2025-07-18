@@ -1,5 +1,4 @@
 import * as Cesium from "cesium";
-import Sandcastle from "Sandcastle";
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
   vrButton: true,

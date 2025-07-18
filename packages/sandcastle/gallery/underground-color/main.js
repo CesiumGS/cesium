@@ -14,7 +14,7 @@ const height = -500.0;
 const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
 const url = "../../SampleData/models/ParcLeadMine/ParcLeadMine.glb";
 
-const entity = viewer.entities.add({
+viewer.entities.add({
   name: url,
   position: position,
   model: {

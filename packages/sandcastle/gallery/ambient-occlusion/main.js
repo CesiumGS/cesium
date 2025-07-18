@@ -2,7 +2,7 @@ import * as Cesium from "cesium";
 
 const viewer = new Cesium.Viewer("cesiumContainer");
 
-const { canvas, camera, clock, scene } = viewer;
+const { camera, clock, scene } = viewer;
 camera.frustum.near = 1.0;
 scene.debugShowFramesPerSecond = true;
 
