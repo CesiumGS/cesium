@@ -1,0 +1,7 @@
+legacyId: Bing Maps Labels Only.html
+title: Bing Maps Labels Only
+description: Use Cesium ion's Bing Maps Labels Only imagery asset to add labels to unlabeled imagery.
+labels:
+  - Beginner
+  - Showcases
+thumbnail: thumbnail.jpg

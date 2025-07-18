@@ -6,6 +6,7 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 });
 
 const scene = viewer.scene;
+const globe = scene.globe;
 scene.verticalExaggeration = 2.0;
 scene.verticalExaggerationRelativeHeight = 2400.0;
 
