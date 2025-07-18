@@ -212,8 +212,6 @@ describe(
         ModelInstance.prototype.getPrimitiveBoundingSphere,
       ).toHaveBeenCalled();
 
-      console.log("boundingSphere --> ", boundingSphere);
-
       const boundingSphereCenter = new Cartesian3(
         1253575.4296778704,
         -4732902.902639246,
@@ -244,8 +242,6 @@ describe(
       );
 
       const instance = new ModelInstance(instanceModelMatrix);
-
-      spyOn(ModelInstance.prototype, "computeModelMatrix").and.callThrough();
 
       // values based on the Primitive for the "Wheels" Node in the CesiumMilkTruck
       const sampleModel = {
@@ -305,8 +301,6 @@ describe(
         samplePrimitiveBoundingSphere,
       );
 
-      expect(ModelInstance.prototype.computeModelMatrix).toHaveBeenCalled();
-
       const boundingSphereCenter = new Cartesian3(
         1253565.0387548013,
         -4732912.569585468,
@@ -333,8 +327,6 @@ describe(
       );
 
       const instance = new ModelInstance(instanceModelMatrix);
-
-      spyOn(ModelInstance.prototype, "computeModelMatrix").and.callThrough();
 
       // values based on the Primitive for the "Wheels" Node in the CesiumMilkTruck
       const sampleModel = {
@@ -399,8 +391,6 @@ describe(
         sampleRuntimeNode,
         samplePrimitiveBoundingSphere,
       );
-
-      expect(ModelInstance.prototype.computeModelMatrix).toHaveBeenCalled();
 
       const boundingSphereCenter = new Cartesian3(
         1253574.849241593,

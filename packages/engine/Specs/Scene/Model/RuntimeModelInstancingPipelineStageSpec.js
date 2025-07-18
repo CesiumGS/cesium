@@ -129,7 +129,6 @@ describe(
         sampleInstance1,
         sampleInstance2,
       ];
-      console.log(renderResources);
       const runtimeNode = renderResources.runtimeNode;
 
       scene.renderForSpecs();
