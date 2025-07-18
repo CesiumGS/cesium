@@ -215,6 +215,7 @@ const shackleton = {
   easingFunction: Cesium.EasingFunction.LINEAR_NONE,
 };
 
+const camera = viewer.scene.camera;
 const rotationSpeed = Cesium.Math.toRadians(0.1);
 const removeRotation = viewer.scene.postRender.addEventListener(
   function (scene, time) {

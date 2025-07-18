@@ -1,0 +1,7 @@
+legacyId: development/Labels.html
+title: Labels - Dev
+description: Create and style textual labels.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true
