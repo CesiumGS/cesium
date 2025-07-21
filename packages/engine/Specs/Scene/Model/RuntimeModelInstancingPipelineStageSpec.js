@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Matrix4,
   combine,
   GltfLoader,
   RuntimeModelInstancingPipelineStage,
@@ -244,21 +245,38 @@ describe(
         expectedTransformsBuffer._buffer,
       );
 
+      // update translation
       const samplePosition3 = new Cartesian3(30, 30, 30);
       const samplePosition4 = new Cartesian3(40, 40, 40);
 
-      const instanceModelMatrix3 = new Transforms.headingPitchRollToFixedFrame(
+      let instanceModelMatrix3 = new Transforms.headingPitchRollToFixedFrame(
         samplePosition3,
         headingPositionRoll,
         Ellipsoid.WGS84,
         fixedFrameTransform,
       );
 
-      const instanceModelMatrix4 = new Transforms.headingPitchRollToFixedFrame(
+      let instanceModelMatrix4 = new Transforms.headingPitchRollToFixedFrame(
         samplePosition4,
         headingPositionRoll,
         Ellipsoid.WGS84,
         fixedFrameTransform,
+      );
+
+      // update scale
+      const scale = new Cartesian3(2.0, 2.0, 2.0); // Uniform 2x scale
+      const scaleMatrix = Matrix4.fromScale(scale);
+
+      instanceModelMatrix3 = Matrix4.multiply(
+        instanceModelMatrix3,
+        scaleMatrix,
+        instanceModelMatrix3,
+      );
+
+      instanceModelMatrix4 = Matrix4.multiply(
+        instanceModelMatrix4,
+        scaleMatrix,
+        instanceModelMatrix4,
       );
 
       const sampleInstance3 = new ModelInstance(instanceModelMatrix3);
@@ -272,12 +290,12 @@ describe(
       ModelInstancesUpdateStage.update(runtimeNode, sceneGraph, frameState);
 
       const newExpectedTransformsTypedArray = new Float32Array([
-        -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
-        -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
-        0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 30, 30, 30,
-        -0.410076379776001, 0.7071067690849304, 0.576053261756897, 0,
-        -0.410076379776001, -0.7071067690849304, 0.576053261756897, 0,
-        0.8146623373031616, 0, 0.5799355506896973, 0, 0, 0, 0, 40, 40, 40,
+        -0.8201527548778271, 1.414213562373095, 1.1521065309537615, 0,
+        -0.8201527548778271, -1.414213562373095, 1.1521065309537615, 0,
+        1.6293246813734275, 0, 1.1598711491658797, 0, 0, 0, 0, 30, 30, 30,
+        -0.8201527548778271, 1.414213562373095, 1.1521065309537615, 0,
+        -0.8201527548778271, -1.4142135623730954, 1.1521065309537615, 0,
+        1.6293246813734275, 0, 1.1598711491658797, 0, 0, 0, 0, 40, 40, 40,
       ]);
 
       const newTransformsTypedArray =
