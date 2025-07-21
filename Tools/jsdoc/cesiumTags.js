@@ -59,4 +59,14 @@ exports.defineTags = function (dictionary) {
     canHaveName: true,
     mustHaveValue: true,
   });
+
+  // TODO: maybe remove or put in a separate PR, but has been really helpful during development
+  // Allow @import tags for importing types only for TS and just completely ignore them
+  // https://github.com/microsoft/TypeScript/issues/22160#issuecomment-2021459033
+  // https://devblogs.microsoft.com/typescript/announcing-typescript-5-5-beta/#type-imports-in-jsdoc
+  dictionary.defineTag("import", {
+    canHaveType: true,
+    canHaveName: true,
+    mustHaveValue: true,
+  });
 };
