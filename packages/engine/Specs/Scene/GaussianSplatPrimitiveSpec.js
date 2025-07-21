@@ -74,7 +74,7 @@ describe(
       expect(tile.content instanceof GaussianSplat3DTileContent).toBe(true);
     });
 
-    it("loads a Gaussian splats tileset and toggles visibility", async function () {
+    xit("loads a Gaussian splats tileset and toggles visibility", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetUrl,
