@@ -5,12 +5,10 @@ import {
   RequestScheduler,
   HeadingPitchRange,
   GaussianSplat3DTileContent,
-  // defined
 } from "../../index.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
-//import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/GaussianSplatPrimitive",
@@ -49,37 +47,34 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    it("load a Gaussian Splat tileset", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(
-        function (tileset) {
-          scene.camera.lookAt(
-            tileset.boundingSphere.center,
-            new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
-          );
-          expect(tileset.hasExtension("3DTILES_content_gltf")).toBe(true);
-          expect(
-            tileset.isGltfExtensionUsed("KHR_spz_gaussian_splats_compression"),
-          ).toBe(true);
-          expect(
-            tileset.isGltfExtensionRequired(
-              "KHR_spz_gaussian_splats_compression",
-            ),
-          ).toBe(true);
-
-          return Cesium3DTilesTester.waitForTileContentReady(
-            scene,
-            tileset.root,
-          ).then(function (tile) {
-            expect(tile.content).toBeDefined();
-            expect(tile.content instanceof GaussianSplat3DTileContent).toBe(
-              true,
-            );
-          });
-        },
+    it("loads a Gaussian splats tileset", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        options,
       );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+      expect(tileset.hasExtension("3DTILES_content_gltf")).toBe(true);
+      expect(
+        tileset.isGltfExtensionUsed("KHR_spz_gaussian_splats_compression"),
+      ).toBe(true);
+      expect(
+        tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression"),
+      ).toBe(true);
+
+      const tile = await Cesium3DTilesTester.waitForTileContentReady(
+        scene,
+        tileset.root,
+      );
+
+      expect(tile.content).toBeDefined();
+      expect(tile.content instanceof GaussianSplat3DTileContent).toBe(true);
     });
 
-    it("load Gaussian Splat tileset and toggle visibility", async function () {
+    it("loads a Gaussian splats tileset and toggles visibility", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetUrl,
@@ -95,7 +90,10 @@ describe(
       );
       expect(tile.content).toBeDefined();
       expect(tileset.gaussianSplatPrimitive).toBeDefined();
-      Cesium3DTilesTester.expectRender(scene, tileset);
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      tileset.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
     });
   },
   "WebGL",
