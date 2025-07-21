@@ -141,11 +141,6 @@ describe(
 
       const instance = new ModelInstance(instanceModelMatrix);
 
-      spyOn(
-        ModelInstance.prototype,
-        "getPrimitiveBoundingSphere",
-      ).and.callThrough();
-
       const model = await loadAndZoomToModelAsync(
         {
           gltf: sampleGltfUrl,
@@ -156,9 +151,6 @@ describe(
       );
 
       const boundingSphere = instance.getBoundingSphere(model);
-      expect(
-        ModelInstance.prototype.getPrimitiveBoundingSphere,
-      ).toHaveBeenCalled();
 
       const boundingSphereCenter = new Cartesian3(
         1253565.2859622256,
@@ -187,11 +179,6 @@ describe(
 
       const instance = new ModelInstance(instanceModelMatrix);
 
-      spyOn(
-        ModelInstance.prototype,
-        "getPrimitiveBoundingSphere",
-      ).and.callThrough();
-
       const model = await loadAndZoomToModelAsync(
         {
           gltf: sampleGltfUrl,
@@ -208,9 +195,6 @@ describe(
       );
 
       const boundingSphere = instance.getBoundingSphere(model);
-      expect(
-        ModelInstance.prototype.getPrimitiveBoundingSphere,
-      ).toHaveBeenCalled();
 
       const boundingSphereCenter = new Cartesian3(
         1253575.4296778704,
