@@ -5,10 +5,12 @@ import {
   RequestScheduler,
   HeadingPitchRange,
   GaussianSplat3DTileContent,
+  // defined
 } from "../../index.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
+//import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/GaussianSplatPrimitive",
@@ -75,6 +77,27 @@ describe(
           });
         },
       );
+    });
+
+    it("load Gaussian Splat tileset and toggle visibility", async function () {
+      //       const tileset = await Cesium3DTilesTester.loadTileset(
+      //         scene,
+      //         tilesetUrl,
+      //         options,
+      //       );
+      //       scene.camera.lookAt(
+      //         tileset.boundingSphere.center,
+      //         new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      //       );
+      //       const tile = await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
+      //       expect(tile.content).toBeDefined();
+      //       expect(tileset.gaussianSplatPrimitive).toBeDefined();
+      // scene.renderForSpecs();
+      //       // await pollToPromise(function () {
+      //       //   scene.renderForSpecs();
+      //       //   return true;//defined(tileset.gaussianSplatPrimitive._drawCommand);
+      //       // });
+      //       Cesium3DTilesTester.expectRender(scene, tileset);
     });
   },
   "WebGL",
