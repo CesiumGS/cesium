@@ -283,9 +283,9 @@ async function generateDevelopmentBuild() {
         !!stats?.isFile() && !file.endsWith(".yml") && !file.endsWith(".yaml"),
       ignoreInitial: true,
     });
-    galleryWatcher.on("all", (event) => {
+    galleryWatcher.on("all", async (event) => {
       if (event === "add" || event === "change" || event === "unlink") {
-        buildGalleryList(galleryDirectory);
+        await buildGalleryList(galleryDirectory);
       }
     });
 

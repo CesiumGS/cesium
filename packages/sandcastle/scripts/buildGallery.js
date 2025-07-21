@@ -4,8 +4,12 @@ import { globbySync } from "globby";
 import { basename, dirname, join } from "path";
 import { exit } from "process";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import * as pagefind from "pagefind";
 
-export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
+export async function buildGalleryList(
+  galleryDirectory,
+  includeDevelopment = true,
+) {
   const yamlFiles = globbySync([
     `${galleryDirectory}/*/sandcastle.(yml|yaml)`,
     `!${galleryDirectory}/list.json`,
@@ -28,6 +32,15 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
     entries: [],
     legacyIdMap: {},
   };
+
+  const { index } = await pagefind.createIndex({
+    verbose: true,
+    logfile: "pagefind-debug.log",
+  });
+  if (!index) {
+    console.log("Unable to create index");
+    return { output, hasErrors: true };
+  }
 
   let hasErrors = false;
   const check = (condition, messageIfTrue) => {
@@ -117,17 +130,37 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
       labels: labels,
       isNew: false,
     });
-    // sort alphabetically so the default sort order when loaded is alphabetical
-    // regardless if titles match the directory names
-    output.entries.sort((a, b) => a.title.localeCompare(b.title));
     if (legacyId) {
       output.legacyIdMap[legacyId] = slug;
     }
+
+    const jsFile = readFileSync(`${galleryBase}/main.js`, "utf-8");
+    await index.addCustomRecord({
+      url: `?id=${slug}`,
+      content: jsFile,
+      language: "en",
+      meta: {
+        id: slug,
+        title,
+        description,
+        labels: labels.join(","),
+      },
+      filters: {
+        tags: labels,
+      },
+    });
   }
 
   if (!hasErrors) {
     console.log("Gallery list built");
+    // sort alphabetically so the default sort order when loaded is alphabetical
+    // regardless if titles match the directory names
+    output.entries.sort((a, b) => a.title.localeCompare(b.title));
     writeFileSync(join(galleryDirectory, "list.json"), JSON.stringify(output));
+
+    await index.writeFiles({
+      outputPath: join(galleryDirectory, "pagefind"),
+    });
   } else {
     console.error("Something is wrong with the gallery, see above");
   }
@@ -139,9 +172,16 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
 if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const defaultGalleryDirectory = join(__dirname, "../gallery");
-  const { output, hasErrors } = buildGalleryList(defaultGalleryDirectory);
-  console.log("processed", output.entries.length, "sandcastles");
-  if (hasErrors) {
-    exit(1);
-  }
+  buildGalleryList(defaultGalleryDirectory)
+    .then(({ output, hasErrors }) => {
+      console.log("processed", output.entries.length, "sandcastles");
+      if (hasErrors) {
+        exit(1);
+      }
+    })
+    .catch((error) => {
+      console.error("Issue processing gallery");
+      console.error(error);
+      exit(1);
+    });
 }
