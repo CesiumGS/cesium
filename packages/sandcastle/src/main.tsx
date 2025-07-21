@@ -1,8 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./reset.css"; // TODO: this may not be needed with itwin-ui
-// import App from "./App.tsx";
-import App from "./TestApp";
+import App from "./App.tsx";
 
 const host = window.location.host;
 if (host.includes("localhost")) {

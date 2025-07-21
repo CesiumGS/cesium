@@ -23,10 +23,7 @@ export default defineConfig(() => {
   };
 
   const copyPlugin = viteStaticCopy({
-    targets: [
-      { src: "templates/Sandcastle.(d.ts|js)", dest: "templates" },
-      { src: "pagefind", dest: "" },
-    ],
+    targets: [{ src: "templates/Sandcastle.(d.ts|js)", dest: "templates" }],
   });
 
   const plugins = config.plugins ?? [];

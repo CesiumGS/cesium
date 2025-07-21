@@ -32,7 +32,6 @@ export default defineConfig(({ command }) => {
       { src: "../../Apps/SampleData", dest: "Apps" },
       { src: "../../Apps/SampleData", dest: "" },
       { src: "gallery", dest: "" },
-      { src: "pagefind", dest: "" },
       { src: `../../Source/Cesium.d.ts`, dest: "Source" },
       { src: "templates/Sandcastle.d.ts", dest: "templates" },
     ],

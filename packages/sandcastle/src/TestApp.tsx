@@ -6,6 +6,8 @@ import { GalleryItem } from "./Gallery.tsx";
 import { Root } from "@stratakit/foundations";
 import { Select } from "@stratakit/bricks";
 
+const GALLERY_BASE = __GALLERY_BASE_URL__;
+
 // Copied/extracted from https://github.com/Pagefind/pagefind/blob/main/pagefind_web_js/lib/coupled_search.ts
 // and https://github.com/Pagefind/pagefind/blob/main/pagefind_web_js/types/index.d.ts
 type Pagefind = {
@@ -84,12 +86,14 @@ function GallerySearch({
     }
 
     doSearch();
-  }, [searchTerm, currentTag]);
+  }, [searchTerm, currentTag, setSearchResults]);
 
   useEffect(() => {
     async function loadPageFind() {
-      // @ts-expect-error The module type is not defined from the import alone
-      const pagefindImport: Pagefind = await import("../pagefind/pagefind.js");
+      const pagefindImport: Pagefind = await import(
+        /* @vite-ignore */
+        `${GALLERY_BASE}/pagefind/pagefind.js`
+      );
 
       console.log(pagefindImport);
 
@@ -114,13 +118,10 @@ function GallerySearch({
 
   const debounceTimeout = useRef<NodeJS.Timeout>(null);
 
-  if (!pagefindLoaded) {
-    return <Input />;
-  }
-
   return (
     <>
       <Input
+        disabled={!pagefindLoaded}
         onChange={(e) => {
           if (debounceTimeout.current) {
             clearInterval(debounceTimeout.current);
@@ -134,6 +135,7 @@ function GallerySearch({
       />
       <Select.Root>
         <Select.HtmlSelect
+          disabled={!pagefindLoaded}
           onChange={(e) => {
             setCurrentTag(e.target.value);
             setTag(e.target.value);
@@ -177,8 +179,6 @@ function GallerySearch({
     </>
   );
 }
-
-const GALLERY_BASE = __GALLERY_BASE_URL__;
 
 export default function TestApp() {
   const [, setLegacyIdMap] = useState<Record<string, string>>({});
@@ -233,7 +233,7 @@ export default function TestApp() {
   return (
     <Root colorScheme="light" density="dense">
       <GallerySearch
-        setSearchResults={(newResults) => setSearchResults(newResults)}
+        setSearchResults={setSearchResults}
         setTag={(newTag: string) => setCurrentTag(newTag)}
       />
       <h2>

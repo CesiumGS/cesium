@@ -68,11 +68,13 @@ export async function buildSearchIndex(galleryDirectory, outputPath) {
 if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const defaultGalleryDirectory = join(__dirname, "../gallery");
-  const outputPath = join(__dirname, "../pagefind");
+  const outputPath = join(__dirname, "../gallery/pagefind");
 
+  console.time();
   buildSearchIndex(defaultGalleryDirectory, outputPath)
     .then(async () => {
       await pagefind.close();
+      console.timeEnd();
       console.log("completed");
     })
     .catch((error) => {

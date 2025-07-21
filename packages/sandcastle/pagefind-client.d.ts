@@ -5,6 +5,20 @@
 export {};
 
 declare global {
+  // Copied/extracted from https://github.com/Pagefind/pagefind/blob/main/pagefind_web_js/lib/coupled_search.ts
+  // and https://github.com/Pagefind/pagefind/blob/main/pagefind_web_js/types/index.d.ts
+  // Issue: https://github.com/Pagefind/pagefind/issues/767
+  type Pagefind = {
+    init: (overrideLanguage?: string) => void;
+    search: (
+      term: string,
+      options?: PagefindSearchOptions,
+    ) => Promise<PagefindIndexesSearchResults>;
+    preload: (term: string, options?: PagefindSearchOptions) => Promise<void>;
+    filters: () => Promise<PagefindFilterCounts>;
+    options: (options: PagefindIndexOptions) => Promise<void>;
+  };
+
   /** Global index options that can be passed to pagefind.options() */
   type PagefindIndexOptions = {
     /** Overrides the URL path that Pagefind uses to load its search bundle */

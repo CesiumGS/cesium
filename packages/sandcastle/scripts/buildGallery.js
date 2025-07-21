@@ -117,6 +117,9 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
       labels: labels,
       isNew: false,
     });
+    // sort alphabetically so the default sort order when loaded is alphabetical
+    // regardless if titles match the directory names
+    output.entries.sort((a, b) => a.title.localeCompare(b.title));
     if (legacyId) {
       output.legacyIdMap[legacyId] = slug;
     }
