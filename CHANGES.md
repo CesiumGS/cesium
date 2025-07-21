@@ -6,10 +6,11 @@
 
 #### Fixes :wrench:
 
+- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [#12716](https://github.com/CesiumGS/cesium/issues/12716)
+- Fixed an issue where draped imagery on tilesets was not updated based on the visibility of the imagery layer [#12742](https://github.com/CesiumGS/cesium/issues/12742)
 - Fixes an exception when removing a Gaussian splat tileset from the scene primitives when it has more than one tile. [#12726](https://github.com/CesiumGS/cesium/pull/12726)
 - Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix. [#12721](https://github.com/CesiumGS/cesium/issues/12721), [#12718](https://github.com/CesiumGS/cesium/issues/12718)
 - Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
-- Fixes material flashing when changing properties. [#1640](https://github.com/CesiumGS/cesium/issues/1640), [12716](https://github.com/CesiumGS/cesium/issues/12716)
 
 #### Additions :tada:
 
