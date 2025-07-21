@@ -559,7 +559,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
  *   `runtimeNode.configurePipeline`, and `runtimePrimitive.configurePipeline`
  * - create the `ModelRenderResources`, `NodeRenderResources`, and
  *   `PrimitiveRenderResources`
- * - Process the render resources with the respective pipelines
+ * - Process the render resources with the stages of the respective pipelines
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -794,7 +794,7 @@ ModelSceneGraph.prototype.createDrawCommands = function (
  * Configure the model pipeline stages. If the pipeline needs to be re-run, call
  * this method again to ensure the correct sequence of pipeline stages are
  * used.
- * @param {Model} model TODO
+ * @param {Model} model the model to be evaluated for configuring the pipeline
  * @param {FrameState} frameState
  * @private
  */
