@@ -10,6 +10,7 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataClassProperty from "./MetadataClassProperty.js";
 import MetadataType from "./MetadataType.js";
+import addAllToArray from "../Core/addAllToArray.js";
 
 /**
  * A binary property in a {@MetadataTable}
@@ -374,7 +375,7 @@ function flatten(values) {
   for (let i = 0; i < values.length; i++) {
     const value = values[i];
     if (Array.isArray(value)) {
-      result.push.apply(result, value);
+      addAllToArray(result, value);
     } else {
       result.push(value);
     }
