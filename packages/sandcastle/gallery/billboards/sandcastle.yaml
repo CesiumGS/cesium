@@ -1,7 +1,7 @@
 legacyId: Billboards.html
 title: Billboards
-thumbnail: ./Billboards.jpg
 description: Add billboard images and markers to the scene.
 labels:
   - Beginner
   - Showcases
+thumbnail: thumbnail.jpg

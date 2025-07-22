@@ -1,0 +1,55 @@
+<style>
+  @import url(../templates/bucket.css);
+  #toolbar {
+    background: rgba(42, 42, 42, 0.8);
+    padding: 4px;
+    border-radius: 4px;
+  }
+  #toolbar input {
+    vertical-align: middle;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  #toolbar .header {
+    font-weight: bold;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Translucency enabled</td>
+        <td>
+          <input type="checkbox" data-bind="checked: translucencyEnabled" />
+        </td>
+      </tr>
+      <tr>
+        <td>Fade by distance</td>
+        <td>
+          <input type="checkbox" data-bind="checked: fadeByDistance" />
+        </td>
+      </tr>
+      <tr>
+        <td>Show vector data</td>
+        <td>
+          <input type="checkbox" data-bind="checked: showVectorData" />
+        </td>
+      </tr>
+      <tr>
+        <td>Alpha</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.1"
+            data-bind="value: alpha, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: alpha" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

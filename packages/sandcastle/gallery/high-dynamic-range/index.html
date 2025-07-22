@@ -1,0 +1,32 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #toolbar {
+    background: rgba(42, 42, 42, 0.8);
+    padding: 4px;
+    border-radius: 4px;
+  }
+
+  #toolbar input {
+    vertical-align: middle;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <div id="hdr-toggle"></div>
+  <span>Tonemap</span>
+  <span id="tonemap-select"></span>
+  <br />
+  <span>Exposure</span>
+  <input
+    type="range"
+    min="0.1"
+    max="10.0"
+    step="0.1"
+    data-bind="value: exposure, valueUpdate: 'input'"
+  />
+  <input type="text" size="5" data-bind="value: exposure" />
+</div>

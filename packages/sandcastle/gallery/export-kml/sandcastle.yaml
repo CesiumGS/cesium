@@ -1,0 +1,7 @@
+legacyId: Export KML.html
+title: Export KML
+description: How to export a subset of a CesiumJS scene as a KML/KMZ file.
+labels:
+  - Showcases
+  - DataSources
+thumbnail: thumbnail.jpg

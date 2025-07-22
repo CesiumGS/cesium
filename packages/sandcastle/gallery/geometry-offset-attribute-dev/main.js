@@ -1,0 +1,218 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer");
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
+const scene = viewer.scene;
+const ellipsoid = scene.globe.ellipsoid;
+
+const id1 = "1";
+const id2 = "2";
+const id3 = "3";
+
+let rectangle = Cesium.Rectangle.fromDegrees(-100.0, 30.0, -99.0, 31.0);
+let center1 = Cesium.Rectangle.center(rectangle);
+center1 = ellipsoid.cartographicToCartesian(center1);
+let offset = Cesium.Cartesian3.multiplyByScalar(
+  ellipsoid.geodeticSurfaceNormal(center1),
+  100000,
+  new Cesium.Cartesian3(),
+);
+
+const i1 = new Cesium.GeometryInstance({
+  id: id1,
+  geometry: new Cesium.RectangleGeometry({
+    rectangle: rectangle,
+    extrudedHeight: 30000.0,
+    height: 10000.0,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    offsetAttribute: Cesium.GeometryOffsetAttribute.TOP,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+      new Cesium.Color(1.0, 0.0, 0.0, 0.5),
+    ),
+    offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
+  },
+});
+const o1 = new Cesium.GeometryInstance({
+  id: id1,
+  geometry: new Cesium.RectangleOutlineGeometry({
+    rectangle: rectangle,
+    extrudedHeight: 30000.0,
+    height: 10000.0,
+    offsetAttribute: Cesium.GeometryOffsetAttribute.TOP,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
+    offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
+  },
+});
+
+rectangle = Cesium.Rectangle.fromDegrees(-99.0, 30.0, -98.0, 31.0);
+let center2 = Cesium.Rectangle.center(rectangle);
+center2 = ellipsoid.cartographicToCartesian(center2);
+
+const i2 = new Cesium.GeometryInstance({
+  id: id2,
+  geometry: new Cesium.RectangleGeometry({
+    rectangle: rectangle,
+    extrudedHeight: 30000.0,
+    height: 10000.0,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    offsetAttribute: Cesium.GeometryOffsetAttribute.TOP,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+      new Cesium.Color(0.0, 1.0, 0.0, 0.5),
+    ),
+    offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
+      Cesium.Cartesian3.ZERO,
+    ),
+  },
+});
+const o2 = new Cesium.GeometryInstance({
+  id: id2,
+  geometry: new Cesium.RectangleOutlineGeometry({
+    rectangle: rectangle,
+    extrudedHeight: 30000.0,
+    height: 10000.0,
+    offsetAttribute: Cesium.GeometryOffsetAttribute.TOP,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
+    offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
+      Cesium.Cartesian3.ZERO,
+    ),
+  },
+});
+
+rectangle = Cesium.Rectangle.fromDegrees(-98.0, 30.0, -97.0, 31.0);
+let center3 = Cesium.Rectangle.center(rectangle);
+center3 = ellipsoid.cartographicToCartesian(center3);
+offset = Cesium.Cartesian3.multiplyByScalar(
+  ellipsoid.geodeticSurfaceNormal(center3),
+  100000,
+  new Cesium.Cartesian3(),
+);
+const i3 = new Cesium.GeometryInstance({
+  id: id3,
+  geometry: new Cesium.RectangleGeometry({
+    rectangle: rectangle,
+    extrudedHeight: 30000.0,
+    height: 10000.0,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    offsetAttribute: Cesium.GeometryOffsetAttribute.ALL,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+      new Cesium.Color(0.0, 0.0, 1.0, 0.5),
+    ),
+    offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
+  },
+});
+const o3 = new Cesium.GeometryInstance({
+  id: id3,
+  geometry: new Cesium.RectangleOutlineGeometry({
+    rectangle: rectangle,
+    extrudedHeight: 30000.0,
+    height: 10000.0,
+    offsetAttribute: Cesium.GeometryOffsetAttribute.ALL,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
+    offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
+  },
+});
+
+const p = scene.primitives.add(
+  new Cesium.Primitive({
+    geometryInstances: [i1, i2, i3],
+    appearance: new Cesium.PerInstanceColorAppearance({
+      closed: true,
+    }),
+    asynchronous: false,
+  }),
+);
+const o = scene.primitives.add(
+  new Cesium.Primitive({
+    geometryInstances: [o1, o2, o3],
+    appearance: new Cesium.PerInstanceColorAppearance({
+      flat: true,
+      renderState: {
+        lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
+      },
+    }),
+    asynchronous: false,
+  }),
+);
+
+Sandcastle.addToolbarButton("1", function () {
+  let attributes = p.getGeometryInstanceAttributes(id1);
+  offset = Cesium.Cartesian3.multiplyByScalar(
+    ellipsoid.geodeticSurfaceNormal(center1),
+    150000,
+    new Cesium.Cartesian3(),
+  );
+  attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
+    offset,
+    attributes.offset,
+  );
+
+  attributes = o.getGeometryInstanceAttributes(id1);
+  offset = Cesium.Cartesian3.multiplyByScalar(
+    ellipsoid.geodeticSurfaceNormal(center1),
+    150000,
+    new Cesium.Cartesian3(),
+  );
+  attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
+    offset,
+    attributes.offset,
+  );
+});
+Sandcastle.addToolbarButton("2", function () {
+  let attributes = p.getGeometryInstanceAttributes(id2);
+  offset = Cesium.Cartesian3.multiplyByScalar(
+    ellipsoid.geodeticSurfaceNormal(center2),
+    100000,
+    new Cesium.Cartesian3(),
+  );
+  attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
+    offset,
+    attributes.offset,
+  );
+
+  attributes = o.getGeometryInstanceAttributes(id2);
+  offset = Cesium.Cartesian3.multiplyByScalar(
+    ellipsoid.geodeticSurfaceNormal(center2),
+    100000,
+    new Cesium.Cartesian3(),
+  );
+  attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
+    offset,
+    attributes.offset,
+  );
+});
+Sandcastle.addToolbarButton("3", function () {
+  let attributes = p.getGeometryInstanceAttributes(id3);
+  offset = Cesium.Cartesian3.multiplyByScalar(
+    ellipsoid.geodeticSurfaceNormal(center3),
+    150000,
+    new Cesium.Cartesian3(),
+  );
+  attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
+    offset,
+    attributes.offset,
+  );
+
+  attributes = o.getGeometryInstanceAttributes(id3);
+  offset = Cesium.Cartesian3.multiplyByScalar(
+    ellipsoid.geodeticSurfaceNormal(center3),
+    150000,
+    new Cesium.Cartesian3(),
+  );
+  attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
+    offset,
+    attributes.offset,
+  );
+});

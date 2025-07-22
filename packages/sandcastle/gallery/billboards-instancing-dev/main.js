@@ -1,0 +1,180 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  terrain: Cesium.Terrain.fromWorldTerrain(),
+});
+
+const scene = viewer.scene;
+const context = scene.context;
+
+scene.debugShowFramesPerSecond = true;
+
+const ellipsoid = scene.globe.ellipsoid;
+let billboardCollection;
+let instancingEnabled = true;
+const instancedArraysExtension = context._instancedArrays;
+let billboardCount = 100489;
+let scale = 1.0;
+
+// seneca
+const centerLongitude = -1.385205433269729;
+const centerLatitude = 0.6777926580888163;
+const rectangleHalfSize = 0.5;
+const e = new Cesium.Rectangle(
+  centerLongitude - rectangleHalfSize,
+  centerLatitude - rectangleHalfSize,
+  centerLongitude + rectangleHalfSize,
+  centerLatitude + rectangleHalfSize,
+);
+
+function resetBillboardCollection() {
+  if (Cesium.defined(billboardCollection)) {
+    scene.primitives.remove(billboardCollection);
+  }
+
+  billboardCollection = scene.primitives.add(
+    new Cesium.BillboardCollection({
+      scene: scene,
+    }),
+  );
+
+  const gridSize = Math.sqrt(billboardCount);
+  for (let y = 0; y < gridSize; ++y) {
+    for (let x = 0; x < gridSize; ++x) {
+      const longitude = Cesium.Math.lerp(e.west, e.east, x / (gridSize - 1));
+      const latitude = Cesium.Math.lerp(e.south, e.north, y / (gridSize - 1));
+      const position = new Cesium.Cartographic(longitude, latitude, 10000.0);
+
+      billboardCollection.add({
+        position: ellipsoid.cartographicToCartesian(position),
+        image: "../images/facility.gif",
+        scale: scale,
+      });
+    }
+  }
+}
+
+const moveAmount = new Cesium.Cartesian3(1000, 0.0, 0.0);
+const positionScratch = new Cesium.Cartesian3();
+function animateBillboards() {
+  const billboards = billboardCollection._billboards;
+  const length = billboards.length;
+  for (let i = 0; i < length; ++i) {
+    const billboard = billboards[i];
+    Cesium.Cartesian3.clone(billboard.position, positionScratch);
+    Cesium.Cartesian3.add(positionScratch, moveAmount, positionScratch);
+    billboard.position = positionScratch;
+  }
+}
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "Instancing Enabled",
+    onselect: function () {
+      if (!instancingEnabled) {
+        context._instancedArrays = instancedArraysExtension;
+        instancingEnabled = true;
+        resetBillboardCollection();
+      }
+    },
+  },
+  {
+    text: "Instancing Disabled",
+    onselect: function () {
+      if (instancingEnabled) {
+        context._instancedArrays = undefined;
+        instancingEnabled = false;
+        resetBillboardCollection();
+      }
+    },
+  },
+]);
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "100489 billboards",
+    onselect: function () {
+      billboardCount = 100489;
+      resetBillboardCollection();
+    },
+  },
+  {
+    text: "10000 billboards",
+    onselect: function () {
+      billboardCount = 10000;
+      resetBillboardCollection();
+    },
+  },
+  {
+    text: "1024 billboards",
+    onselect: function () {
+      billboardCount = 1024;
+      resetBillboardCollection();
+    },
+  },
+  {
+    text: "100 billboards",
+    onselect: function () {
+      billboardCount = 100;
+      resetBillboardCollection();
+    },
+  },
+  {
+    text: "25 billboards",
+    onselect: function () {
+      billboardCount = 25;
+      resetBillboardCollection();
+    },
+  },
+  {
+    text: "4 billboard",
+    onselect: function () {
+      billboardCount = 4;
+      resetBillboardCollection();
+    },
+  },
+]);
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "Static billboards",
+    onselect: function () {
+      resetBillboardCollection();
+      scene.preUpdate.removeEventListener(animateBillboards);
+    },
+  },
+  {
+    text: "Animated billboards",
+    onselect: function () {
+      resetBillboardCollection();
+      scene.preUpdate.addEventListener(animateBillboards);
+    },
+  },
+]);
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "Scale : 1.0",
+    onselect: function () {
+      scale = 1.0;
+      resetBillboardCollection();
+    },
+  },
+  {
+    text: "Scale : 0.5",
+    onselect: function () {
+      scale = 0.5;
+      resetBillboardCollection();
+    },
+  },
+  {
+    text: "Scale : 0.1",
+    onselect: function () {
+      scale = 0.1;
+      resetBillboardCollection();
+    },
+  },
+]);
+
+resetBillboardCollection();

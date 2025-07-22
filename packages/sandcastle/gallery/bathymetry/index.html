@@ -1,0 +1,64 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #toolbar {
+    background: rgba(42, 42, 42, 0.8);
+    padding: 4px;
+    border-radius: 4px;
+  }
+
+  #toolbar input {
+    vertical-align: middle;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  #toolbar .header {
+    font-weight: bold;
+  }
+
+  #toolbar #colorRamp {
+    width: 100%;
+    border: 1px solid lightgray;
+  }
+
+  #toolbar .cesium-button {
+    display: block;
+  }
+
+  #toolbar #minHeight {
+    text-align: right;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td class="header">Elevation</td>
+      </tr>
+      <tr>
+        <td id="minHeight"><span data-bind="text: minHeight"></span>m</td>
+        <td><canvas id="colorRamp"></canvas></td>
+        <td><span data-bind="text: maxHeight"></span>m</td>
+      </tr>
+      <tr>
+        <td class="header">Options</td>
+      </tr>
+      <tr>
+        <td>Exaggeration</td>
+        <td>
+          <input
+            type="range"
+            min="1"
+            max="5"
+            step="0.1"
+            data-bind="value: exaggeration, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: exaggeration" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

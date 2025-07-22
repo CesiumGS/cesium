@@ -1,0 +1,7 @@
+legacyId: development/Circle.html
+title: Circle - Dev
+description: Draw a circle or extruded circle on the globe surface.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

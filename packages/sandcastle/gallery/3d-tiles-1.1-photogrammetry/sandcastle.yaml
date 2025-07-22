@@ -1,0 +1,6 @@
+legacyId: 3D Tiles 1.1 Photogrammetry.html
+title: 3D Tiles 1.1 Photogrammetry
+description: Performance comparison of photogrammetry using 3D Tiles 1.0 vs 3D Tiles 1.1 with KTX2 texture compression. Most notably, KTX2 textures provide significant GPU memory savings
+labels:
+  - 3D Tiles
+thumbnail: thumbnail.jpg

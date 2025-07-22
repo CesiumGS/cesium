@@ -1,0 +1,7 @@
+legacyId: development/BillboardClampToGround.html
+title: BillboardClampToGround - Dev
+description: Clamp billboards to terrain.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

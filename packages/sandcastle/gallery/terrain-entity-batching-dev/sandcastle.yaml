@@ -1,0 +1,7 @@
+legacyId: development/Terrain Entity Batching.html
+title: Terrain Entity Batching - Dev
+description: Demo for batching-by-material of non-overlapping Entities on Terrain.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

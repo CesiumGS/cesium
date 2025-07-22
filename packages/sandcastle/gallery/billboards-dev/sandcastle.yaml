@@ -1,0 +1,7 @@
+legacyId: development/Billboards.html
+title: Billboards - Dev
+description: Add billboard images, points, and markers to the scene.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true
