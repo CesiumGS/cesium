@@ -61,9 +61,12 @@
 
     <div id="cesiumContainer" class="fullSize">
       <div id="slider"></div>
-      <div class="split-label left">Bing Maps labeled<br />+<br />Washington Imagery</div>
+      <div class="split-label left">
+        Bing Maps (labeled)<br />+<br />Washington Imagery
+      </div>
       <div class="split-label right">
-        Bing Maps unlabeled<br />+<br />Washington Imagery<br />+<br />Labels only
+        Bing Maps (unlabeled)<br />+<br />Washington Imagery<br />+<br />Bing Maps (labels
+        only)
       </div>
     </div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -131,9 +134,9 @@
           const rightLabel = document.querySelector(".split-label.right");
           if (checked) {
             rightLabel.innerHTML =
-              "Bing Maps unlabeled<br>+<br>Washington Imagery<br>+<br>Labels only";
+              "Bing Maps (unlabeled)<br />+<br />Washington Imagery<br />+<br />Bing Maps (labels only)";
           } else {
-            rightLabel.innerHTML = "Bing Maps unlabeled<br>+<br>Washington Imagery";
+            rightLabel.innerHTML = "Bing Maps (unlabeled)<br />+<br />Washington Imagery";
           }
         });
 
