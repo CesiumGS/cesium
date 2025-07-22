@@ -18,7 +18,7 @@ import { Button, Divider, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Gallery, { GalleryItem } from "./Gallery.js";
-import Bucket from "./Bucket.tsx";
+import Bucket, { BucketRef } from "./Bucket.tsx";
 import SandcastleEditor from "./SandcastleEditor.tsx";
 import {
   add,
@@ -177,6 +177,8 @@ function App() {
   const rightSideRef = useRef<RightSideRef>(null);
   const consoleCollapsedHeight = 26;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
+
+  const bucketRef = useRef<BucketRef>(null);
 
   const cesiumVersion = __CESIUM_VERSION__;
   const versionString = __COMMIT_SHA__ ? `Commit: ${__COMMIT_SHA__}` : "";
@@ -484,6 +486,7 @@ function App() {
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
+              bucketRef={bucketRef}
               darkTheme={theme === "dark"}
               onJsChange={(value: string = "") =>
                 dispatch({ type: "setCode", code: value })
@@ -533,6 +536,7 @@ function App() {
             <Allotment.Pane minSize={200}>
               {readyForViewer && (
                 <Bucket
+                  ref={bucketRef}
                   code={codeState.committedCode}
                   html={codeState.committedHtml}
                   runNumber={codeState.runNumber}
