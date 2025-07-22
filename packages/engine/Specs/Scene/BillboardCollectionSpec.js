@@ -2517,13 +2517,19 @@ describe("Scene/BillboardCollection", function () {
 
         wideBillboard.show = false;
         narrowBillboard.show = true;
-        scene.renderForSpecs();
-        const narrowBillboardColor = scene.context.readPixels();
+        let narrowBillboardColor;
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect([r, g, b]).not.toEqual([0, 0, 0]);
+          narrowBillboardColor = [r, g, b, a];
+        });
 
         wideBillboard.show = true;
         narrowBillboard.show = false;
-        scene.renderForSpecs();
-        const wideBillboardColor = scene.context.readPixels();
+        let wideBillboardColor;
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect([r, g, b]).not.toEqual([0, 0, 0]);
+          wideBillboardColor = [r, g, b, a];
+        });
 
         expect(narrowBillboardColor).toEqual(wideBillboardColor);
       });
