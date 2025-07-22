@@ -11,6 +11,8 @@ import { Button, Kbd, Tooltip } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { play, textAlignLeft } from "./icons";
 import { setupSandcastleSnippets } from "./setupSandcastleSnippets";
+import { BucketRef } from "./Bucket";
+import { getViewerVariable } from "./Helpers";
 
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import JsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
@@ -52,6 +54,7 @@ export type SandcastleEditorRef = {
 
 function SandcastleEditor({
   ref,
+  bucketRef,
   darkTheme,
   js,
   html,
@@ -61,6 +64,7 @@ function SandcastleEditor({
   setJs,
 }: {
   ref?: RefObject<SandcastleEditorRef | null>;
+  bucketRef: RefObject<BucketRef | null>;
   darkTheme: boolean;
   js: string;
   html: string;
@@ -204,6 +208,12 @@ function SandcastleEditor({
     setJs(newCode);
   }
 
+  function appendCodeOnce(snippet: string) {
+    if (!js.includes(snippet)) {
+      appendCode(snippet);
+    }
+  }
+
   function addButton() {
     appendCode(`
 Sandcastle.addToolbarButton("New Button", function () {
@@ -236,6 +246,41 @@ const ${variableName} = [
 Sandcastle.addToolbarMenu(${variableName});`);
   }
 
+  function saveCameraView() {
+    const viewer = bucketRef.current?.getViewer();
+    if (!viewer) {
+      console.log("cannot access viewer");
+      return;
+    }
+    const camera = viewer.camera;
+    const position = camera.position;
+    const { heading, pitch, roll } = camera;
+
+    const variableName = nextHighestVariableName(js, "cameraLocation");
+
+    const flyToCode = `
+const ${variableName} = {
+  destination : new Cesium.Cartesian3(${position.x}, ${position.y}, ${position.z}),
+  orientation: new Cesium.HeadingPitchRoll(${heading}, ${pitch}, ${roll}),
+  duration : 0,
+  easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+};
+viewer.scene.camera.flyTo(${variableName});
+`;
+    appendCode(flyToCode);
+  }
+
+  function addFps() {
+    const viewerVariable = getViewerVariable(js);
+    if (!viewerVariable) {
+      console.log("unable to determine viewer");
+      return;
+    }
+    appendCodeOnce(
+      `\n${viewerVariable}.scene.debugShowFramesPerSecond = true;`,
+    );
+  }
+
   return (
     <div className="editor-container">
       <div className="header">
@@ -265,9 +310,14 @@ Sandcastle.addToolbarMenu(${variableName});`);
               Insert
             </DropdownMenu.Button>
             <DropdownMenu.Content>
-              <DropdownMenu.Item label="Button" onClick={() => addButton()} />
-              <DropdownMenu.Item label="Toggle" onClick={() => addToggle()} />
-              <DropdownMenu.Item label="Menu" onClick={() => addMenu()} />
+              <DropdownMenu.Item label="Button" onClick={addButton} />
+              <DropdownMenu.Item label="Toggle" onClick={addToggle} />
+              <DropdownMenu.Item label="Menu" onClick={addMenu} />
+              <DropdownMenu.Item
+                label="Current camera location"
+                onClick={saveCameraView}
+              />
+              <DropdownMenu.Item label="FPS" onClick={addFps} />
             </DropdownMenu.Content>
           </DropdownMenu.Root>
           <Tooltip content="Run Sandcastle" placement="bottom">
