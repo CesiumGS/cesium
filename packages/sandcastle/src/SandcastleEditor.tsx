@@ -6,6 +6,7 @@ import * as prettier from "prettier";
 import * as babelPlugin from "prettier/plugins/babel";
 import * as estreePlugin from "prettier/plugins/estree";
 import * as htmlPlugin from "prettier/plugins/html";
+import { setupSandcastleSnippets } from "./setupSandcastleSnippets";
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
@@ -116,6 +117,7 @@ function SandcastleEditor({
       },
     });
 
+    setupSandcastleSnippets(monaco);
     setTypes(monaco);
   }
 
