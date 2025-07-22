@@ -188,6 +188,19 @@ function buildDrawCommandForModel(
   return command;
 }
 
+/**
+ * Returns the model matrix based on the supplied parameters
+ *
+ * @param {Matrix4} modelMatrix
+ * @param {ModelSceneGraph} sceneGraph
+ * @param {ModelRuntimeNode} runtimeNode
+ * @param {Boolean} use2D
+ * @param {Matrix4} result
+ *
+ * @returns {Matrix4} The model matrix
+ *
+ * @private
+ */
 ModelDrawCommands.createCommandModelMatrix = function (
   modelMatrix,
   sceneGraph,
@@ -217,13 +230,17 @@ ModelDrawCommands.createCommandModelMatrix = function (
     result,
   );
 };
+
 /**
- * TODO: Bounding sphere
- * @param {*} sceneGraph
- * @param {*} runtimeNode
- * @param {*} primitiveBoundingSphere
- * @param {*} use2D
- * @param {*} result
+ * Returns the bounding sphere based on the supplied parameters
+ *
+ * @param {Matrix4} modelMatrix
+ * @param {ModelSceneGraph} sceneGraph
+ * @param {ModelRuntimeNode} runtimeNode
+ * @param {BoundingSphere} primitiveBoundingSphere
+ * @param {BoundingSphere} result
+ *
+ * @returns {BoundingSphere}
  */
 ModelDrawCommands.createCommandBoundingSphere = function (
   commandModelMatrix,
