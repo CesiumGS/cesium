@@ -1,13 +1,32 @@
 import Pako from "pako";
 
+export function getViewerVariable(code: string) {
+  // Try to find the variable assignment for the Viewer constructor
+  const viewerVariableMatch =
+    /(?<!\/\/.*)(?:const|let)\s+(?<varName>\w+)\s+=\s+new\s+(?:Cesium\.)?Viewer\(/.exec(
+      code,
+    );
+  return viewerVariableMatch?.groups?.varName;
+}
+
 export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
   let imports = "";
 
+  // make sure that Cesium and Sandcastle are imported if there's not already an import for them
+  // this helps with legacy sandcastles that may not have had them defined
   if (!/^import\s+\*\s+as\s+Cesium\s+from\s+(['"])cesium\1;?$/m.test(code)) {
     imports += `import * as Cesium from "cesium";\n`;
   }
   if (!/^import\s+Sandcastle\s+from\s+(['"])Sandcastle\1;?$/m.test(code)) {
     imports += `import Sandcastle from "Sandcastle";\n`;
+  }
+
+  const viewerVariable = getViewerVariable(code);
+  let windowAssignment = "";
+  if (viewerVariable) {
+    // if we know the viewer variable then expose it on the iframe window. This will
+    // let us hook into it to do things like save the camera position
+    windowAssignment = `window.cesiumViewer = ${viewerVariable}`;
   }
 
   return `${addExtraLine ? "\n" : ""}${code}
@@ -17,6 +36,7 @@ ${imports}
 Sandcastle.finishedLoading();
 // Set Cesium on the window for use in DevTools
 window.Cesium = Cesium;
+${windowAssignment}
 `;
 }
 

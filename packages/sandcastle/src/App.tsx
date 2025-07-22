@@ -29,7 +29,7 @@ import {
 } from "./Gallery/GalleryItemStore.ts";
 import Gallery from "./Gallery/Gallery.js";
 
-import Bucket from "./Bucket.tsx";
+import Bucket, { BucketRef } from "./Bucket.tsx";
 import SandcastleEditor from "./SandcastleEditor.tsx";
 import {
   add,
@@ -205,6 +205,9 @@ function App() {
   const [leftPanel, setLeftPanel] = useState<LeftPanel>(
     startOnEditor ? "editor" : "gallery",
   );
+
+  const bucketRef = useRef<BucketRef>(null);
+
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [title, setTitle] = useState("New Sandcastle");
@@ -594,6 +597,7 @@ function App() {
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
+              bucketRef={bucketRef}
               darkTheme={settings.theme === "dark"}
               onJsChange={(value: string = "") =>
                 dispatch({ type: "setCode", code: value })
@@ -625,6 +629,7 @@ function App() {
             <Allotment.Pane minSize={200}>
               {!deferredIsLoading && (
                 <Bucket
+                  ref={bucketRef}
                   code={codeState.committedCode}
                   html={codeState.committedHtml}
                   runNumber={codeState.runNumber}

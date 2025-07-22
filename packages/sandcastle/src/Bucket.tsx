@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { RefObject, useEffect, useImperativeHandle, useRef } from "react";
 import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
+import { Viewer } from "@cesium/widgets";
 
 type SandcastleMessage =
   | { type: "reload" }
@@ -10,7 +11,12 @@ type SandcastleMessage =
   | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
   | { type: "highlight"; highlight: number };
 
+export type BucketRef = {
+  getViewer: () => Viewer | undefined;
+};
+
 function Bucket({
+  ref,
   code,
   html,
   runNumber,
@@ -18,6 +24,7 @@ function Bucket({
   appendConsole,
   resetConsole,
 }: {
+  ref?: RefObject<BucketRef | null>;
   /** The JS code for the Sandcastle */
   code: string;
   /** The HTML code for the sandcastle */
@@ -32,8 +39,18 @@ function Bucket({
   appendConsole: (type: ConsoleMessageType, message: string) => void;
   resetConsole: () => void;
 }) {
-  const bucket = useRef<HTMLIFrameElement>(null);
+  const bucket = useRef<
+    HTMLIFrameElement & { contentWindow: { cesiumViewer?: Viewer } }
+  >(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
+
+  useImperativeHandle(ref, () => {
+    return {
+      getViewer() {
+        return bucket.current?.contentWindow?.cesiumViewer;
+      },
+    };
+  });
 
   function activateBucketScripts(
     bucketFrame: HTMLIFrameElement,
