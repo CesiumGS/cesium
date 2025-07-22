@@ -4,11 +4,15 @@
 
 ### @cesium/engine
 
-### Fixes :wrench:
+#### Fixes :wrench:
 
-- Fixes incorrect polygon culling in 2D scene mode [#1552](https://github.com/CesiumGS/cesium/issues/1552)
-- Fixes material flashing when changing properties [#1640](https://github.com/CesiumGS/cesium/issues/1640), [12716](https://github.com/CesiumGS/cesium/issues/12716)
+- Fixes incorrect polygon culling in 2D scene mode. [#1552](https://github.com/CesiumGS/cesium/issues/1552)
+- Fixes material flashing when changing properties. [#1640](https://github.com/CesiumGS/cesium/issues/1640), [#12716](https://github.com/CesiumGS/cesium/issues/12716)
+- Fixed an issue where draped imagery on tilesets was not updated based on the visibility of the imagery layer. [#12742](https://github.com/CesiumGS/cesium/issues/12742)
+- Fixes an exception when removing a Gaussian splat tileset from the scene primitives when it has more than one tile. [#12726](https://github.com/CesiumGS/cesium/pull/12726)
+- Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix. [#12721](https://github.com/CesiumGS/cesium/issues/12721), [#12718](https://github.com/CesiumGS/cesium/issues/12718)
 - Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
+- Fixes Gaussian splats incorrectly rendering when `Cesium3DTileset.show` is `false`. [#12748](https://github.com/CesiumGS/cesium/pull/12748)
 
 #### Additions :tada:
 
@@ -18,7 +22,7 @@
 
 ### @cesium/engine
 
-### Fixes :wrench:
+#### Fixes :wrench:
 
 - Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
 - Fixed raymarching step size for cylindrical voxels. [#12681](https://github.com/CesiumGS/cesium/pull/12681)

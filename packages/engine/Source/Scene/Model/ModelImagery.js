@@ -335,6 +335,9 @@ class ModelImagery {
       const imageryLayer = imageryLayers.get(i);
       const imageryConfiguration = imageryConfigurations[i];
 
+      if (imageryLayer.show !== imageryConfiguration.show) {
+        return true;
+      }
       if (imageryLayer.alpha !== imageryConfiguration.alpha) {
         return true;
       }

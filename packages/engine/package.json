@@ -1,6 +1,6 @@
 {
   "name": "@cesium/engine",
-  "version": "18.3.0",
+  "version": "18.3.1-ion.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "keywords": [
     "3D",
