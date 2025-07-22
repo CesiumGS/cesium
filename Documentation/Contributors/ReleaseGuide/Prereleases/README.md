@@ -24,7 +24,7 @@ A prerelease version of CesiumJS typically _will not have the level of validatio
 
 ## Publishing a prelease version
 
-This process is based on an abbreviated version of the [monthly release guide](../README.md). Familiarity with our typical release process is reccomended, but not required.
+This process is based on an abbreviated version of the [monthly release guide](../README.md). Familiarity with our typical release process is recommended, but not required.
 
 ### 1. Create a new branch from the base tag
 
@@ -56,7 +56,7 @@ Use [npm `version` with the `preid` argument](https://docs.npmjs.com/cli/v11/com
 #### Commands
 
 ```sh
-npm version prerelease --preid <tag> -ws --no-git-tag-version
+npm version prerelease --preid <tag> --ws --no-git-tag-version
 npm version prerelease --preid <tag> --no-git-tag-version
 ```
 
