@@ -56,12 +56,12 @@ describe("Scene/Model/ModelInstanceCollection", function () {
   });
 
   it("can remove an instance", function () {
-    collection.add(sampleTransform1);
+    const sampleInstance1 = collection.add(sampleTransform1);
     collection.add(sampleTransform2);
 
-    const removedInstance = collection.remove(0);
+    const removed = collection.remove(sampleInstance1);
 
-    expect(removedInstance.transform).toEqual(sampleTransform1);
+    expect(removed).toEqual(true);
 
     expect(collection.length).toEqual(1);
   });
@@ -80,7 +80,7 @@ describe("Scene/Model/ModelInstanceCollection", function () {
     }).toThrowDeveloperError();
   });
 
-  it("throws when calling remove without an index", function () {
+  it("throws when calling remove without an instance", function () {
     expect(function () {
       collection.remove();
     }).toThrowDeveloperError();
