@@ -11,26 +11,23 @@
 #if defined(HAS_SPHERICAL_HARMONICS)
 const uint coefficientCount[3] = uint[3](3u,8u,15u);
 const float SH_C1 = 0.4886025119029199f;
-// const float SH_C2[5] = float[5](
-//          1.092548430,
-//         -1.09254843,
-//         0.315391565,
-//         -1.09254843,
-//         0.546274215
-// );
+const float SH_C2[5] = float[5](
+         1.092548430,
+        -1.09254843,
+        0.315391565,
+        -1.09254843,
+        0.546274215
+);
 
-// const float SH_C3[7] = float[7](
-//          -0.59004358,
-//         2.890611442,
-//         -0.45704579,
-//         0.373176332,
-//         -0.45704579,
-//         1.445305721,
-//         -0.59004358
-// );
-const float SH_C2[5] = float[5]( 1.092548, 1.092548, 0.315392, 1.092548, 0.546274 );
-const float SH_C3[7] = float[7]( 0.590044, 2.890611, 0.457046, 0.373176,
-                                 0.457046, 1.445306, 0.590044 );
+const float SH_C3[7] = float[7](
+         -0.59004358,
+        2.890611442,
+        -0.45704579,
+        0.373176332,
+        -0.45704579,
+        1.445305721,
+        -0.59004358
+);
 
 vec3 loadSHCoeff(uint splatID, int index) {
     ivec2 shTexSize = textureSize(u_gaussianSplatSHTexture, 0);
@@ -54,8 +51,12 @@ vec3 evaluateSHLighting(uint splatID, vec3 viewDir) {
         result += -SH_C1 * y * sh1 + SH_C1 * z * sh2 - SH_C1 * x * sh3;
 
         if (u_shDegree >= 2.) {
-            float xx = x * x, yy = y * y, zz = z * z;
-            float xy = x * y, yz = y * z, xz = x * z;
+            float xx = x * x;
+            float yy = y * y;
+            float zz = z * z;
+            float xy = x * y;
+            float yz = y * z;
+            float xz = x * z;
 
             vec3 sh4 = loadSHCoeff(splatID, coeffIndex++);
             vec3 sh5 = loadSHCoeff(splatID, coeffIndex++);
@@ -69,12 +70,6 @@ vec3 evaluateSHLighting(uint splatID, vec3 viewDir) {
                     SH_C2[4] * (xx - yy) * sh8;
 
             if (u_shDegree >= 3.) {
-                float xx = x * x, yy = y * y, zz = z * z;
-                float xxy = x * x * y;
-                float xyy = x * y * y;
-                float x3  = x * xx;
-                float y3  = y * yy;
-
                 vec3 sh9 = loadSHCoeff(splatID, coeffIndex++);
                 vec3 sh10 = loadSHCoeff(splatID, coeffIndex++);
                 vec3 sh11 = loadSHCoeff(splatID, coeffIndex++);
@@ -191,17 +186,20 @@ void main() {
     gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
 
     v_vertPos = corner ;
-    v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
-
+    v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu);
+    v_splatColor /= 255.0;
 #if defined(HAS_SPHERICAL_HARMONICS)
 
     vec4 splatWC = czm_inverseView * splatViewPos;
-    vec3 viewDir = normalize( (u_cameraPositionWC.xyz - splatWC.xyz));
-// Extract model rotation (world → model local)
-vec3 viewDirModel = u_inverseModelRotation * viewDir;
+    vec3 viewDir = normalize( (splatWC.xyz - u_cameraPositionWC.xyz ));
+    vec3 viewDirModel = normalize(u_inverseModelRotation * viewDir);
+    
+    v_splatColor.rgb += evaluateSHLighting(texIdx, viewDir).rgb;
+    //v_splatColor.rgb = clamp(v_splatColor.rgb, 0.0, 1.0);
 
-    v_splatColor.rgb += evaluateSHLighting(texIdx, viewDirModel).rgb;
-    //v_splatColor.rgb = 0.5 + 0.5 * normalize(czm_inverseViewRotation * (u_cameraPositionWC.xyz - splatWC.xyz));
+
+   // v_splatColor.rgb = 0.5 + 0.5 * viewDir;//viewDirModel;//normalize(czm_inverseViewRotation * (u_cameraPositionWC.xyz - splatWC.xyz));
+
 
 #endif
     v_splitDirection = u_splitDirection;
