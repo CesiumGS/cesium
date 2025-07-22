@@ -562,10 +562,10 @@ function convertTransformFor2D(camera) {
     scratchCartographic,
   );
 
-  const projectedPosition = projection.project(
-    cartographic,
-    scratchCartesian3Projection,
-  );
+  let projectedPosition = defined(cartographic)
+    ? projection.project(cartographic, scratchCartesian3Projection)
+    : Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3Projection);
+
   const newOrigin = scratchCartesian4NewOrigin;
   newOrigin.x = projectedPosition.z;
   newOrigin.y = projectedPosition.x;
@@ -584,7 +584,10 @@ function convertTransformFor2D(camera) {
   );
   ellipsoid.cartesianToCartographic(xAxis, cartographic);
 
-  projection.project(cartographic, projectedPosition);
+  projectedPosition = defined(cartographic)
+    ? projection.project(cartographic, projectedPosition)
+    : Cartesian3.clone(Cartesian3.ZERO, projectedPosition);
+
   const newXAxis = scratchCartesian4NewXAxis;
   newXAxis.x = projectedPosition.z;
   newXAxis.y = projectedPosition.x;
@@ -605,7 +608,10 @@ function convertTransformFor2D(camera) {
     );
     ellipsoid.cartesianToCartographic(yAxis, cartographic);
 
-    projection.project(cartographic, projectedPosition);
+    projectedPosition = defined(cartographic)
+      ? projection.project(cartographic, projectedPosition)
+      : Cartesian3.clone(Cartesian3.ZERO, projectedPosition);
+
     newYAxis.x = projectedPosition.z;
     newYAxis.y = projectedPosition.x;
     newYAxis.z = projectedPosition.y;
@@ -1313,7 +1319,9 @@ function setViewCV(camera, position, hpr, convert) {
         position,
         scratchSetViewCartographic,
       );
-      position = projection.project(cartographic, scratchSetViewCartesian);
+      position = defined(cartographic)
+        ? projection.project(cartographic, scratchSetViewCartesian)
+        : Cartesian3.clone(Cartesian3.ZERO, scratchSetViewCartesian);
     }
     Cartesian3.clone(position, camera.position);
   }
@@ -1348,7 +1356,9 @@ function setView2D(camera, position, hpr, convert) {
         position,
         scratchSetViewCartographic,
       );
-      position = projection.project(cartographic, scratchSetViewCartesian);
+      position = defined(cartographic)
+        ? projection.project(cartographic, scratchSetViewCartesian)
+        : Cartesian3.clone(Cartesian3.ZERO, scratchSetViewCartesian);
     }
 
     Cartesian2.clone(position, camera.position);
