@@ -44,7 +44,7 @@ function moveTechniquesToExtension(gltf) {
           technique.attributes[attributeName] = {
             semantic: parameterLegacy.semantic,
           };
-        }
+        },
       );
 
       ForEach.techniqueUniform(
@@ -64,7 +64,7 @@ function moveTechniquesToExtension(gltf) {
             mappedUniforms[techniqueId] = {};
           }
           mappedUniforms[techniqueId][parameterName] = uniformName;
-        }
+        },
       );
 
       if (!defined(seenPrograms[techniqueLegacy.program])) {
@@ -92,7 +92,7 @@ function moveTechniquesToExtension(gltf) {
       // Store the index of the new technique to reference instead.
       updatedTechniqueIndices[techniqueId] = addToArray(
         extension.techniques,
-        technique
+        technique,
       );
     });
 
