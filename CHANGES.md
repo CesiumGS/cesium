@@ -1,20 +1,27 @@
 # Change Log
 
-## 1.130.1-ion.0 - 2025-07-17
+## 1.131.1-ion.1 - 2025-07-22
 
 ### @cesium/engine
 
-### Fixes :wrench:
+#### Fixes :wrench:
+
+- Fixes Gaussian splats incorrectly rendering when `Cesium3DTileset.show` is `false`. [#12748](https://github.com/CesiumGS/cesium/pull/12748)
+
+## 1.131.1-ion.0 - 2025-07-17
+
+### @cesium/engine
+
+#### Fixes :wrench:
 
 - Fixes an exception when removing a Gaussian splat tileset from the scene primitives when it has more than one tile. [#12726](https://github.com/CesiumGS/cesium/pull/12726)
 - Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix. [#12721](https://github.com/CesiumGS/cesium/issues/12721), [#12718](https://github.com/CesiumGS/cesium/issues/12718)
-- Fixes Gaussian splats incorrectly rendering when `Cesium3DTileset.show` is `false`. [#12748](https://github.com/CesiumGS/cesium/pull/12748)
 
 ## 1.131 - 2025-07-01
 
 ### @cesium/engine
 
-### Fixes :wrench:
+#### Fixes :wrench:
 
 - Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
 - Fixed raymarching step size for cylindrical voxels. [#12681](https://github.com/CesiumGS/cesium/pull/12681)
