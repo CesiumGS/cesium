@@ -41,6 +41,7 @@ git checkout -b <branch-name>
 ### 2. Cherry pick relevant commits
 
 - Use [`git-cherry-pick`](https://git-scm.com/docs/git-cherry-pick) one or more times to apply select commits to the current branch
+- As necessary, resolve any merge conflicts, add, and continue.
 
 #### Commands
 
@@ -73,8 +74,8 @@ npm version prerelease --preid <tag> --no-git-tag-version
 ...
 ```
 
-- Move any items in list for the next monthly release to the new header in `CHANGES.md`.
-- Delete the empty header (assuming step 2 was successful, there should be no items describing code changes unrelated to the cherry picked commits).
+- Move any relevant items in the list to the new header in `CHANGES.md`.
+- Delete any empty headers.
 - Ensure each change is nested in the section for the relevant workspace.
 - Commit any staged changed and push to your branch.
 
