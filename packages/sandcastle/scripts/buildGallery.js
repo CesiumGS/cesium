@@ -6,6 +6,8 @@ import { exit } from "process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import * as pagefind from "pagefind";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 export async function buildGalleryList(
   galleryDirectory,
   includeDevelopment = true,
@@ -35,7 +37,7 @@ export async function buildGalleryList(
 
   const { index } = await pagefind.createIndex({
     verbose: true,
-    logfile: "pagefind-debug.log",
+    logfile: join(__dirname, "pagefind-debug.log"),
   });
   if (!index) {
     console.log("Unable to create index");
@@ -170,7 +172,6 @@ export async function buildGalleryList(
 // if running the script directly using node
 /* global process */
 if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
-  const __dirname = dirname(fileURLToPath(import.meta.url));
   const defaultGalleryDirectory = join(__dirname, "../gallery");
   buildGalleryList(defaultGalleryDirectory)
     .then(({ output, hasErrors }) => {
