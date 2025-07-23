@@ -157,7 +157,16 @@ function ModelSceneGraph(options) {
 
 Object.defineProperties(ModelSceneGraph.prototype, {
   /**
-   * TODO
+   * Whether to accurately project the positions of the model
+   * corresponding to this scene graph in 2D. If false, the
+   * model will use less memory and will still render in 2D / CV
+   * mode, but its positions may be inaccurate
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   *
    */
   projectTo2D: {
     get: function () {
@@ -262,7 +271,14 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   },
 });
 
-// TODO: Doc
+/**
+ * Initializes the scene graph based on a model and its components
+ *
+ * @param {Model} model the for which to construct the scene graph
+ * @param {Components} components the components for the model loaded with ResourceLoader
+ *
+ * @private
+ */
 ModelSceneGraph.prototype.initialize = function (model, components) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
@@ -368,11 +384,10 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
 };
 
 /**
- * TODO
  * Multiplies the components transform by the the axisCorrectionMatrix
  * glTF * AxisCorrection
- * @param {*} sceneGraph
- * @param {*} result
+ * @param {ModelSceneGraph} sceneGraph
+ * @param {Matrix4} result
  * @returns {Matrix4}
  */
 function computeRootTransform(sceneGraph, result) {
@@ -389,7 +404,13 @@ function computeRootTransform(sceneGraph, result) {
 }
 
 /**
- * TODO
+ * Scale the model matrix by computed model scale
+ * then apply the root transform
+ *
+ * root transform is glTF * AxisCorrection
+ *
+ * result = model * glTF * AxisCorrection
+ *
  * @param {Matrix4} modelMatrix
  * @param {Matrix4} rootTransform
  * @param {Matrix4} result
