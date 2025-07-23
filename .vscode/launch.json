@@ -22,6 +22,32 @@
             "type": "chrome",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
+        },
+        {
+            "request": "attach",
+            "name": "Attach to Karma",
+            "type": "chrome",
+            "port": 9333, // This is the remote debugging port specified in karma.conf.cjs
+            "webRoot": "${workspaceFolder}",
+            "timeout": 60000
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Test Suite",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "test", "--", "--includeName", "${fileDirnameBasename}${/}${fileBasenameNoExtension}", "--debug"],
+            "console": "integratedTerminal"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Launch Test Suite and Debug in VSCode",
+            "configurations": [
+                "Launch Test Suite",
+                "Attach to Karma"
+            ]
         }
     ]
 }
