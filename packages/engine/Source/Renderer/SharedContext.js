@@ -129,7 +129,6 @@ SharedContext.prototype.createSceneContext = function (canvas) {
           return canvas;
         case "destroy":
           return destroy;
-        // ###TODO: When will this be inaccurate? device pixel ratio? Canvas larger than maximum drawing buffer dimensions supported by WebGL implementation?
         case "drawingBufferWidth":
           return canvas.width;
         case "drawingBufferHeight":
