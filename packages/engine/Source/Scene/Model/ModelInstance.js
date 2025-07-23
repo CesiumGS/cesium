@@ -191,7 +191,6 @@ class ModelInstance {
     const sceneGraph = model.sceneGraph;
     const instanceBoundingSpheres = [];
 
-    // TODO: runtime nodes should probably have a internal public accessor
     for (const runtimeNode of sceneGraph._runtimeNodes) {
       const runtimePrimitives = runtimeNode.runtimePrimitives;
       for (const runtimePrimitive of runtimePrimitives) {
@@ -212,6 +211,11 @@ class ModelInstance {
 
   /**
    * Gets the world space bounding sphere representing this instance of a model primitive.
+   *
+   * rootTransform = glTF * AxisCorrection * nodeTransform
+   *
+   * primitiveMatrix = modelMatrix * rootTransform
+   *
    * @param {Matrix4} modelMatrix
    * @param {ModelSceneGraph} sceneGraph
    * @param {ModelRuntimeNode} runtimeNode
