@@ -295,7 +295,6 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
 
   this._projectTo2D = model._projectTo2D;
   this._computedModelScale = model._computedScale;
-  // TODO: 2DBoundingSphere?
 
   // If the model has a height reference that modifies the model matrix,
   // it will be accounted for in updateModelMatrix.
@@ -407,9 +406,9 @@ function computeRootTransform(sceneGraph, result) {
  * Scale the model matrix by computed model scale
  * then apply the root transform
  *
- * root transform is glTF * AxisCorrection
+ * rootTransform = glTF * AxisCorrection
  *
- * result = model * glTF * AxisCorrection
+ * computedModelMatrix = modelMatrix * glTF * AxisCorrection
  *
  * @param {Matrix4} modelMatrix
  * @param {Matrix4} rootTransform
@@ -557,7 +556,7 @@ const scratchPrimitivePositionMax = new Cartesian3();
  * If the model is used for classification, a {@link ClassificationModelDrawCommand}
  * is generated for each primitive instead.
  * Updates the bounding sphere for the scene graph and each primitive.
- * @param {Model} model TODO
+ * @param {Model} model the mode to generate the draw commands for
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
  *
@@ -922,8 +921,6 @@ ModelSceneGraph.prototype.updateModelMatrix = function (
   const rootNodes = this._rootNodes;
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
-    // TODO: Is this really the flag that needs to be set? Or is the bounding sphere what is actually dirty
-    // drawCommandsDirty?
     node._isComputedTransformDirty = true;
   }
 };
