@@ -21,10 +21,12 @@ function Renderbuffer(options) {
   const maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
 
   const format = options.format ?? RenderbufferFormat.RGBA4;
-  const width = defined(options.width) ? options.width : gl.drawingBufferWidth;
+  const width = defined(options.width)
+    ? options.width
+    : context.drawingBufferWidth;
   const height = defined(options.height)
     ? options.height
-    : gl.drawingBufferHeight;
+    : context.drawingBufferHeight;
   const numSamples = options.numSamples ?? 1;
 
   //>>includeStart('debug', pragmas.debug);

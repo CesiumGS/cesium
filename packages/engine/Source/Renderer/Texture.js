@@ -623,13 +623,12 @@ Texture.fromFramebuffer = function (options) {
   //>>includeEnd('debug');
 
   const context = options.context;
-  const gl = context._gl;
   const {
     pixelFormat = PixelFormat.RGB,
     framebufferXOffset = 0,
     framebufferYOffset = 0,
-    width = gl.drawingBufferWidth,
-    height = gl.drawingBufferHeight,
+    width = context.drawingBufferWidth,
+    height = context.drawingBufferHeight,
     framebuffer,
   } = options;
 
@@ -656,12 +655,12 @@ Texture.fromFramebuffer = function (options) {
     framebufferYOffset,
     0,
   );
-  if (framebufferXOffset + width > gl.drawingBufferWidth) {
+  if (framebufferXOffset + width > context.drawingBufferWidth) {
     throw new DeveloperError(
       "framebufferXOffset + width must be less than or equal to drawingBufferWidth",
     );
   }
-  if (framebufferYOffset + height > gl.drawingBufferHeight) {
+  if (framebufferYOffset + height > context.drawingBufferHeight) {
     throw new DeveloperError(
       "framebufferYOffset + height must be less than or equal to drawingBufferHeight.",
     );
