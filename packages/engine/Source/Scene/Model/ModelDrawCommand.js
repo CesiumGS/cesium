@@ -295,6 +295,12 @@ Object.defineProperties(ModelDrawCommand.prototype, {
     set: function (value) {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       this._modelMatrix2DDirty = true;
+
+      this._boundingVolume = BoundingSphere.transform(
+        this.runtimePrimitive.boundingSphere,
+        this._modelMatrix,
+        this._boundingVolume,
+      );
     },
   },
 
