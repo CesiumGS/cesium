@@ -77,6 +77,9 @@ describe(
           _pickIds: [],
           statistics: new ModelStatistics(),
           type: ModelType.GLTF,
+          instances: {
+            _instances: [],
+          },
         },
         runtimePrimitive: {
           primitive: {},
