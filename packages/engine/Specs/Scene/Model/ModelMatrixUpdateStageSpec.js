@@ -105,6 +105,7 @@ describe(
         model: model,
         primitive: mockPrimitive,
       });
+      runtimePrimitive.boundingSphere = new BoundingSphere();
       runtimePrimitive.drawCommand = new ModelDrawCommand({
         command: rootDrawCommand,
         primitiveRenderResources: renderResources,
@@ -122,6 +123,7 @@ describe(
         model: model,
         primitive: mockPrimitive,
       });
+      runtimePrimitive.boundingSphere = new BoundingSphere();
       runtimePrimitive.drawCommand = new ModelDrawCommand({
         command: leafDrawCommand,
         primitiveRenderResources: renderResources,
