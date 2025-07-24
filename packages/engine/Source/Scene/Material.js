@@ -880,50 +880,43 @@ function createTexture2DUpdateFunction(uniformId) {
     //  they are clonable. That's why we check the url property for Resources
     //  because the instances aren't the same and we keep trying to load the same
     //  image if it fails to load.
-    const isResource = uniformValue instanceof Resource;
+    const resource = Resource.createIfNeeded(uniformValue); // Attempt to make a resource. If not already a resource or string, returns original object.
     if (
-      !defined(material._texturePaths[uniformId]) ||
-      (isResource &&
-        uniformValue.url !== material._texturePaths[uniformId].url) ||
-      (!isResource && uniformValue !== material._texturePaths[uniformId])
+      resource instanceof Resource &&
+      resource.url !== material._texturePaths[uniformId].url
     ) {
-      if (typeof uniformValue === "string" || isResource) {
-        const resource = isResource
-          ? uniformValue
-          : Resource.createIfNeeded(uniformValue);
-
-        let promise;
-        if (ktx2Regex.test(resource.url)) {
-          promise = loadKTX2(resource.url);
-        } else {
-          promise = resource.fetchImage();
-        }
-
-        Promise.resolve(promise)
-          .then(function (image) {
-            material._loadedImages.push({
-              id: uniformId,
-              image: image,
-            });
-          })
-          .catch(function () {
-            if (defined(texture) && texture !== material._defaultTexture) {
-              texture.destroy();
-            }
-            material._textures[uniformId] = material._defaultTexture;
-          });
-      } else if (
-        uniformValue instanceof HTMLCanvasElement ||
-        uniformValue instanceof HTMLImageElement ||
-        uniformValue instanceof ImageBitmap ||
-        uniformValue instanceof OffscreenCanvas
-      ) {
-        material._loadedImages.push({
-          id: uniformId,
-          image: uniformValue,
-        });
+      material._texturePaths[uniformId] = uniformValue;
+      let promise;
+      if (ktx2Regex.test(resource.url)) {
+        promise = loadKTX2(resource.url);
+      } else {
+        promise = resource.fetchImage();
       }
 
+      Promise.resolve(promise)
+        .then(function (image) {
+          material._loadedImages.push({
+            id: uniformId,
+            image: image,
+          });
+        })
+        .catch(function () {
+          if (defined(texture) && texture !== material._defaultTexture) {
+            texture.destroy();
+          }
+          material._textures[uniformId] = material._defaultTexture;
+        });
+    } else if (
+      uniformValue !== material._texturePaths[uniformId] &&
+      (uniformValue instanceof HTMLCanvasElement ||
+        uniformValue instanceof HTMLImageElement ||
+        uniformValue instanceof ImageBitmap ||
+        uniformValue instanceof OffscreenCanvas)
+    ) {
+      material._loadedImages.push({
+        id: uniformId,
+        image: uniformValue,
+      });
       material._texturePaths[uniformId] = uniformValue;
     }
   };
