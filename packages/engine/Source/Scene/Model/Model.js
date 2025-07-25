@@ -493,6 +493,7 @@ function Model(options) {
 
   this._sceneGraph = new ModelSceneGraph({
     modelInstances: options.instances,
+    model: this,
   });
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 
@@ -2451,16 +2452,6 @@ function getComputedScale(model, modelMatrix, frameState) {
       );
     }
 
-    if (sceneGraph.hasInstances) {
-      for (const modelInstance of sceneGraph.modelInstances._instances) {
-        const transform = modelInstance.transform;
-        maxScaleInPixels = Math.max(
-          maxScaleInPixels,
-          getScaleInPixels(transform),
-        );
-      }
-    }
-
     // metersPerPixel is always > 0.0
     const pixelsPerMeter = 1.0 / maxScaleInPixels;
     const diameter = 2.0 * radius;
@@ -2544,6 +2535,9 @@ function updateReferenceMatrices(model, frameState) {
 
 function updateSceneGraph(model, frameState) {
   const sceneGraph = model._sceneGraph;
+  if (sceneGraph.hasInstances || model._minimumPixelSize !== 0.0) {
+    sceneGraph.modelInstances._dirty = true;
+  }
   if (model._updateModelMatrix || model._minimumPixelSize !== 0.0) {
     const modelMatrix = defined(model._clampedModelMatrix)
       ? model._clampedModelMatrix
