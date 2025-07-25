@@ -4,6 +4,7 @@ import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import Credit from "../../Core/Credit.js";
 import Color from "../../Core/Color.js";
+import CesiumMath from "../../Core/Math.js";
 import defined from "../../Core/defined.js";
 import Frozen from "../../Core/Frozen.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -313,6 +314,8 @@ function Model(options) {
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 
+  this._runtimeInstancesLength = 0;
+
   this._featureTables = [];
   this._featureTableId = undefined;
   this._featureTableIdDirty = true;
@@ -331,7 +334,6 @@ function Model(options) {
   // The model's bounding sphere and its initial radius are computed
   // in ModelSceneGraph.
   this._boundingSphere = new BoundingSphere();
-  this._initialRadius = undefined;
 
   this._heightReference = options.heightReference ?? HeightReference.NONE;
   this._heightDirty = this._heightReference !== HeightReference.NONE;
@@ -486,7 +488,9 @@ function Model(options) {
   this._readyEvent = new Event();
   this._texturesReadyEvent = new Event();
 
-  this._sceneGraph = undefined;
+  this._sceneGraph = new ModelSceneGraph({
+    modelInstances: options.instances,
+  });
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 
   /**
@@ -865,6 +869,35 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * Gets the collection of {@link ModelInstance} used for rendering multiple copies of a {@link Model} mesh with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
+   * @memberof Model.prototype
+   * @type {ModelInstanceCollection}
+   * @readonly
+   * @demo {@link https://sandcastle.cesium.com/index.html?src=3DModelInstancing.html|Cesium Sandcastle 3D Model Instancing Demo}
+   * @example
+   * // Add an instance to a model
+   * const position = Cesium.Cartesian3.fromDegrees(-75.1652, 39.9526);
+   * const headingPositionRoll = new Cesium.HeadingPitchRoll();
+   * const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+   *   "north",
+   *   "west",
+   * );
+   * const instanceModelMatrix = new Cesium.Transforms.headingPitchRollToFixedFrame(
+   *   position,
+   *   headingPositionRoll,
+   *   Cesium.Ellipsoid.WGS84,
+   *   fixedFrameTransform,
+   * );
+   *
+   * model.instances.add(instanceModelMatrix);
+   */
+  instances: {
+    get: function () {
+      return this._sceneGraph.modelInstances;
+    },
+  },
+
+  /**
    * Gets or sets the distance display condition, which specifies at what distance
    * from the camera this model will be displayed.
    *
@@ -1132,9 +1165,7 @@ Object.defineProperties(Model.prototype, {
       }
       //>>includeEnd('debug');
 
-      const modelMatrix = defined(this._clampedModelMatrix)
-        ? this._clampedModelMatrix
-        : this.modelMatrix;
+      const modelMatrix = this._clampedModelMatrix ?? this.modelMatrix;
       updateBoundingSphere(this, modelMatrix);
 
       return this._boundingSphere;
@@ -1938,12 +1969,9 @@ Model.prototype.update = function (frameState) {
       createModelFeatureTables(this, structuralMetadata);
     }
 
-    const sceneGraph = new ModelSceneGraph({
-      model: this,
-      modelComponents: components,
-    });
+    const sceneGraph = this._sceneGraph;
+    sceneGraph.initialize(this, components);
 
-    this._sceneGraph = sceneGraph;
     this._gltfCredits = sceneGraph.components.asset.credits;
   }
 
@@ -1966,6 +1994,7 @@ Model.prototype.update = function (frameState) {
     }
   }
 
+  updateRuntimeModelInstances(this);
   updateFeatureTableId(this);
   updateStyle(this);
   updateFeatureTables(this, frameState);
@@ -2227,10 +2256,34 @@ function updateVerticalExaggeration(model, frameState) {
   }
 }
 
+function updateRuntimeModelInstances(model) {
+  if (
+    model.sceneGraph.modelInstances.length !== model._runtimeInstancesLength
+  ) {
+    model.resetDrawCommands();
+    model._runtimeInstancesLength = model.sceneGraph.modelInstances.length;
+  }
+  let instance;
+  for (let i = 0; i < model.sceneGraph.modelInstances.length; i++) {
+    instance = model.sceneGraph.modelInstances.get(i);
+    if (instance._dirty) {
+      if (!model.sceneGraph.modelInstances._dirty) {
+        model.sceneGraph.modelInstances._dirty = true;
+      }
+      instance._dirty = false;
+    }
+  }
+}
+
 function buildDrawCommands(model, frameState) {
   if (!model._drawCommandsBuilt) {
     model.destroyPipelineResources();
-    model._sceneGraph.buildDrawCommands(frameState);
+
+    const modelMatrix = model._clampedModelMatrix ?? model.modelMatrix;
+    updateBoundingSphere(model, modelMatrix);
+
+    model._sceneGraph.buildDrawCommands(model, frameState);
+
     model._drawCommandsBuilt = true;
   }
 }
@@ -2326,30 +2379,39 @@ function updateBoundingSphereAndScale(model, frameState) {
     ? model._clampedModelMatrix
     : model.modelMatrix;
 
+  model._computedScale = getComputedScale(model, modelMatrix, frameState);
   updateBoundingSphere(model, modelMatrix);
-  updateComputedScale(model, modelMatrix, frameState);
 }
 
+/**
+ * Updates <code>model._boundingSphere</code>, accounting for the model's modelMatrix and scale properties.
+ * @param {Model} model
+ * @param {Matrix4} modelMatrix
+ */
 function updateBoundingSphere(model, modelMatrix) {
-  model._clampedScale = defined(model._maximumScale)
-    ? Math.min(model._scale, model._maximumScale)
-    : model._scale;
+  const maximumScale = model._maximumScale ?? Number.POSITIVE_INFINITY;
+  const scale = (model._clampedScale = Math.min(model._scale, maximumScale));
 
-  model._boundingSphere.center = Cartesian3.multiplyByScalar(
-    model._sceneGraph.boundingSphere.center,
-    model._clampedScale,
-    model._boundingSphere.center,
+  const sceneGraph = model.sceneGraph;
+  const rootBoundingSphere = sceneGraph.rootBoundingSphere;
+  const modelBoundingSphere = model._boundingSphere;
+  modelBoundingSphere.center = Cartesian3.multiplyByScalar(
+    rootBoundingSphere.center,
+    scale,
+    modelBoundingSphere.center,
   );
-  model._boundingSphere.radius = model._initialRadius * model._clampedScale;
+
+  const radius = rootBoundingSphere.radius;
+  modelBoundingSphere.radius = radius * scale;
 
   model._boundingSphere = BoundingSphere.transform(
-    model._boundingSphere,
+    modelBoundingSphere,
     modelMatrix,
-    model._boundingSphere,
+    modelBoundingSphere,
   );
 }
 
-function updateComputedScale(model, modelMatrix, frameState) {
+function getComputedScale(model, modelMatrix, frameState) {
   let scale = model.scale;
 
   if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
@@ -2360,37 +2422,55 @@ function updateComputedScale(model, modelMatrix, frameState) {
       context.drawingBufferHeight,
     );
 
-    Matrix4.getTranslation(modelMatrix, scratchPosition);
+    const radius = model.sceneGraph.rootBoundingSphere.radius;
+    const getScaleInPixels = (transform) => {
+      let position = Matrix4.getTranslation(transform, scratchPosition);
 
-    if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualEllipsoidPosition(
-        frameState,
-        scratchPosition,
-        scratchPosition,
+      if (model._sceneMode !== SceneMode.SCENE3D) {
+        position = SceneTransforms.computeActualEllipsoidPosition(
+          frameState,
+          position,
+          position,
+        );
+      }
+
+      return scaleInPixels(position, radius, frameState);
+    };
+
+    // maxScaleInPixels is always > 0
+    let maxScaleInPixels = CesiumMath.EPSILON12;
+
+    const sceneGraph = model.sceneGraph;
+    if (!sceneGraph.hasInstances) {
+      maxScaleInPixels = Math.max(
+        maxScaleInPixels,
+        getScaleInPixels(modelMatrix),
       );
     }
 
-    const radius = model._boundingSphere.radius;
-    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
+    if (sceneGraph.hasInstances) {
+      for (const modelInstance of sceneGraph.modelInstances._instances) {
+        const transform = modelInstance.transform;
+        maxScaleInPixels = Math.max(
+          maxScaleInPixels,
+          getScaleInPixels(transform),
+        );
+      }
+    }
 
     // metersPerPixel is always > 0.0
-    const pixelsPerMeter = 1.0 / metersPerPixel;
-    const diameterInPixels = Math.min(
-      pixelsPerMeter * (2.0 * radius),
-      maxPixelSize,
-    );
+    const pixelsPerMeter = 1.0 / maxScaleInPixels;
+    const diameter = 2.0 * radius;
+    const diameterInPixels = Math.min(pixelsPerMeter * diameter, maxPixelSize);
 
     // Maintain model's minimum pixel size
     if (diameterInPixels < model.minimumPixelSize) {
-      scale =
-        (model.minimumPixelSize * metersPerPixel) /
-        (2.0 * model._initialRadius);
+      scale = (model.minimumPixelSize * maxScaleInPixels) / diameter;
     }
   }
 
-  model._computedScale = defined(model.maximumScale)
-    ? Math.min(model.maximumScale, scale)
-    : scale;
+  const maxScale = model.maximumScale ?? Number.POSITIVE_INFINITY;
+  return Math.min(scale, maxScale);
 }
 
 function updatePickIds(model) {
@@ -2465,7 +2545,7 @@ function updateSceneGraph(model, frameState) {
     const modelMatrix = defined(model._clampedModelMatrix)
       ? model._clampedModelMatrix
       : model.modelMatrix;
-    sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    sceneGraph.updateModelMatrix(modelMatrix, model._computedScale, frameState);
     model._updateModelMatrix = false;
   }
 
@@ -2553,7 +2633,7 @@ function submitDrawCommands(model, frameState) {
 
   if (showModel && !model._ignoreCommands && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);
-    model._sceneGraph.pushDrawCommands(frameState);
+    model._sceneGraph.pushDrawCommands(model, frameState);
   }
 }
 
@@ -3324,6 +3404,7 @@ function makeModelOptions(loader, modelType, options) {
     pointCloudShading: options.pointCloudShading,
     classificationType: options.classificationType,
     pickObject: options.pickObject,
+    instances: options.instances,
   };
 }
 
