@@ -1,10 +1,10 @@
-import BoundingSphere from "../../Core/BoundingSphere";
-import Cartesian3 from "../../Core/Cartesian3";
+import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
-import Matrix3 from "../../Core/Matrix3";
-import Matrix4 from "../../Core/Matrix4";
-import TranslationRotationScale from "../../Core/TranslationRotationScale";
-import Quaternion from "../../Core/Quaternion";
+import Matrix3 from "../../Core/Matrix3.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
+import Quaternion from "../../Core/Quaternion.js";
 
 const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
