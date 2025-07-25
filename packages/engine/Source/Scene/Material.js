@@ -393,7 +393,28 @@ Material.fromType = function (type, uniforms) {
   return material;
 };
 
+/**
+ * Creates a new material using an existing material type and returns a promise that resolves when
+ * all of the material's resources have been loaded.
+ *
+ * @param {string} type The base material type.
+ * @param {object} [uniforms] Overrides for the default uniforms.
+ * @returns {Promise<Material>} A promise that resolves to a new material object when all resources are loaded.
+ *
+ * @exception {DeveloperError} material with that type does not exist.
+ *
+ * @example
+ * const material = await Cesium.Material.fromTypeAsync('Image', {
+ *    image: '../Images/Cesium_Logo_overlay.png'
+ * });
+ */
 Material.fromTypeAsync = async function (type, uniforms) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(Material._materialCache.getMaterial(type))) {
+    throw new DeveloperError(`material with type '${type}' does not exist.`);
+  }
+  //>>includeEnd('debug');
+
   const initializationPromises = [];
   // Unlike Material.fromType, we need to specify the uniforms in the Material constructor up front,
   // or else anything that needs to be async loaded won't be kicked off until the next Update call.
@@ -411,6 +432,13 @@ Material.fromTypeAsync = async function (type, uniforms) {
   return material;
 };
 
+/**
+ * Recursively traverses the material and its submaterials to collect all initialization promises.
+ * @param {Material} material The material to traverse.
+ * @param {Promise[]} initializationPromises The array to collect promises into.
+ *
+ * @private
+ */
 function getInitializationPromises(material, initializationPromises) {
   initializationPromises.push(material._initializationPromises);
   const submaterials = material.materials;
@@ -936,6 +964,16 @@ function createTexture2DUpdateFunction(uniformId) {
   };
 }
 
+/**
+ * For a given uniform ID, potentially loads a texture image for the material, if the uniform value is a Resource or string URL,
+ * and has changed since the last time this was called (either on construction or update).
+ *
+ * @param {Material} material The material to load the texture for.
+ * @param {string} uniformId The ID of the uniform of the image.
+ * @returns {Promise} A promise that resolves when the image is loaded, or a resolved promise if image loading is not necessary.
+ *
+ * @private
+ */
 function loadTexture2DImageForUniform(material, uniformId) {
   const uniforms = material.uniforms;
   const uniformValue = uniforms[uniformId];
@@ -1010,6 +1048,13 @@ function createCubeMapUpdateFunction(uniformId) {
   };
 }
 
+/**
+ * Loads the images for a cubemap uniform, if it has changed since the last time this was called.
+ *
+ * @param {Material} material The material to load the cubemap images for.
+ * @param {string} uniformId The ID of the uniform that corresponds to the cubemap images.
+ * @returns {Promise} A promise that resolves when the images are loaded, or a resolved promise if image loading is not necessary.
+ */
 async function loadCubeMapImagesForUniform(material, uniformId) {
   const uniforms = material.uniforms;
   const uniformValue = uniforms[uniformId];
