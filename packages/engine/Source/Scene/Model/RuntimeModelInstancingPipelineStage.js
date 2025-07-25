@@ -11,6 +11,7 @@ import InstancingStageCommon from "../../Shaders/Model/InstancingStageCommon.js"
 import RuntimeModelInstancingPipelineStageVS from "../../Shaders/Model/RuntimeModelInstancingPipelineStageVS.js";
 
 const nodeTransformScratch = new Matrix4();
+const relativeScaledTransformScratch = new Matrix4();
 
 /**
  * The runtime model instancing pipeline stage is responsible for handling GPU mesh instancing
@@ -76,6 +77,8 @@ RuntimeModelInstancingPipelineStage.process = function (
 
 RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
   modelInstances,
+  model,
+  frameState,
 ) {
   const elements = 18;
   const count = modelInstances.length;
@@ -87,7 +90,15 @@ RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
       continue;
     }
 
-    const transform = modelInstance.relativeTransform ?? Matrix4.IDENTITY;
+    //const oldtransform = modelInstance.relativeTransform ?? Matrix4.IDENTITY;
+
+    const transform = modelInstance.getRelativeScaledTransform(
+      model,
+      frameState,
+      relativeScaledTransformScratch,
+    );
+    // console.log("transform ", transform);
+    // console.log("relativeScaledTransform ", newtransform);
     const offset = elements * i;
 
     transformsTypedArray[offset + 0] = transform[0];
@@ -127,6 +138,8 @@ RuntimeModelInstancingPipelineStage._createAttributes = function (
   const transformsTypedArray =
     RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
       modelInstances,
+      renderResources.model,
+      frameState,
     );
   const transformsBuffer = Buffer.createVertexBuffer({
     context,

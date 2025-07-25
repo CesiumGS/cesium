@@ -9,7 +9,7 @@ import Quaternion from "../../Core/Quaternion.js";
 const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
 const scratchBoundingSphereTransform = new Matrix4();
-
+const scratchBoundingSphere = new BoundingSphere();
 /**
  * A copy of a {@link Model} mesh, known as an instance, used for rendering multiple copies with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
  * @see {@link ModelInstanceCollection} for a collection of instances.
@@ -46,6 +46,7 @@ class ModelInstance {
     this._transform = transform;
     this._center = new Cartesian3();
     this._relativeTransform = new Matrix4();
+    this._relativeScaledTransform = new Matrix4();
     this._pickId = undefined;
 
     this._updateTransform(transform);
@@ -110,6 +111,10 @@ class ModelInstance {
    */
   get relativeTransform() {
     return this._relativeTransform;
+  }
+
+  get relativeScaledTransform() {
+    return this._relativeScaledTransform;
   }
 
   /**
@@ -207,6 +212,44 @@ class ModelInstance {
     }
 
     return BoundingSphere.fromBoundingSpheres(instanceBoundingSpheres, result);
+  }
+
+  getRelativeScaledTransform(model, frameState, result) {
+    if (!model.ready) {
+      return Matrix4.IDENTITY;
+    }
+
+    let scale = model.scale;
+    const radius = model.sceneGraph.rootBoundingSphere.radius;
+
+    const boundingSphere = this.getBoundingSphere(model, scratchBoundingSphere);
+    const bw = frameState.context.drawingBufferWidth;
+    const bh = frameState.context.drawingBufferHeight;
+    const scaleInPixels = frameState.camera.getPixelSize(
+      boundingSphere,
+      bw,
+      bh,
+    ); //meters per pixel
+
+    //console.log("instance ", scaleInPixels, this);
+
+    // metersPerPixel is always > 0.0
+    const pixelsPerMeter = 1.0 / scaleInPixels;
+    const diameter = 2.0 * radius;
+    const diameterInPixels = pixelsPerMeter * diameter;
+
+    // Maintain model's minimum pixel size
+    if (diameterInPixels < model.minimumPixelSize) {
+      scale = (model.minimumPixelSize * scaleInPixels) / diameter;
+    }
+
+    //console.log("scale ", scale);
+
+    return Matrix4.multiplyByUniformScale(
+      this._relativeTransform,
+      scale,
+      result,
+    );
   }
 
   /**

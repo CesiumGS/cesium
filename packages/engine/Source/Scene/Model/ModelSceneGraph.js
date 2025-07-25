@@ -34,6 +34,7 @@ import addAllToArray from "../../Core/addAllToArray.js";
  *
  * @param {object} options An object containing the following options
  * @param {ModelInstance[]} [options.modelInstances] The API-level model instances
+ * @param {Model} [options.model] The API-level model instances
  *
  * @alias ModelSceneGraph
  * @constructor
@@ -130,6 +131,7 @@ function ModelSceneGraph(options) {
   this._modelInstances = new ModelInstanceCollection({
     instances: options.modelInstances,
   });
+  this._model = options.model;
 
   // An un-transformed boundingSphere in world space
   this._rootBoundingSphere = new BoundingSphere();

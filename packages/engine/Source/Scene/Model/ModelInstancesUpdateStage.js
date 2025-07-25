@@ -25,7 +25,10 @@ ModelInstancesUpdateStage.update = function (
   sceneGraph,
   frameState,
 ) {
-  if (!sceneGraph.modelInstances._dirty) {
+  if (
+    !sceneGraph.modelInstances._dirty ||
+    !sceneGraph._model._drawCommandsBuilt
+  ) {
     return;
   }
 
@@ -49,6 +52,8 @@ function updateRuntimeNode(runtimeNode, sceneGraph, frameState) {
   const transformsTypedArray =
     RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
       modelInstances,
+      sceneGraph._model,
+      frameState,
     );
 
   runtimeNode.instancingTransformsBuffer.copyFromArrayView(
