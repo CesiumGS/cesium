@@ -393,6 +393,36 @@ Material.fromType = function (type, uniforms) {
   return material;
 };
 
+Material.fromTypeAsync = async function (type, uniforms) {
+  const initializationPromises = [];
+  // Unlike Material.fromType, we need to specify the uniforms in the Material constructor up front,
+  // or else anything that needs to be async loaded won't be kicked off until the next Update call.
+  const material = new Material({
+    fabric: {
+      type: type,
+      uniforms: uniforms,
+    },
+  });
+
+  // Recursively collect initialization promises for this material and its submaterials.
+  getInitializationPromises(material, initializationPromises);
+  await Promise.all(initializationPromises);
+
+  return material;
+};
+
+function getInitializationPromises(material, initializationPromises) {
+  initializationPromises.push(material._initializationPromises);
+  const submaterials = material.materials;
+  for (const name in submaterials) {
+    if (submaterials.hasOwnProperty(name)) {
+      const submaterial = submaterials[name];
+      initializationPromises.push(submaterial._initializationPromises);
+      getInitializationPromises(submaterial, initializationPromises);
+    }
+  }
+}
+
 /**
  * Gets whether or not this material is translucent.
  * @returns {boolean} <code>true</code> if this material is translucent, <code>false</code> otherwise.
