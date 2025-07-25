@@ -440,12 +440,11 @@ Material.fromTypeAsync = async function (type, uniforms) {
  * @private
  */
 function getInitializationPromises(material, initializationPromises) {
-  initializationPromises.push(material._initializationPromises);
+  initializationPromises.push(...material._initializationPromises);
   const submaterials = material.materials;
   for (const name in submaterials) {
     if (submaterials.hasOwnProperty(name)) {
       const submaterial = submaterials[name];
-      initializationPromises.push(submaterial._initializationPromises);
       getInitializationPromises(submaterial, initializationPromises);
     }
   }
@@ -653,6 +652,7 @@ function initializeMaterial(options, result) {
   result._strict = options.strict ?? false;
   result._count = options.count ?? 0;
   result._template = clone(options.fabric ?? Frozen.EMPTY_OBJECT);
+  result.fabric = clone(options.fabric ?? Frozen.EMPTY_OBJECT);
   result._template.uniforms = clone(
     result._template.uniforms ?? Frozen.EMPTY_OBJECT,
   );
@@ -683,14 +683,14 @@ function initializeMaterial(options, result) {
   // Make sure the template has no obvious errors. More error checking happens later.
   checkForTemplateErrors(result);
 
+  createMethodDefinition(result);
+  createUniforms(result);
+  createSubMaterials(result);
+
   // If the material has a new type, add it to the cache.
   if (!defined(cachedMaterial)) {
     Material._materialCache.addMaterial(result.type, result);
   }
-
-  createMethodDefinition(result);
-  createUniforms(result);
-  createSubMaterials(result);
 
   const defaultTranslucent =
     result._translucentFunctions.length === 0 ? true : undefined;
@@ -970,7 +970,7 @@ function createTexture2DUpdateFunction(uniformId) {
  *
  * @param {Material} material The material to load the texture for.
  * @param {string} uniformId The ID of the uniform of the image.
- * @returns {Promise} A promise that resolves when the image is loaded, or a resolved promise if image loading is not necessary.
+ * @returns A promise that resolves when the image is loaded, or a resolved promise if image loading is not necessary.
  *
  * @private
  */
@@ -1053,9 +1053,9 @@ function createCubeMapUpdateFunction(uniformId) {
  *
  * @param {Material} material The material to load the cubemap images for.
  * @param {string} uniformId The ID of the uniform that corresponds to the cubemap images.
- * @returns {Promise} A promise that resolves when the images are loaded, or a resolved promise if image loading is not necessary.
+ * @returns A promise that resolves when the images are loaded, or a resolved promise if image loading is not necessary.
  */
-async function loadCubeMapImagesForUniform(material, uniformId) {
+function loadCubeMapImagesForUniform(material, uniformId) {
   const uniforms = material.uniforms;
   const uniformValue = uniforms[uniformId];
   if (uniformValue === Material.DefaultCubeMapId) {

@@ -630,6 +630,93 @@ describe(
       });
     });
 
+    it("creates a material using fromTypeAsync", async function () {
+      const material = await Material.fromTypeAsync("Color");
+      renderMaterial(material);
+    });
+
+    it("loads a 2D texture image synchronously when awaiting fromTypeAsync", async function () {
+      const imageMaterial = await Material.fromTypeAsync("Image", {
+        image: "./Data/Images/Blue.png",
+      });
+      renderMaterial(imageMaterial);
+    });
+
+    it("loads cubemap images synchronously when awaiting fromTypeAsync", async function () {
+      // First make a material with a cubemap, then use its type to make a second cubemap material asynchronously.
+      const material = new Material({
+        strict: true,
+        fabric: {
+          uniforms: {
+            cubeMap: {
+              positiveX: "./Data/Images/Blue.png",
+              negativeX: "./Data/Images/Blue.png",
+              positiveY: "./Data/Images/Blue.png",
+              negativeY: "./Data/Images/Blue.png",
+              positiveZ: "./Data/Images/Blue.png",
+              negativeZ: "./Data/Images/Blue.png",
+            },
+          },
+          source:
+            "uniform samplerCube cubeMap;\n" +
+            "czm_material czm_getMaterial(czm_materialInput materialInput)\n" +
+            "{\n" +
+            "    czm_material material = czm_getDefaultMaterial(materialInput);\n" +
+            "    material.diffuse = czm_textureCube(cubeMap, vec3(1.0)).xyz;\n" +
+            "    return material;\n" +
+            "}\n",
+        },
+      });
+
+      const materialFromTypeAsync = await Material.fromTypeAsync(
+        material.type,
+        {
+          cubeMap: {
+            positiveX: "./Data/Images/Green.png",
+            negativeX: "./Data/Images/Green.png",
+            positiveY: "./Data/Images/Green.png",
+            negativeY: "./Data/Images/Green.png",
+            positiveZ: "./Data/Images/Green.png",
+            negativeZ: "./Data/Images/Green.png",
+          },
+        },
+      );
+
+      renderMaterial(materialFromTypeAsync);
+    });
+
+    it("loads sub-materials synchronously when awaiting fromTypeAsync", async function () {
+      // First make a material with submaterials, then use its type to make a second material asynchronously.
+      const material = new Material({
+        strict: true,
+        fabric: {
+          materials: {
+            greenMaterial: {
+              type: "Image",
+              uniforms: {
+                image: "./Data/Images/Green.png", // Green image
+              },
+            },
+            blueMaterial: {
+              type: "Image",
+              uniforms: {
+                image: "./Data/Images/Blue.png", // Blue image
+              },
+            },
+          },
+          components: {
+            diffuse:
+              "clamp(greenMaterial.diffuse + blueMaterial.diffuse, 0.0, 1.0)",
+          },
+        },
+      });
+
+      const materialFromTypeAsync = await Material.fromTypeAsync(material.type);
+      renderMaterial(materialFromTypeAsync, false, function (rgba) {
+        expect(rgba).toEqual([0, 255, 255, 255]); // Expect cyan from green + blue
+      });
+    });
+
     it("creates material with custom texture filter", function () {
       const materialLinear = new Material({
         fabric: {
