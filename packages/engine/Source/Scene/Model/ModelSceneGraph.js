@@ -389,6 +389,8 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
  * @param {ModelSceneGraph} sceneGraph
  * @param {Matrix4} result
  * @returns {Matrix4}
+ *
+ * @private
  */
 function computeRootTransform(sceneGraph, result) {
   const components = sceneGraph._components;
