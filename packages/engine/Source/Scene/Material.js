@@ -973,42 +973,53 @@ function createCubeMapUpdateFunction(uniformId) {
     }
 
     if (!defined(material._textures[uniformId])) {
-      material._texturePaths[uniformId] = undefined;
       material._textures[uniformId] = context.defaultCubeMap;
     }
 
-    if (uniformValue === Material.DefaultCubeMapId) {
-      return;
-    }
-
-    const path =
-      uniformValue.positiveX +
-      uniformValue.negativeX +
-      uniformValue.positiveY +
-      uniformValue.negativeY +
-      uniformValue.positiveZ +
-      uniformValue.negativeZ;
-
-    if (path !== material._texturePaths[uniformId]) {
-      const promises = [
-        Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
-        Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
-        Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
-        Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
-        Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
-        Resource.createIfNeeded(uniformValue.negativeZ).fetchImage(),
-      ];
-
-      Promise.all(promises).then(function (images) {
-        material._loadedCubeMaps.push({
-          id: uniformId,
-          images: images,
-        });
-      });
-
-      material._texturePaths[uniformId] = path;
-    }
+    loadCubeMapImagesForUniform(material, uniformId);
   };
+}
+
+async function loadCubeMapImagesForUniform(material, uniformId) {
+  const uniforms = material.uniforms;
+  const uniformValue = uniforms[uniformId];
+  if (uniformValue === Material.DefaultCubeMapId) {
+    return Promise.resolve();
+  }
+
+  const path =
+    uniformValue.positiveX +
+    uniformValue.negativeX +
+    uniformValue.positiveY +
+    uniformValue.negativeY +
+    uniformValue.positiveZ +
+    uniformValue.negativeZ;
+
+  // The uniform value is unchanged, no update / image load necessary.
+  if (path === material._texturePaths[uniformId]) {
+    return Promise.resolve();
+  }
+
+  const promises = [
+    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
+    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
+    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
+    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
+    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
+    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage(),
+  ];
+
+  const allPromise = Promise.all(promises);
+  allPromise.then(function (images) {
+    material._loadedCubeMaps.push({
+      id: uniformId,
+      images: images,
+    });
+  });
+
+  material._texturePaths[uniformId] = path;
+
+  return allPromise;
 }
 
 function createUniforms(material) {
@@ -1096,6 +1107,9 @@ function createUniform(material, uniformId) {
         return material._textures[uniformId];
       };
       material._updateFunctions.push(createCubeMapUpdateFunction(uniformId));
+      material._initializationPromises.push(
+        loadCubeMapImagesForUniform(material, uniformId),
+      );
     } else if (uniformType.indexOf("mat") !== -1) {
       const scratchMatrix = new matrixMap[uniformType]();
       material._uniforms[newUniformId] = function () {
