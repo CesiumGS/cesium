@@ -657,10 +657,12 @@ describe(
 
       const ignoreBackground = true;
       renderMaterial(materialLinear, ignoreBackground); // Populate the scene with the primitive prior to updating
+      renderMaterial(materialNearest, ignoreBackground); // Populate the scene with the primitive prior to updating
       return pollToPromise(function () {
-        const imageLoaded = materialLinear._loadedImages.length !== 0;
+        const linearImageLoaded = materialLinear._loadedImages.length !== 0;
+        const nearestImageLoaded = materialNearest._loadedImages.length !== 0;
         scene.renderForSpecs();
-        return imageLoaded;
+        return linearImageLoaded && nearestImageLoaded;
       })
         .then(function () {
           renderMaterial(materialLinear, ignoreBackground, function (rgba) {
@@ -668,15 +670,8 @@ describe(
           });
         })
         .then(function () {
-          renderMaterial(materialNearest, ignoreBackground); // Populate the scene with the primitive prior to updating
-          return pollToPromise(function () {
-            const imageLoaded = materialNearest._loadedImages.length !== 0;
-            scene.renderForSpecs();
-            return imageLoaded;
-          }).then(function () {
-            renderMaterial(materialNearest, ignoreBackground, function (rgba) {
-              expect(rgba).not.toEqualEpsilon(purple, 1);
-            });
+          renderMaterial(materialNearest, ignoreBackground, function (rgba) {
+            expect(rgba).not.toEqualEpsilon(purple, 1);
           });
         });
     });

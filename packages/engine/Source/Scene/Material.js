@@ -327,6 +327,15 @@ function Material(options) {
 
   this._defaultTexture = undefined;
 
+  /**
+   * Any and all promises that are created when initializing the material.
+   * Examples: loading images and cubemaps.
+   *
+   * @type {Promise[]}
+   * @private
+   */
+  this._initializationPromises = [];
+
   initializeMaterial(options, this);
   Object.defineProperties(this, {
     type: {
@@ -858,10 +867,10 @@ function createTexture2DUpdateFunction(uniformId) {
         texture.destroy();
       }
       texture = undefined;
+      material._texturePaths[uniformId] = undefined;
     }
 
     if (!defined(texture)) {
-      material._texturePaths[uniformId] = undefined;
       texture = material._textures[uniformId] = material._defaultTexture;
 
       uniformDimensionsName = `${uniformId}Dimensions`;
@@ -876,50 +885,77 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
-    // When using the entity layer, the Resource objects get recreated on getValue because
-    //  they are clonable. That's why we check the url property for Resources
-    //  because the instances aren't the same and we keep trying to load the same
-    //  image if it fails to load.
-    const resource = Resource.createIfNeeded(uniformValue); // Attempt to make a resource. If not already a resource or string, returns original object.
     if (
-      resource instanceof Resource &&
-      resource.url !== material._texturePaths[uniformId].url
-    ) {
-      material._texturePaths[uniformId] = uniformValue;
-      let promise;
-      if (ktx2Regex.test(resource.url)) {
-        promise = loadKTX2(resource.url);
-      } else {
-        promise = resource.fetchImage();
-      }
-
-      Promise.resolve(promise)
-        .then(function (image) {
-          material._loadedImages.push({
-            id: uniformId,
-            image: image,
-          });
-        })
-        .catch(function () {
-          if (defined(texture) && texture !== material._defaultTexture) {
-            texture.destroy();
-          }
-          material._textures[uniformId] = material._defaultTexture;
-        });
-    } else if (
-      uniformValue !== material._texturePaths[uniformId] &&
       (uniformValue instanceof HTMLCanvasElement ||
         uniformValue instanceof HTMLImageElement ||
         uniformValue instanceof ImageBitmap ||
-        uniformValue instanceof OffscreenCanvas)
+        uniformValue instanceof OffscreenCanvas) &&
+      uniformValue !== material._texturePaths[uniformId]
     ) {
       material._loadedImages.push({
         id: uniformId,
         image: uniformValue,
       });
       material._texturePaths[uniformId] = uniformValue;
+      return;
     }
+
+    // If we get to this point, the image should be a string URL or Resource.
+    // Don't wait on the promise to resolve, just start loading the image and poll status from the update loop.
+    loadTexture2DImageForUniform(material, uniformId);
   };
+}
+
+function loadTexture2DImageForUniform(material, uniformId) {
+  const uniforms = material.uniforms;
+  const uniformValue = uniforms[uniformId];
+  if (uniformValue === Material.DefaultImageId) {
+    return Promise.resolve();
+  }
+
+  // Attempt to make a resource from the uniform value. If it's not already a resource or string, this returns the original object.
+  const resource = Resource.createIfNeeded(uniformValue);
+  if (!(resource instanceof Resource)) {
+    return Promise.resolve();
+  }
+
+  // When using the entity layer, the Resource objects get recreated on getValue because
+  // they are clonable. That's why we check the url property for Resources
+  // because the instances aren't the same and we keep trying to load the same
+  // image if it fails to load.
+  const oldResource = Resource.createIfNeeded(
+    material._texturePaths[uniformId],
+  );
+  const uniformHasChanged =
+    !defined(oldResource) || oldResource.url !== resource.url;
+  if (!uniformHasChanged) {
+    return Promise.resolve();
+  }
+
+  let promise;
+  if (ktx2Regex.test(resource.url)) {
+    promise = loadKTX2(resource.url);
+  } else {
+    promise = resource.fetchImage();
+  }
+
+  Promise.resolve(promise)
+    .then(function (image) {
+      material._loadedImages.push({
+        id: uniformId,
+        image: image,
+      });
+    })
+    .catch(function () {
+      const texture = material._textures[uniformId];
+      if (defined(texture) && texture !== material._defaultTexture) {
+        texture.destroy();
+      }
+      material._textures[uniformId] = material._defaultTexture;
+    });
+
+  material._texturePaths[uniformId] = uniformValue;
+  return promise;
 }
 
 function createCubeMapUpdateFunction(uniformId) {
@@ -1052,6 +1088,9 @@ function createUniform(material, uniformId) {
         return material._textures[uniformId];
       };
       material._updateFunctions.push(createTexture2DUpdateFunction(uniformId));
+      material._initializationPromises.push(
+        loadTexture2DImageForUniform(material, uniformId),
+      );
     } else if (uniformType === "samplerCube") {
       material._uniforms[newUniformId] = function () {
         return material._textures[uniformId];
