@@ -1,5 +1,5 @@
 import SceneMode from "../SceneMode.js";
-import RuntimeModelInstancingPipelineStage from "./RuntimeModelInstancingPipelineStage";
+import RuntimeModelInstancingPipelineStage from "./RuntimeModelInstancingPipelineStage.js";
 
 /**
  * The model matrix update stage is responsible for updating the instancingTransformsBuffer of a runtime node.
