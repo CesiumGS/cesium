@@ -10,7 +10,7 @@
 
 #if defined(HAS_SPHERICAL_HARMONICS)
 const uint coefficientCount[3] = uint[3](3u,8u,15u);
-const float SH_C1 = 0.4886025119029199f;
+const float SH_C1 = 0.48860251;
 const float SH_C2[5] = float[5](
          1.092548430,
         -1.09254843,
@@ -87,7 +87,6 @@ vec3 evaluateSHLighting(uint splatID, vec3 viewDir) {
             }
         }
     }
-
     return result;
 }
 #endif
@@ -96,46 +95,39 @@ vec3 evaluateSHLighting(uint splatID, vec3 viewDir) {
 // which is used to calculate the vertex position in clip space.
 vec4 calcCovVectors(vec3 viewPos, mat3 Vrk) {
     vec4 t = vec4(viewPos, 1.0);
-    float focal = czm_viewport.z * czm_projection[0][0];
+    vec2 focal = vec2(czm_projection[0][0] * czm_viewport.z, czm_projection[1][1] * czm_viewport.w);
 
-    float J1 = focal / t.z;
-    vec2 J2 = -J1 / t.z * t.xy;
+    vec2 J1 = focal / t.z;
+    vec2 J2 = -focal * vec2(t.x, t.y) / (t.z * t.z);
     mat3 J = mat3(
-        J1, 0.0, J2.x,
-        0.0, J1, J2.y,
+        J1.x, 0.0, J2.x,
+        0.0, J1.y, J2.y,
         0.0, 0.0, 0.0
     );
 
-    //We need to take our view and remove the scale component
-    //quantized models can have a scaled matrix which will throw our splat size off
     mat3 R = mat3(czm_modelView);
-    vec3 scale;
-    scale.x = length(R[0].xyz);
-    scale.y = length(R[1].xyz);
-    scale.z = length(R[2].xyz);
-
-    mat3 Rs = mat3(
-    R[0].xyz / scale.x,
-    R[1].xyz / scale.y,
-    R[2].xyz / scale.z
-    );
 
     //transform our covariance into view space
     //ensures orientation is correct
-    mat3 Vrk_view = Rs * Vrk * transpose(Rs);
+    mat3 Vrk_view = R * Vrk * transpose(R);
 
     mat3 cov = transpose(J) * Vrk_view * J;
 
-    float diagonal1 = cov[0][0] + .3;
+    float diagonal1 = cov[0][0] + .001;
     float offDiagonal = cov[0][1];
-    float diagonal2 = cov[1][1] + .3;
+    float diagonal2 = cov[1][1] + .001;
 
     float mid = 0.5 * (diagonal1 + diagonal2);
     float radius = length(vec2((diagonal1 - diagonal2) * 0.5, offDiagonal));
     float lambda1 = mid + radius;
-    float lambda2 = max(mid - radius, 0.1);
+    float lambda2 = max(mid - radius, 0.001);
 
     vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
+
+    float detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[0][1]; // Before kernel
+    float detBlur = diagonal1 * diagonal2 - offDiagonal * offDiagonal; // After kernel
+    float compensation = sqrt(max(0.0, detOrig / detBlur));
+    v_splatColor.w *= compensation;
 
     return vec4(
         min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector,
@@ -170,37 +162,23 @@ void main() {
     vec2 u3 = unpackHalf2x16(covariance.z);
     mat3 Vrk = mat3(u1.x, u1.y, u2.x, u1.y, u2.y, u3.x, u2.x, u3.x, u3.y);
 
-    //we can still apply scale here even though cov3d is pre-computed
-    Vrk *= u_splatScale;
+    Vrk *=  splatPosition.w;
 
     vec4 covVectors = calcCovVectors(splatViewPos.xyz, Vrk);
 
-    if (dot(covVectors.xy, covVectors.xy) < 4.0 && dot(covVectors.zw, covVectors.zw) < 4.0) {
-        gl_Position = discardVec;
-        return;
-    }
+    vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.0;
+    vec2 screenOffset = corner.x * covVectors.xy + corner.y * covVectors.zw;
+    v_vertPos = corner;
 
-    vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
-
-    gl_Position += vec4((corner.x * covVectors.xy + corner.y * covVectors.zw) / czm_viewport.zw * gl_Position.w, 0, 0);
-    gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
-
-    v_vertPos = corner ;
+    gl_Position += vec4(screenOffset / czm_viewport.zw * gl_Position.w, 0, 0);
+    
     v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu);
     v_splatColor /= 255.0;
 #if defined(HAS_SPHERICAL_HARMONICS)
-
     vec4 splatWC = czm_inverseView * splatViewPos;
-    vec3 viewDir = normalize( (splatWC.xyz - u_cameraPositionWC.xyz ));
-    vec3 viewDirModel = normalize(u_inverseModelRotation * viewDir);
-    
-    v_splatColor.rgb += evaluateSHLighting(texIdx, viewDir).rgb;
-    //v_splatColor.rgb = clamp(v_splatColor.rgb, 0.0, 1.0);
+    vec3 viewDirModel = normalize(u_inverseModelRotation * (splatWC.xyz - u_cameraPositionWC.xyz));
 
-
-   // v_splatColor.rgb = 0.5 + 0.5 * viewDir;//viewDirModel;//normalize(czm_inverseViewRotation * (u_cameraPositionWC.xyz - splatWC.xyz));
-
-
+    v_splatColor.rgb += evaluateSHLighting(texIdx, viewDirModel).rgb;
 #endif
     v_splitDirection = u_splitDirection;
 }

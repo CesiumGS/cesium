@@ -426,12 +426,13 @@ function packSphericalHarmonicData(tileContent) {
     for (let j = 0; j < tileContent.pointsLength; j++) {
       //interleave the data
       const idx = j * stride + base[l - 1] + n * 3;
+      const src = j * 3;
       // packedData[idx] = float32ToFloat16(shAttributes[i].typedArray[j]);
       // packedData[idx + 1] = float32ToFloat16(shAttributes[i].typedArray[j + 1]);
       // packedData[idx + 2] = float32ToFloat16(shAttributes[i].typedArray[j + 2]);
-      packedData[idx] = shAttributes[i].typedArray[j];
-      packedData[idx + 1] = shAttributes[i].typedArray[j + 1];
-      packedData[idx + 2] = shAttributes[i].typedArray[j + 2];
+      packedData[idx] = shAttributes[i].typedArray[src];
+      packedData[idx + 1] = shAttributes[i].typedArray[src + 1];
+      packedData[idx + 2] = shAttributes[i].typedArray[src + 2];
     }
   }
   return packedData;

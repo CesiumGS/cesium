@@ -8,11 +8,12 @@ void main() {
     if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
     if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
 
-    mediump float A = dot(v_vertPos, v_vertPos);
-    if(A > 1.0) {
+    float A = -dot(v_vertPos, v_vertPos);
+    if (A < -4.) {
         discard;
     }
-    mediump float scale = 4.0;
-    mediump float B = exp(-A * scale) * (v_splatColor.a);
-    out_FragColor = vec4(v_splatColor.rgb * B, B);
+
+    float B = exp(A * 4.2) * v_splatColor.a ;
+    out_FragColor = vec4(v_splatColor.rgb * B , B);
+  //  out_FragColor.rgb = pow(out_FragColor.rgb, vec3(1.0 / 2.2)); // gamma correction
 }

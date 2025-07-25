@@ -770,6 +770,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
           values: [-1, -1, 1, -1, 1, 1, -1, 1],
           name: "_SCREEN_QUAD_POS",
           variableName: "screenQuadPosition",
+          instanceDivisor: 1,
         }),
         splatIndex: { ...idxAttr, variableName: "splatIndex" },
       },
@@ -981,13 +982,22 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           const oldTex = this.gaussianSplatSHTexture;
           const dims = tileset._selectedTiles[0].content.shCoefficientCount / 3;
           const splatsPerRow = Math.floor(8192 / dims);
+          const floatsPerRow = splatsPerRow * (dims * 3);
           const texBuf = new Float32Array(
             8192 * Math.ceil(this._numSplats / splatsPerRow) * 3,
           );
-          for (let i = 0; i < this._shData.length; i += 3) {
-            texBuf[i] = this._shData[i];
-            texBuf[i + 1] = this._shData[i + 1];
-            texBuf[i + 2] = this._shData[i + 2];
+          // for (let i = 0; i < this._shData.length; i += 3) {
+          //   texBuf[i] = this._shData[i];
+          //   texBuf[i + 1] = this._shData[i + 1];
+          //   texBuf[i + 2] = this._shData[i + 2];
+          // }
+          let dataIndex = 0;
+          for (let i = 0; dataIndex < this._shData.length; i += 8192 * 3) {
+            texBuf.set(
+              this._shData.subarray(dataIndex, dataIndex + floatsPerRow),
+              i,
+            );
+            dataIndex += floatsPerRow;
           }
           this.gaussianSplatSHTexture = createGaussianSplatSHTexture(
             frameState.context,
