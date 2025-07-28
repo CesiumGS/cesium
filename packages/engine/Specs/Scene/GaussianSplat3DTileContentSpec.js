@@ -96,6 +96,26 @@ describe(
         },
       );
     });
+    it("Create and destroy GaussianSplat3DTileContent", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        options,
+      );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+      const tile = await Cesium3DTilesTester.waitForTileContentReady(
+        scene,
+        tileset.root,
+      );
+
+      scene.primitives.remove(tileset);
+      expect(tileset.isDestroyed()).toBe(true);
+      expect(tile.isDestroyed()).toBe(true);
+      expect(tile.content).toBeUndefined();
+    });
   },
   "WebGL",
 );

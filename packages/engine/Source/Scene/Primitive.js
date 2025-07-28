@@ -1966,7 +1966,6 @@ Primitive._updateBoundingVolumes = function (
             primitive._boundingSphereCV[i],
             primitive._boundingSphere2D[i],
           );
-          primitive._boundingSphere2D[i].center.x = 0.0;
           primitive._boundingSphereMorph[i] = BoundingSphere.union(
             primitive._boundingSphereWC[i],
             primitive._boundingSphereCV[i],
