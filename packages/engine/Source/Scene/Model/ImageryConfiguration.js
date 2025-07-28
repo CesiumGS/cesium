@@ -12,6 +12,7 @@
  */
 class ImageryConfiguration {
   constructor(imageryLayer) {
+    this.show = imageryLayer.show;
     this.alpha = imageryLayer.alpha;
     this.brightness = imageryLayer.brightness;
     this.contrast = imageryLayer.contrast;
