@@ -261,8 +261,14 @@ function App() {
     }
   }
 
-  function runSandcastle() {
+  function resetConsole() {
+    // the console should only be cleared by the Bucket when the viewer page
+    // has actually reloaded and stopped sending console statements
+    // otherwise some could bleed into the "next run"
     setConsoleMessages([]);
+  }
+
+  function runSandcastle() {
     dispatch({ type: "runSandcastle" });
   }
 
@@ -276,7 +282,6 @@ function App() {
     window.history.pushState({}, "", getBaseUrl());
 
     setTitle("New Sandcastle");
-    setConsoleMessages([]);
   }
 
   function share() {
@@ -331,7 +336,6 @@ function App() {
       });
       setTitle(galleryItem.title);
       setReadyForViewer(true);
-      setConsoleMessages([]);
     },
     [galleryItems],
   );
@@ -538,6 +542,7 @@ function App() {
                   runNumber={codeState.runNumber}
                   highlightLine={(lineNumber) => highlightLine(lineNumber)}
                   appendConsole={appendConsole}
+                  resetConsole={resetConsole}
                 />
               )}
             </Allotment.Pane>
