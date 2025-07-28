@@ -717,50 +717,28 @@ describe(
       });
     });
 
-    it("creates material with custom texture filter", function () {
-      const materialLinear = new Material({
-        fabric: {
-          type: "DiffuseMap",
-          uniforms: {
-            image: "./Data/Images/BlueOverRed.png",
-          },
-        },
-        minificationFilter: TextureMinificationFilter.LINEAR,
-        magnificationFilter: TextureMagnificationFilter.LINEAR,
+    it("creates material with custom texture filter", async function () {
+      const materialLinear = await Material.fromTypeAsync("DiffuseMap", {
+        image: "./Data/Images/BlueOverRed.png",
       });
+      materialLinear._minificationFilter = TextureMinificationFilter.LINEAR;
+      materialLinear._magnificationFilter = TextureMagnificationFilter.LINEAR;
 
-      const materialNearest = new Material({
-        fabric: {
-          type: "DiffuseMap",
-          uniforms: {
-            image: "./Data/Images/BlueOverRed.png",
-          },
-        },
-        minificationFilter: TextureMinificationFilter.NEAREST,
-        magnificationFilter: TextureMagnificationFilter.NEAREST,
+      const materialNearest = await Material.fromTypeAsync("DiffuseMap", {
+        image: "./Data/Images/BlueOverRed.png",
       });
+      materialNearest._minificationFilter = TextureMinificationFilter.NEAREST;
+      materialNearest._magnificationFilter = TextureMagnificationFilter.NEAREST;
 
       const purple = [127, 0, 127, 255];
 
       const ignoreBackground = true;
-      renderMaterial(materialLinear, ignoreBackground); // Populate the scene with the primitive prior to updating
-      renderMaterial(materialNearest, ignoreBackground); // Populate the scene with the primitive prior to updating
-      return pollToPromise(function () {
-        const linearImageLoaded = materialLinear._loadedImages.length !== 0;
-        const nearestImageLoaded = materialNearest._loadedImages.length !== 0;
-        scene.renderForSpecs();
-        return linearImageLoaded && nearestImageLoaded;
-      })
-        .then(function () {
-          renderMaterial(materialLinear, ignoreBackground, function (rgba) {
-            expect(rgba).toEqualEpsilon(purple, 1);
-          });
-        })
-        .then(function () {
-          renderMaterial(materialNearest, ignoreBackground, function (rgba) {
-            expect(rgba).not.toEqualEpsilon(purple, 1);
-          });
-        });
+      renderMaterial(materialLinear, ignoreBackground, function (rgba) {
+        expect(rgba).toEqualEpsilon(purple, 1);
+      });
+      renderMaterial(materialNearest, ignoreBackground, function (rgba) {
+        expect(rgba).not.toEqualEpsilon(purple, 1);
+      });
     });
 
     it("handles when material image is undefined", function () {

@@ -1,5 +1,17 @@
 # Change Log
 
+## 1.133 - 2025-09-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+
+#### Additions :tada:
+
+- Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+
 ## 1.132 - 2025-08-01
 
 ### @cesium/engine
