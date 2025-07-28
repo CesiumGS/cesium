@@ -1,8 +1,9 @@
-import { MouseEventHandler, useMemo } from "react";
+import { useMemo } from "react";
 import "./Gallery.css";
 import { Input } from "@stratakit/bricks/TextBox";
-import { Badge, Select } from "@stratakit/bricks";
+import { Badge, IconButton, Select } from "@stratakit/bricks";
 import { getBaseUrl } from "./util/getBaseUrl";
+import { script } from "./icons";
 
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
@@ -17,10 +18,10 @@ export type GalleryItem = {
 
 export function GalleryCard({
   item,
-  cardClickHandler,
+  loadDemo,
 }: {
   item: GalleryItem;
-  cardClickHandler: MouseEventHandler<HTMLAnchorElement>;
+  loadDemo: (demo: GalleryItem, switchToCode: boolean) => void;
 }) {
   const thumbnailPath = item.thumbnail
     ? `${GALLERY_BASE}/${item.id}/${item.thumbnail}`
@@ -29,9 +30,9 @@ export function GalleryCard({
     <a
       className="card"
       href={`${getBaseUrl()}?id=${item.id}`}
-      onClick={(e, ...args) => {
+      onClick={(e) => {
         e.preventDefault();
-        cardClickHandler(e, ...args);
+        loadDemo(item, false);
         return false;
       }}
     >
@@ -47,6 +48,14 @@ export function GalleryCard({
             ))}
         </div>
       </div>
+      <IconButton
+        icon={script}
+        label="Open code"
+        onClick={() => {
+          loadDemo(item, true);
+        }}
+        className="open-code-btn"
+      />
     </a>
   );
 }
@@ -56,7 +65,7 @@ function Gallery({
   loadDemo,
 }: {
   demos: GalleryItem[];
-  loadDemo: (demo: GalleryItem) => void;
+  loadDemo: (demo: GalleryItem, switchToCode: boolean) => void;
 }) {
   const knownLabels = useMemo(() => {
     const labels = new Set<string>();
@@ -89,7 +98,7 @@ function Gallery({
             <GalleryCard
               key={item.id}
               item={item}
-              cardClickHandler={() => loadDemo(item)}
+              loadDemo={loadDemo}
             ></GalleryCard>
           );
         })}

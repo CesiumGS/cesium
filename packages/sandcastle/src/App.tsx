@@ -504,7 +504,7 @@ function App() {
           {leftPanel === "gallery" && (
             <Gallery
               demos={galleryItems}
-              loadDemo={(item) => {
+              loadDemo={(item, switchToCode) => {
                 // Load the gallery item every time it's clicked
                 loadGalleryItem(item.id);
 
@@ -522,7 +522,9 @@ function App() {
                     `${getBaseUrl()}?id=${item.id}`,
                   );
                 }
-                setLeftPanel("editor");
+                if (switchToCode) {
+                  setLeftPanel("editor");
+                }
               }}
             />
           )}
