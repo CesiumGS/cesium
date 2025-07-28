@@ -1,8 +1,13 @@
 # Release Guide
 
-We release Cesium on the first work day of every month. The [Release Schedule](./ReleaseSchedule.md) outlines the release schedule and the developer responsible for each month's release.
+We release CesiumJS on the first work day of every month.
 
-There is no release manager; instead, our community shares the responsibility. Any committer can create the release for a given month, and at any point, they can pass the responsibility to someone else, or someone else can ask for it. This spreads knowledge, avoids stratification, avoids a single point of failure, and is beautifully unstructured ([more info](https://community.cesium.com/t/cesium-releases/45)).
+- [**Release Schedule**](./ReleaseSchedule.md): The upcoming monthly release schedule and the developer responsible for managing each release
+- [**Perelease Guide**](./Prereleases/README.md): If and how to publish a prerelease version ahead of the typical monthly release
+
+## Motivation
+
+There is no one release manager; instead, [our community shares the responsibility](https://community.cesium.com/t/cesium-releases/45). Any committer can create the release for a given month, and at any point, they can pass the responsibility to someone else, or someone else can ask for it. This spreads knowledge, avoids stratification, avoids a single point of failure, and is beautifully unstructured.
 
 ## One week before release
 
