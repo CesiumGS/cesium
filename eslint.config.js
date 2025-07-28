@@ -20,6 +20,8 @@ export default [
       "Apps/Sandcastle/gallery/gallery-index.js",
       "Apps/Sandcastle2/",
       "packages/sandcastle/public/",
+      "packages/sandcastle/templates/Sandcastle.d.ts",
+      "packages/sandcastle/templates/Sandcastle.js",
       "packages/engine/Source/Scene/GltfPipeline/**/*",
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",
@@ -112,6 +114,13 @@ export default [
     },
     rules: {
       "no-alert": "off",
+    },
+  },
+  {
+    files: ["packages/sandcastle/gallery/hello-world/main.js"],
+    rules: {
+      // ignore this rule here to avoid the excessive eslint-disable comment in our bare minimum example
+      "no-unused-vars": "off",
     },
   },
   {

@@ -1,0 +1,36 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Distance</td>
+        <td>
+          <input
+            type="range"
+            min="-100.0"
+            max="100.0"
+            step="1.0"
+            data-bind="value: cylinderRadius, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: cylinderRadius" />
+        </td>
+        <td>Plane Count</td>
+        <td>
+          <input
+            type="range"
+            min="1"
+            max="128"
+            step="1"
+            data-bind="value: planeCount, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: planeCount" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <select data-bind="options: exampleTypes, value: currentExampleType"></select>
+</div>

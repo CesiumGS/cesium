@@ -37,6 +37,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "globals": "^15.15.0",
     "globby": "^14.1.0",
+    "jsdom": "^26.1.0",
+    "slugify": "^1.6.6",
     "typescript": "~5.7.2",
     "vite": "^6.2.0",
     "vite-plugin-static-copy": "^2.3.1",
