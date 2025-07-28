@@ -10,6 +10,7 @@ import "./SandcastleEditor.css";
 import { Button, Kbd, Tooltip } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { play, textAlignLeft } from "./icons";
+import { setupSandcastleSnippets } from "./setupSandcastleSnippets";
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
@@ -124,6 +125,7 @@ function SandcastleEditor({
       },
     });
 
+    setupSandcastleSnippets(monaco);
     setTypes(monaco);
   }
 

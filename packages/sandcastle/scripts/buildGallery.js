@@ -90,7 +90,7 @@ export async function buildGalleryList(
     // Validate metadata
 
     if (
-      check(!/^[a-zA-Z0-9-]+$/.test(slug), `"${slug}" is not a valid slug`) ||
+      check(!/^[a-zA-Z0-9-.]+$/.test(slug), `"${slug}" is not a valid slug`) ||
       check(!title, `${slug} - Missing title`) ||
       check(!description, `${slug} - Missing description`) ||
       check(

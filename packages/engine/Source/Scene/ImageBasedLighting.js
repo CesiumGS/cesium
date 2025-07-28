@@ -86,6 +86,7 @@ function ImageBasedLighting(options) {
 
   // Store the previous frame number to prevent redundant update calls
   this._previousFrameNumber = undefined;
+  this._previousFrameContext = undefined;
 
   // Keeps track of the last values for use during update logic
   this._previousImageBasedLightingFactor = Cartesian2.clone(
@@ -325,12 +326,15 @@ function createSpecularEnvironmentCubeMap(imageBasedLighting, context) {
 }
 
 ImageBasedLighting.prototype.update = function (frameState) {
-  if (frameState.frameNumber === this._previousFrameNumber) {
+  if (
+    frameState.frameNumber === this._previousFrameNumber &&
+    frameState.context === this._previousFrameContext
+  ) {
     return;
   }
 
   this._previousFrameNumber = frameState.frameNumber;
-  const context = frameState.context;
+  const context = (this._previousFrameContext = frameState.context);
 
   frameState.brdfLutGenerator.update(frameState);
   this._shouldRegenerateShaders = false;
