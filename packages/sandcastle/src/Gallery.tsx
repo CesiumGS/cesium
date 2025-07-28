@@ -128,6 +128,7 @@ export function GallerySearch({
             setSearchTerm(newSearchTerm);
           }, 300);
         }}
+        placeholder="Filter demos..."
       />
       <Select.Root>
         <Select.HtmlSelect
