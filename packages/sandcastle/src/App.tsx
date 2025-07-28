@@ -261,8 +261,14 @@ function App() {
     }
   }
 
-  function runSandcastle() {
+  function resetConsole() {
+    // the console should only be cleared by the Bucket when the viewer page
+    // has actually reloaded and stopped sending console statements
+    // otherwise some could bleed into the "next run"
     setConsoleMessages([]);
+  }
+
+  function runSandcastle() {
     dispatch({ type: "runSandcastle" });
   }
 
@@ -276,7 +282,6 @@ function App() {
     window.history.pushState({}, "", getBaseUrl());
 
     setTitle("New Sandcastle");
-    setConsoleMessages([]);
   }
 
   function share() {
@@ -331,7 +336,6 @@ function App() {
       });
       setTitle(galleryItem.title);
       setReadyForViewer(true);
-      setConsoleMessages([]);
     },
     [galleryItems],
   );
@@ -500,7 +504,7 @@ function App() {
           <Gallery
             hidden={leftPanel !== "gallery"}
             galleryItems={galleryItems}
-            loadDemo={(item) => {
+            loadDemo={(item, switchToCode) => {
               // Load the gallery item every time it's clicked
               loadGalleryItem(item.id);
 
@@ -515,8 +519,21 @@ function App() {
                   "",
                   `${getBaseUrl()}?id=${item.id}`,
                 );
+                if (
+                  !searchParams.has("id") ||
+                  (searchParams.has("id") && searchParams.get("id") !== item.id)
+                ) {
+                  // only push state if it's not the current url to prevent duplicated in history
+                  window.history.pushState(
+                    {},
+                    "",
+                    `${getBaseUrl()}?id=${item.id}`,
+                  );
+                }
+                if (switchToCode) {
+                  setLeftPanel("editor");
+                }
               }
-              setLeftPanel("editor");
             }}
           />
         </Allotment.Pane>
@@ -535,6 +552,7 @@ function App() {
                   runNumber={codeState.runNumber}
                   highlightLine={(lineNumber) => highlightLine(lineNumber)}
                   appendConsole={appendConsole}
+                  resetConsole={resetConsole}
                 />
               )}
             </Allotment.Pane>

@@ -34,6 +34,7 @@
   }
 
   .card {
+    position: relative;
     display: flex;
     align-items: center;
     flex: 1 0 116px;
@@ -54,6 +55,7 @@
       display: flex;
       flex-direction: column;
       height: 100%;
+      flex-grow: 1;
       overflow: hidden;
     }
 
@@ -62,6 +64,8 @@
       text-wrap: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
+      --code-btn-width: 20px;
+      max-width: calc(100% - var(--code-btn-width) - 0.5rem);
     }
 
     .description {
@@ -80,6 +84,12 @@
       display: flex;
       justify-items: start;
       gap: 0.3rem;
+    }
+
+    .open-code-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
     }
   }
 }

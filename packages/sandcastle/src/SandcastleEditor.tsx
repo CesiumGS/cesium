@@ -244,37 +244,39 @@ Sandcastle.addToolbarMenu(${variableName});`);
           </Tooltip>
         </div>
       </div>
-      <Editor
-        theme={darkTheme ? "vs-dark" : "light"}
-        options={{
-          automaticLayout: true,
-          bracketPairColorization: {
-            enabled: false,
-          },
-          guides: {
-            bracketPairs: "active",
-          },
-          minimap: {
-            // This can lag pretty bad with the resizing panel, disable instead
-            enabled: false,
-          },
-          placeholder: "// Select a demo from the gallery to load.",
-          renderWhitespace: "trailing",
-          tabSize: 2,
-        }}
-        path={activeTab === "js" ? "script.js" : "index.html"}
-        language={activeTab === "js" ? "javascript" : "html"}
-        value={activeTab === "js" ? js : html}
-        onMount={handleEditorDidMount}
-        beforeMount={handleEditorWillMount}
-        onChange={(...args) => {
-          if (activeTab === "js") {
-            onJsChange(...args);
-          } else {
-            onHtmlChange(...args);
-          }
-        }}
-      />
+      <div className="editor-wrapper">
+        <Editor
+          theme={darkTheme ? "vs-dark" : "light"}
+          options={{
+            automaticLayout: true,
+            bracketPairColorization: {
+              enabled: false,
+            },
+            guides: {
+              bracketPairs: "active",
+            },
+            minimap: {
+              // This can lag pretty bad with the resizing panel, disable instead
+              enabled: false,
+            },
+            placeholder: "// Select a demo from the gallery to load.",
+            renderWhitespace: "trailing",
+            tabSize: 2,
+          }}
+          path={activeTab === "js" ? "script.js" : "index.html"}
+          language={activeTab === "js" ? "javascript" : "html"}
+          value={activeTab === "js" ? js : html}
+          onMount={handleEditorDidMount}
+          beforeMount={handleEditorWillMount}
+          onChange={(...args) => {
+            if (activeTab === "js") {
+              onJsChange(...args);
+            } else {
+              onHtmlChange(...args);
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }

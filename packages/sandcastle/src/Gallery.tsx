@@ -1,9 +1,10 @@
-import { MouseEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./Gallery.css";
-import { Badge, Button, Select } from "@stratakit/bricks";
+import { Badge, Button, IconButton, Select } from "@stratakit/bricks";
 import { getBaseUrl } from "./util/getBaseUrl";
 import { Input } from "@stratakit/bricks/TextBox";
 import classNames from "classnames";
+import { script } from "./icons";
 
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
@@ -152,10 +153,10 @@ export function GallerySearch({
 
 export function GalleryCard({
   item,
-  cardClickHandler,
+  loadDemo,
 }: {
   item: GalleryItem;
-  cardClickHandler: MouseEventHandler<HTMLAnchorElement>;
+  loadDemo: (demo: GalleryItem, switchToCode: boolean) => void;
 }) {
   const thumbnailPath = item.thumbnail
     ? `${GALLERY_BASE}/${item.id}/${item.thumbnail}`
@@ -164,9 +165,9 @@ export function GalleryCard({
     <a
       className="card"
       href={`${getBaseUrl()}?id=${item.id}`}
-      onClick={(e, ...args) => {
+      onClick={(e) => {
         e.preventDefault();
-        cardClickHandler(e, ...args);
+        loadDemo(item, false);
         return false;
       }}
     >
@@ -182,6 +183,14 @@ export function GalleryCard({
             ))}
         </div>
       </div>
+      <IconButton
+        icon={script}
+        label="Open code"
+        onClick={() => {
+          loadDemo(item, true);
+        }}
+        className="open-code-btn"
+      />
     </a>
   );
 }
@@ -192,7 +201,7 @@ function Gallery({
   hidden,
 }: {
   galleryItems: GalleryItem[];
-  loadDemo: (demo: GalleryItem) => void;
+  loadDemo: (demo: GalleryItem, switchToCode: boolean) => void;
   hidden: boolean;
 }) {
   const [searchResults, setSearchResults] = useState<
@@ -243,7 +252,7 @@ function Gallery({
             <GalleryCard
               key={item.id}
               item={item}
-              cardClickHandler={() => loadDemo(item)}
+              loadDemo={loadDemo}
             ></GalleryCard>
           );
         })}

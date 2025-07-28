@@ -16,6 +16,7 @@ function Bucket({
   runNumber,
   highlightLine,
   appendConsole,
+  resetConsole,
 }: {
   /** The JS code for the Sandcastle */
   code: string;
@@ -29,6 +30,7 @@ function Bucket({
    */
   highlightLine: (lineNumber: number) => void;
   appendConsole: (type: ConsoleMessageType, message: string) => void;
+  resetConsole: () => void;
 }) {
   const bucket = useRef<HTMLIFrameElement>(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
@@ -162,6 +164,7 @@ function Bucket({
         const bucketDoc = bucket.current.contentDocument;
         if (bucketDoc.body.dataset.sandcastleLoaded !== "yes") {
           bucketDoc.body.dataset.sandcastleLoaded = "yes";
+          resetConsole();
           // This happens after the bucket.html reloads, to inject the editor code
           // into the iframe, causing the demo to run there.
           activateBucketScripts(bucket.current, code, html);
@@ -194,7 +197,7 @@ function Bucket({
     };
     window.addEventListener("message", messageHandler);
     return () => window.removeEventListener("message", messageHandler);
-  }, [code, html, highlightLine]);
+  }, [code, html, highlightLine, resetConsole, appendConsole]);
 
   return (
     <div className="bucket-container">

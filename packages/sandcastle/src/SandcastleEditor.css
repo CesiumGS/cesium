@@ -19,11 +19,10 @@
     }
   }
 
-  section {
-    border-top: 1px solid grey;
+  .editor-wrapper {
+    border-top: 1px solid var(--stratakit-color-border-neutral-muted);
     flex-shrink: 1;
     /* Monaco needs a defined height for dynamic resizing to work */
-    --tabs-height: 1.5rem;
-    height: calc(100% - var(--tabs-height)) !important;
+    height: 100%;
   }
 }
