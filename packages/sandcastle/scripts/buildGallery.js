@@ -106,7 +106,7 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
       title: title,
       thumbnail: thumbnail,
       description: description,
-      labels: labels,
+      labels: labels ?? [],
       isNew: false,
     });
     if (legacyId) {

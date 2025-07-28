@@ -1,11 +1,15 @@
 import { Editor, Monaco, OnChange } from "@monaco-editor/react";
 import { editor, KeyCode, KeyMod } from "monaco-editor";
 import { RefObject, useImperativeHandle, useRef, useState } from "react";
-import { Button } from "@itwin/itwinui-react/bricks";
 import * as prettier from "prettier";
 import * as babelPlugin from "prettier/plugins/babel";
 import * as estreePlugin from "prettier/plugins/estree";
 import * as htmlPlugin from "prettier/plugins/html";
+import { DropdownMenu, Tabs } from "@stratakit/structures";
+import "./SandcastleEditor.css";
+import { Button, Kbd, Tooltip } from "@stratakit/bricks";
+import { Icon } from "@stratakit/foundations";
+import { play, textAlignLeft } from "./icons";
 import { setupSandcastleSnippets } from "./setupSandcastleSnippets";
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
@@ -16,21 +20,23 @@ export type SandcastleEditorRef = {
 };
 
 function SandcastleEditor({
+  ref,
   darkTheme,
   js,
   html,
   onJsChange,
   onHtmlChange,
   onRun: onRunSandcastle,
-  ref,
+  setJs,
 }: {
+  ref?: RefObject<SandcastleEditorRef | null>;
   darkTheme: boolean;
   js: string;
   html: string;
   onJsChange: OnChange;
   onHtmlChange: OnChange;
   onRun: () => void;
-  ref: RefObject<SandcastleEditorRef | null>;
+  setJs: (newCode: string) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"js" | "html">("js");
 
@@ -38,12 +44,14 @@ function SandcastleEditor({
   useImperativeHandle(ref, () => {
     return {
       formatCode() {
-        internalEditorRef.current
-          ?.getAction("editor.action.formatDocument")
-          ?.run();
+        formatEditor();
       },
     };
   }, []);
+
+  function formatEditor() {
+    internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
+  }
 
   function handleEditorDidMount(
     editor: editor.IStandaloneCodeEditor,
@@ -146,50 +154,129 @@ function SandcastleEditor({
     );
   }
 
+  function nextHighestVariableName(code: string, name: string) {
+    const otherDeclarations = [
+      ...code.matchAll(new RegExp(`(const|let|var)\\s+${name}\\d*\\s=`, "g")),
+    ].length;
+    const variableName = `${name}${otherDeclarations + 1}`;
+    return variableName;
+  }
+
+  function appendCode(snippet: string) {
+    let spacerNewline = "\n";
+    if (js.endsWith("\n")) {
+      spacerNewline = "";
+    }
+    const newCode = `${js}${spacerNewline}\n${snippet.trim()}\n`;
+    setJs(newCode);
+  }
+
+  function addButton() {
+    appendCode(`
+Sandcastle.addToolbarButton("New Button", function () {
+  // your code here
+});`);
+  }
+
+  function addToggle() {
+    const variableName = nextHighestVariableName(js, "toggleValue");
+
+    appendCode(`
+let ${variableName} = true;
+Sandcastle.addToggleButton("Toggle", ${variableName}, function (checked) {
+  ${variableName} = checked;
+});`);
+  }
+
+  function addMenu() {
+    const variableName = nextHighestVariableName(js, "options");
+
+    appendCode(`
+const ${variableName} = [
+  {
+    text: "Option 1",
+    onselect: function () {
+      // your code here, the first option is always run at load
+    },
+  },
+];
+Sandcastle.addToolbarMenu(${variableName});`);
+  }
+
   return (
     <div className="editor-container">
-      <div className="tabs">
-        <Button
-          disabled={activeTab === "js"}
-          onClick={() => setActiveTab("js")}
-        >
-          Javascript
-        </Button>
-        <Button
-          disabled={activeTab === "html"}
-          onClick={() => setActiveTab("html")}
-        >
-          HTML/CSS
-        </Button>
+      <div className="header">
+        <Tabs.Root>
+          <Tabs.TabList tone="accent">
+            <Tabs.Tab id="js" onClick={() => setActiveTab("js")}>
+              Javascript
+            </Tabs.Tab>
+            <Tabs.Tab id="html" onClick={() => setActiveTab("html")}>
+              HTML/CSS
+            </Tabs.Tab>
+          </Tabs.TabList>
+        </Tabs.Root>
+        <div className="flex-spacer"></div>
+        <div className="editor-actions">
+          <Tooltip content="Format" placement="bottom">
+            <Button
+              onClick={() => formatEditor()}
+              variant="ghost"
+              className="icon-button"
+            >
+              <Icon href={textAlignLeft} />
+            </Button>
+          </Tooltip>
+          <DropdownMenu.Root>
+            <DropdownMenu.Button disabled={activeTab !== "js"}>
+              Insert
+            </DropdownMenu.Button>
+            <DropdownMenu.Content>
+              <DropdownMenu.Item label="Button" onClick={() => addButton()} />
+              <DropdownMenu.Item label="Toggle" onClick={() => addToggle()} />
+              <DropdownMenu.Item label="Menu" onClick={() => addMenu()} />
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+          <Tooltip content="Run Sandcastle" placement="bottom">
+            <Button tone="accent" onClick={() => onRunSandcastle()}>
+              <Icon href={play} /> Run <Kbd variant="solid">F8</Kbd>
+            </Button>
+          </Tooltip>
+        </div>
       </div>
-      <Editor
-        theme={darkTheme ? "vs-dark" : "light"}
-        options={{
-          automaticLayout: true,
-          bracketPairColorization: {
-            enabled: false,
-          },
-          guides: {
-            bracketPairs: "active",
-          },
-          minimap: { size: "fill" },
-          placeholder: "// Select a demo from the gallery to load.",
-          renderWhitespace: "trailing",
-          tabSize: 2,
-        }}
-        path={activeTab === "js" ? "script.js" : "index.html"}
-        language={activeTab === "js" ? "javascript" : "html"}
-        value={activeTab === "js" ? js : html}
-        onMount={handleEditorDidMount}
-        beforeMount={handleEditorWillMount}
-        onChange={(...args) => {
-          if (activeTab === "js") {
-            onJsChange(...args);
-          } else {
-            onHtmlChange(...args);
-          }
-        }}
-      />
+      <div className="editor-wrapper">
+        <Editor
+          theme={darkTheme ? "vs-dark" : "light"}
+          options={{
+            automaticLayout: true,
+            bracketPairColorization: {
+              enabled: false,
+            },
+            guides: {
+              bracketPairs: "active",
+            },
+            minimap: {
+              // This can lag pretty bad with the resizing panel, disable instead
+              enabled: false,
+            },
+            placeholder: "// Select a demo from the gallery to load.",
+            renderWhitespace: "trailing",
+            tabSize: 2,
+          }}
+          path={activeTab === "js" ? "script.js" : "index.html"}
+          language={activeTab === "js" ? "javascript" : "html"}
+          value={activeTab === "js" ? js : html}
+          onMount={handleEditorDidMount}
+          beforeMount={handleEditorWillMount}
+          onChange={(...args) => {
+            if (activeTab === "js") {
+              onJsChange(...args);
+            } else {
+              onHtmlChange(...args);
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }

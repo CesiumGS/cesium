@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-color-scheme="dark">
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -39,11 +39,80 @@
       href="__CESIUM_BASE_URL__/Widgets/lighter.css"
       vite-ignore
     />
+    <style>
+      /*
+      * Minimal styles copied from the bucket.css styleshee to avoid FOUC reflow
+      */
+      html {
+        height: 100%;
+      }
+
+      body {
+        background: #000;
+        color: #eee;
+        font-family: sans-serif;
+        font-size: 9pt;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+
+        background-image: var(--_rings), var(--_gradient);
+
+        /* TODO: these should pull from the stratakit directly somehow eventually */
+        --stratakit-color-border-neutral-muted: oklch(91.52% 0.005 258.33);
+        --stratakit-color-bg-page-base: oklch(99.06% 0.002 247.84);
+        --stratakit-color-bg-page-depth: oklch(94.86% 0.002 247.84);
+
+        --stratakit-color-border-neutral-muted: oklch(32.63% 0.014 268.32);
+        --stratakit-color-bg-page-base: oklch(24.37% 0.006 268.32);
+        --stratakit-color-bg-page-depth: oklch(22.52% 0.005 268.32);
+
+        --_rings: repeating-radial-gradient(
+          circle at center,
+          var(--stratakit-color-border-neutral-muted) 1px,
+          var(--stratakit-color-border-neutral-muted) 3px,
+          transparent 3px,
+          transparent 25px
+        );
+        --_gradient: linear-gradient(
+          180deg,
+          var(--stratakit-color-bg-page-base) 0%,
+          var(--stratakit-color-bg-page-depth) 100%
+        );
+      }
+
+      #loadingOverlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0.9;
+        width: 100%;
+        height: 100%;
+        display: none;
+      }
+
+      #loadingOverlay h1 {
+        text-align: center;
+        position: relative;
+        top: 50%;
+        margin-top: -0.5em;
+      }
+
+      .sandcastle-loading #loadingOverlay {
+        display: block;
+      }
+
+      .sandcastle-loading #toolbar {
+        display: none;
+      }
+    </style>
     <script>
       window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
     </script>
   </head>
-  <body>
+  <body class="sandcastle-loading">
     <script
       type="text/javascript"
       src="../Sandcastle-client.js"
