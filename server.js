@@ -325,25 +325,6 @@ async function generateDevelopmentBuild() {
     });
   }
 
-  //eslint-disable-next-line no-unused-vars
-  app.param("remote", function (req, res, next, remote) {
-    if (remote) {
-      // Handles request like http://localhost:8080/proxy/http://example.com/file?query=1
-      let remoteUrl = remote.join("/");
-      // add http:// to the URL if no protocol is present
-      if (!/^https?:\/\//.test(remoteUrl)) {
-        remoteUrl = `http://${remoteUrl}`;
-      }
-      remoteUrl = new URL(remoteUrl);
-      // copy query string
-      const baseURL = `${req.protocol}://${req.headers.host}/`;
-      remoteUrl.search = new URL(req.url, baseURL).search;
-
-      req.remote = remoteUrl;
-    }
-    next();
-  });
-
   const server = app.listen(
     argv.port,
     argv.public ? undefined : "localhost",
