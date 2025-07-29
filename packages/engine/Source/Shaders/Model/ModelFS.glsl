@@ -1,5 +1,6 @@
 
 precision highp float;
+
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -28,6 +29,13 @@ SelectedFeature selectedFeature;
 
 void main()
 {
+    #ifdef HAS_POINT_CLOUD_SHOW_STYLE
+        if (v_pointCloudShow == 0.0)
+        {
+            discard;
+        }
+    #endif
+
     #ifdef HAS_MODEL_SPLITTER
     modelSplitterStage();
     #endif
@@ -79,7 +87,7 @@ void main()
 
     // When not picking metadata END
     //========================================================================
-    #else 
+    #else
     //========================================================================
     // When picking metadata START
 
@@ -117,3 +125,4 @@ void main()
 
     out_FragColor = color;
 }
+

@@ -1,7 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
@@ -20,12 +20,11 @@ import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
  * @constructor
  *
  * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
- * @param {number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {string} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  */
 function ImageBasedLighting(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const imageBasedLightingFactor = defined(options.imageBasedLightingFactor)
     ? Cartesian2.clone(options.imageBasedLightingFactor)
     : new Cartesian2(1.0, 1.0);
@@ -59,14 +58,6 @@ function ImageBasedLighting(options) {
 
   this._imageBasedLightingFactor = imageBasedLightingFactor;
 
-  const luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("options.luminanceAtZenith", luminanceAtZenith);
-  //>>includeEnd('debug');
-
-  this._luminanceAtZenith = luminanceAtZenith;
-
   const sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
 
   //>>includeStart('debug', pragmas.debug);
@@ -95,12 +86,12 @@ function ImageBasedLighting(options) {
 
   // Store the previous frame number to prevent redundant update calls
   this._previousFrameNumber = undefined;
+  this._previousFrameContext = undefined;
 
   // Keeps track of the last values for use during update logic
   this._previousImageBasedLightingFactor = Cartesian2.clone(
     imageBasedLightingFactor,
   );
-  this._previousLuminanceAtZenith = luminanceAtZenith;
   this._previousSphericalHarmonicCoefficients = sphericalHarmonicCoefficients;
   this._removeErrorListener = undefined;
 }
@@ -153,27 +144,6 @@ Object.defineProperties(ImageBasedLighting.prototype, {
         value,
         this._imageBasedLightingFactor,
       );
-    },
-  },
-
-  /**
-   * The sun's luminance at the zenith in kilo candela per meter squared
-   * to use for this model's procedural environment map. This is used when
-   * {@link ImageBasedLighting#specularEnvironmentMaps} and {@link ImageBasedLighting#sphericalHarmonicCoefficients}
-   * are not defined.
-   *
-   * @memberof ImageBasedLighting.prototype
-   *
-   * @type {number}
-   * @default 0.2
-   */
-  luminanceAtZenith: {
-    get: function () {
-      return this._luminanceAtZenith;
-    },
-    set: function (value) {
-      this._previousLuminanceAtZenith = this._luminanceAtZenith;
-      this._luminanceAtZenith = value;
     },
   },
 
@@ -269,38 +239,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   },
 
   /**
-   * Whether or not to use the default spherical harmonic coefficients.
-   *
-   * @memberof ImageBasedLighting.prototype
-   * @type {boolean}
-   *
-   * @private
-   */
-  useDefaultSphericalHarmonics: {
-    get: function () {
-      return this._useDefaultSphericalHarmonics;
-    },
-  },
-
-  /**
-   * Whether or not the image-based lighting settings use spherical harmonic coefficients.
-   *
-   * @memberof ImageBasedLighting.prototype
-   * @type {boolean}
-   *
-   * @private
-   */
-  useSphericalHarmonicCoefficients: {
-    get: function () {
-      return (
-        defined(this._sphericalHarmonicCoefficients) ||
-        this._useDefaultSphericalHarmonics
-      );
-    },
-  },
-
-  /**
-   * The cube map for the specular environment maps.
+   * The texture atlas for the specular environment maps.
    *
    * @memberof ImageBasedLighting.prototype
    * @type {SpecularEnvironmentCubeMap}
@@ -310,6 +249,20 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   specularEnvironmentCubeMap: {
     get: function () {
       return this._specularEnvironmentCubeMap;
+    },
+  },
+
+  /**
+   * Whether or not to use the default spherical harmonics coefficients.
+   *
+   * @memberof ImageBasedLighting.prototype
+   * @type {boolean}
+   *
+   * @private
+   */
+  useDefaultSphericalHarmonics: {
+    get: function () {
+      return this._useDefaultSphericalHarmonics;
     },
   },
 
@@ -373,12 +326,15 @@ function createSpecularEnvironmentCubeMap(imageBasedLighting, context) {
 }
 
 ImageBasedLighting.prototype.update = function (frameState) {
-  if (frameState.frameNumber === this._previousFrameNumber) {
+  if (
+    frameState.frameNumber === this._previousFrameNumber &&
+    frameState.context === this._previousFrameContext
+  ) {
     return;
   }
 
   this._previousFrameNumber = frameState.frameNumber;
-  const context = frameState.context;
+  const context = (this._previousFrameContext = frameState.context);
 
   frameState.brdfLutGenerator.update(frameState);
   this._shouldRegenerateShaders = false;
@@ -398,15 +354,6 @@ ImageBasedLighting.prototype.update = function (frameState) {
       this._imageBasedLightingFactor,
       this._previousImageBasedLightingFactor,
     );
-  }
-
-  if (this._luminanceAtZenith !== this._previousLuminanceAtZenith) {
-    this._shouldRegenerateShaders =
-      this._shouldRegenerateShaders ||
-      defined(this._luminanceAtZenith) !==
-        defined(this._previousLuminanceAtZenith);
-
-    this._previousLuminanceAtZenith = this._luminanceAtZenith;
   }
 
   if (

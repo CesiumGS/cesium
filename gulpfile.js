@@ -348,7 +348,11 @@ export async function prepare() {
     "node_modules/draco3d/draco_decoder.wasm",
     "packages/engine/Source/ThirdParty/draco_decoder.wasm",
   );
-
+  // Copy Gaussian Splatting utilities into Source
+  copyFileSync(
+    "node_modules/@cesium/wasm-splats/wasm_splats_bg.wasm",
+    "packages/engine/Source/ThirdParty/wasm_splats_bg.wasm",
+  );
   // Copy pako and zip.js worker files to Source/ThirdParty
   copyFileSync(
     "node_modules/pako/dist/pako_inflate.min.js",
@@ -995,25 +999,27 @@ export async function test() {
   const release = argv.release ? argv.release : false;
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  const debug = argv.debug ? false : true;
+  const debug = argv.debug ? true : false;
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
-  const includeName = argv.includeName ? argv.includeName : "";
   const isProduction = argv.production;
+  const includeName = argv.includeName
+    ? argv.includeName.replace(/Spec$/, "")
+    : "";
 
   let workspace = argv.workspace;
   if (workspace) {
     workspace = workspace.replaceAll(`@${scope}/`, ``);
   }
 
-  if (!isProduction) {
+  if (!isProduction && !release) {
     console.log("Building specs...");
     await buildCesium({
       iife: true,
     });
   }
 
-  let browsers = ["Chrome"];
+  let browsers = debug ? ["ChromeDebugging"] : ["Chrome"];
   if (argv.browsers) {
     browsers = argv.browsers.split(",");
   }
@@ -1083,7 +1089,7 @@ export async function test() {
     karmaConfigFile,
     {
       port: 9876,
-      singleRun: debug,
+      singleRun: !debug,
       browsers: browsers,
       specReporter: {
         suppressErrorSummary: false,
@@ -1198,12 +1204,19 @@ function generateTypeScriptDefinitions(
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
-      /defined\(value: any\): boolean/gm,
-      "defined<Type>(value: Type): value is NonNullable<Type>",
+      /\n?export function defined\(value: any\): boolean;/gm,
+      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+        .toString()
+        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
+        .replace("export default", "export")}`,
     )
+    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`,
+      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+        .toString()
+        .replace(/export default.*\n?/, "")
+        .replace("const Check", "export const Check")}`,
     )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
     .replace(
@@ -1405,12 +1418,19 @@ function createTypeScriptDefinitions() {
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
-      /defined\(value: any\): boolean/gm,
-      "defined<Type>(value: Type): value is NonNullable<Type>",
+      /\n?export function defined\(value: any\): boolean;/gm,
+      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+        .toString()
+        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
+        .replace("export default", "export")}`,
     )
+    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`,
+      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+        .toString()
+        .replace(/export default.*\n?/, "")
+        .replace("const Check", "export const Check")}`,
     )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 to have rest parameter expand tuple
     .replace(
@@ -1693,7 +1713,7 @@ async function buildSandcastle() {
     streams.push(dataStream);
   }
 
-  const standaloneStream = gulp
+  let standaloneStream = gulp
     .src(["Apps/Sandcastle/standalone.html"])
     .pipe(gulpReplace("../../../", "."))
     .pipe(
@@ -1703,8 +1723,14 @@ async function buildSandcastle() {
           '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>',
       ),
     )
-    .pipe(gulpReplace("../../Build", "."))
-    .pipe(gulp.dest("Build/Sandcastle"));
+    .pipe(gulpReplace("../../Build", "."));
+  if (isProduction) {
+    standaloneStream = standaloneStream.pipe(gulp.dest("Build/Sandcastle"));
+  } else {
+    standaloneStream = standaloneStream.pipe(
+      gulp.dest("Build/Apps/Sandcastle"),
+    );
+  }
   streams.push(standaloneStream);
 
   return Promise.all(streams.map((s) => finished(s)));

@@ -168,19 +168,19 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
     expect(provider.tileHeight).toEqual(256);
     expect(provider.maximumLevel).toBeUndefined();
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-    expect(provider.rectangle.west).toBeCloseTo(
+    expect(provider.rectangle.west).toEqualEpsilon(
       rectangle.west,
       CesiumMath.EPSILON10,
     );
-    expect(provider.rectangle.south).toBeCloseTo(
+    expect(provider.rectangle.south).toEqualEpsilon(
       rectangle.south,
       CesiumMath.EPSILON10,
     );
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       rectangle.east,
       CesiumMath.EPSILON10,
     );
-    expect(provider.rectangle.north).toBeCloseTo(
+    expect(provider.rectangle.north).toEqualEpsilon(
       rectangle.north,
       CesiumMath.EPSILON10,
     );

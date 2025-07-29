@@ -6,11 +6,17 @@
  * the metadata values of an object into the picking frame buffer. The
  * raw values are read from that buffer, and are then translated back into
  * proper metadata values in `Picking.pickMetadata`, using the structural
- * information about the metadata `classProperty` that is stored here.
+ * information about the metadata that is stored here.
  *
  * @private
  */
-function PickedMetadataInfo(schemaId, className, propertyName, classProperty) {
+function PickedMetadataInfo(
+  schemaId,
+  className,
+  propertyName,
+  classProperty,
+  metadataProperty,
+) {
   /**
    * The optional ID of the metadata schema
    *
@@ -29,11 +35,23 @@ function PickedMetadataInfo(schemaId, className, propertyName, classProperty) {
    * @type {string}
    */
   this.propertyName = propertyName;
+
   /**
-   * The optional ID of the metadata schema
+   * The the `MetadataClassProperty` that is described by this
+   * structure, as obtained from the `MetadataSchema`
    *
    * @type {MetadataClassProperty}
    */
   this.classProperty = classProperty;
+
+  /**
+   * The `PropertyTextureProperty` or `PropertyAttributeProperty` that
+   * is described by this structure, as obtained from the property texture
+   * or property attribute of the `StructuralMetadata` that matches the
+   * class name and property name.
+   *
+   * @type {object}
+   */
+  this.metadataProperty = metadataProperty;
 }
 export default PickedMetadataInfo;

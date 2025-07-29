@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRange from "../Core/HeadingPitchRange.js";
@@ -8,8 +7,11 @@ import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
+import Quaternion from "../Core/Quaternion.js";
+import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
 import SceneMode from "../Scene/SceneMode.js";
+import VelocityVectorProperty from "./VelocityVectorProperty.js";
 
 const updateTransformMatrix3Scratch1 = new Matrix3();
 const updateTransformMatrix3Scratch2 = new Matrix3();
@@ -21,6 +23,9 @@ const updateTransformCartesian3Scratch3 = new Cartesian3();
 const updateTransformCartesian3Scratch4 = new Cartesian3();
 const updateTransformCartesian3Scratch5 = new Cartesian3();
 const updateTransformCartesian3Scratch6 = new Cartesian3();
+const updateTransformOrientationScratch = new Quaternion();
+const velocityScratch = new Cartesian3();
+const rotationScratch = new Matrix3();
 const deltaTime = new JulianDate();
 const northUpAxisFactor = 1.25; // times ellipsoid's maximum radius
 
@@ -30,6 +35,9 @@ function updateTransform(
   updateLookAt,
   saveCamera,
   positionProperty,
+  velocityProperty,
+  orientationProperty,
+  trackingReferenceFrame,
   time,
   ellipsoid,
 ) {
@@ -228,7 +236,44 @@ function updateTransform(
     }
 
     const transform = updateTransformMatrix4Scratch;
-    if (hasBasis) {
+
+    let orientation;
+    if (defined(orientationProperty)) {
+      orientation = orientationProperty.getValue(
+        time,
+        updateTransformOrientationScratch,
+      );
+    }
+
+    const velocity = velocityProperty.getValue(time, velocityScratch);
+
+    if (
+      trackingReferenceFrame === TrackingReferenceFrame.INERTIAL &&
+      defined(orientation)
+    ) {
+      Matrix4.fromTranslationQuaternionRotationScale(
+        cartesian,
+        orientation,
+        Cartesian3.ONE,
+        transform,
+      );
+    } else if (
+      trackingReferenceFrame === TrackingReferenceFrame.VELOCITY &&
+      defined(velocity)
+    ) {
+      const rotation = Transforms.rotationMatrixFromPositionVelocity(
+        cartesian,
+        velocity,
+        ellipsoid,
+        rotationScratch,
+      );
+      Matrix4.fromRotationTranslation(rotation, cartesian, transform);
+    } else if (
+      trackingReferenceFrame === TrackingReferenceFrame.ENU ||
+      !hasBasis
+    ) {
+      Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
+    } else {
       transform[0] = xBasis.x;
       transform[1] = xBasis.y;
       transform[2] = xBasis.z;
@@ -245,9 +290,6 @@ function updateTransform(
       transform[13] = cartesian.y;
       transform[14] = cartesian.z;
       transform[15] = 0.0;
-    } else {
-      // Stationary or slow-moving, low-altitude objects use East-North-Up.
-      Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
     }
 
     camera._setTransform(transform);
@@ -301,7 +343,7 @@ function EntityView(entity, scene, ellipsoid) {
    * The ellipsoid to use for orienting the camera.
    * @type {Ellipsoid}
    */
-  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  this.ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   /**
    * The bounding sphere of the object.
@@ -315,6 +357,8 @@ function EntityView(entity, scene, ellipsoid) {
 
   this._lastCartesian = new Cartesian3();
   this._defaultOffset3D = undefined;
+
+  this._velocityProperty = new VelocityVectorProperty(entity.position, true);
 
   this._offset3D = new Cartesian3();
 }
@@ -362,10 +406,13 @@ EntityView.prototype.update = function (time, boundingSphere) {
   }
 
   const entity = this.entity;
+  const trackingReferenceFrame = entity.trackingReferenceFrame;
   const positionProperty = entity.position;
   if (!defined(positionProperty)) {
     return;
   }
+  const velocityProperty = this._velocityProperty;
+  const orientationProperty = entity.orientation;
   const objectChanged = entity !== this._lastEntity;
   const sceneModeChanged = sceneMode !== this._mode;
 
@@ -419,6 +466,9 @@ EntityView.prototype.update = function (time, boundingSphere) {
     updateLookAt,
     saveCamera,
     positionProperty,
+    velocityProperty,
+    orientationProperty,
+    trackingReferenceFrame,
     time,
     ellipsoid,
   );

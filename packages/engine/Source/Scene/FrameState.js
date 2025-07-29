@@ -261,9 +261,10 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @type {object}
    * @property {boolean} enabled <code>true</code> if fog is enabled, <code>false</code> otherwise. This affects both fog culling and rendering.
    * @property {boolean} renderable <code>true</code> if fog should be rendered, <code>false</code> if not. This flag should be checked in combination with fog.enabled.
-   * @property {number} density A positive number used to mix the color and fog color based on camera distance.
-   * @property {number} sse A scalar used to modify the screen space error of geometry partially in fog.
-   * @property {number} minimumBrightness The minimum brightness of terrain with fog applied.
+   * @property {number | undefined} density A positive number used to mix the color and fog color based on camera distance.
+   * @property {number | undefined} visualDensityScalar A positive number to modify how impactful the fog is based off the density
+   * @property {number | undefined} sse A scalar used to modify the screen space error of geometry partially in fog.
+   * @property {number | undefined} minimumBrightness The minimum brightness of terrain with fog applied.
    */
 
   /**
@@ -277,6 +278,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
     enabled: false,
     renderable: false,
     density: undefined,
+    visualDensityScalar: undefined,
     sse: undefined,
     minimumBrightness: undefined,
   };

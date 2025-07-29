@@ -1,7 +1,6 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
@@ -340,7 +339,7 @@ function StaticGroundPolylinePerMaterialBatch(
   this._items = [];
   this._orderedGroundPrimitives = orderedGroundPrimitives;
   this._classificationType = classificationType;
-  this._asynchronous = defaultValue(asynchronous, true);
+  this._asynchronous = asynchronous ?? true;
 }
 
 StaticGroundPolylinePerMaterialBatch.prototype.add = function (time, updater) {

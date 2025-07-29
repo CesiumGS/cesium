@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import MetadataType from "./MetadataType.js";
@@ -26,7 +26,7 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PropertyTextureProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const property = options.property;
   const classProperty = options.classProperty;
   const textures = options.textures;
@@ -60,8 +60,8 @@ function PropertyTextureProperty(options) {
   // the class property. The class property handles setting the default of
   // identity: (offset 0, scale 1) with the same scalar/vector/matrix types.
   // array types are disallowed by the spec.
-  offset = defaultValue(offset, classProperty.offset);
-  scale = defaultValue(scale, classProperty.scale);
+  offset = offset ?? classProperty.offset;
+  scale = scale ?? classProperty.scale;
 
   // offset and scale are applied on the GPU, so unpack the values
   // as math types we can use in uniform callbacks.
@@ -111,6 +111,12 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the property JSON itself did not define it, then it will inherit the
+   * value from the `MetadataClassProperty`. There, it also is always
+   * defined, and initialized to the default value if it was not contained
+   * in the class property JSON.
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
@@ -124,6 +130,12 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the property JSON itself did not define it, then it will inherit the
+   * value from the `MetadataClassProperty`. There, it also is always
+   * defined, and initialized to the default value if it was not contained
+   * in the class property JSON.
    *
    * @memberof PropertyTextureProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}

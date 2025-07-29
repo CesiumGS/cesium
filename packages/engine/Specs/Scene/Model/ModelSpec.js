@@ -14,7 +14,7 @@ import {
   ColorBlendMode,
   Credit,
   CustomShader,
-  defaultValue,
+  Frozen,
   defined,
   DirectionalLight,
   DistanceDisplayCondition,
@@ -166,7 +166,7 @@ describe(
     });
 
     function zoomTo(model, zoom) {
-      zoom = defaultValue(zoom, 4.0);
+      zoom = zoom ?? 4.0;
 
       const camera = scene.camera;
       const center = model.boundingSphere.center;
@@ -182,24 +182,21 @@ describe(
 
     function verifyRender(model, shouldRender, options) {
       expect(model.ready).toBe(true);
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
-      const zoomToModel = defaultValue(options.zoomToModel, true);
+      const zoomToModel = options.zoomToModel ?? true;
       if (zoomToModel) {
         zoomTo(model);
       }
 
-      const backgroundColor = defaultValue(
-        options.backgroundColor,
-        Color.BLACK,
-      );
+      const backgroundColor = options.backgroundColor ?? Color.BLACK;
 
-      const targetScene = defaultValue(options.scene, scene);
+      const targetScene = options.scene ?? scene;
 
       targetScene.backgroundColor = backgroundColor;
       const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
 
-      const time = defaultValue(options.time, defaultDate);
+      const time = options.time ?? defaultDate;
 
       expect({
         scene: targetScene,
@@ -216,9 +213,9 @@ describe(
     }
 
     function verifyDebugWireframe(model, primitiveType, options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-      const modelHasIndices = defaultValue(options.hasIndices, true);
-      const targetScene = defaultValue(options.scene, scene);
+      options = options ?? Frozen.EMPTY_OBJECT;
+      const modelHasIndices = options.hasIndices ?? true;
+      const targetScene = options.scene ?? scene;
 
       const commandList = targetScene.frameState.commandList;
       const commandCounts = [];
@@ -3110,17 +3107,28 @@ describe(
     describe("light color", function () {
       it("initializes with light color", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
+          {
+            gltf: boxTexturedGltfUrl,
+            lightColor: Cartesian3.ZERO,
+          },
           scene,
         );
+
+        // ignore any image-based lighting– Test directional light only
+        model.imageBasedLighting.imageBasedLightingFactor = Cartesian2.ZERO;
+
         verifyRender(model, false);
       });
 
       it("changing light color works", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
+          { gltf: boxTexturedGltfUrl, imageBasedLighting: undefined },
           scene,
         );
+
+        // ignore any image-based lighting– Test directional light only
+        model.imageBasedLighting.imageBasedLightingFactor = Cartesian2.ZERO;
+
         model.lightColor = Cartesian3.ZERO;
         verifyRender(model, false);
 
@@ -3133,7 +3141,7 @@ describe(
 
       it("light color doesn't affect unlit models", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxUnlitUrl },
+          { gltf: boxUnlitUrl, imageBasedLighting: undefined },
           scene,
         );
         const options = {
@@ -3156,7 +3164,6 @@ describe(
       it("initializes with imageBasedLighting", async function () {
         const ibl = new ImageBasedLighting({
           imageBasedLightingFactor: Cartesian2.ZERO,
-          luminanceAtZenith: 0.5,
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, imageBasedLighting: ibl },
@@ -3167,7 +3174,10 @@ describe(
 
       it("creates default imageBasedLighting", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: undefined,
+          },
           scene,
         );
         const imageBasedLighting = model.imageBasedLighting;
@@ -3178,7 +3188,6 @@ describe(
             new Cartesian2(1, 1),
           ),
         ).toBe(true);
-        expect(imageBasedLighting.luminanceAtZenith).toBe(0.2);
         expect(
           imageBasedLighting.sphericalHarmonicCoefficients,
         ).toBeUndefined();
@@ -3187,10 +3196,23 @@ describe(
 
       it("changing imageBasedLighting works", async function () {
         const imageBasedLighting = new ImageBasedLighting({
-          imageBasedLightingFactor: Cartesian2.ZERO,
+          sphericalHarmonicCoefficients: [
+            new Cartesian3(1.0, 0.0, 0.0),
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+          ],
         });
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: undefined,
+          },
           scene,
         );
         const renderOptions = {
@@ -3216,6 +3238,17 @@ describe(
             gltf: boxTexturedGltfUrl,
             imageBasedLighting: new ImageBasedLighting({
               imageBasedLightingFactor: Cartesian2.ZERO,
+              sphericalHarmonicCoefficients: [
+                new Cartesian3(0.35449, 0.35449, 0.35449),
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+              ],
             }),
           },
           scene,
@@ -3233,34 +3266,6 @@ describe(
 
         const ibl = model.imageBasedLighting;
         ibl.imageBasedLightingFactor = new Cartesian2(1, 1);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual(result);
-        });
-      });
-
-      it("changing luminanceAtZenith works", async function () {
-        const model = await loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            imageBasedLighting: new ImageBasedLighting({
-              luminanceAtZenith: 0.0,
-            }),
-          },
-          scene,
-        );
-        const renderOptions = {
-          scene: scene,
-          time: defaultDate,
-        };
-
-        let result;
-        verifyRender(model, true);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          result = rgba;
-        });
-
-        const ibl = model.imageBasedLighting;
-        ibl.luminanceAtZenith = 0.2;
         expect(renderOptions).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual(result);
         });

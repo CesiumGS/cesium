@@ -8,7 +8,7 @@
       "voxel": {
         "properties": {
           "a": {
-            "type": "SCALAR",
+            "type": "VEC4",
             "componentType": "FLOAT32"
           }
         }
@@ -28,32 +28,21 @@
       }
     }
   },
-  "geometricError": 0.0,
+  "geometricError": 240,
   "root": {
     "boundingVolume": {
       "extensions": {
         "3DTILES_bounding_volume_cylinder": {
-          "cylinder": [
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ]
+          "height": 12756274.0,
+          "minRadius": 0.0,
+          "maxRadius": 6378137.0
         }
       }
     },
-    "geometricError": 0.0,
+    "geometricError": 16.0,
     "refine": "REPLACE",
     "content": {
-      "uri": "tiles/{level}/{x}/{y}/{z}.json",
+      "uri": "tiles/{level}/{x}/{y}/{z}.gltf",
       "extensions": {
         "3DTILES_content_voxels": {
           "dimensions": [
@@ -67,19 +56,19 @@
     },
     "implicitTiling": {
       "subdivisionScheme": "OCTREE",
-      "subtreeLevels": 3,
-      "availableLevels": 1,
+      "subtreeLevels": 2,
+      "availableLevels": 2,
       "subtrees": {
         "uri": "subtrees/{level}/{x}/{y}/{z}.json"
       }
     }
   },
   "extensionsUsed": [
-    "3DTILES_content_voxels",
-    "3DTILES_bounding_volume_cylinder"
+    "3DTILES_bounding_volume_cylinder",
+    "3DTILES_content_voxels"
   ],
   "extensionsRequired": [
-    "3DTILES_content_voxels",
-    "3DTILES_bounding_volume_cylinder"
+    "3DTILES_bounding_volume_cylinder",
+    "3DTILES_content_voxels"
   ]
 }

@@ -2,7 +2,7 @@
  * Contains functions for checking that supplied arguments are of a specified type
  * or meet specified conditions
  */
-export const Check: {
+const Check: {
   /**
    * Throws if test is not defined
    *
@@ -38,7 +38,10 @@ export const Check: {
      * @param {*} test The value to test
      * @exception {DeveloperError} test must be typeof 'object'
      */
-    object(name: string, test: any): asserts test is object;
+    object(
+      name: string,
+      test: any,
+    ): asserts test is Record<string | number | symbol, any>;
     /**
      * Throws if test is not typeof 'boolean'
      *
@@ -125,3 +128,4 @@ export const Check: {
     };
   };
 };
+export default Check;

@@ -281,7 +281,14 @@ describe(
     }
 
     async function loadModel(options) {
-      const model = scene.primitives.add(await Model.fromGltfAsync(options));
+      const model = scene.primitives.add(
+        await Model.fromGltfAsync({
+          environmentMapOptions: {
+            enabled: false,
+          },
+          ...options,
+        }),
+      );
       await pollToPromise(
         function () {
           // Render scene to progressively load the model

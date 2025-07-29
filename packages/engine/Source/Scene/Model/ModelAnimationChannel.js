@@ -1,7 +1,7 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ConstantSpline from "../../Core/ConstantSpline.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import HermiteSpline from "../../Core/HermiteSpline.js";
 import InterpolationType from "../../Core/InterpolationType.js";
@@ -29,7 +29,7 @@ const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
  * @private
  */
 function ModelAnimationChannel(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const channel = options.channel;
   const runtimeAnimation = options.runtimeAnimation;

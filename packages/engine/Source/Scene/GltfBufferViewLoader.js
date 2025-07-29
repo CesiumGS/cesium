@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 import { MeshoptDecoder } from "meshoptimizer";
@@ -27,7 +27,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function GltfBufferViewLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const bufferViewId = options.bufferViewId;
@@ -57,14 +57,14 @@ function GltfBufferViewLoader(options) {
   if (hasExtension(bufferView, "EXT_meshopt_compression")) {
     const meshopt = bufferView.extensions.EXT_meshopt_compression;
     bufferId = meshopt.buffer;
-    byteOffset = defaultValue(meshopt.byteOffset, 0);
+    byteOffset = meshopt.byteOffset ?? 0;
     byteLength = meshopt.byteLength;
 
     hasMeshopt = true;
     meshoptByteStride = meshopt.byteStride;
     meshoptCount = meshopt.count;
     meshoptMode = meshopt.mode;
-    meshoptFilter = defaultValue(meshopt.filter, "NONE");
+    meshoptFilter = meshopt.filter ?? "NONE";
   }
 
   const buffer = gltf.buffers[bufferId];

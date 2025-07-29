@@ -1,7 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -18,15 +18,18 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @typedef {object} Texture.ConstructorOptions
  *
  * @property {Context} context
- * @property {object} [source] The source for texel values to be loaded into the texture.
+ * @property {object} [source] The source for texel values to be loaded into the texture. A {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement},
+ *                        {@link HTMLVideoElement}, {@link OffscreenCanvas}, or {@link ImageBitmap},
+ *                        or an object with width, height, and arrayBufferView properties.
  * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
  * @property {boolean} [skipColorSpaceConversion=false] If true, color space conversions will be skipped when reading the texel values.
- * @property {Sampler} [sampler] Information about how to sample the cubemap texture.
+ * @property {Sampler} [sampler] Information about how to sample the texture.
  * @property {number} [width] The pixel width of the texture. If not supplied, must be available from the source.
  * @property {number} [height] The pixel height of the texture. If not supplied, must be available from the source.
  * @property {boolean} [preMultiplyAlpha] If true, the alpha channel will be multiplied into the other channels.
+ * @property {string} [id] A unique identifier for the texture. If this is not given, then a GUID will be created.
  *
  * @private
  */
@@ -42,7 +45,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @private
  */
 function Texture(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -216,7 +219,7 @@ function Texture(options) {
     ? PixelFormat.compressedTextureSizeInBytes(pixelFormat, width, height)
     : PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
 
-  this._id = createGuid();
+  this._id = options.id ?? createGuid();
   this._context = context;
   this._textureFilterAnisotropic = context._textureFilterAnisotropic;
   this._textureTarget = gl.TEXTURE_2D;
@@ -339,11 +342,12 @@ function loadBufferSource(texture, source) {
     pixelDatatype,
     width,
   );
+
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
-  let arrayBufferView = source.arrayBufferView;
+  let { arrayBufferView } = source;
   if (flipY) {
     arrayBufferView = PixelFormat.flipY(
       arrayBufferView,
@@ -387,6 +391,62 @@ function loadBufferSource(texture, source) {
 }
 
 /**
+ * Load texel data from a buffer into part of a texture
+ *
+ * @param {Texture} texture The texture to which texel values will be loaded.
+ * @param {TypedArray} arrayBufferView The texel values to be loaded into the texture.
+ * @param {number} xOffset The texel x coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} yOffset The texel y coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} width The width of the source data, in pixels.
+ * @param {number} width The height of the source data, in pixels.
+ *
+ * @private
+ */
+function loadPartialBufferSource(
+  texture,
+  arrayBufferView,
+  xOffset,
+  yOffset,
+  width,
+  height,
+) {
+  const context = texture._context;
+  const gl = context._gl;
+
+  const { pixelFormat, pixelDatatype } = texture;
+
+  const unpackAlignment = PixelFormat.alignmentInBytes(
+    pixelFormat,
+    pixelDatatype,
+    width,
+  );
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+  if (texture.flipY) {
+    arrayBufferView = PixelFormat.flipY(
+      arrayBufferView,
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height,
+    );
+  }
+  gl.texSubImage2D(
+    texture._textureTarget,
+    0,
+    xOffset,
+    yOffset,
+    width,
+    height,
+    pixelFormat,
+    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    arrayBufferView,
+  );
+}
+
+/**
  * Load texel data from a framebuffer into a texture.
  *
  * @param {Texture} texture The texture to which texel values will be loaded.
@@ -426,7 +486,7 @@ function loadFramebufferSource(texture, source) {
  * Load texel data from an Image into a texture.
  *
  * @param {Texture} texture The texture to which texel values will be loaded.
- * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} source The source for texel values to be loaded into the texture.
+ * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|OffscreenCanvas|ImageBitmap} source The source for texel values to be loaded into the texture.
  *
  * @private
  */
@@ -442,6 +502,35 @@ function loadImageSource(texture, source) {
     texture._textureTarget,
     0,
     texture._internalFormat,
+    texture.pixelFormat,
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    source,
+  );
+}
+
+/**
+ * Load texel data from an Image into part of a texture
+ *
+ * @param {Texture} texture The texture to which texel values will be loaded.
+ * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} source The source for texel values to be loaded into the texture.
+ * @param {number} xOffset The texel x coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} yOffset The texel y coordinate of the lower left corner of the subregion of the texture to be updated.
+ *
+ * @private
+ */
+function loadPartialImageSource(texture, source, xOffset, yOffset) {
+  const context = texture._context;
+  const gl = context._gl;
+
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.preMultiplyAlpha);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY);
+
+  gl.texSubImage2D(
+    texture._textureTarget,
+    0,
+    xOffset,
+    yOffset,
     texture.pixelFormat,
     PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
     source,
@@ -527,20 +616,19 @@ Texture.create = function (options) {
  * @private
  */
 Texture.fromFramebuffer = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
   const context = options.context;
-  const gl = context._gl;
   const {
     pixelFormat = PixelFormat.RGB,
     framebufferXOffset = 0,
     framebufferYOffset = 0,
-    width = gl.drawingBufferWidth,
-    height = gl.drawingBufferHeight,
+    width = context.drawingBufferWidth,
+    height = context.drawingBufferHeight,
     framebuffer,
   } = options;
 
@@ -567,12 +655,12 @@ Texture.fromFramebuffer = function (options) {
     framebufferYOffset,
     0,
   );
-  if (framebufferXOffset + width > gl.drawingBufferWidth) {
+  if (framebufferXOffset + width > context.drawingBufferWidth) {
     throw new DeveloperError(
       "framebufferXOffset + width must be less than or equal to drawingBufferWidth",
     );
   }
-  if (framebufferYOffset + height > gl.drawingBufferHeight) {
+  if (framebufferYOffset + height > context.drawingBufferHeight) {
     throw new DeveloperError(
       "framebufferYOffset + height must be less than or equal to drawingBufferHeight.",
     );
@@ -618,7 +706,8 @@ Object.defineProperties(Texture.prototype, {
    * coordinates in both directions, uses linear filtering for both magnification and minification,
    * and uses a maximum anisotropy of 1.0.
    * @memberof Texture.prototype
-   * @type {object}
+   * @type {Sampler}
+   * @private
    */
   sampler: {
     get: function () {
@@ -743,7 +832,8 @@ function setupSampler(texture, sampler) {
  * Copy new image data into this texture, from a source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement}.
  * or an object with width, height, and arrayBufferView properties.
  * @param {object} options Object with the following properties:
- * @param {object} options.source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement},
+ * @param {object} options.source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, {@link HTMLVideoElement},
+ *                        {@link OffscreenCanvas}, or {@link ImageBitmap},
  *                        or an object with width, height, and arrayBufferView properties.
  * @param {number} [options.xOffset=0] The offset in the x direction within the texture to copy into.
  * @param {number} [options.yOffset=0] The offset in the y direction within the texture to copy into.
@@ -756,7 +846,7 @@ function setupSampler(texture, sampler) {
  * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
  * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- *
+ * @private
  * @example
  * texture.copyFrom({
  *  source: {
@@ -812,7 +902,6 @@ Texture.prototype.copyFrom = function (options) {
   gl.bindTexture(target, this._texture);
 
   let { width, height } = source;
-  const arrayBufferView = source.arrayBufferView;
 
   // Make sure we are using the element's intrinsic width and height where available
   if (defined(source.videoWidth) && defined(source.videoHeight)) {
@@ -822,25 +911,6 @@ Texture.prototype.copyFrom = function (options) {
     width = source.naturalWidth;
     height = source.naturalHeight;
   }
-
-  const textureWidth = this._width;
-  const textureHeight = this._height;
-  const internalFormat = this._internalFormat;
-  const pixelFormat = this._pixelFormat;
-  const pixelDatatype = this._pixelDatatype;
-
-  const preMultiplyAlpha = this._preMultiplyAlpha;
-  const flipY = this._flipY;
-
-  let unpackAlignment = 4;
-  if (defined(arrayBufferView)) {
-    unpackAlignment = PixelFormat.alignmentInBytes(
-      pixelFormat,
-      pixelDatatype,
-      width,
-    );
-  }
-  gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
   if (skipColorSpaceConversion) {
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
@@ -853,94 +923,40 @@ Texture.prototype.copyFrom = function (options) {
 
   let uploaded = false;
   if (!this._initialized) {
-    let pixels;
     if (
       xOffset === 0 &&
       yOffset === 0 &&
-      width === textureWidth &&
-      height === textureHeight
+      width === this._width &&
+      height === this._height
     ) {
       // initialize the entire texture
-      if (defined(arrayBufferView)) {
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-        if (flipY) {
-          pixels = PixelFormat.flipY(
-            arrayBufferView,
-            pixelFormat,
-            pixelDatatype,
-            textureWidth,
-            textureHeight,
-          );
-        } else {
-          pixels = arrayBufferView;
-        }
+      if (defined(source.arrayBufferView)) {
+        loadBufferSource(this, source);
       } else {
-        // Only valid for DOM-Element uploads
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-        pixels = source;
+        loadImageSource(this, source);
       }
       uploaded = true;
     } else {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-      // initialize the entire texture to zero
-      pixels = PixelFormat.createTypedArray(
-        pixelFormat,
-        pixelDatatype,
-        textureWidth,
-        textureHeight,
-      );
+      loadNull(this);
     }
-    gl.texImage2D(
-      target,
-      0,
-      internalFormat,
-      textureWidth,
-      textureHeight,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      pixels,
-    );
     this._initialized = true;
   }
 
   if (!uploaded) {
-    let pixels;
-    if (defined(arrayBufferView)) {
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
-      if (flipY) {
-        pixels = PixelFormat.flipY(
-          arrayBufferView,
-          pixelFormat,
-          pixelDatatype,
-          width,
-          height,
-        );
-      } else {
-        pixels = arrayBufferView;
-      }
+    if (defined(source.arrayBufferView)) {
+      loadPartialBufferSource(
+        this,
+        source.arrayBufferView,
+        xOffset,
+        yOffset,
+        width,
+        height,
+      );
     } else {
-      // Only valid for DOM-Element uploads
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-      pixels = source;
+      loadPartialImageSource(this, source, xOffset, yOffset);
     }
-    gl.texSubImage2D(
-      target,
-      0,
-      xOffset,
-      yOffset,
-      width,
-      height,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      pixels,
-    );
   }
 
   gl.bindTexture(target, null);
@@ -953,7 +969,7 @@ Texture.prototype.copyFrom = function (options) {
  * @param {number} [framebufferYOffset=0] optional
  * @param {number} [width=width] optional
  * @param {number} [height=height] optional
- *
+ * @private
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
  * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
@@ -974,12 +990,12 @@ Texture.prototype.copyFromFramebuffer = function (
   width,
   height,
 ) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
-  framebufferXOffset = defaultValue(framebufferXOffset, 0);
-  framebufferYOffset = defaultValue(framebufferYOffset, 0);
-  width = defaultValue(width, this._width);
-  height = defaultValue(height, this._height);
+  xOffset = xOffset ?? 0;
+  yOffset = yOffset ?? 0;
+  framebufferXOffset = framebufferXOffset ?? 0;
+  framebufferYOffset = framebufferYOffset ?? 0;
+  width = width ?? this._width;
+  height = height ?? this._height;
 
   //>>includeStart('debug', pragmas.debug);
   if (PixelFormat.isDepthFormat(this._pixelFormat)) {
@@ -1048,7 +1064,7 @@ Texture.prototype.copyFromFramebuffer = function (
 
 /**
  * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
- *
+ * @private
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
  * @exception {DeveloperError} hint is invalid.
@@ -1057,7 +1073,7 @@ Texture.prototype.copyFromFramebuffer = function (
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
  */
 Texture.prototype.generateMipmap = function (hint) {
-  hint = defaultValue(hint, MipmapHint.DONT_CARE);
+  hint = hint ?? MipmapHint.DONT_CARE;
 
   //>>includeStart('debug', pragmas.debug);
   if (PixelFormat.isDepthFormat(this._pixelFormat)) {

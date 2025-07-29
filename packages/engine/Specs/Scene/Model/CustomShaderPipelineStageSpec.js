@@ -137,8 +137,13 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
   it("adds varying declarations from the custom shader", function () {
     const varyings = {
-      v_distanceFromCenter: VaryingType.FLOAT,
-      v_computedMatrix: VaryingType.MAT3,
+      v_float: VaryingType.FLOAT,
+      v_vec2: VaryingType.VEC2,
+      v_vec3: VaryingType.VEC3,
+      v_vec4: VaryingType.VEC4,
+      v_mat2x2: VaryingType.MAT2,
+      v_mat3x3: VaryingType.MAT3,
+      v_mat4x4: VaryingType.MAT4,
     };
     const customShader = new CustomShader({
       vertexShaderText: emptyVertexShader,
@@ -152,8 +157,13 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "float v_distanceFromCenter;",
-      "mat2 v_computedMatrix;",
+      "float v_float;",
+      "vec2 v_vec2;",
+      "vec3 v_vec3;",
+      "vec4 v_vec4;",
+      "mat2 v_mat2x2;",
+      "mat3 v_mat3x3;",
+      "mat4 v_mat4x4;",
     ]);
   });
 

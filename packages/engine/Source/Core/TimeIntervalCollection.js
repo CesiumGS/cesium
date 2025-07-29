@@ -1,5 +1,5 @@
 import binarySearch from "./binarySearch.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -277,7 +277,7 @@ TimeIntervalCollection.prototype.indexOf = function (date) {
  * @returns {TimeInterval|undefined} The first interval in the collection that matches the specified parameters.
  */
 TimeIntervalCollection.prototype.findInterval = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const start = options.start;
   const stop = options.stop;
   const isStartIncluded = options.isStartIncluded;
@@ -759,10 +759,10 @@ TimeIntervalCollection.fromJulianDateArray = function (options, result) {
   const length = julianDates.length;
   const dataCallback = options.dataCallback;
 
-  const isStartIncluded = defaultValue(options.isStartIncluded, true);
-  const isStopIncluded = defaultValue(options.isStopIncluded, true);
-  const leadingInterval = defaultValue(options.leadingInterval, false);
-  const trailingInterval = defaultValue(options.trailingInterval, false);
+  const isStartIncluded = options.isStartIncluded ?? true;
+  const isStopIncluded = options.isStopIncluded ?? true;
+  const leadingInterval = options.leadingInterval ?? false;
+  const trailingInterval = options.trailingInterval ?? false;
   let interval;
 
   // Add a default interval, which will only end up being used up to first interval
@@ -1104,7 +1104,7 @@ TimeIntervalCollection.fromIso8601DurationArray = function (options, result) {
 
   const epoch = options.epoch;
   const iso8601Durations = options.iso8601Durations;
-  const relativeToPrevious = defaultValue(options.relativeToPrevious, false);
+  const relativeToPrevious = options.relativeToPrevious ?? false;
   const julianDates = [];
   let date, previousDate;
 

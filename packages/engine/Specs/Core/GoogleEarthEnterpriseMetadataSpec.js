@@ -1,6 +1,5 @@
 import {
   decodeGoogleEarthEnterpriseData,
-  defaultValue,
   GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTileInformation,
   Math as CesiumMath,
@@ -115,7 +114,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       GoogleEarthEnterpriseMetadata.prototype,
       "getQuadTreePacket",
     ).and.callFake(function (quadKey, version, request) {
-      quadKey = defaultValue(quadKey, "") + index.toString();
+      quadKey = (quadKey ?? "") + index.toString();
       this._tileInfo[quadKey] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,

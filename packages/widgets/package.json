@@ -1,6 +1,6 @@
 {
   "name": "@cesium/widgets",
-  "version": "8.1.0",
+  "version": "12.3.1-ion.1",
   "description": "A widgets library for use with CesiumJS. CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "keywords": [
     "3D",
@@ -25,10 +25,10 @@
     "./Specs/**/*"
   ],
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=20.19.0"
   },
   "dependencies": {
-    "@cesium/engine": "^11.1.0",
+    "@cesium/engine": "^18.3.1-ion.1",
     "nosleep.js": "^0.12.0"
   },
   "type": "module",

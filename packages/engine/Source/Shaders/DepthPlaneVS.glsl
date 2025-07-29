@@ -5,7 +5,7 @@ out vec4 positionEC;
 void main()
 {
     positionEC = czm_modelView * position;
-    gl_Position = czm_modelViewProjection * position;
+    gl_Position = czm_projection * positionEC;
 
     czm_vertexLogDepth();
 }

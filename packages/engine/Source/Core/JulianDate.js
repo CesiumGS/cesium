@@ -1,5 +1,4 @@
 import binarySearch from "./binarySearch.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import GregorianDate from "./GregorianDate.js";
@@ -10,7 +9,7 @@ import TimeStandard from "./TimeStandard.js";
 
 const gregorianDateScratch = new GregorianDate();
 const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-const daysInLeapFeburary = 29;
+const daysInLeapFebruary = 29;
 
 function compareLeapSecondDates(leapSecond, dateToFind) {
   return JulianDate.compare(leapSecond.julianDate, dateToFind.julianDate);
@@ -216,9 +215,9 @@ function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
    */
   this.secondsOfDay = undefined;
 
-  julianDayNumber = defaultValue(julianDayNumber, 0.0);
-  secondsOfDay = defaultValue(secondsOfDay, 0.0);
-  timeStandard = defaultValue(timeStandard, TimeStandard.UTC);
+  julianDayNumber = julianDayNumber ?? 0.0;
+  secondsOfDay = secondsOfDay ?? 0.0;
+  timeStandard = timeStandard ?? TimeStandard.UTC;
 
   //If julianDayNumber is fractional, make it an integer and add the number of seconds the fraction represented.
   const wholeDays = julianDayNumber | 0;
@@ -383,7 +382,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
           ) {
             throw new DeveloperError(iso8601ErrorMessage);
           }
-          //>>includeEnd('debug')
+          //>>includeEnd('debug');
         } else {
           tokens = date.match(matchWeekDate);
           if (tokens !== null) {
@@ -402,7 +401,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             ) {
               throw new DeveloperError(iso8601ErrorMessage);
             }
-            //>>includeEnd('debug')
+            //>>includeEnd('debug');
 
             const january4 = new Date(Date.UTC(year, 0, 4));
             dayOfYear = weekNumber * 7 + dayOfWeek - january4.getUTCDay() - 3;
@@ -410,7 +409,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             //None of our regular expressions succeeded in parsing the date properly.
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(iso8601ErrorMessage);
-            //>>includeEnd('debug')
+            //>>includeEnd('debug');
           }
         }
         //Split an ordinal date into month/day.
@@ -430,11 +429,11 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     month > 12 ||
     day < 1 ||
     ((month !== 2 || !inLeapYear) && day > daysInMonth[month - 1]) ||
-    (inLeapYear && month === 2 && day > daysInLeapFeburary)
+    (inLeapYear && month === 2 && day > daysInLeapFebruary)
   ) {
     throw new DeveloperError(iso8601ErrorMessage);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   //Now move onto the time string, which is much simpler.
   //If no time is specified, it is considered the beginning of the day, UTC to match Javascript's implementation.
@@ -447,7 +446,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
       if (dashCount > 0 && dashCount !== 2 && dashCount !== 3) {
         throw new DeveloperError(iso8601ErrorMessage);
       }
-      //>>includeEnd('debug')
+      //>>includeEnd('debug');
 
       hour = +tokens[1];
       minute = +tokens[2];
@@ -462,7 +461,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
         if (dashCount > 2) {
           throw new DeveloperError(iso8601ErrorMessage);
         }
-        //>>includeEnd('debug')
+        //>>includeEnd('debug');
 
         hour = +tokens[1];
         minute = +tokens[2];
@@ -477,7 +476,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
         } else {
           //>>includeStart('debug', pragmas.debug);
           throw new DeveloperError(iso8601ErrorMessage);
-          //>>includeEnd('debug')
+          //>>includeEnd('debug');
         }
       }
     }
@@ -542,7 +541,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     day++;
   }
 
-  tmp = inLeapYear && month === 2 ? daysInLeapFeburary : daysInMonth[month - 1];
+  tmp = inLeapYear && month === 2 ? daysInLeapFebruary : daysInMonth[month - 1];
   while (day > tmp) {
     day -= tmp;
     month++;
@@ -553,7 +552,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     }
 
     tmp =
-      inLeapYear && month === 2 ? daysInLeapFeburary : daysInMonth[month - 1];
+      inLeapYear && month === 2 ? daysInLeapFebruary : daysInMonth[month - 1];
   }
 
   //If UTC offset is at the beginning/end of the day, minutes can be negative.
@@ -575,7 +574,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     }
 
     tmp =
-      inLeapYear && month === 2 ? daysInLeapFeburary : daysInMonth[month - 1];
+      inLeapYear && month === 2 ? daysInLeapFebruary : daysInMonth[month - 1];
     day += tmp;
   }
 
@@ -784,8 +783,15 @@ JulianDate.toIso8601 = function (julianDate, precision) {
   let millisecondStr;
 
   if (!defined(precision) && millisecond !== 0) {
-    //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
-    millisecondStr = (millisecond * 0.01).toString().replace(".", "");
+    // Forces milliseconds into a number with at least 3 digits.
+    const millisecondHundreds = millisecond * 0.01;
+    // Below 1e-6, toString returns scientific notation, so it should be replaced by toFixed with appropriate number of digits.
+    // 20 digits is a trade-off choice guided by JavaScript's Number representation accuracy (15-17 decimal digits for most numbers).
+    // Using toFixed(20) ensures capturing enough precision while avoiding inaccuracies due to floating-point limitations.
+    millisecondStr =
+      millisecondHundreds < 1e-6
+        ? millisecondHundreds.toFixed(20).replace(".", "").replace(/0+$/, "")
+        : millisecondHundreds.toString().replace(".", "");
     return `${year.toString().padStart(4, "0")}-${month
       .toString()
       .padStart(2, "0")}-${day.toString().padStart(2, "0")}T${hour
@@ -896,7 +902,7 @@ JulianDate.equals = function (left, right) {
  * @returns {boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 JulianDate.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||

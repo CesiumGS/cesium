@@ -38,10 +38,36 @@
       #slider:hover {
         cursor: ew-resize;
       }
+
+      .split-label {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(42, 42, 42, 0.8);
+        padding: 8px;
+        border-radius: 4px;
+        z-index: 9999;
+        font-size: large;
+        font-weight: bold;
+        text-align: center;
+      }
+      .split-label.left {
+        left: 0;
+      }
+      .split-label.right {
+        right: 0;
+      }
     </style>
 
     <div id="cesiumContainer" class="fullSize">
       <div id="slider"></div>
+      <div class="split-label left">
+        Bing Maps (labeled)<br />+<br />Washington Imagery
+      </div>
+      <div class="split-label right">
+        Bing Maps (unlabeled)<br />+<br />Washington Imagery<br />+<br />Bing Maps (labels
+        only)
+      </div>
     </div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
@@ -67,6 +93,7 @@
           baseLayer: false,
           baseLayerPicker: false,
           infoBox: false,
+          geocoder: Cesium.IonGeocodeProviderType.BING,
         });
 
         const layers = viewer.imageryLayers;
@@ -104,6 +131,13 @@
         // Add a button to toggle the display of the Bing Maps Labels Only layer
         Sandcastle.addToggleButton("Show Bing Maps Labels Only", true, (checked) => {
           bingMapsLabelsOnly.show = checked;
+          const rightLabel = document.querySelector(".split-label.right");
+          if (checked) {
+            rightLabel.innerHTML =
+              "Bing Maps (unlabeled)<br />+<br />Washington Imagery<br />+<br />Bing Maps (labels only)";
+          } else {
+            rightLabel.innerHTML = "Bing Maps (unlabeled)<br />+<br />Washington Imagery";
+          }
         });
 
         // The remaining code synchronizes the position of the slider with the split position

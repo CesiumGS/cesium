@@ -4,7 +4,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -159,13 +159,13 @@ const pickFeaturesTags = combine(tags, {
  * });
  * // Access a Web Map Service (WMS) server.
  * const wms = new Cesium.UrlTemplateImageryProvider({
- *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
- *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
- *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
- *          'layers=public%3AMyBroadband_Availability&srs=EPSG%3A3857&' +
+ *    url : 'https://services.ga.gov.au/gis/services/NM_Hydrology_and_Marine_Points/MapServer/WMSServer?' +
+ *          'tiled=true&transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
+ *          'styles=&service=WMS&version=1.3.0&request=GetMap&' +
+ *          'layers=Bores&crs=EPSG%3A3857&' +
  *          'bbox={westProjected}%2C{southProjected}%2C{eastProjected}%2C{northProjected}&' +
  *          'width=256&height=256',
- *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
+ *    rectangle : Cesium.Rectangle.fromDegrees(95.0, -55.0, 170.0, -1.0)  // From GetCapabilities EX_GeographicBoundingBox
  * });
  * // Using custom tags in your template url.
  * const custom = new Cesium.UrlTemplateImageryProvider({
@@ -187,7 +187,7 @@ const pickFeaturesTags = combine(tags, {
  * @see WebMapTileServiceImageryProvider
  */
 function UrlTemplateImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._errorEvent = new Event();
 
@@ -213,19 +213,15 @@ function UrlTemplateImageryProvider(options) {
   }
   this._subdomains = subdomains;
 
-  this._tileWidth = defaultValue(options.tileWidth, 256);
-  this._tileHeight = defaultValue(options.tileHeight, 256);
-  this._minimumLevel = defaultValue(options.minimumLevel, 0);
+  this._tileWidth = options.tileWidth ?? 256;
+  this._tileHeight = options.tileHeight ?? 256;
+  this._minimumLevel = options.minimumLevel ?? 0;
   this._maximumLevel = options.maximumLevel;
-  this._tilingScheme = defaultValue(
-    options.tilingScheme,
-    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid }),
-  );
+  this._tilingScheme =
+    options.tilingScheme ??
+    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid });
 
-  this._rectangle = defaultValue(
-    options.rectangle,
-    this._tilingScheme.rectangle,
-  );
+  this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
   this._rectangle = Rectangle.intersection(
     this._rectangle,
     this._tilingScheme.rectangle,
@@ -238,7 +234,7 @@ function UrlTemplateImageryProvider(options) {
     credit = new Credit(credit);
   }
   this._credit = credit;
-  this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
+  this._hasAlphaChannel = options.hasAlphaChannel ?? true;
 
   const customTags = options.customTags;
   const allTags = combine(tags, customTags);
@@ -266,7 +262,7 @@ function UrlTemplateImageryProvider(options) {
    * @type {boolean}
    * @default true
    */
-  this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+  this.enablePickFeatures = options.enablePickFeatures ?? true;
 }
 
 Object.defineProperties(UrlTemplateImageryProvider.prototype, {

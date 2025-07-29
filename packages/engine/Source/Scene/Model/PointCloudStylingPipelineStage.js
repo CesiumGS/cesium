@@ -3,7 +3,6 @@ import Cartesian4 from "../../Core/Cartesian4.js";
 import CesiumMath from "../../Core/Math.js";
 import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
 import clone from "../../Core/clone.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelType from "./ModelType.js";
@@ -162,10 +161,7 @@ PointCloudStylingPipelineStage.process = function (
         ? 5.0
         : content.tileset.memoryAdjustedScreenSpaceError;
     }
-    vec4.x = defaultValue(
-      pointCloudShading.maximumAttenuation,
-      defaultPointSize,
-    );
+    vec4.x = pointCloudShading.maximumAttenuation ?? defaultPointSize;
     vec4.x *= frameState.pixelRatio;
 
     // Geometric error
@@ -333,9 +329,10 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_SHOW_STYLE",
       undefined,
-      ShaderDestination.VERTEX,
+      ShaderDestination.BOTH,
     );
     shaderBuilder.addVertexLines(showStyleFunction);
+    shaderBuilder.addVarying("float", "v_pointCloudShow");
   }
 
   const pointSizeStyleFunction = shaderFunctionInfo.pointSizeStyleFunction;

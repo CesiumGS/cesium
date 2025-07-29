@@ -31,6 +31,7 @@ import {
   getJsonFromTypedArray,
   HeadingPitchRange,
   HeadingPitchRoll,
+  ImageBasedLighting,
   Intersect,
   JulianDate,
   Math as CesiumMath,
@@ -42,6 +43,8 @@ import {
   Resource,
   ResourceCache,
   RuntimeError,
+  TileBoundingRegion,
+  TileOrientedBoundingBox,
   Transforms,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -89,6 +92,10 @@ describe(
     // tiles3.json: root with b3dm content
     const tilesetOfTilesetsUrl =
       "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
+
+    // A tileset that refers to 4 GLB files which share two (external) textures
+    const tilesetUrlWithSharedTextures =
+      "Data/Cesium3DTiles/Tilesets/TilesetWithSharedTextures/tileset.json";
 
     const withoutBatchTableUrl =
       "Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
@@ -482,6 +489,8 @@ describe(
         }),
       );
       expect(root.contentFailed).toBeTrue();
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
     it("handles failed tile requests", async function () {
@@ -514,6 +523,8 @@ describe(
       expect(statistics.numberOfPendingRequests).toBe(0);
       expect(statistics.numberOfTilesProcessing).toBe(0);
       expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
     it("handles failed tile processing", async function () {
@@ -550,6 +561,8 @@ describe(
       expect(statistics.numberOfPendingRequests).toBe(0);
       expect(statistics.numberOfTilesProcessing).toBe(0);
       expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
     it("renders tileset", function () {
@@ -664,7 +677,7 @@ describe(
       );
     });
 
-    it("renders tileset with custom up and forward axes", function () {
+    it("renders tileset with custom up and forward axes", async function () {
       const center = Cartesian3.fromRadians(
         centerLongitude,
         centerLatitude,
@@ -693,42 +706,43 @@ describe(
       // make sure we can see the cube so it loads
       scene.camera.lookAt(center, viewEast);
 
-      return Cesium3DTilesTester.loadTileset(
+      const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetEastNorthUpUrl,
         tilesetOptions,
-      ).then(function (tileset) {
-        // The east (+x) face of the cube is red
-        scene.camera.lookAt(center, viewEast);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(190);
-          expect(rgba[1]).toBeLessThanOrEqual(108);
-          expect(rgba[2]).toBeLessThanOrEqual(108);
-          expect(rgba[3]).toEqual(255);
-        });
+      );
 
-        // The north (+y) face of the cube is green
-        scene.camera.lookAt(center, viewNorth);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeLessThanOrEqual(108);
-          expect(rgba[1]).toBeGreaterThan(190);
-          expect(rgba[2]).toBeLessThanOrEqual(108);
-          expect(rgba[3]).toEqual(255);
-        });
-
-        // The up (+z) face of the cube is blue
-        scene.camera.lookAt(center, viewUp);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeLessThanOrEqual(108);
-          expect(rgba[1]).toBeLessThanOrEqual(108);
-          expect(rgba[2]).toBeGreaterThan(190);
-          expect(rgba[3]).toEqual(255);
-        });
+      // The east (+x) face of the cube is red
+      scene.camera.lookAt(center, viewEast);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(190);
+        expect(rgba[1]).toBeLessThanOrEqual(108);
+        expect(rgba[2]).toBeLessThanOrEqual(108);
+        expect(rgba[3]).toEqual(255);
       });
+
+      // The north (+y) face of the cube is green
+      scene.camera.lookAt(center, viewNorth);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThanOrEqual(108);
+        expect(rgba[1]).toBeGreaterThan(180);
+        expect(rgba[2]).toBeLessThanOrEqual(108);
+        expect(rgba[3]).toEqual(255);
+      });
+
+      // The up (+z) face of the cube is blue
+      scene.camera.lookAt(center, viewUp);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThanOrEqual(108);
+        expect(rgba[1]).toBeLessThanOrEqual(108);
+        expect(rgba[2]).toBeGreaterThan(180);
+        expect(rgba[3]).toEqual(255);
+      });
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
-    xit("verify statistics", async function () {
-      // Excluded due to frequent CI errors https://github.com/CesiumGS/cesium/issues/11958
+    it("verify statistics", async function () {
       const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
       // Verify initial values after root and children are requested
@@ -955,6 +969,78 @@ describe(
           );
         },
       );
+    });
+
+    it("verify memory usage statistics for shared textures", async function () {
+      // One buffer view with 4 positions, 4 normals, and 4 texture coordinates,
+      // using a common byte stride of 12 (resulting in 144 bytes)
+      // and 2*3 unsigned short indices, resulting in a total of 156 bytes
+      const singleGeometryByteLength = 156;
+
+      // One texture with 128x128 * RGBA pixels = 65536 bytes
+      const singleTexturesByteLength = 65536;
+
+      // Basic camera setup
+      const camera = scene.camera;
+
+      // NOTE: This is really, really important. There are some
+      // random calls in "beforeEach" and other parts of these
+      // specs that affect the camera transform. And the camera
+      // transform is NOT maintained to be consistent with the
+      // other properties in any way. So reset it here...
+      camera.lookAtTransform(Matrix4.IDENTITY);
+
+      camera.position = new Cartesian3(0, -1, 0);
+      camera.direction = Cartesian3.clone(Cartesian3.UNIT_Y);
+      camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+      camera.frustum.near = 0.01;
+      camera.frustum.far = 100.0;
+
+      // Move the camera to see no tiles
+      camera.position = new Cartesian3(100, -1, 100);
+
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrlWithSharedTextures,
+      );
+
+      const statistics = tileset._statistics;
+
+      // No tiles loaded
+      expect(statistics.geometryByteLength).toEqual(0);
+      expect(statistics.texturesByteLength).toEqual(0);
+
+      // Move the camera to stare at the center of the first tile
+      camera.position = new Cartesian3(0.5, -1, 0.5);
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+      // A single tile and texture was loaded
+      expect(statistics.geometryByteLength).toEqual(singleGeometryByteLength);
+      expect(statistics.texturesByteLength).toEqual(singleTexturesByteLength);
+
+      // Move the camera back to see all tiles
+      camera.position = new Cartesian3(3.5, -14, 0.5);
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+      // All tiles have been loaded: 4 times the geometry, BUT
+      // ONLY 2 times the texture
+      expect(statistics.geometryByteLength).toEqual(
+        singleGeometryByteLength * 4,
+      );
+      expect(statistics.texturesByteLength).toEqual(
+        singleTexturesByteLength * 2,
+      );
+
+      // Move the camera back to stare at the center of the first tile again
+      camera.position = new Cartesian3(0.5, -1, 0.5);
+
+      // Trim any previously loaded tiles
+      tileset.trimLoadedTiles();
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+      // Again, only a single tile and texture should be loaded
+      expect(statistics.geometryByteLength).toEqual(singleGeometryByteLength);
+      expect(statistics.texturesByteLength).toEqual(singleTexturesByteLength);
     });
 
     it("verify memory usage statistics for shared resources", function () {
@@ -1321,7 +1407,7 @@ describe(
 
         const root = tileset.root;
         root.refine = Cesium3DTileRefine.REPLACE;
-        root.hasEmptyContent = false; // mock content
+        root.hasRenderableContent = true; // mock content
         tileset.maximumScreenSpaceError = 0.0; // Force root tile to always not meet SSE since this is just checking the request volume
 
         // Renders all 5 tiles
@@ -2699,25 +2785,21 @@ describe(
       );
     });
 
-    it("renders with lightColor", function () {
+    it("renders with lightColor", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2457522.154792),
       };
-      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
-        function (tileset) {
-          const ibl = tileset.imageBasedLighting;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba).not.toEqual([0, 0, 0, 255]);
-            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-            expect(renderOptions).toRenderAndCall(function (rgba2) {
-              expect(rgba2).not.toEqual(rgba);
-              tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-              expect(renderOptions).notToRender(rgba2);
-            });
-          });
-        },
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        withoutBatchTableUrl,
       );
+      const ibl = tileset.imageBasedLighting;
+      ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+        expect(renderOptions).notToRender(rgba);
+      });
     });
 
     function testBackFaceCulling(url, setViewOptions) {
@@ -3327,8 +3409,21 @@ describe(
         scene: scene,
         time: new JulianDate(2457522.154792),
       };
-      const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
-      tileset.luminanceAtZenith = undefined;
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, url, {
+        imageBasedLighting: new ImageBasedLighting({
+          sphericalHarmonicCoefficients: [
+            new Cartesian3(2.0, 2.0, 2.0),
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+          ],
+        }),
+      });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
         sourceRed = rgba[0];
@@ -3336,9 +3431,9 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).withContext("starting red .r").toBeGreaterThan(200);
-        expect(rgba[1]).withContext("starting red .g").toEqualEpsilon(116, 1);
-        expect(rgba[2]).withContext("starting red .b").toEqualEpsilon(116, 1);
+        expect(rgba[0]).withContext("starting red .r").toBeGreaterThan(190);
+        expect(rgba[1]).withContext("starting red .g").toEqualEpsilon(118, 1);
+        expect(rgba[2]).withContext("starting red .b").toEqualEpsilon(118, 1);
         expect(rgba[3]).withContext("starting red .a").toEqual(255);
       });
 
@@ -3370,7 +3465,7 @@ describe(
         expect(rgba[0])
           .withContext("hl yellow+alpha .r")
           .toBeLessThan(sourceRed);
-        expect(rgba[1]).withContext("hl yellow+alpha .g").toEqualEpsilon(43, 1);
+        expect(rgba[1]).withContext("hl yellow+alpha .g").toEqualEpsilon(80, 1);
         expect(rgba[2]).withContext("hl yellow+alpha .b").toEqualEpsilon(0, 1);
         expect(rgba[3]).withContext("hl yellow+alpha .a").toEqual(255);
       });
@@ -3390,7 +3485,7 @@ describe(
         expect(rgba[0]).withContext("replace yellow .r").toBeLessThan(255);
         expect(rgba[1]).withContext("replace yellow .g").toBeGreaterThan(100);
         expect(rgba[1]).withContext("replace yellow .g").toBeLessThan(255);
-        expect(rgba[2]).withContext("replace yellow .b").toEqualEpsilon(73, 1);
+        expect(rgba[2]).withContext("replace yellow .b").toEqualEpsilon(62, 1);
         expect(rgba[3]).withContext("replace yellow .a").toEqual(255);
       });
 
@@ -3414,7 +3509,7 @@ describe(
           .toBeLessThan(255);
         expect(rgba[2])
           .withContext("replace yellow+alpha .b")
-          .toEqualEpsilon(48, 1);
+          .toEqualEpsilon(80, 1);
         expect(rgba[3]).withContext("replace yellow+alpha .a").toEqual(255);
       });
 
@@ -3440,7 +3535,7 @@ describe(
           .withContext("mix yellow .g")
           .toBeGreaterThan(sourceGreen);
         expect(rgba[1]).withContext("mix yellow .g").toBeLessThan(replaceGreen);
-        expect(rgba[2]).withContext("mix yellow .b").toEqualEpsilon(94, 1);
+        expect(rgba[2]).withContext("mix yellow .b").toEqualEpsilon(96, 1);
         expect(rgba[3]).withContext("mix yellow .a").toEqual(255);
       });
 
@@ -3455,7 +3550,7 @@ describe(
           .toBeLessThanOrEqual(sourceRed);
         expect(rgba[1]).withContext("mix blend 0.25 .g").toBeGreaterThan(0);
         expect(rgba[1]).withContext("mix blend 0.25 .g").toBeLessThan(mixGreen);
-        expect(rgba[2]).withContext("mix blend 0.25 .b").toEqualEpsilon(106, 1);
+        expect(rgba[2]).withContext("mix blend 0.25 .b").toEqualEpsilon(108, 1);
         expect(rgba[3]).withContext("mix blend 0.25 .a").toEqual(255);
       });
 
@@ -3463,8 +3558,8 @@ describe(
       tileset.colorBlendAmount = 0.0;
       expect(renderOptions).toRenderAndCall(function (rgba) {
         expect(rgba[0]).withContext("mix blend 0.0 .r").toEqual(sourceRed);
-        expect(rgba[1]).withContext("mix blend 0.0 .g").toEqualEpsilon(116, 1);
-        expect(rgba[2]).withContext("mix blend 0.0 .b").toEqualEpsilon(116, 1);
+        expect(rgba[1]).withContext("mix blend 0.0 .g").toEqualEpsilon(118, 1);
+        expect(rgba[2]).withContext("mix blend 0.0 .b").toEqualEpsilon(118, 1);
         expect(rgba[3]).withContext("mix blend 0.0 .a").toEqual(255);
       });
 
@@ -3473,7 +3568,7 @@ describe(
       expect(renderOptions).toRenderAndCall(function (rgba) {
         expect(rgba[0]).withContext("mix blend 1.0 .r").toEqual(replaceRed);
         expect(rgba[1]).withContext("mix blend 1.0 .g").toEqual(replaceGreen);
-        expect(rgba[2]).withContext("mix blend 1.0 .b").toEqualEpsilon(73, 1);
+        expect(rgba[2]).withContext("mix blend 1.0 .b").toEqualEpsilon(62, 1);
         expect(rgba[3]).withContext("mix blend 1.0 .a").toEqual(255);
       });
 
@@ -3488,7 +3583,7 @@ describe(
         expect(rgba[1]).withContext("mix yellow+alpha .g").toBeGreaterThan(0);
         expect(rgba[2])
           .withContext("mix yellow+alpha .b")
-          .toEqualEpsilon(43, 1);
+          .toEqualEpsilon(80, 1);
         expect(rgba[3]).withContext("mix yellow+alpha .a").toEqual(255);
       });
     }
@@ -4712,6 +4807,38 @@ describe(
       );
     });
 
+    it("allows setting the model matrix to its initial value when a tile contains a region", function () {
+      // Regression test for https://github.com/CesiumGS/cesium/issues/12002
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(
+        function (tileset) {
+          expect(function () {
+            viewAllTiles();
+
+            // Initially, the tileset tileset modelMatrix is the identity matrix.
+            // When changing it, the tile boundingVolume instances will become
+            // TileOrientedBoundingBox instances that have been created from the
+            // transformed regions.
+            tileset.modelMatrix = Matrix4.fromTranslation(
+              new Cartesian3(0.1, 0, 0),
+            );
+            scene.renderForSpecs();
+            expect(tileset.root.boundingVolume).toBeInstanceOf(
+              TileOrientedBoundingBox,
+            );
+
+            // When setting the modelMatrix back to its initial value, the tile
+            // boundingVolume instances should be the TileBoundingRegion instances
+            // that reflect the original bounding region
+            tileset.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+            scene.renderForSpecs();
+            expect(tileset.root.boundingVolume).toBeInstanceOf(
+              TileBoundingRegion,
+            );
+          }).not.toThrow();
+        },
+      );
+    });
+
     describe("clippingPolygons", () => {
       const positions = Cartesian3.fromRadiansArray([
         -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
@@ -5746,6 +5873,10 @@ describe(
         "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset_1.1.json";
       const implicitMultipleContentsUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
+      const externalInMultipleContentsUrl =
+        "Data/Cesium3DTiles/MultipleContents/ExternalInMultipleContents/tileset.json";
+      const onlyExternalInMultipleContentsUrl =
+        "Data/Cesium3DTiles/MultipleContents/OnlyExternalInMultipleContents/tileset.json";
 
       it("request statistics are updated correctly on success", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
@@ -5775,7 +5906,10 @@ describe(
 
         viewNothing();
 
-        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsUrl,
+          options,
+        );
         scene.primitives.add(tileset);
         viewAllTiles();
         scene.renderForSpecs();
@@ -5933,51 +6067,66 @@ describe(
         );
       });
 
-      it("raises tileFailed for external tileset inside multiple contents", async function () {
-        const originalLoadJson = Cesium3DTileset.loadJson;
-        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
-          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
-            const contents = [
-              {
-                uri: "external.json",
-              },
-              {
-                uri: "other.json",
-              },
-            ];
-            tilesetJson.root.contents = contents;
+      it("renders external tilesets in multiple contents", async function () {
+        // A tileset that has four contents in its root node:
+        // - One GLB
+        // - Three external tilesets that each have one GLB in their root node
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          externalInMultipleContentsUrl,
+        );
 
-            return tilesetJson;
-          });
+        // Look straight at the tileset with its 4 contents
+        scene.camera.lookAtTransform(Matrix4.IDENTITY);
+        scene.camera.setView({
+          destination: new Cartesian3(0.0, 0.0, -10),
+          orientation: {
+            direction: new Cartesian3(0.0, 0.0, 1.0),
+            up: new Cartesian3(0.0, 1.0, 0.0),
+          },
         });
 
-        viewNothing();
-        let errorCount = 0;
-
-        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
-        tileset.tileFailed.addEventListener(function (event) {
-          errorCount++;
-          expect(endsWith(event.url, ".json")).toBe(true);
-          expect(event.message).toEqual(
-            "External tilesets are disallowed inside multiple contents",
-          );
-        });
-        scene.primitives.add(tileset);
-
-        spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
-          const externalTileset = {
-            asset: {
-              version: "1.1",
-            },
-            root: {},
-          };
-          const buffer = generateJsonBuffer(externalTileset).buffer;
-          return Promise.resolve(buffer);
-        });
-        viewAllTiles();
-
+        scene.renderForSpecs();
         await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-        expect(errorCount).toBe(2);
+
+        // Expect the root node of the main tileset and the
+        // root nodes of the three external tilesets to be
+        // selected and visited
+        const statistics = tileset._statistics;
+        expect(statistics.visited).toEqual(4);
+        expect(statistics.selected).toEqual(4);
+      });
+
+      it("renders external tilesets when multiple contents only contains external tilesets", async function () {
+        // A tileset that has four contents in its root node
+        // that are all external tilesets, each with one GLB
+        // in their root node
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          onlyExternalInMultipleContentsUrl,
+        );
+
+        // Look straight at the tileset with its 4 contents
+        scene.camera.lookAtTransform(Matrix4.IDENTITY);
+        scene.camera.setView({
+          destination: new Cartesian3(0.0, 0.0, -10),
+          orientation: {
+            direction: new Cartesian3(0.0, 0.0, 1.0),
+            up: new Cartesian3(0.0, 1.0, 0.0),
+          },
+        });
+
+        scene.renderForSpecs();
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+        // Expect the root node of the main tileset and the
+        // root nodes of the four external tilesets to be
+        // visited, and the root nodes of the four external
+        // tilesets to be selected
+        const statistics = tileset._statistics;
+        console.log(statistics);
+        expect(statistics.visited).toEqual(5);
+        expect(statistics.selected).toEqual(4);
       });
 
       it("debugColorizeTiles for multiple contents", function () {
@@ -6230,61 +6379,6 @@ describe(
               for (let i = 0; i < expected.length; i++) {
                 expect(endsWith(uris[i], expected[i])).toBe(true);
               }
-            },
-          );
-        });
-      });
-
-      it("raises tileFailed for external tileset inside multiple contents (legacy)", function () {
-        const originalLoadJson = Cesium3DTileset.loadJson;
-        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
-          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
-            const extension =
-              tilesetJson.root.extensions["3DTILES_multiple_contents"];
-            extension.contents = [
-              {
-                uri: "external.json",
-              },
-              {
-                uri: "other.json",
-              },
-            ];
-
-            return tilesetJson;
-          });
-        });
-
-        spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
-          const externalTileset = {
-            asset: {
-              version: "1.0",
-            },
-            root: {},
-          };
-          const buffer = generateJsonBuffer(externalTileset).buffer;
-          return Promise.resolve(buffer);
-        });
-
-        viewNothing();
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          multipleContentsLegacyUrl,
-        ).then(function (tileset) {
-          let errorCount = 0;
-          tileset.tileFailed.addEventListener(function (event) {
-            errorCount++;
-            expect(endsWith(event.url, ".json")).toBe(true);
-            expect(event.message).toEqual(
-              "External tilesets are disallowed inside multiple contents",
-            );
-          });
-
-          viewAllTiles();
-          scene.renderForSpecs();
-
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              expect(errorCount).toBe(2);
             },
           );
         });

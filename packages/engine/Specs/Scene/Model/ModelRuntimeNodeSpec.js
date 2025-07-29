@@ -1,7 +1,6 @@
 import {
   Axis,
   Cartesian3,
-  defaultValue,
   InstancingPipelineStage,
   Matrix3,
   Matrix4,
@@ -42,7 +41,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     runtimeNode,
     originalTransform,
   ) {
-    originalTransform = defaultValue(originalTransform, transform);
+    originalTransform = originalTransform ?? transform;
 
     expect(runtimeNode.transform).toEqual(transform);
     expect(runtimeNode.originalTransform).toEqual(originalTransform);

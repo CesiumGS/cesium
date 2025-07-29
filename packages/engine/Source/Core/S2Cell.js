@@ -2,7 +2,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -382,7 +381,7 @@ S2Cell.prototype.getParentAtLevel = function (level) {
  * @private
  */
 S2Cell.prototype.getCenter = function (ellipsoid) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
 
   let center = getS2Center(this._cellId, this._level);
   // Normalize XYZ.
@@ -411,7 +410,7 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
 
   let vertex = getS2Vertex(this._cellId, this._level, index);
   // Normalize XYZ.

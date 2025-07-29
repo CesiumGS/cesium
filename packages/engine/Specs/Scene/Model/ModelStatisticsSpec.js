@@ -15,7 +15,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({});
-    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._textureIdByteLengths).toEqual({});
     expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
@@ -27,7 +27,7 @@ describe("Scene/Model/ModelStatistics", function () {
     statistics.texturesByteLength = 10;
     statistics.propertyTablesByteLength = 10;
     statistics._bufferIdSet = { uuid1: true, uuid2: true };
-    statistics._textureIdSet = { uuid3: true };
+    statistics._textureIdByteLengths = { uuid3: 1234 };
 
     const map = new AssociativeArray();
     map.set("uuid", {});
@@ -41,7 +41,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({});
-    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._textureIdByteLengths).toEqual({});
     expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
@@ -78,7 +78,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({ uuid: true });
-    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._textureIdByteLengths).toEqual({});
     expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
@@ -99,7 +99,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({ uuid: true });
-    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._textureIdByteLengths).toEqual({});
     expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
@@ -129,7 +129,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({ uuid1: true, uuid2: true });
-    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._textureIdByteLengths).toEqual({});
     expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
@@ -158,7 +158,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({});
-    expect(statistics._textureIdSet).toEqual({ uuid: true });
+    expect(statistics._textureIdByteLengths).toEqual({ uuid: 10 });
     expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
@@ -188,7 +188,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({});
-    expect(statistics._textureIdSet).toEqual({ uuid1: true, uuid2: true });
+    expect(statistics._textureIdByteLengths).toEqual({ uuid1: 2, uuid2: 3 });
     expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
@@ -219,7 +219,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({});
-    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._textureIdByteLengths).toEqual({});
     expect(statistics._batchTextureIdMap).toEqual(expectedMap);
 
     // Simulate creating a batch texture
@@ -265,7 +265,7 @@ describe("Scene/Model/ModelStatistics", function () {
     expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics.batchTexturesByteLength).toBe(0);
     expect(statistics._bufferIdSet).toEqual({});
-    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._textureIdByteLengths).toEqual({});
     expect(statistics._batchTextureIdMap).toEqual(expectedMap);
 
     // Simulate creating first batch texture

@@ -1,5 +1,4 @@
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -274,10 +273,7 @@ function getFeatureHash(symbologyData, outlinesHash, featureIndex) {
     indices: {},
     edges: {},
   });
-  const featureSymbology = defaultValue(
-    symbologyData[featureIndex],
-    symbologyData.default,
-  );
+  const featureSymbology = symbologyData[featureIndex] ?? symbologyData.default;
   newFeatureHash.hasOutline = defined(featureSymbology?.edges);
   return newFeatureHash;
 }

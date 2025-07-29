@@ -1,0 +1,122 @@
+{
+  "asset": {
+    "version": "2.0"
+  },
+  "extensionsUsed": [
+    "KHR_implicit_shapes",
+    "EXT_implicit_cylinder_region",
+    "EXT_primitive_voxels",
+    "EXT_structural_metadata"
+  ],
+  "extensionsRequired": [
+    "KHR_implicit_shapes",
+    "EXT_implicit_cylinder_region",
+    "EXT_primitive_voxels"
+  ],
+  "extensions": {
+    "KHR_implicit_shapes": {
+      "shapes": [
+        {
+          "type": "cylinder region",
+          "extensions": {
+            "EXT_implicit_cylinder_region": {
+              "minRadius": 0,
+              "maxRadius": 1,
+              "height": 2
+            }
+          }
+        }
+      ]
+    },
+    "EXT_structural_metadata": {
+      "schema": {
+        "classes": {
+          "voxel": {
+            "properties": {
+              "a": {
+                "type": "VEC4",
+                "componentType": "FLOAT32"
+              }
+            }
+          }
+        }
+      },
+      "propertyAttributes": [
+        {
+          "class": "voxel",
+          "properties": {
+            "a": {
+              "attribute": "_DATA"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "_DATA": 0
+          },
+          "mode": 2147483647,
+          "extensions": {
+            "EXT_primitive_voxels": {
+              "shape": 0,
+              "dimensions": [
+                2,
+                2,
+                2
+              ]
+            },
+            "EXT_structural_metadata": {
+              "propertyAttributes": [0]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 8,
+      "max": [
+        1.0, 1.0, 1.0, 1.0
+      ],
+      "min": [
+        0.0, 0.0, 0.0, 0.0
+      ],
+      "type": "VEC4"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 128
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "a.bin",
+      "byteLength": 128
+    }
+  ]
+}

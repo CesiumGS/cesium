@@ -1,5 +1,5 @@
 import Check from "../../../../Core/Check.js";
-import defaultValue from "../../../../Core/defaultValue.js";
+import Frozen from "../../../../Core/Frozen.js";
 import defined from "../../../../Core/defined.js";
 import ResourceCache from "../../../ResourceCache.js";
 import ResourceLoader from "../../../ResourceLoader.js";
@@ -39,7 +39,7 @@ import MeshPrimitiveGpmLocal from "./MeshPrimitiveGpmLocal.js";
  * @private
  */
 function GltfMeshPrimitiveGpmLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const gltf = options.gltf;
   const extension = options.extension;
   const gltfResource = options.gltfResource;
@@ -47,7 +47,7 @@ function GltfMeshPrimitiveGpmLoader(options) {
   const supportedImageFormats = options.supportedImageFormats;
   const frameState = options.frameState;
   const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
+  const asynchronous = options.asynchronous ?? true;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -234,7 +234,7 @@ GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache = new Map();
  * Create the JSON description of a metadata class that treats
  * the given PPE texture as a property texture property.
  *
- * @param {any} ppeTexture - The PPE texture
+ * @param {PpeTexture} ppeTexture - The PPE texture
  * @param {number} index - The index of the texture in the extension
  * @returns The class JSON
  */
@@ -268,9 +268,9 @@ GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson = function (
   // property values when they are `normalized`, the values will be
   // declared as `normalized` here.
   // The normalization factor will later have to be cancelled out,
-  // when integrating the `scale` into the actual property texture
-  // property. In the property texture property, the `scale` has to
-  // be multiplied by 255.
+  // with the `scale` being multiplied by 255.
+  const offset = ppeTexture.offset ?? 0.0;
+  const scale = (ppeTexture.scale ?? 1.0) * 255.0;
   const classJson = {
     name: `PPE texture class ${index}`,
     properties: {
@@ -279,6 +279,8 @@ GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson = function (
         type: "SCALAR",
         componentType: "UINT8",
         normalized: true,
+        offset: offset,
+        scale: scale,
         min: traits.min,
         max: traits.max,
       },
@@ -406,19 +408,12 @@ GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata = function (
     const ppePropertyName = traits.source;
     const metadataClass = ppeTexturesMetadataSchema.classes[classId];
 
-    // The class property has been declared as `normalized`, so
-    // that `offset` and `scale` can be applied. The normalization
-    // factor has to be cancelled out here, by multiplying the
-    // `scale` with 255.
-    const scale = (ppeTexture.scale ?? 1.0) * 255.0;
     const ppeTextureAsPropertyTexture = {
       class: classId,
       properties: {
         [ppePropertyName]: {
           index: ppeTexture.index,
           texCoord: ppeTexture.texCoord,
-          offset: ppeTexture.offset,
-          scale: scale,
         },
       },
     };

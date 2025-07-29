@@ -1,4 +1,5 @@
 import {
+  addAllToArray,
   BlendingState,
   BoundingSphere,
   Cartesian3,
@@ -6,7 +7,6 @@ import {
   ClassificationType,
   clone,
   Color,
-  defaultValue,
   DepthFunction,
   DrawCommand,
   Matrix4,
@@ -52,8 +52,8 @@ describe(
     };
 
     function mockRenderResources(options) {
-      const debugWireframe = defaultValue(options.debugWireframe, false);
-      const allowPicking = defaultValue(options.allowPicking, false);
+      const debugWireframe = options.debugWireframe ?? false;
+      const allowPicking = options.allowPicking ?? false;
       return {
         model: {
           classificationType: options.classificationType,
@@ -71,7 +71,7 @@ describe(
     }
 
     function createDrawCommand(options) {
-      options = defaultValue(options, {});
+      options = options ?? {};
       options.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
       const boundingSphere = new BoundingSphere(Cartesian3.ZERO, 1.0);
@@ -81,10 +81,7 @@ describe(
         boundingSphere,
       );
 
-      options.renderState = defaultValue(
-        options.renderState,
-        RenderState.fromCache(),
-      );
+      options.renderState = options.renderState ?? RenderState.fromCache();
 
       options.pass = Pass.OPAQUE;
       options.uniformMap = {};
@@ -98,7 +95,7 @@ describe(
       expectedStencilFunction,
       testForPicking,
     ) {
-      testForPicking = defaultValue(testForPicking, false);
+      testForPicking = testForPicking ?? false;
 
       expect(command.pass).toBe(expectedPass);
       expect(command.pickId).toBeUndefined();
@@ -155,7 +152,7 @@ describe(
     expectedColorCommandBlending.color = noColor;
 
     function verifyColorCommand(command, expectedPass, testForPicking) {
-      testForPicking = defaultValue(testForPicking, false);
+      testForPicking = testForPicking ?? false;
 
       expect(command.pass).toBe(expectedPass);
 
@@ -223,7 +220,7 @@ describe(
       const numBatches = batchLengths.length;
       expect(commandList.length).toEqual(numBatches * 2);
 
-      testForPicking = defaultValue(testForPicking, false);
+      testForPicking = testForPicking ?? false;
 
       for (let i = 0; i < numBatches; i++) {
         const stencilDepthCommand = commandList[i * 2];
@@ -814,8 +811,8 @@ describe(
       expect(drawCommand.modelMatrix).toBe(command.modelMatrix);
 
       const commandList = [];
-      commandList.push.apply(commandList, drawCommand._commandListTerrain);
-      commandList.push.apply(commandList, drawCommand._commandList3DTiles);
+      addAllToArray(commandList, drawCommand._commandListTerrain);
+      addAllToArray(commandList, drawCommand._commandList3DTiles);
 
       const length = commandList.length;
       expect(length).toEqual(12);

@@ -22,6 +22,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     const imageBasedLighting = new ImageBasedLighting();
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
+      environmentMapManager: {},
       _iblReferenceFrameMatrix: Matrix3.clone(Matrix3.IDENTITY),
     };
 
@@ -40,12 +41,10 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "USE_IBL_LIGHTING",
-      "USE_SUN_LUMINANCE",
     ]);
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
       "uniform vec2 model_iblFactor;",
       "uniform mat3 model_iblReferenceFrameMatrix;",
-      "uniform float model_luminanceAtZenith;",
     ]);
 
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
@@ -66,10 +65,6 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
         mockModel._iblReferenceFrameMatrix,
       ),
     ).toBe(true);
-
-    expect(uniformMap.model_luminanceAtZenith()).toEqual(
-      imageBasedLighting.luminanceAtZenith,
-    );
   });
 
   // These are dummy values, not meant to represent valid spherical harmonic coefficients.
@@ -89,10 +84,10 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     const imageBasedLighting = new ImageBasedLighting({
       sphericalHarmonicCoefficients: testCoefficients,
     });
-    imageBasedLighting.luminanceAtZenith = undefined;
 
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
+      environmentMapManager: {},
       _iblReferenceFrameMatrix: Matrix3.clone(Matrix3.IDENTITY),
     };
 
@@ -151,11 +146,11 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     const imageBasedLighting = new ImageBasedLighting({
       specularEnvironmentMaps: "example.ktx2",
     });
-    imageBasedLighting.luminanceAtZenith = undefined;
     imageBasedLighting._specularEnvironmentCubeMap = mockCubeMap;
 
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
+      environmentMapManager: {},
       _iblReferenceFrameMatrix: Matrix3.clone(Matrix3.IDENTITY),
     };
 

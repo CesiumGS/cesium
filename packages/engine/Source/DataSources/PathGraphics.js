@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -44,7 +44,7 @@ function PathGraphics(options) {
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PathGraphics.prototype, {
@@ -149,15 +149,13 @@ PathGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.leadTime = defaultValue(this.leadTime, source.leadTime);
-  this.trailTime = defaultValue(this.trailTime, source.trailTime);
-  this.width = defaultValue(this.width, source.width);
-  this.resolution = defaultValue(this.resolution, source.resolution);
-  this.material = defaultValue(this.material, source.material);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition,
-  );
+  this.show = this.show ?? source.show;
+  this.leadTime = this.leadTime ?? source.leadTime;
+  this.trailTime = this.trailTime ?? source.trailTime;
+  this.width = this.width ?? source.width;
+  this.resolution = this.resolution ?? source.resolution;
+  this.material = this.material ?? source.material;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
 export default PathGraphics;

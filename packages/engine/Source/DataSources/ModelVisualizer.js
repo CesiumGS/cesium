@@ -4,7 +4,6 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -35,6 +34,9 @@ const defaultColor = Color.WHITE;
 const defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
 const defaultColorBlendAmount = 0.5;
 const defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+const defaultEnvironmentMapOptions = {
+  maximumPositionEpsilon: Number.POSITIVE_INFINITY,
+};
 
 const modelMatrixScratch = new Matrix4();
 const nodeMatrixScratch = new Matrix4();
@@ -76,6 +78,7 @@ async function createModelPrimitive(
   entity,
   resource,
   incrementallyLoadTextures,
+  environmentMapOptions,
 ) {
   const primitives = visualizer._primitives;
   const modelHash = visualizer._modelHash;
@@ -85,6 +88,7 @@ async function createModelPrimitive(
       url: resource,
       incrementallyLoadTextures: incrementallyLoadTextures,
       scene: visualizer._scene,
+      environmentMapOptions: environmentMapOptions,
     });
 
     if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
@@ -176,6 +180,9 @@ ModelVisualizer.prototype.update = function (time) {
         articulationsScratch: {},
         loadFailed: false,
         modelUpdated: false,
+        environmentMapOptionsScratch: {
+          ...defaultEnvironmentMapOptions,
+        },
       };
       modelHash[entity.id] = modelData;
 
@@ -185,7 +192,20 @@ ModelVisualizer.prototype.update = function (time) {
         defaultIncrementallyLoadTextures,
       );
 
-      createModelPrimitive(this, entity, resource, incrementallyLoadTextures);
+      const environmentMapOptions = Property.getValueOrDefault(
+        modelGraphics._environmentMapOptions,
+        time,
+        defaultEnvironmentMapOptions,
+        modelData.environmentMapOptionsScratch,
+      );
+
+      createModelPrimitive(
+        this,
+        entity,
+        resource,
+        incrementallyLoadTextures,
+        environmentMapOptions,
+      );
     }
 
     const model = modelData.modelPrimitive;
@@ -450,7 +470,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
 
   const scene = this._scene;
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
   if (hasHeightReference) {

@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Intersect from "./Intersect.js";
@@ -22,7 +21,7 @@ function CullingVolume(planes) {
    * @type {Cartesian4[]}
    * @default []
    */
-  this.planes = defaultValue(planes, []);
+  this.planes = planes ?? [];
 }
 
 const faces = [new Cartesian3(), new Cartesian3(), new Cartesian3()];

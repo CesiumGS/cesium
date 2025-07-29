@@ -41,6 +41,7 @@
           timeline: false,
           animation: false,
           baseLayerPicker: false,
+          geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
         });
         const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
@@ -56,7 +57,10 @@
 
         let worldTileset;
         try {
-          worldTileset = await Cesium.createGooglePhotorealistic3DTileset();
+          worldTileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
           viewer.scene.primitives.add(worldTileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
@@ -227,7 +231,7 @@
                     ],
                   },
                   material: "../images/Cesium_Logo_Color.jpg",
-                  classificationType: Cesium.ClassificationType.TERRAIN,
+                  classificationType: Cesium.ClassificationType.BOTH,
                   stRotation: Cesium.Math.toRadians(45),
                 },
               });

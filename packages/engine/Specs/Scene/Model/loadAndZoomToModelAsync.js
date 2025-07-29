@@ -2,6 +2,14 @@ import { Model } from "../../../index.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
 async function loadAndZoomToModelAsync(options, scene) {
+  options = {
+    environmentMapOptions: {
+      enabled: false, // disable other diffuse lighting by default
+      ...options.environmentMapOptions,
+    },
+    ...options,
+  };
+
   const model = await Model.fromGltfAsync(options);
   scene.primitives.add(model);
 

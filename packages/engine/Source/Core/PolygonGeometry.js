@@ -6,7 +6,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -690,19 +690,16 @@ function PolygonGeometry(options) {
   //>>includeEnd('debug');
 
   const polygonHierarchy = options.polygonHierarchy;
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  const stRotation = defaultValue(options.stRotation, 0.0);
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const stRotation = options.stRotation ?? 0.0;
   const textureCoordinates = options.textureCoordinates;
-  const perPositionHeight = defaultValue(options.perPositionHeight, false);
+  const perPositionHeight = options.perPositionHeight ?? false;
   const perPositionHeightExtrude =
     perPositionHeight && defined(options.extrudedHeight);
-  let height = defaultValue(options.height, 0.0);
-  let extrudedHeight = defaultValue(options.extrudedHeight, height);
+  let height = options.height ?? 0.0;
+  let extrudedHeight = options.extrudedHeight ?? height;
 
   if (!perPositionHeightExtrude) {
     const h = Math.max(height, extrudedHeight);
@@ -716,15 +713,15 @@ function PolygonGeometry(options) {
   this._stRotation = stRotation;
   this._height = height;
   this._extrudedHeight = extrudedHeight;
-  this._closeTop = defaultValue(options.closeTop, true);
-  this._closeBottom = defaultValue(options.closeBottom, true);
+  this._closeTop = options.closeTop ?? true;
+  this._closeBottom = options.closeBottom ?? true;
   this._polygonHierarchy = polygonHierarchy;
   this._perPositionHeight = perPositionHeight;
   this._perPositionHeightExtrude = perPositionHeightExtrude;
-  this._shadowVolume = defaultValue(options.shadowVolume, false);
+  this._shadowVolume = options.shadowVolume ?? false;
   this._workerName = "createPolygonGeometry";
   this._offsetAttribute = options.offsetAttribute;
-  this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+  this._arcType = options.arcType ?? ArcType.GEODESIC;
 
   this._rectangle = undefined;
   this._textureCoordinateRotationPoints = undefined;
@@ -784,7 +781,7 @@ function PolygonGeometry(options) {
  * @see PolygonGeometry#createGeometry
  */
 PolygonGeometry.fromPositions = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.positions", options.positions);
@@ -825,7 +822,7 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
@@ -849,7 +846,7 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
   array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-  array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex++] = value._offsetAttribute ?? -1;
   array[startingIndex++] = value._arcType;
   if (defined(value._textureCoordinates)) {
     startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
@@ -879,13 +876,14 @@ const dummyOptions = {
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PolygonGeometry} [result] The object into which to store the result.
+ * @returns {PolygonGeometry} The modified result parameter or a new PolygonGeometry instance if one was not provided.
  */
 PolygonGeometry.unpack = function (array, startingIndex, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,

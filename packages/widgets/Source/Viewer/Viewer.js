@@ -2,36 +2,24 @@ import {
   BoundingSphere,
   BoundingSphereState,
   Cartesian3,
-  Cartographic,
   CesiumWidget,
   Cesium3DTileFeature,
-  Cesium3DTileset,
   Clock,
-  computeFlyToLocationForRectangle,
   ConstantPositionProperty,
-  DataSourceCollection,
-  DataSourceDisplay,
-  defaultValue,
+  Frozen,
   defined,
   destroyObject,
   DeveloperError,
   Entity,
-  EntityView,
   Event,
   EventHelper,
   getElement,
-  HeadingPitchRange,
-  ImageryLayer,
   JulianDate,
   Math as CesiumMath,
-  Matrix4,
   Property,
-  SceneMode,
   ScreenSpaceEventType,
-  TimeDynamicPointCloud,
-  VoxelPrimitive,
+  IonGeocoderService,
 } from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
 import BaseLayerPicker from "../BaseLayerPicker/BaseLayerPicker.js";
@@ -116,7 +104,7 @@ function getCesium3DTileFeatureName(feature) {
 function pickEntity(viewer, e) {
   const picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
-    const id = defaultValue(picked.id, picked.primitive.id);
+    const id = picked.id ?? picked.primitive.id;
     if (id instanceof Entity) {
       return id;
     }
@@ -138,26 +126,23 @@ function pickEntity(viewer, e) {
 
 const scratchStopTime = new JulianDate();
 
-function trackDataSourceClock(timeline, clock, dataSource) {
+function linkTimelineToDataSourceClock(timeline, dataSource) {
   if (defined(dataSource)) {
     const dataSourceClock = dataSource.clock;
-    if (defined(dataSourceClock)) {
-      dataSourceClock.getValue(clock);
-      if (defined(timeline)) {
-        const startTime = dataSourceClock.startTime;
-        let stopTime = dataSourceClock.stopTime;
-        // When the start and stop times are equal, set the timeline to the shortest interval
-        // starting at the start time. This prevents an invalid timeline configuration.
-        if (JulianDate.equals(startTime, stopTime)) {
-          stopTime = JulianDate.addSeconds(
-            startTime,
-            CesiumMath.EPSILON2,
-            scratchStopTime,
-          );
-        }
-        timeline.updateFromClock();
-        timeline.zoomTo(startTime, stopTime);
+    if (defined(dataSourceClock) && defined(timeline)) {
+      const startTime = dataSourceClock.startTime;
+      let stopTime = dataSourceClock.stopTime;
+      // When the start and stop times are equal, set the timeline to the shortest interval
+      // starting at the start time. This prevents an invalid timeline configuration.
+      if (JulianDate.equals(startTime, stopTime)) {
+        stopTime = JulianDate.addSeconds(
+          startTime,
+          CesiumMath.EPSILON2,
+          scratchStopTime,
+        );
       }
+      timeline.updateFromClock();
+      timeline.zoomTo(startTime, stopTime);
     }
   }
 }
@@ -296,7 +281,7 @@ function enableVRUI(viewer, enabled) {
  * @property {boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
  * @property {boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
  * @property {boolean} [vrButton=false] If set to true, the VRButton widget will be created.
- * @property {boolean|GeocoderService[]} [geocoder=true] If set to false, the Geocoder widget will not be created.
+ * @property {boolean|IonGeocodeProviderType|GeocoderService[]} [geocoder=IonGeocodeProviderType.DEFAULT] The geocoding service or services to use when searching with the Geocoder widget. If set to false, the Geocoder widget will not be created.
  * @property {boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
  * @property {boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
  * @property {boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
@@ -311,7 +296,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
- * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
+ * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false. Cannot be used when `globe` is set to false.
  * @property {Ellipsoid} [ellipsoid = Ellipsoid.default] The default ellipsoid.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
@@ -416,7 +401,17 @@ function Viewer(container, options) {
   //>>includeEnd('debug');
 
   container = getElement(container);
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
+
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    options.globe === false &&
+    defined(options.baseLayer) &&
+    options.baseLayer !== false
+  ) {
+    throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
+  }
+  //>>includeEnd('debug');
 
   const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
@@ -444,7 +439,7 @@ Either specify options.baseLayer instead or set options.baseLayerPicker to true.
 Either specify options.terrainProvider instead or set options.baseLayerPicker to true.",
     );
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const that = this;
 
@@ -463,7 +458,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   viewerContainer.appendChild(bottomContainer);
 
-  const scene3DOnly = defaultValue(options.scene3DOnly, false);
+  const scene3DOnly = options.scene3DOnly ?? false;
 
   let clock;
   let clockViewModel;
@@ -477,10 +472,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     destroyClockViewModel = true;
   }
 
-  if (defined(options.shouldAnimate)) {
-    clock.shouldAnimate = options.shouldAnimate;
-  }
-
   // Cesium widget
   const cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
     baseLayer:
@@ -491,6 +482,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         ? false
         : undefined,
     clock: clock,
+    shouldAnimate: options.shouldAnimate,
     skyBox: options.skyBox,
     skyAtmosphere: options.skyAtmosphere,
     sceneMode: options.sceneMode,
@@ -498,6 +490,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     mapProjection: options.mapProjection,
     globe: options.globe,
     orderIndependentTranslucency: options.orderIndependentTranslucency,
+    automaticallyTrackDataSourceClocks:
+      options.automaticallyTrackDataSourceClocks,
     contextOptions: options.contextOptions,
     useDefaultRenderLoop: options.useDefaultRenderLoop,
     targetFrameRate: options.targetFrameRate,
@@ -507,6 +501,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       ? options.creditContainer
       : bottomContainer,
     creditViewport: options.creditViewport,
+    dataSources: options.dataSources,
     scene3DOnly: scene3DOnly,
     shadows: options.shadows,
     terrainShadows: options.terrainShadows,
@@ -518,24 +513,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     msaaSamples: options.msaaSamples,
   });
 
-  let dataSourceCollection = options.dataSources;
-  let destroyDataSourceCollection = false;
-  if (!defined(dataSourceCollection)) {
-    dataSourceCollection = new DataSourceCollection();
-    destroyDataSourceCollection = true;
-  }
-
   const scene = cesiumWidget.scene;
-
-  const dataSourceDisplay = new DataSourceDisplay({
-    scene: scene,
-    dataSourceCollection: dataSourceCollection,
-  });
 
   const eventHelper = new EventHelper();
 
   eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
-  eventHelper.add(scene.morphStart, Viewer.prototype._clearTrackedObject, this);
 
   // Selection Indicator
   let selectionIndicator;
@@ -586,7 +568,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     geocoderContainer.className = "cesium-viewer-geocoderContainer";
     toolbar.appendChild(geocoderContainer);
     let geocoderService;
-    if (defined(options.geocoder) && typeof options.geocoder !== "boolean") {
+    if (typeof options.geocoder === "string") {
+      geocoderService = [
+        new IonGeocoderService({
+          scene,
+          geocodeProviderType: options.geocoder,
+        }),
+      ];
+    } else if (
+      defined(options.geocoder) &&
+      typeof options.geocoder !== "boolean"
+    ) {
       geocoderService = Array.isArray(options.geocoder)
         ? options.geocoder
         : [options.geocoder];
@@ -653,14 +645,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   let baseLayerPicker;
   let baseLayerPickerDropDown;
   if (createBaseLayerPicker) {
-    const imageryProviderViewModels = defaultValue(
-      options.imageryProviderViewModels,
-      createDefaultImageryProviderViewModels(),
-    );
-    const terrainProviderViewModels = defaultValue(
-      options.terrainProviderViewModels,
-      createDefaultTerrainProviderViewModels(),
-    );
+    const imageryProviderViewModels =
+      options.imageryProviderViewModels ??
+      createDefaultImageryProviderViewModels();
+    const terrainProviderViewModels =
+      options.terrainProviderViewModels ??
+      createDefaultTerrainProviderViewModels();
 
     baseLayerPicker = new BaseLayerPicker(toolbar, {
       globe: scene.globe,
@@ -702,7 +692,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         "Specify either options.terrainProvider or options.terrain.",
       );
     }
-    //>>includeEnd('debug')
+    //>>includeEnd('debug');
 
     if (createBaseLayerPicker) {
       // Required as this is otherwise set by the baseLayerPicker
@@ -737,10 +727,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     }
     navigationHelpButton = new NavigationHelpButton({
       container: toolbar,
-      instructionsInitiallyVisible: defaultValue(
-        options.navigationInstructionsInitiallyVisible,
-        showNavHelp,
-      ),
+      instructionsInitiallyVisible:
+        options.navigationInstructionsInitiallyVisible ?? showNavHelp,
     });
   }
 
@@ -841,19 +829,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._vrSubscription = vrSubscription;
   this._vrModeSubscription = vrModeSubscription;
   this._dataSourceChangedListeners = {};
-  this._automaticallyTrackDataSourceClocks = defaultValue(
-    options.automaticallyTrackDataSourceClocks,
-    true,
-  );
   this._container = container;
   this._bottomContainer = bottomContainer;
   this._element = viewerContainer;
   this._cesiumWidget = cesiumWidget;
   this._selectionIndicator = selectionIndicator;
   this._infoBox = infoBox;
-  this._dataSourceCollection = dataSourceCollection;
-  this._destroyDataSourceCollection = destroyDataSourceCollection;
-  this._dataSourceDisplay = dataSourceDisplay;
   this._clockViewModel = clockViewModel;
   this._destroyClockViewModel = destroyClockViewModel;
   this._toolbar = toolbar;
@@ -870,25 +851,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._eventHelper = eventHelper;
   this._lastWidth = 0;
   this._lastHeight = 0;
-  this._allowDataSourcesToSuspendAnimation = true;
-  this._entityView = undefined;
   this._enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
-  this._clockTrackedDataSource = undefined;
-  this._trackedEntity = undefined;
-  this._needTrackedEntityUpdate = false;
   this._selectedEntity = undefined;
-  this._zoomIsFlight = false;
-  this._zoomTarget = undefined;
-  this._zoomPromise = undefined;
-  this._zoomOptions = undefined;
   this._selectedEntityChanged = new Event();
-  this._trackedEntityChanged = new Event();
 
-  knockout.track(this, [
-    "_trackedEntity",
-    "_selectedEntity",
-    "_clockTrackedDataSource",
-  ]);
+  const dataSourceCollection = this._cesiumWidget.dataSources;
+  const dataSourceDisplay = this._cesiumWidget.dataSourceDisplay;
 
   //Listen to data source events in order to track clock changes.
   eventHelper.add(
@@ -904,7 +872,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   // Prior to each render, check if anything needs to be resized.
   eventHelper.add(scene.postUpdate, Viewer.prototype.resize, this);
-  eventHelper.add(scene.postRender, Viewer.prototype._postRender, this);
 
   // We need to subscribe to the data sources and collections so that we can clear the
   // tracked object when it is removed from the scene.
@@ -956,6 +923,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     pickAndTrackObject,
     ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
   );
+
+  // This allows to update the Viewer's _clockViewModel instead of the CesiumWidget's _clock
+  // when CesiumWidget is created from the Viewer.
+  cesiumWidget._canAnimateUpdateCallback = this._updateCanAnimate(this);
 }
 
 Object.defineProperties(Viewer.prototype, {
@@ -1160,7 +1131,7 @@ Object.defineProperties(Viewer.prototype, {
    */
   dataSourceDisplay: {
     get: function () {
-      return this._dataSourceDisplay;
+      return this._cesiumWidget.dataSourceDisplay;
     },
   },
 
@@ -1173,7 +1144,7 @@ Object.defineProperties(Viewer.prototype, {
    */
   entities: {
     get: function () {
-      return this._dataSourceDisplay.defaultDataSource.entities;
+      return this._cesiumWidget.entities;
     },
   },
 
@@ -1185,7 +1156,7 @@ Object.defineProperties(Viewer.prototype, {
    */
   dataSources: {
     get: function () {
-      return this._dataSourceCollection;
+      return this._cesiumWidget.dataSources;
     },
   },
 
@@ -1452,10 +1423,10 @@ Object.defineProperties(Viewer.prototype, {
    */
   allowDataSourcesToSuspendAnimation: {
     get: function () {
-      return this._allowDataSourcesToSuspendAnimation;
+      return this._cesiumWidget.allowDataSourcesToSuspendAnimation;
     },
     set: function (value) {
-      this._allowDataSourcesToSuspendAnimation = value;
+      this._cesiumWidget.allowDataSourcesToSuspendAnimation = value;
     },
   },
 
@@ -1466,46 +1437,10 @@ Object.defineProperties(Viewer.prototype, {
    */
   trackedEntity: {
     get: function () {
-      return this._trackedEntity;
+      return this._cesiumWidget.trackedEntity;
     },
     set: function (value) {
-      if (this._trackedEntity !== value) {
-        this._trackedEntity = value;
-
-        //Cancel any pending zoom
-        cancelZoom(this);
-
-        const scene = this.scene;
-        const sceneMode = scene.mode;
-
-        //Stop tracking
-        if (!defined(value) || !defined(value.position)) {
-          this._needTrackedEntityUpdate = false;
-          if (
-            sceneMode === SceneMode.COLUMBUS_VIEW ||
-            sceneMode === SceneMode.SCENE2D
-          ) {
-            scene.screenSpaceCameraController.enableTranslate = true;
-          }
-
-          if (
-            sceneMode === SceneMode.COLUMBUS_VIEW ||
-            sceneMode === SceneMode.SCENE3D
-          ) {
-            scene.screenSpaceCameraController.enableTilt = true;
-          }
-
-          this._entityView = undefined;
-          this.camera.lookAtTransform(Matrix4.IDENTITY);
-        } else {
-          //We can't start tracking immediately, so we set a flag and start tracking
-          //when the bounding sphere is ready (most likely next frame).
-          this._needTrackedEntityUpdate = true;
-        }
-
-        this._trackedEntityChanged.raiseEvent(value);
-        this.scene.requestRender();
-      }
+      this._cesiumWidget.trackedEntity = value;
     },
   },
   /**
@@ -1558,7 +1493,7 @@ Object.defineProperties(Viewer.prototype, {
    */
   trackedEntityChanged: {
     get: function () {
-      return this._trackedEntityChanged;
+      return this._cesiumWidget.trackedEntityChanged;
     },
   },
   /**
@@ -1568,12 +1503,12 @@ Object.defineProperties(Viewer.prototype, {
    */
   clockTrackedDataSource: {
     get: function () {
-      return this._clockTrackedDataSource;
+      return this._cesiumWidget.clockTrackedDataSource;
     },
     set: function (value) {
-      if (this._clockTrackedDataSource !== value) {
-        this._clockTrackedDataSource = value;
-        trackDataSourceClock(this._timeline, this.clock, value);
+      if (this._cesiumWidget.clockTrackedDataSource !== value) {
+        this._cesiumWidget.clockTrackedDataSource = value;
+        linkTimelineToDataSourceClock(this._timeline, value);
       }
     },
   },
@@ -1594,7 +1529,7 @@ Viewer.prototype.extend = function (mixin, options) {
   if (!defined(mixin)) {
     throw new DeveloperError("mixin is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   mixin(this, options);
 };
@@ -1738,7 +1673,6 @@ Viewer.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 Viewer.prototype.destroy = function () {
-  let i;
   if (
     defined(this.screenSpaceEventHandler) &&
     !this.screenSpaceEventHandler.isDestroyed()
@@ -1750,14 +1684,6 @@ Viewer.prototype.destroy = function () {
       ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
   }
-
-  // Unsubscribe from data sources
-  const dataSources = this.dataSources;
-  const dataSourceLength = dataSources.length;
-  for (i = 0; i < dataSourceLength; i++) {
-    this._dataSourceRemoved(dataSources, dataSources.get(i));
-  }
-  this._dataSourceRemoved(undefined, this._dataSourceDisplay.defaultDataSource);
 
   this._container.removeChild(this._element);
   this._element.removeChild(this._toolbar);
@@ -1825,12 +1751,7 @@ Viewer.prototype.destroy = function () {
   if (this._destroyClockViewModel) {
     this._clockViewModel = this._clockViewModel.destroy();
   }
-  this._dataSourceDisplay = this._dataSourceDisplay.destroy();
   this._cesiumWidget = this._cesiumWidget.destroy();
-
-  if (this._destroyDataSourceCollection) {
-    this._dataSourceCollection = this._dataSourceCollection.destroy();
-  }
 
   return destroyObject(this);
 };
@@ -1862,14 +1783,6 @@ Viewer.prototype._dataSourceRemoved = function (
     this,
   );
 
-  if (defined(this.trackedEntity)) {
-    if (
-      entityCollection.getById(this.trackedEntity.id) === this.trackedEntity
-    ) {
-      this.trackedEntity = undefined;
-    }
-  }
-
   if (defined(this.selectedEntity)) {
     if (
       entityCollection.getById(this.selectedEntity.id) === this.selectedEntity
@@ -1882,26 +1795,17 @@ Viewer.prototype._dataSourceRemoved = function (
 /**
  * @private
  */
+Viewer.prototype._updateCanAnimate = function (that) {
+  return function (isUpdated) {
+    that._clockViewModel.canAnimate = isUpdated;
+  };
+};
+
+/**
+ * @private
+ */
 Viewer.prototype._onTick = function (clock) {
   const time = clock.currentTime;
-
-  const isUpdated = this._dataSourceDisplay.update(time);
-  if (this._allowDataSourcesToSuspendAnimation) {
-    this._clockViewModel.canAnimate = isUpdated;
-  }
-
-  const entityView = this._entityView;
-  if (defined(entityView)) {
-    const trackedEntity = this._trackedEntity;
-    const trackedState = this._dataSourceDisplay.getBoundingSphere(
-      trackedEntity,
-      true,
-      boundingSphereScratch,
-    );
-    if (trackedState === BoundingSphereState.DONE) {
-      entityView.update(time, boundingSphereScratch);
-    }
-  }
 
   let position;
   let enableCamera = false;
@@ -1913,7 +1817,7 @@ Viewer.prototype._onTick = function (clock) {
     selectedEntity.isShowing &&
     selectedEntity.isAvailable(time)
   ) {
-    const state = this._dataSourceDisplay.getBoundingSphere(
+    const state = this._cesiumWidget.dataSourceDisplay.getBoundingSphere(
       selectedEntity,
       true,
       boundingSphereScratch,
@@ -1948,10 +1852,7 @@ Viewer.prototype._onTick = function (clock) {
       this.trackedEntity === this.selectedEntity;
 
     if (showSelection) {
-      infoBoxViewModel.titleText = defaultValue(
-        selectedEntity.name,
-        selectedEntity.id,
-      );
+      infoBoxViewModel.titleText = selectedEntity.name ?? selectedEntity.id;
       infoBoxViewModel.description = Property.getValueOrDefault(
         selectedEntity.description,
         time,
@@ -1975,9 +1876,6 @@ Viewer.prototype._onEntityCollectionChanged = function (
   const length = removed.length;
   for (let i = 0; i < length; i++) {
     const removedObject = removed[i];
-    if (this.trackedEntity === removedObject) {
-      this.trackedEntity = undefined;
-    }
     if (this.selectedEntity === removedObject) {
       this.selectedEntity = undefined;
     }
@@ -2031,7 +1929,7 @@ Viewer.prototype._clearObjects = function () {
  */
 Viewer.prototype._onDataSourceChanged = function (dataSource) {
   if (this.clockTrackedDataSource === dataSource) {
-    trackDataSourceClock(this.timeline, this.clock, dataSource);
+    linkTimelineToDataSourceClock(this.timeline, dataSource);
   }
 };
 
@@ -2042,8 +1940,13 @@ Viewer.prototype._onDataSourceAdded = function (
   dataSourceCollection,
   dataSource,
 ) {
-  if (this._automaticallyTrackDataSourceClocks) {
-    this.clockTrackedDataSource = dataSource;
+  if (
+    this._cesiumWidget._automaticallyTrackDataSourceClocks &&
+    dataSource === this.clockTrackedDataSource
+  ) {
+    // When data sources are added to the CesiumWidget they may be automatically
+    // tracked in that class but we also need to update the timeline in this class
+    linkTimelineToDataSourceClock(this._timeline, dataSource);
   }
   const id = dataSource.entities.id;
   const removalFunc = this._eventHelper.add(
@@ -2061,20 +1964,9 @@ Viewer.prototype._onDataSourceRemoved = function (
   dataSourceCollection,
   dataSource,
 ) {
-  const resetClock = this.clockTrackedDataSource === dataSource;
   const id = dataSource.entities.id;
   this._dataSourceChangedListeners[id]();
   this._dataSourceChangedListeners[id] = undefined;
-  if (resetClock) {
-    const numDataSources = dataSourceCollection.length;
-    if (this._automaticallyTrackDataSourceClocks && numDataSources > 0) {
-      this.clockTrackedDataSource = dataSourceCollection.get(
-        numDataSources - 1,
-      );
-    } else {
-      this.clockTrackedDataSource = undefined;
-    }
-  }
 };
 
 /**
@@ -2097,10 +1989,7 @@ Viewer.prototype._onDataSourceRemoved = function (
  * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
  */
 Viewer.prototype.zoomTo = function (target, offset) {
-  const options = {
-    offset: offset,
-  };
-  return zoomToOrFly(this, target, options, false);
+  return this._cesiumWidget.zoomTo(target, offset);
 };
 
 /**
@@ -2126,325 +2015,8 @@ Viewer.prototype.zoomTo = function (target, offset) {
  * @returns {Promise<boolean>} A Promise that resolves to true if the flight was successful or false if the target is not currently visualized in the scene or the flight was cancelled. //TODO: Cleanup entity mentions
  */
 Viewer.prototype.flyTo = function (target, options) {
-  return zoomToOrFly(this, target, options, true);
+  return this._cesiumWidget.flyTo(target, options);
 };
-
-function zoomToOrFly(that, zoomTarget, options, isFlight) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(zoomTarget)) {
-    throw new DeveloperError("zoomTarget is required.");
-  }
-  //>>includeEnd('debug');
-
-  cancelZoom(that);
-
-  //We can't actually perform the zoom until all visualization is ready and
-  //bounding spheres have been computed.  Therefore we create and return
-  //a deferred which will be resolved as part of the post-render step in the
-  //frame that actually performs the zoom.
-  const zoomPromise = new Promise((resolve) => {
-    that._completeZoom = function (value) {
-      resolve(value);
-    };
-  });
-  that._zoomPromise = zoomPromise;
-  that._zoomIsFlight = isFlight;
-  that._zoomOptions = options;
-
-  Promise.resolve(zoomTarget).then(function (zoomTarget) {
-    //Only perform the zoom if it wasn't cancelled before the promise resolved.
-    if (that._zoomPromise !== zoomPromise) {
-      return;
-    }
-
-    //If the zoom target is a rectangular imagery in an ImageLayer
-    if (zoomTarget instanceof ImageryLayer) {
-      let rectanglePromise;
-
-      if (defined(zoomTarget.imageryProvider)) {
-        rectanglePromise = Promise.resolve(zoomTarget.getImageryRectangle());
-      } else {
-        rectanglePromise = new Promise((resolve) => {
-          const removeListener = zoomTarget.readyEvent.addEventListener(() => {
-            removeListener();
-            resolve(zoomTarget.getImageryRectangle());
-          });
-        });
-      }
-      rectanglePromise
-        .then(function (rectangle) {
-          return computeFlyToLocationForRectangle(rectangle, that.scene);
-        })
-        .then(function (position) {
-          //Only perform the zoom if it wasn't cancelled before the promise was resolved
-          if (that._zoomPromise === zoomPromise) {
-            that._zoomTarget = position;
-          }
-        });
-      return;
-    }
-
-    if (
-      zoomTarget instanceof Cesium3DTileset ||
-      zoomTarget instanceof TimeDynamicPointCloud ||
-      zoomTarget instanceof VoxelPrimitive
-    ) {
-      that._zoomTarget = zoomTarget;
-      return;
-    }
-
-    //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
-    if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
-      const removeEvent = zoomTarget.loadingEvent.addEventListener(function () {
-        removeEvent();
-
-        //Only perform the zoom if it wasn't cancelled before the data source finished.
-        if (that._zoomPromise === zoomPromise) {
-          that._zoomTarget = zoomTarget.entities.values.slice(0);
-        }
-      });
-      return;
-    }
-
-    //Zoom target is already an array, just copy it and return.
-    if (Array.isArray(zoomTarget)) {
-      that._zoomTarget = zoomTarget.slice(0);
-      return;
-    }
-
-    //If zoomTarget is an EntityCollection, this will retrieve the array
-    zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
-
-    //If zoomTarget is a DataSource, this will retrieve the array.
-    if (defined(zoomTarget.entities)) {
-      zoomTarget = zoomTarget.entities.values;
-    }
-
-    //Zoom target is already an array, just copy it and return.
-    if (Array.isArray(zoomTarget)) {
-      that._zoomTarget = zoomTarget.slice(0);
-    } else {
-      //Single entity
-      that._zoomTarget = [zoomTarget];
-    }
-  });
-
-  that.scene.requestRender();
-  return zoomPromise;
-}
-
-function clearZoom(viewer) {
-  viewer._zoomPromise = undefined;
-  viewer._zoomTarget = undefined;
-  viewer._zoomOptions = undefined;
-}
-
-function cancelZoom(viewer) {
-  const zoomPromise = viewer._zoomPromise;
-  if (defined(zoomPromise)) {
-    clearZoom(viewer);
-    viewer._completeZoom(false);
-  }
-}
-
-/**
- * @private
- */
-Viewer.prototype._postRender = function () {
-  updateZoomTarget(this);
-  updateTrackedEntity(this);
-};
-
-function updateZoomTarget(viewer) {
-  const target = viewer._zoomTarget;
-  if (!defined(target) || viewer.scene.mode === SceneMode.MORPHING) {
-    return;
-  }
-
-  const scene = viewer.scene;
-  const camera = scene.camera;
-  const zoomOptions = defaultValue(viewer._zoomOptions, {});
-  let options;
-  function zoomToBoundingSphere(boundingSphere) {
-    // If offset was originally undefined then give it base value instead of empty object
-    if (!defined(zoomOptions.offset)) {
-      zoomOptions.offset = new HeadingPitchRange(
-        0.0,
-        -0.5,
-        boundingSphere.radius,
-      );
-    }
-
-    options = {
-      offset: zoomOptions.offset,
-      duration: zoomOptions.duration,
-      maximumHeight: zoomOptions.maximumHeight,
-      complete: function () {
-        viewer._completeZoom(true);
-      },
-      cancel: function () {
-        viewer._completeZoom(false);
-      },
-    };
-
-    if (viewer._zoomIsFlight) {
-      camera.flyToBoundingSphere(target.boundingSphere, options);
-    } else {
-      camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-      camera.lookAtTransform(Matrix4.IDENTITY);
-
-      // Finish the promise
-      viewer._completeZoom(true);
-    }
-
-    clearZoom(viewer);
-  }
-
-  if (target instanceof TimeDynamicPointCloud) {
-    if (defined(target.boundingSphere)) {
-      zoomToBoundingSphere(target.boundingSphere);
-      return;
-    }
-
-    // Otherwise, the first "frame" needs to have been rendered
-    const removeEventListener = target.frameChanged.addEventListener(
-      function (timeDynamicPointCloud) {
-        zoomToBoundingSphere(timeDynamicPointCloud.boundingSphere);
-        removeEventListener();
-      },
-    );
-    return;
-  }
-
-  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
-    zoomToBoundingSphere(target.boundingSphere);
-    return;
-  }
-
-  // If zoomTarget was an ImageryLayer
-  if (target instanceof Cartographic) {
-    options = {
-      destination: scene.ellipsoid.cartographicToCartesian(target),
-      duration: zoomOptions.duration,
-      maximumHeight: zoomOptions.maximumHeight,
-      complete: function () {
-        viewer._completeZoom(true);
-      },
-      cancel: function () {
-        viewer._completeZoom(false);
-      },
-    };
-
-    if (viewer._zoomIsFlight) {
-      camera.flyTo(options);
-    } else {
-      camera.setView(options);
-      viewer._completeZoom(true);
-    }
-    clearZoom(viewer);
-    return;
-  }
-
-  const entities = target;
-
-  const boundingSpheres = [];
-  for (let i = 0, len = entities.length; i < len; i++) {
-    const state = viewer._dataSourceDisplay.getBoundingSphere(
-      entities[i],
-      false,
-      boundingSphereScratch,
-    );
-
-    if (state === BoundingSphereState.PENDING) {
-      return;
-    } else if (state !== BoundingSphereState.FAILED) {
-      boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
-    }
-  }
-
-  if (boundingSpheres.length === 0) {
-    cancelZoom(viewer);
-    return;
-  }
-
-  // Stop tracking the current entity.
-  viewer.trackedEntity = undefined;
-
-  const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
-
-  if (!viewer._zoomIsFlight) {
-    camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-    camera.lookAtTransform(Matrix4.IDENTITY);
-    clearZoom(viewer);
-    viewer._completeZoom(true);
-  } else {
-    clearZoom(viewer);
-    camera.flyToBoundingSphere(boundingSphere, {
-      duration: zoomOptions.duration,
-      maximumHeight: zoomOptions.maximumHeight,
-      complete: function () {
-        viewer._completeZoom(true);
-      },
-      cancel: function () {
-        viewer._completeZoom(false);
-      },
-      offset: zoomOptions.offset,
-    });
-  }
-}
-
-function updateTrackedEntity(viewer) {
-  if (!viewer._needTrackedEntityUpdate) {
-    return;
-  }
-
-  const trackedEntity = viewer._trackedEntity;
-  const currentTime = viewer.clock.currentTime;
-
-  //Verify we have a current position at this time. This is only triggered if a position
-  //has become undefined after trackedEntity is set but before the boundingSphere has been
-  //computed. In this case, we will track the entity once it comes back into existence.
-  const currentPosition = Property.getValueOrUndefined(
-    trackedEntity.position,
-    currentTime,
-  );
-
-  if (!defined(currentPosition)) {
-    return;
-  }
-
-  const scene = viewer.scene;
-
-  const state = viewer._dataSourceDisplay.getBoundingSphere(
-    trackedEntity,
-    false,
-    boundingSphereScratch,
-  );
-  if (state === BoundingSphereState.PENDING) {
-    return;
-  }
-
-  const sceneMode = scene.mode;
-  if (
-    sceneMode === SceneMode.COLUMBUS_VIEW ||
-    sceneMode === SceneMode.SCENE2D
-  ) {
-    scene.screenSpaceCameraController.enableTranslate = false;
-  }
-
-  if (
-    sceneMode === SceneMode.COLUMBUS_VIEW ||
-    sceneMode === SceneMode.SCENE3D
-  ) {
-    scene.screenSpaceCameraController.enableTilt = false;
-  }
-
-  const bs =
-    state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
-  viewer._entityView = new EntityView(trackedEntity, scene, scene.ellipsoid);
-  viewer._entityView.update(currentTime, bs);
-  viewer._needTrackedEntityUpdate = false;
-}
 
 /**
  * A function that augments a Viewer instance with additional functionality.

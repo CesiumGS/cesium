@@ -62,14 +62,26 @@
             </td>
           </tr>
           <tr>
-            <td>Step Size</td>
+            <td>Step Count</td>
             <td>
               <input
                 type="range"
                 min="1"
-                max="10"
-                step="0.01"
-                data-bind="value: stepSize, valueUpdate: 'input'"
+                max="64"
+                step="1"
+                data-bind="value: stepCount, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Direction Count</td>
+            <td>
+              <input
+                type="range"
+                min="1"
+                max="16"
+                step="1"
+                data-bind="value: directionCount, valueUpdate: 'input'"
               />
             </td>
           </tr>
@@ -85,18 +97,6 @@
               />
             </td>
           </tr>
-          <tr>
-            <td>Blur Step Size</td>
-            <td>
-              <input
-                type="range"
-                min="0"
-                max="4"
-                step="0.01"
-                data-bind="value: blurStepSize, valueUpdate: 'input'"
-              />
-            </td>
-          </tr>
         </tbody>
       </table>
     </div>
@@ -106,7 +106,11 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
+        const { canvas, camera, clock, scene } = viewer;
+        camera.frustum.near = 1.0;
+        scene.debugShowFramesPerSecond = true;
+
+        clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
 
         if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
           window.alert(
@@ -119,9 +123,9 @@
           ambientOcclusionOnly: false,
           intensity: 3.0,
           bias: 0.1,
-          lengthCap: 0.03,
-          stepSize: 1.0,
-          blurStepSize: 0.86,
+          lengthCap: 0.26,
+          directionCount: 8,
+          stepCount: 32,
         };
 
         Cesium.knockout.track(viewModel);
@@ -134,7 +138,7 @@
         }
 
         function updatePostProcess() {
-          const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
+          const ambientOcclusion = scene.postProcessStages.ambientOcclusion;
           ambientOcclusion.enabled =
             Boolean(viewModel.show) || Boolean(viewModel.ambientOcclusionOnly);
           ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(
@@ -143,12 +147,11 @@
           ambientOcclusion.uniforms.intensity = Number(viewModel.intensity);
           ambientOcclusion.uniforms.bias = Number(viewModel.bias);
           ambientOcclusion.uniforms.lengthCap = Number(viewModel.lengthCap);
-          ambientOcclusion.uniforms.stepSize = Number(viewModel.stepSize);
-          ambientOcclusion.uniforms.blurStepSize = Number(viewModel.blurStepSize);
+          ambientOcclusion.uniforms.directionCount = Number(viewModel.directionCount);
+          ambientOcclusion.uniforms.stepCount = Number(viewModel.stepCount);
         }
         updatePostProcess();
 
-        const camera = viewer.scene.camera;
         camera.position = new Cesium.Cartesian3(
           1234127.2294710164,
           -5086011.666443127,
@@ -173,7 +176,7 @@
         try {
           // Power Plant design model provided by Bentley Systems
           const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
-          viewer.scene.primitives.add(tileset);
+          scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
         } //Sandcastle_End

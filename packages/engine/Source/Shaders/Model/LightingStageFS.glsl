@@ -5,14 +5,10 @@ vec3 computeIBL(vec3 position, vec3 normal, vec3 lightDirection, vec3 lightColor
         // Environment maps were provided, use them for IBL
         vec3 viewDirection = -normalize(position);
         vec3 iblColor = textureIBL(viewDirection, normal, material);
-    #else
-        // Use procedural IBL if there are no environment maps
-        vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
-        float maximumComponent = czm_maximumComponent(lightColorHdr);
-        vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
-        vec3 iblColor = clampedLightColor * imageBasedLighting;
+        return iblColor;
     #endif
-    return iblColor * material.occlusion;
+    
+    return vec3(0.0);
 }
 #endif
 
@@ -44,21 +40,6 @@ vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirect
         vec3 reflectMC = normalize(model_iblReferenceFrameMatrix * reflect(-viewDirection, normal));
         vec3 iblColor = computeSpecularIBL(reflectMC, NdotV, f0, roughness);
         color += iblColor * material.occlusion;
-    #elif defined(USE_IBL_LIGHTING)
-        vec3 positionWC = vec3(czm_inverseView * vec4(position, 1.0));
-        vec3 reflectionWC = normalize(czm_inverseViewRotation * reflect(viewDirection, normal));
-        vec3 skyMetrics = getProceduralSkyMetrics(positionWC, reflectionWC);
-
-        vec3 specularIrradiance = getProceduralSpecularIrradiance(reflectionWC, skyMetrics, roughness);
-        vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
-        vec3 specularColor = czm_srgbToLinear(f0 * brdfLut.x + brdfLut.y);
-        vec3 iblColor = specularIrradiance * specularColor * model_iblFactor.y;
-        #ifdef USE_SUN_LUMINANCE
-            iblColor *= getSunLuminance(positionWC, normal, lightDirection);
-        #endif
-        float maximumComponent = czm_maximumComponent(lightColorHdr);
-        vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
-        color += clampedLightColor * iblColor * material.occlusion;
     #endif
 
     float clearcoatFactor = material.clearcoatFactor;

@@ -1,4 +1,4 @@
-import { defaultValue, defined, DeveloperError } from "@cesium/engine";
+import { Frozen, defined, DeveloperError } from "@cesium/engine";
 import knockout from "./ThirdParty/knockout.js";
 
 /**
@@ -20,21 +20,21 @@ function ToggleButtonViewModel(command, options) {
 
   this._command = command;
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * Gets or sets whether the button is currently toggled.  This property is observable.
    * @type {boolean}
    * @default false
    */
-  this.toggled = defaultValue(options.toggled, false);
+  this.toggled = options.toggled ?? false;
 
   /**
    * Gets or sets the button's tooltip.  This property is observable.
    * @type {string}
    * @default ''
    */
-  this.tooltip = defaultValue(options.tooltip, "");
+  this.tooltip = options.tooltip ?? "";
 
   knockout.track(this, ["toggled", "tooltip"]);
 }

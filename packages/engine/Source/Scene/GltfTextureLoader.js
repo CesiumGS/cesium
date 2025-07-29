@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Texture from "../Renderer/Texture.js";
@@ -35,7 +35,7 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  * @private
  */
 function GltfTextureLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const textureInfo = options.textureInfo;
@@ -43,7 +43,7 @@ function GltfTextureLoader(options) {
   const baseResource = options.baseResource;
   const supportedImageFormats = options.supportedImageFormats;
   const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
+  const asynchronous = options.asynchronous ?? true;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -170,6 +170,7 @@ GltfTextureLoader.prototype.load = async function () {
 function CreateTextureJob() {
   this.gltf = undefined;
   this.textureInfo = undefined;
+  this.textureId = undefined;
   this.image = undefined;
   this.context = undefined;
   this.texture = undefined;
@@ -178,12 +179,14 @@ function CreateTextureJob() {
 CreateTextureJob.prototype.set = function (
   gltf,
   textureInfo,
+  textureId,
   image,
   mipLevels,
   context,
 ) {
   this.gltf = gltf;
   this.textureInfo = textureInfo;
+  this.textureId = textureId;
   this.image = image;
   this.mipLevels = mipLevels;
   this.context = context;
@@ -193,13 +196,21 @@ CreateTextureJob.prototype.execute = function () {
   this.texture = createTexture(
     this.gltf,
     this.textureInfo,
+    this.textureId,
     this.image,
     this.mipLevels,
     this.context,
   );
 };
 
-function createTexture(gltf, textureInfo, image, mipLevels, context) {
+function createTexture(
+  gltf,
+  textureInfo,
+  textureId,
+  image,
+  mipLevels,
+  context,
+) {
   // internalFormat is only defined for CompressedTextureBuffer
   const internalFormat = image.internalFormat;
 
@@ -261,6 +272,7 @@ function createTexture(gltf, textureInfo, image, mipLevels, context) {
     }
 
     texture = Texture.create({
+      id: textureId,
       context: context,
       source: {
         arrayBufferView: image.bufferView, // Only defined for CompressedTextureBuffer
@@ -276,6 +288,7 @@ function createTexture(gltf, textureInfo, image, mipLevels, context) {
       image = resizeImageToNextPowerOfTwo(image);
     }
     texture = Texture.create({
+      id: textureId,
       context: context,
       source: image,
       sampler: sampler,
@@ -332,6 +345,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
     textureJob.set(
       this._gltf,
       this._textureInfo,
+      this._cacheKey,
       this._image,
       this._mipLevels,
       frameState.context,
@@ -346,6 +360,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
     texture = createTexture(
       this._gltf,
       this._textureInfo,
+      this._cacheKey,
       this._image,
       this._mipLevels,
       frameState.context,

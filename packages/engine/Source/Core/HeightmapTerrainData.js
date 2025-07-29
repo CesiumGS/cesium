@@ -1,7 +1,7 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import GeographicProjection from "./GeographicProjection.js";
@@ -109,39 +109,29 @@ function HeightmapTerrainData(options) {
   this._buffer = options.buffer;
   this._width = options.width;
   this._height = options.height;
-  this._childTileMask = defaultValue(options.childTileMask, 15);
-  this._encoding = defaultValue(options.encoding, HeightmapEncoding.NONE);
+  this._childTileMask = options.childTileMask ?? 15;
+  this._encoding = options.encoding ?? HeightmapEncoding.NONE;
 
   const defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
   let structure = options.structure;
   if (!defined(structure)) {
     structure = defaultStructure;
   } else if (structure !== defaultStructure) {
-    structure.heightScale = defaultValue(
-      structure.heightScale,
-      defaultStructure.heightScale,
-    );
-    structure.heightOffset = defaultValue(
-      structure.heightOffset,
-      defaultStructure.heightOffset,
-    );
-    structure.elementsPerHeight = defaultValue(
-      structure.elementsPerHeight,
-      defaultStructure.elementsPerHeight,
-    );
-    structure.stride = defaultValue(structure.stride, defaultStructure.stride);
-    structure.elementMultiplier = defaultValue(
-      structure.elementMultiplier,
-      defaultStructure.elementMultiplier,
-    );
-    structure.isBigEndian = defaultValue(
-      structure.isBigEndian,
-      defaultStructure.isBigEndian,
-    );
+    structure.heightScale =
+      structure.heightScale ?? defaultStructure.heightScale;
+    structure.heightOffset =
+      structure.heightOffset ?? defaultStructure.heightOffset;
+    structure.elementsPerHeight =
+      structure.elementsPerHeight ?? defaultStructure.elementsPerHeight;
+    structure.stride = structure.stride ?? defaultStructure.stride;
+    structure.elementMultiplier =
+      structure.elementMultiplier ?? defaultStructure.elementMultiplier;
+    structure.isBigEndian =
+      structure.isBigEndian ?? defaultStructure.isBigEndian;
   }
 
   this._structure = structure;
-  this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
+  this._createdByUpsampling = options.createdByUpsampling ?? false;
   this._waterMask = options.waterMask;
 
   this._skirtHeight = undefined;
@@ -168,7 +158,7 @@ Object.defineProperties(HeightmapTerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof HeightmapTerrainData.prototype
-   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|undefined}
    */
   waterMask: {
     get: function () {
@@ -208,7 +198,7 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
  *          be retried later.
  */
 HeightmapTerrainData.prototype.createMesh = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);
@@ -221,12 +211,9 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
   const x = options.x;
   const y = options.y;
   const level = options.level;
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0,
-  );
-  const throttle = defaultValue(options.throttle, true);
+  const exaggeration = options.exaggeration ?? 1.0;
+  const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
+  const throttle = options.throttle ?? true;
 
   const ellipsoid = tilingScheme.ellipsoid;
   const nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
@@ -340,11 +327,8 @@ HeightmapTerrainData.prototype._createMeshSync = function (options) {
   const x = options.x;
   const y = options.y;
   const level = options.level;
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0,
-  );
+  const exaggeration = options.exaggeration ?? 1.0;
+  const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
 
   const ellipsoid = tilingScheme.ellipsoid;
   const nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);

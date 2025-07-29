@@ -34,7 +34,8 @@
         //Sandcastle_Begin
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrain: Cesium.Terrain.fromWorldTerrain(),
+          // Load Japan Regional Terrain
+          terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(2767062),
           baseLayerPicker: false,
           sceneModePicker: false,
           animation: false,
@@ -242,6 +243,7 @@
         // Set up a light to come from the camera to always highlight the buildings
         const cameraLight = new Cesium.DirectionalLight({
           direction: scene.camera.directionWC, // Updated every frame
+          intensity: 2.0,
         });
         scene.globe.enableLighting = true;
         scene.globe.dynamicAtmosphereLightingFromSun = false;

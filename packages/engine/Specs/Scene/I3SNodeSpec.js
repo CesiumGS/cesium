@@ -698,17 +698,17 @@ describe("Scene/I3SNode", function () {
           expectedHeight,
         );
 
-        expect(cartographicOrigin.longitude).toBeCloseTo(
+        expect(cartographicOrigin.longitude).toEqualEpsilon(
           expectedPosition.longitude,
-          -3,
+          CesiumMath.EPSILON3,
         );
-        expect(cartographicOrigin.latitude).toBeCloseTo(
+        expect(cartographicOrigin.latitude).toEqualEpsilon(
           expectedPosition.latitude,
-          -3,
+          CesiumMath.EPSILON3,
         );
-        expect(cartographicOrigin.height).toBeCloseTo(
+        expect(cartographicOrigin.height).toEqualEpsilon(
           expectedPosition.height,
-          -3,
+          CesiumMath.EPSILON3,
         );
       });
   });

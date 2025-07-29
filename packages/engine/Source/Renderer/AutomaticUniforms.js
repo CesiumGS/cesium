@@ -1488,11 +1488,11 @@ const AutomaticUniforms = {
    *
    * @example
    * // GLSL declaration
-   * uniform sampler2D czm_specularEnvironmentMaps;
+   * uniform samplerCube czm_specularEnvironmentMaps;
    */
   czm_specularEnvironmentMaps: new AutomaticUniform({
     size: 1,
-    datatype: WebGLConstants.SAMPLER_2D,
+    datatype: WebGLConstants.SAMPLER_CUBE,
     getValue: function (uniformState) {
       return uniformState.specularEnvironmentMaps;
     },
@@ -1574,6 +1574,19 @@ const AutomaticUniforms = {
     datatype: WebGLConstants.FLOAT,
     getValue: function (uniformState) {
       return uniformState.fogDensity;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform scalar used to mix a color with the fog color based on the distance to the camera.
+   *
+   * @see czm_fog
+   */
+  czm_fogVisualDensityScalar: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.fogVisualDensityScalar;
     },
   }),
 

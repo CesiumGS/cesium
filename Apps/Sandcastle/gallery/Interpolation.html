@@ -154,6 +154,21 @@
           viewer.trackedEntity = entity;
         });
 
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Tracking reference frame: East-North-Up",
+            onselect: function () {
+              entity.trackingReferenceFrame = Cesium.TrackingReferenceFrame.ENU;
+            },
+          },
+          {
+            text: "Tracking reference frame: Inertial",
+            onselect: function () {
+              entity.trackingReferenceFrame = Cesium.TrackingReferenceFrame.INERTIAL;
+            },
+          },
+        ]);
+
         //Add a combo box for selecting each interpolation mode.
         Sandcastle.addToolbarMenu(
           [

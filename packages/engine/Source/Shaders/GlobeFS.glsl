@@ -87,25 +87,47 @@ flat in int v_regionIndex;
 uniform float u_minimumBrightness;
 #endif
 
+// Based on colorCorrect
+// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift 
+// are nonzero AND when (applyFog || showGroundAtmosphere) in the tile provider
+// - The tileProvider.hue/saturation/brightnessShift are just passed through
+//   from the Globe hue/saturation/brightness, like atmosphereBrightnessShift
+// - The applyFog depends on enableFog, and some tile distance from the viewer
+// - The showGroundAtmosphere is a flag that is passed through from the Globe,
+//   and is true by default when the ellipsoid is WGS84
 #ifdef COLOR_CORRECT
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
+// Based on highlightFillTile
+// This is set for terrain tiles when they are "fill" tiles, and
+// the terrainProvider.fillHighlightColor was set to a value with
+// nonzero alpha
 #ifdef HIGHLIGHT_FILL_TILE
 uniform vec4 u_fillHighlightColor;
 #endif
 
+// Based on translucent
+// This is set depending on the GlobeTranslucencyState
 #ifdef TRANSLUCENT
 uniform vec4 u_frontFaceAlphaByDistance;
 uniform vec4 u_backFaceAlphaByDistance;
 uniform vec4 u_translucencyRectangle;
 #endif
 
+// Based on showUndergroundColor
+// This is set when GlobeSurfaceTileProvider.isUndergroundVisible 
+// returns true, AND the tileProvider.undergroundColor had a value with 
+// nonzero alpha, and the tileProvider.undergroundColorAlphaByDistance
+// was in the right range
 #ifdef UNDERGROUND_COLOR
 uniform vec4 u_undergroundColor;
 uniform vec4 u_undergroundColorAlphaByDistance;
 #endif
 
+// Based on enableLighting && hasVertexNormals
+// The enableLighting flag is passed in directly from the Globe.
+// The hasVertexNormals flag is from the tileProvider
 #ifdef ENABLE_VERTEX_LIGHTING
 uniform float u_lambertDiffuseMultiplier;
 uniform float u_vertexShadowDarkness;
@@ -285,7 +307,16 @@ vec3 computeEllipsoidPosition()
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
     xy *= czm_viewport.zw * mpp * 0.5;
 
-    vec3 direction = normalize(vec3(xy, -czm_currentFrustum.x));
+    vec3 direction;
+    if (czm_orthographicIn3D == 1.0)
+    {
+        direction = vec3(0.0, 0.0, -1.0);
+    }
+    else
+    {
+        direction = normalize(vec3(xy, -czm_currentFrustum.x));
+    }
+
     czm_ray ray = czm_ray(vec3(0.0), direction);
 
     vec3 ellipsoid_center = czm_view[3].xyz;
@@ -499,8 +530,7 @@ void main()
                 fogColor.rgb = czm_inverseGamma(fogColor.rgb);
             #endif
 
-            const float modifier = 0.15;
-            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
+            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, czm_fogVisualDensityScalar), finalColor.a);
 
         #else
             // Apply ground atmosphere. This happens when the camera is far away from the earth.

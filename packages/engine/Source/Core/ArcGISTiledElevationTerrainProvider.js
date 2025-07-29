@@ -1,7 +1,7 @@
 import Cartesian2 from "./Cartesian2.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
@@ -41,7 +41,7 @@ const ALL_CHILDREN = 15;
  * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  */
 function TerrainProviderBuilder(options) {
-  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   this.credit = undefined;
   this.tilingScheme = undefined;
@@ -85,7 +85,7 @@ function parseMetadataSuccess(terrainProviderBuilder, metadata) {
   }
 
   const spatialReference = metadata.spatialReference;
-  const wkid = defaultValue(spatialReference.latestWkid, spatialReference.wkid);
+  const wkid = spatialReference.latestWkid ?? spatialReference.wkid;
   const extent = metadata.extent;
   const tilingSchemeOptions = {
     ellipsoid: terrainProviderBuilder.ellipsoid,
@@ -234,7 +234,7 @@ async function requestMetadata(
  * @see TerrainProvider
  */
 function ArcGISTiledElevationTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._resource = undefined;
   this._credit = undefined;
@@ -325,7 +325,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -357,7 +357,7 @@ ArcGISTiledElevationTerrainProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   url = await Promise.resolve(url);
   let resource = Resource.createIfNeeded(url);

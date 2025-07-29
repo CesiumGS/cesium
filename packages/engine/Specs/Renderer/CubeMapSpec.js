@@ -1,6 +1,8 @@
 import {
+  BufferUsage,
   Cartesian3,
   Color,
+  ComponentDatatype,
   defined,
   PixelFormat,
   Resource,
@@ -244,6 +246,16 @@ describe(
       });
 
       expect(cubeMap.flipY).toEqual(true);
+    });
+
+    it("faceNames returns an iterator over each of the faces by name", () => {
+      let count = 0;
+      for (const faceName of CubeMap.faceNames()) {
+        expect(Object.values(CubeMap.FaceName).includes(faceName)).toBeTrue();
+        count++;
+      }
+
+      expect(count).toBe(6);
     });
 
     it("draws with a cube map", function () {
@@ -1308,6 +1320,24 @@ describe(
       expect(cubeMap.sizeInBytes).toEqualEpsilon(
         (16 * 16 + 8 * 8 + 4 * 4 + 2 * 2 + 1) * 4 * 6,
         10,
+      );
+    });
+
+    it("createVertexArray produces expected ", function () {
+      const va = CubeMap.createVertexArray(webgl2Context);
+
+      expect(va.numberOfAttributes).toBe(1);
+      expect(va.indexBuffer).toBeDefined();
+
+      expect(va.getAttribute(0).index).toEqual(0);
+      expect(va.getAttribute(0).componentDatatype).toEqual(
+        ComponentDatatype.FLOAT,
+      );
+      expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
+      expect(va.getAttribute(0).offsetInBytes).toEqual(0);
+
+      expect(va.getAttribute(0).vertexBuffer.usage).toEqual(
+        BufferUsage.STATIC_DRAW,
       );
     });
 
