@@ -1,3 +1,4 @@
+import addAllToArray from "../Core/addAllToArray.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import Expression from "./Expression.js";
@@ -203,8 +204,8 @@ ConditionsExpression.prototype.getVariables = function () {
   const length = conditions.length;
   for (let i = 0; i < length; ++i) {
     const statement = conditions[i];
-    variables.push.apply(variables, statement.condition.getVariables());
-    variables.push.apply(variables, statement.expression.getVariables());
+    addAllToArray(variables, statement.condition.getVariables());
+    addAllToArray(variables, statement.expression.getVariables());
   }
 
   // Remove duplicates

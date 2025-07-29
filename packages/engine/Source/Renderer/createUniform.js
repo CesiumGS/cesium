@@ -24,7 +24,10 @@ function createUniform(gl, activeUniform, uniformName, location) {
     case gl.FLOAT_VEC4:
       return new UniformFloatVec4(gl, activeUniform, uniformName, location);
     case gl.SAMPLER_2D:
+    case gl.SAMPLER_3D:
     case gl.SAMPLER_CUBE:
+      return new UniformSampler(gl, activeUniform, uniformName, location);
+    case gl.UNSIGNED_INT_SAMPLER_2D:
       return new UniformSampler(gl, activeUniform, uniformName, location);
     case gl.INT:
     case gl.BOOL:
