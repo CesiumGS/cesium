@@ -139,12 +139,9 @@ MaterialPipelineStage.process = function (
     VertexAttributeSemantic.NORMAL,
   );
 
-  //Disable normals if PointCloud has them, but the parameter is set
-  //to false in PointCloudShading.normalShading.
-  let hasNormalsDisabling = false;
-  if (defined(model.pointCloudShading)) {
-    hasNormalsDisabling = !model.pointCloudShading.normalShading;
-  }
+  // Disable PointCloud normals if the user explicitly turned them off.
+  const disablePointCloudNormals =
+    defined(model.pointCloudShading) && !model.pointCloudShading.normalShading;
 
   // Classification models will be rendered as unlit.
   const lightingOptions = renderResources.lightingOptions;
@@ -152,7 +149,7 @@ MaterialPipelineStage.process = function (
     material.unlit ||
     !hasNormals ||
     hasClassification ||
-    hasNormalsDisabling
+    disablePointCloudNormals
   ) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
