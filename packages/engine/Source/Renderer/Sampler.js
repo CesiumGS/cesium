@@ -106,6 +106,7 @@ Sampler.equals = function (left, right) {
 
 Sampler.NEAREST = Object.freeze(
   new Sampler({
+    wrapR: TextureWrap.CLAMP_TO_EDGE,
     wrapS: TextureWrap.CLAMP_TO_EDGE,
     wrapT: TextureWrap.CLAMP_TO_EDGE,
     minificationFilter: TextureMinificationFilter.NEAREST,

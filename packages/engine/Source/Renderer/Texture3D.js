@@ -14,24 +14,29 @@ import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
 
 /**
+ * @typedef {object} Texture3D.Source
+ * @property {number} width The width (in pixels) of the 3D texture source data.
+ * @property {number} height The height (in pixels) of the 3D texture source data.
+ * @property {number} depth The depth (in pixels) of the 3D texture source data.
+ * @property {TypedArray|DataView} arrayBufferView The source data for a 3D texture. The type of each element needs to match the pixelDatatype.
+ * @property {TypedArray|DataView} [mipLevels] An array of mip level data. Each element in the array should be a TypedArray or DataView that matches the pixelDatatype.
+ */
+
+/**
  * @typedef {object} Texture3D.ConstructorOptions
  *
  * @property {Context} context
- * @property {object} [source] The source for texel values to be loaded into the texture3D.
- * @param {number} [source.width] The width of the 3D Texture.
- * @param {number} [source.height] The height of the 3D Texture.
- * @param {number} [source.depth] The depth of the 3D Texture.
- * @param {number} [source.arrayBufferView] The TypedArray data of the 3D Texture. The type needs to match the pixelDatatype.
+ * @property {Texture3D.Source} [source] The source for texel values to be loaded into the 3D texture.
  * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
  * @property {boolean} [skipColorSpaceConversion=false] If true, color space conversions will be skipped when reading the texel values.
- * @property {Sampler} [sampler] Information about how to sample the texture3D.
- * @property {number} [width] The pixel width of the texture3D. If not supplied, must be available from the source.
- * @property {number} [height] The pixel height of the texture3D. If not supplied, must be available from the source.
- * @property {number} [depth] The pixel depth of the texture3D. If not supplied, must be available from the source.
+ * @property {Sampler} [sampler] Information about how to sample the 3D texture.
+ * @property {number} [width] The width (in pixels) of the 3D texture. If not supplied, must be available from the source.
+ * @property {number} [height] The height (in pixels) of the 3D texture. If not supplied, must be available from the source.
+ * @property {number} [depth] The depth (in pixels) of the 3D texture. If not supplied, must be available from the source.
  * @property {boolean} [preMultiplyAlpha] If true, the alpha channel will be multiplied into the other channels.
- * @property {string} [id] A unique identifier for the texture3D. If this is not given, then a GUID will be created.
+ * @property {string} [id] A unique identifier for the 3D texture. If this is not given, then a GUID will be created.
  *
  * @private
  */
