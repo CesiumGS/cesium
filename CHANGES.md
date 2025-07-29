@@ -14,6 +14,7 @@
 - Fixes label background translucency issue. [#12673](https://github.com/CesiumGS/cesium/issues/12673)
 - Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
 - Fixes Gaussian splats incorrectly rendering when `Cesium3DTileset.show` is `false`. [#12748](https://github.com/CesiumGS/cesium/pull/12748)
+- Fixed performance issues with GLTF extension CESIUM_primitive_outline since version 1.96. [#12077](https://github.com/CesiumGS/cesium/issues/12077)
 
 #### Additions :tada:
 
@@ -357,7 +358,6 @@ This is an npm-only release to extra source maps included in 1.121
 #### Fixes :wrench:
 
 - Fixed environment map LOD selection in image-based lighting. [#12070](https://github.com/CesiumGS/cesium/pull/12070)
-- Fixed performance issues with GLTF extension CESIUM_primitive_outline since version 1.96. [#12077](https://github.com/CesiumGS/cesium/issues/12077)
 - Corrected calculation of diffuse component in image-based lighting. [#12082](https://github.com/CesiumGS/cesium/pull/12082)
 - Updated specular BRDF for image-based lighting. [#12083](https://github.com/CesiumGS/cesium/pull/12083)
 - Fixed environment map transform for image-based lighting. [#12091](https://github.com/CesiumGS/cesium/pull/12091)
