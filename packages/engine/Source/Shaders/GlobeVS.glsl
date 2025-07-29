@@ -114,8 +114,8 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
     float yPositionFraction = get2DYPositionFraction(textureCoordinates);
     vec4 position2DWC = vec4(height, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
-    vec4 positionEC = czm_modelView * position;
-    return czm_projection * positionEC;
+    vec4 morphPositionEC = czm_modelView * morphPosition;
+    return czm_projection * morphPositionEC;
 }
 
 #ifdef QUANTIZATION_BITS12
