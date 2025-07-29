@@ -30,14 +30,6 @@ const argv = yargs(process.argv)
       type: "boolean",
       description: "Run a public server that listens on all interfaces.",
     },
-    "upstream-proxy": {
-      description:
-        'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".',
-    },
-    "bypass-upstream-proxy-hosts": {
-      description:
-        'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
-    },
     production: {
       type: "boolean",
       description: "If true, skip build step and serve existing built files.",
@@ -302,28 +294,6 @@ async function generateDevelopmentBuild() {
   }
 
   app.use(express.static(path.resolve(".")));
-
-  const dontProxyHeaderRegex =
-    /^(?:Host|Proxy-Connection|Connection|Keep-Alive|Transfer-Encoding|TE|Trailer|Proxy-Authorization|Proxy-Authenticate|Upgrade)$/i;
-
-  //eslint-disable-next-line no-unused-vars
-  function filterHeaders(req, headers) {
-    const result = {};
-    // filter out headers that are listed in the regex above
-    Object.keys(headers).forEach(function (name) {
-      if (!dontProxyHeaderRegex.test(name)) {
-        result[name] = headers[name];
-      }
-    });
-    return result;
-  }
-
-  const bypassUpstreamProxyHosts = {};
-  if (argv["bypass-upstream-proxy-hosts"]) {
-    argv["bypass-upstream-proxy-hosts"].split(",").forEach(function (host) {
-      bypassUpstreamProxyHosts[host.toLowerCase()] = true;
-    });
-  }
 
   const server = app.listen(
     argv.port,
