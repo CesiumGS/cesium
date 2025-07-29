@@ -262,7 +262,7 @@ function Texture3D(options) {
  * Load texel data from a buffer into a texture3D.
  *
  * @param {Texture3D} texture3D The texture3D to which texel values will be loaded.
- * @param {object} source The source for texel values to be loaded into the texture3D.
+ * @param {Texture3D.Source} source The source for texel values to be loaded into the texture3D.
  *
  * @private
  */
