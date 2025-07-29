@@ -639,7 +639,9 @@ describe(
       const imageMaterial = await Material.fromTypeAsync("Image", {
         image: "./Data/Images/Blue.png",
       });
-      renderMaterial(imageMaterial);
+      renderMaterial(imageMaterial, false, function (rgba) {
+        expect(rgba).toEqual([0, 0, 255, 255]);
+      });
     });
 
     it("loads cubemap images synchronously when awaiting fromTypeAsync", async function () {
@@ -718,17 +720,27 @@ describe(
     });
 
     it("creates material with custom texture filter", async function () {
-      const materialLinear = await Material.fromTypeAsync("DiffuseMap", {
-        image: "./Data/Images/BlueOverRed.png",
-      });
-      materialLinear._minificationFilter = TextureMinificationFilter.LINEAR;
-      materialLinear._magnificationFilter = TextureMagnificationFilter.LINEAR;
+      const materialLinear = await Material.fromTypeAsync(
+        "DiffuseMap",
+        {
+          image: "./Data/Images/BlueOverRed.png",
+        },
+        {
+          minificationFilter: TextureMinificationFilter.LINEAR,
+          magnificationFilter: TextureMagnificationFilter.LINEAR,
+        },
+      );
 
-      const materialNearest = await Material.fromTypeAsync("DiffuseMap", {
-        image: "./Data/Images/BlueOverRed.png",
-      });
-      materialNearest._minificationFilter = TextureMinificationFilter.NEAREST;
-      materialNearest._magnificationFilter = TextureMagnificationFilter.NEAREST;
+      const materialNearest = await Material.fromTypeAsync(
+        "DiffuseMap",
+        {
+          image: "./Data/Images/BlueOverRed.png",
+        },
+        {
+          minificationFilter: TextureMinificationFilter.NEAREST,
+          magnificationFilter: TextureMagnificationFilter.NEAREST,
+        },
+      );
 
       const purple = [127, 0, 127, 255];
 
