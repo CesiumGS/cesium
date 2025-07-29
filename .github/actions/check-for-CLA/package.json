@@ -3,7 +3,6 @@
     "version": "0.1.0",
     "main": "index.js",
     "dependencies": {
-        "@cesium/check-for-cla": "file:",
         "@octokit/core": "^6.1.2",
         "fs-extra": "^11.2.0",
         "googleapis": "^137.1.0",
