@@ -24,10 +24,10 @@
   }
   function t(a, b) {
     if (!b.cache)
-      (b.cache = {}),
+      ((b.cache = {}),
         (b.createElem = a.createElement),
         (b.createFrag = a.createDocumentFragment),
-        (b.frag = b.createFrag());
+        (b.frag = b.createFrag()));
     a.createElement = function (c) {
       return !e.shivMethods ? b.createElem(c) : p(c, a, b);
     };
