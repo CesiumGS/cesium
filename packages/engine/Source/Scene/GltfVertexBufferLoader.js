@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Buffer from "../Renderer/Buffer.js";
@@ -9,6 +9,7 @@ import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
+import CesiumMath from "../Core/Math.js";
 
 /**
  * Loads a vertex buffer from a glTF buffer view.
@@ -42,7 +43,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function GltfVertexBufferLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const gltfResource = options.gltfResource;
@@ -53,9 +54,10 @@ function GltfVertexBufferLoader(options) {
   const attributeSemantic = options.attributeSemantic;
   const accessorId = options.accessorId;
   const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  const spz = options.spz;
+  const asynchronous = options.asynchronous ?? true;
+  const loadBuffer = options.loadBuffer ?? false;
+  const loadTypedArray = options.loadTypedArray ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -73,10 +75,10 @@ function GltfVertexBufferLoader(options) {
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
-
-  if (hasBufferViewId === hasDraco) {
+  const hasSpz = defined(spz);
+  if (hasBufferViewId === (hasDraco !== hasSpz)) {
     throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined.",
+      "One of options.bufferViewId, options.draco, or options.spz must be defined.",
     );
   }
 
@@ -104,6 +106,7 @@ function GltfVertexBufferLoader(options) {
     Check.typeOf.string("options.attributeSemantic", attributeSemantic);
     Check.typeOf.number("options.accessorId", accessorId);
   }
+
   //>>includeEnd('debug');
 
   this._resourceCache = resourceCache;
@@ -113,6 +116,7 @@ function GltfVertexBufferLoader(options) {
   this._bufferViewId = bufferViewId;
   this._primitive = primitive;
   this._draco = draco;
+  this._spz = spz;
   this._attributeSemantic = attributeSemantic;
   this._accessorId = accessorId;
   this._cacheKey = cacheKey;
@@ -210,6 +214,11 @@ GltfVertexBufferLoader.prototype.load = async function () {
     return this._promise;
   }
 
+  if (defined(this._spz)) {
+    this._promise = loadFromSpz(this);
+    return this._promise;
+  }
+
   if (hasDracoCompression(this._draco, this._attributeSemantic)) {
     this._promise = loadFromDraco(this);
     return this._promise;
@@ -268,6 +277,74 @@ function getQuantizationInformation(
   }
 
   return quantization;
+}
+
+async function loadFromSpz(vertexBufferLoader) {
+  vertexBufferLoader._state = ResourceLoaderState.LOADING;
+  const resourceCache = vertexBufferLoader._resourceCache;
+  try {
+    const spzLoader = resourceCache.getSpzLoader({
+      gltf: vertexBufferLoader._gltf,
+      primitive: vertexBufferLoader._primitive,
+      spz: vertexBufferLoader._spz,
+      gltfResource: vertexBufferLoader._gltfResource,
+      baseResource: vertexBufferLoader._baseResource,
+    });
+    vertexBufferLoader._spzLoader = spzLoader;
+    await spzLoader.load();
+
+    if (vertexBufferLoader.isDestroyed()) {
+      return;
+    }
+
+    vertexBufferLoader._state = ResourceLoaderState.LOADED;
+    return vertexBufferLoader;
+  } catch {
+    if (vertexBufferLoader.isDestroyed()) {
+      return;
+    }
+  }
+}
+
+function processSpz(vertexBufferLoader) {
+  vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
+  const spzLoader = vertexBufferLoader._spzLoader;
+
+  const gcloudData = spzLoader.decodedData.gcloud;
+
+  if (vertexBufferLoader._attributeSemantic === "POSITION") {
+    vertexBufferLoader._typedArray = gcloudData.positions;
+  } else if (vertexBufferLoader._attributeSemantic === "_SCALE") {
+    vertexBufferLoader._typedArray = gcloudData.scales;
+  } else if (vertexBufferLoader._attributeSemantic === "_ROTATION") {
+    vertexBufferLoader._typedArray = gcloudData.rotations;
+  } else if (vertexBufferLoader._attributeSemantic === "COLOR_0") {
+    const colors = gcloudData.colors;
+    const alphas = gcloudData.alphas;
+    vertexBufferLoader._typedArray = new Uint8Array((colors.length / 3) * 4);
+    for (let i = 0; i < colors.length / 3; i++) {
+      vertexBufferLoader._typedArray[i * 4] = CesiumMath.clamp(
+        colors[i * 3] * 255.0,
+        0.0,
+        255.0,
+      );
+      vertexBufferLoader._typedArray[i * 4 + 1] = CesiumMath.clamp(
+        colors[i * 3 + 1] * 255.0,
+        0.0,
+        255.0,
+      );
+      vertexBufferLoader._typedArray[i * 4 + 2] = CesiumMath.clamp(
+        colors[i * 3 + 2] * 255.0,
+        0.0,
+        255.0,
+      );
+      vertexBufferLoader._typedArray[i * 4 + 3] = CesiumMath.clamp(
+        alphas[i] * 255.0,
+        0.0,
+        255.0,
+      );
+    }
+  }
 }
 
 async function loadFromDraco(vertexBufferLoader) {
@@ -427,6 +504,19 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     processDraco(this);
   }
 
+  if (defined(this._spzLoader)) {
+    try {
+      const ready = this._spzLoader.process(frameState);
+      if (!ready) {
+        return false;
+      }
+    } catch (error) {
+      handleError(this, error);
+    }
+
+    processSpz(this);
+  }
+
   let buffer;
   const typedArray = this._typedArray;
   if (this._loadBuffer && this._asynchronous) {
@@ -474,8 +564,13 @@ GltfVertexBufferLoader.prototype.unload = function () {
     resourceCache.unload(this._dracoLoader);
   }
 
+  if (defined(this._spzLoader)) {
+    resourceCache.unload(this._spzLoader);
+  }
+
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
+  this._spzLoader = undefined;
   this._typedArray = undefined;
   this._buffer = undefined;
   this._gltf = undefined;

@@ -3,7 +3,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -320,6 +319,24 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasImplicitContent = false;
 
   /**
+   * Determines whether the tile has renderable content.
+   *
+   * The loading starts with the assumption that the tile does have
+   * renderable content, if the content is not empty.<br>
+   * <br>
+   * This turns <code>false</code> only when the tile content is loaded
+   * and turns out to be a single content that points to an external
+   * tileset or implicit content
+   * </p>
+   *
+   * @type {boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasRenderableContent = !hasEmptyContent;
+
+  /**
    * When <code>true</code>, the tile contains content metadata from implicit tiling. This flag is set
    * for tiles transcoded by <code>Implicit3DTileContent</code>.
    * <p>
@@ -579,7 +596,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    */
   contentBoundingVolume: {
     get: function () {
-      return defaultValue(this._contentBoundingVolume, this._boundingVolume);
+      return this._contentBoundingVolume ?? this._boundingVolume;
     },
   },
 
@@ -650,27 +667,6 @@ Object.defineProperties(Cesium3DTile.prototype, {
     set: function (value) {
       this._color = Color.clone(value, this._color);
       this._colorDirty = true;
-    },
-  },
-
-  /**
-   * Determines if the tile's content is renderable. <code>false</code> if the
-   * tile has empty content or if it points to an external tileset or implicit content
-   *
-   * @memberof Cesium3DTile.prototype
-   *
-   * @type {boolean}
-   * @readonly
-   *
-   * @private
-   */
-  hasRenderableContent: {
-    get: function () {
-      return (
-        !this.hasEmptyContent &&
-        !this.hasTilesetContent &&
-        !this.hasImplicitContent
-      );
     },
   },
 
@@ -918,7 +914,7 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
   progressiveResolutionHeightFraction,
 ) {
   const tileset = this._tileset;
-  const heightFraction = defaultValue(progressiveResolutionHeightFraction, 1.0);
+  const heightFraction = progressiveResolutionHeightFraction ?? 1.0;
   const parentGeometricError = defined(this.parent)
     ? this.parent.geometricError
     : tileset._scaledGeometricError;
@@ -1346,10 +1342,12 @@ async function makeContent(tile, arrayBuffer) {
     preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON
   ) {
     tile.hasImplicitContent = true;
+    tile.hasRenderableContent = false;
   }
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
     tile.hasTilesetContent = true;
+    tile.hasRenderableContent = false;
   }
 
   let content;
@@ -1976,7 +1974,7 @@ Cesium3DTile.prototype.updateTransform = function (
   parentTransform,
   frameState,
 ) {
-  parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
+  parentTransform = parentTransform ?? Matrix4.IDENTITY;
   const computedTransform = Matrix4.multiplyTransformation(
     parentTransform,
     this.transform,

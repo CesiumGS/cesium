@@ -1,7 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -51,7 +51,7 @@ import Vector3DTileBatch from "./Vector3DTileBatch.js";
  * @private
  */
 function Vector3DTilePrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._batchTable = options.batchTable;
   this._batchIds = options.batchIds;
@@ -70,7 +70,7 @@ function Vector3DTilePrimitive(options) {
   this._boundingVolume = options.boundingVolume;
   this._boundingVolumes = options.boundingVolumes;
 
-  this._center = defaultValue(options.center, Cartesian3.ZERO);
+  this._center = options.center ?? Cartesian3.ZERO;
 
   this._va = undefined;
   this._sp = undefined;
@@ -127,10 +127,8 @@ function Vector3DTilePrimitive(options) {
    * @type {ClassificationType}
    * @default ClassificationType.BOTH
    */
-  this.classificationType = defaultValue(
-    options.classificationType,
-    ClassificationType.BOTH,
-  );
+  this.classificationType =
+    options.classificationType ?? ClassificationType.BOTH;
 
   // Hidden options
   this._vertexShaderSource = options._vertexShaderSource;
@@ -257,10 +255,8 @@ function createShaders(primitive, context) {
   }
 
   const batchTable = primitive._batchTable;
-  const attributeLocations = defaultValue(
-    primitive._attributeLocations,
-    defaultAttributeLocations,
-  );
+  const attributeLocations =
+    primitive._attributeLocations ?? defaultAttributeLocations;
 
   let pickId = primitive._pickId;
   const vertexShaderSource = primitive._vertexShaderSource;
@@ -769,7 +765,7 @@ function createColorCommands(primitive, context) {
 
   const vertexArray = primitive._va;
   const sp = primitive._sp;
-  const modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
+  const modelMatrix = primitive._modelMatrix ?? Matrix4.IDENTITY;
   const uniformMap = primitive._uniformMap;
   const bv = primitive._boundingVolume;
 
@@ -876,7 +872,7 @@ function createPickCommands(primitive) {
   const vertexArray = primitive._va;
   const spStencil = primitive._spStencil;
   const spPick = primitive._spPick;
-  const modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
+  const modelMatrix = primitive._modelMatrix ?? Matrix4.IDENTITY;
   const uniformMap = primitive._uniformMap;
 
   for (let j = 0; j < length; ++j) {

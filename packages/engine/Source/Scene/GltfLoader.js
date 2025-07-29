@@ -5,7 +5,7 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import InterpolationType from "../Core/InterpolationType.js";
@@ -196,7 +196,7 @@ const GltfLoaderState = {
  * @private
  */
 function GltfLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltfResource,
     typedArray,
@@ -508,8 +508,7 @@ function postProcessGeometry(loader, context) {
   for (let i = 0; i < loadPlans.length; i++) {
     const loadPlan = loadPlans[i];
     loadPlan.postProcess(context);
-
-    if (loadPlan.needsOutlines) {
+    if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
       // The glTF loader takes ownership of any buffers generated in the
       // post-process stage since they were created after the geometry loaders
       // finished. This way they can be destroyed when the loader is destroyed.
@@ -688,6 +687,7 @@ function getVertexBufferLoader(
   semantic,
   primitive,
   draco,
+  spzExtension,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -704,6 +704,7 @@ function getVertexBufferLoader(
     bufferViewId: bufferViewId,
     primitive: primitive,
     draco: draco,
+    spz: spzExtension,
     attributeSemantic: semantic,
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
@@ -856,7 +857,7 @@ async function loadAccessorBufferView(
     bufferViewLoader.typedArray,
   );
 
-  useQuaternion = defaultValue(useQuaternion, false);
+  useQuaternion = useQuaternion ?? false;
   loadAccessorValues(accessor, typedArray, values, useQuaternion);
 }
 
@@ -1005,7 +1006,7 @@ function setQuantizationFromWeb3dQuantizedAttributes(
 function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   const accessor = gltf.accessors[accessorId];
   const MathType = AttributeType.getMathType(accessor.type);
-  const normalized = defaultValue(accessor.normalized, false);
+  const normalized = accessor.normalized ?? false;
 
   const attribute = new Attribute();
   attribute.name = name;
@@ -1033,7 +1034,10 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
     attribute.semantic === VertexAttributeSemantic.POSITION ||
     attribute.semantic === VertexAttributeSemantic.NORMAL ||
     attribute.semantic === VertexAttributeSemantic.TANGENT ||
-    attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+    attribute.semantic === VertexAttributeSemantic.TEXCOORD ||
+    attribute.semantic === VertexAttributeSemantic.FEATURE_ID ||
+    attribute.semantic === VertexAttributeSemantic.SCALE ||
+    attribute.semantic === VertexAttributeSemantic.ROTATION;
 
   // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
   // However, for KHR_mesh_quantization, min and max must be dequantized for
@@ -1125,6 +1129,58 @@ function finalizeDracoAttribute(
   }
 }
 
+function finalizeSpzAttribute(
+  attribute,
+  vertexBufferLoader,
+  loadBuffer,
+  loadTypedArray,
+) {
+  attribute.byteOffset = 0;
+  attribute.byteStride = undefined;
+
+  if (loadBuffer) {
+    attribute.buffer = vertexBufferLoader.buffer;
+  }
+
+  if (loadTypedArray && defined(vertexBufferLoader.typedArray)) {
+    attribute.typedArray = ComponentDatatype.createArrayBufferView(
+      attribute.componentDatatype,
+      vertexBufferLoader.typedArray.buffer,
+    );
+  }
+
+  if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+    const findMinMaxXY = (flatArray) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+
+      for (let i = 0; i < flatArray.length; i += 3) {
+        const x = flatArray[i];
+        const y = flatArray[i + 1];
+        const z = flatArray[i + 2];
+
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+      }
+
+      return [
+        new Cartesian3(minX, minY, minZ),
+        new Cartesian3(maxX, maxY, maxZ),
+      ];
+    };
+    const buffer = attribute.typedArray;
+    [attribute.min, attribute.max] = findMinMaxXY(buffer);
+  }
+}
+
 function finalizeAttribute(
   gltf,
   accessor,
@@ -1161,6 +1217,7 @@ function loadAttribute(
   semanticInfo,
   primitive,
   draco,
+  spz,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -1186,7 +1243,7 @@ function loadAttribute(
     setIndex,
   );
 
-  if (!defined(draco) && !defined(bufferViewId)) {
+  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
     return attribute;
   }
 
@@ -1196,6 +1253,7 @@ function loadAttribute(
     gltfSemantic,
     primitive,
     draco,
+    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1205,6 +1263,7 @@ function loadAttribute(
   loader._geometryLoaders.push(vertexBufferLoader);
   const promise = vertexBufferLoader.load();
   loader._loaderPromises.push(promise);
+
   // This can only execute once vertexBufferLoader.process() has run and returns true
   // Save this finish callback by the loader index so it can be called
   // in process().
@@ -1215,6 +1274,13 @@ function loadAttribute(
       defined(draco.attributes[gltfSemantic])
     ) {
       finalizeDracoAttribute(
+        attribute,
+        vertexBufferLoader,
+        loadBuffer,
+        loadTypedArray,
+      );
+    } else if (defined(spz)) {
+      finalizeSpzAttribute(
         attribute,
         vertexBufferLoader,
         loadBuffer,
@@ -1241,6 +1307,7 @@ function loadVertexAttribute(
   semanticInfo,
   primitive,
   draco,
+  spz,
   hasInstances,
   needsPostProcessing,
   frameState,
@@ -1288,6 +1355,7 @@ function loadVertexAttribute(
     semanticInfo,
     primitive,
     draco,
+    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1359,6 +1427,7 @@ function loadInstancedAttribute(
     loader,
     accessorId,
     semanticInfo,
+    undefined,
     undefined,
     undefined,
     loadBuffer,
@@ -1671,10 +1740,7 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 function loadMaterial(loader, gltfMaterial, frameState) {
   const material = new Material();
 
-  const extensions = defaultValue(
-    gltfMaterial.extensions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const extensions = gltfMaterial.extensions ?? Frozen.EMPTY_OBJECT;
   const pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
   const pbrSpecular = extensions.KHR_materials_specular;
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
@@ -1795,9 +1861,9 @@ function loadFeatureIdImplicitRangeLegacy(
   featureIdRange.featureCount = featureCount;
 
   // constant/divisor was renamed to offset/repeat
-  featureIdRange.offset = defaultValue(featureIds.constant, 0);
+  featureIdRange.offset = featureIds.constant ?? 0;
   // The default is now undefined
-  const divisor = defaultValue(featureIds.divisor, 0);
+  const divisor = featureIds.divisor ?? 0;
   featureIdRange.repeat = divisor === 0 ? undefined : divisor;
 
   featureIdRange.positionalLabel = positionalLabel;
@@ -1880,6 +1946,7 @@ function loadMorphTarget(
   // Don't pass in primitive or draco object since morph targets can't be draco compressed
   const primitive = undefined;
   const draco = undefined;
+  const spz = undefined;
   const hasInstances = false;
 
   for (const semantic in target) {
@@ -1900,6 +1967,7 @@ function loadMorphTarget(
       semanticInfo,
       primitive,
       draco,
+      spz,
       hasInstances,
       needsPostProcessing,
       frameState,
@@ -1937,10 +2005,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  const extensions = defaultValue(
-    gltfPrimitive.extensions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
 
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
@@ -1952,6 +2017,12 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       outlineExtension,
       primitivePlan,
     );
+  }
+
+  const spzExtension = extensions.KHR_spz_gaussian_splats_compression;
+  if (defined(spzExtension)) {
+    needsPostProcessing = true;
+    primitivePlan.needsGaussianSplats = true;
   }
 
   const loadForClassification = loader._loadForClassification;
@@ -1986,6 +2057,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
         semanticInfo,
         gltfPrimitive,
         draco,
+        spzExtension,
         hasInstances,
         needsPostProcessing,
         frameState,
@@ -2192,16 +2264,14 @@ function loadPrimitiveMetadata(primitive, structuralMetadataExtension) {
   if (!defined(structuralMetadataExtension)) {
     return;
   }
+  const { propertyTextures, propertyAttributes } = structuralMetadataExtension;
 
-  // Property Textures
-  if (defined(structuralMetadataExtension.propertyTextures)) {
-    primitive.propertyTextureIds = structuralMetadataExtension.propertyTextures;
+  if (defined(propertyTextures)) {
+    primitive.propertyTextureIds = propertyTextures;
   }
 
-  // Property Attributes
-  if (defined(structuralMetadataExtension.propertyAttributes)) {
-    primitive.propertyAttributeIds =
-      structuralMetadataExtension.propertyAttributes;
+  if (defined(propertyAttributes)) {
+    primitive.propertyAttributeIds = propertyAttributes;
   }
 }
 
@@ -2243,10 +2313,8 @@ function loadInstances(loader, nodeExtensions, frameState) {
     }
   }
 
-  const instancingExtExtensions = defaultValue(
-    instancingExtension.extensions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const instancingExtExtensions =
+    instancingExtension.extensions ?? Frozen.EMPTY_OBJECT;
   const instanceFeatures = nodeExtensions.EXT_instance_features;
   const featureMetadataLegacy = instancingExtExtensions.EXT_feature_metadata;
 
@@ -2344,10 +2412,7 @@ function loadNode(loader, gltfNode, frameState) {
   node.rotation = fromArray(Quaternion, gltfNode.rotation);
   node.scale = fromArray(Cartesian3, gltfNode.scale);
 
-  const nodeExtensions = defaultValue(
-    gltfNode.extensions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
 
@@ -2381,7 +2446,7 @@ function loadNode(loader, gltfNode, frameState) {
 
     // If the node has no weights array, it will look for the weights array provided
     // by the mesh. If both are undefined, it will default to an array of zero weights.
-    const morphWeights = defaultValue(gltfNode.weights, mesh.weights);
+    const morphWeights = gltfNode.weights ?? mesh.weights;
     const targets = node.primitives[0].morphTargets;
 
     // Since meshes are not stored as separate components, the mesh weights will still
@@ -2511,10 +2576,8 @@ function loadAnimationSampler(loader, gltfSampler) {
   animationSampler.input = loadAccessor(loader, inputAccessor);
 
   const gltfInterpolation = gltfSampler.interpolation;
-  animationSampler.interpolation = defaultValue(
-    InterpolationType[gltfInterpolation],
-    InterpolationType.LINEAR,
-  );
+  animationSampler.interpolation =
+    InterpolationType[gltfInterpolation] ?? InterpolationType.LINEAR;
 
   const outputAccessor = accessors[gltfSampler.output];
   animationSampler.output = loadAccessor(loader, outputAccessor, true);
@@ -2609,7 +2672,7 @@ function loadArticulation(articulationJson) {
 }
 
 function loadArticulations(gltf) {
-  const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
+  const extensions = gltf.extensions ?? Frozen.EMPTY_OBJECT;
   const articulationJsons = extensions.AGI_articulations?.articulations;
   if (!defined(articulationJsons)) {
     return [];
@@ -2622,7 +2685,7 @@ function getSceneNodeIds(gltf) {
   if (defined(gltf.scenes) && defined(gltf.scene)) {
     nodesIds = gltf.scenes[gltf.scene].nodes;
   }
-  nodesIds = defaultValue(nodesIds, gltf.nodes);
+  nodesIds = nodesIds ?? gltf.nodes;
   nodesIds = defined(nodesIds) ? nodesIds : [];
   return nodesIds;
 }
@@ -2655,7 +2718,7 @@ const scratchCenter = new Cartesian3();
  */
 function parse(loader, frameState) {
   const gltf = loader.gltfJson;
-  const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
+  const extensions = gltf.extensions ?? Frozen.EMPTY_OBJECT;
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
   const cesiumRtcExtension = extensions.CESIUM_RTC;

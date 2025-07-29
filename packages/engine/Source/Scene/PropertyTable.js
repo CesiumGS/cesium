@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import JsonMetadataTable from "./JsonMetadataTable.js";
@@ -39,7 +39,7 @@ import addAllToArray from "../Core/addAllToArray.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PropertyTable(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.count", options.count);

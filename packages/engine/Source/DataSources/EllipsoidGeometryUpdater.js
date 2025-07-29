@@ -2,7 +2,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
@@ -446,7 +445,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
   );
   const material = MaterialProperty.getValue(
     time,
-    defaultValue(ellipsoid.material, defaultMaterial),
+    ellipsoid.material ?? defaultMaterial,
     this._material,
   );
 

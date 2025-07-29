@@ -1225,6 +1225,7 @@ Node.prototype._evaluateVariableString = function (feature) {
       property = "";
     }
     result = result.replace(placeholder, property);
+    variableRegex.lastIndex += property.length - placeholder.length;
     match = variableRegex.exec(result);
   }
   return result;

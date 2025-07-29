@@ -2,7 +2,7 @@ import arrayRemoveDuplicates from "../Core/arrayRemoveDuplicates.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
@@ -35,11 +35,11 @@ import Material from "./Material.js";
  *
  */
 function Polyline(options, polylineCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._show = defaultValue(options.show, true);
-  this._width = defaultValue(options.width, 1.0);
-  this._loop = defaultValue(options.loop, false);
+  this._show = options.show ?? true;
+  this._width = options.width ?? 1.0;
+  this._loop = options.loop ?? false;
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
   this._material = options.material;

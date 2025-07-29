@@ -4,7 +4,6 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
@@ -312,6 +311,18 @@ PolygonGeometryLibrary.subdivideTexcoordRhumbLine = function (
   return texcoords;
 };
 
+/**
+ * Subdivide the line between 2 points every minDistance length
+ * If the points are already closer than minDistance the first will be returned
+ *
+ * @private
+ * @param {Ellipsoid} ellipsoid
+ * @param {Cartesian3} p0 start point
+ * @param {Cartesian3} p1 end point
+ * @param {number} minDistance minimum distance between points in radians
+ * @param {number[]} [result] if provided positions will be packed into this array starting at index 0
+ * @returns {number[]} Cartesian3 positions packed into an array
+ */
 PolygonGeometryLibrary.subdivideRhumbLine = function (
   ellipsoid,
   p0,
@@ -323,14 +334,24 @@ PolygonGeometryLibrary.subdivideRhumbLine = function (
   const c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
   const rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
 
+  if (!defined(result)) {
+    result = [];
+  }
+
+  if (rhumb.surfaceDistance <= minDistance) {
+    // no need to try and subdivide a line that's already shorter than the min distance
+    // this also inherently handles duplicated points which would have 0 distance
+    result.length = 3;
+    result[0] = p0.x;
+    result[1] = p0.y;
+    result[2] = p0.z;
+    return result;
+  }
+
   const n = rhumb.surfaceDistance / minDistance;
   const countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
   const numVertices = Math.pow(2, countDivide);
   const distanceBetweenVertices = rhumb.surfaceDistance / numVertices;
-
-  if (!defined(result)) {
-    result = [];
-  }
 
   const positions = result;
   positions.length = numVertices * 3;
@@ -362,7 +383,7 @@ PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function (
   ellipsoid,
   perPositionHeight,
 ) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const n1 = scaleToGeodeticHeightN1;
   let n2 = scaleToGeodeticHeightN2;

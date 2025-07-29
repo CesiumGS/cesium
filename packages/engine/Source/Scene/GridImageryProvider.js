@@ -1,5 +1,5 @@
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -37,7 +37,7 @@ const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
  *
  */
 function GridImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -53,22 +53,19 @@ function GridImageryProvider(options) {
   this._tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme
     : new GeographicTilingScheme({ ellipsoid: options.ellipsoid });
-  this._cells = defaultValue(options.cells, 8);
-  this._color = defaultValue(options.color, defaultColor);
-  this._glowColor = defaultValue(options.glowColor, defaultGlowColor);
-  this._glowWidth = defaultValue(options.glowWidth, 6);
-  this._backgroundColor = defaultValue(
-    options.backgroundColor,
-    defaultBackgroundColor,
-  );
+  this._cells = options.cells ?? 8;
+  this._color = options.color ?? defaultColor;
+  this._glowColor = options.glowColor ?? defaultGlowColor;
+  this._glowWidth = options.glowWidth ?? 6;
+  this._backgroundColor = options.backgroundColor ?? defaultBackgroundColor;
   this._errorEvent = new Event();
 
-  this._tileWidth = defaultValue(options.tileWidth, 256);
-  this._tileHeight = defaultValue(options.tileHeight, 256);
+  this._tileWidth = options.tileWidth ?? 256;
+  this._tileHeight = options.tileHeight ?? 256;
 
   // A little larger than tile size so lines are sharper
   // Note: can't be too much difference otherwise texture blowout
-  this._canvasSize = defaultValue(options.canvasSize, 256);
+  this._canvasSize = options.canvasSize ?? 256;
 
   // We only need a single canvas since all tiles will be the same
   this._canvas = this._createGridCanvas();

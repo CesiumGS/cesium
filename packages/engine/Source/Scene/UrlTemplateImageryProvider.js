@@ -4,7 +4,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -187,7 +187,7 @@ const pickFeaturesTags = combine(tags, {
  * @see WebMapTileServiceImageryProvider
  */
 function UrlTemplateImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._errorEvent = new Event();
 
@@ -213,19 +213,15 @@ function UrlTemplateImageryProvider(options) {
   }
   this._subdomains = subdomains;
 
-  this._tileWidth = defaultValue(options.tileWidth, 256);
-  this._tileHeight = defaultValue(options.tileHeight, 256);
-  this._minimumLevel = defaultValue(options.minimumLevel, 0);
+  this._tileWidth = options.tileWidth ?? 256;
+  this._tileHeight = options.tileHeight ?? 256;
+  this._minimumLevel = options.minimumLevel ?? 0;
   this._maximumLevel = options.maximumLevel;
-  this._tilingScheme = defaultValue(
-    options.tilingScheme,
-    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid }),
-  );
+  this._tilingScheme =
+    options.tilingScheme ??
+    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid });
 
-  this._rectangle = defaultValue(
-    options.rectangle,
-    this._tilingScheme.rectangle,
-  );
+  this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
   this._rectangle = Rectangle.intersection(
     this._rectangle,
     this._tilingScheme.rectangle,
@@ -238,7 +234,7 @@ function UrlTemplateImageryProvider(options) {
     credit = new Credit(credit);
   }
   this._credit = credit;
-  this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
+  this._hasAlphaChannel = options.hasAlphaChannel ?? true;
 
   const customTags = options.customTags;
   const allTags = combine(tags, customTags);
@@ -266,7 +262,7 @@ function UrlTemplateImageryProvider(options) {
    * @type {boolean}
    * @default true
    */
-  this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+  this.enablePickFeatures = options.enablePickFeatures ?? true;
 }
 
 Object.defineProperties(UrlTemplateImageryProvider.prototype, {

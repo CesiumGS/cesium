@@ -1,6 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import EllipseGeometry from "./EllipseGeometry.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -37,7 +37,7 @@ import VertexFormat from "./VertexFormat.js";
  * const geometry = Cesium.CircleGeometry.createGeometry(circle);
  */
 function CircleGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const radius = options.radius;
 
   //>>includeStart('debug', pragmas.debug);

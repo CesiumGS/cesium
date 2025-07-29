@@ -3,7 +3,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Color from "./Color.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -87,10 +87,10 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
  * const geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
  */
 function SimplePolylineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const colors = options.colors;
-  const colorsPerVertex = defaultValue(options.colorsPerVertex, false);
+  const colorsPerVertex = options.colorsPerVertex ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(positions) || positions.length < 2) {
@@ -109,12 +109,9 @@ function SimplePolylineGeometry(options) {
   this._colors = colors;
   this._colorsPerVertex = colorsPerVertex;
 
-  this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
-  this._granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this._arcType = options.arcType ?? ArcType.GEODESIC;
+  this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._workerName = "createSimplePolylineGeometry";
 
   let numComponents = 1 + positions.length * Cartesian3.packedLength;
@@ -146,7 +143,7 @@ SimplePolylineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -191,7 +188,7 @@ SimplePolylineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 

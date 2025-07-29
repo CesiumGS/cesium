@@ -7,7 +7,58 @@ import {
 } from "../../index.js";
 
 describe("Core/PolygonGeometryLibrary", function () {
-  describe("splitPolygonByPlane", function () {
+  describe("subdivideRhumbLine", () => {
+    it("returns first point if both points are the same", function () {
+      const p0 = new Cartesian3(3813220.0, -5085291.0, 527179.0);
+      const p1 = new Cartesian3(3813220.0, -5085291.0, 527179.0);
+      const positions = PolygonGeometryLibrary.subdivideRhumbLine(
+        Ellipsoid.WGS84,
+        p0,
+        p1,
+        2,
+      );
+      expect(positions.length).toEqual(3);
+      expect(positions).toEqual([3813220.0, -5085291.0, 527179.0]);
+    });
+
+    it("returns first point if the points are closer than minDistance", function () {
+      const p0 = new Cartesian3(3813220.0, -5085291.0, 527179.0);
+      const p1 = new Cartesian3(3813220.0, -5085291.0, 527179.0 + 1);
+      // actual surface distance is ~0.997
+      const positions = PolygonGeometryLibrary.subdivideRhumbLine(
+        Ellipsoid.WGS84,
+        p0,
+        p1,
+        2,
+      );
+      expect(positions.length).toEqual(3);
+      expect(positions).toEqual([3813220.0, -5085291.0, 527179.0]);
+    });
+
+    it("subdivides the line between 2 points", function () {
+      const p0 = new Cartesian3(3813220.0, -5085291.0, 527179.0);
+      const p1 = new Cartesian3(3813220.0, -5085291.0, 527179.0 + 5);
+      // actual surface distance is ~4.983
+      const positions = PolygonGeometryLibrary.subdivideRhumbLine(
+        Ellipsoid.WGS84,
+        p0,
+        p1,
+        2,
+      );
+      expect(positions.length).toEqual(12);
+      expect(positions).toEqualEpsilon(
+        [
+          3813220.447295841, -5085291.596511482, 527179.0622555692,
+          3813220.3851130935, -5085291.513584885, 527180.3036009098,
+          3813220.3229302, -5085291.430658091, 527181.5449462304,
+          3813220.2607471617, -5085291.347731101, 527182.7862915307,
+        ],
+        CesiumMath.EPSILON7,
+      );
+    });
+  });
+
+  describe("splitPolygonsOnEquator", function () {
     it("splits a simple polygon at the equator", function () {
       const positions = Cartesian3.unpackArray([
         3813220.0, -5085291.0, 527179.0, 3701301.0, -5097773.0, -993503.0,

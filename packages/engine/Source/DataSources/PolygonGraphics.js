@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -104,7 +104,7 @@ function PolygonGraphics(options) {
   this._textureCoordinates = undefined;
   this._textureCoordinatesSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PolygonGraphics.prototype, {
@@ -353,48 +353,31 @@ PolygonGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.hierarchy = defaultValue(this.hierarchy, source.hierarchy);
-  this.height = defaultValue(this.height, source.height);
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference,
-  );
-  this.extrudedHeight = defaultValue(
-    this.extrudedHeight,
-    source.extrudedHeight,
-  );
-  this.extrudedHeightReference = defaultValue(
-    this.extrudedHeightReference,
-    source.extrudedHeightReference,
-  );
-  this.stRotation = defaultValue(this.stRotation, source.stRotation);
-  this.granularity = defaultValue(this.granularity, source.granularity);
-  this.fill = defaultValue(this.fill, source.fill);
-  this.material = defaultValue(this.material, source.material);
-  this.outline = defaultValue(this.outline, source.outline);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.perPositionHeight = defaultValue(
-    this.perPositionHeight,
-    source.perPositionHeight,
-  );
-  this.closeTop = defaultValue(this.closeTop, source.closeTop);
-  this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
-  this.arcType = defaultValue(this.arcType, source.arcType);
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition,
-  );
-  this.classificationType = defaultValue(
-    this.classificationType,
-    source.classificationType,
-  );
-  this.zIndex = defaultValue(this.zIndex, source.zIndex);
-  this.textureCoordinates = defaultValue(
-    this.textureCoordinates,
-    source.textureCoordinates,
-  );
+  this.show = this.show ?? source.show;
+  this.hierarchy = this.hierarchy ?? source.hierarchy;
+  this.height = this.height ?? source.height;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.extrudedHeight = this.extrudedHeight ?? source.extrudedHeight;
+  this.extrudedHeightReference =
+    this.extrudedHeightReference ?? source.extrudedHeightReference;
+  this.stRotation = this.stRotation ?? source.stRotation;
+  this.granularity = this.granularity ?? source.granularity;
+  this.fill = this.fill ?? source.fill;
+  this.material = this.material ?? source.material;
+  this.outline = this.outline ?? source.outline;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.perPositionHeight = this.perPositionHeight ?? source.perPositionHeight;
+  this.closeTop = this.closeTop ?? source.closeTop;
+  this.closeBottom = this.closeBottom ?? source.closeBottom;
+  this.arcType = this.arcType ?? source.arcType;
+  this.shadows = this.shadows ?? source.shadows;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.classificationType =
+    this.classificationType ?? source.classificationType;
+  this.zIndex = this.zIndex ?? source.zIndex;
+  this.textureCoordinates =
+    this.textureCoordinates ?? source.textureCoordinates;
 };
 export default PolygonGraphics;

@@ -6,6 +6,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import Check from "../Core/Check.js";
 import KmlDataSource from "../DataSources/KmlDataSource.js";
 import GeoJsonDataSource from "../DataSources/GeoJsonDataSource.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS
@@ -106,7 +107,7 @@ ITwinData.createTilesetForRealityDataId = async function (
   if (defined(rootDocument)) {
     Check.typeOf.string("rootDocument", rootDocument);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   if (!defined(type) || !defined(rootDocument)) {
     const metadata = await ITwinPlatform.getRealityDataMetadata(
@@ -154,7 +155,7 @@ ITwinData.createTilesetForRealityDataId = async function (
  *
  * @throws {RuntimeError} if the type of reality data is not supported by this function
  */
-ITwinData.createDataSourceForRealityDataId = async function loadRealityData(
+ITwinData.createDataSourceForRealityDataId = async function (
   iTwinId,
   realityDataId,
   type,
@@ -169,7 +170,7 @@ ITwinData.createDataSourceForRealityDataId = async function loadRealityData(
   if (defined(rootDocument)) {
     Check.typeOf.string("rootDocument", rootDocument);
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   if (!defined(type) || !defined(rootDocument)) {
     const metadata = await ITwinPlatform.getRealityDataMetadata(
@@ -203,6 +204,56 @@ ITwinData.createDataSourceForRealityDataId = async function loadRealityData(
 
   // If we get here it's guaranteed to be a KML type
   return KmlDataSource.load(tilesetAccessUrl);
+};
+
+/**
+ * Load data from the Geospatial Features API as GeoJSON.
+ *
+ * @param {string} iTwinId The id of the iTwin to load data from
+ * @param {string} collectionId The id of the data collection to load
+ * @param {number} [limit=10000] number of items per page, must be between 1 and 10,000 inclusive
+ * @returns {Promise<GeoJsonDataSource>}
+ */
+ITwinData.loadGeospatialFeatures = async function (
+  iTwinId,
+  collectionId,
+  limit,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("collectionId", collectionId);
+  if (defined(limit)) {
+    Check.typeOf.number("limit", limit);
+    Check.typeOf.number.lessThanOrEquals("limit", limit, 10000);
+    Check.typeOf.number.greaterThanOrEquals("limit", limit, 1);
+  }
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
+
+  const pageLimit = limit ?? 10000;
+
+  const tilesetUrl = `${ITwinPlatform.apiEndpoint}geospatial-features/itwins/${iTwinId}/ogc/collections/${collectionId}/items`;
+
+  const resource = new Resource({
+    url: tilesetUrl,
+    headers: {
+      Authorization: ITwinPlatform._getAuthorizationHeader(),
+      Accept: "application/vnd.bentley.itwin-platform.v1+json",
+    },
+    queryParameters: {
+      limit: pageLimit,
+      client: "CesiumJS",
+    },
+  });
+
+  return GeoJsonDataSource.load(resource);
 };
 
 export default ITwinData;

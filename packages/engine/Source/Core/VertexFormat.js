@@ -1,4 +1,4 @@
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -23,7 +23,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see Packable
  */
 function VertexFormat(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * When <code>true</code>, the vertex has a 3D position attribute.
@@ -35,7 +35,7 @@ function VertexFormat(options) {
    *
    * @default false
    */
-  this.position = defaultValue(options.position, false);
+  this.position = options.position ?? false;
 
   /**
    * When <code>true</code>, the vertex has a normal attribute (normalized), which is commonly used for lighting.
@@ -47,7 +47,7 @@ function VertexFormat(options) {
    *
    * @default false
    */
-  this.normal = defaultValue(options.normal, false);
+  this.normal = options.normal ?? false;
 
   /**
    * When <code>true</code>, the vertex has a 2D texture coordinate attribute.
@@ -59,7 +59,7 @@ function VertexFormat(options) {
    *
    * @default false
    */
-  this.st = defaultValue(options.st, false);
+  this.st = options.st ?? false;
 
   /**
    * When <code>true</code>, the vertex has a bitangent attribute (normalized), which is used for tangent-space effects like bump mapping.
@@ -71,7 +71,7 @@ function VertexFormat(options) {
    *
    * @default false
    */
-  this.bitangent = defaultValue(options.bitangent, false);
+  this.bitangent = options.bitangent ?? false;
 
   /**
    * When <code>true</code>, the vertex has a tangent attribute (normalized), which is used for tangent-space effects like bump mapping.
@@ -83,7 +83,7 @@ function VertexFormat(options) {
    *
    * @default false
    */
-  this.tangent = defaultValue(options.tangent, false);
+  this.tangent = options.tangent ?? false;
 
   /**
    * When <code>true</code>, the vertex has an RGB color attribute.
@@ -95,7 +95,7 @@ function VertexFormat(options) {
    *
    * @default false
    */
-  this.color = defaultValue(options.color, false);
+  this.color = options.color ?? false;
 }
 
 /**
@@ -243,7 +243,7 @@ VertexFormat.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.position ? 1.0 : 0.0;
   array[startingIndex++] = value.normal ? 1.0 : 0.0;
@@ -270,7 +270,7 @@ VertexFormat.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new VertexFormat();

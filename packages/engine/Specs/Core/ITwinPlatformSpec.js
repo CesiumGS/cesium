@@ -7,13 +7,50 @@ import {
 
 describe("ITwinPlatform", () => {
   let previousAccessToken;
+  let previousShareKey;
   beforeEach(() => {
     previousAccessToken = ITwinPlatform.defaultAccessToken;
     ITwinPlatform.defaultAccessToken = "default-access-token";
+    previousShareKey = ITwinPlatform.defaultShareKey;
+    ITwinPlatform.defaultShareKey = undefined;
   });
 
   afterEach(() => {
     ITwinPlatform.defaultAccessToken = previousAccessToken;
+    ITwinPlatform.defaultShareKey = previousShareKey;
+  });
+
+  describe("_getAuthorizationHeader", () => {
+    it("rejects with no default access token or default share key set", async () => {
+      ITwinPlatform.defaultAccessToken = undefined;
+      ITwinPlatform.defaultShareKey = undefined;
+      expect(() =>
+        ITwinPlatform._getAuthorizationHeader(),
+      ).toThrowDeveloperError(
+        /Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey/,
+      );
+    });
+
+    it("uses default access token if default share key not set", () => {
+      ITwinPlatform.defaultAccessToken = "access-token";
+      ITwinPlatform.defaultShareKey = undefined;
+      const header = ITwinPlatform._getAuthorizationHeader();
+      expect(header).toEqual("Bearer access-token");
+    });
+
+    it("uses default share key if default access token not set", () => {
+      ITwinPlatform.defaultAccessToken = undefined;
+      ITwinPlatform.defaultShareKey = "share-key";
+      const header = ITwinPlatform._getAuthorizationHeader();
+      expect(header).toEqual("Basic share-key");
+    });
+
+    it("uses default share key even if default access token is set", () => {
+      ITwinPlatform.defaultAccessToken = "access-token";
+      ITwinPlatform.defaultShareKey = "share-key";
+      const header = ITwinPlatform._getAuthorizationHeader();
+      expect(header).toEqual("Basic share-key");
+    });
   });
 
   describe("getExports", () => {
@@ -30,12 +67,13 @@ describe("ITwinPlatform", () => {
       );
     });
 
-    it("rejects with no default access token set", async () => {
+    it("rejects with no default access token or default share key set", async () => {
       ITwinPlatform.defaultAccessToken = undefined;
+      ITwinPlatform.defaultShareKey = undefined;
       await expectAsync(
         ITwinPlatform.getExports("imodel-id-1"),
       ).toBeRejectedWithDeveloperError(
-        "Must set ITwinPlatform.defaultAccessToken first",
+        /Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey/,
       );
     });
 
@@ -142,12 +180,13 @@ describe("ITwinPlatform", () => {
       );
     });
 
-    it("rejects with no default access token set", async () => {
+    it("rejects with no default access token or default share key set", async () => {
       ITwinPlatform.defaultAccessToken = undefined;
+      ITwinPlatform.defaultShareKey = undefined;
       await expectAsync(
         ITwinPlatform.getRealityDataMetadata("itwin-id-1", "reality-data-id-1"),
       ).toBeRejectedWithDeveloperError(
-        "Must set ITwinPlatform.defaultAccessToken first",
+        /Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey/,
       );
     });
 
@@ -271,7 +310,7 @@ describe("ITwinPlatform", () => {
       );
     });
 
-    it("rejects with no default access token set", async () => {
+    it("rejects with no default access token or default share key set", async () => {
       ITwinPlatform.defaultAccessToken = undefined;
       await expectAsync(
         ITwinPlatform.getRealityDataURL(
@@ -280,7 +319,7 @@ describe("ITwinPlatform", () => {
           "root/document/path.json",
         ),
       ).toBeRejectedWithDeveloperError(
-        "Must set ITwinPlatform.defaultAccessToken first",
+        /Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey/,
       );
     });
 

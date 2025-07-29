@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Geometry from "./Geometry.js";
@@ -35,7 +35,7 @@ const diffScratch = new Cartesian3();
  * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
  */
 function BoxOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const min = options.minimum;
   const max = options.maximum;
@@ -78,7 +78,7 @@ function BoxOutlineGeometry(options) {
  * @see BoxOutlineGeometry.createGeometry
  */
 BoxOutlineGeometry.fromDimensions = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const dimensions = options.dimensions;
 
   //>>includeStart('debug', pragmas.debug);
@@ -149,14 +149,12 @@ BoxOutlineGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value._min, array, startingIndex);
   Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
-  array[startingIndex + Cartesian3.packedLength * 2] = defaultValue(
-    value._offsetAttribute,
-    -1,
-  );
+  array[startingIndex + Cartesian3.packedLength * 2] =
+    value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -182,7 +180,7 @@ BoxOutlineGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const min = Cartesian3.unpack(array, startingIndex, scratchMin);
   const max = Cartesian3.unpack(

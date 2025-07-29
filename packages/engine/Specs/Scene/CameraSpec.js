@@ -4,7 +4,6 @@ import {
   Cartesian3,
   Cartesian4,
   Cartographic,
-  defaultValue,
   Ellipsoid,
   GeographicProjection,
   HeadingPitchRange,
@@ -45,7 +44,7 @@ describe("Scene/Camera", function () {
     };
     this.drawingBufferWidth = 1024;
     this.drawingBufferHeight = 768;
-    this.mapProjection = defaultValue(projection, new GeographicProjection());
+    this.mapProjection = projection ?? new GeographicProjection();
     this.tweens = new TweenCollection();
     this.screenSpaceCameraController = {
       minimumZoomDistance: 0,
@@ -3174,7 +3173,7 @@ describe("Scene/Camera", function () {
       new Cartesian3(0.0, -windowHeight, -1.0),
       new Cartesian3(),
     );
-    expect(ray.origin).toEqual(camera.position);
+    expect(ray.origin).toEqual(camera.positionWC);
     expect(ray.direction).toEqualEpsilon(
       expectedDirection,
       CesiumMath.EPSILON15,
@@ -3199,11 +3198,11 @@ describe("Scene/Camera", function () {
     );
     const ray = camera.getPickRay(windowCoord);
 
-    const cameraPosition = camera.position;
+    const cameraPosition = camera.positionWC;
     const expectedPosition = new Cartesian3(
-      cameraPosition.z,
-      cameraPosition.x + 2.0,
+      cameraPosition.x,
       cameraPosition.y + 2.0,
+      cameraPosition.z + 2.0,
     );
     expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
     expect(ray.direction).toEqual(camera.directionWC);
@@ -3228,10 +3227,10 @@ describe("Scene/Camera", function () {
     );
     const ray = camera.getPickRay(windowCoord);
 
-    const cameraPosition = camera.position;
+    const cameraPosition = camera.positionWC;
     const expectedPosition = new Cartesian3(
       cameraPosition.x + 2.0,
-      cameraPosition.y + 2,
+      cameraPosition.y + 2.0,
       cameraPosition.z,
     );
     expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
@@ -3257,14 +3256,144 @@ describe("Scene/Camera", function () {
     );
     const ray = camera.getPickRay(windowCoord);
 
-    const cameraPosition = camera.position;
+    const cameraPosition = camera.positionWC;
     const expectedPosition = new Cartesian3(
-      cameraPosition.z,
-      cameraPosition.x + 2.0,
-      cameraPosition.y + 2,
+      cameraPosition.x,
+      cameraPosition.y + 2.0,
+      cameraPosition.z + 2.0,
     );
     expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
     expect(ray.direction).toEqual(camera.directionWC);
+  });
+
+  it("get pick ray with lookAt perspective in 3D", function () {
+    const target = Cartesian3.fromDegrees(0.0, 0.0);
+    const offset = new Cartesian3(0.0, -1.0, 0.0);
+
+    const tempCamera = Camera.clone(camera);
+    tempCamera.lookAt(target, offset);
+
+    const windowCoord = new Cartesian2(
+      scene.canvas.clientWidth / 2,
+      scene.canvas.clientHeight,
+    );
+    const ray = tempCamera.getPickRay(windowCoord);
+
+    const windowHeight =
+      tempCamera.frustum.near * Math.tan(tempCamera.frustum.fovy * 0.5);
+    const expectedDirection = Cartesian3.normalize(
+      new Cartesian3(-windowHeight, 0, 1.0),
+      new Cartesian3(),
+    );
+    expect(ray.origin).toEqual(tempCamera.positionWC);
+    expect(ray.direction).toEqualEpsilon(
+      expectedDirection,
+      CesiumMath.EPSILON9,
+    );
+  });
+
+  it("get pick ray with lookAt orthographic in 3D", function () {
+    const target = Cartesian3.fromDegrees(1.0, 1.0);
+    const offset = new Cartesian3(0.0, 2.0, 0.0);
+
+    const tempCamera = Camera.clone(camera);
+    tempCamera.lookAt(target, offset);
+
+    const frustum = new OrthographicFrustum();
+    frustum.aspectRatio = 1.0;
+    frustum.width = 20.0;
+    frustum.near = 1.0;
+    frustum.far = 21.0;
+    tempCamera.frustum = frustum;
+
+    // force off center frustum to update
+    expect(frustum.projectionMatrix).toBeDefined();
+
+    tempCamera.update(SceneMode.SCENE3D);
+
+    const windowCoord = new Cartesian2(
+      (3.0 / 5.0) * scene.canvas.clientWidth,
+      (1.0 - 3.0 / 5.0) * scene.canvas.clientHeight,
+    );
+    const ray = tempCamera.getPickRay(windowCoord);
+
+    const cameraPosition = tempCamera.positionWC;
+    const expectedPosition = new Cartesian3(
+      cameraPosition.x + 2.0,
+      cameraPosition.y - 2.0,
+      cameraPosition.z,
+    );
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON6);
+    expect(ray.direction).toEqual(tempCamera.directionWC);
+  });
+
+  it("get pick ray with lookAt orthographic in 2D", function () {
+    const target = Cartesian3.fromDegrees(1.0, 1.0);
+    const offset = new Cartesian3(0.0, 1.0, 0.0);
+
+    const tempCamera = Camera.clone(camera);
+    tempCamera.lookAt(target, offset);
+
+    const frustum = new OrthographicOffCenterFrustum();
+    frustum.left = -10.0;
+    frustum.right = 10.0;
+    frustum.bottom = -10.0;
+    frustum.top = 10.0;
+    frustum.near = 1.0;
+    frustum.far = 21.0;
+    tempCamera.frustum = frustum;
+
+    tempCamera.update(SceneMode.SCENE2D);
+
+    const windowCoord = new Cartesian2(
+      (3.0 / 5.0) * scene.canvas.clientWidth,
+      (1.0 - 3.0 / 5.0) * scene.canvas.clientHeight,
+    );
+    const ray = tempCamera.getPickRay(windowCoord);
+
+    const cameraPosition = tempCamera.positionWC;
+    const expectedPosition = new Cartesian3(
+      cameraPosition.x + 2.0,
+      cameraPosition.y - 2.0,
+      cameraPosition.z,
+    );
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON6);
+    expect(ray.direction).toEqual(tempCamera.directionWC);
+  });
+
+  it("get pick ray with lookAt orthographic in Columbus view", function () {
+    const target = Cartesian3.fromDegrees(1.0, 1.0);
+    const offset = new Cartesian3(0.0, 1.0, 0.0);
+
+    const tempCamera = Camera.clone(camera);
+    tempCamera.lookAt(target, offset);
+
+    const frustum = new OrthographicFrustum();
+    frustum.aspectRatio = 1.0;
+    frustum.width = 20.0;
+    frustum.near = 1.0;
+    frustum.far = 21.0;
+    tempCamera.frustum = frustum;
+
+    // force off center frustum to update
+    expect(frustum.projectionMatrix).toBeDefined();
+
+    tempCamera.update(SceneMode.COLUMBUS_VIEW);
+
+    const windowCoord = new Cartesian2(
+      (3.0 / 5.0) * scene.canvas.clientWidth,
+      (1.0 - 3.0 / 5.0) * scene.canvas.clientHeight,
+    );
+    const ray = tempCamera.getPickRay(windowCoord);
+
+    const cameraPosition = tempCamera.positionWC;
+    const expectedPosition = new Cartesian3(
+      cameraPosition.x + 2.0,
+      cameraPosition.y - 2.0,
+      cameraPosition.z,
+    );
+    expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON6);
+    expect(ray.direction).toEqual(tempCamera.directionWC);
   });
 
   it("gets magnitude in 2D", function () {

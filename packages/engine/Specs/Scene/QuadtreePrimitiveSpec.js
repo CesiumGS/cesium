@@ -7,6 +7,7 @@ import {
   GeographicProjection,
   GeographicTilingScheme,
   Intersect,
+  Math as CesiumMath,
   Rectangle,
   Visibility,
   Camera,
@@ -22,6 +23,18 @@ import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+
+function expectCartographicToEqualEpsilon(actual, expected, epsilon) {
+  expect(
+    CesiumMath.equalsEpsilon(actual.longitude, expected.longitude, epsilon),
+  ).toBe(true);
+  expect(
+    CesiumMath.equalsEpsilon(actual.latitude, expected.latitude, epsilon),
+  ).toBe(true);
+  expect(
+    CesiumMath.equalsEpsilon(actual.height, expected.height, epsilon),
+  ).toBe(true);
+}
 
 describe("Scene/QuadtreePrimitive", function () {
   describe("selectTilesForRendering", function () {
@@ -920,9 +933,15 @@ describe("Scene/QuadtreePrimitive", function () {
           },
         };
 
-        const position = Cartesian3.clone(Cartesian3.ZERO);
-        const updatedPosition = Cartesian3.clone(Cartesian3.UNIT_X);
+        const positionCarto = Cartographic.fromDegrees(-72.0, 40.0, 0);
+        const updatedPositionCarto = Cartographic.fromDegrees(-72.0, 40.0, 100);
+        const position = Cartographic.toCartesian(positionCarto);
+        const updatedPosition = Cartographic.toCartesian(updatedPositionCarto);
+        // variables for results
+        const positionRes = new Cartographic();
+        const updatedPositionRes = new Cartographic();
         let currentPosition = position;
+        let currentPositionRes = positionRes;
 
         // Load the root tiles.
         tileProvider.loadTile.and.callFake(function (frameState, tile) {
@@ -943,7 +962,8 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree.updateHeight(
           Cartographic.fromDegrees(-72.0, 40.0),
           function (p) {
-            Cartesian3.clone(p, position);
+            // p is a Cartographic position
+            Cartographic.clone(p, currentPositionRes);
           },
         );
 
@@ -959,16 +979,106 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        expect(position).toEqual(Cartesian3.ZERO);
+        expectCartographicToEqualEpsilon(
+          positionRes,
+          positionCarto,
+          CesiumMath.EPSILON10,
+        );
 
         currentPosition = updatedPosition;
+        currentPositionRes = updatedPositionRes;
 
         quadtree.update(scene.frameState);
         quadtree.beginFrame(scene.frameState);
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        expect(position).toEqual(updatedPosition);
+        expectCartographicToEqualEpsilon(
+          updatedPositionRes,
+          updatedPositionCarto,
+          CesiumMath.EPSILON10,
+        );
+      });
+
+      it("uses tiles position caching in update heights", function () {
+        const tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        tileProvider.terrainProvider = {
+          getTileDataAvailable: function () {
+            return true;
+          },
+        };
+
+        // Dummy positions
+        const computedPosition = new Cartesian3(1000, 2000, 3000);
+        const currentPosition = computedPosition;
+
+        // Create a Map to count how many times the tile's pick function is called for each tile level.
+        const pickCounters = new Map();
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            // The pick function simulates computing a clamped position.
+            // Each call increments the counter.
+            pick: function () {
+              // Initialize the counter for this tile's level if not already set.
+              if (!pickCounters.has(tile.level)) {
+                pickCounters.set(tile.level, 0);
+              }
+              const count = pickCounters.get(tile.level);
+              const pickPosition = currentPosition;
+              pickCounters.set(tile.level, count + 1);
+              return pickPosition;
+            },
+            mesh: {},
+          };
+        });
+
+        const quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        // Create two nearly identical cartographic positions (in degrees)
+        const carto1 = Cartographic.fromDegrees(-72.0, 40.0);
+        // Slightly offset cartographic coordinates (within the rounding tolerance)
+        const carto2 = Cartographic.fromDegrees(
+          -72.0 + 0.000001,
+          40.0 + 0.000001,
+        );
+
+        // Variables to store results from the callbacks
+        const position1 = new Cartographic();
+        const position2 = new Cartographic();
+
+        // Install two height update callbacks with near-identical positions.
+        quadtree.updateHeight(carto1, function (p) {
+          Cartographic.clone(p, position1);
+        });
+        quadtree.updateHeight(carto2, function (p) {
+          Cartographic.clone(p, position2);
+        });
+
+        // Process a few render cycles to trigger height updates and cache usage.
+        for (let i = 0; i < 3; ++i) {
+          quadtree.update(scene.frameState);
+          quadtree.beginFrame(scene.frameState);
+          quadtree.render(scene.frameState);
+          quadtree.endFrame(scene.frameState);
+        }
+
+        // Verify that for each tile level recorded in pickCounters, the pick function was called only once.
+        pickCounters.forEach((count, level) => {
+          expect(count).toEqual(1);
+        });
+
+        // Verify that both callbacks produced the same computed position (indicating a cache hit).
+        expect(position1).toEqual(position2);
       });
 
       it("gives correct priority to tile loads", function () {

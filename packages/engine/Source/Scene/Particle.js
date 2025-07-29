@@ -1,7 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 
 const defaultSize = new Cartesian2(1.0, 1.0);
@@ -25,36 +25,32 @@ const defaultSize = new Cartesian2(1.0, 1.0);
  * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions, width by height, to scale the particle image in pixels.
  */
 function Particle(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The mass of the particle in kilograms.
    * @type {number}
    * @default 1.0
    */
-  this.mass = defaultValue(options.mass, 1.0);
+  this.mass = options.mass ?? 1.0;
   /**
    * The positon of the particle in world coordinates.
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    */
-  this.position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
+  this.position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
   /**
    * The velocity of the particle in world coordinates.
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    */
-  this.velocity = Cartesian3.clone(
-    defaultValue(options.velocity, Cartesian3.ZERO),
-  );
+  this.velocity = Cartesian3.clone(options.velocity ?? Cartesian3.ZERO);
   /**
    * The life of the particle in seconds.
    * @type {number}
    * @default Number.MAX_VALUE
    */
-  this.life = defaultValue(options.life, Number.MAX_VALUE);
+  this.life = options.life ?? Number.MAX_VALUE;
   /**
    * The image to use for the particle.
    * @type {object}
@@ -66,33 +62,31 @@ function Particle(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.startColor = Color.clone(defaultValue(options.startColor, Color.WHITE));
+  this.startColor = Color.clone(options.startColor ?? Color.WHITE);
   /**
    * The color of the particle when it dies.
    * @type {Color}
    * @default Color.WHITE
    */
-  this.endColor = Color.clone(defaultValue(options.endColor, Color.WHITE));
+  this.endColor = Color.clone(options.endColor ?? Color.WHITE);
   /**
    * the scale of the particle when it is born.
    * @type {number}
    * @default 1.0
    */
-  this.startScale = defaultValue(options.startScale, 1.0);
+  this.startScale = options.startScale ?? 1.0;
   /**
    * The scale of the particle when it dies.
    * @type {number}
    * @default 1.0
    */
-  this.endScale = defaultValue(options.endScale, 1.0);
+  this.endScale = options.endScale ?? 1.0;
   /**
    * The dimensions, width by height, to scale the particle image in pixels.
    * @type {Cartesian2}
    * @default new Cartesian(1.0, 1.0)
    */
-  this.imageSize = Cartesian2.clone(
-    defaultValue(options.imageSize, defaultSize),
-  );
+  this.imageSize = Cartesian2.clone(options.imageSize ?? defaultSize);
 
   this._age = 0.0;
   this._normalizedAge = 0.0;

@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
 import defined from "./defined.js";
@@ -21,7 +21,7 @@ const CREDIT_HTML = `<img alt="Google" src="https://assets.ion.cesium.com/google
  * @param {string} options.key An API key to use with the Google geocoding service
  */
 function GoogleGeocoderService(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const key = options.key;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(key)) {

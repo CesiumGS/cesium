@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
@@ -25,9 +25,9 @@ import VertexFormat from "./VertexFormat.js";
  * });
  */
 function PlaneGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
   this._vertexFormat = vertexFormat;
   this._workerName = "createPlaneGeometry";
@@ -54,7 +54,7 @@ PlaneGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   VertexFormat.pack(value._vertexFormat, array, startingIndex);
 
@@ -79,7 +79,7 @@ PlaneGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const vertexFormat = VertexFormat.unpack(
     array,
