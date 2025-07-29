@@ -1,5 +1,4 @@
 import defined from "../../Core/defined.js";
-import defaultValue from "../../Core/defaultValue.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Matrix3 from "../../Core/Matrix3.js";
@@ -140,9 +139,18 @@ MaterialPipelineStage.process = function (
     VertexAttributeSemantic.NORMAL,
   );
 
+  // Disable PointCloud normals if the user explicitly turned them off.
+  const disablePointCloudNormals =
+    defined(model.pointCloudShading) && !model.pointCloudShading.normalShading;
+
   // Classification models will be rendered as unlit.
   const lightingOptions = renderResources.lightingOptions;
-  if (material.unlit || !hasNormals || hasClassification) {
+  if (
+    material.unlit ||
+    !hasNormals ||
+    hasClassification ||
+    disablePointCloudNormals
+  ) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
     lightingOptions.lightingModel = LightingModel.PBR;
@@ -272,7 +280,7 @@ function processTexture(
     ShaderDestination.FRAGMENT,
   );
   uniformMap[uniformName] = function () {
-    return defaultValue(textureReader.texture, defaultTexture);
+    return textureReader.texture ?? defaultTexture;
   };
 
   // Add a #define directive to enable using the texture in the shader

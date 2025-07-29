@@ -1,6 +1,5 @@
 import {
   ColorGeometryInstanceAttribute,
-  defaultValue,
   defined,
   GeometryInstance,
   Rectangle,
@@ -49,21 +48,16 @@ describe(
       // render until all labels have been updated
       return pollToPromise(function () {
         scene.renderForSpecs();
-        const backgroundBillboard =
-          labels._backgroundBillboardCollection.get(0);
-        return (
-          (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
-          labels._labelsToUpdate.length === 0
-        );
+        return labels.ready;
       });
     }
 
     function createLabels(position) {
-      position = defaultValue(position, {
+      position = position ?? {
         x: -1.0,
         y: 0.0,
         z: 0.0,
-      });
+      };
       const labels = new LabelCollection();
       labels.add({
         position: position,
@@ -692,6 +686,127 @@ describe(
       collection.destroy();
       p1.destroy();
       p2.destroy();
+    });
+
+    it("initializes reference-counting", function () {
+      expect(primitives.destroyPrimitives).toEqual(true);
+      expect(primitives._countReferences).toEqual(false);
+
+      let collection = new PrimitiveCollection({
+        countReferences: true,
+      });
+      expect(collection.destroyPrimitives).toEqual(true);
+      expect(collection._countReferences).toEqual(true);
+
+      collection = new PrimitiveCollection({ destroyPrimitives: false });
+      expect(collection.destroyPrimitives).toEqual(false);
+      expect(collection._countReferences).toEqual(false);
+    });
+
+    it("does not change reference-counting behavior after construction", function () {
+      const collection = new PrimitiveCollection({
+        countReferences: true,
+      });
+      expect(collection._countReferences).toEqual(true);
+
+      collection.destroyPrimitives = false;
+      expect(collection._countReferences).toEqual(true);
+
+      collection.destroyPrimitives = true;
+      expect(collection._countReferences).toEqual(true);
+    });
+
+    function expectRefCount(primitive, expectedCount) {
+      expect(primitive._external?._referenceCount).toEqual(expectedCount);
+    }
+
+    it("maintains primitive reference counts IFF enabled", function () {
+      const p = createLabels();
+      expectRefCount(p, undefined);
+
+      primitives.add(p);
+      expectRefCount(p, undefined);
+
+      const rc1 = new PrimitiveCollection({
+        countReferences: true,
+      });
+      rc1.add(p);
+      rc1.destroyPrimitives = false;
+      expectRefCount(p, 1);
+
+      const rc2 = new PrimitiveCollection({
+        countReferences: true,
+      });
+      rc2.destroyPrimitives = false;
+      rc2.add(p);
+      expectRefCount(p, 2);
+
+      rc1.remove(p);
+      expectRefCount(p, 1);
+
+      rc2.removeAll();
+      expectRefCount(p, 0);
+    });
+
+    it("destroys primitives on removal IFF reference count is zero and destroyPrimitives is true", function () {
+      const p1 = createLabels();
+      const rc1 = new PrimitiveCollection({
+        countReferences: true,
+      });
+      rc1.add(p1);
+      expect(p1.isDestroyed()).toEqual(false);
+      rc1.remove(p1);
+      expect(p1.isDestroyed()).toEqual(true);
+
+      const p2 = createLabels();
+      rc1.add(p2);
+      rc1.removeAll();
+      expect(p2.isDestroyed()).toEqual(true);
+
+      const p3 = createLabels();
+      rc1.add(p3);
+      rc1.destroyPrimitives = false;
+      rc1.remove(p3);
+      expect(p3.isDestroyed()).toEqual(false);
+      expectRefCount(p3, 0);
+
+      const rc2 = new PrimitiveCollection({
+        countReferences: true,
+      });
+      const p4 = createLabels();
+      rc1.add(p4);
+      expectRefCount(p4, 1);
+      rc2.add(p4);
+      expectRefCount(p4, 2);
+      rc2.remove(p4);
+      expectRefCount(p4, 1);
+      rc1.remove(p4);
+      expectRefCount(p4, 0);
+      expect(p4.isDestroyed()).toEqual(false);
+
+      const p5 = createLabels();
+      rc1.add(p5);
+      expectRefCount(p5, 1);
+      rc2.add(p5);
+      expectRefCount(p5, 2);
+      rc1.remove(p5);
+      expectRefCount(p5, 1);
+      rc2.remove(p5);
+      expect(p5.isDestroyed()).toEqual(true);
+    });
+
+    it("destroys primitives regardless of reference count if reference-counting is not enabled", function () {
+      const p = createLabels();
+      primitives.add(p);
+
+      const rc = new PrimitiveCollection({
+        countReferences: true,
+      });
+      rc.add(p);
+      expectRefCount(p, 1);
+
+      primitives.remove(p);
+      expect(p.isDestroyed()).toEqual(true);
     });
   },
   "WebGL",

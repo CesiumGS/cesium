@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 import MetadataTableProperty from "./MetadataTableProperty.js";
@@ -26,7 +26,7 @@ import MetadataTableProperty from "./MetadataTableProperty.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataTable(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const count = options.count;
   const metadataClass = options.class;
 

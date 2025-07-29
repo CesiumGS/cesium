@@ -295,11 +295,11 @@ function decodePointCloud(parameters) {
 function decodePrimitive(parameters) {
   const dracoDecoder = new draco.Decoder();
 
-  // Skip all parameter types except generic
-  const attributesToSkip = ["POSITION", "NORMAL", "COLOR", "TEX_COORD"];
   if (parameters.dequantizeInShader) {
-    for (let i = 0; i < attributesToSkip.length; ++i) {
-      dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
+    for (let i = 0; i < parameters.attributesToSkipTransform.length; ++i) {
+      dracoDecoder.SkipAttributeTransform(
+        draco[parameters.attributesToSkipTransform[i]],
+      );
     }
   }
 

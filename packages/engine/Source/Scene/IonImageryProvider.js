@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import IonResource from "../Core/IonResource.js";
@@ -82,7 +82,7 @@ const ImageryProviderAsyncMapping = {
  * @see IonImageryProvider.fromAssetId
  */
 function IonImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -266,7 +266,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
   Check.typeOf.number("assetId", assetId);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const endpointResource = IonResource._createEndpointResource(
     assetId,
     options,

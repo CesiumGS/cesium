@@ -1,6 +1,5 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -507,7 +506,7 @@ Occluder.computeOccludeePointFromRectangle = function (rectangle, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
   const positions = Rectangle.subsample(
     rectangle,
     ellipsoid,

@@ -4,7 +4,7 @@ import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -246,10 +246,7 @@ function processDescription(node, entity) {
   for (i = 0; i < length; i++) {
     const infoTypeName = infoTypeNames[i];
     const infoType = descriptiveInfoTypes[infoTypeName];
-    infoType.value = defaultValue(
-      queryStringValue(node, infoType.tag, namespaces.gpx),
-      "",
-    );
+    infoType.value = queryStringValue(node, infoType.tag, namespaces.gpx) ?? "";
     if (defined(infoType.value) && infoType.value !== "") {
       text = `${text}<p>${infoType.text}: ${infoType.value}</p>`;
     }
@@ -668,7 +665,7 @@ function metadataChanged(old, current) {
 }
 
 function load(dataSource, entityCollection, data, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   let promise = data;
   if (typeof data === "string" || data instanceof Resource) {
     data = Resource.createIfNeeded(data);
@@ -947,7 +944,7 @@ GpxDataSource.prototype.load = function (data, options) {
     throw new DeveloperError("data is required.");
   }
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   DataSource.setLoading(this, true);
   const oldName = this._name;
   const that = this;

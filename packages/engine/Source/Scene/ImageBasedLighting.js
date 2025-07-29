@@ -1,7 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
@@ -24,7 +24,7 @@ import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
  * @param {string} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  */
 function ImageBasedLighting(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const imageBasedLightingFactor = defined(options.imageBasedLightingFactor)
     ? Cartesian2.clone(options.imageBasedLightingFactor)
     : new Cartesian2(1.0, 1.0);
@@ -86,6 +86,7 @@ function ImageBasedLighting(options) {
 
   // Store the previous frame number to prevent redundant update calls
   this._previousFrameNumber = undefined;
+  this._previousFrameContext = undefined;
 
   // Keeps track of the last values for use during update logic
   this._previousImageBasedLightingFactor = Cartesian2.clone(
@@ -325,12 +326,15 @@ function createSpecularEnvironmentCubeMap(imageBasedLighting, context) {
 }
 
 ImageBasedLighting.prototype.update = function (frameState) {
-  if (frameState.frameNumber === this._previousFrameNumber) {
+  if (
+    frameState.frameNumber === this._previousFrameNumber &&
+    frameState.context === this._previousFrameContext
+  ) {
     return;
   }
 
   this._previousFrameNumber = frameState.frameNumber;
-  const context = frameState.context;
+  const context = (this._previousFrameContext = frameState.context);
 
   frameState.brdfLutGenerator.update(frameState);
   this._shouldRegenerateShaders = false;

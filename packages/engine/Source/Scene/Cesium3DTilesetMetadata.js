@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import GroupMetadata from "./GroupMetadata.js";
 import TilesetMetadata from "./TilesetMetadata.js";
@@ -24,7 +24,7 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DTilesetMetadata(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const metadataJson = options.metadataJson;
 
   // The calling code is responsible for loading the schema.
@@ -37,7 +37,7 @@ function Cesium3DTilesetMetadata(options) {
   //>>includeEnd('debug');
 
   // An older schema stored the tileset metadata in the "tileset" property.
-  const metadata = defaultValue(metadataJson.metadata, metadataJson.tileset);
+  const metadata = metadataJson.metadata ?? metadataJson.tileset;
 
   let tileset;
   if (defined(metadata)) {

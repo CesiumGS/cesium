@@ -1,13 +1,13 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ShaderDestination from "./ShaderDestination.js";
 import ShaderProgram from "./ShaderProgram.js";
 import ShaderSource from "./ShaderSource.js";
 import ShaderStruct from "./ShaderStruct.js";
 import ShaderFunction from "./ShaderFunction.js";
+import addAllToArray from "../Core/addAllToArray.js";
 
 /**
  * An object that makes it easier to build the text of a {@link ShaderProgram}. This tracks GLSL code for both the vertex shader and the fragment shader.
@@ -122,7 +122,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  destination = defaultValue(destination, ShaderDestination.BOTH);
+  destination = destination ?? ShaderDestination.BOTH;
 
   // The ShaderSource created in build() will add the #define part
   let line = identifier;
@@ -281,7 +281,7 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  destination = defaultValue(destination, ShaderDestination.BOTH);
+  destination = destination ?? ShaderDestination.BOTH;
   const line = `uniform ${type} ${identifier};`;
 
   if (ShaderDestination.includesVertexShader(destination)) {
@@ -414,7 +414,7 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
 
   const vertexLines = this._vertexShaderParts.shaderLines;
   if (Array.isArray(lines)) {
-    vertexLines.push.apply(vertexLines, lines);
+    addAllToArray(vertexLines, lines);
   } else {
     // Single string case
     vertexLines.push(lines);
@@ -449,7 +449,7 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
 
   const fragmentLines = this._fragmentShaderParts.shaderLines;
   if (Array.isArray(lines)) {
-    fragmentLines.push.apply(fragmentLines, lines);
+    addAllToArray(fragmentLines, lines);
   } else {
     // Single string case
     fragmentLines.push(lines);
@@ -534,7 +534,7 @@ function generateStructLines(shaderBuilder) {
     structId = structIds[i];
     struct = shaderBuilder._structs[structId];
     structLines = struct.generateGlslLines();
-    vertexLines.push.apply(vertexLines, structLines);
+    addAllToArray(vertexLines, structLines);
   }
 
   structIds = shaderBuilder._fragmentShaderParts.structIds;
@@ -542,7 +542,7 @@ function generateStructLines(shaderBuilder) {
     structId = structIds[i];
     struct = shaderBuilder._structs[structId];
     structLines = struct.generateGlslLines();
-    fragmentLines.push.apply(fragmentLines, structLines);
+    addAllToArray(fragmentLines, structLines);
   }
 
   return {
@@ -577,7 +577,7 @@ function generateFunctionLines(shaderBuilder) {
     functionId = functionIds[i];
     func = shaderBuilder._functions[functionId];
     functionLines = func.generateGlslLines();
-    vertexLines.push.apply(vertexLines, functionLines);
+    addAllToArray(vertexLines, functionLines);
   }
 
   functionIds = shaderBuilder._fragmentShaderParts.functionIds;
@@ -585,7 +585,7 @@ function generateFunctionLines(shaderBuilder) {
     functionId = functionIds[i];
     func = shaderBuilder._functions[functionId];
     functionLines = func.generateGlslLines();
-    fragmentLines.push.apply(fragmentLines, functionLines);
+    addAllToArray(fragmentLines, functionLines);
   }
 
   return {

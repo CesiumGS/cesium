@@ -1,7 +1,7 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -53,7 +53,7 @@ const scratchCartesian3Position2 = new Cartesian3();
  * const geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
  */
 function WallOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const wallPositions = options.positions;
   const maximumHeights = options.maximumHeights;
@@ -81,11 +81,8 @@ function WallOutlineGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   this._positions = wallPositions;
   this._minimumHeights = minimumHeights;
@@ -128,7 +125,7 @@ WallOutlineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -192,7 +189,7 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -277,7 +274,7 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @see WallOutlineGeometry#createGeometry
  */
 WallOutlineGeometry.fromConstantHeights = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
 
   //>>includeStart('debug', pragmas.debug);

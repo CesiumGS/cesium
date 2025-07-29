@@ -5,7 +5,7 @@ import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CornerType from "./CornerType.js";
 import CorridorGeometryLibrary from "./CorridorGeometryLibrary.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Geometry from "./Geometry.js";
@@ -376,7 +376,7 @@ function computePositionsExtruded(params) {
  * });
  */
 function CorridorOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const width = options.width;
 
@@ -385,21 +385,16 @@ function CorridorOutlineGeometry(options) {
   Check.typeOf.number("options.width", width);
   //>>includeEnd('debug');
 
-  const height = defaultValue(options.height, 0.0);
-  const extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = options.height ?? 0.0;
+  const extrudedHeight = options.extrudedHeight ?? height;
 
   this._positions = positions;
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default),
-  );
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
   this._width = width;
   this._height = Math.max(height, extrudedHeight);
   this._extrudedHeight = Math.min(height, extrudedHeight);
-  this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
-  this._granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
+  this._cornerType = options.cornerType ?? CornerType.ROUNDED;
+  this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
   this._offsetAttribute = options.offsetAttribute;
   this._workerName = "createCorridorOutlineGeometry";
 
@@ -426,7 +421,7 @@ CorridorOutlineGeometry.pack = function (value, array, startingIndex) {
   Check.typeOf.object("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const positions = value._positions;
   const length = positions.length;
@@ -444,7 +439,7 @@ CorridorOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._extrudedHeight;
   array[startingIndex++] = value._cornerType;
   array[startingIndex++] = value._granularity;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
@@ -474,7 +469,7 @@ CorridorOutlineGeometry.unpack = function (array, startingIndex, result) {
   Check.typeOf.object("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const length = array[startingIndex++];
   const positions = new Array(length);

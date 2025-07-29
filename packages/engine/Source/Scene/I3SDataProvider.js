@@ -49,7 +49,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
@@ -139,25 +139,20 @@ import Rectangle from "../Core/Rectangle.js";
  * }
  */
 function I3SDataProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   // All public configuration is defined as ES5 properties
   // These are just the "private" variables and their defaults.
   this._name = options.name;
-  this._show = defaultValue(options.show, true);
+  this._show = options.show ?? true;
   this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
-  this._showFeatures = defaultValue(options.showFeatures, false);
-  this._adjustMaterialAlphaMode = defaultValue(
-    options.adjustMaterialAlphaMode,
-    false,
-  );
-  this._applySymbology = defaultValue(options.applySymbology, false);
-  this._calculateNormals = defaultValue(options.calculateNormals, false);
+  this._showFeatures = options.showFeatures ?? false;
+  this._adjustMaterialAlphaMode = options.adjustMaterialAlphaMode ?? false;
+  this._applySymbology = options.applySymbology ?? false;
+  this._calculateNormals = options.calculateNormals ?? false;
 
-  this._cesium3dTilesetOptions = defaultValue(
-    options.cesium3dTilesetOptions,
-    defaultValue.EMPTY_OBJECT,
-  );
+  this._cesium3dTilesetOptions =
+    options.cesium3dTilesetOptions ?? Frozen.EMPTY_OBJECT;
 
   this._layers = [];
   this._sublayers = [];
@@ -542,7 +537,7 @@ I3SDataProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(url);
   // Set a query parameter for json to avoid failure on html pages

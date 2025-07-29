@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
@@ -54,7 +54,7 @@ import TerrainProvider from "./TerrainProvider.js";
  * @see TerrainProvider
  */
 function CustomHeightmapTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.callback", options.callback);
@@ -67,7 +67,7 @@ function CustomHeightmapTerrainProvider(options) {
   this._tilingScheme = options.tilingScheme;
   if (!defined(this._tilingScheme)) {
     this._tilingScheme = new GeographicTilingScheme({
-      ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
+      ellipsoid: options.ellipsoid ?? Ellipsoid.default,
     });
   }
 

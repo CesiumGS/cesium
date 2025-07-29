@@ -1,6 +1,6 @@
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -70,7 +70,7 @@ import StencilOperation from "./StencilOperation.js";
  * @see Appearance
  */
 function ClassificationPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const geometryInstances = options.geometryInstances;
 
   /**
@@ -100,7 +100,7 @@ function ClassificationPrimitive(options) {
    *
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
   /**
    * Determines whether terrain, 3D Tiles or both will be classified.
    *
@@ -108,10 +108,8 @@ function ClassificationPrimitive(options) {
    *
    * @default ClassificationType.BOTH
    */
-  this.classificationType = defaultValue(
-    options.classificationType,
-    ClassificationType.BOTH,
-  );
+  this.classificationType =
+    options.classificationType ?? ClassificationType.BOTH;
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
@@ -122,10 +120,7 @@ function ClassificationPrimitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
@@ -136,14 +131,11 @@ function ClassificationPrimitive(options) {
    *
    * @default false
    */
-  this.debugShowShadowVolume = defaultValue(
-    options.debugShowShadowVolume,
-    false,
-  );
+  this.debugShowShadowVolume = options.debugShowShadowVolume ?? false;
   this._debugShowShadowVolume = false;
 
   // These are used by GroundPrimitive to augment the shader and uniform map.
-  this._extruded = defaultValue(options._extruded, false);
+  this._extruded = options._extruded ?? false;
   this._uniformMap = options._uniformMap;
 
   this._sp = undefined;
@@ -181,15 +173,12 @@ function ClassificationPrimitive(options) {
   this._primitiveOptions = {
     geometryInstances: undefined,
     appearance: undefined,
-    vertexCacheOptimize: defaultValue(options.vertexCacheOptimize, false),
-    interleave: defaultValue(options.interleave, false),
-    releaseGeometryInstances: defaultValue(
-      options.releaseGeometryInstances,
-      true,
-    ),
-    allowPicking: defaultValue(options.allowPicking, true),
-    asynchronous: defaultValue(options.asynchronous, true),
-    compressVertices: defaultValue(options.compressVertices, true),
+    vertexCacheOptimize: options.vertexCacheOptimize ?? false,
+    interleave: options.interleave ?? false,
+    releaseGeometryInstances: options.releaseGeometryInstances ?? true,
+    allowPicking: options.allowPicking ?? true,
+    asynchronous: options.asynchronous ?? true,
+    compressVertices: options.compressVertices ?? true,
     _createBoundingVolumeFunction: undefined,
     _createRenderStatesFunction: undefined,
     _createShaderProgramFunction: undefined,
@@ -1164,7 +1153,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
         attributes: instance.attributes,
         modelMatrix: instance.modelMatrix,
         id: instance.id,
-        pickPrimitive: defaultValue(this._pickPrimitive, that),
+        pickPrimitive: this._pickPrimitive ?? that,
       });
     }
 

@@ -77,3 +77,5 @@ you quit VSCode, so should be restarted manually on next launch.
 ## Debugging CesiumJS
 
 To debug CesiumJS using the VSCode Chrome debugger, run the `"Launch Server"` configuration. If the server was already started in the terminal using `npm start`, use the `"Launch in Chrome"` configuration.
+
+To debug a specific unit test suite, run the "Launch Test Suite and Debug in VSCode" configuration. This will start the server, launch chrome, and prepare to run the tests in the currently open file. Set one or more breakpoints in VSCode and then click "Debug" in the browser. If the server is already started, use the "Attach to Karma" configuration and then continue setting breakpoints.

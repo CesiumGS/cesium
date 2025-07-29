@@ -1,6 +1,5 @@
 import AssociativeArray from "./AssociativeArray.js";
 import Cartesian2 from "./Cartesian2.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
@@ -982,9 +981,9 @@ function handlePointerMove(screenSpaceEventHandler, event) {
 function ScreenSpaceEventHandler(element) {
   this._inputEvents = {};
   this._buttonDown = {
-    LEFT: false,
-    MIDDLE: false,
-    RIGHT: false,
+    [MouseButton.LEFT]: false,
+    [MouseButton.MIDDLE]: false,
+    [MouseButton.RIGHT]: false,
   };
   this._isPinching = false;
   this._isTouchHolding = false;
@@ -1007,7 +1006,7 @@ function ScreenSpaceEventHandler(element) {
   this._clickPixelTolerance = 5;
   this._holdPixelTolerance = 25;
 
-  this._element = defaultValue(element, document);
+  this._element = element ?? document;
 
   registerListeners(this);
 }

@@ -47,6 +47,8 @@ import {
   PerInstanceColorAppearance,
   ColorGeometryInstanceAttribute,
   Resource,
+  HeightReference,
+  SharedContext,
 } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -796,6 +798,63 @@ describe(
 
         scene.backgroundColor = Color.BLUE;
         expect(scene).toRender([0, 0, 255, 255]);
+      });
+
+      describe("with shared context", () => {
+        // All of these tests require a real WebGL context. Skip them if WebGL is being stubbed.
+        const webglStub = !!window.webglStub;
+
+        it("accepts a SharedContext in place of ContextOptions", function () {
+          if (webglStub) {
+            return;
+          }
+
+          const sharedContext = new SharedContext();
+          const s = new Scene({
+            canvas: createCanvas(5, 5),
+            contextOptions: sharedContext,
+          });
+
+          expect(s._context._gl).toBe(sharedContext._context._gl);
+          s.destroy();
+        });
+
+        it("draws background color with SharedContext", function () {
+          if (webglStub) {
+            return;
+          }
+
+          const sharedContext = new SharedContext();
+          const s1 = new Scene({
+            canvas: createCanvas(1, 1),
+            contextOptions: sharedContext,
+          });
+          const s2 = new Scene({
+            canvas: createCanvas(1, 1),
+            contextOptions: sharedContext,
+          });
+
+          expect(s1).toRender([0, 0, 0, 255]);
+          expect(s2).toRender([0, 0, 0, 255]);
+
+          s1.backgroundColor = Color.BLUE;
+          s2.backgroundColor = Color.RED;
+          expect(s1).toRender([0, 0, 255, 255]);
+          expect(s2).toRender([255, 0, 0, 255]);
+        });
+
+        it("reference-counts primitives IFF using a SharedContext", function () {
+          if (webglStub) {
+            return;
+          }
+
+          expect(scene.primitives._countReferences).toBe(false);
+          const s = new Scene({
+            canvas: createCanvas(5, 5),
+            contextOptions: new SharedContext(),
+          });
+          expect(s.primitives._countReferences).toBe(true);
+        });
       });
     });
 
@@ -2943,6 +3002,37 @@ describe(
       scene.renderForSpecs();
 
       expect(mockTileset.updateHeight).toHaveBeenCalled();
+    });
+
+    it("adds nested primitive collection to scene", function () {
+      const expectedHeight = 100;
+
+      const mockTileset = new TilesetMockPrimitive();
+      mockTileset.enableCollision = true;
+      mockTileset.getHeight = function () {
+        return expectedHeight;
+      };
+      mockTileset.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+      const mockTileset2 = new TilesetMockPrimitive();
+      mockTileset2.enableCollision = true;
+      mockTileset2.getHeight = function () {
+        return 80;
+      };
+      mockTileset2.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+      const nestedCollection = new PrimitiveCollection();
+      nestedCollection.add(mockTileset);
+      nestedCollection.add(mockTileset2);
+
+      scene.primitives.add(nestedCollection);
+
+      const actualHeight = scene.getHeight(
+        scene.camera.positionCartographic,
+        HeightReference.CLAMP_TO_GROUND,
+      );
+
+      expect(actualHeight).toEqual(expectedHeight);
     });
   },
 

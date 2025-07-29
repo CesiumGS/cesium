@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
@@ -37,7 +37,7 @@ function DataRectangle(rectangle, maxLevel) {
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
 function TerrainProviderBuilder(options) {
-  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this.tilingScheme = undefined;
   this.heightmapWidth = undefined;
   this.heightmapHeight = undefined;
@@ -156,7 +156,7 @@ async function requestMetadata(terrainProviderBuilder, resource, provider) {
  * @see TerrainProvider
  */
 function VRTheWorldTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._errorEvent = new Event();
 
@@ -251,7 +251,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
    * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -282,7 +282,7 @@ VRTheWorldTerrainProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const terrainProviderBuilder = new TerrainProviderBuilder(options);
   const resource = Resource.createIfNeeded(url);

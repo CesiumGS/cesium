@@ -1,7 +1,7 @@
 name: deploy
-on: 
+on:
   push:
-    branches-ignore: 
+    branches-ignore:
       - 'cesium.com'
       - production
 concurrency:
@@ -24,10 +24,10 @@ jobs:
       GITHUB_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
-      - name: install node 20
+      - name: install node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: set the version in package.json
@@ -47,7 +47,6 @@ jobs:
           aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
           --cache-control "no-cache" \
           --exclude ".git/*" \
-          --exclude ".concierge/*" \
           --exclude ".github/*" \
           --exclude ".husky/*" \
           --exclude ".vscode/*" \
@@ -58,7 +57,7 @@ jobs:
           --exclude "node_modules/*" \
           --exclude "scripts/*" \
           --exclude "Tools/*" \
-          --delete 
+          --delete
       - name: set status
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: npm run deploy-status -- --status success --message Deployed

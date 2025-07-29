@@ -2,7 +2,6 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -225,7 +224,7 @@ function ScreenSpaceCameraController(scene) {
     modifier: KeyboardEventModifier.SHIFT,
   };
 
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
   /**
    * The minimum height the camera must be before picking the terrain or scene content instead of the ellipsoid. Defaults to scene.ellipsoid.minimumRadius * 0.025 when another ellipsoid than WGS84 is used.
@@ -267,6 +266,8 @@ function ScreenSpaceCameraController(scene) {
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
    * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
+   * Also used in conjunction with {@link Cesium3DTileset#enableCollision} to prevent the camera from moving through or below a 3D Tileset surface.
+   * This may also affect clamping behavior when using {@link HeightReference.CLAMP_TO_GROUND} on 3D Tiles.
    * @type {boolean}
    * @default true
    */
@@ -623,18 +624,9 @@ function handleZoom(
   orientation.pitch = camera.pitch;
   orientation.roll = camera.roll;
 
-  if (camera.frustum instanceof OrthographicFrustum) {
-    if (Math.abs(distance) > 0.0) {
-      camera.zoomIn(distance);
-      camera._adjustOrthographicFrustum(true);
-    }
-    return;
-  }
-
-  const sameStartPosition = defaultValue(
-    movement.inertiaEnabled,
-    Cartesian2.equals(startPosition, object._zoomMouseStart),
-  );
+  const sameStartPosition =
+    movement.inertiaEnabled ??
+    Cartesian2.equals(startPosition, object._zoomMouseStart);
   let zoomingOnVector = object._zoomingOnVector;
   let rotatingZoom = object._rotatingZoom;
   let pickedPosition;
@@ -1210,7 +1202,7 @@ function getDistanceFromSurface(controller) {
   } else {
     height = camera.position.z;
   }
-  const globeHeight = defaultValue(controller._scene.globeHeight, 0.0);
+  const globeHeight = controller._scene.globeHeight ?? 0.0;
   const distanceFromSurface = Math.abs(globeHeight - height);
   return distanceFromSurface;
 }
@@ -2038,8 +2030,8 @@ function rotate3D(
   rotateOnlyVertical,
   rotateOnlyHorizontal,
 ) {
-  rotateOnlyVertical = defaultValue(rotateOnlyVertical, false);
-  rotateOnlyHorizontal = defaultValue(rotateOnlyHorizontal, false);
+  rotateOnlyVertical = rotateOnlyVertical ?? false;
+  rotateOnlyHorizontal = rotateOnlyHorizontal ?? false;
 
   const scene = controller._scene;
   const camera = scene.camera;
@@ -2826,7 +2818,7 @@ function look3D(controller, startPosition, movement, rotationAxis) {
   }
   angle = movement.startPosition.y > movement.endPosition.y ? -angle : angle;
 
-  rotationAxis = defaultValue(rotationAxis, horizontalRotationAxis);
+  rotationAxis = rotationAxis ?? horizontalRotationAxis;
   if (defined(rotationAxis)) {
     const direction = camera.direction;
     const negativeRotationAxis = Cartesian3.negate(
@@ -2913,7 +2905,7 @@ function adjustHeightForTerrain(controller, cameraChanged) {
   }
 
   const camera = scene.camera;
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.WGS84;
   const projection = scene.mapProjection;
 
   let transform;
@@ -3012,7 +3004,7 @@ ScreenSpaceCameraController.prototype.update = function () {
     this._ellipsoid = Ellipsoid.UNIT_SPHERE;
   } else {
     this._globe = globe;
-    this._ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+    this._ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
   }
 
   const { verticalExaggeration, verticalExaggerationRelativeHeight } = scene;

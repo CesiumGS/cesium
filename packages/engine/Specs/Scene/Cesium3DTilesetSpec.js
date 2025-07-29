@@ -1407,7 +1407,7 @@ describe(
 
         const root = tileset.root;
         root.refine = Cesium3DTileRefine.REPLACE;
-        root.hasEmptyContent = false; // mock content
+        root.hasRenderableContent = true; // mock content
         tileset.maximumScreenSpaceError = 0.0; // Force root tile to always not meet SSE since this is just checking the request volume
 
         // Renders all 5 tiles
@@ -5873,6 +5873,10 @@ describe(
         "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset_1.1.json";
       const implicitMultipleContentsUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
+      const externalInMultipleContentsUrl =
+        "Data/Cesium3DTiles/MultipleContents/ExternalInMultipleContents/tileset.json";
+      const onlyExternalInMultipleContentsUrl =
+        "Data/Cesium3DTiles/MultipleContents/OnlyExternalInMultipleContents/tileset.json";
 
       it("request statistics are updated correctly on success", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
@@ -6063,54 +6067,66 @@ describe(
         );
       });
 
-      it("raises tileFailed for external tileset inside multiple contents", async function () {
-        const originalLoadJson = Cesium3DTileset.loadJson;
-        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
-          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
-            const contents = [
-              {
-                uri: "external.json",
-              },
-              {
-                uri: "other.json",
-              },
-            ];
-            tilesetJson.root.contents = contents;
-
-            return tilesetJson;
-          });
-        });
-
-        viewNothing();
-        let errorCount = 0;
-
-        const tileset = await Cesium3DTileset.fromUrl(
-          multipleContentsUrl,
-          options,
+      it("renders external tilesets in multiple contents", async function () {
+        // A tileset that has four contents in its root node:
+        // - One GLB
+        // - Three external tilesets that each have one GLB in their root node
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          externalInMultipleContentsUrl,
         );
-        tileset.tileFailed.addEventListener(function (event) {
-          errorCount++;
-          expect(endsWith(event.url, ".json")).toBe(true);
-          expect(event.message).toEqual(
-            "External tilesets are disallowed inside multiple contents",
-          );
-        });
-        scene.primitives.add(tileset);
 
-        spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
-          const externalTileset = {
-            asset: {
-              version: "1.1",
-            },
-            root: {},
-          };
-          const buffer = generateJsonBuffer(externalTileset).buffer;
-          return Promise.resolve(buffer);
+        // Look straight at the tileset with its 4 contents
+        scene.camera.lookAtTransform(Matrix4.IDENTITY);
+        scene.camera.setView({
+          destination: new Cartesian3(0.0, 0.0, -10),
+          orientation: {
+            direction: new Cartesian3(0.0, 0.0, 1.0),
+            up: new Cartesian3(0.0, 1.0, 0.0),
+          },
         });
-        viewAllTiles();
 
+        scene.renderForSpecs();
         await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-        expect(errorCount).toBe(2);
+
+        // Expect the root node of the main tileset and the
+        // root nodes of the three external tilesets to be
+        // selected and visited
+        const statistics = tileset._statistics;
+        expect(statistics.visited).toEqual(4);
+        expect(statistics.selected).toEqual(4);
+      });
+
+      it("renders external tilesets when multiple contents only contains external tilesets", async function () {
+        // A tileset that has four contents in its root node
+        // that are all external tilesets, each with one GLB
+        // in their root node
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          onlyExternalInMultipleContentsUrl,
+        );
+
+        // Look straight at the tileset with its 4 contents
+        scene.camera.lookAtTransform(Matrix4.IDENTITY);
+        scene.camera.setView({
+          destination: new Cartesian3(0.0, 0.0, -10),
+          orientation: {
+            direction: new Cartesian3(0.0, 0.0, 1.0),
+            up: new Cartesian3(0.0, 1.0, 0.0),
+          },
+        });
+
+        scene.renderForSpecs();
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+        // Expect the root node of the main tileset and the
+        // root nodes of the four external tilesets to be
+        // visited, and the root nodes of the four external
+        // tilesets to be selected
+        const statistics = tileset._statistics;
+        console.log(statistics);
+        expect(statistics.visited).toEqual(5);
+        expect(statistics.selected).toEqual(4);
       });
 
       it("debugColorizeTiles for multiple contents", function () {
@@ -6363,61 +6379,6 @@ describe(
               for (let i = 0; i < expected.length; i++) {
                 expect(endsWith(uris[i], expected[i])).toBe(true);
               }
-            },
-          );
-        });
-      });
-
-      it("raises tileFailed for external tileset inside multiple contents (legacy)", function () {
-        const originalLoadJson = Cesium3DTileset.loadJson;
-        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
-          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
-            const extension =
-              tilesetJson.root.extensions["3DTILES_multiple_contents"];
-            extension.contents = [
-              {
-                uri: "external.json",
-              },
-              {
-                uri: "other.json",
-              },
-            ];
-
-            return tilesetJson;
-          });
-        });
-
-        spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
-          const externalTileset = {
-            asset: {
-              version: "1.0",
-            },
-            root: {},
-          };
-          const buffer = generateJsonBuffer(externalTileset).buffer;
-          return Promise.resolve(buffer);
-        });
-
-        viewNothing();
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          multipleContentsLegacyUrl,
-        ).then(function (tileset) {
-          let errorCount = 0;
-          tileset.tileFailed.addEventListener(function (event) {
-            errorCount++;
-            expect(endsWith(event.url, ".json")).toBe(true);
-            expect(event.message).toEqual(
-              "External tilesets are disallowed inside multiple contents",
-            );
-          });
-
-          viewAllTiles();
-          scene.renderForSpecs();
-
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              expect(errorCount).toBe(2);
             },
           );
         });

@@ -1,4 +1,4 @@
-import { defined, defaultValue } from "@cesium/engine";
+import { defined } from "@cesium/engine";
 import concatTypedArrays from "./concatTypedArrays.js";
 import MetadataTester from "./MetadataTester.js";
 
@@ -87,7 +87,7 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
   subtreeDescription,
   constantOnly,
 ) {
-  constantOnly = defaultValue(constantOnly, false);
+  constantOnly = constantOnly ?? false;
 
   // This will be populated by makeBufferViews() and makeBuffers()
   let subtreeJson = {};
@@ -148,10 +148,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     count: 0,
   };
 
-  const useLegacySchema = defaultValue(
-    subtreeDescription.useLegacySchema,
-    false,
-  );
+  const useLegacySchema = subtreeDescription.useLegacySchema ?? false;
   const bufferViewJsonArray = [];
   gatherBufferViews(
     bufferViewsU8,

@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import MetadataType from "./MetadataType.js";
@@ -26,7 +26,7 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PropertyTextureProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const property = options.property;
   const classProperty = options.classProperty;
   const textures = options.textures;
@@ -60,8 +60,8 @@ function PropertyTextureProperty(options) {
   // the class property. The class property handles setting the default of
   // identity: (offset 0, scale 1) with the same scalar/vector/matrix types.
   // array types are disallowed by the spec.
-  offset = defaultValue(offset, classProperty.offset);
-  scale = defaultValue(scale, classProperty.scale);
+  offset = offset ?? classProperty.offset;
+  scale = scale ?? classProperty.scale;
 
   // offset and scale are applied on the GPU, so unpack the values
   // as math types we can use in uniform callbacks.

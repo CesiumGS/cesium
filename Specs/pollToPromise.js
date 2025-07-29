@@ -1,10 +1,10 @@
-import { defaultValue, getTimestamp } from "@cesium/engine";
+import { Frozen, getTimestamp } from "@cesium/engine";
 
 function pollToPromise(f, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const pollInterval = defaultValue(options.pollInterval, 1);
-  const timeout = defaultValue(options.timeout, 5000);
+  const pollInterval = options.pollInterval ?? 1;
+  const timeout = options.timeout ?? 5000;
 
   return new Promise(function (resolve, reject) {
     const startTimestamp = getTimestamp();

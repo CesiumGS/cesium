@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -391,7 +390,7 @@ function interpolateUsingSurfaceDistance(
  * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
  */
 function EllipsoidRhumbLine(start, end, ellipsoid) {
-  const e = defaultValue(ellipsoid, Ellipsoid.default);
+  const e = ellipsoid ?? Ellipsoid.default;
   this._ellipsoid = e;
   this._start = new Cartographic();
   this._end = new Cartographic();
@@ -500,7 +499,7 @@ EllipsoidRhumbLine.fromStartHeadingDistance = function (
   Check.typeOf.number.greaterThan("distance", distance, 0.0);
   //>>includeEnd('debug');
 
-  const e = defaultValue(ellipsoid, Ellipsoid.default);
+  const e = ellipsoid ?? Ellipsoid.default;
   const major = e.maximumRadius;
   const minor = e.minimumRadius;
   const majorSquared = major * major;
@@ -562,7 +561,7 @@ EllipsoidRhumbLine.prototype.interpolateUsingFraction = function (
 /**
  * Provides the location of a point at the indicated distance along the rhumb line.
  *
- * @param {number} distance The distance from the inital point to the point of interest along the rhumbLine.
+ * @param {number} distance The distance from the initial point to the point of interest along the rhumbLine.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the rhumb line.
  *

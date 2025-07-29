@@ -1,5 +1,5 @@
 import {
-  defaultValue,
+  Frozen,
   Cartesian2,
   Cartesian3,
   Cartesian4,
@@ -320,7 +320,7 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   function testGetUint64(options) {
-    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+    options = options ?? Frozen.EMPTY_OBJECT;
     const disableBigIntSupport = options.disableBigIntSupport;
     const disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
 
@@ -358,7 +358,7 @@ describe("Scene/MetadataTableProperty", function () {
   }
 
   function testGetInt64(options) {
-    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+    options = options ?? Frozen.EMPTY_OBJECT;
     const disableBigIntSupport = options.disableBigIntSupport;
     const disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
 

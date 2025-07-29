@@ -1,7 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -139,7 +139,7 @@ TileMapServiceImageryProvider.fromUrl = async function (url, options) {
     url: "tilemapresource.xml",
   });
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const metadata = await TileMapServiceImageryProvider._requestMetadata(
     options,
     tmsResource,
@@ -262,26 +262,17 @@ TileMapServiceImageryProvider._metadataSuccess = function (
     throw new RuntimeError(message);
   }
 
-  const fileExtension = defaultValue(
-    options.fileExtension,
-    format.getAttribute("extension"),
-  );
-  const tileWidth = defaultValue(
-    options.tileWidth,
-    parseInt(format.getAttribute("width"), 10),
-  );
-  const tileHeight = defaultValue(
-    options.tileHeight,
-    parseInt(format.getAttribute("height"), 10),
-  );
-  let minimumLevel = defaultValue(
-    options.minimumLevel,
-    parseInt(tilesetsList[0].getAttribute("order"), 10),
-  );
-  const maximumLevel = defaultValue(
-    options.maximumLevel,
-    parseInt(tilesetsList[tilesetsList.length - 1].getAttribute("order"), 10),
-  );
+  const fileExtension =
+    options.fileExtension ?? format.getAttribute("extension");
+  const tileWidth =
+    options.tileWidth ?? parseInt(format.getAttribute("width"), 10);
+  const tileHeight =
+    options.tileHeight ?? parseInt(format.getAttribute("height"), 10);
+  let minimumLevel =
+    options.minimumLevel ?? parseInt(tilesetsList[0].getAttribute("order"), 10);
+  const maximumLevel =
+    options.maximumLevel ??
+    parseInt(tilesetsList[tilesetsList.length - 1].getAttribute("order"), 10);
   const tilingSchemeName = tilesets.getAttribute("profile");
   let tilingScheme = options.tilingScheme;
 
@@ -326,7 +317,7 @@ TileMapServiceImageryProvider._metadataSuccess = function (
 
     // In older versions of gdal x and y values were flipped, which is why we check for an option to flip
     // the values here as well. Unfortunately there is no way to autodetect whether flipping is needed.
-    const flipXY = defaultValue(options.flipXY, false);
+    const flipXY = options.flipXY ?? false;
     if (flipXY) {
       swXY = new Cartesian2(
         parseFloat(bbox.getAttribute("miny")),
@@ -412,15 +403,15 @@ TileMapServiceImageryProvider._metadataFailure = function (
   tmsResource,
 ) {
   // Can't load XML, still allow options and defaults
-  const fileExtension = defaultValue(options.fileExtension, "png");
-  const tileWidth = defaultValue(options.tileWidth, 256);
-  const tileHeight = defaultValue(options.tileHeight, 256);
+  const fileExtension = options.fileExtension ?? "png";
+  const tileWidth = options.tileWidth ?? 256;
+  const tileHeight = options.tileHeight ?? 256;
   const maximumLevel = options.maximumLevel;
   const tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme
     : new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid });
 
-  let rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+  let rectangle = options.rectangle ?? tilingScheme.rectangle;
   // The rectangle must not be outside the bounds allowed by the tiling scheme.
   rectangle = confineRectangleToTilingScheme(rectangle, tilingScheme);
 

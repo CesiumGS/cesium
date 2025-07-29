@@ -3,7 +3,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
@@ -59,10 +59,10 @@ function LayerInformation(layer) {
  * @param {CesiumTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
 function TerrainProviderBuilder(options) {
-  this.requestVertexNormals = defaultValue(options.requestVertexNormals, false);
-  this.requestWaterMask = defaultValue(options.requestWaterMask, false);
-  this.requestMetadata = defaultValue(options.requestMetadata, true);
-  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this.requestVertexNormals = options.requestVertexNormals ?? false;
+  this.requestWaterMask = options.requestWaterMask ?? false;
+  this.requestMetadata = options.requestMetadata ?? true;
+  this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   this.heightmapWidth = 65;
   this.heightmapStructure = undefined;
@@ -475,7 +475,7 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  * @see TerrainProvider
  */
 function CesiumTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._heightmapWidth = undefined;
   this._heightmapStructure = undefined;
@@ -491,10 +491,7 @@ function CesiumTerrainProvider(options) {
    * @default false
    * @private
    */
-  this._requestVertexNormals = defaultValue(
-    options.requestVertexNormals,
-    false,
-  );
+  this._requestVertexNormals = options.requestVertexNormals ?? false;
 
   /**
    * Boolean flag that indicates if the client should request tile watermasks from the server.
@@ -502,7 +499,7 @@ function CesiumTerrainProvider(options) {
    * @default false
    * @private
    */
-  this._requestWaterMask = defaultValue(options.requestWaterMask, false);
+  this._requestWaterMask = options.requestWaterMask ?? false;
 
   /**
    * Boolean flag that indicates if the client should request tile metadata from the server.
@@ -510,7 +507,7 @@ function CesiumTerrainProvider(options) {
    * @default true
    * @private
    */
-  this._requestMetadata = defaultValue(options.requestMetadata, true);
+  this._requestMetadata = options.requestMetadata ?? true;
 
   this._errorEvent = new Event();
 
@@ -1132,7 +1129,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * exists deeper in the tree rather than it all being discoverable at the root. However, a tile that
    * is available now will not become unavailable in the future.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -1229,7 +1226,7 @@ CesiumTerrainProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   url = await Promise.resolve(url);
   const resource = Resource.createIfNeeded(url);

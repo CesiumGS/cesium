@@ -29,10 +29,13 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const serviceResponse = await fetch("https://api.cesium.com/itwin/token");
-        const { access_token: token } = await serviceResponse.json();
+        // Generate a share key for access to an iTwin without OAuth
+        // https://developer.bentley.com/apis/access-control-v2/operations/create-itwin-share/
+        Cesium.ITwinPlatform.defaultShareKey =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiMDRiYTcyNWYtZjNjMC00ZjMwLTgwMTQtYTQ0ODhjYmQ2MTJkIiwiaWQiOiJkNzNhODQzMC1iZWNiLTQxMTQtYThjYy04NmIxZGMzNGYzMjUiLCJleHAiOjE3NzcwNTU3Njl9.ySsHT7VcVZDTPBhrnzqRIQMaLwjD6p3mPyGCHUI0awA";
 
-        Cesium.ITwinPlatform.defaultAccessToken = token;
+        // For alternative forms of authentication you can use, visit https://developer.bentley.com/apis/overview/authorization/. Then set your access token like this:
+        // Cesium.ITwinPlatform.defaultAccessToken = 'your token'
 
         const iTwinId = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
 
@@ -63,17 +66,17 @@
         viewer.scene.camera.flyTo(birdsEyeView);
 
         // Load feature service geojson files
-        const points = await Cesium.ITwinData.createDataSourceForRealityDataId(
+        const points = await Cesium.ITwinData.loadGeospatialFeatures(
           iTwinId,
-          "57b975f6-fd92-42ba-8014-79911ed606d1",
+          "2380dc1b-1dac-4709-aa5c-f6cb38c4e9f5",
         );
-        const lines = await Cesium.ITwinData.createDataSourceForRealityDataId(
+        const lines = await Cesium.ITwinData.loadGeospatialFeatures(
           iTwinId,
-          "1099c53f-c568-48a3-a57c-0230a6f37229",
+          "613d2310-4d01-43b7-bc92-873a2ca4a4a0",
         );
-        const areas = await Cesium.ITwinData.createDataSourceForRealityDataId(
+        const areas = await Cesium.ITwinData.loadGeospatialFeatures(
           iTwinId,
-          "21eaf0d0-ab90-400f-97cf-adc455b29a78",
+          "93e7ef51-5210-49f2-92a3-c7f6685e102f",
         );
 
         // Add some styling to the lines and points to differentiate types
@@ -86,7 +89,7 @@
             Arrow_Marking: { color: Cesium.Color.YELLOW, icon: "car" },
             Road_Sign: { color: Cesium.Color.ORANGE, icon: "triangle" },
           };
-          const type = entity.properties.Type?.getValue();
+          const type = entity.properties.type?.getValue();
           if (Cesium.defined(type) && Cesium.defined(styleByType[type])) {
             const { color, icon } = styleByType[type];
             const canvas = await pinBuilder.fromMakiIconId(icon, color, 48);
@@ -103,7 +106,7 @@
             Turning_pocket: Cesium.Color.DEEPPINK,
             Yellow_Box: Cesium.Color.GOLD,
           };
-          const type = entity.properties.Type?.getValue();
+          const type = entity.properties.type?.getValue();
           if (Cesium.defined(type) && Cesium.defined(lineColorsByType[type])) {
             entity.polyline.material = lineColorsByType[type];
           }
