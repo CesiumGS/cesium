@@ -415,6 +415,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Kirn Kim](https://github.com/squrki)
 - [Emanuele Mastaglia](https://github.com/Masty88)
 - [Connor Manning](https://github.com/connormanning)
+- [Gajanan Gourshettiwar](https://github.com/GGajanan1)
 - [Isaac Young](https://github.com/ibreathebsb)
 - [Nick Crews](https://github.com/NickCrews)
 - [胡文康](https://github.com/XiaoHu1994)

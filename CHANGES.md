@@ -15,6 +15,7 @@
 - Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
 - Fixes Gaussian splats incorrectly rendering when `Cesium3DTileset.show` is `false`. [#12748](https://github.com/CesiumGS/cesium/pull/12748)
 - Fixed the PointCloudShading.normalShading parameter, to disable normal shading when set to false, even if the point cloud contains normals. [#11196](https://github.com/CesiumGS/cesium/issues/11196)
+- Updated GPU vertex transformations to reduce precision errors. [#4250](https://github.com/CesiumGS/cesium/issues/4250)
 
 #### Additions :tada:
 
