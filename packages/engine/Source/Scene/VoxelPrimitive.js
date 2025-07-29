@@ -631,11 +631,7 @@ function initialize(primitive, provider) {
   // Create the shape object, and update it so it is valid for VoxelTraversal
   const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
   primitive._shape = new ShapeConstructor();
-  primitive._shapeVisible = updateShapeAndTransforms(
-    primitive,
-    primitive._shape,
-    provider,
-  );
+  primitive._shapeVisible = updateShapeAndTransforms(primitive);
 }
 
 Object.defineProperties(VoxelPrimitive.prototype, {
@@ -1185,10 +1181,9 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // frame because the member variables can be modified externally via the
   // getters.
   const shapeDirty = checkTransformAndBounds(this, provider);
-  const shape = this._shape;
   if (shapeDirty) {
-    this._shapeVisible = updateShapeAndTransforms(this, shape, provider);
-    if (checkShapeDefines(this, shape)) {
+    this._shapeVisible = updateShapeAndTransforms(this);
+    if (checkShapeDefines(this)) {
       this._shaderDirty = true;
     }
   }
@@ -1262,7 +1257,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Calculate the NDC-space AABB to "scissor" the fullscreen quad
   const transformPositionWorldToProjection =
     context.uniformState.viewProjection;
-  const orientedBoundingBox = shape.orientedBoundingBox;
+  const { orientedBoundingBox } = this._shape;
   const ndcAabb = orientedBoundingBoxToNdcAabb(
     orientedBoundingBox,
     transformPositionWorldToProjection,
@@ -1326,7 +1321,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     : frameState.passes.pickVoxel
       ? this._drawCommandPickVoxel
       : this._drawCommand;
-  command.boundingVolume = shape.boundingSphere;
+  command.boundingVolume = this._shape.boundingSphere;
   frameState.commandList.push(command);
 };
 
@@ -1586,12 +1581,11 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
 /**
  * Update the shape and related transforms
  * @param {VoxelPrimitive} primitive
- * @param {VoxelShape} shape
- * @param {VoxelProvider} provider
  * @returns {boolean} True if the shape is visible
  * @private
  */
-function updateShapeAndTransforms(primitive, shape, provider) {
+function updateShapeAndTransforms(primitive) {
+  const shape = primitive._shape;
   const visible = shape.update(
     primitive._compoundModelMatrix,
     primitive._exaggeratedMinBounds,
@@ -1679,12 +1673,11 @@ function setTraversalUniforms(traversal, uniforms) {
 /**
  * Track changes in shape-related shader defines
  * @param {VoxelPrimitive} primitive
- * @param {VoxelShape} shape
  * @returns {boolean} True if any of the shape defines changed, requiring a shader rebuild
  * @private
  */
-function checkShapeDefines(primitive, shape) {
-  const shapeDefines = shape.shaderDefines;
+function checkShapeDefines(primitive) {
+  const { shapeDefines } = primitive._shape;
   const shapeDefinesChanged = Object.keys(shapeDefines).some(
     (key) => shapeDefines[key] !== primitive._shapeDefinesOld[key],
   );
