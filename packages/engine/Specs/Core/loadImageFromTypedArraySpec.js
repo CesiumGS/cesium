@@ -21,7 +21,7 @@ describe("Core/loadImageFromTypedArray", function () {
           expect(image.width).toEqual(10);
           expect(image.height).toEqual(10);
         });
-      }
+      },
     );
   });
 
@@ -59,7 +59,7 @@ describe("Core/loadImageFromTypedArray", function () {
         })
         .then(function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-            imageOrientation: "none",
+            imageOrientation: "from-image",
             premultiplyAlpha: "none",
             colorSpaceConversion: "default",
           });
@@ -91,7 +91,7 @@ describe("Core/loadImageFromTypedArray", function () {
       return loadImageFromTypedArray(options)
         .then(function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-            imageOrientation: "none",
+            imageOrientation: "from-image",
             premultiplyAlpha: "none",
             colorSpaceConversion: "none",
           });
@@ -102,7 +102,7 @@ describe("Core/loadImageFromTypedArray", function () {
         })
         .then(function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-            imageOrientation: "none",
+            imageOrientation: "from-image",
             premultiplyAlpha: "none",
             colorSpaceConversion: "default",
           });
@@ -116,7 +116,7 @@ describe("Core/loadImageFromTypedArray", function () {
     }
 
     spyOn(Resource, "supportsImageBitmapOptions").and.returnValue(
-      Promise.resolve(false)
+      Promise.resolve(false),
     );
     spyOn(window, "createImageBitmap").and.callThrough();
     return Resource.fetchArrayBuffer("./Data/Images/Blue10x10.png").then(
@@ -131,7 +131,7 @@ describe("Core/loadImageFromTypedArray", function () {
           expect(image.height).toEqual(10);
           expect(window.createImageBitmap).not.toHaveBeenCalled();
         });
-      }
+      },
     );
   });
 

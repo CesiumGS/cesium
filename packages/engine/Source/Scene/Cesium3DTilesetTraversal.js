@@ -165,10 +165,8 @@ function isOnScreenLongEnough(tile, frameState) {
     return true;
   }
 
-  const {
-    positionWCDeltaMagnitude,
-    positionWCDeltaMagnitudeLastFrame,
-  } = frameState.camera;
+  const { positionWCDeltaMagnitude, positionWCDeltaMagnitudeLastFrame } =
+    frameState.camera;
   const deltaMagnitude =
     positionWCDeltaMagnitude !== 0.0
       ? positionWCDeltaMagnitude
@@ -296,29 +294,29 @@ function updateMinimumMaximumPriority(tile) {
 
   maximumPriority.distance = Math.max(
     priorityHolder._distanceToCamera,
-    maximumPriority.distance
+    maximumPriority.distance,
   );
   minimumPriority.distance = Math.min(
     priorityHolder._distanceToCamera,
-    minimumPriority.distance
+    minimumPriority.distance,
   );
   maximumPriority.depth = Math.max(tile._depth, maximumPriority.depth);
   minimumPriority.depth = Math.min(tile._depth, minimumPriority.depth);
   maximumPriority.foveatedFactor = Math.max(
     priorityHolder._foveatedFactor,
-    maximumPriority.foveatedFactor
+    maximumPriority.foveatedFactor,
   );
   minimumPriority.foveatedFactor = Math.min(
     priorityHolder._foveatedFactor,
-    minimumPriority.foveatedFactor
+    minimumPriority.foveatedFactor,
   );
   maximumPriority.reverseScreenSpaceError = Math.max(
     tile._priorityReverseScreenSpaceError,
-    maximumPriority.reverseScreenSpaceError
+    maximumPriority.reverseScreenSpaceError,
   );
   minimumPriority.reverseScreenSpaceError = Math.min(
     tile._priorityReverseScreenSpaceError,
-    minimumPriority.reverseScreenSpaceError
+    minimumPriority.reverseScreenSpaceError,
   );
 }
 

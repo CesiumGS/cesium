@@ -46,7 +46,7 @@ TileImagery.prototype.freeResources = function () {
 TileImagery.prototype.processStateMachine = function (
   tile,
   frameState,
-  skipLoading
+  skipLoading,
 ) {
   const loadingImagery = this.loadingImagery;
   const imageryLayer = loadingImagery.imageryLayer;
@@ -54,7 +54,7 @@ TileImagery.prototype.processStateMachine = function (
   loadingImagery.processStateMachine(
     frameState,
     !this.useWebMercatorT,
-    skipLoading
+    skipLoading,
   );
 
   if (loadingImagery.state === ImageryState.READY) {
@@ -63,10 +63,8 @@ TileImagery.prototype.processStateMachine = function (
     }
     this.readyImagery = this.loadingImagery;
     this.loadingImagery = undefined;
-    this.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(
-      tile,
-      this
-    );
+    this.textureTranslationAndScale =
+      imageryLayer._calculateTextureTranslationAndScale(tile, this);
     return true; // done loading
   }
 
@@ -98,10 +96,8 @@ TileImagery.prototype.processStateMachine = function (
 
     if (defined(ancestor)) {
       ancestor.addReference();
-      this.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(
-        tile,
-        this
-      );
+      this.textureTranslationAndScale =
+        imageryLayer._calculateTextureTranslationAndScale(tile, this);
     }
   }
 
@@ -117,7 +113,7 @@ TileImagery.prototype.processStateMachine = function (
       closestAncestorThatNeedsLoading.processStateMachine(
         frameState,
         !this.useWebMercatorT,
-        skipLoading
+        skipLoading,
       );
       return false; // not done loading
     }

@@ -55,19 +55,19 @@ describe("Core/BoundingRectangle", function () {
   it("equals", function () {
     const rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
     expect(rectangle.equals(new BoundingRectangle(1.0, 2.0, 3.0, 4.0))).toEqual(
-      true
+      true,
     );
     expect(rectangle.equals(new BoundingRectangle(5.0, 2.0, 3.0, 4.0))).toEqual(
-      false
+      false,
     );
     expect(rectangle.equals(new BoundingRectangle(1.0, 6.0, 3.0, 4.0))).toEqual(
-      false
+      false,
     );
     expect(rectangle.equals(new BoundingRectangle(1.0, 2.0, 7.0, 4.0))).toEqual(
-      false
+      false,
     );
     expect(rectangle.equals(new BoundingRectangle(1.0, 2.0, 3.0, 8.0))).toEqual(
-      false
+      false,
     );
     expect(rectangle.equals(undefined)).toEqual(false);
   });
@@ -123,10 +123,10 @@ describe("Core/BoundingRectangle", function () {
       rectangle.west,
       rectangle.south,
       rectangle.east - rectangle.west,
-      rectangle.north - rectangle.south
+      rectangle.north - rectangle.south,
     );
     expect(BoundingRectangle.fromRectangle(rectangle, projection)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -136,7 +136,7 @@ describe("Core/BoundingRectangle", function () {
       rectangle.west,
       rectangle.south,
       rectangle.east - rectangle.west,
-      rectangle.north - rectangle.south
+      rectangle.north - rectangle.south,
     );
     const projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
 
@@ -144,7 +144,7 @@ describe("Core/BoundingRectangle", function () {
     const returnedResult = BoundingRectangle.fromRectangle(
       rectangle,
       projection,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expected);
@@ -157,19 +157,19 @@ describe("Core/BoundingRectangle", function () {
     const rectangle5 = new BoundingRectangle(2, -6, 4, 4);
     const rectangle6 = new BoundingRectangle(2, 8, 4, 4);
     expect(BoundingRectangle.intersect(rectangle1, rectangle2)).toEqual(
-      Intersect.INTERSECTING
+      Intersect.INTERSECTING,
     );
     expect(BoundingRectangle.intersect(rectangle1, rectangle3)).toEqual(
-      Intersect.OUTSIDE
+      Intersect.OUTSIDE,
     );
     expect(BoundingRectangle.intersect(rectangle1, rectangle4)).toEqual(
-      Intersect.OUTSIDE
+      Intersect.OUTSIDE,
     );
     expect(BoundingRectangle.intersect(rectangle1, rectangle5)).toEqual(
-      Intersect.OUTSIDE
+      Intersect.OUTSIDE,
     );
     expect(BoundingRectangle.intersect(rectangle1, rectangle6)).toEqual(
-      Intersect.OUTSIDE
+      Intersect.OUTSIDE,
     );
   });
 
@@ -189,7 +189,7 @@ describe("Core/BoundingRectangle", function () {
     const returnedResult = BoundingRectangle.union(
       rectangle1,
       rectangle2,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expected);
@@ -291,10 +291,9 @@ describe("Core/BoundingRectangle", function () {
     }).toThrowDeveloperError();
   });
 
-  createPackableSpecs(BoundingRectangle, new BoundingRectangle(1, 2, 3, 4), [
-    1,
-    2,
-    3,
-    4,
-  ]);
+  createPackableSpecs(
+    BoundingRectangle,
+    new BoundingRectangle(1, 2, 3, 4),
+    [1, 2, 3, 4],
+  );
 });

@@ -64,6 +64,34 @@ const PixelFormat = {
   RGBA: WebGLConstants.RGBA,
 
   /**
+   * A pixel format containing a red channel as an integer.
+   * @type {number}
+   * @constant
+   */
+  RED_INTEGER: WebGLConstants.RED_INTEGER,
+
+  /**
+   * A pixel format containing red and green channels as integers.
+   * @type {number}
+   * @constant
+   */
+  RG_INTEGER: WebGLConstants.RG_INTEGER,
+
+  /**
+   * A pixel format containing red, green, and blue channels as integers.
+   * @type {number}
+   * @constant
+   */
+  RGB_INTEGER: WebGLConstants.RGB_INTEGER,
+
+  /**
+   * A pixel format containing red, green, blue, and alpha channels as integers.
+   * @type {number}
+   * @constant
+   */
+  RGBA_INTEGER: WebGLConstants.RGBA_INTEGER,
+
+  /**
    * A pixel format containing a luminance (intensity) channel.
    *
    * @type {number}
@@ -190,14 +218,18 @@ const PixelFormat = {
 PixelFormat.componentsLength = function (pixelFormat) {
   switch (pixelFormat) {
     case PixelFormat.RGB:
+    case PixelFormat.RGB_INTEGER:
       return 3;
     case PixelFormat.RGBA:
+    case PixelFormat.RGBA_INTEGER:
       return 4;
     case PixelFormat.LUMINANCE_ALPHA:
     case PixelFormat.RG:
+    case PixelFormat.RG_INTEGER:
       return 2;
     case PixelFormat.ALPHA:
     case PixelFormat.RED:
+    case PixelFormat.RED_INTEGER:
     case PixelFormat.LUMINANCE:
       return 1;
     default:
@@ -217,6 +249,10 @@ PixelFormat.validate = function (pixelFormat) {
     pixelFormat === PixelFormat.RG ||
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.RGBA ||
+    pixelFormat === PixelFormat.RED_INTEGER ||
+    pixelFormat === PixelFormat.RG_INTEGER ||
+    pixelFormat === PixelFormat.RGB_INTEGER ||
+    pixelFormat === PixelFormat.RGBA_INTEGER ||
     pixelFormat === PixelFormat.LUMINANCE ||
     pixelFormat === PixelFormat.LUMINANCE_ALPHA ||
     pixelFormat === PixelFormat.RGB_DXT1 ||
@@ -341,7 +377,7 @@ PixelFormat.isBC7Format = function (pixelFormat) {
 PixelFormat.compressedTextureSizeInBytes = function (
   pixelFormat,
   width,
-  height
+  height,
 ) {
   switch (pixelFormat) {
     case PixelFormat.RGB_DXT1:
@@ -363,7 +399,7 @@ PixelFormat.compressedTextureSizeInBytes = function (
     case PixelFormat.RGB_PVRTC_2BPPV1:
     case PixelFormat.RGBA_PVRTC_2BPPV1:
       return Math.floor(
-        (Math.max(width, 16) * Math.max(height, 8) * 2 + 7) / 8
+        (Math.max(width, 16) * Math.max(height, 8) * 2 + 7) / 8,
       );
 
     case PixelFormat.RGBA_BC7:
@@ -381,7 +417,7 @@ PixelFormat.textureSizeInBytes = function (
   pixelFormat,
   pixelDatatype,
   width,
-  height
+  height,
 ) {
   let componentsLength = PixelFormat.componentsLength(pixelFormat);
   if (PixelDatatype.isPacked(pixelDatatype)) {
@@ -389,6 +425,29 @@ PixelFormat.textureSizeInBytes = function (
   }
   return (
     componentsLength * PixelDatatype.sizeInBytes(pixelDatatype) * width * height
+  );
+};
+
+/**
+ * @private
+ */
+PixelFormat.texture3DSizeInBytes = function (
+  pixelFormat,
+  pixelDatatype,
+  width,
+  height,
+  depth,
+) {
+  let componentsLength = PixelFormat.componentsLength(pixelFormat);
+  if (PixelDatatype.isPacked(pixelDatatype)) {
+    componentsLength = 1;
+  }
+  return (
+    componentsLength *
+    PixelDatatype.sizeInBytes(pixelDatatype) *
+    width *
+    height *
+    depth
   );
 };
 
@@ -413,23 +472,9 @@ PixelFormat.createTypedArray = function (
   pixelFormat,
   pixelDatatype,
   width,
-  height
+  height,
 ) {
-  let constructor;
-  const sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
-  if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
-    constructor = Uint8Array;
-  } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
-    constructor = Uint16Array;
-  } else if (
-    sizeInBytes === Float32Array.BYTES_PER_ELEMENT &&
-    pixelDatatype === PixelDatatype.FLOAT
-  ) {
-    constructor = Float32Array;
-  } else {
-    constructor = Uint32Array;
-  }
-
+  const constructor = PixelDatatype.getTypedArrayConstructor(pixelDatatype);
   const size = PixelFormat.componentsLength(pixelFormat) * width * height;
   return new constructor(size);
 };
@@ -442,7 +487,7 @@ PixelFormat.flipY = function (
   pixelFormat,
   pixelDatatype,
   width,
-  height
+  height,
 ) {
   if (height === 1) {
     return bufferView;
@@ -451,7 +496,7 @@ PixelFormat.flipY = function (
     pixelFormat,
     pixelDatatype,
     width,
-    height
+    height,
   );
   const numberOfComponents = PixelFormat.componentsLength(pixelFormat);
   const textureWidth = width * numberOfComponents;
@@ -510,6 +555,45 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
         return WebGLConstants.RG16F;
       case PixelFormat.RED:
         return WebGLConstants.R16F;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.UNSIGNED_BYTE) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA:
+        return WebGLConstants.RGBA8;
+      case PixelFormat.RGB:
+        return WebGLConstants.RGB8;
+      case PixelFormat.RG:
+        return WebGLConstants.RG8;
+      case PixelFormat.RED:
+        return WebGLConstants.R8;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.INT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA_INTEGER:
+        return WebGLConstants.RGBA32I;
+      case PixelFormat.RGB_INTEGER:
+        return WebGLConstants.RGB32I;
+      case PixelFormat.RG_INTEGER:
+        return WebGLConstants.RG32I;
+      case PixelFormat.RED_INTEGER:
+        return WebGLConstants.R32I;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA_INTEGER:
+        return WebGLConstants.RGBA32UI;
+      case PixelFormat.RGB_INTEGER:
+        return WebGLConstants.RGB32UI;
+      case PixelFormat.RG_INTEGER:
+        return WebGLConstants.RG32UI;
+      case PixelFormat.RED_INTEGER:
+        return WebGLConstants.R32UI;
     }
   }
 

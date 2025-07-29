@@ -84,12 +84,12 @@ describe("Scene/Model/ModelAnimation", function () {
         createMockChannel(
           mockNode,
           mockTranslationSampler,
-          AnimatedPropertyType.TRANSLATION
+          AnimatedPropertyType.TRANSLATION,
         ),
         createMockChannel(
           mockNode,
           mockRotationSampler,
-          AnimatedPropertyType.ROTATION
+          AnimatedPropertyType.ROTATION,
         ),
       ],
       name: "Sample Animation",
@@ -98,7 +98,7 @@ describe("Scene/Model/ModelAnimation", function () {
     const runtimeAnimation = new ModelAnimation(
       mockModel,
       mockAnimation,
-      emptyOptions
+      emptyOptions,
     );
 
     expect(runtimeAnimation.animation).toBe(mockAnimation);
@@ -128,12 +128,12 @@ describe("Scene/Model/ModelAnimation", function () {
         createMockChannel(
           mockNode,
           mockTranslationSampler,
-          AnimatedPropertyType.TRANSLATION
+          AnimatedPropertyType.TRANSLATION,
         ),
         createMockChannel(
           mockNode,
           mockRotationSampler,
-          AnimatedPropertyType.ROTATION
+          AnimatedPropertyType.ROTATION,
         ),
       ],
       name: "Sample Animation",
@@ -152,7 +152,7 @@ describe("Scene/Model/ModelAnimation", function () {
     const runtimeAnimation = new ModelAnimation(
       mockModel,
       mockAnimation,
-      options
+      options,
     );
 
     expect(runtimeAnimation.animation).toBe(mockAnimation);
@@ -182,7 +182,7 @@ describe("Scene/Model/ModelAnimation", function () {
         createMockChannel(
           mockNode,
           mockTranslationSampler,
-          AnimatedPropertyType.TRANSLATION
+          AnimatedPropertyType.TRANSLATION,
         ),
         {
           sampler: mockRotationSampler,
@@ -195,7 +195,7 @@ describe("Scene/Model/ModelAnimation", function () {
     const runtimeAnimation = new ModelAnimation(
       mockModel,
       mockAnimation,
-      emptyOptions
+      emptyOptions,
     );
 
     expect(runtimeAnimation.animation).toBe(mockAnimation);
@@ -216,12 +216,12 @@ describe("Scene/Model/ModelAnimation", function () {
         createMockChannel(
           mockNode,
           mockTranslationSampler,
-          AnimatedPropertyType.TRANSLATION
+          AnimatedPropertyType.TRANSLATION,
         ),
         createMockChannel(
           mockNode,
           mockRotationSampler,
-          AnimatedPropertyType.ROTATION
+          AnimatedPropertyType.ROTATION,
         ),
       ],
       name: "Sample Animation",
@@ -230,7 +230,7 @@ describe("Scene/Model/ModelAnimation", function () {
     const runtimeAnimation = new ModelAnimation(
       mockModel,
       mockAnimation,
-      emptyOptions
+      emptyOptions,
     );
 
     expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
@@ -245,7 +245,7 @@ describe("Scene/Model/ModelAnimation", function () {
 
     expect(runtimeNode.translation).toEqual(new Cartesian3(4.0, 5.0, 6.0));
     expect(runtimeNode.rotation).toEqual(
-      new Quaternion(0.0, 0.0, 0.707, -0.707)
+      new Quaternion(0.0, 0.0, 0.707, -0.707),
     );
   });
 });

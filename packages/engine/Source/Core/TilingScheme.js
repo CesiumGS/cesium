@@ -16,7 +16,7 @@ import DeveloperError from "./DeveloperError.js";
 function TilingScheme(options) {
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme."
+    "This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.",
   );
   //>>includeEnd('debug');
 }

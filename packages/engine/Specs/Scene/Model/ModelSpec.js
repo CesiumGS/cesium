@@ -14,7 +14,7 @@ import {
   ColorBlendMode,
   Credit,
   CustomShader,
-  defaultValue,
+  Frozen,
   defined,
   DirectionalLight,
   DistanceDisplayCondition,
@@ -31,11 +31,11 @@ import {
   JobScheduler,
   JulianDate,
   Math as CesiumMath,
+  Matrix3,
   Matrix4,
   Model,
   ModelFeature,
   ModelSceneGraph,
-  OctahedralProjectedCubeMap,
   ModelUtility,
   Pass,
   PrimitiveType,
@@ -44,6 +44,7 @@ import {
   RuntimeError,
   ShaderProgram,
   ShadowMode,
+  SpecularEnvironmentCubeMap,
   SplitDirection,
   StyleCommandsNeeded,
   SunLight,
@@ -66,7 +67,7 @@ describe(
     const animatedTriangleOffset = new HeadingPitchRange(
       CesiumMath.PI / 2.0,
       0,
-      2.0
+      2.0,
     );
 
     const boxTexturedGltfUrl =
@@ -126,14 +127,14 @@ describe(
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
-      "west"
+      "west",
     );
 
     const modelMatrix = Transforms.headingPitchRollToFixedFrame(
       Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0),
       new HeadingPitchRoll(0, 0, 0),
       Ellipsoid.WGS84,
-      fixedFrameTransform
+      fixedFrameTransform,
     );
 
     let scene;
@@ -165,7 +166,7 @@ describe(
     });
 
     function zoomTo(model, zoom) {
-      zoom = defaultValue(zoom, 4.0);
+      zoom = zoom ?? 4.0;
 
       const camera = scene.camera;
       const center = model.boundingSphere.center;
@@ -176,29 +177,26 @@ describe(
 
     const scratchBytes = [];
     const defaultDate = JulianDate.fromDate(
-      new Date("January 1, 2014 12:00:00 UTC")
+      new Date("January 1, 2014 12:00:00 UTC"),
     );
 
     function verifyRender(model, shouldRender, options) {
       expect(model.ready).toBe(true);
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? Frozen.EMPTY_OBJECT;
 
-      const zoomToModel = defaultValue(options.zoomToModel, true);
+      const zoomToModel = options.zoomToModel ?? true;
       if (zoomToModel) {
         zoomTo(model);
       }
 
-      const backgroundColor = defaultValue(
-        options.backgroundColor,
-        Color.BLACK
-      );
+      const backgroundColor = options.backgroundColor ?? Color.BLACK;
 
-      const targetScene = defaultValue(options.scene, scene);
+      const targetScene = options.scene ?? scene;
 
       targetScene.backgroundColor = backgroundColor;
       const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
 
-      const time = defaultValue(options.time, defaultDate);
+      const time = options.time ?? defaultDate;
 
       expect({
         scene: targetScene,
@@ -215,9 +213,9 @@ describe(
     }
 
     function verifyDebugWireframe(model, primitiveType, options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-      const modelHasIndices = defaultValue(options.hasIndices, true);
-      const targetScene = defaultValue(options.scene, scene);
+      options = options ?? Frozen.EMPTY_OBJECT;
+      const modelHasIndices = options.hasIndices ?? true;
+      const targetScene = options.scene ?? scene;
 
       const commandList = targetScene.frameState.commandList;
       const commandCounts = [];
@@ -244,7 +242,7 @@ describe(
 
         const expectedCount = WireframeIndexGenerator.getWireframeIndicesCount(
           primitiveType,
-          commandCounts[i]
+          commandCounts[i],
         );
         expect(command.count).toEqual(expectedCount);
       }
@@ -269,7 +267,7 @@ describe(
 
     it("fromGltfAsync throws with undefined url", async function () {
       await expectAsync(
-        Model.fromGltfAsync({})
+        Model.fromGltfAsync({}),
       ).toBeRejectedWithDeveloperError();
     });
 
@@ -278,7 +276,7 @@ describe(
       const buffer = await resource.fetchArrayBuffer();
       const model = await loadAndZoomToModelAsync(
         { gltf: new Uint8Array(buffer) },
-        scene
+        scene,
       );
       expect(model.ready).toEqual(true);
       expect(model._sceneGraph).toBeDefined();
@@ -294,7 +292,7 @@ describe(
           gltf: gltf,
           basePath: boxTexturedGltfUrl,
         },
-        scene
+        scene,
       );
       expect(model.ready).toEqual(true);
       expect(model._sceneGraph).toBeDefined();
@@ -310,7 +308,7 @@ describe(
           gltf: gltf,
           basePath: microcosm,
         },
-        scene
+        scene,
       );
       expect(model.ready).toEqual(true);
       expect(model._sceneGraph).toBeDefined();
@@ -323,7 +321,7 @@ describe(
         {
           url: boxTexturedGltfUrl,
         },
-        scene
+        scene,
       );
       expect(model.ready).toEqual(true);
       expect(model._sceneGraph).toBeDefined();
@@ -341,11 +339,11 @@ describe(
             expect(gltf).toEqual(
               jasmine.objectContaining({
                 asset: { generator: "COLLADA2GLTF", version: "2.0" },
-              })
+              }),
             );
           },
         },
-        scene
+        scene,
       );
       expect(model.ready).toEqual(true);
       expect(model._sceneGraph).toBeDefined();
@@ -370,7 +368,7 @@ describe(
         expect(e).toBeInstanceOf(RuntimeError);
         expect(e.message).toContain("Failed to load texture");
         expect(e.message).toContain(
-          "Failed to load image: non-existent-path.png"
+          "Failed to load image: non-existent-path.png",
         );
         finished = true;
       });
@@ -396,7 +394,7 @@ describe(
       model.errorEvent.addEventListener((e) => {
         expect(e).toBeInstanceOf(RuntimeError);
         expect(e.message).toContain(
-          `Failed to load model: ${boxTexturedGltfUrl}`
+          `Failed to load model: ${boxTexturedGltfUrl}`,
         );
         expect(e.message).toContain("Failed to load texture");
         finished = true;
@@ -423,7 +421,7 @@ describe(
       model.errorEvent.addEventListener((e) => {
         expect(e).toBeInstanceOf(RuntimeError);
         expect(e.message).toContain(
-          `Failed to load model: ${boxTexturedGltfUrl}`
+          `Failed to load model: ${boxTexturedGltfUrl}`,
         );
         expect(e.message).toContain("Failed to load vertex buffer");
         finished = true;
@@ -438,7 +436,7 @@ describe(
     it("loads with asynchronous set to true", async function () {
       const jobSchedulerExecute = spyOn(
         JobScheduler.prototype,
-        "execute"
+        "execute",
       ).and.callThrough();
 
       const model = await loadAndZoomToModelAsync(
@@ -446,7 +444,7 @@ describe(
           gltf: boxTexturedGltfUrl,
           asynchronous: true,
         },
-        scene
+        scene,
       );
       const loader = model.loader;
       expect(loader._asynchronous).toBe(true);
@@ -457,7 +455,7 @@ describe(
     it("loads with asynchronous set to false", async function () {
       const jobSchedulerExecute = spyOn(
         JobScheduler.prototype,
-        "execute"
+        "execute",
       ).and.callThrough();
 
       const model = await loadAndZoomToModelAsync(
@@ -465,7 +463,7 @@ describe(
           gltf: boxTexturedGltfUrl,
           asynchronous: false,
         },
-        scene
+        scene,
       );
       const loader = model.loader;
       expect(loader._asynchronous).toBe(false);
@@ -476,7 +474,7 @@ describe(
     it("initializes feature table", async function () {
       const model = await loadAndZoomToModelAsync(
         { gltf: buildingsMetadata },
-        scene
+        scene,
       );
       expect(model.ready).toEqual(true);
       expect(model.featureTables).toBeDefined();
@@ -505,7 +503,7 @@ describe(
         {
           gltf: boxTexturedGlbUrl,
         },
-        scene
+        scene,
       );
       expect(model.show).toEqual(true);
       expect(model.modelMatrix).toEqual(Matrix4.IDENTITY);
@@ -515,6 +513,8 @@ describe(
 
       expect(model.id).toBeUndefined();
       expect(model.allowPicking).toEqual(true);
+
+      expect(model.enableVerticalExaggeration).toEqual(true);
 
       expect(model.activeAnimations).toBeDefined();
       expect(model.clampAnimations).toEqual(true);
@@ -561,17 +561,17 @@ describe(
           gltf: gltf,
           basePath: triangleWithoutIndicesUrl,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
-            Cartesian3.fromDegrees(0.0, 0.0, 100.0)
+            Cartesian3.fromDegrees(0.0, 0.0, 100.0),
           ),
         },
-        scene
+        scene,
       );
       // Orient the camera so it doesn't back-face cull the triangle.
       const center = model.boundingSphere.center;
       const range = 4.0 * model.boundingSphere.radius;
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(-CesiumMath.PI_OVER_TWO, 0, range)
+        new HeadingPitchRange(-CesiumMath.PI_OVER_TWO, 0, range),
       );
 
       // The triangle's diagonal edge is slightly out of frame.
@@ -590,7 +590,7 @@ describe(
           gltf: gltf,
           basePath: vertexColorTestUrl,
         },
-        scene
+        scene,
       );
       const renderOptions = {
         scene: scene,
@@ -624,10 +624,10 @@ describe(
           gltf: gltf,
           basePath: twoSidedPlaneUrl,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
-            Cartesian3.fromDegrees(0.0, 0.0, 100.0)
+            Cartesian3.fromDegrees(0.0, 0.0, 100.0),
           ),
         },
-        scene
+        scene,
       );
       const renderOptions = {
         scene: scene,
@@ -638,7 +638,7 @@ describe(
       const range = 4.0 * model.boundingSphere.radius;
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0, -CesiumMath.PI_OVER_TWO, range)
+        new HeadingPitchRange(0, -CesiumMath.PI_OVER_TWO, range),
       );
 
       // The top of the double-sided plane should render brightly, since
@@ -651,7 +651,7 @@ describe(
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0, CesiumMath.PI_OVER_TWO, range)
+        new HeadingPitchRange(0, CesiumMath.PI_OVER_TWO, range),
       );
 
       // The bottom of the plane should render darker than the top, since
@@ -676,7 +676,7 @@ describe(
           gltf: gltf,
           basePath: emissiveTextureUrl,
         },
-        scene
+        scene,
       );
       const renderOptions = {
         scene: scene,
@@ -707,7 +707,7 @@ describe(
           scale: 10.0,
           offset: offset,
         },
-        scene
+        scene,
       );
       verifyRender(model, true);
     });
@@ -720,7 +720,7 @@ describe(
           gltf: gltf,
           basePath: boxSpecularUrl,
         },
-        scene
+        scene,
       );
       verifyRender(model, true);
     });
@@ -733,7 +733,7 @@ describe(
           gltf: gltf,
           basePath: boxAnisotropyUrl,
         },
-        scene
+        scene,
       );
       verifyRender(model, true);
     });
@@ -746,14 +746,14 @@ describe(
           gltf: gltf,
           basePath: boxClearcoatUrl,
         },
-        scene
+        scene,
       );
       verifyRender(model, true);
     });
 
     it("transforms property textures with KHR_texture_transform", async function () {
       const resource = Resource.createIfNeeded(
-        propertyTextureWithTextureTransformUrl
+        propertyTextureWithTextureTransformUrl,
       );
       // The texture in the example model contains contains 8x8 pixels
       // with increasing 'red' component values [0 to 64)*3, interpreted
@@ -791,7 +791,7 @@ describe(
           // texture is fully loaded when the model is rendered!
           incrementallyLoadTextures: false,
         },
-        scene
+        scene,
       );
       const renderOptions = {
         scene: scene,
@@ -803,7 +803,7 @@ describe(
       scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
       scene.camera.direction = Cartesian3.negate(
         Cartesian3.UNIT_X,
-        new Cartesian3()
+        new Cartesian3(),
       );
       scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
       scene.camera.frustum.near = 0.01;
@@ -821,7 +821,7 @@ describe(
 
     it("transforms feature ID textures with KHR_texture_transform", async function () {
       const resource = Resource.createIfNeeded(
-        featureIdTextureWithTextureTransformUrl
+        featureIdTextureWithTextureTransformUrl,
       );
       // The texture in the example model contains contains 8x8 pixels
       // with increasing 'red' component values [0 to 64)*3.
@@ -857,7 +857,7 @@ describe(
           // texture is fully loaded when the model is rendered!
           incrementallyLoadTextures: false,
         },
-        scene
+        scene,
       );
       const renderOptions = {
         scene: scene,
@@ -870,7 +870,7 @@ describe(
       scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
       scene.camera.direction = Cartesian3.negate(
         Cartesian3.UNIT_X,
-        new Cartesian3()
+        new Cartesian3(),
       );
       scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
       scene.camera.frustum.near = 0.01;
@@ -899,7 +899,7 @@ describe(
           basePath: morphPrimitivesTestUrl,
           offset: offset,
         },
-        scene
+        scene,
       );
       // The background color must be changed because the model's texture
       // contains black, which can confuse the test.
@@ -919,7 +919,7 @@ describe(
     it("renders Draco-compressed model", async function () {
       const model = await loadAndZoomToModelAsync(
         { gltf: dracoCesiumManUrl },
-        scene
+        scene,
       );
       verifyRender(model, true);
     });
@@ -938,14 +938,14 @@ describe(
       const model = scene.primitives.add(
         await Model.fromGltfAsync({
           url: dracoCesiumManUrl,
-        })
+        }),
       );
 
       let failed = false;
       model.errorEvent.addEventListener((e) => {
         expect(e).toBeInstanceOf(RuntimeError);
         expect(e.message).toContain(
-          `Failed to load model: ${dracoCesiumManUrl}`
+          `Failed to load model: ${dracoCesiumManUrl}`,
         );
         expect(e.message).toContain("Failed to load Draco");
         expect(e.message).toContain("Custom error");
@@ -957,7 +957,7 @@ describe(
           scene.renderForSpecs();
           return failed;
         },
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
     });
 
@@ -967,7 +967,7 @@ describe(
           gltf: animatedTriangleUrl,
           offset: animatedTriangleOffset,
         },
-        scene
+        scene,
       );
       const animationCollection = model.activeAnimations;
       expect(animationCollection).toBeDefined();
@@ -986,7 +986,7 @@ describe(
           gltf: animatedTriangleUrl,
           offset: animatedTriangleOffset,
         },
-        scene
+        scene,
       );
       // Move camera so that the triangle is in view.
       scene.camera.moveDown(0.5);
@@ -1017,7 +1017,7 @@ describe(
         {
           gltf: boxCesiumRtcUrl,
         },
-        scene
+        scene,
       );
       verifyRender(model, true);
     });
@@ -1025,7 +1025,7 @@ describe(
     it("adds animation to draco-compressed model", async function () {
       const model = await loadAndZoomToModelAsync(
         { gltf: dracoCesiumManUrl },
-        scene
+        scene,
       );
       verifyRender(model, true);
 
@@ -1043,7 +1043,7 @@ describe(
       const offset = new HeadingPitchRange(
         CesiumMath.PI_OVER_TWO,
         -CesiumMath.PI_OVER_FOUR,
-        1
+        1,
       );
 
       const resource = Resource.createIfNeeded(boxInstancedNoNormalsUrl);
@@ -1054,7 +1054,7 @@ describe(
           basePath: boxInstancedNoNormalsUrl,
           offset: offset,
         },
-        scene
+        scene,
       );
       const renderOptions = {
         zoomToModel: false,
@@ -1068,7 +1068,7 @@ describe(
       const buffer = await resource.fetchArrayBuffer();
       const model = await loadAndZoomToModelAsync(
         { gltf: new Uint8Array(buffer), show: false },
-        scene
+        scene,
       );
       expect(model.ready).toEqual(true);
       expect(model.show).toEqual(false);
@@ -1085,7 +1085,7 @@ describe(
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
         },
-        scene2D
+        scene2D,
       );
       expect(model.ready).toEqual(true);
       verifyRender(model, true, {
@@ -1099,10 +1099,10 @@ describe(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
-            Cartesian3.fromDegrees(180.0, 0.0)
+            Cartesian3.fromDegrees(180.0, 0.0),
           ),
         },
-        scene2D
+        scene2D,
       );
       expect(model.ready).toEqual(true);
       verifyRender(model, true, {
@@ -1111,7 +1111,7 @@ describe(
       });
 
       model.modelMatrix = Transforms.eastNorthUpToFixedFrame(
-        Cartesian3.fromDegrees(-180.0, 0.0)
+        Cartesian3.fromDegrees(-180.0, 0.0),
       );
       verifyRender(model, true, {
         zoomToModel: false,
@@ -1125,7 +1125,7 @@ describe(
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
         },
-        sceneCV
+        sceneCV,
       );
       expect(model.ready).toEqual(true);
       scene.camera.moveBackward(1.0);
@@ -1141,7 +1141,7 @@ describe(
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
         },
-        sceneCV
+        sceneCV,
       );
       expect(model.ready).toEqual(true);
       scene.camera.moveBackward(1.0);
@@ -1165,7 +1165,7 @@ describe(
           projectTo2D: true,
           incrementallyLoadTextures: false,
         },
-        scene2D
+        scene2D,
       );
       expect(model.ready).toEqual(true);
       verifyRender(model, true, {
@@ -1182,7 +1182,7 @@ describe(
           projectTo2D: true,
           incrementallyLoadTextures: false,
         },
-        sceneCV
+        sceneCV,
       );
       expect(model.ready).toEqual(true);
       sceneCV.camera.moveBackward(1.0);
@@ -1199,7 +1199,7 @@ describe(
           modelMatrix: modelMatrix,
           projectTo2D: true,
         },
-        scene
+        scene,
       );
       const commandList = scene.frameState.commandList;
       expect(model.ready).toEqual(true);
@@ -1221,7 +1221,7 @@ describe(
       it("applies style to model with feature table", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: buildingsMetadata },
-          scene
+          scene,
         );
 
         // Renders without style.
@@ -1244,7 +1244,7 @@ describe(
         });
         verifyRender(model, true);
         expect(model._styleCommandsNeeded).toBe(
-          StyleCommandsNeeded.ALL_TRANSLUCENT
+          StyleCommandsNeeded.ALL_TRANSLUCENT,
         );
 
         // Does not render with invisible color.
@@ -1271,7 +1271,7 @@ describe(
       it("applies style to model without feature table", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
 
         const renderOptions = {
@@ -1347,7 +1347,7 @@ describe(
             basePath: boxTexturedGltfUrl,
             credit: credit,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
         const creditDisplay = scene.frameState.creditDisplay;
@@ -1367,7 +1367,7 @@ describe(
             basePath: boxTexturedGltfUrl,
             credit: creditString,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
         const creditDisplay = scene.frameState.creditDisplay;
@@ -1385,7 +1385,7 @@ describe(
             gltf: gltf,
             basePath: boxWithCreditsUrl,
           },
-          scene
+          scene,
         );
         const expectedCredits = [
           "First Source",
@@ -1412,7 +1412,7 @@ describe(
             basePath: boxWithCreditsUrl,
             credit: "User Credit",
           },
-          scene
+          scene,
         );
         model._resourceCredits = [new Credit("Resource Credit")];
         const expectedCredits = [
@@ -1443,7 +1443,7 @@ describe(
             credit: "User Credit",
             showCreditsOnScreen: true,
           },
-          scene
+          scene,
         );
         const expectedCredits = [
           "User Credit",
@@ -1471,7 +1471,7 @@ describe(
             credit: "User Credit",
             showCreditsOnScreen: false,
           },
-          scene
+          scene,
         );
         const expectedCredits = [
           "User Credit",
@@ -1520,7 +1520,7 @@ describe(
             credit: new Credit("User Credit", false),
             showCreditsOnScreen: true,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
         const creditDisplay = scene.frameState.creditDisplay;
@@ -1561,7 +1561,7 @@ describe(
         const buffer = await resource.fetchArrayBuffer();
         const model = await loadAndZoomToModelAsync(
           { gltf: new Uint8Array(buffer), enableDebugWireframe: true },
-          sceneWithWebgl1
+          sceneWithWebgl1,
         );
         verifyDebugWireframe(model, PrimitiveType.TRIANGLES);
       });
@@ -1571,7 +1571,7 @@ describe(
         const buffer = await resource.fetchArrayBuffer();
         const model = await loadAndZoomToModelAsync(
           { gltf: new Uint8Array(buffer), enableDebugWireframe: false },
-          sceneWithWebgl1
+          sceneWithWebgl1,
         );
         const commandList = scene.frameState.commandList;
         const commandCounts = [];
@@ -1601,7 +1601,7 @@ describe(
         const buffer = await resource.fetchArrayBuffer();
         const model = await loadAndZoomToModelAsync(
           { gltf: new Uint8Array(buffer) },
-          scene
+          scene,
         );
         verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
           scene: scene,
@@ -1611,7 +1611,7 @@ describe(
       it("debugWireframe works for model without indices", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: triangleWithoutIndicesUrl, enableDebugWireframe: true },
-          scene
+          scene,
         );
         verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
           hasIndices: false,
@@ -1621,7 +1621,7 @@ describe(
       it("debugWireframe works for model with triangle strip", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: triangleStripUrl, enableDebugWireframe: true },
-          scene
+          scene,
         );
         verifyDebugWireframe(model, PrimitiveType.TRIANGLE_STRIP);
       });
@@ -1629,7 +1629,7 @@ describe(
       it("debugWireframe works for model with triangle fan", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: triangleFanUrl, enableDebugWireframe: true },
-          scene
+          scene,
         );
         verifyDebugWireframe(model, PrimitiveType.TRIANGLE_FAN);
       });
@@ -1637,7 +1637,7 @@ describe(
       it("debugWireframe ignores points", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: pointCloudUrl, enableDebugWireframe: true },
-          scene
+          scene,
         );
         scene.renderForSpecs();
         const commandList = scene.frameState.commandList;
@@ -1661,7 +1661,7 @@ describe(
       const buffer = await resource.fetchArrayBuffer();
       const model = await loadAndZoomToModelAsync(
         { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true },
-        scene
+        scene,
       );
       scene.renderForSpecs();
       const commandList = scene.frameState.commandList;
@@ -1691,14 +1691,14 @@ describe(
         const buffer = await resource.fetchArrayBuffer();
         const model = await loadAndZoomToModelAsync(
           { gltf: new Uint8Array(buffer) },
-          scene
+          scene,
         );
         const boundingSphere = model.boundingSphere;
         expect(boundingSphere).toBeDefined();
         expect(boundingSphere.center).toEqual(new Cartesian3());
         expect(boundingSphere.radius).toEqualEpsilon(
           0.8660254037844386,
-          CesiumMath.EPSILON8
+          CesiumMath.EPSILON8,
         );
       });
 
@@ -1712,11 +1712,11 @@ describe(
         expect(boundingSphere).toBeDefined();
         expect(boundingSphere.center).toEqualEpsilon(
           new Cartesian3(0.0320296511054039, 0, 0.7249599695205688),
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
         expect(boundingSphere.radius).toEqualEpsilon(
           0.9484635280120018,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
       });
 
@@ -1725,7 +1725,7 @@ describe(
           {
             gltf: boxCesiumRtcUrl,
           },
-          scene
+          scene,
         );
         const boundingSphere = model.boundingSphere;
         expect(boundingSphere).toBeDefined();
@@ -1735,7 +1735,7 @@ describe(
       it("boundingSphere updates bounding sphere when invoked", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         const expectedRadius = 0.8660254037844386;
         const translation = new Cartesian3(10, 0, 0);
@@ -1749,7 +1749,49 @@ describe(
         expect(boundingSphere.center).toEqual(translation);
         expect(boundingSphere.radius).toEqualEpsilon(
           2.0 * expectedRadius,
-          CesiumMath.EPSILON8
+          CesiumMath.EPSILON8,
+        );
+      });
+    });
+
+    describe("reference matrices", function () {
+      it("sets IBL transform matrix", async function () {
+        if (!scene.highDynamicRangeSupported) {
+          return;
+        }
+        const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+        const buffer = await resource.fetchArrayBuffer();
+        const imageBasedLighting = new ImageBasedLighting({
+          specularEnvironmentMaps:
+            "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2",
+        });
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: new Uint8Array(buffer),
+            imageBasedLighting: imageBasedLighting,
+          },
+          scene,
+        );
+        await pollToPromise(function () {
+          scene.render();
+          return (
+            defined(imageBasedLighting.specularEnvironmentCubeMap) &&
+            imageBasedLighting.specularEnvironmentCubeMap.ready
+          );
+        });
+        expect(model.modelMatrix).toEqual(Matrix4.IDENTITY);
+        const { view3D } = scene.context.uniformState;
+        const viewRotation = Matrix4.getRotation(view3D, new Matrix3());
+        Matrix3.transpose(viewRotation, viewRotation);
+        const yUpToZUp = new Matrix3(1, 0, 0, 0, 0, 1, 0, -1, 0);
+        const expectedIblTransform = Matrix3.multiply(
+          yUpToZUp,
+          viewRotation,
+          new Matrix3(),
+        );
+        expect(model._iblReferenceFrameMatrix).toEqualEpsilon(
+          expectedIblTransform,
+          CesiumMath.EPSILON14,
         );
       });
     });
@@ -1766,7 +1808,7 @@ describe(
             offset: offset,
             id: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         expect(model.id).toBe(boxTexturedGlbUrl);
 
@@ -1785,7 +1827,7 @@ describe(
             gltf: boxTexturedGlbUrl,
             offset: offset,
           },
-          scene
+          scene,
         );
         expect(model.id).toBeUndefined();
 
@@ -1817,7 +1859,7 @@ describe(
             gltf: boxTexturedGlbUrl,
             offset: offset,
           },
-          scene
+          scene,
         );
         expect(scene).toPickAndCall(function (result) {
           expect(result.primitive).toBeInstanceOf(Model);
@@ -1841,7 +1883,7 @@ describe(
             offset: offset,
             id: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         expect(scene).toPickAndCall(function (result) {
           expect(result.primitive).toBeInstanceOf(Model);
@@ -1866,7 +1908,7 @@ describe(
             offset: offset,
             id: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         expect(scene).toPickAndCall(function (result) {
           expect(result.primitive).toBeInstanceOf(Model);
@@ -1898,7 +1940,7 @@ describe(
             allowPicking: false,
             offset: offset,
           },
-          scene
+          scene,
         );
         expect(scene).toPickAndCall(function (result) {
           expect(result).toBeUndefined();
@@ -1920,7 +1962,7 @@ describe(
             gltf: boxTexturedGlbUrl,
             offset: offset,
           },
-          scene
+          scene,
         );
         model.show = false;
         expect(scene).toPickAndCall(function (result) {
@@ -1933,7 +1975,7 @@ describe(
       function setFeaturesWithOpacity(
         featureTable,
         opaqueFeaturesLength,
-        translucentFeaturesLength
+        translucentFeaturesLength,
       ) {
         for (let i = 0; i < opaqueFeaturesLength; i++) {
           const feature = featureTable.getFeature(i);
@@ -1954,7 +1996,7 @@ describe(
           {
             gltf: buildingsMetadata,
           },
-          scene
+          scene,
         );
         const featureTable = model.featureTables[model.featureTableId];
 
@@ -1963,7 +2005,7 @@ describe(
         scene.renderForSpecs();
         expect(featureTable.styleCommandsNeededDirty).toEqual(false);
         expect(featureTable._styleCommandsNeeded).toEqual(
-          StyleCommandsNeeded.ALL_OPAQUE
+          StyleCommandsNeeded.ALL_OPAQUE,
         );
 
         // Set some features to translucent.
@@ -1971,7 +2013,7 @@ describe(
         scene.renderForSpecs();
         expect(featureTable.styleCommandsNeededDirty).toEqual(true);
         expect(featureTable._styleCommandsNeeded).toEqual(
-          StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
+          StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
         );
 
         // Set some more features to translucent.
@@ -1979,7 +2021,7 @@ describe(
         scene.renderForSpecs();
         expect(featureTable.styleCommandsNeededDirty).toEqual(false);
         expect(featureTable._styleCommandsNeeded).toEqual(
-          StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
+          StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
         );
 
         // Set all features to translucent.
@@ -1987,7 +2029,7 @@ describe(
         scene.renderForSpecs();
         expect(featureTable.styleCommandsNeededDirty).toEqual(true);
         expect(featureTable._styleCommandsNeeded).toEqual(
-          StyleCommandsNeeded.ALL_TRANSLUCENT
+          StyleCommandsNeeded.ALL_TRANSLUCENT,
         );
       });
 
@@ -2000,7 +2042,7 @@ describe(
             gltf: boxInstanced,
             instanceFeatureIdLabel: "section",
           },
-          scene
+          scene,
         );
         expect(model.featureTableId).toEqual(1);
       });
@@ -2010,7 +2052,7 @@ describe(
           {
             gltf: microcosm,
           },
-          scene
+          scene,
         );
         expect(model.featureTableId).toEqual(0);
       });
@@ -2020,7 +2062,7 @@ describe(
           {
             gltf: buildingsMetadata,
           },
-          scene
+          scene,
         );
         expect(model.featureTableId).toEqual(0);
       });
@@ -2030,7 +2072,7 @@ describe(
           {
             gltf: buildingsMetadata,
           },
-          scene
+          scene,
         );
         expect(model.featureIdLabel).toBe("featureId_0");
         model.featureIdLabel = "buildings";
@@ -2047,7 +2089,7 @@ describe(
           {
             gltf: boxInstanced,
           },
-          scene
+          scene,
         );
         expect(model.instanceFeatureIdLabel).toBe("instanceFeatureId_0");
         model.instanceFeatureIdLabel = "section";
@@ -2069,7 +2111,7 @@ describe(
             forwardAxis: Axis.X,
             modelMatrix: transform,
           },
-          scene
+          scene,
         );
         const sceneGraph = model.sceneGraph;
         scene.renderForSpecs();
@@ -2085,11 +2127,11 @@ describe(
         const translation = new Cartesian3(10, 0, 0);
         const updateModelMatrix = spyOn(
           ModelSceneGraph.prototype,
-          "updateModelMatrix"
+          "updateModelMatrix",
         ).and.callThrough();
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
-          scene
+          scene,
         );
         verifyRender(model, true);
         const sceneGraph = model.sceneGraph;
@@ -2098,7 +2140,7 @@ describe(
         Matrix4.multiplyTransformation(
           model.modelMatrix,
           transform,
-          model.modelMatrix
+          model.modelMatrix,
         );
         scene.renderForSpecs();
 
@@ -2115,7 +2157,7 @@ describe(
         const translation = new Cartesian3(10, 0, 0);
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
-          scene
+          scene,
         );
         const transform = Matrix4.fromTranslation(translation);
         expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
@@ -2123,7 +2165,7 @@ describe(
         Matrix4.multiplyTransformation(
           model.modelMatrix,
           transform,
-          model.modelMatrix
+          model.modelMatrix,
         );
         scene.renderForSpecs();
 
@@ -2136,7 +2178,7 @@ describe(
             gltf: boxTexturedGlbUrl,
             modelMatrix: modelMatrix,
           },
-          scene2D
+          scene2D,
         );
         verifyRender(model, true, {
           zoomToModel: false,
@@ -2157,7 +2199,7 @@ describe(
             modelMatrix: modelMatrix,
             projectTo2D: true,
           },
-          scene2D
+          scene2D,
         );
         expect(function () {
           model.modelMatrix = Matrix4.IDENTITY;
@@ -2184,7 +2226,7 @@ describe(
             modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
             scene: scene,
           },
-          scene
+          scene,
         );
         expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
         expect(model._scene).toBe(scene);
@@ -2200,7 +2242,7 @@ describe(
             modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
             scene: scene,
           },
-          scene
+          scene,
         );
         expect(model.heightReference).toEqual(HeightReference.NONE);
         expect(model._clampedModelMatrix).toBeUndefined();
@@ -2224,14 +2266,14 @@ describe(
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
-          scene
+          scene,
         );
 
         expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Ellipsoid.WGS84.cartesianToCartographic(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       });
 
@@ -2247,7 +2289,7 @@ describe(
             heightReference: HeightReference.NONE,
             scene: scene,
           },
-          scene
+          scene,
         );
 
         model.heightReference = HeightReference.CLAMP_TO_GROUND;
@@ -2257,7 +2299,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Ellipsoid.WGS84.cartesianToCartographic(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       });
 
@@ -2273,7 +2315,7 @@ describe(
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
-          scene
+          scene,
         );
 
         model.heightReference = HeightReference.NONE;
@@ -2295,12 +2337,12 @@ describe(
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
-          scene
+          scene,
         );
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Ellipsoid.WGS84.cartesianToCartographic(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
 
         model.heightReference = HeightReference.RELATIVE_TO_GROUND;
@@ -2310,7 +2352,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Ellipsoid.WGS84.cartesianToCartographic(position),
           jasmine.any(Function),
-          HeightReference.RELATIVE_TO_GROUND
+          HeightReference.RELATIVE_TO_GROUND,
         );
       });
 
@@ -2327,12 +2369,12 @@ describe(
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
-          scene
+          scene,
         );
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Ellipsoid.WGS84.cartesianToCartographic(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
 
         // Modify the model matrix in place
@@ -2346,7 +2388,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Ellipsoid.WGS84.cartesianToCartographic(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       });
 
@@ -2363,12 +2405,12 @@ describe(
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
-          scene
+          scene,
         );
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Ellipsoid.WGS84.cartesianToCartographic(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
 
         position = Cartesian3.fromDegrees(-73.0, 40.0);
@@ -2382,7 +2424,7 @@ describe(
         expect(scene.updateHeight).toHaveBeenCalledWith(
           Ellipsoid.WGS84.cartesianToCartographic(position),
           jasmine.any(Function),
-          HeightReference.CLAMP_TO_GROUND
+          HeightReference.CLAMP_TO_GROUND,
         );
       });
 
@@ -2394,19 +2436,19 @@ describe(
               cartographic.height = height;
               updateCallback(cartographic);
             };
-          }
+          },
         );
 
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
+              Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
-          scene
+          scene,
         );
 
         invokeCallback(100.0);
@@ -2422,12 +2464,12 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
+              Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
-          scene
+          scene,
         );
         expect(model._heightDirty).toBe(false);
         const terrainProvider = new CesiumTerrainProvider({
@@ -2446,15 +2488,15 @@ describe(
             {
               gltf: boxTexturedGltfUrl,
               modelMatrix: Transforms.eastNorthUpToFixedFrame(
-                Cartesian3.fromDegrees(-72.0, 40.0)
+                Cartesian3.fromDegrees(-72.0, 40.0),
               ),
               heightReference: HeightReference.CLAMP_TO_GROUND,
               scene: undefined,
             },
-            scene
-          )
+            scene,
+          ),
         ).toBeRejectedWithDeveloperError(
-          "Height reference is not supported without a scene."
+          "Height reference is not supported without a scene.",
         );
       });
 
@@ -2463,11 +2505,11 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
+              Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.NONE,
           },
-          scene
+          scene,
         );
 
         expect(function () {
@@ -2482,13 +2524,13 @@ describe(
             {
               gltf: boxTexturedGltfUrl,
               modelMatrix: Transforms.eastNorthUpToFixedFrame(
-                Cartesian3.fromDegrees(-72.0, 40.0)
+                Cartesian3.fromDegrees(-72.0, 40.0),
               ),
               heightReference: HeightReference.CLAMP_TO_GROUND,
               scene: scene,
             },
-            scene
-          )
+            scene,
+          ),
         ).toBeResolved();
       });
 
@@ -2500,12 +2542,12 @@ describe(
           {
             gltf: boxTexturedGlbUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
+              Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
-          scene
+          scene,
         );
 
         scene.primitives.remove(model);
@@ -2524,7 +2566,7 @@ describe(
             gltf: boxTexturedGltfUrl,
             distanceDisplayCondition: condition,
           },
-          scene
+          scene,
         );
         verifyRender(model, false);
       });
@@ -2537,7 +2579,7 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
           },
-          scene
+          scene,
         );
         verifyRender(model, true);
 
@@ -2556,7 +2598,7 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
           },
-          scene
+          scene,
         );
         verifyRender(model, true);
 
@@ -2569,7 +2611,7 @@ describe(
         // Model distance is between near and far values, should render
         frameState.camera.lookAt(
           Cartesian3.ZERO,
-          new HeadingPitchRange(0.0, 0.0, (far + near) * 0.5)
+          new HeadingPitchRange(0.0, 0.0, (far + near) * 0.5),
         );
         verifyRender(model, true, {
           zoomToModel: false,
@@ -2578,7 +2620,7 @@ describe(
         // Model distance is greater than far value, should not render
         frameState.camera.lookAt(
           Cartesian3.ZERO,
-          new HeadingPitchRange(0.0, 0.0, far + 10.0)
+          new HeadingPitchRange(0.0, 0.0, far + 10.0),
         );
         verifyRender(model, false, {
           zoomToModel: false,
@@ -2593,7 +2635,7 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
           },
-          scene
+          scene,
         );
         expect(function () {
           model.distanceDisplayCondition = condition;
@@ -2605,7 +2647,7 @@ describe(
       it("initializes with model color", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, color: Color.BLACK },
-          scene
+          scene,
         );
         verifyRender(model, false);
       });
@@ -2613,7 +2655,7 @@ describe(
       it("changing model color works", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl },
-          scene
+          scene,
         );
         verifyRender(model, true);
 
@@ -2637,7 +2679,7 @@ describe(
             gltf: boxTexturedGltfUrl,
             offset: offset,
           },
-          scene
+          scene,
         );
         const renderOptions = {
           scene: scene,
@@ -2669,7 +2711,7 @@ describe(
             color: Color.fromAlpha(Color.BLACK, 0.0),
             offset: offset,
           },
-          scene
+          scene,
         );
         verifyRender(model, false);
 
@@ -2719,7 +2761,7 @@ describe(
             color: Color.RED,
             colorBlendMode: ColorBlendMode.HIGHLIGHT,
           },
-          scene
+          scene,
         );
         expect(model.colorBlendMode).toEqual(ColorBlendMode.HIGHLIGHT);
 
@@ -2740,7 +2782,7 @@ describe(
             color: Color.RED,
             colorBlendMode: ColorBlendMode.REPLACE,
           },
-          scene
+          scene,
         );
         expect(model.colorBlendMode).toEqual(ColorBlendMode.REPLACE);
 
@@ -2761,7 +2803,7 @@ describe(
             color: Color.RED,
             colorBlendMode: ColorBlendMode.MIX,
           },
-          scene
+          scene,
         );
         expect(model.colorBlendMode).toEqual(ColorBlendMode.MIX);
 
@@ -2782,7 +2824,7 @@ describe(
             color: Color.RED,
             colorBlendMode: ColorBlendMode.REPLACE,
           },
-          scene
+          scene,
         );
         expect(model.colorBlendMode).toEqual(ColorBlendMode.REPLACE);
 
@@ -2824,7 +2866,7 @@ describe(
             colorBlendMode: ColorBlendMode.MIX,
             colorBlendAmount: 1.0,
           },
-          scene
+          scene,
         );
         expect(model.colorBlendAmount).toEqual(1.0);
 
@@ -2845,7 +2887,7 @@ describe(
             gltf: boxTexturedGltfUrl,
             offset: offset,
           },
-          scene
+          scene,
         );
         const renderOptions = {
           scene: scene,
@@ -2891,7 +2933,7 @@ describe(
       it("initializes with silhouette size", async function () {
         await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, silhouetteSize: 1.0 },
-          scene
+          scene,
         );
         const commands = scene.frameState.commandList;
         scene.renderForSpecs();
@@ -2905,7 +2947,7 @@ describe(
       it("changing silhouette size works", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl },
-          scene
+          scene,
         );
         const commands = scene.frameState.commandList;
         scene.renderForSpecs();
@@ -2935,7 +2977,7 @@ describe(
             silhouetteSize: 1.0,
             silhouetteColor: Color.fromAlpha(Color.GREEN, 0.5),
           },
-          scene
+          scene,
         );
         const commands = scene.frameState.commandList;
         scene.renderForSpecs();
@@ -2949,7 +2991,7 @@ describe(
       it("silhouette is disabled by invisible color", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, silhouetteSize: 1.0 },
-          scene
+          scene,
         );
         const commands = scene.frameState.commandList;
         scene.renderForSpecs();
@@ -2973,7 +3015,7 @@ describe(
             silhouetteSize: 1.0,
             color: Color.fromAlpha(Color.WHITE, 0.0),
           },
-          scene
+          scene,
         );
         const commands = scene.frameState.commandList;
         scene.renderForSpecs();
@@ -2998,7 +3040,7 @@ describe(
             silhouetteSize: 1.0,
             color: Color.fromAlpha(Color.WHITE, 0.5),
           },
-          scene
+          scene,
         );
         const commands = scene.frameState.commandList;
         scene.renderForSpecs();
@@ -3020,7 +3062,7 @@ describe(
             color: Color.fromAlpha(Color.WHITE, 0.5),
             silhouetteColor: Color.fromAlpha(Color.RED, 0.5),
           },
-          scene
+          scene,
         );
         const commands = scene.frameState.commandList;
         scene.renderForSpecs();
@@ -3038,14 +3080,14 @@ describe(
             gltf: boxTexturedGltfUrl,
             silhouetteSize: 1.0,
           },
-          scene
+          scene,
         );
         await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             silhouetteSize: 1.0,
           },
-          scene
+          scene,
         );
         const commands = scene.frameState.commandList;
         scene.renderForSpecs();
@@ -3065,17 +3107,28 @@ describe(
     describe("light color", function () {
       it("initializes with light color", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
-          scene
+          {
+            gltf: boxTexturedGltfUrl,
+            lightColor: Cartesian3.ZERO,
+          },
+          scene,
         );
+
+        // ignore any image-based lighting– Test directional light only
+        model.imageBasedLighting.imageBasedLightingFactor = Cartesian2.ZERO;
+
         verifyRender(model, false);
       });
 
       it("changing light color works", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
-          scene
+          { gltf: boxTexturedGltfUrl, imageBasedLighting: undefined },
+          scene,
         );
+
+        // ignore any image-based lighting– Test directional light only
+        model.imageBasedLighting.imageBasedLightingFactor = Cartesian2.ZERO;
+
         model.lightColor = Cartesian3.ZERO;
         verifyRender(model, false);
 
@@ -3088,8 +3141,8 @@ describe(
 
       it("light color doesn't affect unlit models", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxUnlitUrl },
-          scene
+          { gltf: boxUnlitUrl, imageBasedLighting: undefined },
+          scene,
         );
         const options = {
           zoomToModel: false,
@@ -3111,42 +3164,56 @@ describe(
       it("initializes with imageBasedLighting", async function () {
         const ibl = new ImageBasedLighting({
           imageBasedLightingFactor: Cartesian2.ZERO,
-          luminanceAtZenith: 0.5,
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, imageBasedLighting: ibl },
-          scene
+          scene,
         );
         expect(model.imageBasedLighting).toBe(ibl);
       });
 
       it("creates default imageBasedLighting", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
-          scene
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: undefined,
+          },
+          scene,
         );
         const imageBasedLighting = model.imageBasedLighting;
         expect(imageBasedLighting).toBeDefined();
         expect(
           Cartesian2.equals(
             imageBasedLighting.imageBasedLightingFactor,
-            new Cartesian2(1, 1)
-          )
+            new Cartesian2(1, 1),
+          ),
         ).toBe(true);
-        expect(imageBasedLighting.luminanceAtZenith).toBe(0.2);
         expect(
-          imageBasedLighting.sphericalHarmonicCoefficients
+          imageBasedLighting.sphericalHarmonicCoefficients,
         ).toBeUndefined();
         expect(imageBasedLighting.specularEnvironmentMaps).toBeUndefined();
       });
 
       it("changing imageBasedLighting works", async function () {
         const imageBasedLighting = new ImageBasedLighting({
-          imageBasedLightingFactor: Cartesian2.ZERO,
+          sphericalHarmonicCoefficients: [
+            new Cartesian3(1.0, 0.0, 0.0),
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+          ],
         });
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
-          scene
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: undefined,
+          },
+          scene,
         );
         const renderOptions = {
           scene: scene,
@@ -3171,9 +3238,20 @@ describe(
             gltf: boxTexturedGltfUrl,
             imageBasedLighting: new ImageBasedLighting({
               imageBasedLightingFactor: Cartesian2.ZERO,
+              sphericalHarmonicCoefficients: [
+                new Cartesian3(0.35449, 0.35449, 0.35449),
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+              ],
             }),
           },
-          scene
+          scene,
         );
         const renderOptions = {
           scene: scene,
@@ -3193,34 +3271,6 @@ describe(
         });
       });
 
-      it("changing luminanceAtZenith works", async function () {
-        const model = await loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            imageBasedLighting: new ImageBasedLighting({
-              luminanceAtZenith: 0.0,
-            }),
-          },
-          scene
-        );
-        const renderOptions = {
-          scene: scene,
-          time: defaultDate,
-        };
-
-        let result;
-        verifyRender(model, true);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          result = rgba;
-        });
-
-        const ibl = model.imageBasedLighting;
-        ibl.luminanceAtZenith = 0.2;
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual(result);
-        });
-      });
-
       it("changing sphericalHarmonicCoefficients works", async function () {
         if (!scene.highDynamicRangeSupported) {
           return;
@@ -3228,47 +3278,47 @@ describe(
         const L00 = new Cartesian3(
           0.692622075009195,
           0.4543516001819,
-          0.36910172299235
+          0.36910172299235,
         ); // L00, irradiance, pre-scaled base
         const L1_1 = new Cartesian3(
           0.289407068366422,
           0.16789310162658,
-          0.106174907004792
+          0.106174907004792,
         ); // L1-1, irradiance, pre-scaled base
         const L10 = new Cartesian3(
           -0.591502034778913,
           -0.28152432317119,
-          0.124647554708491
+          0.124647554708491,
         ); // L10, irradiance, pre-scaled base
         const L11 = new Cartesian3(
           0.34945458117126,
           0.163273486841657,
-          -0.03095643545207
+          -0.03095643545207,
         ); // L11, irradiance, pre-scaled base
         const L2_2 = new Cartesian3(
           0.22171176447426,
           0.11771991868122,
-          0.031381053430064
+          0.031381053430064,
         ); // L2-2, irradiance, pre-scaled base
         const L2_1 = new Cartesian3(
           -0.348955284677868,
           -0.187256994042823,
-          -0.026299717727617
+          -0.026299717727617,
         ); // L2-1, irradiance, pre-scaled base
         const L20 = new Cartesian3(
           0.119982671127227,
           0.076784552175028,
-          0.055517838847755
+          0.055517838847755,
         ); // L20, irradiance, pre-scaled base
         const L21 = new Cartesian3(
           -0.545546043202299,
           -0.279787444030397,
-          -0.086854000285261
+          -0.086854000285261,
         ); // L21, irradiance, pre-scaled base
         const L22 = new Cartesian3(
           0.160417569726332,
           0.120896423762313,
-          0.121102528320197
+          0.121102528320197,
         ); // L22, irradiance, pre-scaled base
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
         const model = await loadAndZoomToModelAsync(
@@ -3278,7 +3328,7 @@ describe(
               sphericalHarmonicCoefficients: coefficients,
             }),
           },
-          scene
+          scene,
         );
         scene.highDynamicRange = true;
 
@@ -3313,15 +3363,15 @@ describe(
               specularEnvironmentMaps: url,
             }),
           },
-          scene
+          scene,
         );
         const ibl = model.imageBasedLighting;
 
         await pollToPromise(function () {
           scene.render();
           return (
-            defined(ibl.specularEnvironmentMapAtlas) &&
-            ibl.specularEnvironmentMapAtlas.ready
+            defined(ibl.specularEnvironmentCubeMap) &&
+            ibl.specularEnvironmentCubeMap.ready
           );
         });
         scene.highDynamicRange = true;
@@ -3344,14 +3394,14 @@ describe(
       });
 
       it("renders when specularEnvironmentMaps aren't supported", async function () {
-        spyOn(OctahedralProjectedCubeMap, "isSupported").and.returnValue(false);
+        spyOn(SpecularEnvironmentCubeMap, "isSupported").and.returnValue(false);
 
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boomBoxUrl,
             scale: 10.0,
           },
-          scene
+          scene,
         );
         expect(scene.specularEnvironmentMapsSupported).toBe(false);
         verifyRender(model, true);
@@ -3367,7 +3417,7 @@ describe(
             forwardAxis: Axis.X,
             scale: 0.0,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
 
@@ -3379,7 +3429,7 @@ describe(
       it("changing scale works", async function () {
         const updateModelMatrix = spyOn(
           ModelSceneGraph.prototype,
-          "updateModelMatrix"
+          "updateModelMatrix",
         ).and.callThrough();
         const model = await loadAndZoomToModelAsync(
           {
@@ -3387,7 +3437,7 @@ describe(
             upAxis: Axis.Z,
             forwardAxis: Axis.X,
           },
-          scene
+          scene,
         );
         verifyRender(model, true);
         model.scale = 0.0;
@@ -3409,7 +3459,7 @@ describe(
             gltf: new Uint8Array(buffer),
             scale: 10,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
 
@@ -3418,7 +3468,7 @@ describe(
         expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(boundingSphere.radius).toEqualEpsilon(
           expectedRadius * 10.0,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
 
         model.scale = 0.0;
@@ -3431,7 +3481,7 @@ describe(
         expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
       });
 
@@ -3443,7 +3493,7 @@ describe(
             gltf: new Uint8Array(buffer),
             scale: 10,
           },
-          scene
+          scene,
         );
         const expectedRadius = 0.866;
         const expectedCenter = new Cartesian3(5.0, 0.0, 0.0);
@@ -3451,22 +3501,22 @@ describe(
         const axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
           Axis.Y,
           Axis.Z,
-          new Matrix4()
+          new Matrix4(),
         );
         Matrix4.multiplyTransformation(
           axisCorrectionMatrix,
           expectedTranslation,
-          expectedTranslation
+          expectedTranslation,
         );
         Matrix4.getTranslation(expectedTranslation, expectedCenter);
 
         const boundingSphere = model.boundingSphere;
         expect(boundingSphere.center).toEqual(
-          Cartesian3.multiplyByScalar(expectedCenter, 10.0, new Cartesian3())
+          Cartesian3.multiplyByScalar(expectedCenter, 10.0, new Cartesian3()),
         );
         expect(boundingSphere.radius).toEqualEpsilon(
           expectedRadius * 10.0,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
 
         model.scale = 0.0;
@@ -3479,7 +3529,7 @@ describe(
         expect(boundingSphere.center).toEqual(expectedCenter);
         expect(boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
       });
     });
@@ -3496,7 +3546,7 @@ describe(
             minimumPixelSize: 1,
             offset: new HeadingPitchRange(0, 0, 500),
           },
-          scene
+          scene,
         );
         const renderOptions = {
           zoomToModel: false,
@@ -3510,14 +3560,14 @@ describe(
         expect(model.scale).toEqual(1.0);
         expect(model.boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
       });
 
       it("changing minimumPixelSize works", async function () {
         const updateModelMatrix = spyOn(
           ModelSceneGraph.prototype,
-          "updateModelMatrix"
+          "updateModelMatrix",
         ).and.callThrough();
         const model = await loadAndZoomToModelAsync(
           {
@@ -3527,7 +3577,7 @@ describe(
             minimumPixelSize: 1,
             offset: new HeadingPitchRange(0, 0, 500),
           },
-          scene
+          scene,
         );
         const renderOptions = {
           zoomToModel: false,
@@ -3551,7 +3601,7 @@ describe(
       it("changing minimumPixelSize doesn't affect bounding sphere or scale", async function () {
         const updateModelMatrix = spyOn(
           ModelSceneGraph.prototype,
-          "updateModelMatrix"
+          "updateModelMatrix",
         ).and.callThrough();
         const model = await loadAndZoomToModelAsync(
           {
@@ -3561,7 +3611,7 @@ describe(
             minimumPixelSize: 1,
             offset: new HeadingPitchRange(0, 0, 500),
           },
-          scene
+          scene,
         );
         const expectedRadius = 0.866;
         scene.renderForSpecs();
@@ -3569,7 +3619,7 @@ describe(
         expect(model.scale).toEqual(1.0);
         expect(model.boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
 
         model.minimumPixelSize = 0.0;
@@ -3578,7 +3628,7 @@ describe(
         expect(model.scale).toEqual(1.0);
         expect(model.boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
 
         model.minimumPixelSize = 1;
@@ -3587,7 +3637,7 @@ describe(
         expect(model.scale).toEqual(1.0);
         expect(model.boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
       });
     });
@@ -3603,7 +3653,7 @@ describe(
             forwardAxis: Axis.X,
             maximumScale: 0.0,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
         verifyRender(model, false);
@@ -3614,7 +3664,7 @@ describe(
       it("changing maximumScale works", async function () {
         const updateModelMatrix = spyOn(
           ModelSceneGraph.prototype,
-          "updateModelMatrix"
+          "updateModelMatrix",
         ).and.callThrough();
         const model = await loadAndZoomToModelAsync(
           {
@@ -3623,7 +3673,7 @@ describe(
             forwardAxis: Axis.X,
             scale: 2.0,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
         verifyRender(model, true);
@@ -3648,7 +3698,7 @@ describe(
             scale: 20,
             maximumScale: 10,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
 
@@ -3657,7 +3707,7 @@ describe(
         expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(boundingSphere.radius).toEqualEpsilon(
           expectedRadius * 10.0,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
 
         model.maximumScale = 0.0;
@@ -3670,7 +3720,7 @@ describe(
         expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
       });
 
@@ -3683,7 +3733,7 @@ describe(
             minimumPixelSize: 1,
             maximumScale: 10,
           },
-          scene
+          scene,
         );
         scene.renderForSpecs();
 
@@ -3692,7 +3742,7 @@ describe(
         expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
 
         model.maximumScale = 0.0;
@@ -3705,7 +3755,7 @@ describe(
         expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(boundingSphere.radius).toEqualEpsilon(
           expectedRadius,
-          CesiumMath.EPSILON3
+          CesiumMath.EPSILON3,
         );
       });
     });
@@ -3715,18 +3765,39 @@ describe(
         {
           gltf: boxTexturedGltfUrl,
         },
-        scene
+        scene,
       );
       const resetDrawCommands = spyOn(
         model,
-        "resetDrawCommands"
+        "resetDrawCommands",
       ).and.callThrough();
       expect(model.ready).toBe(true);
 
       scene.verticalExaggeration = 2.0;
       scene.renderForSpecs();
       expect(resetDrawCommands).toHaveBeenCalled();
-      scene.verticalExaggeration = 1.0;
+    });
+
+    it("resets draw commands when enableVerticalExaggeration changes", async function () {
+      scene.verticalExaggeration = 2.0;
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene,
+      );
+      const resetDrawCommands = spyOn(
+        model,
+        "resetDrawCommands",
+      ).and.callThrough();
+      expect(model.ready).toBe(true);
+      expect(model.hasVerticalExaggeration).toBe(true);
+
+      model.enableVerticalExaggeration = false;
+
+      scene.renderForSpecs();
+      expect(resetDrawCommands).toHaveBeenCalled();
+      expect(model.hasVerticalExaggeration).toBe(false);
     });
 
     it("does not issue draw commands when ignoreCommands is true", async function () {
@@ -3734,7 +3805,7 @@ describe(
         {
           gltf: boxTexturedGltfUrl,
         },
-        scene
+        scene,
       );
       expect(model.ready).toBe(true);
       model._ignoreCommands = true;
@@ -3750,7 +3821,7 @@ describe(
             gltf: boxTexturedGltfUrl,
             cull: true,
           },
-          scene
+          scene,
         );
         expect(model.cull).toEqual(true);
 
@@ -3760,7 +3831,7 @@ describe(
 
         // Commands should not be submitted when model is out of view.
         model.modelMatrix = Matrix4.fromTranslation(
-          new Cartesian3(100.0, 0.0, 0.0)
+          new Cartesian3(100.0, 0.0, 0.0),
         );
         scene.renderForSpecs();
         expect(scene.frustumCommandsList.length).toEqual(0);
@@ -3772,7 +3843,7 @@ describe(
             gltf: boxTexturedGltfUrl,
             cull: false,
           },
-          scene
+          scene,
         );
         expect(model.cull).toEqual(false);
 
@@ -3783,7 +3854,7 @@ describe(
 
         // Commands should still be submitted when model is out of view.
         model.modelMatrix = Matrix4.fromTranslation(
-          new Cartesian3(0.0, 100.0, 0.0)
+          new Cartesian3(0.0, 100.0, 0.0),
         );
         scene.renderForSpecs();
         expect(scene.frustumCommandsList.length).toEqual(length);
@@ -3796,7 +3867,7 @@ describe(
       const boxBackFaceCullingOffset = new HeadingPitchRange(
         Math.PI / 2,
         0,
-        2.0
+        2.0,
       );
 
       it("enables back-face culling", async function () {
@@ -3806,7 +3877,7 @@ describe(
             backFaceCulling: true,
             offset: boxBackFaceCullingOffset,
           },
-          scene
+          scene,
         );
         verifyRender(model, false, {
           zoomToModel: false,
@@ -3820,7 +3891,7 @@ describe(
             backFaceCulling: false,
             offset: boxBackFaceCullingOffset,
           },
-          scene
+          scene,
         );
         verifyRender(model, true, {
           zoomToModel: false,
@@ -3834,7 +3905,7 @@ describe(
             backFaceCulling: true,
             offset: boxBackFaceCullingOffset,
           },
-          scene
+          scene,
         );
         verifyRender(model, false, {
           zoomToModel: false,
@@ -3854,7 +3925,7 @@ describe(
             backFaceCulling: false,
             offset: boxBackFaceCullingOffset,
           },
-          scene
+          scene,
         );
         verifyRender(model, true, {
           zoomToModel: false,
@@ -3875,7 +3946,7 @@ describe(
             offset: boxBackFaceCullingOffset,
             color: new Color(0, 0, 1.0, 0.5),
           },
-          scene
+          scene,
         );
         verifyRender(model, true, {
           zoomToModel: false,
@@ -3901,7 +3972,7 @@ describe(
           gltf: boxTexturedGlbUrl,
           modelMatrix: Matrix4.fromUniformScale(-1.0),
         },
-        scene
+        scene,
       );
       const renderOptions = {
         scene: scene,
@@ -3936,11 +4007,11 @@ describe(
         });
         await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
-          scene
+          scene,
         );
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         expect(function () {
           model.clippingPlanes = clippingPlanes;
@@ -3954,7 +4025,7 @@ describe(
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         const gl = scene.frameState.context._gl;
         spyOn(gl, "texImage2D").and.callThrough();
@@ -3978,7 +4049,7 @@ describe(
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
-          scene
+          scene,
         );
         verifyRender(model, false);
 
@@ -3990,7 +4061,7 @@ describe(
         const direction = Cartesian3.multiplyByScalar(
           Cartesian3.UNIT_X,
           -1,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const plane = new ClippingPlane(direction, 0.0);
         const clippingPlanes = new ClippingPlaneCollection({
@@ -3998,7 +4069,7 @@ describe(
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         let modelColor;
         verifyRender(model, true);
@@ -4026,7 +4097,7 @@ describe(
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
-          scene
+          scene,
         );
         verifyRender(model, false);
 
@@ -4041,7 +4112,7 @@ describe(
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
-          scene
+          scene,
         );
         verifyRender(model, false);
 
@@ -4059,7 +4130,7 @@ describe(
 
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
-          scene
+          scene,
         );
         verifyRender(model, false);
 
@@ -4086,7 +4157,7 @@ describe(
 
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         let modelColor;
         verifyRender(model, true);
@@ -4116,7 +4187,7 @@ describe(
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         verifyRender(model, true);
 
@@ -4133,7 +4204,7 @@ describe(
           {
             gltf: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
@@ -4153,7 +4224,7 @@ describe(
           {
             gltf: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
@@ -4192,13 +4263,13 @@ describe(
         });
         const modelA = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         modelA.clippingPolygons = collection;
 
         const modelB = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
 
         expect(function () {
@@ -4216,7 +4287,7 @@ describe(
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         model.clippingPolygons = collection;
         verifyRender(model, false);
@@ -4235,7 +4306,7 @@ describe(
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
-          scene
+          scene,
         );
         let modelColor;
         verifyRender(model, true);
@@ -4264,7 +4335,7 @@ describe(
           {
             gltf: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         model.clippingPolygons = collection;
         verifyRender(model, true);
@@ -4285,7 +4356,7 @@ describe(
           {
             gltf: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         model.clippingPolygons = collection;
         verifyRender(model, false);
@@ -4299,7 +4370,7 @@ describe(
           {
             gltf: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         const collection = new ClippingPolygonCollection({
           polygons: [polygon],
@@ -4319,7 +4390,7 @@ describe(
           {
             gltf: boxTexturedGlbUrl,
           },
-          scene
+          scene,
         );
         const collection = new ClippingPolygonCollection({
           polygons: [polygon],
@@ -4338,7 +4409,7 @@ describe(
           url: boxTexturedGltfUrl,
           classificationType: ClassificationType.CESIUM_3D_TILE,
         },
-        scene
+        scene,
       );
       expect(model.classificationType).toBe(ClassificationType.CESIUM_3D_TILE);
 
@@ -4350,7 +4421,7 @@ describe(
       it("gets triangle count", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl },
-          scene
+          scene,
         );
         const statistics = model.statistics;
         expect(statistics.trianglesLength).toEqual(12);
@@ -4359,7 +4430,7 @@ describe(
       it("gets point count", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: pointCloudUrl },
-          scene
+          scene,
         );
         const statistics = model.statistics;
         expect(statistics.pointsLength).toEqual(2500);
@@ -4368,7 +4439,7 @@ describe(
       it("gets memory usage for geometry and textures", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, incrementallyLoadTextures: false },
-          scene
+          scene,
         );
         const expectedGeometryMemory = 840;
         // Texture is 256*256 and then is mipmapped
@@ -4382,13 +4453,13 @@ describe(
       it("gets memory usage for property tables", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: buildingsMetadata },
-          scene
+          scene,
         );
         const expectedPropertyTableMemory = 110;
 
         const statistics = model.statistics;
         expect(statistics.propertyTablesByteLength).toEqual(
-          expectedPropertyTableMemory
+          expectedPropertyTableMemory,
         );
       });
     });
@@ -4409,7 +4480,7 @@ describe(
           {
             gltf: boxArticulationsUrl,
           },
-          scene
+          scene,
         );
         expect(function () {
           model.setArticulationStage("SampleArticulation MoveX", "bad");
@@ -4431,7 +4502,7 @@ describe(
           {
             gltf: boxArticulationsUrl,
           },
-          scene
+          scene,
         );
         verifyRender(model, true);
 
@@ -4469,7 +4540,7 @@ describe(
           {
             gltf: boxArticulationsUrl,
           },
-          scene
+          scene,
         );
         expect(function () {
           model.getNode();
@@ -4481,7 +4552,7 @@ describe(
           {
             gltf: boxArticulationsUrl,
           },
-          scene
+          scene,
         );
         const node = model.getNode("I don't exist");
         expect(node).toBeUndefined();
@@ -4492,7 +4563,7 @@ describe(
           {
             gltf: boxArticulationsUrl,
           },
-          scene
+          scene,
         );
         const node = model.getNode("Root");
 
@@ -4509,7 +4580,7 @@ describe(
           {
             gltf: boxArticulationsUrl,
           },
-          scene
+          scene,
         );
         verifyRender(model, true);
         const node = model.getNode("Root");
@@ -4524,7 +4595,7 @@ describe(
           {
             gltf: boxArticulationsUrl,
           },
-          scene
+          scene,
         );
         verifyRender(model, true);
         const node = model.getNode("Root");
@@ -4572,10 +4643,10 @@ describe(
           {
             url: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(0, 0, 10.0)
+              Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
-          scene
+          scene,
         );
 
         viewFog(scene, model);
@@ -4620,10 +4691,10 @@ describe(
           {
             url: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(0, 0, 10.0)
+              Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
-          scene
+          scene,
         );
 
         // In order for fog to render, the camera needs to be
@@ -4688,10 +4759,10 @@ describe(
           {
             url: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(0, 0, 10.0)
+              Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
-          scene
+          scene,
         );
 
         viewFog(scene, model);
@@ -4752,10 +4823,10 @@ describe(
           {
             url: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(0, 0, 10.0)
+              Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
-          scene
+          scene,
         );
 
         viewFog(scene, model);
@@ -4806,10 +4877,10 @@ describe(
           {
             url: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(0, 0, 10.0)
+              Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
-          scene
+          scene,
         );
 
         viewFog(scene, model);
@@ -4879,10 +4950,10 @@ describe(
           {
             url: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(0, 0, 10.0)
+              Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
-          scene
+          scene,
         );
 
         viewFog(scene, model);
@@ -4930,10 +5001,10 @@ describe(
           {
             url: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(0, 0, 10.0)
+              Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
-          scene
+          scene,
         );
 
         viewFog(scene, model);
@@ -4978,19 +5049,19 @@ describe(
           url: boxTexturedGltfUrl,
           enablePick: !scene.frameState.context.webgl2,
         },
-        scene
+        scene,
       );
       const ray = scene.camera.getPickRay(
         new Cartesian2(
           scene.drawingBufferWidth / 2.0,
-          scene.drawingBufferHeight / 2.0
-        )
+          scene.drawingBufferHeight / 2.0,
+        ),
       );
 
       const expected = new Cartesian3(0.5, 0, 0.5);
       expect(model.pick(ray, scene.frameState)).toEqualEpsilon(
         expected,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
     });
 
@@ -4998,7 +5069,7 @@ describe(
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
       const model = await loadAndZoomToModelAsync(
         { gltf: boxTexturedGlbUrl },
-        scene
+        scene,
       );
       const resources = model._pipelineResources;
       const loader = model._loader;
@@ -5053,5 +5124,5 @@ describe(
       }
     });
   },
-  "WebGL"
+  "WebGL",
 );

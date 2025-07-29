@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import IonImageryProvider from "./IonImageryProvider.js";
 import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
 
@@ -32,8 +32,8 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  * }
  */
 function createWorldImageryAsync(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const style = defaultValue(options.style, IonWorldImageryStyle.AERIAL);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const style = options.style ?? IonWorldImageryStyle.AERIAL;
   return IonImageryProvider.fromAssetId(style);
 }
 export default createWorldImageryAsync;

@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -22,7 +21,7 @@ const defaultOutline = new ConstantProperty(false);
 const defaultOutlineColor = new ConstantProperty(Color.BLACK);
 const defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
 const defaultDistanceDisplayCondition = new ConstantProperty(
-  new DistanceDisplayCondition()
+  new DistanceDisplayCondition(),
 );
 const defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
@@ -70,9 +69,8 @@ function GeometryUpdater(options) {
   this._geometryPropertyName = geometryPropertyName;
   this._id = `${geometryPropertyName}-${entity.id}`;
   this._observedPropertyNames = options.observedPropertyNames;
-  this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(
-    options.scene
-  );
+  this._supportsMaterialsforEntitiesOnTerrain =
+    Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
 }
 
 Object.defineProperties(GeometryUpdater.prototype, {
@@ -297,7 +295,7 @@ GeometryUpdater.prototype.isOutlineVisible = function (time) {
     entity.isAvailable(time) &&
     this._showProperty.getValue(time) &&
     this._showOutlineProperty.getValue(time);
-  return defaultValue(visible, false);
+  return visible ?? false;
 };
 
 /**
@@ -313,7 +311,7 @@ GeometryUpdater.prototype.isFilled = function (time) {
     entity.isAvailable(time) &&
     this._showProperty.getValue(time) &&
     this._fillProperty.getValue(time);
-  return defaultValue(visible, false);
+  return visible ?? false;
 };
 
 /**
@@ -412,7 +410,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   if (this._observedPropertyNames.indexOf(propertyName) === -1) {
     return;
@@ -460,22 +458,18 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
     return;
   }
 
-  this._materialProperty = defaultValue(geometry.material, defaultMaterial);
-  this._fillProperty = defaultValue(fillProperty, defaultFill);
-  this._showProperty = defaultValue(show, defaultShow);
-  this._showOutlineProperty = defaultValue(geometry.outline, defaultOutline);
+  this._materialProperty = geometry.material ?? defaultMaterial;
+  this._fillProperty = fillProperty ?? defaultFill;
+  this._showProperty = show ?? defaultShow;
+  this._showOutlineProperty = geometry.outline ?? defaultOutline;
   this._outlineColorProperty = outlineEnabled
-    ? defaultValue(geometry.outlineColor, defaultOutlineColor)
+    ? (geometry.outlineColor ?? defaultOutlineColor)
     : undefined;
-  this._shadowsProperty = defaultValue(geometry.shadows, defaultShadows);
-  this._distanceDisplayConditionProperty = defaultValue(
-    geometry.distanceDisplayCondition,
-    defaultDistanceDisplayCondition
-  );
-  this._classificationTypeProperty = defaultValue(
-    geometry.classificationType,
-    defaultClassificationType
-  );
+  this._shadowsProperty = geometry.shadows ?? defaultShadows;
+  this._distanceDisplayConditionProperty =
+    geometry.distanceDisplayCondition ?? defaultDistanceDisplayCondition;
+  this._classificationTypeProperty =
+    geometry.classificationType ?? defaultClassificationType;
 
   this._fillEnabled = fillEnabled;
 
@@ -522,7 +516,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
  */
 GeometryUpdater.prototype.createDynamicUpdater = function (
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("primitives", primitives);
@@ -530,7 +524,7 @@ GeometryUpdater.prototype.createDynamicUpdater = function (
 
   if (!this._dynamic) {
     throw new DeveloperError(
-      "This instance does not represent dynamic geometry."
+      "This instance does not represent dynamic geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -538,7 +532,7 @@ GeometryUpdater.prototype.createDynamicUpdater = function (
   return new this.constructor.DynamicGeometryUpdater(
     this,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 };
 export default GeometryUpdater;

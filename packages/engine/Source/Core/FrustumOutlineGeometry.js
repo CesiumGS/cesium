@@ -2,7 +2,6 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import FrustumGeometry from "./FrustumGeometry.js";
 import Geometry from "./Geometry.js";
@@ -42,7 +41,7 @@ function FrustumOutlineGeometry(options) {
   // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
   // creating multiple FrustumOutlineGeometrys. This way the near plane of one frustum doesn't overlap
   // the far plane of another.
-  const drawNearPlane = defaultValue(options._drawNearPlane, true);
+  const drawNearPlane = options._drawNearPlane ?? true;
 
   let frustumType;
   let frustumPackedLength;
@@ -84,7 +83,7 @@ FrustumOutlineGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const frustumType = value._frustumType;
   const frustum = value._frustum;
@@ -125,7 +124,7 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const frustumType = array[startingIndex++];
 
@@ -134,14 +133,14 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
     frustum = PerspectiveFrustum.unpack(
       array,
       startingIndex,
-      scratchPackPerspective
+      scratchPackPerspective,
     );
     startingIndex += PerspectiveFrustum.packedLength;
   } else {
     frustum = OrthographicFrustum.unpack(
       array,
       startingIndex,
-      scratchPackOrthographic
+      scratchPackOrthographic,
     );
     startingIndex += OrthographicFrustum.packedLength;
   }
@@ -151,7 +150,7 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
   const orientation = Quaternion.unpack(
     array,
     startingIndex,
-    scratchPackQuaternion
+    scratchPackQuaternion,
   );
   startingIndex += Quaternion.packedLength;
   const drawNearPlane = array[startingIndex] === 1.0;
@@ -196,7 +195,7 @@ FrustumOutlineGeometry.createGeometry = function (frustumGeometry) {
     orientation,
     frustumType,
     frustum,
-    positions
+    positions,
   );
 
   const attributes = new GeometryAttributes({

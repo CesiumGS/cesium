@@ -1330,7 +1330,7 @@ const AutomaticUniforms = {
     getValue: function (uniformState) {
       return Matrix4.getTranslation(
         uniformState.inverseView,
-        viewerPositionWCScratch
+        viewerPositionWCScratch,
       );
     },
   }),
@@ -1484,37 +1484,22 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform containing the specular environment map atlas used within the scene.
+   * An automatic GLSL uniform containing the specular environment cube map used within the scene.
    *
    * @example
    * // GLSL declaration
-   * uniform sampler2D czm_specularEnvironmentMaps;
+   * uniform samplerCube czm_specularEnvironmentMaps;
    */
   czm_specularEnvironmentMaps: new AutomaticUniform({
     size: 1,
-    datatype: WebGLConstants.SAMPLER_2D,
+    datatype: WebGLConstants.SAMPLER_CUBE,
     getValue: function (uniformState) {
       return uniformState.specularEnvironmentMaps;
     },
   }),
 
   /**
-   * An automatic GLSL uniform containing the size of the specular environment map atlas used within the scene.
-   *
-   * @example
-   * // GLSL declaration
-   * uniform vec2 czm_specularEnvironmentMapSize;
-   */
-  czm_specularEnvironmentMapSize: new AutomaticUniform({
-    size: 1,
-    datatype: WebGLConstants.FLOAT_VEC2,
-    getValue: function (uniformState) {
-      return uniformState.specularEnvironmentMapsDimensions;
-    },
-  }),
-
-  /**
-   * An automatic GLSL uniform containing the maximum level-of-detail of the specular environment map atlas used within the scene.
+   * An automatic GLSL uniform containing the maximum valid level-of-detail of the specular environment cube map used within the scene.
    *
    * @example
    * // GLSL declaration
@@ -1589,6 +1574,19 @@ const AutomaticUniforms = {
     datatype: WebGLConstants.FLOAT,
     getValue: function (uniformState) {
       return uniformState.fogDensity;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform scalar used to mix a color with the fog color based on the distance to the camera.
+   *
+   * @see czm_fog
+   */
+  czm_fogVisualDensityScalar: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.fogVisualDensityScalar;
     },
   }),
 

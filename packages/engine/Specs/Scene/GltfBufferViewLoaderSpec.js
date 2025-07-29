@@ -92,7 +92,7 @@ describe("Scene/GltfBufferViewLoader", function () {
   const meshoptPositionBufferBase64 =
     "oAUZJkCZgAQAAAU/P8D/fn1+fX59fn1+fX7ADAAAfX4FAAhISEgAAAAFAAzMzH1+fX59zAAAAH59BQhAmYBmZgAABQzA/8B9fn1+fX59//8AAH59fn1+fX59AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8//z8AAA==";
   const meshoptPositionTypedArray = getTypedArrayFromBase64(
-    meshoptPositionBufferBase64
+    meshoptPositionBufferBase64,
   );
 
   const bufferTypedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
@@ -169,7 +169,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("load throws if buffer fails to load", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
-      Promise.reject(new Error("404 Not Found"))
+      Promise.reject(new Error("404 Not Found")),
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -182,7 +182,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
     await expectAsync(bufferViewLoader.load()).toBeRejectedWithError(
       RuntimeError,
-      "Failed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+      "Failed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found",
     );
   });
 
@@ -210,7 +210,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("loads buffer view for external buffer", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(bufferArrayBuffer)
+      Promise.resolve(bufferArrayBuffer),
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -228,12 +228,12 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("destroys buffer view", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(bufferArrayBuffer)
+      Promise.resolve(bufferArrayBuffer),
     );
 
     const unloadBuffer = spyOn(
       BufferLoader.prototype,
-      "unload"
+      "unload",
     ).and.callThrough();
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -278,14 +278,14 @@ describe("Scene/GltfBufferViewLoader", function () {
     await bufferViewLoader.load();
 
     const decodedPositionBase64 = getBase64FromTypedArray(
-      bufferViewLoader.typedArray
+      bufferViewLoader.typedArray,
     );
     expect(decodedPositionBase64).toEqual(fallbackPositionBufferBase64);
   });
 
   it("handles asynchronous load after destroy", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(bufferArrayBuffer)
+      Promise.resolve(bufferArrayBuffer),
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -308,7 +308,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("handles asynchronous error after destroy", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
-      Promise.reject(new Error())
+      Promise.reject(new Error()),
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({

@@ -9,11 +9,11 @@ describe("Core/IndexDatatype", function () {
 
   it("createTypedArray creates array", function () {
     expect(IndexDatatype.createTypedArray(3, 3).BYTES_PER_ELEMENT).toEqual(
-      Uint16Array.BYTES_PER_ELEMENT
+      Uint16Array.BYTES_PER_ELEMENT,
     );
     expect(
       IndexDatatype.createTypedArray(CesiumMath.SIXTY_FOUR_KILOBYTES + 1, 3)
-        .BYTES_PER_ELEMENT
+        .BYTES_PER_ELEMENT,
     ).toEqual(Uint32Array.BYTES_PER_ELEMENT);
   });
 
@@ -30,10 +30,10 @@ describe("Core/IndexDatatype", function () {
       3,
       sourceArray.buffer,
       0,
-      5
+      5,
     );
     expect(indexBuffer.BYTES_PER_ELEMENT).toEqual(
-      Uint16Array.BYTES_PER_ELEMENT
+      Uint16Array.BYTES_PER_ELEMENT,
     );
     expect(indexBuffer.length).toEqual(5);
     expect(indexBuffer[0]).toEqual(0);
@@ -46,10 +46,10 @@ describe("Core/IndexDatatype", function () {
       3,
       sourceArray.buffer,
       Uint16Array.BYTES_PER_ELEMENT * 5,
-      5
+      5,
     );
     expect(indexBuffer.BYTES_PER_ELEMENT).toEqual(
-      Uint16Array.BYTES_PER_ELEMENT
+      Uint16Array.BYTES_PER_ELEMENT,
     );
     expect(indexBuffer.length).toEqual(5);
     expect(indexBuffer[0]).toEqual(5);
@@ -62,10 +62,10 @@ describe("Core/IndexDatatype", function () {
       CesiumMath.SIXTY_FOUR_KILOBYTES + 1,
       sourceArray.buffer,
       0,
-      5
+      5,
     );
     expect(indexBuffer.BYTES_PER_ELEMENT).toEqual(
-      Uint32Array.BYTES_PER_ELEMENT
+      Uint32Array.BYTES_PER_ELEMENT,
     );
     expect(indexBuffer.length).toEqual(5);
     expect(indexBuffer[0]).toEqual(0);
@@ -78,10 +78,10 @@ describe("Core/IndexDatatype", function () {
       CesiumMath.SIXTY_FOUR_KILOBYTES + 1,
       sourceArray.buffer,
       Uint32Array.BYTES_PER_ELEMENT * 5,
-      5
+      5,
     );
     expect(indexBuffer.BYTES_PER_ELEMENT).toEqual(
-      Uint32Array.BYTES_PER_ELEMENT
+      Uint32Array.BYTES_PER_ELEMENT,
     );
     expect(indexBuffer.length).toEqual(5);
     expect(indexBuffer[0]).toEqual(5);
@@ -105,20 +105,20 @@ describe("Core/IndexDatatype", function () {
       IndexDatatype.createTypedArrayFromArrayBuffer(
         3,
         sourceArray.buffer,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
 
   it("getSizeInBytes returns size", function () {
     expect(IndexDatatype.getSizeInBytes(IndexDatatype.UNSIGNED_BYTE)).toEqual(
-      Uint8Array.BYTES_PER_ELEMENT
+      Uint8Array.BYTES_PER_ELEMENT,
     );
     expect(IndexDatatype.getSizeInBytes(IndexDatatype.UNSIGNED_SHORT)).toEqual(
-      Uint16Array.BYTES_PER_ELEMENT
+      Uint16Array.BYTES_PER_ELEMENT,
     );
     expect(IndexDatatype.getSizeInBytes(IndexDatatype.UNSIGNED_INT)).toEqual(
-      Uint32Array.BYTES_PER_ELEMENT
+      Uint32Array.BYTES_PER_ELEMENT,
     );
   });
 
@@ -130,13 +130,13 @@ describe("Core/IndexDatatype", function () {
 
   it("fromTypedArray works", function () {
     expect(IndexDatatype.fromTypedArray(new Uint8Array())).toBe(
-      IndexDatatype.UNSIGNED_BYTE
+      IndexDatatype.UNSIGNED_BYTE,
     );
     expect(IndexDatatype.fromTypedArray(new Uint16Array())).toBe(
-      IndexDatatype.UNSIGNED_SHORT
+      IndexDatatype.UNSIGNED_SHORT,
     );
     expect(IndexDatatype.fromTypedArray(new Uint32Array())).toBe(
-      IndexDatatype.UNSIGNED_INT
+      IndexDatatype.UNSIGNED_INT,
     );
   });
 

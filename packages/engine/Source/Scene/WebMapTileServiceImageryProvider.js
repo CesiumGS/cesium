@@ -1,6 +1,6 @@
 import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -57,7 +57,7 @@ const defaultParameters = Object.freeze({
  * @example
  * // Example 1. USGS shaded relief tiles (KVP)
  * const shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
- *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
+ *     url : 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
  *     layer : 'USGSShadedReliefOnly',
  *     style : 'default',
  *     format : 'image/jpeg',
@@ -71,7 +71,7 @@ const defaultParameters = Object.freeze({
  * @example
  * // Example 2. USGS shaded relief tiles (RESTful)
  * const shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
- *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/tile/1.0.0/USGSShadedReliefOnly/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg',
+ *     url : 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/tile/1.0.0/USGSShadedReliefOnly/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg',
  *     layer : 'USGSShadedReliefOnly',
  *     style : 'default',
  *     format : 'image/jpeg',
@@ -114,7 +114,7 @@ const defaultParameters = Object.freeze({
  * @see UrlTemplateImageryProvider
  */
 function WebMapTileServiceImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url)) {
@@ -131,7 +131,7 @@ function WebMapTileServiceImageryProvider(options) {
   }
   if (defined(options.times) && !defined(options.clock)) {
     throw new DeveloperError(
-      "options.times was specified, so options.clock is required."
+      "options.times was specified, so options.clock is required.",
     );
   }
   //>>includeEnd('debug');
@@ -176,22 +176,19 @@ function WebMapTileServiceImageryProvider(options) {
   this._style = style;
   this._tileMatrixSetID = tileMatrixSetID;
   this._tileMatrixLabels = options.tileMatrixLabels;
-  this._format = defaultValue(options.format, "image/jpeg");
+  this._format = options.format ?? "image/jpeg";
   this._tileDiscardPolicy = options.tileDiscardPolicy;
 
   this._tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme
     : new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid });
-  this._tileWidth = defaultValue(options.tileWidth, 256);
-  this._tileHeight = defaultValue(options.tileHeight, 256);
+  this._tileWidth = options.tileWidth ?? 256;
+  this._tileHeight = options.tileHeight ?? 256;
 
-  this._minimumLevel = defaultValue(options.minimumLevel, 0);
+  this._minimumLevel = options.minimumLevel ?? 0;
   this._maximumLevel = options.maximumLevel;
 
-  this._rectangle = defaultValue(
-    options.rectangle,
-    this._tilingScheme.rectangle
-  );
+  this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
   this._dimensions = options.dimensions;
 
   const that = this;
@@ -216,18 +213,18 @@ function WebMapTileServiceImageryProvider(options) {
   // level will cause too many tiles to be downloaded and rendered.
   const swTile = this._tilingScheme.positionToTileXY(
     Rectangle.southwest(this._rectangle),
-    this._minimumLevel
+    this._minimumLevel,
   );
   const neTile = this._tilingScheme.positionToTileXY(
     Rectangle.northeast(this._rectangle),
-    this._minimumLevel
+    this._minimumLevel,
   );
   const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      `The imagery provider's rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
+      `The imagery provider's rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`,
     );
   }
   //>>includeEnd('debug');
@@ -533,7 +530,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
 WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
@@ -552,7 +549,7 @@ WebMapTileServiceImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   let result;
   const timeDynamicImagery = this._timeDynamicImagery;
@@ -593,7 +590,7 @@ WebMapTileServiceImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };

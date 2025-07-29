@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
@@ -10,21 +10,15 @@ import TextureWrap from "./TextureWrap.js";
  * @private
  */
 function Sampler(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const wrapS = defaultValue(options.wrapS, TextureWrap.CLAMP_TO_EDGE);
-  const wrapT = defaultValue(options.wrapT, TextureWrap.CLAMP_TO_EDGE);
-  const minificationFilter = defaultValue(
-    options.minificationFilter,
-    TextureMinificationFilter.LINEAR
-  );
-  const magnificationFilter = defaultValue(
-    options.magnificationFilter,
-    TextureMagnificationFilter.LINEAR
-  );
-  const maximumAnisotropy = defined(options.maximumAnisotropy)
-    ? options.maximumAnisotropy
-    : 1.0;
+  const {
+    wrapS = TextureWrap.CLAMP_TO_EDGE,
+    wrapT = TextureWrap.CLAMP_TO_EDGE,
+    minificationFilter = TextureMinificationFilter.LINEAR,
+    magnificationFilter = TextureMagnificationFilter.LINEAR,
+    maximumAnisotropy = 1.0,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   if (!TextureWrap.validate(wrapS)) {
@@ -46,7 +40,7 @@ function Sampler(options) {
   Check.typeOf.number.greaterThanOrEquals(
     "maximumAnisotropy",
     maximumAnisotropy,
-    1.0
+    1.0,
   );
   //>>includeEnd('debug');
 
@@ -104,6 +98,6 @@ Sampler.NEAREST = Object.freeze(
     wrapT: TextureWrap.CLAMP_TO_EDGE,
     minificationFilter: TextureMinificationFilter.NEAREST,
     magnificationFilter: TextureMagnificationFilter.NEAREST,
-  })
+  }),
 );
 export default Sampler;

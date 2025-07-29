@@ -51,7 +51,7 @@ css: { "cesium-button-disabled" : _isOrthographic }, \
 attr: { title: tooltip },\
 click: command,\
 enable: isVREnabled,\
-cesiumSvgPath: { path: isVRMode ? _exitVRPath : _enterVRPath, width: 32, height: 32 }'
+cesiumSvgPath: { path: isVRMode ? _exitVRPath : _enterVRPath, width: 32, height: 32 }',
   );
 
   container.appendChild(element);

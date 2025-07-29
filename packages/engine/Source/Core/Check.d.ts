@@ -2,7 +2,7 @@
  * Contains functions for checking that supplied arguments are of a specified type
  * or meet specified conditions
  */
-export const Check: {
+const Check: {
   /**
    * Throws if test is not defined
    *
@@ -38,7 +38,10 @@ export const Check: {
      * @param {*} test The value to test
      * @exception {DeveloperError} test must be typeof 'object'
      */
-    object(name: string, test: any): asserts test is object;
+    object(
+      name: string,
+      test: any,
+    ): asserts test is Record<string | number | symbol, any>;
     /**
      * Throws if test is not typeof 'boolean'
      *
@@ -84,7 +87,7 @@ export const Check: {
       lessThanOrEquals(
         name: string,
         test: any,
-        limit: number
+        limit: number,
       ): asserts test is number;
       /**
        * Throws if test is not typeof 'number' and greater than limit
@@ -97,7 +100,7 @@ export const Check: {
       greaterThan(
         name: string,
         test: any,
-        limit: number
+        limit: number,
       ): asserts test is number;
       /**
        * Throws if test is not typeof 'number' and greater than or equal to limit
@@ -110,7 +113,7 @@ export const Check: {
       greaterThanOrEquals(
         name: string,
         test: any,
-        limit: number
+        limit: number,
       ): asserts test is number;
       /**
        * Throws if test1 and test2 is not typeof 'number' and not equal in value
@@ -125,3 +128,4 @@ export const Check: {
     };
   };
 };
+export default Check;

@@ -161,7 +161,7 @@ Tileset3DTileContent.prototype.getFeature = function (batchId) {
 
 Tileset3DTileContent.prototype.applyDebugSettings = function (
   enabled,
-  color
+  color,
 ) {};
 
 Tileset3DTileContent.prototype.applyStyle = function (style) {};

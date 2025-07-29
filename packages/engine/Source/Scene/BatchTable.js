@@ -94,12 +94,12 @@ function BatchTable(context, attributes, numberOfInstances) {
 
   const stride = getStride(offsets, attributes, packFloats);
   const maxNumberOfInstancesPerRow = Math.floor(
-    ContextLimits.maximumTextureSize / stride
+    ContextLimits.maximumTextureSize / stride,
   );
 
   const instancesPerWidth = Math.min(
     numberOfInstances,
-    maxNumberOfInstancesPerRow
+    maxNumberOfInstancesPerRow,
   );
   const width = stride * instancesPerWidth;
   const height = Math.ceil(numberOfInstances / instancesPerWidth);
@@ -258,7 +258,7 @@ const scratchGetAttributeCartesian4 = new Cartesian4();
 BatchTable.prototype.getBatchedAttribute = function (
   instanceIndex,
   attributeIndex,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (instanceIndex < 0 || instanceIndex >= this._numberOfInstances) {
@@ -283,13 +283,13 @@ BatchTable.prototype.getBatchedAttribute = function (
     value = getPackedFloat(
       this._batchValues,
       index,
-      scratchGetAttributeCartesian4
+      scratchGetAttributeCartesian4,
     );
   } else {
     value = Cartesian4.unpack(
       this._batchValues,
       index,
-      scratchGetAttributeCartesian4
+      scratchGetAttributeCartesian4,
     );
   }
 
@@ -325,7 +325,7 @@ const setAttributeScratchCartesian4 = new Cartesian4();
 BatchTable.prototype.setBatchedAttribute = function (
   instanceIndex,
   attributeIndex,
-  value
+  value,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (instanceIndex < 0 || instanceIndex >= this._numberOfInstances) {
@@ -347,7 +347,7 @@ BatchTable.prototype.setBatchedAttribute = function (
   const currentAttribute = this.getBatchedAttribute(
     instanceIndex,
     attributeIndex,
-    result
+    result,
   );
   const attributeType = getAttributeType(this._attributes, attributeIndex);
   const entriesEqual = defined(attributeType.equals)

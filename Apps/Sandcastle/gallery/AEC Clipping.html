@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -16,10 +16,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -35,6 +32,7 @@
           animation: false,
           sceneModePicker: false,
           baseLayerPicker: false,
+          geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
           // The globe does not need to be displayed,
           // since the Photorealistic 3D Tiles include terrain
           globe: false,
@@ -44,14 +42,17 @@
         viewer.scene.skyAtmosphere.show = true;
 
         const currentTime = Cesium.JulianDate.fromIso8601(
-          "2020-01-09T23:00:39.018261982600961346Z"
+          "2020-01-09T23:00:39.018261982600961346Z",
         );
         viewer.clock.currentTime = currentTime;
 
         // Add Photorealistic 3D Tiles
         let googleTileset;
         try {
-          googleTileset = await Cesium.createGooglePhotorealistic3DTileset();
+          googleTileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
           viewer.scene.primitives.add(googleTileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
@@ -69,7 +70,7 @@
           viewer.dataSources.add(dataSource);
 
           footprint = dataSource.entities.values.find((entity) =>
-            Cesium.defined(entity.polygon)
+            Cesium.defined(entity.polygon),
           );
           footprint.polygon.outline = false;
 
@@ -77,15 +78,13 @@
           const cameraOffset = new Cesium.HeadingPitchRange(
             Cesium.Math.toRadians(95.0),
             Cesium.Math.toRadians(-75.0),
-            800.0
+            800.0,
           );
           viewer.zoomTo(footprint, cameraOffset);
-          viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
-            (e) => {
-              e.cancel = true;
-              viewer.zoomTo(footprint, cameraOffset);
-            }
-          );
+          viewer.homeButton.viewModel.command.beforeExecute.addEventListener((e) => {
+            e.cancel = true;
+            viewer.zoomTo(footprint, cameraOffset);
+          });
         } catch (error) {
           console.log(`Error loading geojson. ${error}`);
         }
@@ -104,18 +103,14 @@
         // Add tileset of proposed project design
         let buildingTileset;
         try {
-          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            2533124
-          );
+          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2533124);
           viewer.scene.primitives.add(buildingTileset);
         } catch (error) {
           console.log(`Error loading design tileset.
   ${error}`);
         }
 
-        Sandcastle.addToggleButton("Show proposed design", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Show proposed design", true, function (checked) {
           buildingTileset.show = checked;
         });
 
@@ -123,9 +118,7 @@
           footprint.show = checked;
         });
 
-        Sandcastle.addToggleButton("Clip target location", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Clip target location", true, function (checked) {
           clippingPolygons.enabled = checked;
         });
 

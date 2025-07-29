@@ -2,7 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -85,7 +85,7 @@ import TileImagery from "./TileImagery.js";
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates
  *                          of the imagery tile for which the hue is required, and it is expected to return
- *                          the contrast value to use for the tile.  The function is executed for every
+ *                          the hue value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
  * @property {number|Function} [saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
  *                          Less than 1.0 reduces the saturation while greater than 1.0 increases it.
@@ -93,7 +93,7 @@ import TileImagery from "./TileImagery.js";
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates
  *                          of the imagery tile for which the saturation is required, and it is expected to return
- *                          the contrast value to use for the tile.  The function is executed for every
+ *                          the saturation value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
  * @property {number|Function} [gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
  *                          This can either be a simple number or a function with the signature
@@ -127,7 +127,7 @@ import TileImagery from "./TileImagery.js";
 
 /**
  * An imagery layer that displays tiled image data from a single imagery provider
- * on a {@link Globe}.
+ * on a {@link Globe} or {@link Cesium3DTileset}.
  *
  * @alias ImageryLayer
  * @constructor
@@ -135,8 +135,10 @@ import TileImagery from "./TileImagery.js";
  * @param {ImageryProvider} [imageryProvider] The imagery provider to use.
  * @param {ImageryLayer.ConstructorOptions} [options] An object describing initialization options
  *
- * @see ImageryLayer.fromProviderAsync
- * @see ImageryLayer.fromWorldImagery
+ * @see {@link ImageryLayer.fromProviderAsync} for creating an imagery layer from an asynchronous imagery provider.
+ * @see {@link ImageryLayer.fromWorldImagery} for creating an imagery layer for Cesium ion's default global base imagery layer.
+ * @see {@link Scene#imageryLayers} for adding an imagery layer to the globe.
+ * @see {@link Cesium3DTileset#imageryLayers} for adding an imagery layer to a 3D tileset.
  *
  * @example
  * // Add an OpenStreetMaps layer
@@ -155,6 +157,19 @@ import TileImagery from "./TileImagery.js";
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
  * imageryLayer.alpha = 0.5;
  * scene.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * // Drape Bing Maps Aerial imagery over a 3D tileset
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl(
+ *   "http://localhost:8002/tilesets/Seattle/tileset.json"
+ * );
+ * scene.primitives.add(tileset);
+ *
+ * const imageryProvider = await Cesium.createWorldImageryAsync({
+ *   style: Cesium.IonWorldImageryStyle.AERIAL,
+ * });
+ * const imageryLayer = new ImageryLayer(imageryProvider);
+ * tileset.imageryLayers.add(imageryLayer);
  */
 function ImageryLayer(imageryProvider, options) {
   this._imageryProvider = imageryProvider;
@@ -162,8 +177,8 @@ function ImageryLayer(imageryProvider, options) {
   this._readyEvent = new Event();
   this._errorEvent = new Event();
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  imageryProvider = defaultValue(imageryProvider, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  imageryProvider = imageryProvider ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The alpha blending value of this layer, with 0.0 representing fully transparent and
@@ -172,10 +187,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.alpha = defaultValue(
-    options.alpha,
-    defaultValue(imageryProvider._defaultAlpha, 1.0)
-  );
+  this.alpha = options.alpha ?? imageryProvider._defaultAlpha ?? 1.0;
 
   /**
    * The alpha blending value of this layer on the night side of the globe, with 0.0 representing fully transparent and
@@ -184,10 +196,8 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.nightAlpha = defaultValue(
-    options.nightAlpha,
-    defaultValue(imageryProvider._defaultNightAlpha, 1.0)
-  );
+  this.nightAlpha =
+    options.nightAlpha ?? imageryProvider._defaultNightAlpha ?? 1.0;
 
   /**
    * The alpha blending value of this layer on the day side of the globe, with 0.0 representing fully transparent and
@@ -196,10 +206,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.dayAlpha = defaultValue(
-    options.dayAlpha,
-    defaultValue(imageryProvider._defaultDayAlpha, 1.0)
-  );
+  this.dayAlpha = options.dayAlpha ?? imageryProvider._defaultDayAlpha ?? 1.0;
 
   /**
    * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
@@ -208,13 +215,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_BRIGHTNESS}
    */
-  this.brightness = defaultValue(
-    options.brightness,
-    defaultValue(
-      imageryProvider._defaultBrightness,
-      ImageryLayer.DEFAULT_BRIGHTNESS
-    )
-  );
+  this.brightness =
+    options.brightness ??
+    imageryProvider._defaultBrightness ??
+    ImageryLayer.DEFAULT_BRIGHTNESS;
 
   /**
    * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
@@ -223,13 +227,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_CONTRAST}
    */
-  this.contrast = defaultValue(
-    options.contrast,
-    defaultValue(
-      imageryProvider._defaultContrast,
-      ImageryLayer.DEFAULT_CONTRAST
-    )
-  );
+  this.contrast =
+    options.contrast ??
+    imageryProvider._defaultContrast ??
+    ImageryLayer.DEFAULT_CONTRAST;
 
   /**
    * The hue of this layer in radians. 0.0 uses the unmodified imagery color.
@@ -237,10 +238,8 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_HUE}
    */
-  this.hue = defaultValue(
-    options.hue,
-    defaultValue(imageryProvider._defaultHue, ImageryLayer.DEFAULT_HUE)
-  );
+  this.hue =
+    options.hue ?? imageryProvider._defaultHue ?? ImageryLayer.DEFAULT_HUE;
 
   /**
    * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
@@ -249,13 +248,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_SATURATION}
    */
-  this.saturation = defaultValue(
-    options.saturation,
-    defaultValue(
-      imageryProvider._defaultSaturation,
-      ImageryLayer.DEFAULT_SATURATION
-    )
-  );
+  this.saturation =
+    options.saturation ??
+    imageryProvider._defaultSaturation ??
+    ImageryLayer.DEFAULT_SATURATION;
 
   /**
    * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
@@ -263,10 +259,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_GAMMA}
    */
-  this.gamma = defaultValue(
-    options.gamma,
-    defaultValue(imageryProvider._defaultGamma, ImageryLayer.DEFAULT_GAMMA)
-  );
+  this.gamma =
+    options.gamma ??
+    imageryProvider._defaultGamma ??
+    ImageryLayer.DEFAULT_GAMMA;
 
   /**
    * The {@link SplitDirection} to apply to this layer.
@@ -274,10 +270,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {SplitDirection}
    * @default {@link ImageryLayer.DEFAULT_SPLIT}
    */
-  this.splitDirection = defaultValue(
-    options.splitDirection,
-    ImageryLayer.DEFAULT_SPLIT
-  );
+  this.splitDirection = options.splitDirection ?? ImageryLayer.DEFAULT_SPLIT;
 
   /**
    * The {@link TextureMinificationFilter} to apply to this layer.
@@ -290,13 +283,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {TextureMinificationFilter}
    * @default {@link ImageryLayer.DEFAULT_MINIFICATION_FILTER}
    */
-  this.minificationFilter = defaultValue(
-    options.minificationFilter,
-    defaultValue(
-      imageryProvider._defaultMinificationFilter,
-      ImageryLayer.DEFAULT_MINIFICATION_FILTER
-    )
-  );
+  this.minificationFilter =
+    options.minificationFilter ??
+    imageryProvider._defaultMinificationFilter ??
+    ImageryLayer.DEFAULT_MINIFICATION_FILTER;
 
   /**
    * The {@link TextureMagnificationFilter} to apply to this layer.
@@ -309,13 +299,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {TextureMagnificationFilter}
    * @default {@link ImageryLayer.DEFAULT_MAGNIFICATION_FILTER}
    */
-  this.magnificationFilter = defaultValue(
-    options.magnificationFilter,
-    defaultValue(
-      imageryProvider._defaultMagnificationFilter,
-      ImageryLayer.DEFAULT_MAGNIFICATION_FILTER
-    )
-  );
+  this.magnificationFilter =
+    options.magnificationFilter ??
+    imageryProvider._defaultMagnificationFilter ??
+    ImageryLayer.DEFAULT_MAGNIFICATION_FILTER;
 
   /**
    * Determines if this layer is shown.
@@ -323,12 +310,12 @@ function ImageryLayer(imageryProvider, options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   this._minimumTerrainLevel = options.minimumTerrainLevel;
   this._maximumTerrainLevel = options.maximumTerrainLevel;
 
-  this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+  this._rectangle = options.rectangle ?? Rectangle.MAX_VALUE;
   this._maximumAnisotropy = options.maximumAnisotropy;
 
   this._imageryCache = {};
@@ -367,10 +354,9 @@ function ImageryLayer(imageryProvider, options) {
    *
    * @type {number}
    */
-  this.colorToAlphaThreshold = defaultValue(
-    options.colorToAlphaThreshold,
-    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD
-  );
+  this.colorToAlphaThreshold =
+    options.colorToAlphaThreshold ??
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD;
 }
 
 Object.defineProperties(ImageryLayer.prototype, {
@@ -402,8 +388,8 @@ Object.defineProperties(ImageryLayer.prototype, {
    * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of the thrown error.
-   * @memberof Imagery.prototype
-   * @type {Event<Imagery.ErrorEventCallback>}
+   * @memberof ImageryLayer.prototype
+   * @type {Event<ImageryLayer.ErrorEventCallback>}
    * @readonly
    */
   errorEvent: {
@@ -511,7 +497,7 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  * Create a new imagery layer from an asynchronous imagery provider. The layer will handle any asynchronous loads or errors, and begin rendering the imagery layer once ready.
  *
  * @param {Promise<ImageryProvider>} imageryProviderPromise A promise which resolves to a imagery provider
- * @param {ImageryLayer.ConstructorOptions} options An object describing initialization options
+ * @param {ImageryLayer.ConstructorOptions} [options] An object describing initialization options
  * @returns {ImageryLayer} The created imagery layer.
  *
  * @example
@@ -532,7 +518,7 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  * viewer.imageryLayers.add(imageryLayer);
  *
  * imageryLayer.readyEvent.addEventListener(provider => {
- *   imageryLayer.provider.errorEvent.addEventListener(error => {
+ *   imageryLayer.imageryProvider.errorEvent.addEventListener(error => {
  *     alert(`Encountered an error while loading imagery tiles! ${error}`);
  *   });
  * });
@@ -541,9 +527,9 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  *   alert(`Encountered an error while creating an imagery layer! ${error}`);
  * });
  *
- * @see ImageryLayer.errorEvent
- * @see ImageryLayer.readyEvent
- * @see ImageryLayer.provider
+ * @see ImageryLayer#errorEvent
+ * @see ImageryLayer#readyEvent
+ * @see ImageryLayer#imageryProvider
  * @see ImageryLayer.fromWorldImagery
  */
 ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
@@ -590,7 +576,7 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  * viewer.imageryLayers.add(imageryLayer);
  *
  * imageryLayer.readyEvent.addEventListener(provider => {
- *   imageryLayer.provider.errorEvent.addEventListener(error => {
+ *   imageryLayer.imageryProvider.errorEvent.addEventListener(error => {
  *     alert(`Encountered an error while loading imagery tiles! ${error}`);
  *   });
  * });
@@ -599,18 +585,18 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  *   alert(`Encountered an error while creating an imagery layer! ${error}`);
  * });
  *
- * @see ImageryLayer.errorEvent
- * @see ImageryLayer.readyEvent
- * @see ImageryLayer.provider
+ * @see ImageryLayer#errorEvent
+ * @see ImageryLayer#readyEvent
+ * @see ImageryLayer#imageryProvider
  */
 ImageryLayer.fromWorldImagery = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   return ImageryLayer.fromProviderAsync(
     createWorldImageryAsync({
       style: options.style,
     }),
-    options
+    options,
   );
 };
 
@@ -692,7 +678,7 @@ ImageryLayer.prototype.getImageryRectangle = function () {
  *
  * @private
  *
- * @param {Tile} tile The terrain tile.
+ * @param {QuadtreeTile} tile The terrain tile.
  * @param {TerrainProvider|undefined} terrainProvider The terrain provider associated with the terrain tile.
  * @param {number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
  * @returns {boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
@@ -700,7 +686,7 @@ ImageryLayer.prototype.getImageryRectangle = function () {
 ImageryLayer.prototype._createTileImagerySkeletons = function (
   tile,
   terrainProvider,
-  insertionPoint
+  insertionPoint,
 ) {
   const surfaceTile = tile.data;
 
@@ -747,12 +733,12 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const imageryBounds = Rectangle.intersection(
     imageryProvider.rectangle,
     this._rectangle,
-    imageryBoundsScratch
+    imageryBoundsScratch,
   );
   let rectangle = Rectangle.intersection(
     tile.rectangle,
     imageryBounds,
-    tileImageryBoundsScratch
+    tileImageryBoundsScratch,
   );
 
   if (!defined(rectangle)) {
@@ -774,11 +760,11 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     } else {
       rectangle.south = Math.max(
         baseTerrainRectangle.south,
-        baseImageryRectangle.south
+        baseImageryRectangle.south,
       );
       rectangle.north = Math.min(
         baseTerrainRectangle.north,
-        baseImageryRectangle.north
+        baseImageryRectangle.north,
       );
     }
 
@@ -789,11 +775,11 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     } else {
       rectangle.west = Math.max(
         baseTerrainRectangle.west,
-        baseImageryRectangle.west
+        baseImageryRectangle.west,
       );
       rectangle.east = Math.min(
         baseTerrainRectangle.east,
-        baseImageryRectangle.east
+        baseImageryRectangle.east,
       );
     }
   }
@@ -815,7 +801,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   let imageryLevel = getLevelWithMaximumTexelSpacing(
     this,
     targetGeometricError,
-    latitudeClosestToEquator
+    latitudeClosestToEquator,
   );
   imageryLevel = Math.max(0, imageryLevel);
   const maximumLevel = imageryProvider.maximumLevel;
@@ -833,11 +819,11 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const imageryTilingScheme = imageryProvider.tilingScheme;
   const northwestTileCoordinates = imageryTilingScheme.positionToTileXY(
     Rectangle.northwest(rectangle),
-    imageryLevel
+    imageryLevel,
   );
   const southeastTileCoordinates = imageryTilingScheme.positionToTileXY(
     Rectangle.southeast(rectangle),
-    imageryLevel
+    imageryLevel,
   );
 
   // If the southeast corner of the rectangle lies very close to the north or west side
@@ -853,7 +839,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const northwestTileRectangle = imageryTilingScheme.tileXYToRectangle(
     northwestTileCoordinates.x,
     northwestTileCoordinates.y,
-    imageryLevel
+    imageryLevel,
   );
   if (
     Math.abs(northwestTileRectangle.south - tile.rectangle.north) <
@@ -872,7 +858,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const southeastTileRectangle = imageryTilingScheme.tileXYToRectangle(
     southeastTileCoordinates.x,
     southeastTileCoordinates.y,
-    imageryLevel
+    imageryLevel,
   );
   if (
     Math.abs(southeastTileRectangle.north - tile.rectangle.south) <
@@ -893,46 +879,44 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
 
   const terrainRectangle = Rectangle.clone(
     tile.rectangle,
-    terrainRectangleScratch
+    terrainRectangleScratch,
   );
   let imageryRectangle = imageryTilingScheme.tileXYToRectangle(
     northwestTileCoordinates.x,
     northwestTileCoordinates.y,
-    imageryLevel
+    imageryLevel,
   );
   let clippedImageryRectangle = Rectangle.intersection(
     imageryRectangle,
     imageryBounds,
-    clippedRectangleScratch
+    clippedRectangleScratch,
   );
 
   let imageryTileXYToRectangle;
   if (useWebMercatorT) {
     imageryTilingScheme.rectangleToNativeRectangle(
       terrainRectangle,
-      terrainRectangle
+      terrainRectangle,
     );
     imageryTilingScheme.rectangleToNativeRectangle(
       imageryRectangle,
-      imageryRectangle
+      imageryRectangle,
     );
     imageryTilingScheme.rectangleToNativeRectangle(
       clippedImageryRectangle,
-      clippedImageryRectangle
+      clippedImageryRectangle,
     );
     imageryTilingScheme.rectangleToNativeRectangle(
       imageryBounds,
-      imageryBounds
+      imageryBounds,
     );
-    imageryTileXYToRectangle = imageryTilingScheme.tileXYToNativeRectangle.bind(
-      imageryTilingScheme
-    );
+    imageryTileXYToRectangle =
+      imageryTilingScheme.tileXYToNativeRectangle.bind(imageryTilingScheme);
     veryCloseX = terrainRectangle.width / 512.0;
     veryCloseY = terrainRectangle.height / 512.0;
   } else {
-    imageryTileXYToRectangle = imageryTilingScheme.tileXYToRectangle.bind(
-      imageryTilingScheme
-    );
+    imageryTileXYToRectangle =
+      imageryTilingScheme.tileXYToRectangle.bind(imageryTilingScheme);
   }
 
   let minU;
@@ -951,7 +935,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     maxU = Math.min(
       1.0,
       (clippedImageryRectangle.west - terrainRectangle.west) /
-        terrainRectangle.width
+        terrainRectangle.width,
     );
   }
 
@@ -963,7 +947,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     minV = Math.max(
       0.0,
       (clippedImageryRectangle.north - terrainRectangle.south) /
-        terrainRectangle.height
+        terrainRectangle.height,
     );
   }
 
@@ -979,12 +963,12 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     imageryRectangle = imageryTileXYToRectangle(
       i,
       northwestTileCoordinates.y,
-      imageryLevel
+      imageryLevel,
     );
     clippedImageryRectangle = Rectangle.simpleIntersection(
       imageryRectangle,
       imageryBounds,
-      clippedRectangleScratch
+      clippedRectangleScratch,
     );
 
     if (!defined(clippedImageryRectangle)) {
@@ -994,7 +978,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     maxU = Math.min(
       1.0,
       (clippedImageryRectangle.east - terrainRectangle.west) /
-        terrainRectangle.width
+        terrainRectangle.width,
     );
 
     // If this is the eastern-most imagery tile mapped to this terrain tile,
@@ -1023,7 +1007,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
       clippedImageryRectangle = Rectangle.simpleIntersection(
         imageryRectangle,
         imageryBounds,
-        clippedRectangleScratch
+        clippedRectangleScratch,
       );
 
       if (!defined(clippedImageryRectangle)) {
@@ -1033,7 +1017,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
       minV = Math.max(
         0.0,
         (clippedImageryRectangle.south - terrainRectangle.south) /
-          terrainRectangle.height
+          terrainRectangle.height,
       );
 
       // If this is the southern-most imagery tile mapped to this terrain tile,
@@ -1054,7 +1038,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
       surfaceTile.imagery.splice(
         insertionPoint,
         0,
-        new TileImagery(imagery, texCoordsRectangle, useWebMercatorT)
+        new TileImagery(imagery, texCoordsRectangle, useWebMercatorT),
       );
       ++insertionPoint;
     }
@@ -1076,7 +1060,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
  */
 ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
   tile,
-  tileImagery
+  tileImagery,
 ) {
   let imageryRectangle = tileImagery.readyImagery.rectangle;
   let terrainRectangle = tile.rectangle;
@@ -1086,11 +1070,11 @@ ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
       tileImagery.readyImagery.imageryLayer.imageryProvider.tilingScheme;
     imageryRectangle = tilingScheme.rectangleToNativeRectangle(
       imageryRectangle,
-      imageryBoundsScratch
+      imageryBoundsScratch,
     );
     terrainRectangle = tilingScheme.rectangleToNativeRectangle(
       terrainRectangle,
-      terrainRectangleScratch
+      terrainRectangleScratch,
     );
   }
 
@@ -1104,7 +1088,7 @@ ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
     (scaleY * (terrainRectangle.south - imageryRectangle.south)) /
       terrainHeight,
     scaleX,
-    scaleY
+    scaleY,
   );
 };
 
@@ -1155,7 +1139,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       imagery.x,
       imagery.y,
       imagery.level,
-      e
+      e,
     );
     if (that._requestImageError.retry) {
       doRequest();
@@ -1174,7 +1158,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       imagery.x,
       imagery.y,
       imagery.level,
-      request
+      request,
     );
 
     if (!defined(imagePromise)) {
@@ -1188,7 +1172,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       imagery.credits = imageryProvider.getTileCredits(
         imagery.x,
         imagery.y,
-        imagery.level
+        imagery.level,
       );
     }
 
@@ -1272,7 +1256,7 @@ ImageryLayer.prototype._createTexture = function (context, imagery) {
     this.minificationFilter !== TextureMinificationFilter.LINEAR
   ) {
     throw new DeveloperError(
-      "ImageryLayer minification filter must be NEAREST or LINEAR"
+      "ImageryLayer minification filter must be NEAREST or LINEAR",
     );
   }
   //>>includeEnd('debug');
@@ -1294,7 +1278,7 @@ ImageryLayer.prototype._createTexture = function (context, imagery) {
 function getSamplerKey(
   minificationFilter,
   magnificationFilter,
-  maximumAnisotropy
+  maximumAnisotropy,
 ) {
   return `${minificationFilter}:${magnificationFilter}:${maximumAnisotropy}`;
 }
@@ -1318,12 +1302,12 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
       ContextLimits.maximumTextureFilterAnisotropy;
     const maximumAnisotropy = Math.min(
       maximumSupportedAnisotropy,
-      defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy)
+      this._maximumAnisotropy ?? maximumSupportedAnisotropy,
     );
     const mipmapSamplerKey = getSamplerKey(
       minificationFilter,
       magnificationFilter,
-      maximumAnisotropy
+      maximumAnisotropy,
     );
     let mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
     if (!defined(mipmapSamplers)) {
@@ -1346,7 +1330,7 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
     const nonMipmapSamplerKey = getSamplerKey(
       minificationFilter,
       magnificationFilter,
-      0
+      0,
     );
     let nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers;
     if (!defined(nonMipmapSamplers)) {
@@ -1379,13 +1363,13 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
 ImageryLayer.prototype._reprojectTexture = function (
   frameState,
   imagery,
-  needGeographicProjection
+  needGeographicProjection,
 ) {
   const texture = imagery.textureWebMercator || imagery.texture;
   const rectangle = imagery.rectangle;
   const context = frameState.context;
 
-  needGeographicProjection = defaultValue(needGeographicProjection, true);
+  needGeographicProjection = needGeographicProjection ?? true;
 
   // Reproject this texture if it is not already in a geographic projection and
   // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
@@ -1464,7 +1448,7 @@ ImageryLayer.prototype.getImageryFromCache = function (
   x,
   y,
   level,
-  imageryRectangle
+  imageryRectangle,
 ) {
   const cacheKey = getImageryCacheKey(x, y, level);
   let imagery = this._imageryCache[cacheKey];
@@ -1698,7 +1682,7 @@ function reprojectToGeographic(command, context, texture, rectangle) {
 function getLevelWithMaximumTexelSpacing(
   layer,
   texelSpacing,
-  latitudeClosestToEquator
+  latitudeClosestToEquator,
 ) {
   // PERFORMANCE_IDEA: factor out the stuff that doesn't change.
   const imageryProvider = layer._imageryProvider;

@@ -135,12 +135,12 @@ describe(
       const transformCenter = Cartesian3.fromRadians(
         longitude,
         latitude,
-        height
+        height,
       );
       const hpr = new HeadingPitchRoll();
       const transformMatrix = Transforms.headingPitchRollToFixedFrame(
         transformCenter,
-        hpr
+        hpr,
       );
       return Matrix4.pack(transformMatrix, new Array(16));
     }
@@ -150,7 +150,7 @@ describe(
         mockTileset,
         "/some_url",
         tileWithBoundingSphere,
-        undefined
+        undefined,
       );
       expect(tile.isDestroyed()).toEqual(false);
       tile.destroy();
@@ -165,7 +165,7 @@ describe(
           mockTileset,
           "/some_url",
           tileWithoutBoundingVolume,
-          undefined
+          undefined,
         );
       }).toThrowError(RuntimeError);
     });
@@ -178,7 +178,7 @@ describe(
           mockTileset,
           "/some_url",
           tileWithoutBoundingVolume,
-          undefined
+          undefined,
         );
       }).toThrowError(RuntimeError);
     });
@@ -191,7 +191,7 @@ describe(
         mockTileset,
         "/some_url",
         header,
-        undefined
+        undefined,
       );
       expect(tile.refine).toBe(Cesium3DTileRefine.REPLACE);
       expect(Cesium3DTile._deprecationWarning).toHaveBeenCalled();
@@ -204,7 +204,7 @@ describe(
         mockTileset,
         "/some_url",
         header,
-        undefined
+        undefined,
       );
       expect(tile.content).toBeDefined();
       expect(tile.content).toBeInstanceOf(Empty3DTileContent);
@@ -221,13 +221,13 @@ describe(
         mockTileset,
         "/some_url",
         tileWithBoundingSphere,
-        undefined
+        undefined,
       );
       const child = new Cesium3DTile(
         mockTileset,
         "/some_url",
         geometricErrorMissing,
-        parent
+        parent,
       );
       expect(child.geometricError).toBe(parent.geometricError);
       expect(child.geometricError).toBe(1);
@@ -236,7 +236,7 @@ describe(
         mockTileset,
         "/some_url",
         geometricErrorMissing,
-        undefined
+        undefined,
       );
       expect(tile.geometricError).toBe(mockTileset._geometricError);
       expect(tile.geometricError).toBe(2);
@@ -250,7 +250,7 @@ describe(
           mockTileset,
           "/some_url",
           tileWithBoundingSphere,
-          undefined
+          undefined,
         );
         expect(tile.boundingVolume).toBeDefined();
         expect(tile.contentBoundingVolume).toBe(tile.boundingVolume);
@@ -261,13 +261,13 @@ describe(
           mockTileset,
           "/some_url",
           tileWithBoundingSphere,
-          undefined
+          undefined,
         );
         const radius = tileWithBoundingSphere.boundingVolume.sphere[3];
         expect(tile.boundingVolume).toBeDefined();
         expect(tile.boundingVolume.boundingVolume.radius).toEqual(radius);
         expect(tile.boundingVolume.boundingVolume.center).toEqual(
-          Cartesian3.ZERO
+          Cartesian3.ZERO,
         );
       });
 
@@ -276,16 +276,16 @@ describe(
           mockTileset,
           "/some_url",
           tileWithContentBoundingSphere,
-          undefined
+          undefined,
         );
         const radius =
           tileWithContentBoundingSphere.content.boundingVolume.sphere[3];
         expect(tile.contentBoundingVolume).toBeDefined();
         expect(tile.contentBoundingVolume.boundingVolume.radius).toEqual(
-          radius
+          radius,
         );
         expect(tile.contentBoundingVolume.boundingVolume.center).toEqual(
-          new Cartesian3(0.0, 0.0, 1.0)
+          new Cartesian3(0.0, 0.0, 1.0),
         );
       });
 
@@ -298,7 +298,7 @@ describe(
           mockTileset,
           "/some_url",
           tileWithBoundingRegion,
-          undefined
+          undefined,
         );
         const tbr = new TileBoundingRegion({
           rectangle: rectangle,
@@ -316,7 +316,7 @@ describe(
           mockTileset,
           "/some_url",
           tileWithContentBoundingRegion,
-          undefined
+          undefined,
         );
         expect(tile.contentBoundingVolume).toBeDefined();
         const tbb = new TileBoundingRegion({
@@ -333,7 +333,7 @@ describe(
           mockTileset,
           "/some_url",
           tileWithBoundingBox,
-          undefined
+          undefined,
         );
         expect(tile.boundingVolume).toBeDefined();
         const center = new Cartesian3(box[0], box[1], box[2]);
@@ -345,7 +345,7 @@ describe(
       it("does not crash for bounding box with 0 volume", function () {
         // Create a copy of the tile with bounding box.
         const tileWithBoundingBox0Volume = JSON.parse(
-          JSON.stringify(tileWithBoundingBox)
+          JSON.stringify(tileWithBoundingBox),
         );
         // Generate all the combinations of missing axes.
         const boxes = [];
@@ -379,7 +379,7 @@ describe(
             mockTileset,
             "/some_url",
             tileWithBoundingBox0Volume,
-            undefined
+            undefined,
           );
           expect(tile.boundingVolume).toBeDefined();
           const center = new Cartesian3(box[0], box[1], box[2]);
@@ -395,7 +395,7 @@ describe(
           mockTileset,
           "/some_url",
           tileWithContentBoundingBox,
-          undefined
+          undefined,
         );
         expect(tile.contentBoundingVolume).toBeDefined();
         const center = new Cartesian3(box[0], box[1], box[2]);
@@ -411,7 +411,7 @@ describe(
           mockTileset,
           "/some_url",
           header,
-          undefined
+          undefined,
         );
         const boundingSphere = tile.boundingVolume.boundingVolume;
         const contentBoundingSphere = tile.contentBoundingVolume.boundingVolume;
@@ -419,17 +419,17 @@ describe(
         const boundingVolumeCenter = Cartesian3.fromRadians(
           centerLongitude,
           centerLatitude,
-          1.0
+          1.0,
         );
         expect(boundingSphere.center).toEqualEpsilon(
           boundingVolumeCenter,
-          CesiumMath.EPSILON4
+          CesiumMath.EPSILON4,
         );
         expect(boundingSphere.radius).toEqual(5.0); // No change
 
         expect(contentBoundingSphere.center).toEqualEpsilon(
           boundingVolumeCenter,
-          CesiumMath.EPSILON4
+          CesiumMath.EPSILON4,
         );
         expect(contentBoundingSphere.radius).toEqual(5.0); // No change
       });
@@ -441,7 +441,7 @@ describe(
           mockTileset,
           "/some_url",
           header,
-          undefined
+          undefined,
         );
         const boundingBox = tile.boundingVolume.boundingVolume;
         const contentBoundingBox = tile.contentBoundingVolume.boundingVolume;
@@ -449,15 +449,15 @@ describe(
         const boundingVolumeCenter = Cartesian3.fromRadians(
           centerLongitude,
           centerLatitude,
-          1.0
+          1.0,
         );
         expect(boundingBox.center).toEqualEpsilon(
           boundingVolumeCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         expect(contentBoundingBox.center).toEqualEpsilon(
           boundingVolumeCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
       });
 
@@ -468,7 +468,7 @@ describe(
           mockTileset,
           "/some_url",
           header,
-          undefined
+          undefined,
         );
         const boundingRegion = tile.boundingVolume;
         const contentBoundingRegion = tile.contentBoundingVolume;
@@ -486,17 +486,17 @@ describe(
           mockTileset,
           "/some_url",
           header,
-          undefined
+          undefined,
         );
         const requestVolume = tile._viewerRequestVolume.boundingVolume;
         const requestVolumeCenter = Cartesian3.fromRadians(
           centerLongitude,
           centerLatitude,
-          1.0
+          1.0,
         );
         expect(requestVolume.center).toEqualEpsilon(
           requestVolumeCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
       });
 
@@ -510,18 +510,18 @@ describe(
           mockTileset,
           "/some_url",
           header,
-          undefined
+          undefined,
         );
         const boundingSphere = tile.boundingVolume.boundingVolume;
 
         // Check the original transform
         const boundingVolumeCenter = Cartesian3.fromRadians(
           centerLongitude,
-          centerLatitude
+          centerLatitude,
         );
         expect(boundingSphere.center).toEqualEpsilon(
           boundingVolumeCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
 
         // Change the transform
@@ -534,7 +534,7 @@ describe(
         const newCenter = Cartesian3.fromRadians(newLongitude, newLatitude);
         expect(boundingSphere.center).toEqualEpsilon(
           newCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
       });
 
@@ -594,28 +594,20 @@ describe(
           mockTileset,
           "/some_url",
           header,
-          undefined
+          undefined,
         );
         const boundingBox = tile.boundingVolume.boundingVolume;
         const boundingVolumeCenter = Cartesian3.fromRadians(0.0, 0.0, 101.0);
         expect(boundingBox.center).toEqualEpsilon(
           boundingVolumeCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         const boundingVolumeHalfAxes = Matrix3.fromArray([
-          0.0,
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          1.0,
-          2.0,
-          0.0,
-          0.0,
+          0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 0.0,
         ]);
         expect(boundingBox.halfAxes).toEqualEpsilon(
           boundingVolumeHalfAxes,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
 
         scene.verticalExaggeration = 2.0;
@@ -625,23 +617,15 @@ describe(
         const exaggeratedCenter = Cartesian3.fromRadians(0.0, 0.0, 202.0);
         expect(boundingBox.center).toEqualEpsilon(
           exaggeratedCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         // Note orientation flip due to re-computing the box after exaggeration
         const exaggeratedHalfAxes = Matrix3.fromArray([
-          4.0,
-          0.0,
-          0.0,
-          0.0,
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          1.0,
+          4.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
         ]);
         expect(boundingBox.halfAxes).toEqualEpsilon(
           exaggeratedHalfAxes,
-          CesiumMath.EPSILON4
+          CesiumMath.EPSILON4,
         );
       });
 
@@ -650,24 +634,24 @@ describe(
           mockTileset,
           "/some_url",
           tileWithBoundingRegion,
-          undefined
+          undefined,
         );
         const tileBoundingRegion = tile.boundingVolume;
         expect(tileBoundingRegion.minimumHeight).toEqualEpsilon(
           -34.0,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         expect(tileBoundingRegion.maximumHeight).toEqualEpsilon(
           -30.0,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         const rectangle = Rectangle.pack(
           tileBoundingRegion.rectangle,
-          new Array(4)
+          new Array(4),
         );
         expect(rectangle).toEqualEpsilon(
           [-1.2, -1.2, 0.0, 0.0],
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
 
         scene.verticalExaggeration = 2.0;
@@ -677,19 +661,19 @@ describe(
 
         expect(tileBoundingRegion.minimumHeight).toEqualEpsilon(
           -34.0,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         expect(tileBoundingRegion.maximumHeight).toEqualEpsilon(
           -26.0,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         const exaggeratedRectangle = Rectangle.pack(
           tileBoundingRegion.rectangle,
-          new Array(4)
+          new Array(4),
         );
         expect(exaggeratedRectangle).toEqualEpsilon(
           [-1.2, -1.2, 0.0, 0.0],
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
       });
 
@@ -698,24 +682,24 @@ describe(
         header.transform = getTileTransform(
           centerLongitude,
           centerLatitude,
-          100.0
+          100.0,
         );
         const tile = new Cesium3DTile(
           mockTileset,
           "/some_url",
           header,
-          undefined
+          undefined,
         );
         const boundingSphere = tile.boundingVolume.boundingVolume;
 
         const boundingVolumeCenter = Cartesian3.fromRadians(
           centerLongitude,
           centerLatitude,
-          100.0
+          100.0,
         );
         expect(boundingSphere.center).toEqualEpsilon(
           boundingVolumeCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         expect(boundingSphere.radius).toEqualEpsilon(5.0, CesiumMath.EPSILON7);
 
@@ -726,11 +710,11 @@ describe(
         const exaggeratedCenter = Cartesian3.fromRadians(
           centerLongitude,
           centerLatitude,
-          200.0
+          200.0,
         );
         expect(boundingSphere.center).toEqualEpsilon(
           exaggeratedCenter,
-          CesiumMath.EPSILON7
+          CesiumMath.EPSILON7,
         );
         expect(boundingSphere.radius).toEqualEpsilon(10.0, CesiumMath.EPSILON7);
       });
@@ -752,10 +736,10 @@ describe(
           mockTileset,
           "/some_url",
           tileWithBoundingRegion,
-          undefined
+          undefined,
         );
         const passOptions = Cesium3DTilePass.getPassOptions(
-          Cesium3DTilePass.RENDER
+          Cesium3DTilePass.RENDER,
         );
         tile.update(mockTileset, scene.frameState, passOptions);
         expect(tile._debugBoundingVolume).toBeDefined();
@@ -766,10 +750,10 @@ describe(
           mockTileset,
           "/some_url",
           tileWithBoundingBox,
-          undefined
+          undefined,
         );
         const passOptions = Cesium3DTilePass.getPassOptions(
-          Cesium3DTilePass.RENDER
+          Cesium3DTilePass.RENDER,
         );
         tile.update(mockTileset, scene.frameState, passOptions);
         expect(tile._debugBoundingVolume).toBeDefined();
@@ -780,10 +764,10 @@ describe(
           mockTileset,
           "/some_url",
           tileWithBoundingSphere,
-          undefined
+          undefined,
         );
         const passOptions = Cesium3DTilePass.getPassOptions(
-          Cesium3DTilePass.RENDER
+          Cesium3DTilePass.RENDER,
         );
         tile.update(mockTileset, scene.frameState, passOptions);
         expect(tile._debugBoundingVolume).toBeDefined();
@@ -794,10 +778,10 @@ describe(
           mockTileset,
           "/some_url",
           tileWithViewerRequestVolume,
-          undefined
+          undefined,
         );
         const passOptions = Cesium3DTilePass.getPassOptions(
-          Cesium3DTilePass.RENDER
+          Cesium3DTilePass.RENDER,
         );
         tile.update(mockTileset, scene.frameState, passOptions);
         expect(tile._debugViewerRequestVolume).toBeDefined();
@@ -809,7 +793,7 @@ describe(
         mockTileset,
         "/some_url",
         tileWithBoundingSphere,
-        undefined
+        undefined,
       );
       tile1._priorityHolder = tile1;
       tile1._foveatedFactor = 0.0;
@@ -821,7 +805,7 @@ describe(
         mockTileset,
         "/some_url",
         tileWithBoundingSphere,
-        undefined
+        undefined,
       );
       tile2._priorityHolder = tile1;
       tile2._foveatedFactor = 1.0; // foveatedFactor (when considered for priority in certain modes) is actually 0 since its linked up to tile1
@@ -850,15 +834,15 @@ describe(
         CesiumMath.equalsEpsilon(
           tile1._priority,
           tile1ExpectedPriority,
-          CesiumMath.EPSILON2
-        )
+          CesiumMath.EPSILON2,
+        ),
       ).toBe(true);
       expect(
         CesiumMath.equalsEpsilon(
           tile2._priority,
           tile2ExpectedPriority,
-          CesiumMath.EPSILON2
-        )
+          CesiumMath.EPSILON2,
+        ),
       ).toBe(true);
 
       // Penalty for not being a progressive resolution
@@ -880,7 +864,7 @@ describe(
       const header = clone(tileWithContentBoundingSphere, true);
       header.transform = Matrix4.pack(
         Matrix4.fromUniformScale(2.0),
-        new Array(16)
+        new Array(16),
       );
 
       const mockTilesetScaled = clone(mockTileset, true);
@@ -889,7 +873,7 @@ describe(
         mockTilesetScaled,
         "/some_url",
         header,
-        undefined
+        undefined,
       );
 
       expect(tile._geometricError).toBe(1);
@@ -898,5 +882,5 @@ describe(
       expect(mockTilesetScaled._scaledGeometricError).toBe(4);
     });
   },
-  "WebGL"
+  "WebGL",
 );

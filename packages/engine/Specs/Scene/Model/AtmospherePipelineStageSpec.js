@@ -27,7 +27,7 @@ describe(
           url: boxTexturedGlbUrl,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
         },
-        scene
+        scene,
       );
     });
 
@@ -41,7 +41,7 @@ describe(
       scene.frameState.camera.direction = new Cartesian3(0, -1, 0);
 
       // Reset the fog density
-      scene.fog.density = 2e-4;
+      scene.fog.density = 0.0006;
     });
 
     afterAll(async function () {
@@ -85,7 +85,7 @@ describe(
       const frameState = scene.frameState;
       frameState.camera.position = Cartesian3.clone(
         model.boundingSphere.center,
-        frameState.camera.position
+        frameState.camera.position,
       );
       scene.renderForSpecs();
 
@@ -116,5 +116,5 @@ describe(
       expect(uniformMap.u_isInFog()).toBe(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Load a 3D Tiles 1.1 tileset converted from CDB."
-    />
+    <meta name="description" content="Load a 3D Tiles 1.1 tileset converted from CDB." />
     <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       table,
@@ -47,7 +41,7 @@
 
         const viewer = new Cesium.Viewer("cesiumContainer", {});
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2021-11-09T07:27:37.016064475348684937Z"
+          "2021-11-09T07:27:37.016064475348684937Z",
         );
         const scene = viewer.scene;
         scene.light.intensity = 7.0;
@@ -57,68 +51,68 @@
             destination: new Cesium.Cartesian3(
               4397999.822774582,
               4404502.67774069,
-              1397782.4709840622
+              1397782.4709840622,
             ),
             direction: new Cesium.Cartesian3(
               -0.29335588497705106,
               -0.6066709587467911,
-              0.7388454997917905
+              0.7388454997917905,
             ),
             up: new Cesium.Cartesian3(
               0.6240972421637774,
               0.46391380837591956,
-              0.6287182283994301
+              0.6287182283994301,
             ),
           },
           airport: {
             destination: new Cesium.Cartesian3(
               4394719.151490939,
               4402317.401942875,
-              1406608.6602404779
+              1406608.6602404779,
             ),
             direction: new Cesium.Cartesian3(
               0.4146699515908668,
               -0.8887814163588482,
-              0.1952342828060377
+              0.1952342828060377,
             ),
             up: new Cesium.Cartesian3(
               0.8415067525520951,
               0.4561872920946922,
-              0.28941240460723
+              0.28941240460723,
             ),
           },
           crater: {
             destination: new Cesium.Cartesian3(
               4398179.160380196,
               4402518.469409466,
-              1399161.7612076725
+              1399161.7612076725,
             ),
             direction: new Cesium.Cartesian3(
               -0.2800903637088597,
               -0.6348021519070498,
-              0.7201219452923355
+              0.7201219452923355,
             ),
             up: new Cesium.Cartesian3(
               0.6319189548885261,
               0.4427783126727723,
-              0.6361020360596605
+              0.6361020360596605,
             ),
           },
           port: {
             destination: new Cesium.Cartesian3(
               4399698.85724341,
               4399019.639078034,
-              1405153.7766045567
+              1405153.7766045567,
             ),
             direction: new Cesium.Cartesian3(
               -0.5651458936543287,
               0.17696574231117793,
-              -0.8057873447342694
+              -0.8057873447342694,
             ),
             up: new Cesium.Cartesian3(
               0.4886488937394081,
               0.8587605935024302,
-              -0.15411846642958343
+              -0.15411846642958343,
             ),
           },
         };
@@ -142,18 +136,9 @@
           color: {
             conditions: [
               ["${HGT} !== undefined && ${HGT} < 5", "color('#f5fd2d')"],
-              [
-                "${HGT} !== undefined && ${HGT} >= 5 && ${HGT} < 10",
-                "color('#d3a34a')",
-              ],
-              [
-                "${HGT} !== undefined && ${HGT} >= 10 && ${HGT} < 15",
-                "color('#947e75')",
-              ],
-              [
-                "${HGT} !== undefined && ${HGT} >= 15 && ${HGT} < 20",
-                "color('#565a9f')",
-              ],
+              ["${HGT} !== undefined && ${HGT} >= 5 && ${HGT} < 10", "color('#d3a34a')"],
+              ["${HGT} !== undefined && ${HGT} >= 10 && ${HGT} < 15", "color('#947e75')"],
+              ["${HGT} !== undefined && ${HGT} >= 15 && ${HGT} < 20", "color('#565a9f')"],
               ["${HGT} !== undefined && ${HGT} > 20", "color('#223bc3')"],
               ["true", "color('white')"],
             ],
@@ -225,10 +210,8 @@
             const feature = scene.pick(movement.endPosition);
             const featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
 
-            const isTerrainFeature =
-              featurePicked && feature.hasProperty("substrates");
-            const isBuildingFeature =
-              featurePicked && feature.hasProperty("HGT");
+            const isTerrainFeature = featurePicked && feature.hasProperty("substrates");
+            const isBuildingFeature = featurePicked && feature.hasProperty("HGT");
 
             if (isTerrainFeature) {
               metadataOverlay.style.display = "block";
@@ -238,7 +221,7 @@
               metadataOverlay.style.left = `${movement.endPosition.x}px`;
 
               tableHtmlScratch = `<table><thead><tr><td>Material:</td><th><tt>${feature.getProperty(
-                "name"
+                "name",
               )}</tt></tr></thead><tbody>`;
 
               materialsScratch = feature.getProperty("substrates");
@@ -248,7 +231,7 @@
 
               for (i = 0; i < materialsScratch.length; i++) {
                 tableHtmlScratch += `<tr><td><tt>${materialsScratch[i].slice(
-                  3
+                  3,
                 )}</tt></td><td style='text-align: right;'><tt>${
                   weightsScratch[i]
                 }%</tt></td></tr>`;
@@ -290,10 +273,7 @@
 
             // Save the selected feature's original color
             if (feature === highlighted.feature) {
-              Cesium.Color.clone(
-                highlighted.originalColor,
-                selected.originalColor
-              );
+              Cesium.Color.clone(highlighted.originalColor, selected.originalColor);
               highlighted.feature = undefined;
             } else {
               Cesium.Color.clone(feature.color, selected.originalColor);
@@ -303,8 +283,7 @@
             tableHtmlScratch = "<table class='cesium-infoBox-defaultTable'>";
             tableHtmlScratch +=
               "<tr><th>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
-            const metadataClass =
-              feature.content.batchTable._propertyTable.class;
+            const metadataClass = feature.content.batchTable._propertyTable.class;
             const propertyIds = feature.getPropertyIds();
             const length = propertyIds.length;
             for (let i = 0; i < length; ++i) {
@@ -322,10 +301,7 @@
               const propertyValue = feature.getProperty(propertyId);
               const property = metadataClass.properties[propertyId];
 
-              const propertyType = Cesium.defaultValue(
-                property.componentType,
-                property.type
-              );
+              const propertyType = property.componentType ?? property.type;
               tableHtmlScratch += `<tr style='font-family: monospace;' title='${property.description}'><th>${property.name}</th><th><b>${property.id}</b></th><td>${propertyType}</td><td>${propertyValue}</td></tr>`;
             }
             tableHtmlScratch +=
@@ -384,22 +360,13 @@
 
         try {
           // 3D Tiles 1.1 converted from CDB of Aden, Yemen (CDB provided by Presagis)
-          const terrainTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            2389063
-          );
+          const terrainTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2389063);
           viewer.scene.primitives.add(terrainTileset);
-          const buildingsTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            2389064,
-            {
-              maximumScreenSpaceError: 12,
-            }
-          );
+          const buildingsTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2389064, {
+            maximumScreenSpaceError: 12,
+          });
           viewer.scene.primitives.add(buildingsTileset);
-          const center = Cesium.Cartesian3.fromDegrees(
-            45.04192,
-            12.753525,
-            2000
-          );
+          const center = Cesium.Cartesian3.fromDegrees(45.04192, 12.753525, 2000);
 
           viewer.camera.flyTo({
             duration: 0,
@@ -450,7 +417,7 @@
             }
 
             enablePicking = checked;
-          }
+          },
         );
 
         //Sandcastle_End

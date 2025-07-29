@@ -1,7 +1,7 @@
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import CesiumMath from "../Core/Math.js";
@@ -101,7 +101,7 @@ ImageryProviderBuilder.prototype.build = function (provider) {
         CesiumMath.toRadians(bbox[1]),
         CesiumMath.toRadians(bbox[0]),
         CesiumMath.toRadians(bbox[3]),
-        CesiumMath.toRadians(bbox[2])
+        CesiumMath.toRadians(bbox[2]),
       );
     }
   }
@@ -110,7 +110,7 @@ ImageryProviderBuilder.prototype.build = function (provider) {
 function metadataSuccess(data, imageryProviderBuilder) {
   if (data.resourceSets.length !== 1) {
     throw new RuntimeError(
-      "metadata does not specify one resource in resourceSets"
+      "metadata does not specify one resource in resourceSets",
     );
   }
 
@@ -120,7 +120,16 @@ function metadataSuccess(data, imageryProviderBuilder) {
   imageryProviderBuilder.maximumLevel = resource.zoomMax - 1;
   imageryProviderBuilder.imageUrlSubdomains = resource.imageUrlSubdomains;
   imageryProviderBuilder.imageUrlTemplate = resource.imageUrl;
-  imageryProviderBuilder.attributionList = resource.imageryProviders;
+
+  let validProviders = resource.imageryProviders;
+  if (defined(resource.imageryProviders)) {
+    // prevent issues with the imagery API from crashing the viewer when the expected properties are not there
+    // See https://github.com/CesiumGS/cesium/issues/12088
+    validProviders = resource.imageryProviders.filter((provider) =>
+      provider.coverageAreas?.some((area) => defined(area.bbox)),
+    );
+  }
+  imageryProviderBuilder.attributionList = validProviders;
 }
 
 function metadataFailure(metadataResource, error, provider) {
@@ -137,7 +146,7 @@ function metadataFailure(metadataResource, error, provider) {
     undefined,
     undefined,
     undefined,
-    error
+    error,
   );
 
   throw new RuntimeError(message);
@@ -146,7 +155,7 @@ function metadataFailure(metadataResource, error, provider) {
 async function requestMetadata(
   metadataResource,
   imageryProviderBuilder,
-  provider
+  provider,
 ) {
   const cacheKey = metadataResource.url;
   let promise = BingMapsImageryProvider._metadataCache[cacheKey];
@@ -196,7 +205,7 @@ async function requestMetadata(
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function BingMapsImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -209,9 +218,9 @@ function BingMapsImageryProvider(options) {
   this._defaultMinificationFilter = undefined;
   this._defaultMagnificationFilter = undefined;
 
-  this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+  this._mapStyle = options.mapStyle ?? BingMapsStyle.AERIAL;
   this._mapLayer = options.mapLayer;
-  this._culture = defaultValue(options.culture, "");
+  this._culture = options.culture ?? "";
   this._key = options.key;
 
   this._tileDiscardPolicy = options.tileDiscardPolicy;
@@ -221,7 +230,7 @@ function BingMapsImageryProvider(options) {
 
   this._proxy = options.proxy;
   this._credit = new Credit(
-    `<a href="https://www.microsoft.com/en-us/maps/product/enduserterms"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
+    `<a href="https://www.microsoft.com/en-us/maps/bing-maps/product"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`,
   );
 
   this._tilingScheme = new WebMercatorTilingScheme({
@@ -462,7 +471,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
  * @exception {RuntimeError} metadata does not specify one resource in resourceSets
  */
 BingMapsImageryProvider.fromUrl = async function (url, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("url", url);
@@ -486,7 +495,7 @@ BingMapsImageryProvider.fromUrl = async function (url, options) {
     tileProtocol = documentProtocol === "http:" ? "http" : "https";
   }
 
-  const mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+  const mapStyle = options.mapStyle ?? BingMapsStyle.AERIAL;
   const resource = Resource.createIfNeeded(url);
   resource.appendForwardSlash();
 
@@ -532,12 +541,12 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
     x,
     y,
     level,
-    rectangleScratch
+    rectangleScratch,
   );
   const result = getRectangleAttribution(
     this._attributionList,
     level,
-    rectangle
+    rectangle,
   );
 
   return result;
@@ -557,11 +566,11 @@ BingMapsImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const promise = ImageryProvider.loadImage(
     this,
-    buildImageResource(this, x, y, level, request)
+    buildImageResource(this, x, y, level, request),
   );
 
   if (defined(promise)) {
@@ -595,7 +604,7 @@ BingMapsImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };
@@ -674,7 +683,7 @@ Object.defineProperties(BingMapsImageryProvider, {
     get: function () {
       if (!defined(BingMapsImageryProvider._logoUrl)) {
         BingMapsImageryProvider._logoUrl = buildModuleUrl(
-          "Assets/Images/bing_maps_credit.png"
+          "Assets/Images/bing_maps_credit.png",
         );
       }
       return BingMapsImageryProvider._logoUrl;
@@ -739,7 +748,7 @@ function getRectangleAttribution(attributionList, level, rectangle) {
         const intersection = Rectangle.intersection(
           rectangle,
           area.bbox,
-          intersectionScratch
+          intersectionScratch,
         );
         if (defined(intersection)) {
           included = true;

@@ -1,6 +1,5 @@
 import {
   ComponentDatatype,
-  defaultValue,
   GeometryInstance,
   GeometryInstanceAttribute,
   Rectangle,
@@ -42,7 +41,7 @@ describe(
     function createInstance(vertexFormat) {
       return new GeometryInstance({
         geometry: new RectangleGeometry({
-          vertexFormat: defaultValue(vertexFormat, VertexFormat.ALL),
+          vertexFormat: vertexFormat ?? VertexFormat.ALL,
           rectangle: rectangle,
         }),
       });
@@ -71,7 +70,7 @@ describe(
       expect(a.attributeName).toEqual("normal");
       expect(a.glslDatatype).toEqual("vec3");
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(false, false)
+        Appearance.getDefaultRenderState(false, false),
       );
       expect(a.translucent).toEqual(false);
       expect(a.closed).toEqual(false);
@@ -94,7 +93,7 @@ describe(
       expect(a.attributeName).toEqual("st");
       expect(a.glslDatatype).toEqual("vec2");
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(false, false)
+        Appearance.getDefaultRenderState(false, false),
       );
       expect(a.translucent).toEqual(false);
       expect(a.closed).toEqual(false);
@@ -118,7 +117,7 @@ describe(
       expect(a.attributeName).toEqual("rotation");
       expect(a.glslDatatype).toEqual("float");
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(false, false)
+        Appearance.getDefaultRenderState(false, false),
       );
       expect(a.translucent).toEqual(false);
       expect(a.closed).toEqual(false);
@@ -142,7 +141,7 @@ describe(
       expect(a.attributeName).toEqual("str");
       expect(a.glslDatatype).toEqual("vec3");
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(false, false)
+        Appearance.getDefaultRenderState(false, false),
       );
       expect(a.translucent).toEqual(false);
       expect(a.closed).toEqual(false);
@@ -161,14 +160,14 @@ describe(
 
       expect(a.fragmentShaderSource).toBeDefined();
       expect(a.fragmentShaderSource.indexOf("v_quaternion")).toBeGreaterThan(
-        -1
+        -1,
       );
 
       expect(a.material).not.toBeDefined();
       expect(a.attributeName).toEqual("quaternion");
       expect(a.glslDatatype).toEqual("vec4");
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(false, false)
+        Appearance.getDefaultRenderState(false, false),
       );
       expect(a.translucent).toEqual(false);
       expect(a.closed).toEqual(false);
@@ -369,5 +368,5 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
   },
-  "WebGL"
+  "WebGL",
 );

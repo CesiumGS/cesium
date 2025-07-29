@@ -18,22 +18,22 @@ describe("Core/HeadingPitchRoll", function () {
     const headingPitchRoll = new HeadingPitchRoll(
       1.0 * deg2rad,
       2.0 * deg2rad,
-      3.0 * deg2rad
+      3.0 * deg2rad,
     );
     expect(headingPitchRoll.heading).toEqual(
       1.0 * deg2rad,
       2.0 * deg2rad,
-      3.0 * deg2rad
+      3.0 * deg2rad,
     );
     expect(headingPitchRoll.pitch).toEqual(
       2.0 * deg2rad,
       2.0 * deg2rad,
-      3.0 * deg2rad
+      3.0 * deg2rad,
     );
     expect(headingPitchRoll.roll).toEqual(
       3.0 * deg2rad,
       2.0 * deg2rad,
-      3.0 * deg2rad
+      3.0 * deg2rad,
     );
   });
 
@@ -57,7 +57,7 @@ describe("Core/HeadingPitchRoll", function () {
       hpr.roll = init[2];
 
       const result = HeadingPitchRoll.fromQuaternion(
-        Quaternion.fromHeadingPitchRoll(hpr)
+        Quaternion.fromHeadingPitchRoll(hpr),
       );
       expect(init[0]).toEqualEpsilon(result.heading, CesiumMath.EPSILON11);
       expect(init[1]).toEqualEpsilon(result.pitch, CesiumMath.EPSILON11);
@@ -70,7 +70,7 @@ describe("Core/HeadingPitchRoll", function () {
       8.801218199179452e-17,
       -0.7071067801637715,
       -8.801218315071006e-17,
-      -0.7071067822093238
+      -0.7071067822093238,
     );
     const result = HeadingPitchRoll.fromQuaternion(q);
     expect(result.pitch).toEqual(-(Math.PI / 2));
@@ -93,15 +93,15 @@ describe("Core/HeadingPitchRoll", function () {
       const result = HeadingPitchRoll.fromDegrees(init[0], init[1], init[2]);
       expect(init[0] * deg2rad).toEqualEpsilon(
         result.heading,
-        CesiumMath.EPSILON11
+        CesiumMath.EPSILON11,
       );
       expect(init[1] * deg2rad).toEqualEpsilon(
         result.pitch,
-        CesiumMath.EPSILON11
+        CesiumMath.EPSILON11,
       );
       expect(init[2] * deg2rad).toEqualEpsilon(
         result.roll,
-        CesiumMath.EPSILON11
+        CesiumMath.EPSILON11,
       );
     }
   });
@@ -118,7 +118,7 @@ describe("Core/HeadingPitchRoll", function () {
       headingDeg,
       pitchDeg,
       rollDeg,
-      result
+      result,
     );
     const expected = new HeadingPitchRoll(headingRad, pitchRad, rollRad);
     expect(actual).toEqual(expected);
@@ -129,7 +129,7 @@ describe("Core/HeadingPitchRoll", function () {
     const headingPitchRoll = new HeadingPitchRoll(
       1.0 * deg2rad,
       2.0 * deg2rad,
-      3.0 * deg2rad
+      3.0 * deg2rad,
     );
     const result = new HeadingPitchRoll();
     const returnedResult = HeadingPitchRoll.clone(headingPitchRoll, result);
@@ -142,11 +142,11 @@ describe("Core/HeadingPitchRoll", function () {
     const headingPitchRoll = new HeadingPitchRoll(
       1.0 * deg2rad,
       2.0 * deg2rad,
-      3.0 * deg2rad
+      3.0 * deg2rad,
     );
     const returnedResult = HeadingPitchRoll.clone(
       headingPitchRoll,
-      headingPitchRoll
+      headingPitchRoll,
     );
     expect(headingPitchRoll).toBe(returnedResult);
   });
@@ -156,26 +156,26 @@ describe("Core/HeadingPitchRoll", function () {
     expect(
       HeadingPitchRoll.equals(
         headingPitchRoll,
-        new HeadingPitchRoll(1.0, 2.0, 3.0)
-      )
+        new HeadingPitchRoll(1.0, 2.0, 3.0),
+      ),
     ).toEqual(true);
     expect(
       HeadingPitchRoll.equals(
         headingPitchRoll,
-        new HeadingPitchRoll(2.0, 2.0, 3.0)
-      )
+        new HeadingPitchRoll(2.0, 2.0, 3.0),
+      ),
     ).toEqual(false);
     expect(
       HeadingPitchRoll.equals(
         headingPitchRoll,
-        new HeadingPitchRoll(2.0, 1.0, 3.0)
-      )
+        new HeadingPitchRoll(2.0, 1.0, 3.0),
+      ),
     ).toEqual(false);
     expect(
       HeadingPitchRoll.equals(
         headingPitchRoll,
-        new HeadingPitchRoll(1.0, 2.0, 4.0)
-      )
+        new HeadingPitchRoll(1.0, 2.0, 4.0),
+      ),
     ).toEqual(false);
     expect(HeadingPitchRoll.equals(headingPitchRoll, undefined)).toEqual(false);
   });
@@ -183,37 +183,37 @@ describe("Core/HeadingPitchRoll", function () {
   it("equalsEpsilon", function () {
     let headingPitchRoll = new HeadingPitchRoll(1.0, 2.0, 3.0);
     expect(
-      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 3.0), 0.0)
+      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 3.0), 0.0),
     ).toEqual(true);
     expect(
-      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 3.0), 1.0)
+      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 3.0), 1.0),
     ).toEqual(true);
     expect(
-      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(2.0, 2.0, 3.0), 1.0)
+      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(2.0, 2.0, 3.0), 1.0),
     ).toEqual(true);
     expect(
-      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 3.0, 3.0), 1.0)
+      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 3.0, 3.0), 1.0),
     ).toEqual(true);
     expect(
-      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 4.0), 1.0)
+      headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 4.0), 1.0),
     ).toEqual(true);
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(2.0, 2.0, 3.0),
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toEqual(false);
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(1.0, 3.0, 3.0),
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toEqual(false);
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(1.0, 2.0, 4.0),
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toEqual(false);
     expect(headingPitchRoll.equalsEpsilon(undefined, 1)).toEqual(false);
 
@@ -221,43 +221,43 @@ describe("Core/HeadingPitchRoll", function () {
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(3000000.0, 4000000.0, 5000000.0),
-        0.0
-      )
+        0.0,
+      ),
     ).toEqual(true);
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(3000000.2, 4000000.0, 5000000.0),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(3000000.0, 4000000.2, 5000000.0),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(3000000.0, 4000000.0, 5000000.2),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(3000000.2, 4000000.2, 5000000.2),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       headingPitchRoll.equalsEpsilon(
         new HeadingPitchRoll(3000000.2, 4000000.2, 5000000.2),
-        CesiumMath.EPSILON9
-      )
+        CesiumMath.EPSILON9,
+      ),
     ).toEqual(false);
     expect(headingPitchRoll.equalsEpsilon(undefined, 1)).toEqual(false);
 
     expect(
-      HeadingPitchRoll.equalsEpsilon(undefined, headingPitchRoll, 1)
+      HeadingPitchRoll.equalsEpsilon(undefined, headingPitchRoll, 1),
     ).toEqual(false);
   });
 

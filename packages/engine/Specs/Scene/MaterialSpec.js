@@ -1,7 +1,6 @@
 import {
   Cartesian3,
   Color,
-  defaultValue,
   defined,
   Ellipsoid,
   GeometryInstance,
@@ -38,7 +37,7 @@ describe(
         backgroundColor[1],
         backgroundColor[2],
         backgroundColor[3],
-        scene.backgroundColor
+        scene.backgroundColor,
       );
       scene.primitives.destroyPrimitives = false;
       scene.camera.setView({ destination: rectangle });
@@ -71,7 +70,7 @@ describe(
       polyline = polylines.add({
         positions: Cartesian3.fromDegreesArray(
           [-50.0, 0.0, 50.0, 0.0],
-          Ellipsoid.WGS84
+          Ellipsoid.WGS84,
         ),
         width: 5.0,
       });
@@ -84,7 +83,7 @@ describe(
     });
 
     function renderMaterial(material, ignoreBackground, callback) {
-      ignoreBackground = defaultValue(ignoreBackground, false);
+      ignoreBackground = ignoreBackground ?? false;
       polygon.appearance.material = material;
       if (!ignoreBackground) {
         expect(scene).toRender(backgroundColor);
@@ -371,6 +370,44 @@ describe(
       renderMaterial(material);
     });
 
+    it("creates a material with an image offscreen canvas uniform", function () {
+      const canvas = new OffscreenCanvas(1, 1);
+      const context2D = canvas.getContext("2d");
+      context2D.fillStyle = "rgb(0,0,255)";
+      context2D.fillRect(0, 0, 1, 1);
+
+      const material = new Material({
+        strict: true,
+        fabric: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: canvas,
+          },
+        },
+      });
+
+      renderMaterial(material);
+    });
+
+    it("creates a material with an image bitmap", function () {
+      const canvas = new OffscreenCanvas(1, 1);
+      const context2D = canvas.getContext("2d");
+      context2D.fillStyle = "rgb(0,0,255)";
+      context2D.fillRect(0, 0, 1, 1);
+
+      const material = new Material({
+        strict: true,
+        fabric: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: canvas.transferToImageBitmap(),
+          },
+        },
+      });
+
+      renderMaterial(material);
+    });
+
     it("creates a material with an KTX2 compressed image uniform", function () {
       let compressedUrl;
       if (FeatureDetection.supportsBasis(scene)) {
@@ -494,22 +531,8 @@ describe(
         fabric: {
           uniforms: {
             value: [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5,
+              0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+              0.5, 0.5, 0.5,
             ],
           },
           components: {
@@ -1063,5 +1086,5 @@ describe(
       material.destroy();
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -19,6 +19,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
  * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @property {Property | SplitDirection} [splitDirection] A Property specifying the {@link SplitDirection} split to apply to this point.
  */
 
 /**
@@ -51,8 +52,10 @@ function PointGraphics(options) {
   this._distanceDisplayConditionSubscription = undefined;
   this._disableDepthTestDistance = undefined;
   this._disableDepthTestDistanceSubscription = undefined;
+  this._splitDirection = undefined;
+  this._splitDirectionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PointGraphics.prototype, {
@@ -142,7 +145,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -152,8 +155,16 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
+
+  /**
+   * Gets or sets the Property specifying the {@link SplitDirection} of this point.
+   * @memberof PointGraphics.prototype
+   * @type {Property|undefined}
+   * @default SplitDirection.NONE
+   */
+  splitDirection: createPropertyDescriptor("splitDirection"),
 });
 
 /**
@@ -176,6 +187,7 @@ PointGraphics.prototype.clone = function (result) {
   result.translucencyByDistance = this._translucencyByDistance;
   result.distanceDisplayCondition = this.distanceDisplayCondition;
   result.disableDepthTestDistance = this.disableDepthTestDistance;
+  result.splitDirection = this.splitDirection;
   return result;
 };
 
@@ -192,30 +204,20 @@ PointGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.pixelSize = defaultValue(this.pixelSize, source.pixelSize);
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference
-  );
-  this.color = defaultValue(this.color, source.color);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.scaleByDistance = defaultValue(
-    this.scaleByDistance,
-    source.scaleByDistance
-  );
-  this.translucencyByDistance = defaultValue(
-    this._translucencyByDistance,
-    source.translucencyByDistance
-  );
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition
-  );
-  this.disableDepthTestDistance = defaultValue(
-    this.disableDepthTestDistance,
-    source.disableDepthTestDistance
-  );
+  this.show = this.show ?? source.show;
+  this.pixelSize = this.pixelSize ?? source.pixelSize;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.color = this.color ?? source.color;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.scaleByDistance = this.scaleByDistance ?? source.scaleByDistance;
+  this.translucencyByDistance =
+    this._translucencyByDistance ?? source.translucencyByDistance;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.disableDepthTestDistance =
+    this.disableDepthTestDistance ?? source.disableDepthTestDistance;
+
+  this.splitDirection = this.splitDirection ?? source.splitDirection;
 };
 export default PointGraphics;

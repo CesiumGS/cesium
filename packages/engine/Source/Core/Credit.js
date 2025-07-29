@@ -1,6 +1,5 @@
 import DOMPurify from "dompurify";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 let nextCreditId = 0;
@@ -34,7 +33,7 @@ function Credit(html, showOnScreen) {
     creditToId[key] = id;
   }
 
-  showOnScreen = defaultValue(showOnScreen, false);
+  showOnScreen = showOnScreen ?? false;
 
   // Credits are immutable so generate an id to use to optimize equal()
   this._id = id;
@@ -115,8 +114,8 @@ Object.defineProperties(Credit.prototype, {
 /**
  * Returns true if the credits are equal
  *
- * @param {Credit} left The first credit
- * @param {Credit} right The second credit
+ * @param {Credit} [left] The first credit
+ * @param {Credit} [right] The second credit
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Credit.equals = function (left, right) {
@@ -132,7 +131,7 @@ Credit.equals = function (left, right) {
 /**
  * Returns true if the credits are equal
  *
- * @param {Credit} credit The credit to compare to.
+ * @param {Credit} [credit] The credit to compare to.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Credit.prototype.equals = function (credit) {

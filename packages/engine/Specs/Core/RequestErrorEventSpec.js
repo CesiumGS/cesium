@@ -5,7 +5,7 @@ describe("Core/RequestErrorEvent", function () {
     const event = new RequestErrorEvent(
       404,
       "foo",
-      "This-is-a-test: first\r\nAnother: second value!"
+      "This-is-a-test: first\r\nAnother: second value!",
     );
     expect(event.responseHeaders).toEqual({
       "This-is-a-test": "first",

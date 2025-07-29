@@ -77,10 +77,10 @@ describe(
       expect(p.width).toEqual(2);
       expect(p.material.uniforms.color).toEqual(material.uniforms.color);
       expect(p.material.uniforms.outlineColor).toEqual(
-        material.uniforms.outlineColor
+        material.uniforms.outlineColor,
       );
       expect(p.material.uniforms.outlineWidth).toEqual(
-        material.uniforms.outlineWidth
+        material.uniforms.outlineWidth,
       );
       expect(p.id).toEqual("id");
     });
@@ -107,10 +107,10 @@ describe(
       expect(p.width).toEqual(2);
       expect(p.material.uniforms.color).toEqual(material.uniforms.color);
       expect(p.material.uniforms.outlineColor).toEqual(
-        material.uniforms.outlineColor
+        material.uniforms.outlineColor,
       );
       expect(p.material.uniforms.outlineWidth).toEqual(
-        material.uniforms.outlineWidth
+        material.uniforms.outlineWidth,
       );
     });
 
@@ -1276,7 +1276,7 @@ describe(
             x: -1000000.0,
             y: -1000000.0,
             z: 0.0,
-          }
+          },
         );
       }
       polylines.add({
@@ -1325,7 +1325,7 @@ describe(
             x: -1000000.0,
             y: -1000000.0,
             z: 0.0,
-          }
+          },
         );
       }
       polylines.add({
@@ -1422,20 +1422,28 @@ describe(
         new HeadingPitchRange(
           0.0,
           -CesiumMath.PI_OVER_TWO,
-          radius + near - 10.0
-        )
+          radius + near - 10.0,
+        ),
       );
       expect(scene).toRender([0, 0, 0, 255]);
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0)
+        new HeadingPitchRange(
+          0.0,
+          -CesiumMath.PI_OVER_TWO,
+          radius + near + 1.0,
+        ),
       );
       expect(scene).notToRender([0, 0, 0, 255]);
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 10.0)
+        new HeadingPitchRange(
+          0.0,
+          -CesiumMath.PI_OVER_TWO,
+          radius + far + 10.0,
+        ),
       );
       expect(scene).toRender([0, 0, 0, 255]);
     });
@@ -1474,20 +1482,28 @@ describe(
         new HeadingPitchRange(
           0.0,
           -CesiumMath.PI_OVER_TWO,
-          radius + near - 10.0
-        )
+          radius + near - 10.0,
+        ),
       );
       expect(scene).toRender([0, 0, 0, 255]);
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0)
+        new HeadingPitchRange(
+          0.0,
+          -CesiumMath.PI_OVER_TWO,
+          radius + near + 1.0,
+        ),
       );
       expect(scene).notToRender([0, 0, 0, 255]);
 
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 10.0)
+        new HeadingPitchRange(
+          0.0,
+          -CesiumMath.PI_OVER_TWO,
+          radius + far + 10.0,
+        ),
       );
       expect(scene).toRender([0, 0, 0, 255]);
     });
@@ -1505,7 +1521,7 @@ describe(
             x: 0.0,
             y: -1000000.0,
             z: 0.0,
-          }
+          },
         );
       }
       const p = polylines.add({
@@ -1595,7 +1611,7 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
       polylines.modelMatrix = Matrix4.fromUniformScale(
         1000000.0,
-        polylines.modelMatrix
+        polylines.modelMatrix,
       );
       expect(scene).notToRender([0, 0, 0, 255]);
     });
@@ -1757,19 +1773,19 @@ describe(
       const boundingVolume = scene.frameState.commandList[0].boundingVolume;
 
       expect(one._boundingVolume).toEqual(
-        BoundingSphere.fromPoints(one.positions)
+        BoundingSphere.fromPoints(one.positions),
       );
       expect(two._boundingVolume).toEqual(
-        BoundingSphere.fromPoints(two.positions)
+        BoundingSphere.fromPoints(two.positions),
       );
       expect(three._boundingVolume).toEqual(
-        BoundingSphere.fromPoints(three.positions)
+        BoundingSphere.fromPoints(three.positions),
       );
       expect(boundingVolume).toEqual(
         BoundingSphere.union(
           BoundingSphere.union(one._boundingVolume, two._boundingVolume),
-          three._boundingVolume
-        )
+          three._boundingVolume,
+        ),
       );
     });
 
@@ -1793,49 +1809,49 @@ describe(
       let i;
       for (i = 0; i < positions.length; ++i) {
         projectedPositions.push(
-          projection.project(ellipsoid.cartesianToCartographic(positions[i]))
+          projection.project(ellipsoid.cartesianToCartographic(positions[i])),
         );
       }
       let bs = BoundingSphere.fromPoints(projectedPositions);
       bs.center = new Cartesian3(bs.center.z, bs.center.x, bs.center.y);
       expect(one._boundingVolume2D.center).toEqualEpsilon(
         bs.center,
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
       expect(one._boundingVolume2D.radius).toEqualEpsilon(
         bs.radius,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
 
       positions = two.positions;
       projectedPositions = [];
       for (i = 0; i < positions.length; ++i) {
         projectedPositions.push(
-          projection.project(ellipsoid.cartesianToCartographic(positions[i]))
+          projection.project(ellipsoid.cartesianToCartographic(positions[i])),
         );
       }
       bs = BoundingSphere.fromPoints(projectedPositions);
       bs.center = new Cartesian3(bs.center.z, bs.center.x, bs.center.y);
       expect(two._boundingVolume2D.center).toEqualEpsilon(
         bs.center,
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
       expect(two._boundingVolume2D.radius).toEqualEpsilon(
         bs.radius,
-        CesiumMath.EPSILON12
+        CesiumMath.EPSILON12,
       );
 
       const expected = BoundingSphere.union(
         one._boundingVolume2D,
-        two._boundingVolume2D
+        two._boundingVolume2D,
       );
       expect(boundingVolume.center).toEqualEpsilon(
         expected.center,
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
       expect(boundingVolume.radius).toEqualEpsilon(
         expected.radius,
-        CesiumMath.EPSILON8
+        CesiumMath.EPSILON8,
       );
     }
 
@@ -1886,10 +1902,10 @@ describe(
       scene.render();
 
       expect(scene.frameState.commandList[0].boundingVolume).toEqual(
-        one._boundingVolume
+        one._boundingVolume,
       );
       expect(scene.frameState.commandList[1].boundingVolume).toEqual(
-        two._boundingVolume
+        two._boundingVolume,
       );
     });
 
@@ -1899,5 +1915,5 @@ describe(
       expect(polylines.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

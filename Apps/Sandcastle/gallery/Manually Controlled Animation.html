@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -42,7 +39,7 @@
         const stop = Cesium.JulianDate.addSeconds(
           start,
           totalSeconds,
-          new Cesium.JulianDate()
+          new Cesium.JulianDate(),
         );
         viewer.clock.startTime = start.clone();
         viewer.clock.stopTime = stop.clone();
@@ -56,18 +53,15 @@
         const startPosition = new Cesium.Cartesian3(
           -2379556.799372864,
           -4665528.205030263,
-          3628013.106599678
+          3628013.106599678,
         );
         const endPosition = new Cesium.Cartesian3(
           -2379603.7074103747,
           -4665623.48990283,
-          3627860.82704567
+          3627860.82704567,
         );
         // A velocity vector property will give us the entity's speed and direction at any given time.
-        const velocityVectorProperty = new Cesium.VelocityVectorProperty(
-          position,
-          false
-        );
+        const velocityVectorProperty = new Cesium.VelocityVectorProperty(position, false);
         const velocityVector = new Cesium.Cartesian3();
 
         const numberOfSamples = 100;
@@ -78,7 +72,7 @@
           const time = Cesium.JulianDate.addSeconds(
             start,
             factor * totalSeconds,
-            new Cesium.JulianDate()
+            new Cesium.JulianDate(),
           );
 
           // Lerp using a non-linear factor so that the model accelerates.
@@ -87,15 +81,12 @@
             startPosition,
             endPosition,
             locationFactor,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           position.addSample(time, location);
           distance.addSample(
             time,
-            (totalDistance += Cesium.Cartesian3.distance(
-              location,
-              prevLocation
-            ))
+            (totalDistance += Cesium.Cartesian3.distance(location, prevLocation)),
           );
           prevLocation = location;
         }
@@ -114,7 +105,7 @@
             await Cesium.Model.fromGltfAsync({
               url: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
               scale: 4,
-            })
+            }),
           );
 
           modelPrimitive.readyEvent.addEventListener(() => {
@@ -137,12 +128,12 @@
               pos,
               vel,
               viewer.scene.globe.ellipsoid,
-              rotation
+              rotation,
             );
             Cesium.Matrix4.fromRotationTranslation(
               rotation,
               pos,
-              modelPrimitive.modelMatrix
+              modelPrimitive.modelMatrix,
             );
           });
         } catch (error) {
@@ -156,10 +147,7 @@
             text: new Cesium.CallbackProperty(updateSpeedLabel, false),
             font: "20px sans-serif",
             showBackground: true,
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
-              0.0,
-              100.0
-            ),
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0.0, 100.0),
             eyeOffset: new Cesium.Cartesian3(0, 7.2, 0),
           },
         });

@@ -67,22 +67,22 @@ describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorerVie
     expect(viewModel.sublayers[0].sublayers[0].visibility).toEqual(true);
     expect(viewModel.sublayers[0].sublayers[0].sublayers.length).toEqual(2);
     expect(viewModel.sublayers[0].sublayers[0].sublayers[0].name).toEqual(
-      "SubCat1"
+      "SubCat1",
     );
     expect(viewModel.sublayers[0].sublayers[0].sublayers[0].visibility).toEqual(
-      true
+      true,
     );
     expect(
-      viewModel.sublayers[0].sublayers[0].sublayers[0].sublayers.length
+      viewModel.sublayers[0].sublayers[0].sublayers[0].sublayers.length,
     ).toEqual(0);
     expect(viewModel.sublayers[0].sublayers[0].sublayers[1].name).toEqual(
-      "SubCat2"
+      "SubCat2",
     );
     expect(viewModel.sublayers[0].sublayers[0].sublayers[1].visibility).toEqual(
-      false
+      false,
     );
     expect(
-      viewModel.sublayers[0].sublayers[0].sublayers[1].sublayers.length
+      viewModel.sublayers[0].sublayers[0].sublayers[1].sublayers.length,
     ).toEqual(0);
 
     expect(viewModel.topLayers.length).toEqual(3);
@@ -91,7 +91,7 @@ describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorerVie
 
   it("can create bsl explorer ViewModel if no Overview", function () {
     const viewModel = new I3SBuildingSceneLayerExplorerViewModel(
-      i3sProviderWithoutOverview
+      i3sProviderWithoutOverview,
     );
     expect(viewModel.sublayers.length).toEqual(1);
     expect(viewModel.sublayers[0].name).toEqual("Full Model");
@@ -102,22 +102,22 @@ describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorerVie
     expect(viewModel.sublayers[0].sublayers[0].visibility).toEqual(true);
     expect(viewModel.sublayers[0].sublayers[0].sublayers.length).toEqual(2);
     expect(viewModel.sublayers[0].sublayers[0].sublayers[0].name).toEqual(
-      "SubCat1"
+      "SubCat1",
     );
     expect(viewModel.sublayers[0].sublayers[0].sublayers[0].visibility).toEqual(
-      true
+      true,
     );
     expect(
-      viewModel.sublayers[0].sublayers[0].sublayers[0].sublayers.length
+      viewModel.sublayers[0].sublayers[0].sublayers[0].sublayers.length,
     ).toEqual(0);
     expect(viewModel.sublayers[0].sublayers[0].sublayers[1].name).toEqual(
-      "SubCat2"
+      "SubCat2",
     );
     expect(viewModel.sublayers[0].sublayers[0].sublayers[1].visibility).toEqual(
-      false
+      false,
     );
     expect(
-      viewModel.sublayers[0].sublayers[0].sublayers[1].sublayers.length
+      viewModel.sublayers[0].sublayers[0].sublayers[1].sublayers.length,
     ).toEqual(0);
 
     expect(viewModel.topLayers.length).toEqual(2);
@@ -187,7 +187,7 @@ describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorerVie
 
     i3sProviderWithoutOverview.filterByAttributes = jasmine.createSpy();
     const viewModel = new I3SBuildingSceneLayerExplorerViewModel(
-      i3sProviderWithoutOverview
+      i3sProviderWithoutOverview,
     );
     knockout.track(viewModel);
 

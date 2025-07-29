@@ -4,7 +4,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import GltfLoader from "../GltfLoader.js";
@@ -56,35 +56,24 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
  * */
 function B3dmLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const b3dmResource = options.b3dmResource;
   let baseResource = options.baseResource;
   const arrayBuffer = options.arrayBuffer;
-  const byteOffset = defaultValue(options.byteOffset, 0);
-  const releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const incrementallyLoadTextures = defaultValue(
-    options.incrementallyLoadTextures,
-    true
-  );
-  const upAxis = defaultValue(options.upAxis, Axis.Y);
-  const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
-  const loadAttributesAsTypedArray = defaultValue(
-    options.loadAttributesAsTypedArray,
-    false
-  );
-  const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
-  const enablePick = defaultValue(options.enablePick, false);
-  const loadIndicesForWireframe = defaultValue(
-    options.loadIndicesForWireframe,
-    false
-  );
-  const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
-  const loadForClassification = defaultValue(
-    options.loadForClassification,
-    false
-  );
+  const byteOffset = options.byteOffset ?? 0;
+  const releaseGltfJson = options.releaseGltfJson ?? false;
+  const asynchronous = options.asynchronous ?? true;
+  const incrementallyLoadTextures = options.incrementallyLoadTextures ?? true;
+  const upAxis = options.upAxis ?? Axis.Y;
+  const forwardAxis = options.forwardAxis ?? Axis.X;
+  const loadAttributesAsTypedArray =
+    options.loadAttributesAsTypedArray ?? false;
+  const loadAttributesFor2D = options.loadAttributesFor2D ?? false;
+  const enablePick = options.enablePick ?? false;
+  const loadIndicesForWireframe = options.loadIndicesForWireframe ?? false;
+  const loadPrimitiveOutline = options.loadPrimitiveOutline ?? true;
+  const loadForClassification = options.loadForClassification ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.b3dmResource", b3dmResource);
@@ -196,7 +185,7 @@ B3dmLoader.prototype.load = function () {
 
   const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
-    featureTableBinary
+    featureTableBinary,
   );
   batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
   // Set batch length.
@@ -205,7 +194,7 @@ B3dmLoader.prototype.load = function () {
   const rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
-    3
+    3,
   );
   if (defined(rtcCenter)) {
     this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
@@ -293,7 +282,7 @@ B3dmLoader.prototype.process = function (frameState) {
   components.transform = Matrix4.multiplyTransformation(
     this._transform,
     components.transform,
-    components.transform
+    components.transform,
   );
   createStructuralMetadata(this, components);
   this._components = components;
@@ -354,7 +343,7 @@ function processNode(node) {
     const primitive = node.primitives[i];
     const featureIdVertexAttribute = ModelUtility.getAttributeBySemantic(
       primitive,
-      VertexAttributeSemantic.FEATURE_ID
+      VertexAttributeSemantic.FEATURE_ID,
     );
     if (defined(featureIdVertexAttribute)) {
       featureIdVertexAttribute.setIndex = 0;

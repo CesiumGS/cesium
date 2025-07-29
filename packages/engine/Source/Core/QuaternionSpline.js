@@ -1,4 +1,4 @@
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Quaternion from "./Quaternion.js";
@@ -15,7 +15,7 @@ function createEvaluateFunction(spline) {
     }
     const i = (spline._lastTimeIndex = spline.findTimeInterval(
       time,
-      spline._lastTimeIndex
+      spline._lastTimeIndex,
     ));
     const u = (time - times[i]) / (times[i + 1] - times[i]);
 
@@ -50,7 +50,7 @@ function createEvaluateFunction(spline) {
  * @see MorphWeightSpline
  */
 function QuaternionSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;
@@ -61,7 +61,7 @@ function QuaternionSpline(options) {
   }
   if (points.length < 2) {
     throw new DeveloperError(
-      "points.length must be greater than or equal to 2."
+      "points.length must be greater than or equal to 2.",
     );
   }
   if (times.length !== points.length) {

@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 
@@ -74,22 +74,19 @@ import destroyObject from "../Core/destroyObject.js";
  * }));
  */
 function PostProcessStageComposite(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.stages", options.stages);
   Check.typeOf.number.greaterThan(
     "options.stages.length",
     options.stages.length,
-    0
+    0,
   );
   //>>includeEnd('debug');
 
   this._stages = options.stages;
-  this._inputPreviousStageTexture = defaultValue(
-    options.inputPreviousStageTexture,
-    true
-  );
+  this._inputPreviousStageTexture = options.inputPreviousStageTexture ?? true;
 
   let name = options.name;
   if (!defined(name)) {

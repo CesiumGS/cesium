@@ -91,20 +91,18 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.something).toEqual("foo");
-      expect(params.another).toEqual("false");
-      expect(params.version).toEqual("1.3.0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.something).toEqual("foo");
+        expect(params.another).toEqual("false");
+        expect(params.version).toEqual("1.3.0");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -121,19 +119,17 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.crs).toEqual("CRS:27");
-      expect(params.version).toEqual("1.3.0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("CRS:27");
+        expect(params.version).toEqual("1.3.0");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -150,20 +146,18 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.crs).toEqual("EPSG:4326");
-      expect(params.version).toEqual("1.3.0");
-      expect(params.bbox).toEqual("-90,-180,90,0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -180,20 +174,18 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.crs).toEqual("EPSG:4321");
-      expect(params.version).toEqual("1.3.0");
-      expect(params.bbox).toEqual("-90,-180,90,0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4321");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -210,20 +202,18 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.crs).toEqual("EPSG:3035");
-      expect(params.version).toEqual("1.3.0");
-      expect(params.bbox).toEqual("-90,-180,90,0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:3035");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -240,20 +230,18 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.crs).toEqual("EPSG:4559");
-      expect(params.version).toEqual("1.3.0");
-      expect(params.bbox).toEqual("-180,-90,0,90");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4559");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-180,-90,0,90");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -270,19 +258,17 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.srs).toEqual("EPSG:4326");
-      expect(params.version).toEqual("1.1.0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.srs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.1.0");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -299,19 +285,17 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.srs).toEqual("IAU2000:30118");
-      expect(params.version).toEqual("1.1.0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.srs).toEqual("IAU2000:30118");
+        expect(params.version).toEqual("1.1.0");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -328,20 +312,18 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
-      expect(params.srs).toEqual("EPSG:4326");
-      expect(params.version).toEqual("1.1.0");
-      expect(params.bbox).toEqual("-180,-90,0,90");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.srs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.1.0");
+        expect(params.bbox).toEqual("-180,-90,0,90");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -373,7 +355,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     provider.requestImage(0, 0, 0);
     const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
     expect(["foo", "bar"].indexOf(url.substring(0, 3))).toBeGreaterThanOrEqual(
-      0
+      0,
     );
   });
 
@@ -383,17 +365,15 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const questionMarkCount = request.url.match(/\?/g).length;
-      expect(questionMarkCount).toEqual(1);
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const questionMarkCount = request.url.match(/\?/g).length;
+        expect(questionMarkCount).toEqual(1);
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -406,19 +386,17 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const url = request.url;
-      const questionMarkCount = url.match(/\?/g).length;
-      expect(questionMarkCount).toEqual(1);
-      expect(url).not.toContain("&&");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const url = request.url;
+        const questionMarkCount = url.match(/\?/g).length;
+        expect(questionMarkCount).toEqual(1);
+        expect(url).not.toContain("&&");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -431,22 +409,20 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const url = request.url;
-      const questionMarkCount = url.match(/\?/g).length;
-      expect(questionMarkCount).toEqual(1);
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const url = request.url;
+        const questionMarkCount = url.match(/\?/g).length;
+        expect(questionMarkCount).toEqual(1);
 
-      const uri = new Uri(url);
-      const params = queryToObject(uri.query());
-      expect(params.foo).toEqual("bar");
+        const uri = new Uri(url);
+        const params = queryToObject(uri.query());
+        expect(params.foo).toEqual("bar");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     provider.requestImage(0, 0, 0);
 
@@ -459,19 +435,17 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const url = request.url;
-      const uri = new Uri(url);
-      const params = queryToObject(uri.query());
-      expect(params.version).toEqual("1.1.1");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const url = request.url;
+        const uri = new Uri(url);
+        const params = queryToObject(uri.query());
+        expect(params.version).toEqual("1.1.1");
 
-      // Don't need to actually load image, but satisfy the request.
-      deferred.resolve(true);
-    });
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      },
+    );
 
     provider.requestImage(0, 0, 0);
 
@@ -493,18 +467,16 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -529,28 +501,26 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
-      expect(params.srs).toEqual("EPSG:3857");
-      expect(params.version).toEqual("1.1.1");
+        expect(params.srs).toEqual("EPSG:3857");
+        expect(params.version).toEqual("1.1.1");
 
-      const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
-      expect(params.bbox).toEqual(
-        `${rect.west},${rect.south},${rect.east},${rect.north}`
-      );
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        expect(params.bbox).toEqual(
+          `${rect.west},${rect.south},${rect.east},${rect.north}`,
+        );
 
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -578,28 +548,26 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
-      expect(params.crs).toEqual("EPSG:3857");
-      expect(params.version).toEqual("1.3.0");
+        expect(params.crs).toEqual("EPSG:3857");
+        expect(params.version).toEqual("1.3.0");
 
-      const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
-      expect(params.bbox).toEqual(
-        `${rect.west},${rect.south},${rect.east},${rect.north}`
-      );
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        expect(params.bbox).toEqual(
+          `${rect.west},${rect.south},${rect.east},${rect.north}`,
+        );
 
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -624,28 +592,26 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
-      expect(params.srs).toEqual("EPSG:4326");
-      expect(params.version).toEqual("1.1.1");
+        expect(params.srs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.1.1");
 
-      const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
-      expect(params.bbox).toEqual(
-        `${rect.west},${rect.south},${rect.east},${rect.north}`
-      );
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        expect(params.bbox).toEqual(
+          `${rect.west},${rect.south},${rect.east},${rect.north}`,
+        );
 
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -673,28 +639,26 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
-      expect(params.srs).toEqual("EPSG:4326");
-      expect(params.version).toEqual("1.1.0");
+        expect(params.srs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.1.0");
 
-      const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
-      expect(params.bbox).toEqual(
-        `${rect.west},${rect.south},${rect.east},${rect.north}`
-      );
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        expect(params.bbox).toEqual(
+          `${rect.west},${rect.south},${rect.east},${rect.north}`,
+        );
 
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -722,28 +686,26 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
-      expect(params.crs).toEqual("CRS:84");
-      expect(params.version).toEqual("1.3.0");
+        expect(params.crs).toEqual("CRS:84");
+        expect(params.version).toEqual("1.3.0");
 
-      const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
-      expect(params.bbox).toEqual(
-        `${rect.west},${rect.south},${rect.east},${rect.north}`
-      );
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        expect(params.bbox).toEqual(
+          `${rect.west},${rect.south},${rect.east},${rect.north}`,
+        );
 
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -771,28 +733,26 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
-      expect(params.crs).toEqual("CRS:84");
-      expect(params.version).toEqual("1.3.1");
+        expect(params.crs).toEqual("CRS:84");
+        expect(params.version).toEqual("1.3.1");
 
-      const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
-      expect(params.bbox).toEqual(
-        `${rect.west},${rect.south},${rect.east},${rect.north}`
-      );
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        expect(params.bbox).toEqual(
+          `${rect.west},${rect.south},${rect.east},${rect.north}`,
+        );
 
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -809,24 +769,22 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      const uri = new Uri(request.url);
-      const params = queryToObject(uri.query());
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
-      expect(params.format).toEqual("foo");
-      expect(params.format).not.toEqual("image/jpeg");
+        expect(params.format).toEqual("foo");
+        expect(params.format).not.toEqual("image/jpeg");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -933,14 +891,14 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       } else {
         // fail
@@ -978,7 +936,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         Resource._DefaultImplementations.loadWithXhr(
@@ -988,7 +946,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1002,7 +960,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           expect(firstResult.name).toBe("TOP TANK");
           expect(firstResult.description).toContain("GEOSCIENCE AUSTRALIA");
           expect(firstResult.position).toEqual(
-            Cartographic.fromDegrees(145.91299, -30.19445)
+            Cartographic.fromDegrees(145.91299, -30.19445),
           );
         });
     });
@@ -1020,7 +978,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1030,7 +988,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1059,7 +1017,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1069,7 +1027,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1098,7 +1056,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1108,7 +1066,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1137,7 +1095,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1147,7 +1105,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1176,7 +1134,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1186,7 +1144,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1215,7 +1173,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         Resource._DefaultImplementations.loadWithXhr(
@@ -1225,7 +1183,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1293,7 +1251,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         expect(url).not.toContain("json");
@@ -1304,7 +1262,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1334,7 +1292,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
 
@@ -1349,7 +1307,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
             data,
             headers,
             deferred,
-            overrideMimeType
+            overrideMimeType,
           );
         }
       };
@@ -1378,7 +1336,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         expect(url).toContain("1.1.1");
@@ -1394,7 +1352,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1417,7 +1375,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         expect(url).not.toContain("1.1.1");
@@ -1433,7 +1391,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1453,7 +1411,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         expect(url).toContain("1.1.1");
@@ -1469,7 +1427,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
       return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
@@ -1499,7 +1457,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
 
@@ -1514,7 +1472,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1537,7 +1495,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
         if (url.indexOf(encodeURIComponent("text/html")) < 0) {
@@ -1550,7 +1508,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
       };
 
@@ -1605,12 +1563,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       };
 
@@ -1660,12 +1618,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       };
 
@@ -1713,12 +1671,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       };
 
@@ -1771,12 +1729,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       };
 

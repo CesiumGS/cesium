@@ -1,4 +1,4 @@
-import { defined, defaultValue } from "@cesium/engine";
+import { defined } from "@cesium/engine";
 import concatTypedArrays from "./concatTypedArrays.js";
 import MetadataTester from "./MetadataTester.js";
 
@@ -85,9 +85,9 @@ function ImplicitTilingTester() {}
  */
 ImplicitTilingTester.generateSubtreeBuffers = function (
   subtreeDescription,
-  constantOnly
+  constantOnly,
 ) {
-  constantOnly = defaultValue(constantOnly, false);
+  constantOnly = constantOnly ?? false;
 
   // This will be populated by makeBufferViews() and makeBuffers()
   let subtreeJson = {};
@@ -127,14 +127,13 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
   const parsedAvailability = {
     tileAvailability: parseAvailability(subtreeDescription.tileAvailability),
     childSubtreeAvailability: parseAvailability(
-      subtreeDescription.childSubtreeAvailability
+      subtreeDescription.childSubtreeAvailability,
     ),
   };
 
   if (hasContent) {
-    parsedAvailability.contentAvailability = subtreeDescription.contentAvailability.map(
-      parseAvailability
-    );
+    parsedAvailability.contentAvailability =
+      subtreeDescription.contentAvailability.map(parseAvailability);
   }
 
   // to simulate additional buffer views for metadata or other purposes.
@@ -149,35 +148,32 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     count: 0,
   };
 
-  const useLegacySchema = defaultValue(
-    subtreeDescription.useLegacySchema,
-    false
-  );
+  const useLegacySchema = subtreeDescription.useLegacySchema ?? false;
   const bufferViewJsonArray = [];
   gatherBufferViews(
     bufferViewsU8,
     bufferViewJsonArray,
     parsedAvailability.tileAvailability,
-    useLegacySchema
+    useLegacySchema,
   );
 
   if (hasContent) {
-    parsedAvailability.contentAvailability.forEach(function (
-      contentAvailability
-    ) {
-      gatherBufferViews(
-        bufferViewsU8,
-        bufferViewJsonArray,
-        contentAvailability,
-        useLegacySchema
-      );
-    });
+    parsedAvailability.contentAvailability.forEach(
+      function (contentAvailability) {
+        gatherBufferViews(
+          bufferViewsU8,
+          bufferViewJsonArray,
+          contentAvailability,
+          useLegacySchema,
+        );
+      },
+    );
   }
   gatherBufferViews(
     bufferViewsU8,
     bufferViewJsonArray,
     parsedAvailability.childSubtreeAvailability,
-    useLegacySchema
+    useLegacySchema,
   );
 
   // to simulate additional buffer views for metadata or other purposes.
@@ -186,7 +182,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
       bufferViewsU8,
       bufferViewJsonArray,
       parsedAvailability.other,
-      useLegacySchema
+      useLegacySchema,
     );
   }
   if (bufferViewJsonArray.length > 0) {
@@ -210,11 +206,11 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
         },
       };
     } else if (contentAvailabilityArray.length > 1) {
-      subtreeJson.contentAvailability = contentAvailabilityArray.map(function (
-        x
-      ) {
-        return x.availabilityJson;
-      });
+      subtreeJson.contentAvailability = contentAvailabilityArray.map(
+        function (x) {
+          return x.availabilityJson;
+        },
+      );
     } else {
       subtreeJson.contentAvailability =
         contentAvailabilityArray[0].availabilityJson;
@@ -236,7 +232,7 @@ function gatherBufferViews(
   bufferViewsU8,
   bufferViewJsonArray,
   parsedBitstream,
-  useLegacySchema
+  useLegacySchema,
 ) {
   if (defined(parsedBitstream.constant)) {
     parsedBitstream.availabilityJson = {
@@ -340,7 +336,7 @@ function parseAvailability(availability) {
   const includeAvailableCount = availability.includeAvailableCount;
   const parsed = parseAvailabilityDescriptor(
     availability.descriptor,
-    includeAvailableCount
+    includeAvailableCount,
   );
   parsed.isInternal = availability.isInternal;
   parsed.shareBuffer = availability.shareBuffer;
@@ -399,10 +395,10 @@ function addMetadata(
   bufferViewsU8,
   subtreeJson,
   metadataOptions,
-  useLegacySchema
+  useLegacySchema,
 ) {
   const propertyTableResults = MetadataTester.createPropertyTables(
-    metadataOptions.propertyTables
+    metadataOptions.propertyTables,
   );
 
   // Add bufferViews to the list -----------------------------------
@@ -445,7 +441,7 @@ function addMetadata(
   const tileProperties = getPropertiesObjectFromPropertyTable(
     tileTable,
     firstMetadataIndex,
-    useLegacySchema
+    useLegacySchema,
   );
 
   const propertyTables = [];
@@ -479,7 +475,7 @@ function addMetadata(
       const contentProperties = getPropertiesObjectFromPropertyTable(
         contentTable,
         firstMetadataIndex,
-        useLegacySchema
+        useLegacySchema,
       );
       const contentMetadata = {
         class: contentTable.class,
@@ -501,7 +497,7 @@ function addMetadata(
 function getPropertiesObjectFromPropertyTable(
   propertyTable,
   firstMetadataIndex,
-  useLegacySchema
+  useLegacySchema,
 ) {
   const tableProperties = propertyTable.properties;
   const properties = {};

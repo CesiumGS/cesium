@@ -85,7 +85,7 @@ describe(
           enabled: true,
           func: DepthFunction.LESS_OR_EQUAL,
         },
-      })
+      }),
     );
 
     let runtimePrimitive;
@@ -115,7 +115,7 @@ describe(
         const modelResources = new ModelRenderResources(mockModel);
         const nodeResources = new NodeRenderResources(
           modelResources,
-          runtimeNode
+          runtimeNode,
         );
         return new PrimitiveRenderResources(nodeResources, undefined);
       }).toThrowDeveloperError();
@@ -125,11 +125,11 @@ describe(
       const modelResources = new ModelRenderResources(mockModel);
       const nodeResources = new NodeRenderResources(
         modelResources,
-        runtimeNode
+        runtimeNode,
       );
       const primitiveResources = new PrimitiveRenderResources(
         nodeResources,
-        runtimePrimitive
+        runtimePrimitive,
       );
 
       expect(primitiveResources.runtimePrimitive).toBe(runtimePrimitive);
@@ -138,25 +138,25 @@ describe(
       expect(primitiveResources.indices).toBe(primitive.indices);
       expect(primitiveResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
       expect(primitiveResources.positionMin).toEqual(
-        new Cartesian3(-1, -1, -1)
+        new Cartesian3(-1, -1, -1),
       );
       expect(primitiveResources.positionMax).toEqual(new Cartesian3(1, 1, 1));
       // The points are in a cube from -1, -1, -1 to 1, 1, 1. The center is
       // (0, 0, 0). The full diagonal is 2 * sqrt(3), so half is sqrt(3)
       expect(primitiveResources.boundingSphere.center).toEqualEpsilon(
         Cartesian3.ZERO,
-        CesiumMath.EPSILON9
+        CesiumMath.EPSILON9,
       );
       expect(primitiveResources.boundingSphere.radius).toEqualEpsilon(
         Math.sqrt(3),
-        CesiumMath.EPSILON9
+        CesiumMath.EPSILON9,
       );
       expect(primitiveResources.uniformMap).toEqual({});
       expect(primitiveResources.lightingOptions.lightingModel).toEqual(
-        LightingModel.UNLIT
+        LightingModel.UNLIT,
       );
       expect(
-        RenderState.getState(primitiveResources.renderStateOptions)
+        RenderState.getState(primitiveResources.renderStateOptions),
       ).toEqual(defaultRenderState);
 
       expect(primitiveResources.hasSilhouette).toBe(false);
@@ -167,36 +167,36 @@ describe(
       const modelResources = new ModelRenderResources(mockModel);
       const nodeResources = new NodeRenderResources(
         modelResources,
-        runtimeNode
+        runtimeNode,
       );
       const primitiveResources = new PrimitiveRenderResources(
         nodeResources,
-        runtimePrimitiveWithoutIndices
+        runtimePrimitiveWithoutIndices,
       );
 
       expect(primitiveResources.count).toBe(8);
       expect(primitiveResources.indices).not.toBeDefined();
       expect(primitiveResources.primitiveType).toBe(PrimitiveType.POINTS);
       expect(primitiveResources.positionMin).toEqual(
-        new Cartesian3(-2, -2, -2)
+        new Cartesian3(-2, -2, -2),
       );
       expect(primitiveResources.positionMax).toEqual(new Cartesian3(2, 2, 2));
       // The points are in a cube from -2, -2, -2 to 2, 2, 2. The center is
       // (0, 0, 0). The full diagonal is 4 * sqrt(3), so half is 2 * sqrt(3)
       expect(primitiveResources.boundingSphere.center).toEqualEpsilon(
         Cartesian3.ZERO,
-        CesiumMath.EPSILON9
+        CesiumMath.EPSILON9,
       );
       expect(primitiveResources.boundingSphere.radius).toEqualEpsilon(
         2.0 * Math.sqrt(3),
-        CesiumMath.EPSILON9
+        CesiumMath.EPSILON9,
       );
       expect(primitiveResources.uniformMap).toEqual({});
       expect(primitiveResources.lightingOptions.lightingModel).toEqual(
-        LightingModel.UNLIT
+        LightingModel.UNLIT,
       );
       expect(
-        RenderState.getState(primitiveResources.renderStateOptions)
+        RenderState.getState(primitiveResources.renderStateOptions),
       ).toEqual(defaultRenderState);
     });
 
@@ -211,13 +211,13 @@ describe(
 
       const nodeResources = new NodeRenderResources(
         modelResources,
-        runtimeNode
+        runtimeNode,
       );
       nodeResources.shaderBuilder.addDefine("NODE");
 
       const primitiveResources = new PrimitiveRenderResources(
         nodeResources,
-        runtimePrimitive
+        runtimePrimitive,
       );
       primitiveResources.shaderBuilder.addDefine("PRIMITIVE");
 
@@ -225,10 +225,10 @@ describe(
 
       // The primitive's shader builder should be a clone of the node's
       expect(primitiveResources.shaderBuilder).not.toBe(
-        modelResources.shaderBuilder
+        modelResources.shaderBuilder,
       );
       expect(primitiveResources.shaderBuilder).not.toBe(
-        modelResources.shaderBuilder
+        modelResources.shaderBuilder,
       );
 
       // The primitive should have inherited the renderStateOptions of the model's
@@ -243,15 +243,15 @@ describe(
       // The defines should cascade through the three levels
       ShaderBuilderTester.expectHasFragmentDefines(
         modelResources.shaderBuilder,
-        ["MODEL"]
+        ["MODEL"],
       );
       ShaderBuilderTester.expectHasFragmentDefines(
         nodeResources.shaderBuilder,
-        ["MODEL", "NODE"]
+        ["MODEL", "NODE"],
       );
       ShaderBuilderTester.expectHasFragmentDefines(
         primitiveResources.shaderBuilder,
-        ["MODEL", "NODE", "PRIMITIVE"]
+        ["MODEL", "NODE", "PRIMITIVE"],
       );
     });
 
@@ -264,14 +264,14 @@ describe(
 
       const nodeResources = new NodeRenderResources(
         modelResources,
-        runtimeNode
+        runtimeNode,
       );
       nodeResources.shaderBuilder.addDefine("NODE");
       nodeResources.renderStateOptions.blending = BlendingState.ALPHA_BLEND;
 
       const primitiveResources = new PrimitiveRenderResources(
         nodeResources,
-        runtimePrimitive
+        runtimePrimitive,
       );
 
       expect(primitiveResources.runtimeNode).toBe(runtimeNode);
@@ -282,9 +282,9 @@ describe(
         enabled: true,
       });
       expect(primitiveResources.renderStateOptions.blending).toEqual(
-        BlendingState.ALPHA_BLEND
+        BlendingState.ALPHA_BLEND,
       );
     });
   },
-  "WebGL"
+  "WebGL",
 );

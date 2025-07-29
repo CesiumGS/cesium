@@ -39,17 +39,9 @@ describe("Core/WallGeometry", function () {
     const geometry = WallGeometry.createGeometry(
       new WallGeometry({
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          49.0,
-          18.0,
-          5000.0,
-          49.0,
-          18.0,
-          1000.0,
+          49.0, 18.0, 1000.0, 49.0, 18.0, 5000.0, 49.0, 18.0, 1000.0,
         ]),
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
   });
@@ -58,29 +50,19 @@ describe("Core/WallGeometry", function () {
     let geometry = WallGeometry.createGeometry(
       new WallGeometry({
         positions: Cartesian3.fromDegreesArray([
-          49.0,
-          18.0,
-          49.0,
-          18.0,
-          49.0,
-          18.0,
+          49.0, 18.0, 49.0, 18.0, 49.0, 18.0,
         ]),
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
 
     geometry = WallGeometry.createGeometry(
       new WallGeometry({
         positions: Cartesian3.fromDegreesArray([
-          49.0,
-          18.0,
-          49.0,
-          18.0,
-          49.0,
-          18.0,
+          49.0, 18.0, 49.0, 18.0, 49.0, 18.0,
         ]),
         maximumHeights: [0, 0, 0],
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
   });
@@ -90,12 +72,10 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArray([
-          -47.93121266896352,
-          -15.771192496304398,
-          -47.93119792786269,
+          -47.93121266896352, -15.771192496304398, -47.93119792786269,
           -15.771148001875085,
         ]),
-      })
+      }),
     );
   });
 
@@ -104,14 +84,9 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
+          49.0, 18.0, 1000.0, 50.0, 18.0, 1000.0,
         ]),
-      })
+      }),
     );
 
     const positions = w.attributes.position.values;
@@ -121,12 +96,12 @@ describe("Core/WallGeometry", function () {
     expect(w.indices.length).toEqual(numTriangles * 3);
 
     let cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 0)
+      Cartesian3.fromArray(positions, 0),
     );
     expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 3)
+      Cartesian3.fromArray(positions, 3),
     );
     expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
   });
@@ -136,23 +111,10 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArrayHeights([
-          -107.0,
-          43.0,
-          1000.0,
-          -106.0,
-          43.0,
-          1000.0,
-          -106.0,
-          42.0,
-          1000.0,
-          -107.0,
-          42.0,
-          1000.0,
-          -107.0,
-          43.0,
-          1000.0,
+          -107.0, 43.0, 1000.0, -106.0, 43.0, 1000.0, -106.0, 42.0, 1000.0,
+          -107.0, 42.0, 1000.0, -107.0, 43.0, 1000.0,
         ]),
-      })
+      }),
     );
 
     const positions = w.attributes.position.values;
@@ -162,12 +124,12 @@ describe("Core/WallGeometry", function () {
     expect(w.indices.length).toEqual(numTriangles * 3);
 
     let cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 0)
+      Cartesian3.fromArray(positions, 0),
     );
     expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 3)
+      Cartesian3.fromArray(positions, 3),
     );
     expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
   });
@@ -177,16 +139,11 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
+          49.0, 18.0, 1000.0, 50.0, 18.0, 1000.0,
         ]),
         minimumHeights: [1000.0, 2000.0],
         maximumHeights: [3000.0, 4000.0],
-      })
+      }),
     );
 
     const positions = w.attributes.position.values;
@@ -196,22 +153,22 @@ describe("Core/WallGeometry", function () {
     expect(w.indices.length).toEqual(numTriangles * 3);
 
     let cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 0)
+      Cartesian3.fromArray(positions, 0),
     );
     expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 3)
+      Cartesian3.fromArray(positions, 3),
     );
     expect(cartographic.height).toEqualEpsilon(3000.0, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 6)
+      Cartesian3.fromArray(positions, 6),
     );
     expect(cartographic.height).toEqualEpsilon(2000.0, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 9)
+      Cartesian3.fromArray(positions, 9),
     );
     expect(cartographic.height).toEqualEpsilon(4000.0, CesiumMath.EPSILON8);
   });
@@ -221,29 +178,11 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          49.0,
-          18.0,
-          2000.0,
-          50.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
-          51.0,
-          18.0,
-          1000.0,
-          51.0,
-          18.0,
+          49.0, 18.0, 1000.0, 49.0, 18.0, 2000.0, 50.0, 18.0, 1000.0, 50.0,
+          18.0, 1000.0, 50.0, 18.0, 1000.0, 51.0, 18.0, 1000.0, 51.0, 18.0,
           1000.0,
         ]),
-      })
+      }),
     );
 
     const numPositions = 8;
@@ -253,12 +192,12 @@ describe("Core/WallGeometry", function () {
     expect(w.indices.length).toEqual(numTriangles * 3);
 
     let cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 0)
+      Cartesian3.fromArray(positions, 0),
     );
     expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 3)
+      Cartesian3.fromArray(positions, 3),
     );
     expect(cartographic.height).toEqualEpsilon(2000.0, CesiumMath.EPSILON8);
   });
@@ -271,25 +210,25 @@ describe("Core/WallGeometry", function () {
           new Cartesian3(
             4347090.215457887,
             1061403.4237998386,
-            4538066.036525028
+            4538066.036525028,
           ),
           new Cartesian3(
             4348147.589624987,
             1043897.8776143644,
-            4541092.234751661
+            4541092.234751661,
           ),
           new Cartesian3(
             4348147.589882754,
             1043897.8776762491,
-            4541092.234492364
+            4541092.234492364,
           ),
           new Cartesian3(
             4335659.882947743,
             1047571.602084736,
-            4552098.654605664
+            4552098.654605664,
           ),
         ],
-      })
+      }),
     );
 
     const numPositions = 8;
@@ -319,7 +258,7 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: inputPositions,
-      })
+      }),
     );
     expect(w).toBeDefined();
 
@@ -335,11 +274,11 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: expectedPositions,
-      })
+      }),
     );
     const positions = w.attributes.position.values;
     expect(positions.length).toEqual(
-      expectedW.attributes.position.values.length
+      expectedW.attributes.position.values.length,
     );
   });
 
@@ -348,23 +287,10 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          6000.0,
-          50.0,
-          18.0,
-          10000.0,
-          51.0,
-          18.0,
-          1000.0,
+          49.0, 18.0, 1000.0, 50.0, 18.0, 1000.0, 50.0, 18.0, 6000.0, 50.0,
+          18.0, 10000.0, 51.0, 18.0, 1000.0,
         ]),
-      })
+      }),
     );
 
     const numPositions = 8;
@@ -374,12 +300,12 @@ describe("Core/WallGeometry", function () {
     expect(w.indices.length).toEqual(numTriangles * 3);
 
     let cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 0)
+      Cartesian3.fromArray(positions, 0),
     );
     expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 9)
+      Cartesian3.fromArray(positions, 9),
     );
     expect(cartographic.height).toEqualEpsilon(10000.0, CesiumMath.EPSILON8);
   });
@@ -389,17 +315,9 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.ALL,
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
-          51.0,
-          18.0,
-          1000.0,
+          49.0, 18.0, 1000.0, 50.0, 18.0, 1000.0, 51.0, 18.0, 1000.0,
         ]),
-      })
+      }),
     );
 
     const numPositions = 8;
@@ -417,36 +335,14 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.ALL,
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
-          51.0,
-          18.0,
-          1000.0,
+          49.0, 18.0, 1000.0, 50.0, 18.0, 1000.0, 51.0, 18.0, 1000.0,
         ]),
-      })
+      }),
     );
 
     expect(w.attributes.st.values.length).toEqual(4 * 2 * 2);
     expect(w.attributes.st.values).toEqual([
-      0.0,
-      0.0,
-      0.0,
-      1.0,
-      0.5,
-      0.0,
-      0.5,
-      1.0,
-      0.5,
-      0.0,
-      0.5,
-      1.0,
-      1.0,
-      0.0,
-      1.0,
+      0.0, 0.0, 0.0, 1.0, 0.5, 0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 1.0, 0.0, 1.0,
       1.0,
     ]);
   });
@@ -456,39 +352,15 @@ describe("Core/WallGeometry", function () {
       new WallGeometry({
         vertexFormat: VertexFormat.ALL,
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
-          51.0,
-          18.0,
-          1000.0,
+          49.0, 18.0, 1000.0, 50.0, 18.0, 1000.0, 50.0, 18.0, 1000.0, 51.0,
+          18.0, 1000.0,
         ]),
-      })
+      }),
     );
 
     expect(w.attributes.st.values.length).toEqual(4 * 2 * 2);
     expect(w.attributes.st.values).toEqual([
-      0.0,
-      0.0,
-      0.0,
-      1.0,
-      0.5,
-      0.0,
-      0.5,
-      1.0,
-      0.5,
-      0.0,
-      0.5,
-      1.0,
-      1.0,
-      0.0,
-      1.0,
+      0.0, 0.0, 0.0, 1.0, 0.5, 0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 1.0, 0.0, 1.0,
       1.0,
     ]);
   });
@@ -507,16 +379,11 @@ describe("Core/WallGeometry", function () {
       WallGeometry.fromConstantHeights({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArrayHeights([
-          49.0,
-          18.0,
-          1000.0,
-          50.0,
-          18.0,
-          1000.0,
+          49.0, 18.0, 1000.0, 50.0, 18.0, 1000.0,
         ]),
         minimumHeight: min,
         maximumHeight: max,
-      })
+      }),
     );
 
     const numPositions = 4;
@@ -526,22 +393,22 @@ describe("Core/WallGeometry", function () {
     expect(w.indices.length).toEqual(numTriangles * 3);
 
     let cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 0)
+      Cartesian3.fromArray(positions, 0),
     );
     expect(cartographic.height).toEqualEpsilon(min, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 3)
+      Cartesian3.fromArray(positions, 3),
     );
     expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 6)
+      Cartesian3.fromArray(positions, 6),
     );
     expect(cartographic.height).toEqualEpsilon(min, CesiumMath.EPSILON8);
 
     cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 9)
+      Cartesian3.fromArray(positions, 9),
     );
     expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
   });
@@ -558,28 +425,8 @@ describe("Core/WallGeometry", function () {
     ellipsoid: Ellipsoid.UNIT_SPHERE,
   });
   const packedInstance = [
-    3.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    1.0,
-    1.0,
-    1.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.01,
+    3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+    1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01,
   ];
   createPackableSpecs(WallGeometry, wall, packedInstance);
 });

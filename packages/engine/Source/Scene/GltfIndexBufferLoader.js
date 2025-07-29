@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -27,6 +27,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {object} [options.primitive] The primitive containing the Draco extension.
  * @param {object} [options.draco] The Draco extension object.
  * @param {string} [options.cacheKey] The cache key of the resource.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
@@ -35,17 +36,18 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function GltfIndexBufferLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const accessorId = options.accessorId;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
+  const primitive = options.primitive;
   const draco = options.draco;
   const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  const asynchronous = options.asynchronous ?? true;
+  const loadBuffer = options.loadBuffer ?? false;
+  const loadTypedArray = options.loadTypedArray ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -55,7 +57,7 @@ function GltfIndexBufferLoader(options) {
   Check.typeOf.object("options.baseResource", baseResource);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
   //>>includeEnd('debug');
@@ -68,6 +70,7 @@ function GltfIndexBufferLoader(options) {
   this._gltf = gltf;
   this._accessorId = accessorId;
   this._indexDatatype = indexDatatype;
+  this._primitive = primitive;
   this._draco = draco;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
@@ -174,6 +177,7 @@ async function loadFromDraco(indexBufferLoader) {
   try {
     const dracoLoader = resourceCache.getDracoLoader({
       gltf: indexBufferLoader._gltf,
+      primitive: indexBufferLoader._primitive,
       draco: indexBufferLoader._draco,
       gltfResource: indexBufferLoader._gltfResource,
       baseResource: indexBufferLoader._baseResource,
@@ -222,7 +226,7 @@ async function loadFromBufferView(indexBufferLoader) {
     const bufferViewTypedArray = bufferViewLoader.typedArray;
     indexBufferLoader._typedArray = createIndicesTypedArray(
       indexBufferLoader,
-      bufferViewTypedArray
+      bufferViewTypedArray,
     );
     indexBufferLoader._state = ResourceLoaderState.PROCESSING;
     return indexBufferLoader;
@@ -254,7 +258,7 @@ function createIndicesTypedArray(indexBufferLoader, bufferViewTypedArray) {
     byteOffset = 0;
     deprecationWarning(
       "index-buffer-unaligned",
-      `The index array is not aligned to a ${indexSize}-byte boundary.`
+      `The index array is not aligned to a ${indexSize}-byte boundary.`,
     );
   }
 
@@ -287,7 +291,7 @@ function CreateIndexBufferJob() {
 CreateIndexBufferJob.prototype.set = function (
   typedArray,
   indexDatatype,
-  context
+  context,
 ) {
   this.typedArray = typedArray;
   this.indexDatatype = indexDatatype;
@@ -298,7 +302,7 @@ CreateIndexBufferJob.prototype.execute = function () {
   this.buffer = createIndexBuffer(
     this.typedArray,
     this.indexDatatype,
-    this.context
+    this.context,
   );
 };
 
@@ -411,6 +415,7 @@ GltfIndexBufferLoader.prototype.unload = function () {
   this._typedArray = undefined;
   this._buffer = undefined;
   this._gltf = undefined;
+  this._primitive = undefined;
 };
 
 export default GltfIndexBufferLoader;

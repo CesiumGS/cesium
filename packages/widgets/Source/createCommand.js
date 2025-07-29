@@ -1,4 +1,4 @@
-import { defaultValue, defined, DeveloperError, Event } from "@cesium/engine";
+import { defined, DeveloperError, Event } from "@cesium/engine";
 import knockout from "./ThirdParty/knockout.js";
 
 /**
@@ -21,7 +21,7 @@ function createCommand(func, canExecute) {
   }
   //>>includeEnd('debug');
 
-  canExecute = defaultValue(canExecute, true);
+  canExecute = canExecute ?? true;
 
   const beforeExecute = new Event();
   const afterExecute = new Event();

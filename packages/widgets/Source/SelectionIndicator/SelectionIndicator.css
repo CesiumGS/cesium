@@ -5,7 +5,9 @@
   pointer-events: none;
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0s 0.2s, opacity 0.2s ease-in;
+  transition:
+    visibility 0s 0.2s,
+    opacity 0.2s ease-in;
 }
 
 .cesium-selection-wrapper-visible {

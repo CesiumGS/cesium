@@ -91,7 +91,7 @@ describe(
         PrimitiveOutlinePipelineStage.process(
           renderResources,
           primitive,
-          frameState
+          frameState,
         );
 
         const context = frameState.context;
@@ -135,11 +135,11 @@ describe(
 
         expect(outlineCoordinates.index).toBe(1);
         expect(outlineCoordinates.vertexBuffer).toBe(
-          primitive.outlineCoordinates.buffer
+          primitive.outlineCoordinates.buffer,
         );
         expect(outlineCoordinates.componentsPerAttribute).toBe(3);
         expect(outlineCoordinates.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(outlineCoordinates.offsetInBytes).toBe(0);
         expect(outlineCoordinates.strideInBytes).not.toBeDefined();
@@ -147,5 +147,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

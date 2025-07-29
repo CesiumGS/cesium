@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import WebGLConstants from "./WebGLConstants.js";
@@ -168,7 +167,7 @@ ComponentDatatype.fromTypedArray = function (array) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "array must be an Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, or Float64Array."
+    "array must be an Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, or Float64Array.",
   );
   //>>includeEnd('debug');
 };
@@ -213,7 +212,7 @@ ComponentDatatype.validate = function (componentDatatype) {
  */
 ComponentDatatype.createTypedArray = function (
   componentDatatype,
-  valuesOrLength
+  valuesOrLength,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(componentDatatype)) {
@@ -263,7 +262,7 @@ ComponentDatatype.createArrayBufferView = function (
   componentDatatype,
   buffer,
   byteOffset,
-  length
+  length,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(componentDatatype)) {
@@ -274,12 +273,11 @@ ComponentDatatype.createArrayBufferView = function (
   }
   //>>includeEnd('debug');
 
-  byteOffset = defaultValue(byteOffset, 0);
-  length = defaultValue(
-    length,
+  byteOffset = byteOffset ?? 0;
+  length =
+    length ??
     (buffer.byteLength - byteOffset) /
-      ComponentDatatype.getSizeInBytes(componentDatatype)
-  );
+      ComponentDatatype.getSizeInBytes(componentDatatype);
 
   switch (componentDatatype) {
     case ComponentDatatype.BYTE:

@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getMagic from "../Core/getMagic.js";
@@ -222,9 +221,9 @@ Composite3DTileContent.fromTileType = async function (
   resource,
   arrayBuffer,
   byteOffset,
-  factory
+  factory,
 ) {
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
 
   const uint8Array = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
@@ -233,7 +232,7 @@ Composite3DTileContent.fromTileType = async function (
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      `Only Composite Tile version 1 is supported. Version ${version} is not.`
+      `Only Composite Tile version 1 is supported. Version ${version} is not.`,
     );
   }
   byteOffset += sizeOfUint32;
@@ -278,11 +277,11 @@ Composite3DTileContent.fromTileType = async function (
 
     if (defined(contentFactory)) {
       promises[i] = Promise.resolve(
-        contentFactory(tileset, tile, childResource, arrayBuffer, byteOffset)
+        contentFactory(tileset, tile, childResource, arrayBuffer, byteOffset),
       );
     } else {
       throw new RuntimeError(
-        `Unknown tile content type, ${tileType}, inside Composite tile`
+        `Unknown tile content type, ${tileType}, inside Composite tile`,
       );
     }
 
@@ -294,7 +293,7 @@ Composite3DTileContent.fromTileType = async function (
     tileset,
     tile,
     resource,
-    innerContents
+    innerContents,
   );
   return content;
 };
@@ -317,7 +316,7 @@ Composite3DTileContent.prototype.getFeature = function (batchId) {
 
 Composite3DTileContent.prototype.applyDebugSettings = function (
   enabled,
-  color
+  color,
 ) {
   const contents = this._contents;
   const length = contents.length;

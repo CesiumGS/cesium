@@ -1,7 +1,6 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -160,7 +159,7 @@ Vector3DTileGeometry.packedSphereLength = Cartesian3.packedLength + 1;
 
 function packBuffer(geometries) {
   const packedBuffer = new Float64Array(
-    Matrix4.packedLength + Cartesian3.packedLength
+    Matrix4.packedLength + Cartesian3.packedLength,
   );
 
   let offset = 0;
@@ -213,7 +212,7 @@ function unpackBuffer(geometries, packedBuffer) {
 
 const createVerticesTaskProcessor = new TaskProcessor(
   "createVectorTileGeometries",
-  5
+  5,
 );
 const scratchColor = new Color();
 
@@ -245,12 +244,14 @@ function createPrimitive(geometries) {
       }
       if (defined(geometries._cylinders)) {
         cylinders = geometries._cylinders = cylinders.slice();
-        cylinderBatchIds = geometries._cylinderBatchIds = cylinderBatchIds.slice();
+        cylinderBatchIds = geometries._cylinderBatchIds =
+          cylinderBatchIds.slice();
         length += cylinderBatchIds.length;
       }
       if (defined(geometries._ellipsoids)) {
         ellipsoids = geometries._ellipsoids = ellipsoids.slice();
-        ellipsoidBatchIds = geometries._ellipsoidBatchIds = ellipsoidBatchIds.slice();
+        ellipsoidBatchIds = geometries._ellipsoidBatchIds =
+          ellipsoidBatchIds.slice();
         length += ellipsoidBatchIds.length;
       }
       if (defined(geometries._spheres)) {
@@ -302,10 +303,11 @@ function createPrimitive(geometries) {
       packedBuffer: packedBuffer.buffer,
     };
 
-    const verticesPromise = (geometries._verticesPromise = createVerticesTaskProcessor.scheduleTask(
-      parameters,
-      transferrableObjects
-    ));
+    const verticesPromise = (geometries._verticesPromise =
+      createVerticesTaskProcessor.scheduleTask(
+        parameters,
+        transferrableObjects,
+      ));
     if (!defined(verticesPromise)) {
       // Postponed
       return;
@@ -362,7 +364,7 @@ function finishPrimitive(geometries) {
       boundingVolume: geometries._boundingVolume,
       boundingVolumes: geometries._boundingVolumes,
       center: geometries._center,
-      pickObject: defaultValue(geometries._pickObject, geometries),
+      pickObject: geometries._pickObject ?? geometries,
     });
 
     geometries._boxes = undefined;

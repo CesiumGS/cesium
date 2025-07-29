@@ -238,7 +238,7 @@ function checkMatchingSubtreeShape(a, b) {
  * @private
  */
 ImplicitTileCoordinates.prototype.getDescendantCoordinates = function (
-  offsetCoordinates
+  offsetCoordinates,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("offsetCoordinates", offsetCoordinates);
@@ -281,7 +281,7 @@ ImplicitTileCoordinates.prototype.getDescendantCoordinates = function (
  * @private
  */
 ImplicitTileCoordinates.prototype.getAncestorCoordinates = function (
-  offsetLevels
+  offsetLevels,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("offsetLevels", offsetLevels);
@@ -328,7 +328,7 @@ ImplicitTileCoordinates.prototype.getAncestorCoordinates = function (
  * @returns {ImplicitTileCoordinates} The offset between the ancestor and the descendant
  */
 ImplicitTileCoordinates.prototype.getOffsetCoordinates = function (
-  descendantCoordinates
+  descendantCoordinates,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("descendantCoordinates", descendantCoordinates);
@@ -382,11 +382,11 @@ ImplicitTileCoordinates.prototype.getChildCoordinates = function (childIndex) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("childIndex", childIndex);
   const branchingFactor = ImplicitSubdivisionScheme.getBranchingFactor(
-    this.subdivisionScheme
+    this.subdivisionScheme,
   );
   if (childIndex < 0 || branchingFactor <= childIndex) {
     throw new DeveloperError(
-      `childIndex must be at least 0 and less than ${branchingFactor}`
+      `childIndex must be at least 0 and less than ${branchingFactor}`,
     );
   }
   //>>includeEnd('debug');
@@ -436,7 +436,7 @@ ImplicitTileCoordinates.prototype.getSubtreeCoordinates = function () {
  */
 ImplicitTileCoordinates.prototype.getParentSubtreeCoordinates = function () {
   return this.getAncestorCoordinates(
-    (this.level % this.subtreeLevels) + this.subtreeLevels
+    (this.level % this.subtreeLevels) + this.subtreeLevels,
   );
 };
 
@@ -448,7 +448,7 @@ ImplicitTileCoordinates.prototype.getParentSubtreeCoordinates = function () {
  * @private
  */
 ImplicitTileCoordinates.prototype.isAncestor = function (
-  descendantCoordinates
+  descendantCoordinates,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("descendantCoordinates", descendantCoordinates);
@@ -565,13 +565,13 @@ ImplicitTileCoordinates.fromMortonIndex = function (
   subdivisionScheme,
   subtreeLevels,
   level,
-  mortonIndex
+  mortonIndex,
 ) {
   let coordinatesArray;
   if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
     coordinatesArray = MortonOrder.decode3D(
       mortonIndex,
-      scratchCoordinatesArray
+      scratchCoordinatesArray,
     );
     return new ImplicitTileCoordinates({
       subdivisionScheme: subdivisionScheme,
@@ -606,7 +606,7 @@ ImplicitTileCoordinates.fromMortonIndex = function (
 ImplicitTileCoordinates.fromTileIndex = function (
   subdivisionScheme,
   subtreeLevels,
-  tileIndex
+  tileIndex,
 ) {
   let level;
   let levelOffset;
@@ -640,7 +640,7 @@ ImplicitTileCoordinates.fromTileIndex = function (
     subdivisionScheme,
     subtreeLevels,
     level,
-    mortonIndex
+    mortonIndex,
   );
 };
 

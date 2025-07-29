@@ -1,4 +1,4 @@
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Event from "../../Core/Event.js";
@@ -167,14 +167,14 @@ function addAnimation(collection, animation, options) {
  * });
  */
 ModelAnimationCollection.prototype.add = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const model = this._model;
 
   //>>includeStart('debug', pragmas.debug);
   if (!model.ready) {
     throw new DeveloperError(
-      "Animations are not loaded.  Wait for Model.ready to be true."
+      "Animations are not loaded.  Wait for Model.ready to be true.",
     );
   }
   //>>includeEnd('debug');
@@ -184,7 +184,7 @@ ModelAnimationCollection.prototype.add = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.name) && !defined(options.index)) {
     throw new DeveloperError(
-      "Either options.name or options.index must be defined."
+      "Either options.name or options.index must be defined.",
     );
   }
 
@@ -251,14 +251,14 @@ ModelAnimationCollection.prototype.add = function (options) {
  * });
  */
 ModelAnimationCollection.prototype.addAll = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const model = this._model;
 
   //>>includeStart('debug', pragmas.debug);
   if (!model.ready) {
     throw new DeveloperError(
-      "Animations are not loaded.  Wait for Model.ready to be true."
+      "Animations are not loaded.  Wait for Model.ready to be true.",
     );
   }
 
@@ -371,7 +371,7 @@ ModelAnimationCollection.prototype.get = function (index) {
 
   if (index >= this._runtimeAnimations.length || index < 0) {
     throw new DeveloperError(
-      "index must be valid within the range of the collection"
+      "index must be valid within the range of the collection",
     );
   }
   //>>includeEnd('debug');
@@ -384,7 +384,7 @@ const animationsToRemove = [];
 function createAnimationRemovedFunction(
   modelAnimationCollection,
   model,
-  animation
+  animation,
 ) {
   return function () {
     modelAnimationCollection.animationRemoved.raiseEvent(model, animation);
@@ -426,9 +426,9 @@ ModelAnimationCollection.prototype.update = function (frameState) {
 
     if (!defined(runtimeAnimation._computedStartTime)) {
       runtimeAnimation._computedStartTime = JulianDate.addSeconds(
-        defaultValue(runtimeAnimation.startTime, sceneTime),
+        runtimeAnimation.startTime ?? sceneTime,
         runtimeAnimation.delay,
-        new JulianDate()
+        new JulianDate(),
       );
     }
 
@@ -450,7 +450,7 @@ ModelAnimationCollection.prototype.update = function (frameState) {
     if (duration !== 0.0) {
       const seconds = JulianDate.secondsDifference(
         reachedStopTime ? stopTime : sceneTime,
-        startTime
+        startTime,
       );
       delta = defined(runtimeAnimation._animationTime)
         ? runtimeAnimation._animationTime(duration, seconds)
@@ -511,7 +511,7 @@ ModelAnimationCollection.prototype.update = function (frameState) {
       localAnimationTime = CesiumMath.clamp(
         localAnimationTime,
         runtimeAnimation.localStartTime,
-        runtimeAnimation.localStopTime
+        runtimeAnimation.localStopTime,
       );
 
       runtimeAnimation.animate(localAnimationTime);
@@ -542,7 +542,7 @@ ModelAnimationCollection.prototype.update = function (frameState) {
     const animationToRemove = animationsToRemove[j];
     runtimeAnimations.splice(runtimeAnimations.indexOf(animationToRemove), 1);
     frameState.afterRender.push(
-      createAnimationRemovedFunction(this, model, animationToRemove)
+      createAnimationRemovedFunction(this, model, animationToRemove),
     );
   }
   animationsToRemove.length = 0;

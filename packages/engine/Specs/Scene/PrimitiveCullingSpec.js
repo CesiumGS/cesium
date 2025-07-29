@@ -2,8 +2,6 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  defaultValue,
-  defined,
   GeometryInstance,
   Math as CesiumMath,
   PerspectiveFrustum,
@@ -38,11 +36,11 @@ describe(
       scene = createScene();
       scene.primitives.destroyPrimitives = false;
 
-      return Resource.fetchImage("./Data/Images/Green.png").then(function (
-        image
-      ) {
-        greenImage = image;
-      });
+      return Resource.fetchImage("./Data/Images/Green.png").then(
+        function (image) {
+          greenImage = image;
+        },
+      );
     });
 
     afterAll(function () {
@@ -116,7 +114,7 @@ describe(
     }
 
     function createPrimitive(height) {
-      height = defaultValue(height, 0);
+      height = height ?? 0;
       const primitive = new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({
@@ -158,18 +156,12 @@ describe(
       // render until all labels have been updated
       return pollToPromise(function () {
         scene.renderForSpecs();
-        const backgroundBillboard = labels._backgroundBillboardCollection.get(
-          0
-        );
-        return (
-          (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
-          labels._labelsToUpdate.length === 0
-        );
+        return labels.ready;
       });
     }
 
     function createLabels(height) {
-      height = defaultValue(height, 0);
+      height = height ?? 0;
       const labels = new LabelCollection();
       const center = Cartesian3.fromDegrees(-96.5, 33.5, height);
       labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
@@ -234,7 +226,7 @@ describe(
     });
 
     function createBillboard(height) {
-      height = defaultValue(height, 0);
+      height = height ?? 0;
       const billboards = new BillboardCollection();
       billboards.add({
         position: Cartesian3.fromDegrees(-96.5, 33.5, height),
@@ -298,7 +290,7 @@ describe(
     });
 
     function createPolylines(height) {
-      height = defaultValue(height, 0);
+      height = height ?? 0;
       const material = Material.fromType("Color");
       material.translucent = false;
 
@@ -337,5 +329,5 @@ describe(
       testOcclusionCull(primitive);
     });
   },
-  "WebGL"
+  "WebGL",
 );

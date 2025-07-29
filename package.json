@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.119.0",
+  "version": "1.131.1-ion.1",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -38,6 +38,7 @@
     "./Build/*": "./Build/*",
     "./Build/*.js": null,
     ".": {
+      "types": "./Source/Cesium.d.ts",
       "require": "./index.cjs",
       "import": "./Source/Cesium.js"
     }
@@ -50,20 +51,20 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "^10.0.0",
-    "@cesium/widgets": "^7.0.0"
+    "@cesium/engine": "^18.3.1-ion.1",
+    "@cesium/widgets": "^12.3.1-ion.1"
   },
   "devDependencies": {
+    "@cesium/eslint-config": "^12.0.0",
     "@playwright/test": "^1.41.1",
-    "chokidar": "^3.5.3",
-    "cloc": "^2.0.0-cloc",
+    "chokidar": "^4.0.1",
+    "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
-    "esbuild": "^0.21.4",
+    "esbuild": "^0.25.0",
     "eslint": "^9.1.1",
-    "eslint-config-cesium": "^11.0.1",
     "eslint-plugin-html": "^8.1.1",
-    "express": "^4.17.1",
-    "globals": "^15.1.0",
+    "express": "^5.1.0",
+    "globals": "^16.0.0",
     "globby": "^14.0.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
@@ -89,22 +90,21 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-sourcemap-loader": "^0.4.0",
     "karma-spec-reporter": "^0.0.36",
-    "markdownlint-cli": "^0.41.0",
+    "markdownlint-cli": "^0.45.0",
     "merge-stream": "^2.0.0",
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
     "open": "^10.0.2",
-    "prettier": "2.1.2",
+    "prettier": "3.6.1",
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
-    "rimraf": "^5.0.0",
-    "sinon": "^18.0.0",
+    "rimraf": "^6.0.1",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^5.3.2",
-    "yargs": "^17.0.1"
+    "yargs": "^18.0.0"
   },
   "scripts": {
-    "prepare": "gulp prepare && husky && playwright install --with-deps",
+    "prepare": "gulp prepare && husky && node scripts/isCI.js || playwright install --with-deps",
     "start": "node server.js",
     "start-public": "node server.js --public",
     "build": "gulp build",
@@ -138,20 +138,21 @@
     "test-e2e-update": "playwright test -c Specs/e2e/playwright.config.js --project=chromium -u",
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
-    "prettier": "prettier --write --no-config \"**/*\"",
-    "prettier-check": "prettier --check --no-config \"**/*\""
+    "prettier": "prettier --write \"**/*\"",
+    "prettier-check": "prettier --check \"**/*\"",
+    "cspell": "npx cspell lint -c .vscode/cspell.json --unique --no-progress"
   },
   "engines": {
-    "node": ">=18.18.0"
+    "node": ">=20.19.0"
   },
   "lint-staged": {
     "*.{js,cjs,mjs,css,html}": [
       "eslint --cache --quiet",
-      "prettier --write --no-config"
+      "prettier --write"
     ],
     "*.md": [
       "markdownlint",
-      "prettier --write --no-config"
+      "prettier --write"
     ]
   },
   "workspaces": [

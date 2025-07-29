@@ -64,7 +64,7 @@ describe(
           scene.renderForSpecs();
           const newLength = scene.frameState.commandList.length;
           expect(newLength).toEqual(originalLength + 2);
-        }
+        },
       );
     });
 
@@ -84,7 +84,7 @@ describe(
           scene.pickForSpecs();
           const newLength = scene.frameState.commandList.length;
           expect(newLength).toEqual(originalLength);
-        }
+        },
       );
     });
 
@@ -118,9 +118,9 @@ describe(
           scene.renderForSpecs();
 
           expect(scene.frameState.commandList.length).toBe(3);
-        }
+        },
       );
     });
   },
-  "WebGL"
+  "WebGL",
 );

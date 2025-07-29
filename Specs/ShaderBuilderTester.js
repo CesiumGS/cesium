@@ -14,7 +14,7 @@ function expectEqualUnordered(array1, array2) {
 ShaderBuilderTester.expectHasAttributes = function (
   shaderBuilder,
   positionAttributeLine,
-  expectedAttributeLines
+  expectedAttributeLines,
 ) {
   expect(shaderBuilder._positionAttributeLine).toEqual(positionAttributeLine);
   expectEqualUnordered(shaderBuilder._attributeLines, expectedAttributeLines);
@@ -22,63 +22,63 @@ ShaderBuilderTester.expectHasAttributes = function (
 
 ShaderBuilderTester.expectHasVertexDefines = function (
   shaderBuilder,
-  expectedDefines
+  expectedDefines,
 ) {
   expectEqualUnordered(
     shaderBuilder._vertexShaderParts.defineLines,
-    expectedDefines
+    expectedDefines,
   );
 };
 
 ShaderBuilderTester.expectHasFragmentDefines = function (
   shaderBuilder,
-  expectedDefines
+  expectedDefines,
 ) {
   expectEqualUnordered(
     shaderBuilder._fragmentShaderParts.defineLines,
-    expectedDefines
+    expectedDefines,
   );
 };
 
 ShaderBuilderTester.expectHasVertexUniforms = function (
   shaderBuilder,
-  expectedUniforms
+  expectedUniforms,
 ) {
   expectEqualUnordered(
     shaderBuilder._vertexShaderParts.uniformLines,
-    expectedUniforms
+    expectedUniforms,
   );
 };
 
 ShaderBuilderTester.expectHasFragmentUniforms = function (
   shaderBuilder,
-  expectedUniforms
+  expectedUniforms,
 ) {
   expectEqualUnordered(
     shaderBuilder._fragmentShaderParts.uniformLines,
-    expectedUniforms
+    expectedUniforms,
   );
 };
 
 ShaderBuilderTester.expectHasVaryings = function (
   shaderBuilder,
-  expectedVaryings
+  expectedVaryings,
 ) {
   expect(shaderBuilder._vertexShaderParts.varyingLines).toEqual(
     jasmine.arrayWithExactContents(
-      expectedVaryings.map((varying) => jasmine.stringContaining(varying))
-    )
+      expectedVaryings.map((varying) => jasmine.stringContaining(varying)),
+    ),
   );
   expect(shaderBuilder._fragmentShaderParts.varyingLines).toEqual(
     jasmine.arrayWithExactContents(
-      expectedVaryings.map((varying) => jasmine.stringContaining(varying))
-    )
+      expectedVaryings.map((varying) => jasmine.stringContaining(varying)),
+    ),
   );
 };
 
 ShaderBuilderTester.expectHasVertexStructIds = function (
   shaderBuilder,
-  expectedStructIds
+  expectedStructIds,
 ) {
   expect(shaderBuilder._vertexShaderParts.structIds).toEqual(expectedStructIds);
 };
@@ -87,7 +87,7 @@ ShaderBuilderTester.expectHasVertexStruct = function (
   shaderBuilder,
   structId,
   structName,
-  expectedFields
+  expectedFields,
 ) {
   expectHasLine(shaderBuilder._vertexShaderParts.structIds, structId);
   const struct = shaderBuilder._structs[structId];
@@ -98,10 +98,10 @@ ShaderBuilderTester.expectHasVertexStruct = function (
 
 ShaderBuilderTester.expectHasFragmentStructIds = function (
   shaderBuilder,
-  expectedStructIds
+  expectedStructIds,
 ) {
   expect(shaderBuilder._fragmentShaderParts.structIds).toEqual(
-    expectedStructIds
+    expectedStructIds,
   );
 };
 
@@ -109,7 +109,7 @@ ShaderBuilderTester.expectHasFragmentStruct = function (
   shaderBuilder,
   structId,
   structName,
-  expectedFields
+  expectedFields,
 ) {
   expectHasLine(shaderBuilder._fragmentShaderParts.structIds, structId);
   const struct = shaderBuilder._structs[structId];
@@ -120,10 +120,10 @@ ShaderBuilderTester.expectHasFragmentStruct = function (
 
 ShaderBuilderTester.expectHasVertexFunctionIds = function (
   shaderBuilder,
-  expectedFunctionIds
+  expectedFunctionIds,
 ) {
   expect(shaderBuilder._vertexShaderParts.functionIds).toEqual(
-    expectedFunctionIds
+    expectedFunctionIds,
   );
 };
 
@@ -131,7 +131,7 @@ ShaderBuilderTester.expectHasVertexFunction = function (
   shaderBuilder,
   functionId,
   signature,
-  bodyLines
+  bodyLines,
 ) {
   expectHasLine(shaderBuilder._vertexShaderParts.functionIds, functionId);
   const func = shaderBuilder._functions[functionId];
@@ -144,7 +144,7 @@ ShaderBuilderTester.expectHasVertexFunctionUnordered = function (
   shaderBuilder,
   functionId,
   signature,
-  bodyLines
+  bodyLines,
 ) {
   expectHasLine(shaderBuilder._vertexShaderParts.functionIds, functionId);
   const func = shaderBuilder._functions[functionId];
@@ -155,10 +155,10 @@ ShaderBuilderTester.expectHasVertexFunctionUnordered = function (
 
 ShaderBuilderTester.expectHasFragmentFunctionIds = function (
   shaderBuilder,
-  expectedFunctionIds
+  expectedFunctionIds,
 ) {
   expect(shaderBuilder._fragmentShaderParts.functionIds).toEqual(
-    expectedFunctionIds
+    expectedFunctionIds,
   );
 };
 
@@ -166,7 +166,7 @@ ShaderBuilderTester.expectHasFragmentFunction = function (
   shaderBuilder,
   functionId,
   signature,
-  bodyLines
+  bodyLines,
 ) {
   expectHasLine(shaderBuilder._fragmentShaderParts.functionIds, functionId);
   const func = shaderBuilder._functions[functionId];
@@ -179,7 +179,7 @@ ShaderBuilderTester.expectHasFragmentFunctionUnordered = function (
   shaderBuilder,
   functionId,
   signature,
-  bodyLines
+  bodyLines,
 ) {
   expectHasLine(shaderBuilder._fragmentShaderParts.functionIds, functionId);
   const func = shaderBuilder._functions[functionId];
@@ -190,7 +190,7 @@ ShaderBuilderTester.expectHasFragmentFunctionUnordered = function (
 
 ShaderBuilderTester.expectVertexLinesContains = function (
   shaderBuilder,
-  expectedString
+  expectedString,
 ) {
   let hasLine = false;
   const lines = shaderBuilder._vertexShaderParts.shaderLines;
@@ -208,16 +208,16 @@ ShaderBuilderTester.expectVertexLinesContains = function (
 
 ShaderBuilderTester.expectVertexLinesEqual = function (
   shaderBuilder,
-  expectedVertexLines
+  expectedVertexLines,
 ) {
   expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual(
-    expectedVertexLines
+    expectedVertexLines,
   );
 };
 
 ShaderBuilderTester.expectFragmentLinesContains = function (
   shaderBuilder,
-  expectedString
+  expectedString,
 ) {
   const lines = shaderBuilder._fragmentShaderParts.shaderLines;
   for (let i = 0; i < lines; i++) {
@@ -228,10 +228,10 @@ ShaderBuilderTester.expectFragmentLinesContains = function (
 
 ShaderBuilderTester.expectFragmentLinesEqual = function (
   shaderBuilder,
-  expectedFragmentLines
+  expectedFragmentLines,
 ) {
   expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual(
-    expectedFragmentLines
+    expectedFragmentLines,
   );
 };
 

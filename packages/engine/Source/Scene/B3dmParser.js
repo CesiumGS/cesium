@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -25,7 +24,7 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  * @returns {object} Returns an object with the batch length, feature table (binary and json), batch table (binary and json) and glTF parts of the b3dm.
  */
 B3dmParser.parse = function (arrayBuffer, byteOffset) {
-  const byteStart = defaultValue(byteOffset, 0);
+  const byteStart = byteOffset ?? 0;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
@@ -39,7 +38,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      `Only Batched 3D Model version 1 is supported.  Version ${version} is not.`
+      `Only Batched 3D Model version 1 is supported.  Version ${version} is not.`,
     );
   }
   byteOffset += sizeOfUint32;
@@ -77,7 +76,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
     featureTableBinaryByteLength = 0;
     B3dmParser._deprecationWarning(
       "b3dm-legacy-header",
-      "This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel."
+      "This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel.",
     );
   } else if (batchTableBinaryByteLength >= 570425344) {
     // Second legacy check
@@ -89,20 +88,20 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
     featureTableBinaryByteLength = 0;
     B3dmParser._deprecationWarning(
       "b3dm-legacy-header",
-      "This b3dm header is using the legacy format [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel."
+      "This b3dm header is using the legacy format [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel.",
     );
   }
 
   let featureTableJson;
   if (featureTableJsonByteLength === 0) {
     featureTableJson = {
-      BATCH_LENGTH: defaultValue(batchLength, 0),
+      BATCH_LENGTH: batchLength ?? 0,
     };
   } else {
     featureTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
-      featureTableJsonByteLength
+      featureTableJsonByteLength,
     );
     byteOffset += featureTableJsonByteLength;
   }
@@ -110,7 +109,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
   const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
-    featureTableBinaryByteLength
+    featureTableBinaryByteLength,
   );
   byteOffset += featureTableBinaryByteLength;
 
@@ -125,7 +124,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
     batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
-      batchTableJsonByteLength
+      batchTableJsonByteLength,
     );
     byteOffset += batchTableJsonByteLength;
 
@@ -134,7 +133,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
       batchTableBinary = new Uint8Array(
         arrayBuffer,
         byteOffset,
-        batchTableBinaryByteLength
+        batchTableBinaryByteLength,
       );
       // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
       batchTableBinary = new Uint8Array(batchTableBinary);
@@ -154,10 +153,10 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
     // Create a copy of the glb so that it is 4-byte aligned
     B3dmParser._deprecationWarning(
       "b3dm-glb-unaligned",
-      "The embedded glb is not aligned to a 4-byte boundary."
+      "The embedded glb is not aligned to a 4-byte boundary.",
     );
     gltfView = new Uint8Array(
-      uint8Array.subarray(byteOffset, byteOffset + gltfByteLength)
+      uint8Array.subarray(byteOffset, byteOffset + gltfByteLength),
     );
   }
 

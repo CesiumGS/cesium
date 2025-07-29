@@ -1,6 +1,6 @@
 import {
   defined,
-  defaultValue,
+  Frozen,
   DeveloperError,
   FeatureDetection,
   PropertyTable,
@@ -84,7 +84,7 @@ function createProperties(options) {
       count = values.length;
 
       const valuesBuffer = addPadding(
-        createValuesBuffer(values, classProperty)
+        createValuesBuffer(values, classProperty),
       );
       const valuesBufferView = bufferViewIndex++;
       bufferViews[valuesBufferView] = valuesBuffer;
@@ -109,13 +109,13 @@ function createProperties(options) {
       }
 
       if (classProperty.isVariableLengthArray) {
-        const arrayOffsetBufferType = defaultValue(arrayOffsetType, offsetType);
+        const arrayOffsetBufferType = arrayOffsetType ?? offsetType;
         const arrayOffsetBuffer = addPadding(
           createArrayOffsetBuffer(
             values,
             classProperty.type,
-            arrayOffsetBufferType
-          )
+            arrayOffsetBufferType,
+          ),
         );
         const arrayOffsetBufferView = bufferViewIndex++;
         bufferViews[arrayOffsetBufferView] = arrayOffsetBuffer;
@@ -123,12 +123,9 @@ function createProperties(options) {
       }
 
       if (classProperty.type === MetadataType.STRING) {
-        const stringOffsetBufferType = defaultValue(
-          stringOffsetType,
-          offsetType
-        );
+        const stringOffsetBufferType = stringOffsetType ?? offsetType;
         const stringOffsetBuffer = addPadding(
-          createStringOffsetBuffer(values, stringOffsetBufferType)
+          createStringOffsetBuffer(values, stringOffsetBufferType),
         );
         const stringOffsetBufferView = bufferViewIndex++;
         bufferViews[stringOffsetBufferView] = stringOffsetBuffer;
@@ -146,7 +143,7 @@ function createProperties(options) {
 }
 
 MetadataTester.createMetadataTable = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const disableBigIntSupport = options.disableBigIntSupport;
   const disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
   const disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
@@ -193,7 +190,7 @@ MetadataTester.createMetadataTable = function (options) {
 };
 
 MetadataTester.createPropertyTable = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const disableBigIntSupport = options.disableBigIntSupport;
   const disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
   const disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
@@ -248,7 +245,7 @@ MetadataTester.createPropertyTable = function (options) {
 
 // for EXT_structural_metadata
 MetadataTester.createPropertyTables = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const propertyTables = [];
   const bufferViews = {};
@@ -280,7 +277,7 @@ MetadataTester.createPropertyTables = function (options) {
 
 // For EXT_feature_metadata
 MetadataTester.createFeatureTables = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const featureTables = {};
   const bufferViews = {};
@@ -312,7 +309,7 @@ MetadataTester.createFeatureTables = function (options) {
 };
 
 MetadataTester.createGltf = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const propertyTableResults = MetadataTester.createPropertyTables(options);
 
@@ -418,7 +415,7 @@ function createBuffer(values, componentType) {
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(
-        `${componentType} is not a valid component type`
+        `${componentType} is not a valid component type`,
       );
     //>>includeEnd('debug');
   }
@@ -483,7 +480,7 @@ function createStringOffsetBuffer(values, offsetType) {
     offset += encoder.encode(strings[i]).length;
   }
   offsets[length] = offset;
-  offsetType = defaultValue(offsetType, MetadataComponentType.UINT32);
+  offsetType = offsetType ?? MetadataComponentType.UINT32;
   return createBuffer(offsets, offsetType);
 }
 
@@ -497,7 +494,7 @@ function createArrayOffsetBuffer(values, type, offsetType) {
     offset += values[i].length / componentCount;
   }
   offsets[length] = offset;
-  offsetType = defaultValue(offsetType, MetadataComponentType.UINT32);
+  offsetType = offsetType ?? MetadataComponentType.UINT32;
   return createBuffer(offsets, offsetType);
 }
 

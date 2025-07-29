@@ -1,5 +1,6 @@
 
 precision highp float;
+
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -28,6 +29,13 @@ SelectedFeature selectedFeature;
 
 void main()
 {
+    #ifdef HAS_POINT_CLOUD_SHOW_STYLE
+        if (v_pointCloudShow == 0.0)
+        {
+            discard;
+        }
+    #endif
+
     #ifdef HAS_MODEL_SPLITTER
     modelSplitterStage();
     #endif
@@ -44,6 +52,10 @@ void main()
     MetadataClass metadataClass;
     MetadataStatistics metadataStatistics;
     metadataStage(metadata, metadataClass, metadataStatistics, attributes);
+
+    //========================================================================
+    // When not picking metadata START
+    #ifndef METADATA_PICKING_ENABLED
 
     #ifdef HAS_SELECTED_FEATURE_ID
     selectedFeatureIdStage(selectedFeature, featureIds);
@@ -73,6 +85,20 @@ void main()
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
+    // When not picking metadata END
+    //========================================================================
+    #else
+    //========================================================================
+    // When picking metadata START
+
+    vec4 metadataValues = vec4(0.0, 0.0, 0.0, 0.0);
+    metadataPickingStage(metadata, metadataClass, metadataValues);
+    vec4 color = metadataValues;
+
+    #endif
+    // When picking metadata END
+    //========================================================================
+
     #ifdef HAS_CLIPPING_PLANES
     modelClippingPlanesStage(color);
     #endif
@@ -80,6 +106,10 @@ void main()
     #ifdef ENABLE_CLIPPING_POLYGONS
     modelClippingPolygonsStage();
     #endif
+
+    //========================================================================
+    // When not picking metadata START
+    #ifndef METADATA_PICKING_ENABLED
 
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
     silhouetteStage(color);
@@ -89,5 +119,10 @@ void main()
     atmosphereStage(color, attributes);
     #endif
 
+    #endif
+    // When not picking metadata END
+    //========================================================================
+
     out_FragColor = color;
 }
+

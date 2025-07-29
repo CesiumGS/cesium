@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
@@ -19,7 +19,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function ImplicitSubtreeMetadata(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const subtreeMetadata = options.subtreeMetadata;
   const metadataClass = options.class;
 
@@ -104,7 +104,7 @@ ImplicitSubtreeMetadata.prototype.hasPropertyBySemantic = function (semantic) {
   return MetadataEntity.hasPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -149,7 +149,7 @@ ImplicitSubtreeMetadata.prototype.setProperty = function (propertyId, value) {
     propertyId,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -164,7 +164,7 @@ ImplicitSubtreeMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -178,13 +178,13 @@ ImplicitSubtreeMetadata.prototype.getPropertyBySemantic = function (semantic) {
  */
 ImplicitSubtreeMetadata.prototype.setPropertyBySemantic = function (
   semantic,
-  value
+  value,
 ) {
   return MetadataEntity.setPropertyBySemantic(
     semantic,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 

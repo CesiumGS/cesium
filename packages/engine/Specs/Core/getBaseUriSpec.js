@@ -6,7 +6,7 @@ describe("Core/getBaseUri", function () {
     expect(result).toEqual("http://www.mysite.com/");
 
     result = getBaseUri(
-      "http://www.mysite.com/somefolder/awesome.png#makeitawesome"
+      "http://www.mysite.com/somefolder/awesome.png#makeitawesome",
     );
     expect(result).toEqual("http://www.mysite.com/somefolder/");
   });
@@ -14,13 +14,13 @@ describe("Core/getBaseUri", function () {
   it("works with includeQuery flag", function () {
     let result = getBaseUri(
       "http://www.mysite.com/awesome?makeitawesome=true",
-      true
+      true,
     );
     expect(result).toEqual("http://www.mysite.com/?makeitawesome=true");
 
     result = getBaseUri(
       "http://www.mysite.com/somefolder/awesome.png#makeitawesome",
-      true
+      true,
     );
     expect(result).toEqual("http://www.mysite.com/somefolder/#makeitawesome");
   });

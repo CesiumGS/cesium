@@ -14,7 +14,7 @@ function createDynamicGeometryUpdaterSpecs(
   Updater,
   geometryPropertyName,
   createDynamicEntity,
-  getScene
+  getScene,
 ) {
   const time = JulianDate.now();
 
@@ -36,7 +36,7 @@ function createDynamicGeometryUpdaterSpecs(
     const groundPrimitives = new PrimitiveCollection();
     const dynamicUpdater = updater.createDynamicUpdater(
       primitives,
-      groundPrimitives
+      groundPrimitives,
     );
     expect(primitives.length).toBe(0);
     expect(groundPrimitives.length).toBe(0);
@@ -87,7 +87,7 @@ function createDynamicGeometryUpdaterSpecs(
     updater._onEntityPropertyChanged(entity, updater._geometryPropertyName);
     const dynamicUpdater = updater.createDynamicUpdater(
       scene.primitives,
-      scene.groundPrimitives
+      scene.groundPrimitives,
     );
     dynamicUpdater.update(time);
 
@@ -105,7 +105,7 @@ function createDynamicGeometryUpdaterSpecs(
       const attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(result).toEqualEpsilon(
         attributes.boundingSphere,
-        CesiumMath.EPSILON6
+        CesiumMath.EPSILON6,
       );
 
       updater.destroy();
@@ -124,7 +124,7 @@ function createDynamicGeometryUpdaterSpecs(
 
     const dynamicUpdater = updater.createDynamicUpdater(
       scene.primitives,
-      scene.groundPrimitives
+      scene.groundPrimitives,
     );
     dynamicUpdater.update(time);
 
@@ -141,7 +141,7 @@ function createDynamicGeometryUpdaterSpecs(
       const attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(result).toEqualEpsilon(
         attributes.boundingSphere,
-        CesiumMath.EPSILON6
+        CesiumMath.EPSILON6,
       );
 
       updater.destroy();
@@ -155,7 +155,7 @@ function createDynamicGeometryUpdaterSpecs(
     const updater = new Updater(entity, scene);
     const dynamicUpdater = updater.createDynamicUpdater(
       scene.primitives,
-      scene.groundPrimitives
+      scene.groundPrimitives,
     );
 
     expect(function () {

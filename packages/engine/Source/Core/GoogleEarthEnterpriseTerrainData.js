@@ -2,7 +2,7 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import IndexDatatype from "./IndexDatatype.js";
@@ -55,16 +55,16 @@ import TerrainMesh from "./TerrainMesh.js";
  * @see QuantizedMeshTerrainData
  */
 function GoogleEarthEnterpriseTerrainData(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.buffer", options.buffer);
   Check.typeOf.number(
     "options.negativeAltitudeExponentBias",
-    options.negativeAltitudeExponentBias
+    options.negativeAltitudeExponentBias,
   );
   Check.typeOf.number(
     "options.negativeElevationThreshold",
-    options.negativeElevationThreshold
+    options.negativeElevationThreshold,
   );
   //>>includeEnd('debug');
 
@@ -76,14 +76,14 @@ function GoogleEarthEnterpriseTerrainData(options) {
   // Convert from google layout to layout of other providers
   // 3 2 -> 2 3
   // 0 1 -> 0 1
-  const googleChildTileMask = defaultValue(options.childTileMask, 15);
+  const googleChildTileMask = options.childTileMask ?? 15;
   let childTileMask = googleChildTileMask & 3; // Bottom row is identical
   childTileMask |= googleChildTileMask & 4 ? 8 : 0; // NE
   childTileMask |= googleChildTileMask & 8 ? 4 : 0; // NW
 
   this._childTileMask = childTileMask;
 
-  this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
+  this._createdByUpsampling = options.createdByUpsampling ?? false;
 
   this._skirtHeight = undefined;
   this._bufferType = this._buffer.constructor;
@@ -108,7 +108,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof GoogleEarthEnterpriseTerrainData.prototype
-   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|undefined}
    */
   waterMask: {
     get: function () {
@@ -121,7 +121,7 @@ const createMeshTaskName = "createVerticesFromGoogleEarthEnterpriseBuffer";
 const createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
 const createMeshTaskProcessorThrottle = new TaskProcessor(
   createMeshTaskName,
-  TerrainData.maximumAsynchronousTasks
+  TerrainData.maximumAsynchronousTasks,
 );
 
 const nativeRectangleScratch = new Rectangle();
@@ -145,7 +145,7 @@ const rectangleScratch = new Rectangle();
  *          be retried later.
  */
 GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);
@@ -158,12 +158,9 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
   const x = options.x;
   const y = options.y;
   const level = options.level;
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0
-  );
-  const throttle = defaultValue(options.throttle, true);
+  const exaggeration = options.exaggeration ?? 1.0;
+  const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
+  const throttle = options.throttle ?? true;
 
   const ellipsoid = tilingScheme.ellipsoid;
   tilingScheme.tileXYToNativeRectangle(x, y, level, nativeRectangleScratch);
@@ -171,7 +168,7 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
 
   // Compute the center of the tile for RTC rendering.
   const center = ellipsoid.cartographicToCartesian(
-    Rectangle.center(rectangleScratch)
+    Rectangle.center(rectangleScratch),
   );
 
   const levelZeroMaxError = 40075.16; // From Google's Doc
@@ -221,7 +218,7 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
       result.westIndicesSouthToNorth,
       result.southIndicesEastToWest,
       result.eastIndicesNorthToSouth,
-      result.northIndicesWestToEast
+      result.northIndicesWestToEast,
     );
 
     that._minimumHeight = result.minimumHeight;
@@ -246,17 +243,17 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
 GoogleEarthEnterpriseTerrainData.prototype.interpolateHeight = function (
   rectangle,
   longitude,
-  latitude
+  latitude,
 ) {
   const u = CesiumMath.clamp(
     (longitude - rectangle.west) / rectangle.width,
     0.0,
-    1.0
+    1.0,
   );
   const v = CesiumMath.clamp(
     (latitude - rectangle.south) / rectangle.height,
     0.0,
-    1.0
+    1.0,
   );
 
   if (!defined(this._mesh)) {
@@ -268,7 +265,7 @@ GoogleEarthEnterpriseTerrainData.prototype.interpolateHeight = function (
 
 const upsampleTaskProcessor = new TaskProcessor(
   "upsampleQuantizedTerrainMesh",
-  TerrainData.maximumAsynchronousTasks
+  TerrainData.maximumAsynchronousTasks,
 );
 
 /**
@@ -293,7 +290,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
   thisLevel,
   descendantX,
   descendantY,
-  descendantLevel
+  descendantLevel,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("tilingScheme", tilingScheme);
@@ -306,7 +303,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
   const levelDifference = descendantLevel - thisLevel;
   if (levelDifference > 1) {
     throw new DeveloperError(
-      "Upsampling through more than one level at a time is not currently supported."
+      "Upsampling through more than one level at a time is not currently supported.",
     );
   }
   //>>includeEnd('debug');
@@ -323,7 +320,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
   const childRectangle = tilingScheme.tileXYToRectangle(
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   );
 
   const upsamplePromise = upsampleTaskProcessor.scheduleTask({
@@ -350,7 +347,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
     const quantizedVertices = new Uint16Array(result.vertices);
     const indicesTypedArray = IndexDatatype.createTypedArray(
       quantizedVertices.length / 3,
-      result.indices
+      result.indices,
     );
 
     const skirtHeight = that._skirtHeight;
@@ -363,7 +360,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
       maximumHeight: result.maximumHeight,
       boundingSphere: BoundingSphere.clone(result.boundingSphere),
       orientedBoundingBox: OrientedBoundingBox.clone(
-        result.orientedBoundingBox
+        result.orientedBoundingBox,
       ),
       horizonOcclusionPoint: Cartesian3.clone(result.horizonOcclusionPoint),
       westIndices: result.westIndices,
@@ -397,7 +394,7 @@ GoogleEarthEnterpriseTerrainData.prototype.isChildAvailable = function (
   thisX,
   thisY,
   childX,
-  childY
+  childY,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("thisX", thisX);
@@ -425,9 +422,10 @@ GoogleEarthEnterpriseTerrainData.prototype.isChildAvailable = function (
  *
  * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
  */
-GoogleEarthEnterpriseTerrainData.prototype.wasCreatedByUpsampling = function () {
-  return this._createdByUpsampling;
-};
+GoogleEarthEnterpriseTerrainData.prototype.wasCreatedByUpsampling =
+  function () {
+    return this._createdByUpsampling;
+  };
 
 const texCoordScratch0 = new Cartesian2();
 const texCoordScratch1 = new Cartesian2();
@@ -448,17 +446,17 @@ function interpolateMeshHeight(terrainData, u, v) {
     const uv0 = encoding.decodeTextureCoordinates(
       vertices,
       i0,
-      texCoordScratch0
+      texCoordScratch0,
     );
     const uv1 = encoding.decodeTextureCoordinates(
       vertices,
       i1,
-      texCoordScratch1
+      texCoordScratch1,
     );
     const uv2 = encoding.decodeTextureCoordinates(
       vertices,
       i2,
-      texCoordScratch2
+      texCoordScratch2,
     );
 
     const barycentric = Intersections2D.computeBarycentricCoordinates(
@@ -470,7 +468,7 @@ function interpolateMeshHeight(terrainData, u, v) {
       uv1.y,
       uv2.x,
       uv2.y,
-      barycentricCoordinateScratch
+      barycentricCoordinateScratch,
     );
     if (
       barycentric.x >= -1e-15 &&
@@ -586,7 +584,7 @@ function interpolateHeight(terrainData, u, v, rectangle) {
       v1,
       u2,
       v2,
-      barycentricCoordinateScratch
+      barycentricCoordinateScratch,
     );
     if (
       barycentric.x >= -1e-15 &&

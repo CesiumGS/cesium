@@ -49,7 +49,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
@@ -139,25 +139,20 @@ import Rectangle from "../Core/Rectangle.js";
  * }
  */
 function I3SDataProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   // All public configuration is defined as ES5 properties
   // These are just the "private" variables and their defaults.
   this._name = options.name;
-  this._show = defaultValue(options.show, true);
+  this._show = options.show ?? true;
   this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
-  this._showFeatures = defaultValue(options.showFeatures, false);
-  this._adjustMaterialAlphaMode = defaultValue(
-    options.adjustMaterialAlphaMode,
-    false
-  );
-  this._applySymbology = defaultValue(options.applySymbology, false);
-  this._calculateNormals = defaultValue(options.calculateNormals, false);
+  this._showFeatures = options.showFeatures ?? false;
+  this._adjustMaterialAlphaMode = options.adjustMaterialAlphaMode ?? false;
+  this._applySymbology = options.applySymbology ?? false;
+  this._calculateNormals = options.calculateNormals ?? false;
 
-  this._cesium3dTilesetOptions = defaultValue(
-    options.cesium3dTilesetOptions,
-    defaultValue.EMPTY_OBJECT
-  );
+  this._cesium3dTilesetOptions =
+    options.cesium3dTilesetOptions ?? Frozen.EMPTY_OBJECT;
 
   this._layers = [];
   this._sublayers = [];
@@ -452,7 +447,7 @@ async function addLayers(provider, data, options) {
           provider,
           buildingLayerUrl,
           data.sublayers[i],
-          provider
+          provider,
         );
         promises.push(promise);
       }
@@ -476,7 +471,7 @@ async function addLayers(provider, data, options) {
         data.fullExtent.xmin,
         data.fullExtent.ymin,
         data.fullExtent.xmax,
-        data.fullExtent.ymax
+        data.fullExtent.ymax,
       );
       provider._layersExtent.push(extent);
     }
@@ -500,7 +495,7 @@ async function addLayers(provider, data, options) {
   } else {
     // Filter other scene layer types out
     console.log(
-      `${data.layerType} layer ${data.name} is skipped as not supported.`
+      `${data.layerType} layer ${data.name} is skipped as not supported.`,
     );
   }
 }
@@ -542,7 +537,7 @@ I3SDataProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(url);
   // Set a query parameter for json to avoid failure on html pages
@@ -571,7 +566,7 @@ I3SDataProvider.fromUrl = async function (url, options) {
   const layerPromises = [];
   for (let i = 0; i < provider._layers.length; i++) {
     layerPromises.push(
-      provider._layers[i].load(options.cesium3dTilesetOptions)
+      provider._layers[i].load(options.cesium3dTilesetOptions),
     );
   }
 
@@ -646,7 +641,7 @@ I3SDataProvider.prototype._binarizeGltf = function (rawGltf) {
     chunkData: new Uint8Array(
       binaryGltfData.buffer,
       20,
-      rawGltfData.byteLength
+      rawGltfData.byteLength,
     ),
   };
 
@@ -680,7 +675,7 @@ function getCoveredTiles(terrainProvider, extent) {
   const minCornerXY = tilingScheme.positionToTileXY(topLeftCorner, maxLevel);
   const maxCornerXY = tilingScheme.positionToTileXY(
     bottomRightCorner,
-    maxLevel
+    maxLevel,
   );
 
   // Get all the tiles in between
@@ -711,7 +706,7 @@ function getCoveredTiles(terrainProvider, extent) {
     const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
       tileRequest.x,
       tileRequest.y,
-      tileRequest.level
+      tileRequest.level,
     );
 
     tilePromises.push(requestPromise);
@@ -739,7 +734,7 @@ function getCoveredTiles(terrainProvider, extent) {
         nativeExtent: tilingScheme.tileXYToNativeRectangle(
           options.x,
           options.y,
-          options.level
+          options.level,
         ),
         height: heightMap._height,
         width: heightMap._width,
@@ -772,12 +767,12 @@ async function loadGeoidData(provider) {
   try {
     const heightMaps = await getCoveredTiles(
       geoidTerrainProvider,
-      provider._extent
+      provider._extent,
     );
     provider._geoidDataList = heightMaps;
   } catch (error) {
     console.log(
-      "Error retrieving Geoid Terrain tiles - no geoid conversion will be performed."
+      "Error retrieving Geoid Terrain tiles - no geoid conversion will be performed.",
     );
   }
 }

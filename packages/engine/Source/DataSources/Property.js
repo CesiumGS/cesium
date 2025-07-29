@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
@@ -52,7 +51,7 @@ Object.defineProperties(Property.prototype, {
  * Gets the value of the property at the provided time.
  * @function
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
@@ -113,7 +112,7 @@ Property.getValueOrUndefined = function (property, time, result) {
  */
 Property.getValueOrDefault = function (property, time, valueDefault, result) {
   return defined(property)
-    ? defaultValue(property.getValue(time, result), valueDefault)
+    ? (property.getValue(time, result) ?? valueDefault)
     : valueDefault;
 };
 
@@ -124,7 +123,7 @@ Property.getValueOrClonedDefault = function (
   property,
   time,
   valueDefault,
-  result
+  result,
 ) {
   let value;
   if (defined(property)) {

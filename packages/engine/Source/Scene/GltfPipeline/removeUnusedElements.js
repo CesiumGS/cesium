@@ -1,7 +1,6 @@
 import ForEach from "./ForEach.js";
 import forEachTextureInMaterial from "./forEachTextureInMaterial.js";
 import usesExtension from "./usesExtension.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 
 const allElementTypes = [
@@ -25,7 +24,7 @@ const allElementTypes = [
  * @private
  */
 function removeUnusedElements(gltf, elementTypes) {
-  elementTypes = defaultValue(elementTypes, allElementTypes);
+  elementTypes = elementTypes ?? allElementTypes;
   allElementTypes.forEach(function (type) {
     if (elementTypes.indexOf(type) > -1) {
       removeUnusedElementsByType(gltf, type);
@@ -88,7 +87,7 @@ Remove.accessor = function (gltf, accessorId) {
           if (attributeAccessorId > accessorId) {
             primitive.attributes[semantic]--;
           }
-        }
+        },
       );
 
       // Update accessor ids for the targets.
@@ -99,7 +98,7 @@ Remove.accessor = function (gltf, accessorId) {
             if (attributeAccessorId > accessorId) {
               target[semantic]--;
             }
-          }
+          },
         );
       });
       const indices = primitive.indices;
@@ -549,7 +548,7 @@ getListOfElementsIdsInUse.accessor = function (gltf) {
             const attributeAccessorId =
               node.extensions.EXT_mesh_gpu_instancing.attributes[key];
             usedAccessorIds[attributeAccessorId] = true;
-          }
+          },
         );
       }
     });
@@ -588,9 +587,8 @@ getListOfElementsIdsInUse.buffer = function (gltf) {
       defined(bufferView.extensions) &&
       defined(bufferView.extensions.EXT_meshopt_compression)
     ) {
-      usedBufferIds[
-        bufferView.extensions.EXT_meshopt_compression.buffer
-      ] = true;
+      usedBufferIds[bufferView.extensions.EXT_meshopt_compression.buffer] =
+        true;
     }
   });
 

@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
@@ -28,7 +27,7 @@ function Rectangle(west, south, east, north) {
    * @type {number}
    * @default 0.0
    */
-  this.west = defaultValue(west, 0.0);
+  this.west = west ?? 0.0;
 
   /**
    * The southernmost latitude in radians in the range [-Pi/2, Pi/2].
@@ -36,7 +35,7 @@ function Rectangle(west, south, east, north) {
    * @type {number}
    * @default 0.0
    */
-  this.south = defaultValue(south, 0.0);
+  this.south = south ?? 0.0;
 
   /**
    * The easternmost longitude in radians in the range [-Pi, Pi].
@@ -44,7 +43,7 @@ function Rectangle(west, south, east, north) {
    * @type {number}
    * @default 0.0
    */
-  this.east = defaultValue(east, 0.0);
+  this.east = east ?? 0.0;
 
   /**
    * The northernmost latitude in radians in the range [-Pi/2, Pi/2].
@@ -52,7 +51,7 @@ function Rectangle(west, south, east, north) {
    * @type {number}
    * @default 0.0
    */
-  this.north = defaultValue(north, 0.0);
+  this.north = north ?? 0.0;
 }
 
 Object.defineProperties(Rectangle.prototype, {
@@ -102,7 +101,7 @@ Rectangle.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.west;
   array[startingIndex++] = value.south;
@@ -125,7 +124,7 @@ Rectangle.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Rectangle();
@@ -181,10 +180,10 @@ Rectangle.computeHeight = function (rectangle) {
  * const rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
  */
 Rectangle.fromDegrees = function (west, south, east, north, result) {
-  west = CesiumMath.toRadians(defaultValue(west, 0.0));
-  south = CesiumMath.toRadians(defaultValue(south, 0.0));
-  east = CesiumMath.toRadians(defaultValue(east, 0.0));
-  north = CesiumMath.toRadians(defaultValue(north, 0.0));
+  west = CesiumMath.toRadians(west ?? 0.0);
+  south = CesiumMath.toRadians(south ?? 0.0);
+  east = CesiumMath.toRadians(east ?? 0.0);
+  north = CesiumMath.toRadians(north ?? 0.0);
 
   if (!defined(result)) {
     return new Rectangle(west, south, east, north);
@@ -216,10 +215,10 @@ Rectangle.fromRadians = function (west, south, east, north, result) {
     return new Rectangle(west, south, east, north);
   }
 
-  result.west = defaultValue(west, 0.0);
-  result.south = defaultValue(south, 0.0);
-  result.east = defaultValue(east, 0.0);
-  result.north = defaultValue(north, 0.0);
+  result.west = west ?? 0.0;
+  result.south = south ?? 0.0;
+  result.east = east ?? 0.0;
+  result.north = north ?? 0.0;
 
   return result;
 };
@@ -293,7 +292,7 @@ Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesians", cartesians);
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   let west = Number.MAX_VALUE;
   let east = -Number.MAX_VALUE;
@@ -382,18 +381,18 @@ Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
   const fromENU = Transforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
-    fromBoundingSphereMatrixScratch
+    fromBoundingSphereMatrixScratch,
   );
   const east = Matrix4.multiplyByPointAsVector(
     fromENU,
     Cartesian3.UNIT_X,
-    fromBoundingSphereEastScratch
+    fromBoundingSphereEastScratch,
   );
   Cartesian3.normalize(east, east);
   const north = Matrix4.multiplyByPointAsVector(
     fromENU,
     Cartesian3.UNIT_Y,
-    fromBoundingSphereNorthScratch
+    fromBoundingSphereNorthScratch,
   );
   Cartesian3.normalize(north, north);
 
@@ -443,7 +442,7 @@ Rectangle.clone = function (rectangle, result) {
       rectangle.west,
       rectangle.south,
       rectangle.east,
-      rectangle.north
+      rectangle.north,
     );
   }
 
@@ -465,7 +464,7 @@ Rectangle.clone = function (rectangle, result) {
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Rectangle.equalsEpsilon = function (left, right, absoluteEpsilon) {
-  absoluteEpsilon = defaultValue(absoluteEpsilon, 0);
+  absoluteEpsilon = absoluteEpsilon ?? 0;
 
   return (
     left === right ||
@@ -541,8 +540,9 @@ Rectangle.prototype.equalsEpsilon = function (other, epsilon) {
  * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
  * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @private
  */
-Rectangle.validate = function (rectangle) {
+Rectangle._validate = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
 
@@ -550,7 +550,7 @@ Rectangle.validate = function (rectangle) {
   Check.typeOf.number.greaterThanOrEquals(
     "north",
     north,
-    -CesiumMath.PI_OVER_TWO
+    -CesiumMath.PI_OVER_TWO,
   );
   Check.typeOf.number.lessThanOrEquals("north", north, CesiumMath.PI_OVER_TWO);
 
@@ -558,7 +558,7 @@ Rectangle.validate = function (rectangle) {
   Check.typeOf.number.greaterThanOrEquals(
     "south",
     south,
-    -CesiumMath.PI_OVER_TWO
+    -CesiumMath.PI_OVER_TWO,
   );
   Check.typeOf.number.lessThanOrEquals("south", south, CesiumMath.PI_OVER_TWO);
 
@@ -725,10 +725,10 @@ Rectangle.intersection = function (rectangle, otherRectangle, result) {
   }
 
   const west = CesiumMath.negativePiToPi(
-    Math.max(rectangleWest, otherRectangleWest)
+    Math.max(rectangleWest, otherRectangleWest),
   );
   const east = CesiumMath.negativePiToPi(
-    Math.min(rectangleEast, otherRectangleEast)
+    Math.min(rectangleEast, otherRectangleEast),
   );
 
   if (
@@ -830,10 +830,10 @@ Rectangle.union = function (rectangle, otherRectangle, result) {
   }
 
   const west = CesiumMath.negativePiToPi(
-    Math.min(rectangleWest, otherRectangleWest)
+    Math.min(rectangleWest, otherRectangleWest),
   );
   const east = CesiumMath.negativePiToPi(
-    Math.max(rectangleEast, otherRectangleEast)
+    Math.max(rectangleEast, otherRectangleEast),
   );
 
   result.west = west;
@@ -922,8 +922,8 @@ Rectangle.subsample = function (rectangle, ellipsoid, surfaceHeight, result) {
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
-  surfaceHeight = defaultValue(surfaceHeight, 0.0);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
+  surfaceHeight = surfaceHeight ?? 0.0;
 
   if (!defined(result)) {
     result = [];
@@ -1000,7 +1000,7 @@ Rectangle.subsection = function (
   southLerp,
   eastLerp,
   northLerp,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
@@ -1065,7 +1065,7 @@ Rectangle.MAX_VALUE = Object.freeze(
     -Math.PI,
     -CesiumMath.PI_OVER_TWO,
     Math.PI,
-    CesiumMath.PI_OVER_TWO
-  )
+    CesiumMath.PI_OVER_TWO,
+  ),
 );
 export default Rectangle;

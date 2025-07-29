@@ -1,6 +1,5 @@
 import addPipelineExtras from "./addPipelineExtras.js";
 import removeExtensionsUsed from "./removeExtensionsUsed.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import getMagic from "../../Core/getMagic.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
@@ -44,7 +43,7 @@ function readHeader(glb, byteOffset, count) {
   for (let i = 0; i < count; ++i) {
     header[i] = dataView.getUint32(
       glb.byteOffset + byteOffset + i * sizeOfUint32,
-      true
+      true,
     );
   }
   return header;
@@ -72,10 +71,7 @@ function parseGlbVersion1(glb, header) {
   const buffers = gltf.buffers;
   if (defined(buffers) && Object.keys(buffers).length > 0) {
     // In some older models, the binary glTF buffer is named KHR_binary_glTF
-    const binaryGltfBuffer = defaultValue(
-      buffers.binary_glTF,
-      buffers.KHR_binary_glTF
-    );
+    const binaryGltfBuffer = buffers.binary_glTF ?? buffers.KHR_binary_glTF;
     if (defined(binaryGltfBuffer)) {
       binaryGltfBuffer.extras._pipeline.source = binaryBuffer;
       delete binaryGltfBuffer.uri;

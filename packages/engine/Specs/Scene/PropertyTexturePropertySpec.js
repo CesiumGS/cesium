@@ -373,5 +373,5 @@ describe(
       }
     });
   },
-  "WebGL"
+  "WebGL",
 );

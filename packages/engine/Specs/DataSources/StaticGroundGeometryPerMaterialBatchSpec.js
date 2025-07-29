@@ -18,6 +18,8 @@ import {
   ClassificationType,
   GroundPrimitive,
   MaterialAppearance,
+  GeometryVisualizer,
+  EntityCollection,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -51,11 +53,8 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       return;
     }
 
-    const batch = new StaticGroundGeometryPerMaterialBatch(
-      scene.primitives,
-      ClassificationType.BOTH,
-      MaterialAppearance
-    );
+    const entityCollection = new EntityCollection();
+    const geometryVisualizer = new GeometryVisualizer(scene, entityCollection);
 
     const ellipse = new EllipseGraphics();
     ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -77,31 +76,29 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       ellipse: ellipse2,
     });
 
-    const updater = new EllipseGeometryUpdater(entity, scene);
-    const updater2 = new EllipseGeometryUpdater(entity2, scene);
-    batch.add(time, updater);
-    batch.add(time, updater2);
+    entityCollection.add(entity);
+    entityCollection.add(entity2);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      const isUpdated = batch.update(time);
+      const isUpdated = geometryVisualizer.update(time);
       scene.render(time);
       return isUpdated;
     })
       .then(function () {
-        expect(scene.primitives.length).toEqual(1);
+        expect(scene.groundPrimitives.length).toEqual(1);
         ellipse.material.cellAlpha = new ConstantProperty(0.5);
 
         return pollToPromise(function () {
           scene.initializeFrame();
-          const isUpdated = batch.update(time);
+          const isUpdated = geometryVisualizer.update(time);
           scene.render(time);
           return isUpdated;
         });
       })
       .then(function () {
-        expect(scene.primitives.length).toEqual(2);
-        batch.removeAllPrimitives();
+        expect(scene.groundPrimitives.length).toEqual(2);
+        geometryVisualizer.destroy();
       });
   });
 
@@ -121,7 +118,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: new DistanceDisplayCondition(1.0, 2.0),
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -139,9 +136,9 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     });
 
     const batch = new StaticGroundGeometryPerMaterialBatch(
-      scene.primitives,
+      scene.groundPrimitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -153,18 +150,18 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
-      expect(scene.primitives.length).toEqual(1);
-      let primitive = scene.primitives.get(0);
+      expect(scene.groundPrimitives.length).toEqual(1);
+      let primitive = scene.groundPrimitives.get(0);
       let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqualEpsilon(
         [1.0, 2.0],
-        CesiumMath.EPSILON6
+        CesiumMath.EPSILON6,
       );
 
       batch.update(outOfRangeTime);
       scene.render(outOfRangeTime);
 
-      primitive = scene.primitives.get(0);
+      primitive = scene.groundPrimitives.get(0);
       attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqual([0.0, Infinity]);
 
@@ -188,7 +185,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: true,
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -206,9 +203,9 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     });
 
     const batch = new StaticGroundGeometryPerMaterialBatch(
-      scene.primitives,
+      scene.groundPrimitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -220,15 +217,15 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
-      expect(scene.primitives.length).toEqual(1);
-      let primitive = scene.primitives.get(0);
+      expect(scene.groundPrimitives.length).toEqual(1);
+      let primitive = scene.groundPrimitives.get(0);
       let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.show).toEqual([1]);
 
       batch.update(outOfRangeTime);
       scene.render(outOfRangeTime);
 
-      primitive = scene.primitives.get(0);
+      primitive = scene.groundPrimitives.get(0);
       attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.show).toEqual([0]);
 
@@ -246,9 +243,9 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     }
 
     const batch = new StaticGroundGeometryPerMaterialBatch(
-      scene.primitives,
+      scene.groundPrimitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     function buildEntity(x, y, z) {
@@ -285,8 +282,8 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     batch.add(time, updater1);
     return pollToPromise(renderScene)
       .then(function () {
-        expect(scene.primitives.length).toEqual(1);
-        const primitive = scene.primitives.get(0);
+        expect(scene.groundPrimitives.length).toEqual(1);
+        const primitive = scene.groundPrimitives.get(0);
         expect(primitive.show).toBeTruthy();
       })
       .then(function () {
@@ -295,22 +292,22 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       .then(function () {
         return pollToPromise(function () {
           renderScene();
-          return scene.primitives.length === 2;
+          return scene.groundPrimitives.length === 2;
         });
       })
       .then(function () {
         let showCount = 0;
-        expect(scene.primitives.length).toEqual(2);
-        showCount += !!scene.primitives.get(0).show;
-        showCount += !!scene.primitives.get(1).show;
+        expect(scene.groundPrimitives.length).toEqual(2);
+        showCount += !!scene.groundPrimitives.get(0).show;
+        showCount += !!scene.groundPrimitives.get(1).show;
         expect(showCount).toEqual(1);
       })
       .then(function () {
         return pollToPromise(renderScene);
       })
       .then(function () {
-        expect(scene.primitives.length).toEqual(1);
-        const primitive = scene.primitives.get(0);
+        expect(scene.groundPrimitives.length).toEqual(1);
+        const primitive = scene.groundPrimitives.get(0);
         expect(primitive.show).toBeTruthy();
 
         batch.removeAllPrimitives();
@@ -327,9 +324,9 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     }
 
     const batch = new StaticGroundGeometryPerMaterialBatch(
-      scene.primitives,
+      scene.groundPrimitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     const ellipse = new EllipseGraphics();
@@ -363,7 +360,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       scene.render(time);
       return isUpdated;
     }).then(function () {
-      expect(scene.primitives.length).toEqual(2);
+      expect(scene.groundPrimitives.length).toEqual(2);
 
       batch.removeAllPrimitives();
     });
@@ -379,9 +376,9 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     }
 
     const batch = new StaticGroundGeometryPerMaterialBatch(
-      scene.primitives,
+      scene.groundPrimitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
     const entity = new Entity({
       position: new Cartesian3(1234, 5678, 9101112),
@@ -412,7 +409,7 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
       scene.render(time);
       return isUpdated;
     }).then(function () {
-      expect(scene.primitives.length).toEqual(1);
+      expect(scene.groundPrimitives.length).toEqual(1);
 
       batch.removeAllPrimitives();
     });
@@ -432,9 +429,9 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     }
 
     const batch = new StaticGroundGeometryPerMaterialBatch(
-      scene.primitives,
+      scene.groundPrimitives,
       ClassificationType.BOTH,
-      MaterialAppearance
+      MaterialAppearance,
     );
 
     function buildEntity(x, y, z) {
@@ -471,8 +468,8 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
 
     return pollToPromise(renderScene)
       .then(function () {
-        expect(scene.primitives.length).toEqual(1);
-        const primitive = scene.primitives.get(0);
+        expect(scene.groundPrimitives.length).toEqual(1);
+        const primitive = scene.groundPrimitives.get(0);
         const attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([1]);
 
@@ -481,8 +478,8 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
         return pollToPromise(renderScene);
       })
       .then(function () {
-        expect(scene.primitives.length).toEqual(1);
-        const primitive = scene.primitives.get(0);
+        expect(scene.groundPrimitives.length).toEqual(1);
+        const primitive = scene.groundPrimitives.get(0);
         const attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([0]);
 
@@ -490,8 +487,8 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
         return pollToPromise(renderScene);
       })
       .then(function () {
-        expect(scene.primitives.length).toEqual(1);
-        const primitive = scene.primitives.get(0);
+        expect(scene.groundPrimitives.length).toEqual(1);
+        const primitive = scene.groundPrimitives.get(0);
         let attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([0]);
 
@@ -500,5 +497,68 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
 
         batch.removeAllPrimitives();
       });
+  });
+
+  /**
+   * Written originally in response to issue #1640, where materials flashed white and transparent when changing their properties,
+   * because doing so caused a batch to be destroyed and recreated prematurely which, in turn, caused the associated
+   * material (and primitive) to be destroyed and recreated.
+   */
+  it("doesn't immediately remove an empty batch that may be reused before the next update", async function () {
+    if (
+      !GroundPrimitive.isSupported(scene) ||
+      !GroundPrimitive.supportsMaterials(scene)
+    ) {
+      // Don't fail if materials on GroundPrimitive not supported
+      return;
+    }
+
+    const batch = new StaticGroundGeometryPerMaterialBatch(
+      scene.groundPrimitives,
+      ClassificationType.BOTH,
+      MaterialAppearance,
+    );
+
+    const ellipse = new EllipseGraphics();
+    const ellipseMaterial = new GridMaterialProperty();
+    ellipse.semiMajorAxis = new ConstantProperty(2);
+    ellipse.semiMinorAxis = new ConstantProperty(1);
+    ellipse.material = ellipseMaterial;
+
+    const entity = new Entity({
+      position: new Cartesian3(1234, 5678, 9101112),
+      ellipse: ellipse,
+    });
+
+    const updater = new EllipseGeometryUpdater(entity, scene);
+    batch.add(time, updater);
+
+    await pollToPromise(function () {
+      scene.initializeFrame();
+      const isUpdated = batch.update(time);
+      scene.render(time);
+      return isUpdated;
+    });
+
+    // Remove and add back the updater before the next batch update
+    // Removal should defer deletion of the batch, and the updater should find the old batch still works upon re-adding
+    // Thus, the material should not be destroyed and recreated (and will have the same guid / be the same object)
+    const materialBefore = scene.groundPrimitives.get(0).appearance.material;
+    batch.remove(updater);
+    batch.add(time, updater);
+
+    await pollToPromise(function () {
+      scene.initializeFrame();
+      const isUpdated = batch.update(time);
+      scene.render(time);
+      return isUpdated;
+    });
+
+    const groundPrimitives = scene.groundPrimitives;
+    const materialAfter = groundPrimitives.get(0).appearance.material;
+    expect(materialBefore).toEqual(materialAfter);
+    expect(groundPrimitives.length).toEqual(1);
+
+    batch.removeAllPrimitives();
   });
 });

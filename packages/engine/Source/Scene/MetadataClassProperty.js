@@ -3,7 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix2 from "../Core/Matrix2.js";
@@ -45,7 +45,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClassProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const type = options.type;
 
@@ -60,7 +60,7 @@ function MetadataClassProperty(options) {
   const normalized =
     defined(componentType) &&
     MetadataComponentType.isIntegerType(componentType) &&
-    defaultValue(options.normalized, false);
+    (options.normalized ?? false);
 
   // Basic information about this property
   this._id = id;
@@ -78,11 +78,8 @@ function MetadataClassProperty(options) {
   this._valueType = defined(enumType) ? enumType.valueType : componentType;
 
   // Details about arrays
-  this._isArray = defaultValue(options.isArray, false);
-  this._isVariableLengthArray = defaultValue(
-    options.isVariableLengthArray,
-    false
-  );
+  this._isArray = options.isArray ?? false;
+  this._isVariableLengthArray = options.isVariableLengthArray ?? false;
   this._arrayLength = options.arrayLength;
 
   // min and max allowed values
@@ -115,7 +112,7 @@ function MetadataClassProperty(options) {
   // For vector and array types, this is stored as an array of values.
   this._default = clone(options.default, true);
 
-  this._required = defaultValue(options.required, true);
+  this._required = options.required ?? true;
 
   // extras and extensions
   this._extras = clone(options.extras, true);
@@ -136,7 +133,7 @@ function MetadataClassProperty(options) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.fromJson = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const property = options.property;
 
@@ -164,7 +161,7 @@ MetadataClassProperty.fromJson = function (options) {
   } else if (isLegacyExtension) {
     required = defined(property.optional) ? !property.optional : true;
   } else {
-    required = defaultValue(property.required, false);
+    required = property.required ?? false;
   }
 
   return new MetadataClassProperty({
@@ -438,6 +435,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the class property JSON itself did not define it, then it will be
+   * initialized to the default value.
+   *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
@@ -450,6 +451,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the class property JSON itself did not define it, then it will be
+   * initialized to the default value.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
@@ -668,7 +673,7 @@ function parseType(property, enums) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    `unknown metadata type {type: ${type}, componentType: ${componentType})`
+    `unknown metadata type {type: ${type}, componentType: ${componentType})`,
   );
   //>>includeEnd('debug');
 }
@@ -702,7 +707,7 @@ MetadataClassProperty.prototype.normalize = function (value) {
   return normalizeInPlace(
     value,
     this._valueType,
-    MetadataComponentType.normalize
+    MetadataComponentType.normalize,
   );
 };
 
@@ -735,7 +740,7 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   return normalizeInPlace(
     value,
     this._valueType,
-    MetadataComponentType.unnormalize
+    MetadataComponentType.unnormalize,
   );
 };
 
@@ -753,7 +758,7 @@ MetadataClassProperty.prototype.applyValueTransform = function (value) {
     value,
     this._offset,
     this._scale,
-    MetadataComponentType.applyValueTransform
+    MetadataComponentType.applyValueTransform,
   );
 };
 
@@ -771,7 +776,7 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
     value,
     this._offset,
     this._scale,
-    MetadataComponentType.unapplyValueTransform
+    MetadataComponentType.unapplyValueTransform,
   );
 };
 
@@ -780,9 +785,9 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
  */
 MetadataClassProperty.prototype.expandConstant = function (
   constant,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const isArray = this._isArray;
   const arrayLength = this._arrayLength;
   const componentCount = MetadataType.getComponentCount(this._type);
@@ -871,9 +876,9 @@ function arrayEquals(left, right) {
  */
 MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
   value,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
   const componentCount = MetadataType.getComponentCount(this._type);
@@ -910,9 +915,9 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
  */
 MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
   value,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
   const componentCount = MetadataType.getComponentCount(this._type);
@@ -1139,13 +1144,31 @@ function normalizeInPlace(values, valueType, normalizeFunction) {
 }
 
 /**
+ * Applies the value transform that is defined with the given offsets
+ * and scales to the given values.
+ *
+ * If the given values are not an array, then the given transformation
+ * function will be applied directly.
+ *
+ * If the values are an array, then this function will be called recursively
+ * with the array elements, boiling down to a component-wise application
+ * of the transformation function to the innermost array elements.
+ *
+ * @param {number|number[]|number[][]} values The input values
+ * @param {number|number[]|number[][]} offsets The offsets
+ * @param {number|number[]|number[][]} scales The scales
+ * @param {Function} transformationFunction The function with the signature
+ * `(value:number, offset:number, scale:number) : number` that will be
+ * applied to the innermost elements
+ * @returns The input values (or the result of applying the transformation
+ * function to a single value if the values have not been an array).
  * @private
  */
 MetadataClassProperty.valueTransformInPlace = function (
   values,
   offsets,
   scales,
-  transformationFunction
+  transformationFunction,
 ) {
   if (!Array.isArray(values)) {
     // transform a single value
@@ -1158,7 +1181,7 @@ MetadataClassProperty.valueTransformInPlace = function (
       values[i],
       offsets[i],
       scales[i],
-      transformationFunction
+      transformationFunction,
     );
   }
 

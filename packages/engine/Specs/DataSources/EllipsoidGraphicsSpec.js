@@ -43,10 +43,10 @@ describe("DataSources/EllipsoidGraphics", function () {
     expect(ellipsoid.material.color.getValue()).toEqual(options.material);
     expect(ellipsoid.show.getValue()).toEqual(options.show);
     expect(ellipsoid.stackPartitions.getValue()).toEqual(
-      options.stackPartitions
+      options.stackPartitions,
     );
     expect(ellipsoid.slicePartitions.getValue()).toEqual(
-      options.slicePartitions
+      options.slicePartitions,
     );
     expect(ellipsoid.subdivisions.getValue()).toEqual(options.subdivisions);
     expect(ellipsoid.fill.getValue()).toEqual(options.fill);
@@ -55,7 +55,7 @@ describe("DataSources/EllipsoidGraphics", function () {
     expect(ellipsoid.outlineWidth.getValue()).toEqual(options.outlineWidth);
     expect(ellipsoid.shadows.getValue()).toEqual(options.shadows);
     expect(ellipsoid.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
   });
 
@@ -78,7 +78,7 @@ describe("DataSources/EllipsoidGraphics", function () {
     source.outlineWidth = new ConstantProperty();
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
 
     const target = new EllipsoidGraphics();
@@ -101,7 +101,7 @@ describe("DataSources/EllipsoidGraphics", function () {
     expect(target.outlineWidth).toBe(source.outlineWidth);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -195,7 +195,7 @@ describe("DataSources/EllipsoidGraphics", function () {
     expect(result.outlineWidth).toBe(source.outlineWidth);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
 
     // Clone with source passed
@@ -212,7 +212,7 @@ describe("DataSources/EllipsoidGraphics", function () {
     expect(result.outlineWidth).toBe(source.outlineWidth);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -230,7 +230,7 @@ describe("DataSources/EllipsoidGraphics", function () {
       property,
       "radii",
       new Cartesian3(1, 2, 3),
-      new Cartesian3(4, 5, 6)
+      new Cartesian3(4, 5, 6),
     );
     testDefinitionChanged(property, "show", true, false);
     testDefinitionChanged(property, "stackPartitions", 1, 2);
@@ -244,13 +244,13 @@ describe("DataSources/EllipsoidGraphics", function () {
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
   });
 });

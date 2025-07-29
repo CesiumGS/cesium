@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -16,10 +15,10 @@ import DeveloperError from "./DeveloperError.js";
  * billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(10.0, 20.0);
  */
 function DistanceDisplayCondition(near, far) {
-  near = defaultValue(near, 0.0);
+  near = near ?? 0.0;
   this._near = near;
 
-  far = defaultValue(far, Number.MAX_VALUE);
+  far = far ?? Number.MAX_VALUE;
   this._far = far;
 }
 
@@ -79,7 +78,7 @@ DistanceDisplayCondition.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.near;
   array[startingIndex] = value.far;
@@ -102,7 +101,7 @@ DistanceDisplayCondition.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new DistanceDisplayCondition();
@@ -115,8 +114,8 @@ DistanceDisplayCondition.unpack = function (array, startingIndex, result) {
 /**
  * Determines if two distance display conditions are equal.
  *
- * @param {DistanceDisplayCondition} left A distance display condition.
- * @param {DistanceDisplayCondition} right Another distance display condition.
+ * @param {DistanceDisplayCondition} [left] A distance display condition.
+ * @param {DistanceDisplayCondition} [right] Another distance display condition.
  * @return {boolean} Whether the two distance display conditions are equal.
  */
 DistanceDisplayCondition.equals = function (left, right) {
@@ -163,7 +162,7 @@ DistanceDisplayCondition.prototype.clone = function (result) {
 /**
  * Determines if this distance display condition is equal to another.
  *
- * @param {DistanceDisplayCondition} other Another distance display condition.
+ * @param {DistanceDisplayCondition} [other] Another distance display condition.
  * @return {boolean} Whether this distance display condition is equal to the other.
  */
 DistanceDisplayCondition.prototype.equals = function (other) {

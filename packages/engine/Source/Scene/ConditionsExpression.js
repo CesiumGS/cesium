@@ -1,3 +1,4 @@
+import addAllToArray from "../Core/addAllToArray.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import Expression from "./Expression.js";
@@ -73,8 +74,8 @@ function setRuntime(expression, defines) {
     runtimeConditions.push(
       new Statement(
         new Expression(cond, defines),
-        new Expression(condExpression, defines)
-      )
+        new Expression(condExpression, defines),
+      ),
     );
   }
   expression._runtimeConditions = runtimeConditions;
@@ -148,7 +149,7 @@ ConditionsExpression.prototype.getShaderFunction = function (
   functionSignature,
   variableSubstitutionMap,
   shaderState,
-  returnType
+  returnType,
 ) {
   const conditions = this._runtimeConditions;
   if (!defined(conditions) || conditions.length === 0) {
@@ -162,11 +163,11 @@ ConditionsExpression.prototype.getShaderFunction = function (
 
     const condition = statement.condition.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     const expression = statement.expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
 
     // Build the if/else chain from the list of conditions
@@ -203,8 +204,8 @@ ConditionsExpression.prototype.getVariables = function () {
   const length = conditions.length;
   for (let i = 0; i < length; ++i) {
     const statement = conditions[i];
-    variables.push.apply(variables, statement.condition.getVariables());
-    variables.push.apply(variables, statement.expression.getVariables());
+    addAllToArray(variables, statement.condition.getVariables());
+    addAllToArray(variables, statement.expression.getVariables());
   }
 
   // Remove duplicates

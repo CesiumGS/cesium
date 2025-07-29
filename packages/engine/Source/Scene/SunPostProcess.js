@@ -154,18 +154,18 @@ function updateSunPosition(postProcess, context, viewport) {
     viewport,
     0.0,
     1.0,
-    postProcessMatrix4Scratch
+    postProcessMatrix4Scratch,
   );
   const sunPositionEC = Matrix4.multiplyByPoint(
     viewMatrix,
     sunPosition,
-    sunPositionECScratch
+    sunPositionECScratch,
   );
   let sunPositionWC = Transforms.pointToGLWindowCoordinates(
     viewProjectionMatrix,
     viewportTransformation,
     sunPosition,
-    sunPositionWCScratch
+    sunPositionWCScratch,
   );
 
   sunPositionEC.x += CesiumMath.SOLAR_RADIUS;
@@ -173,7 +173,7 @@ function updateSunPosition(postProcess, context, viewport) {
     projectionMatrix,
     viewportTransformation,
     sunPositionEC,
-    sunPositionEC
+    sunPositionEC,
   );
   const sunSize =
     Cartesian2.magnitude(Cartesian2.subtract(limbWC, sunPositionWC, limbWC)) *
@@ -205,13 +205,13 @@ function updateSunPosition(postProcess, context, viewport) {
     downSampleViewport,
     0.0,
     1.0,
-    postProcessMatrix4Scratch
+    postProcessMatrix4Scratch,
   );
   sunPositionWC = Transforms.pointToGLWindowCoordinates(
     viewProjectionMatrix,
     viewportTransformation,
     sunPosition,
-    sunPositionWCScratch
+    sunPositionWCScratch,
   );
 
   size.x *= downSampleWidth / width;

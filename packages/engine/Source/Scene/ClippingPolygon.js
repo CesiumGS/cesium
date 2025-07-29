@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
@@ -42,11 +41,11 @@ function ClippingPolygon(options) {
   Check.typeOf.number.greaterThanOrEquals(
     "options.positions.length",
     options.positions.length,
-    3
+    3,
   );
   //>>includeEnd('debug');
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._positions = [...options.positions];
 }
 
@@ -117,8 +116,8 @@ ClippingPolygon.clone = function (polygon, result) {
  * Compares the provided ClippingPolygons and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
- * @param {Plane} left The first polygon.
- * @param {Plane} right The second polygon.
+ * @param {ClippingPolygon} left The first polygon.
+ * @param {ClippingPolygon} right The second polygon.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 ClippingPolygon.equals = function (left, right) {
@@ -143,7 +142,7 @@ ClippingPolygon.prototype.computeRectangle = function (result) {
     this.positions,
     this.ellipsoid,
     undefined,
-    result
+    result,
   );
 };
 
@@ -167,19 +166,19 @@ ClippingPolygon.prototype.computeSphericalExtents = function (result) {
   let spherePoint = Cartographic.toCartesian(
     Rectangle.southwest(rectangle),
     this.ellipsoid,
-    spherePointScratch
+    spherePointScratch,
   );
 
   // Project into plane with vertical for latitude
   let magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
+    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y,
   );
 
   // Use fastApproximateAtan2 for alignment with shader
   let sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
   let sphereLongitude = CesiumMath.fastApproximateAtan2(
     spherePoint.x,
-    spherePoint.y
+    spherePoint.y,
   );
 
   result.south = sphereLatitude;
@@ -188,19 +187,19 @@ ClippingPolygon.prototype.computeSphericalExtents = function (result) {
   spherePoint = Cartographic.toCartesian(
     Rectangle.northeast(rectangle),
     this.ellipsoid,
-    spherePointScratch
+    spherePointScratch,
   );
 
   // Project into plane with vertical for latitude
   magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
+    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y,
   );
 
   // Use fastApproximateAtan2 for alignment with shader
   sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
   sphereLongitude = CesiumMath.fastApproximateAtan2(
     spherePoint.x,
-    spherePoint.y
+    spherePoint.y,
   );
 
   result.north = sphereLatitude;

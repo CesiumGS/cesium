@@ -34,7 +34,7 @@ describe("Core/OrientedBoundingBox", function () {
 
     for (let i = 0; i < positions.length; ++i) {
       points.push(
-        Matrix3.multiplyByVector(rotation, positions[i], new Cartesian3())
+        Matrix3.multiplyByVector(rotation, positions[i], new Cartesian3()),
       );
     }
 
@@ -74,7 +74,7 @@ describe("Core/OrientedBoundingBox", function () {
   it("fromPoints correct scale", function () {
     const box = OrientedBoundingBox.fromPoints(positions);
     expect(box.halfAxes).toEqual(
-      Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0))
+      Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0)),
     );
     expect(box.center).toEqual(Cartesian3.ZERO);
   });
@@ -84,7 +84,7 @@ describe("Core/OrientedBoundingBox", function () {
     const points = translatePositions(positions, translation);
     const box = OrientedBoundingBox.fromPoints(points);
     expect(box.halfAxes).toEqual(
-      Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0))
+      Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0)),
     );
     expect(box.center).toEqual(translation);
   });
@@ -93,7 +93,7 @@ describe("Core/OrientedBoundingBox", function () {
     const result = rotatePositions(
       positions,
       Cartesian3.UNIT_Z,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const points = result.points;
     const rotation = result.rotation;
@@ -105,9 +105,9 @@ describe("Core/OrientedBoundingBox", function () {
       Matrix3.multiplyByScale(
         rotation,
         new Cartesian3(3.0, 2.0, 4.0),
-        new Matrix3()
+        new Matrix3(),
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
   });
@@ -116,7 +116,7 @@ describe("Core/OrientedBoundingBox", function () {
     const result = rotatePositions(
       positions,
       Cartesian3.UNIT_Y,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const points = result.points;
     const rotation = result.rotation;
@@ -128,9 +128,9 @@ describe("Core/OrientedBoundingBox", function () {
       Matrix3.multiplyByScale(
         rotation,
         new Cartesian3(4.0, 3.0, 2.0),
-        new Matrix3()
+        new Matrix3(),
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
   });
@@ -139,7 +139,7 @@ describe("Core/OrientedBoundingBox", function () {
     const result = rotatePositions(
       positions,
       Cartesian3.UNIT_X,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     const points = result.points;
     const rotation = result.rotation;
@@ -151,9 +151,9 @@ describe("Core/OrientedBoundingBox", function () {
       Matrix3.multiplyByScale(
         rotation,
         new Cartesian3(2.0, 4.0, 3.0),
-        new Matrix3()
+        new Matrix3(),
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
   });
@@ -162,7 +162,7 @@ describe("Core/OrientedBoundingBox", function () {
     const result = rotatePositions(
       positions,
       Cartesian3.UNIT_Z,
-      CesiumMath.PI_OVER_FOUR
+      CesiumMath.PI_OVER_FOUR,
     );
     let points = result.points;
     const rotation = result.rotation;
@@ -177,9 +177,9 @@ describe("Core/OrientedBoundingBox", function () {
       Matrix3.multiplyByScale(
         rotation,
         new Cartesian3(3.0, 2.0, 4.0),
-        new Matrix3()
+        new Matrix3(),
       ),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(box.center).toEqualEpsilon(translation, CesiumMath.EPSILON15);
   });
@@ -191,7 +191,7 @@ describe("Core/OrientedBoundingBox", function () {
       rectangle,
       0.0,
       0.0,
-      Ellipsoid.WGS84
+      Ellipsoid.WGS84,
     );
 
     expect(box1.center).toEqualEpsilon(box2.center, CesiumMath.EPSILON15);
@@ -205,12 +205,12 @@ describe("Core/OrientedBoundingBox", function () {
       rectangle,
       undefined,
       undefined,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
 
     expect(box.center).toEqualEpsilon(
       new Cartesian3(1.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     const rotScale = Matrix3.ZERO;
@@ -231,7 +231,7 @@ describe("Core/OrientedBoundingBox", function () {
         new Rectangle(-1.0, 1.0, 1.0, -1.0),
         0.0,
         0.0,
-        ellipsoid
+        ellipsoid,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -239,7 +239,7 @@ describe("Core/OrientedBoundingBox", function () {
         new Rectangle(-2.0, 2.0, -1.0, 1.0),
         0.0,
         0.0,
-        ellipsoid
+        ellipsoid,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -247,7 +247,7 @@ describe("Core/OrientedBoundingBox", function () {
         new Rectangle(-4.0, -2.0, 4.0, 1.0),
         0.0,
         0.0,
-        ellipsoid
+        ellipsoid,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -255,7 +255,7 @@ describe("Core/OrientedBoundingBox", function () {
         new Rectangle(-2.0, -2.0, 1.0, 2.0),
         0.0,
         0.0,
-        ellipsoid
+        ellipsoid,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -263,7 +263,7 @@ describe("Core/OrientedBoundingBox", function () {
         new Rectangle(-1.0, -2.0, 2.0, 2.0),
         0.0,
         0.0,
-        ellipsoid
+        ellipsoid,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -271,7 +271,7 @@ describe("Core/OrientedBoundingBox", function () {
         new Rectangle(-4.0, -1.0, 4.0, 2.0),
         0.0,
         0.0,
-        ellipsoid
+        ellipsoid,
       );
     }).toThrowDeveloperError();
   });
@@ -283,7 +283,7 @@ describe("Core/OrientedBoundingBox", function () {
         rectangle,
         0.0,
         0.0,
-        new Ellipsoid(1.01, 1.0, 1.01)
+        new Ellipsoid(1.01, 1.0, 1.01),
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -291,7 +291,7 @@ describe("Core/OrientedBoundingBox", function () {
         rectangle,
         0.0,
         0.0,
-        new Ellipsoid(1.0, 1.01, 1.01)
+        new Ellipsoid(1.0, 1.01, 1.01),
       );
     }).toThrowDeveloperError();
   });
@@ -303,12 +303,12 @@ describe("Core/OrientedBoundingBox", function () {
       rectangle,
       0.0,
       0.0,
-      ellipsoid
+      ellipsoid,
     );
 
     expect(box.center).toEqualEpsilon(
       new Cartesian3(1.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     const rotScale = Matrix3.ZERO;
@@ -324,13 +324,13 @@ describe("Core/OrientedBoundingBox", function () {
       0.0,
       0.0,
       ellipsoid,
-      result
+      result,
     );
     expect(box).toBe(result);
 
     expect(box.center).toEqualEpsilon(
       new Cartesian3(1.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     const rotScale = Matrix3.ZERO;
@@ -346,11 +346,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(0.0, 0.0, 0.0, 0.0),
       1.0,
       1.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(2.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
@@ -358,11 +358,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(0.0, 0.0, 0.0, 0.0),
       -1.0,
       -1.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
@@ -370,41 +370,41 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(0.0, 0.0, 0.0, 0.0),
       -1.0,
       1.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(1.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 1, 0, 0, 0, 0, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(-d90, -d90, d90, d90),
       0.0,
       1.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(1.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 1, 2, 0, 0, 0, 2, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(-d90, -d90, d90, d90),
       -1.0,
       -1.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
@@ -412,15 +412,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d90, -d90, d90, d90),
       -1.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.5, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 0.5, 1, 0, 0, 0, 1, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -440,15 +440,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d180, -d90, d180, d90),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // 3/4s of longitude, full latitude
@@ -456,15 +456,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d135, -d90, d135, d90),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(oneMinusOnePlusSqrtHalfDivTwo, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, onePlusSqrtHalfDivTwo, 1, 0, 0, 0, 1, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // 3/4s of longitude, 1/2 of latitude centered at equator
@@ -472,15 +472,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d135, -d45, d135, d45),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(oneMinusOnePlusSqrtHalfDivTwo, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, onePlusSqrtHalfDivTwo, 1, 0, 0, 0, Math.SQRT1_2, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // 3/4s of longitude centered at IDL, 1/2 of latitude centered at equator
@@ -488,11 +488,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(d180, -d45, d90, d45),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(sqrtTwoMinusOneDivFour, -sqrtTwoMinusOneDivFour, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(
@@ -504,9 +504,9 @@ describe("Core/OrientedBoundingBox", function () {
         -sqrtTwoPlusOneDivFour,
         0,
         Math.SQRT1_2,
-        0.0
+        0.0,
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // Full longitude, 1/2 of latitude centered at equator
@@ -514,15 +514,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d180, -d45, d180, d45),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 1, 1, 0, 0, 0, Math.SQRT1_2, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // Full longitude, 1/4 of latitude starting from north pole
@@ -530,11 +530,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d180, d45, d180, d90),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0, 0, onePlusSqrtHalfDivTwo),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(
@@ -546,9 +546,9 @@ describe("Core/OrientedBoundingBox", function () {
         0,
         0,
         oneMinusOnePlusSqrtHalfDivTwo,
-        0
+        0,
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // Full longitude, 1/4 of latitude starting from south pole
@@ -556,11 +556,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d180, -d90, d180, -d45),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0, 0, -onePlusSqrtHalfDivTwo),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(
@@ -572,9 +572,9 @@ describe("Core/OrientedBoundingBox", function () {
         0,
         0,
         oneMinusOnePlusSqrtHalfDivTwo,
-        0
+        0,
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // Cmpletely on north pole
@@ -582,15 +582,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d180, d90, d180, d90),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0, 0, 1),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // Completely on north pole 2
@@ -598,15 +598,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d135, d90, d135, d90),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0, 0, 1),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // Completely on south pole
@@ -614,15 +614,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d180, -d90, d180, -d90),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0, 0, -1),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     // Completely on south pole 2
@@ -630,15 +630,15 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(-d135, -d90, d135, -d90),
       0,
       0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0, 0, -1),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -656,11 +656,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(0.0, 0.0, 0.0, 0.0),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(1.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
@@ -668,11 +668,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(d180, 0.0, -d180, 0.0),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(-1.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
@@ -680,11 +680,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(d180, 0.0, d180, 0.0),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(-1.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
@@ -692,11 +692,11 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(0.0, d90, 0.0, d90),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.0, 0.0, 1.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
@@ -704,101 +704,101 @@ describe("Core/OrientedBoundingBox", function () {
       new Rectangle(0.0, 0.0, d180, 0.0),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.0, 0.5, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(-1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(-d90, -d90, d90, d90),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.5, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(-d90, -d30, d90, d90),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.1875 * sqrt3, 0.0, 0.1875),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, -sqrt3 / 4, (5 * sqrt3) / 16, 1, 0, 0, 0, 3 / 4, 5 / 16),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(-d90, -d90, d90, d30),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.1875 * sqrt3, 0.0, -0.1875),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0, sqrt3 / 4, (5 * sqrt3) / 16, 1, 0, 0, 0, 3 / 4, -5 / 16),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(0.0, -d30, d180, d90),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.0, 0.1875 * sqrt3, 0.1875),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(-1, 0, 0, 0, -sqrt3 / 4, (5 * sqrt3) / 16, 0, 3 / 4, 5 / 16),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(0.0, -d90, d180, d30),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.0, 0.1875 * sqrt3, -0.1875),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(-1, 0, 0, 0, sqrt3 / 4, (5 * sqrt3) / 16, 0, 3 / 4, -5 / 16),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(-d45, 0.0, d45, 0.0),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(
@@ -810,20 +810,20 @@ describe("Core/OrientedBoundingBox", function () {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(d135, 0.0, -d135, 0.0),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(-(1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(
@@ -835,20 +835,20 @@ describe("Core/OrientedBoundingBox", function () {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(0.0, -d45, 0.0, d45),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(
@@ -860,39 +860,39 @@ describe("Core/OrientedBoundingBox", function () {
         0.0,
         0.0,
         Math.SQRT1_2,
-        0.0
+        0.0,
       ),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(-d90, 0.0, d90, 0.0),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.5, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
 
     box = OrientedBoundingBox.fromRectangle(
       new Rectangle(0.0, -d90, 0.0, d90),
       0.0,
       0.0,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(box.center).toEqualEpsilon(
       new Cartesian3(0.5, 0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(box.halfAxes).toEqualEpsilon(
       new Matrix3(0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -903,7 +903,7 @@ describe("Core/OrientedBoundingBox", function () {
     const transformation = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     const box = new OrientedBoundingBox();
@@ -914,9 +914,9 @@ describe("Core/OrientedBoundingBox", function () {
       Matrix3.multiplyByUniformScale(
         Matrix4.getMatrix3(transformation, new Matrix3()),
         0.5,
-        new Matrix3()
+        new Matrix3(),
       ),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -927,7 +927,7 @@ describe("Core/OrientedBoundingBox", function () {
     const transformation = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     const box = OrientedBoundingBox.fromTransformation(transformation);
@@ -937,9 +937,9 @@ describe("Core/OrientedBoundingBox", function () {
       Matrix3.multiplyByUniformScale(
         Matrix4.getMatrix3(transformation, new Matrix3()),
         0.5,
-        new Matrix3()
+        new Matrix3(),
       ),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -964,7 +964,7 @@ describe("Core/OrientedBoundingBox", function () {
 
     const box = new OrientedBoundingBox(
       center,
-      Matrix3.multiplyByScalar(axes, 0.5, new Matrix3())
+      Matrix3.multiplyByScalar(axes, 0.5, new Matrix3()),
     );
 
     const planeNormXform = function (nx, ny, nz, dist) {
@@ -1438,11 +1438,11 @@ describe("Core/OrientedBoundingBox", function () {
   it("intersectPlane works with off-center box", function () {
     intersectPlaneTestCornersEdgesFaces(
       new Cartesian3(1.0, 0.0, 0.0),
-      Matrix3.IDENTITY
+      Matrix3.IDENTITY,
     );
     intersectPlaneTestCornersEdgesFaces(
       new Cartesian3(0.7, -1.8, 12.0),
-      Matrix3.IDENTITY
+      Matrix3.IDENTITY,
     );
   });
 
@@ -1451,8 +1451,8 @@ describe("Core/OrientedBoundingBox", function () {
       Cartesian3.ZERO,
       Matrix3.fromQuaternion(
         Quaternion.fromAxisAngle(new Cartesian3(0.5, 1.5, -1.2), 1.2),
-        new Matrix3()
-      )
+        new Matrix3(),
+      ),
     );
   });
 
@@ -1460,23 +1460,23 @@ describe("Core/OrientedBoundingBox", function () {
     const m = new Matrix3();
     intersectPlaneTestCornersEdgesFaces(
       Cartesian3.ZERO,
-      Matrix3.fromScale(new Cartesian3(1.5, 0.4, 20.6), m)
+      Matrix3.fromScale(new Cartesian3(1.5, 0.4, 20.6), m),
     );
     intersectPlaneTestCornersEdgesFaces(
       Cartesian3.ZERO,
-      Matrix3.fromScale(new Cartesian3(0.0, 0.4, 20.6), m)
+      Matrix3.fromScale(new Cartesian3(0.0, 0.4, 20.6), m),
     );
     intersectPlaneTestCornersEdgesFaces(
       Cartesian3.ZERO,
-      Matrix3.fromScale(new Cartesian3(1.5, 0.0, 20.6), m)
+      Matrix3.fromScale(new Cartesian3(1.5, 0.0, 20.6), m),
     );
     intersectPlaneTestCornersEdgesFaces(
       Cartesian3.ZERO,
-      Matrix3.fromScale(new Cartesian3(1.5, 0.4, 0.0), m)
+      Matrix3.fromScale(new Cartesian3(1.5, 0.4, 0.0), m),
     );
     intersectPlaneTestCornersEdgesFaces(
       Cartesian3.ZERO,
-      Matrix3.fromScale(new Cartesian3(0.0, 0.0, 0.0), m)
+      Matrix3.fromScale(new Cartesian3(0.0, 0.0, 0.0), m),
     );
   });
 
@@ -1484,7 +1484,7 @@ describe("Core/OrientedBoundingBox", function () {
     const m = Matrix3.fromScale(new Cartesian3(1.5, 80.4, 2.6), new Matrix3());
     const n = Matrix3.fromQuaternion(
       Quaternion.fromAxisAngle(new Cartesian3(0.5, 1.5, -1.2), 1.2),
-      new Matrix3()
+      new Matrix3(),
     );
     Matrix3.multiply(m, n, n);
     intersectPlaneTestCornersEdgesFaces(new Cartesian3(-5.1, 0.0, 0.1), n);
@@ -1513,7 +1513,7 @@ describe("Core/OrientedBoundingBox", function () {
     const rotationScale = Matrix3.multiplyByScale(
       rotation,
       scale,
-      new Matrix3()
+      new Matrix3(),
     );
 
     const center = new Cartesian3(4.0, 3.0, 2.0);
@@ -1533,7 +1533,7 @@ describe("Core/OrientedBoundingBox", function () {
     let expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative x direction
@@ -1544,7 +1544,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive y direction
@@ -1555,7 +1555,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative y direction
@@ -1566,7 +1566,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive z direction
@@ -1577,7 +1577,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative z direction
@@ -1588,7 +1588,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from corner point
@@ -1602,7 +1602,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // inside box
@@ -1611,7 +1611,7 @@ describe("Core/OrientedBoundingBox", function () {
     Cartesian3.add(center, offset, cartesian);
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -1622,7 +1622,7 @@ describe("Core/OrientedBoundingBox", function () {
     const rotationScale = Matrix3.multiplyByScale(
       rotation,
       scale,
-      new Matrix3()
+      new Matrix3(),
     );
 
     const center = new Cartesian3(4.0, 3.0, 2.0);
@@ -1647,7 +1647,7 @@ describe("Core/OrientedBoundingBox", function () {
     let expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative x direction
@@ -1658,7 +1658,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive y direction
@@ -1669,7 +1669,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative y direction
@@ -1680,7 +1680,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive z direction
@@ -1691,7 +1691,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative z direction
@@ -1702,7 +1702,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from corner point
@@ -1715,7 +1715,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // inside box
@@ -1724,7 +1724,7 @@ describe("Core/OrientedBoundingBox", function () {
     Cartesian3.add(center, offset, cartesian);
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -1735,7 +1735,7 @@ describe("Core/OrientedBoundingBox", function () {
     const rotationScale = Matrix3.multiplyByScale(
       rotation,
       scale,
-      new Matrix3()
+      new Matrix3(),
     );
 
     const center = new Cartesian3(4.0, 3.0, 2.0);
@@ -1760,7 +1760,7 @@ describe("Core/OrientedBoundingBox", function () {
     let expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative x direction
@@ -1771,7 +1771,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive y direction
@@ -1782,7 +1782,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative y direction
@@ -1793,7 +1793,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive z direction
@@ -1804,7 +1804,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative z direction
@@ -1815,7 +1815,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from corner point
@@ -1828,7 +1828,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // inside box
@@ -1837,7 +1837,7 @@ describe("Core/OrientedBoundingBox", function () {
     Cartesian3.add(center, offset, cartesian);
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -1869,7 +1869,7 @@ describe("Core/OrientedBoundingBox", function () {
     let expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative x direction
@@ -1880,7 +1880,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive y direction
@@ -1891,7 +1891,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative y direction
@@ -1902,7 +1902,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive z direction
@@ -1913,7 +1913,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative z direction
@@ -1924,7 +1924,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from corner point
@@ -1937,7 +1937,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // inside box
@@ -1945,7 +1945,7 @@ describe("Core/OrientedBoundingBox", function () {
     Cartesian3.add(center, offset, cartesian);
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -1958,7 +1958,7 @@ describe("Core/OrientedBoundingBox", function () {
     const rotationScale = Matrix3.multiplyByScale(
       rotation,
       scale,
-      new Matrix3()
+      new Matrix3(),
     );
 
     const center = new Cartesian3(4.0, 3.0, 2.0);
@@ -1988,7 +1988,7 @@ describe("Core/OrientedBoundingBox", function () {
     let expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative x direction
@@ -1999,7 +1999,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive y direction
@@ -2010,7 +2010,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative y direction
@@ -2021,7 +2021,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive z direction
@@ -2032,7 +2032,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative z direction
@@ -2043,7 +2043,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from endpoint in posiive direction
@@ -2055,7 +2055,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from endpoint in negative direction
@@ -2068,7 +2068,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // inside box
@@ -2077,7 +2077,7 @@ describe("Core/OrientedBoundingBox", function () {
     Cartesian3.add(center, offset, cartesian);
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -2090,7 +2090,7 @@ describe("Core/OrientedBoundingBox", function () {
     const rotationScale = Matrix3.multiplyByScale(
       rotation,
       scale,
-      new Matrix3()
+      new Matrix3(),
     );
 
     const center = new Cartesian3(4.0, 3.0, 2.0);
@@ -2120,7 +2120,7 @@ describe("Core/OrientedBoundingBox", function () {
     let expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative x direction
@@ -2131,7 +2131,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive y direction
@@ -2142,7 +2142,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative y direction
@@ -2153,7 +2153,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive z direction
@@ -2164,7 +2164,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative z direction
@@ -2175,7 +2175,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from endpoint in positive direction
@@ -2187,7 +2187,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from endpoint in negative direction
@@ -2200,7 +2200,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // inside box
@@ -2209,7 +2209,7 @@ describe("Core/OrientedBoundingBox", function () {
     Cartesian3.add(center, offset, cartesian);
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -2222,7 +2222,7 @@ describe("Core/OrientedBoundingBox", function () {
     const rotationScale = Matrix3.multiplyByScale(
       rotation,
       scale,
-      new Matrix3()
+      new Matrix3(),
     );
 
     const center = new Cartesian3(4.0, 3.0, 2.0);
@@ -2252,7 +2252,7 @@ describe("Core/OrientedBoundingBox", function () {
     let expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative x direction
@@ -2263,7 +2263,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive y direction
@@ -2274,7 +2274,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative y direction
@@ -2285,7 +2285,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive z direction
@@ -2296,7 +2296,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative z direction
@@ -2307,7 +2307,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from endpoint in positive direction
@@ -2319,7 +2319,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from endpoint in negative direction   // from endpoint in negative direction
@@ -2332,7 +2332,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // inside box
@@ -2341,7 +2341,7 @@ describe("Core/OrientedBoundingBox", function () {
     Cartesian3.add(center, offset, cartesian);
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -2372,7 +2372,7 @@ describe("Core/OrientedBoundingBox", function () {
     let expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative x direction
@@ -2383,7 +2383,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive y direction
@@ -2394,7 +2394,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative y direction
@@ -2405,7 +2405,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from positive z direction
@@ -2416,7 +2416,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from negative z direction
@@ -2427,7 +2427,7 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // from arbitrary point
@@ -2438,14 +2438,14 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     // inside box
     cartesian = center;
     expect(obb.distanceSquaredTo(center)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -2459,7 +2459,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(function () {
       OrientedBoundingBox.distanceSquaredTo(
         new OrientedBoundingBox(),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -2550,7 +2550,7 @@ describe("Core/OrientedBoundingBox", function () {
       OrientedBoundingBox.computePlaneDistances(
         undefined,
         new Cartesian3(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -2560,7 +2560,7 @@ describe("Core/OrientedBoundingBox", function () {
       OrientedBoundingBox.computePlaneDistances(
         new OrientedBoundingBox(),
         undefined,
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -2570,7 +2570,7 @@ describe("Core/OrientedBoundingBox", function () {
       OrientedBoundingBox.computePlaneDistances(
         new OrientedBoundingBox(),
         new Cartesian3(),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -2589,7 +2589,7 @@ describe("Core/OrientedBoundingBox", function () {
       new Cartesian3(),
       new Cartesian3(),
       new Cartesian3(),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const result = box.computeCorners(corners);
 
@@ -2658,7 +2658,7 @@ describe("Core/OrientedBoundingBox", function () {
 
     const extractedTranslation = Matrix4.getTranslation(
       result,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const extractedScale = Matrix4.getScale(result, new Cartesian3());
 
@@ -2678,7 +2678,7 @@ describe("Core/OrientedBoundingBox", function () {
 
     const extractedTranslation = Matrix4.getTranslation(
       transformation,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const extractedScale = Matrix4.getScale(transformation, new Cartesian3());
 
@@ -2711,7 +2711,7 @@ describe("Core/OrientedBoundingBox", function () {
     let halfAxes = Matrix3.multiplyByScale(
       Matrix3.IDENTITY,
       new Cartesian3(radius, radius, radius),
-      new Matrix3()
+      new Matrix3(),
     );
     let obb = new OrientedBoundingBox(new Cartesian3(0, 0, -2.75), halfAxes);
     expect(obb.isOccluded(occluder)).toEqual(true);
@@ -2723,7 +2723,7 @@ describe("Core/OrientedBoundingBox", function () {
     halfAxes = Matrix3.multiplyByScale(
       Matrix3.IDENTITY,
       new Cartesian3(radius, radius, radius),
-      new Matrix3()
+      new Matrix3(),
     );
     obb = new OrientedBoundingBox(new Cartesian3(0, 0, -1.5), halfAxes);
     expect(obb.isOccluded(occluder)).toEqual(false);
@@ -2733,7 +2733,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(function () {
       OrientedBoundingBox.isOccluded(
         undefined,
-        new Occluder(new BoundingSphere(), new Cartesian3())
+        new Occluder(new BoundingSphere(), new Cartesian3()),
       );
     }).toThrowDeveloperError();
   });
@@ -2794,6 +2794,6 @@ describe("Core/OrientedBoundingBox", function () {
   createPackableSpecs(
     OrientedBoundingBox,
     new OrientedBoundingBox(new Cartesian3(1.0, 2.0, 3.0), Matrix3.IDENTITY),
-    [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+    [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
   );
 });

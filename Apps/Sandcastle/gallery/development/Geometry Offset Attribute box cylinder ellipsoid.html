@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -45,13 +42,13 @@
         let offset = Cesium.Cartesian3.multiplyByScalar(
           ellipsoid.geodeticSurfaceNormal(center1),
           100000,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
         const dimensions = new Cesium.Cartesian3(400000.0, 300000.0, 500000.0);
         const boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(center1),
           new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
 
         const i1 = new Cesium.GeometryInstance({
@@ -64,11 +61,9 @@
           modelMatrix: boxModelMatrix,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5),
             ),
-            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
-              offset
-            ),
+            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
           },
         });
 
@@ -80,12 +75,8 @@
           }),
           modelMatrix: boxModelMatrix,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
-            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
-              offset
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
+            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
           },
         });
 
@@ -93,7 +84,7 @@
         offset = Cesium.Cartesian3.multiplyByScalar(
           ellipsoid.geodeticSurfaceNormal(center2),
           100000,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
         const length = 400000.0;
         const topRad = 200000.0;
@@ -101,7 +92,7 @@
         const cylinderModelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(center2),
           new Cesium.Cartesian3(0.0, 0.0, length * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
 
         const i2 = new Cesium.GeometryInstance({
@@ -116,11 +107,9 @@
           modelMatrix: cylinderModelMatrix,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5),
             ),
-            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
-              offset
-            ),
+            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
           },
         });
 
@@ -135,12 +124,8 @@
           }),
           modelMatrix: cylinderModelMatrix,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
-            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
-              offset
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
+            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
           },
         });
 
@@ -148,13 +133,13 @@
         offset = Cesium.Cartesian3.multiplyByScalar(
           ellipsoid.geodeticSurfaceNormal(center3),
           100000,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
         const radii = new Cesium.Cartesian3(200000.0, 200000.0, 300000.0);
         const ellipsoidModelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(center3),
           new Cesium.Cartesian3(0.0, 0.0, radii.z),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         const i3 = new Cesium.GeometryInstance({
           id: id3,
@@ -166,11 +151,9 @@
           modelMatrix: ellipsoidModelMatrix,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5),
             ),
-            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
-              offset
-            ),
+            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
           },
         });
         const o3 = new Cesium.GeometryInstance({
@@ -183,12 +166,8 @@
           }),
           modelMatrix: ellipsoidModelMatrix,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
-            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
-              offset
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
+            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
           },
         });
 
@@ -199,7 +178,7 @@
               closed: true,
             }),
             asynchronous: false,
-          })
+          }),
         );
         const o = scene.primitives.add(
           new Cesium.Primitive({
@@ -211,7 +190,7 @@
               },
             }),
             asynchronous: false,
-          })
+          }),
         );
 
         Sandcastle.addToolbarButton("Move box", function () {
@@ -219,22 +198,22 @@
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center1),
             150000,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
 
           attributes = o.getGeometryInstanceAttributes(id1);
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center1),
             150000,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
         });
 
@@ -243,22 +222,22 @@
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center2),
             150000,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
 
           attributes = o.getGeometryInstanceAttributes(id2);
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center2),
             150000,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
         });
 
@@ -267,22 +246,22 @@
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center3),
             150000,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
 
           attributes = o.getGeometryInstanceAttributes(id3);
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center3),
             150000,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
         });
         //Sandcastle_End

@@ -61,7 +61,7 @@ VoxelCell.fromKeyframeNode = function (
   primitive,
   tileIndex,
   sampleIndex,
-  keyframeNode
+  keyframeNode,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("primitive", primitive);
@@ -71,13 +71,13 @@ VoxelCell.fromKeyframeNode = function (
   //>>includeEnd('debug');
 
   const voxelCell = new VoxelCell(primitive, tileIndex, sampleIndex);
-  const { spatialNode, metadata } = keyframeNode;
-  voxelCell._metadata = getMetadataForSample(primitive, metadata, sampleIndex);
+  const { spatialNode, content } = keyframeNode;
+  voxelCell._metadata = getMetadataForSample(primitive, content, sampleIndex);
   voxelCell._orientedBoundingBox = getOrientedBoundingBox(
     primitive,
     spatialNode,
     sampleIndex,
-    voxelCell._orientedBoundingBox
+    voxelCell._orientedBoundingBox,
   );
   return voxelCell;
 };
@@ -85,22 +85,23 @@ VoxelCell.fromKeyframeNode = function (
 /**
  * @private
  * @param {VoxelPrimitive} primitive
- * @param {object} metadata
+ * @param {VoxelContent} content
  * @param {number} sampleIndex
  * @returns {object}
  */
-function getMetadataForSample(primitive, metadata, sampleIndex) {
-  if (!defined(metadata)) {
+function getMetadataForSample(primitive, content, sampleIndex) {
+  if (!defined(content) || !defined(content.metadata)) {
     return undefined;
   }
   const { names, types } = primitive.provider;
+  const { metadata } = content;
   const metadataMap = {};
   for (let i = 0; i < names.length; i++) {
     const name = names[i];
     const componentCount = MetadataType.getComponentCount(types[i]);
     const samples = metadata[i].slice(
       sampleIndex * componentCount,
-      (sampleIndex + 1) * componentCount
+      (sampleIndex + 1) * componentCount,
     );
     metadataMap[name] = samples;
   }
@@ -130,7 +131,7 @@ function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
     xIndex,
     yIndex,
     zIndex,
-    tileCoordinateScratch
+    tileCoordinateScratch,
   );
 
   // Remove padding, and convert to a fraction in [0, 1], where the limits are
@@ -139,10 +140,10 @@ function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
     Cartesian3.subtract(
       tileCoordinate,
       primitive._paddingBefore,
-      tileCoordinateScratch
+      tileCoordinateScratch,
     ),
     primitive.dimensions,
-    tileUvScratch
+    tileUvScratch,
   );
 
   const shape = primitive._shape;
@@ -150,7 +151,7 @@ function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
     spatialNode,
     primitive.dimensions,
     tileUv,
-    result
+    result,
   );
 }
 

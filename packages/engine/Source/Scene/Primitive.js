@@ -7,7 +7,7 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -152,7 +152,7 @@ import ShadowMode from "./ShadowMode.js";
  * @see GroundPrimitive
  */
 function Primitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The geometry instances rendered with this primitive.  This may
@@ -224,9 +224,7 @@ function Primitive(options) {
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = new Matrix4();
 
   /**
@@ -237,17 +235,14 @@ function Primitive(options) {
    *
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
-  this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
-  this._interleave = defaultValue(options.interleave, false);
-  this._releaseGeometryInstances = defaultValue(
-    options.releaseGeometryInstances,
-    true
-  );
-  this._allowPicking = defaultValue(options.allowPicking, true);
-  this._asynchronous = defaultValue(options.asynchronous, true);
-  this._compressVertices = defaultValue(options.compressVertices, true);
+  this._vertexCacheOptimize = options.vertexCacheOptimize ?? false;
+  this._interleave = options.interleave ?? false;
+  this._releaseGeometryInstances = options.releaseGeometryInstances ?? true;
+  this._allowPicking = options.allowPicking ?? true;
+  this._asynchronous = options.asynchronous ?? true;
+  this._compressVertices = options.compressVertices ?? true;
 
   /**
    * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
@@ -258,7 +253,7 @@ function Primitive(options) {
    *
    * @default true
    */
-  this.cull = defaultValue(options.cull, true);
+  this.cull = options.cull ?? true;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -270,10 +265,7 @@ function Primitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * @private
@@ -288,7 +280,7 @@ function Primitive(options) {
         this.geometryInstances.length !== 1))
   ) {
     throw new DeveloperError(
-      "Relative-to-center rendering only supports one geometry instance."
+      "Relative-to-center rendering only supports one geometry instance.",
     );
   }
   //>>includeEnd('debug');
@@ -300,7 +292,7 @@ function Primitive(options) {
    *
    * @default ShadowMode.DISABLED
    */
-  this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
+  this.shadows = options.shadows ?? ShadowMode.DISABLED;
 
   this._translucent = undefined;
 
@@ -607,7 +599,7 @@ function createBatchTable(primitive, context) {
         functionName: "czm_batchTable_boundingSphereRadius",
         componentDatatype: ComponentDatatype.FLOAT,
         componentsPerAttribute: 1,
-      }
+      },
     );
     boundingSphereAttributeIndices.center3DHigh = attributes.length - 5;
     boundingSphereAttributeIndices.center3DLow = attributes.length - 4;
@@ -648,7 +640,7 @@ function createBatchTable(primitive, context) {
     }
 
     const pickObject = {
-      primitive: defaultValue(instance.pickPrimitive, primitive),
+      primitive: instance.pickPrimitive ?? primitive,
     };
 
     if (defined(instance.id)) {
@@ -670,7 +662,8 @@ function createBatchTable(primitive, context) {
 
   primitive._batchTable = batchTable;
   primitive._batchTableAttributeIndices = attributeIndices;
-  primitive._batchTableBoundingSphereAttributeIndices = boundingSphereAttributeIndices;
+  primitive._batchTableBoundingSphereAttributeIndices =
+    boundingSphereAttributeIndices;
   primitive._batchTableOffsetAttribute2DIndex = offset2DIndex;
 }
 
@@ -731,7 +724,7 @@ const positionRegex = /in\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 Primitive._modifyShaderPosition = function (
   primitive,
   vertexShaderSource,
-  scene3DOnly
+  scene3DOnly,
 ) {
   let match;
 
@@ -743,7 +736,7 @@ Primitive._modifyShaderPosition = function (
     const name = match[1];
 
     const functionName = `vec4 czm_compute${name[0].toUpperCase()}${name.substr(
-      1
+      1,
     )}()`;
 
     // Don't forward-declare czm_computePosition because computePosition.glsl already does.
@@ -788,11 +781,11 @@ Primitive._modifyShaderPosition = function (
       // Use RTC
       vertexShaderSource = vertexShaderSource.replace(
         /in\s+vec(?:3|4)\s+position3DHigh;/g,
-        ""
+        "",
       );
       vertexShaderSource = vertexShaderSource.replace(
         /in\s+vec(?:3|4)\s+position3DLow;/g,
-        ""
+        "",
       );
 
       forwardDecl += "uniform mat4 u_modifiedModelView;\n";
@@ -806,17 +799,17 @@ Primitive._modifyShaderPosition = function (
 
       vertexShaderSource = vertexShaderSource.replace(
         /czm_modelViewRelativeToEye\s+\*\s+/g,
-        ""
+        "",
       );
       vertexShaderSource = vertexShaderSource.replace(
         /czm_modelViewProjectionRelativeToEye/g,
-        "czm_projection"
+        "czm_projection",
       );
     }
   }
 
   return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join(
-    "\n"
+    "\n",
   );
 };
 
@@ -827,7 +820,7 @@ Primitive._appendShowToShader = function (primitive, vertexShaderSource) {
 
   const renamedVS = ShaderSource.replaceMain(
     vertexShaderSource,
-    "czm_non_show_main"
+    "czm_non_show_main",
   );
   const showMain =
     "void main() \n" +
@@ -842,7 +835,7 @@ Primitive._appendShowToShader = function (primitive, vertexShaderSource) {
 Primitive._updateColorAttribute = function (
   primitive,
   vertexShaderSource,
-  isDepthFail
+  isDepthFail,
 ) {
   // some appearances have a color attribute for per vertex color.
   // only remove if color is a per instance attribute.
@@ -863,7 +856,7 @@ Primitive._updateColorAttribute = function (
     !defined(primitive._batchTableAttributeIndices.depthFailColor)
   ) {
     throw new DeveloperError(
-      "A depthFailColor per-instance attribute is required when using a depth fail appearance that uses a color attribute."
+      "A depthFailColor per-instance attribute is required when using a depth fail appearance that uses a color attribute.",
     );
   }
   //>>includeEnd('debug');
@@ -873,12 +866,12 @@ Primitive._updateColorAttribute = function (
   if (!isDepthFail) {
     modifiedVS = modifiedVS.replace(
       /(\b)color(\b)/g,
-      "$1czm_batchTable_color(batchId)$2"
+      "$1czm_batchTable_color(batchId)$2",
     );
   } else {
     modifiedVS = modifiedVS.replace(
       /(\b)color(\b)/g,
-      "$1czm_batchTable_depthFailColor(batchId)$2"
+      "$1czm_batchTable_depthFailColor(batchId)$2",
     );
   }
   return modifiedVS;
@@ -905,7 +898,7 @@ Primitive._updatePickColorAttribute = function (source) {
   let vsPick = source.replace(/in\s+vec4\s+pickColor;/g, "");
   vsPick = vsPick.replace(
     /(\b)pickColor(\b)/g,
-    "$1czm_batchTable_pickColor(batchId)$2"
+    "$1czm_batchTable_pickColor(batchId)$2",
   );
   return vsPick;
 };
@@ -919,7 +912,7 @@ Primitive._appendOffsetToShader = function (primitive, vertexShaderSource) {
   attr += "in float applyOffset;";
   let modifiedShader = vertexShaderSource.replace(
     /in\s+float\s+batchId;/g,
-    attr
+    attr,
   );
 
   let str = "vec4 $1 = czm_computePosition();\n";
@@ -935,7 +928,7 @@ Primitive._appendOffsetToShader = function (primitive, vertexShaderSource) {
   str += "    }\n";
   modifiedShader = modifiedShader.replace(
     /vec4\s+([A-Za-z0-9_]+)\s+=\s+czm_computePosition\(\);/g,
-    str
+    str,
   );
   return modifiedShader;
 };
@@ -943,7 +936,7 @@ Primitive._appendOffsetToShader = function (primitive, vertexShaderSource) {
 Primitive._appendDistanceDisplayConditionToShader = function (
   primitive,
   vertexShaderSource,
-  scene3DOnly
+  scene3DOnly,
 ) {
   if (
     !defined(primitive._batchTableAttributeIndices.distanceDisplayCondition)
@@ -953,7 +946,7 @@ Primitive._appendDistanceDisplayConditionToShader = function (
 
   const renamedVS = ShaderSource.replaceMain(
     vertexShaderSource,
-    "czm_non_distanceDisplayCondition_main"
+    "czm_non_distanceDisplayCondition_main",
   );
   let distanceDisplayConditionMain =
     "void main() \n" +
@@ -1088,7 +1081,7 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
 function depthClampVS(vertexShaderSource) {
   let modifiedVS = ShaderSource.replaceMain(
     vertexShaderSource,
-    "czm_non_depth_clamp_main"
+    "czm_non_depth_clamp_main",
   );
   modifiedVS +=
     "void main() {\n" +
@@ -1101,7 +1094,7 @@ function depthClampVS(vertexShaderSource) {
 function depthClampFS(fragmentShaderSource) {
   let modifiedFS = ShaderSource.replaceMain(
     fragmentShaderSource,
-    "czm_non_depth_clamp_main"
+    "czm_non_depth_clamp_main",
   );
   modifiedFS +=
     "void main() {\n" +
@@ -1132,7 +1125,7 @@ function validateShaderMatching(shaderProgram, attributeLocations) {
     if (shaderAttributes.hasOwnProperty(name)) {
       if (!defined(attributeLocations[name])) {
         throw new DeveloperError(
-          `Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input '${name}', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry.`
+          `Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input '${name}', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry.`,
         );
       }
     }
@@ -1148,7 +1141,7 @@ function getUniformFunction(uniforms, name) {
 
 const numberOfCreationWorkers = Math.max(
   FeatureDetection.hardwareConcurrency - 1,
-  1
+  1,
 );
 let createGeometryTaskProcessors;
 const combineGeometryTaskProcessor = new TaskProcessor("combineGeometry");
@@ -1179,7 +1172,7 @@ function loadAsynchronous(primitive, frameState) {
         (!defined(geometry._workerName) && !defined(geometry._workerPath))
       ) {
         throw new DeveloperError(
-          "Must define either _workerName or _workerPath for asynchronous geometry."
+          "Must define either _workerName or _workerPath for asynchronous geometry.",
         );
       }
       //>>includeEnd('debug');
@@ -1210,10 +1203,8 @@ function loadAsynchronous(primitive, frameState) {
         geometry = subTask.geometry;
         if (defined(geometry.constructor.pack)) {
           subTask.offset = packedLength;
-          packedLength += defaultValue(
-            geometry.constructor.packedLength,
-            geometry.packedLength
-          );
+          packedLength +=
+            geometry.constructor.packedLength ?? geometry.packedLength;
         }
       }
 
@@ -1238,8 +1229,8 @@ function loadAsynchronous(primitive, frameState) {
           {
             subTasks: subTasks[i],
           },
-          subTaskTransferableObjects
-        )
+          subTaskTransferableObjects,
+        ),
       );
     }
 
@@ -1276,9 +1267,9 @@ function loadAsynchronous(primitive, frameState) {
           modelMatrix: primitive.modelMatrix,
           createPickOffsets: primitive._createPickOffsets,
         },
-        transferableObjects
+        transferableObjects,
       ),
-      transferableObjects
+      transferableObjects,
     );
 
     primitive._createGeometryResults = undefined;
@@ -1286,14 +1277,13 @@ function loadAsynchronous(primitive, frameState) {
 
     Promise.resolve(promise)
       .then(function (packedResult) {
-        const result = PrimitivePipeline.unpackCombineGeometryResults(
-          packedResult
-        );
+        const result =
+          PrimitivePipeline.unpackCombineGeometryResults(packedResult);
         primitive._geometries = result.geometries;
         primitive._attributeLocations = result.attributeLocations;
         primitive.modelMatrix = Matrix4.clone(
           result.modelMatrix,
-          primitive.modelMatrix
+          primitive.modelMatrix,
         );
         primitive._pickOffsets = result.pickOffsets;
         primitive._offsetInstanceExtend = result.offsetInstanceExtend;
@@ -1364,7 +1354,7 @@ function loadSynchronous(primitive, frameState) {
   primitive._attributeLocations = result.attributeLocations;
   primitive.modelMatrix = Matrix4.clone(
     result.modelMatrix,
-    primitive.modelMatrix
+    primitive.modelMatrix,
   );
   primitive._pickOffsets = result.pickOffsets;
   primitive._offsetInstanceExtend = result.offsetInstanceExtend;
@@ -1403,7 +1393,7 @@ function recomputeBoundingSpheres(primitive, frameState) {
     const offset = primitive._batchTable.getBatchedAttribute(
       i,
       offsetIndex,
-      new Cartesian3()
+      new Cartesian3(),
     );
     newBS = boundingSpheres[i].clone(newBS);
     transformBoundingSphere(newBS, offset, offsetInstanceExtend[i]);
@@ -1458,7 +1448,7 @@ function recomputeBoundingSpheres(primitive, frameState) {
     primitive._boundingSphereCV[i] = BoundingSphere.projectTo2D(
       boundingSphere,
       frameState.mapProjection,
-      primitive._boundingSphereCV[i]
+      primitive._boundingSphereCV[i],
     );
   }
 
@@ -1466,7 +1456,7 @@ function recomputeBoundingSpheres(primitive, frameState) {
     primitive,
     frameState,
     primitive.modelMatrix,
-    true
+    true,
   );
   primitive._recomputeBoundingSpheres = false;
 }
@@ -1478,7 +1468,7 @@ const scratchBoundingSphere = new BoundingSphere();
 
 function updateBatchTableBoundingSpheres(primitive, frameState) {
   const hasDistanceDisplayCondition = defined(
-    primitive._batchTableAttributeIndices.distanceDisplayCondition
+    primitive._batchTableAttributeIndices.distanceDisplayCondition,
   );
   if (
     !hasDistanceDisplayCondition ||
@@ -1512,7 +1502,7 @@ function updateBatchTableBoundingSpheres(primitive, frameState) {
       boundingSphere = BoundingSphere.transform(
         boundingSphere,
         modelMatrix,
-        scratchBoundingSphere
+        scratchBoundingSphere,
       );
     }
 
@@ -1521,7 +1511,7 @@ function updateBatchTableBoundingSpheres(primitive, frameState) {
 
     let encodedCenter = EncodedCartesian3.fromCartesian(
       center,
-      scratchBoundingSphereCenterEncoded
+      scratchBoundingSphereCenterEncoded,
     );
     batchTable.setBatchedAttribute(i, center3DHighIndex, encodedCenter.high);
     batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
@@ -1529,15 +1519,15 @@ function updateBatchTableBoundingSpheres(primitive, frameState) {
     if (!frameState.scene3DOnly) {
       const cartographic = ellipsoid.cartesianToCartographic(
         center,
-        scratchBoundingSphereCartographic
+        scratchBoundingSphereCartographic,
       );
       const center2D = projection.project(
         cartographic,
-        scratchBoundingSphereCenter2D
+        scratchBoundingSphereCenter2D,
       );
       encodedCenter = EncodedCartesian3.fromCartesian(
         center2D,
-        scratchBoundingSphereCenterEncoded
+        scratchBoundingSphereCenterEncoded,
       );
       batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
       batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
@@ -1577,7 +1567,7 @@ function updateBatchTableOffsets(primitive, frameState) {
     }
     const offset = batchTable.getBatchedAttribute(
       i,
-      primitive._batchTableAttributeIndices.offset
+      primitive._batchTableAttributeIndices.offset,
     );
     if (Cartesian3.equals(offset, Cartesian3.ZERO)) {
       batchTable.setBatchedAttribute(i, index2D, Cartesian3.ZERO);
@@ -1589,7 +1579,7 @@ function updateBatchTableOffsets(primitive, frameState) {
       boundingSphere = BoundingSphere.transform(
         boundingSphere,
         modelMatrix,
-        scratchBoundingSphere
+        scratchBoundingSphere,
       );
     }
 
@@ -1597,11 +1587,11 @@ function updateBatchTableOffsets(primitive, frameState) {
     center = ellipsoid.scaleToGeodeticSurface(center, offsetCenterScratch);
     let cartographic = ellipsoid.cartesianToCartographic(
       center,
-      scratchBoundingSphereCartographic
+      scratchBoundingSphereCartographic,
     );
     const center2D = projection.project(
       cartographic,
-      scratchBoundingSphereCenter2D
+      scratchBoundingSphereCenter2D,
     );
 
     const newPoint = Cartesian3.add(offset, center, offsetScratchCartesian);
@@ -1609,13 +1599,13 @@ function updateBatchTableOffsets(primitive, frameState) {
 
     const newPointProjected = projection.project(
       cartographic,
-      offsetScratchCartesian
+      offsetScratchCartesian,
     );
 
     const newVector = Cartesian3.subtract(
       newPointProjected,
       center2D,
-      offsetScratchCartesian
+      offsetScratchCartesian,
     );
 
     const x = newVector.x;
@@ -1647,14 +1637,14 @@ function createVertexArray(primitive, frameState) {
         attributeLocations: attributeLocations,
         bufferUsage: BufferUsage.STATIC_DRAW,
         interleave: primitive._interleave,
-      })
+      }),
     );
 
     if (defined(primitive._createBoundingVolumeFunction)) {
       primitive._createBoundingVolumeFunction(frameState, geometry);
     } else {
       primitive._boundingSpheres.push(
-        BoundingSphere.clone(geometry.boundingSphere)
+        BoundingSphere.clone(geometry.boundingSphere),
       );
       primitive._boundingSphereWC.push(new BoundingSphere());
 
@@ -1668,7 +1658,7 @@ function createVertexArray(primitive, frameState) {
         center.z = y;
 
         primitive._boundingSphereCV.push(
-          BoundingSphere.clone(geometry.boundingSphereCV)
+          BoundingSphere.clone(geometry.boundingSphereCV),
         );
         primitive._boundingSphere2D.push(new BoundingSphere());
         primitive._boundingSphereMorph.push(new BoundingSphere());
@@ -1737,14 +1727,14 @@ function createShaderProgram(primitive, frameState, appearance) {
   const attributeLocations = primitive._attributeLocations;
 
   let vs = primitive._batchTable.getVertexShaderCallback()(
-    appearance.vertexShaderSource
+    appearance.vertexShaderSource,
   );
   vs = Primitive._appendOffsetToShader(primitive, vs);
   vs = Primitive._appendShowToShader(primitive, vs);
   vs = Primitive._appendDistanceDisplayConditionToShader(
     primitive,
     vs,
-    frameState.scene3DOnly
+    frameState.scene3DOnly,
   );
   vs = appendPickToVertexShader(vs);
   vs = Primitive._updateColorAttribute(primitive, vs, false);
@@ -1764,13 +1754,13 @@ function createShaderProgram(primitive, frameState, appearance) {
 
   if (defined(primitive._depthFailAppearance)) {
     vs = primitive._batchTable.getVertexShaderCallback()(
-      primitive._depthFailAppearance.vertexShaderSource
+      primitive._depthFailAppearance.vertexShaderSource,
     );
     vs = Primitive._appendShowToShader(primitive, vs);
     vs = Primitive._appendDistanceDisplayConditionToShader(
       primitive,
       vs,
-      frameState.scene3DOnly
+      frameState.scene3DOnly,
     );
     vs = appendPickToVertexShader(vs);
     vs = Primitive._updateColorAttribute(primitive, vs, true);
@@ -1809,14 +1799,14 @@ function getUniforms(primitive, appearance, material, frameState) {
         if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
           // Later, we could rename uniforms behind-the-scenes if needed.
           throw new DeveloperError(
-            `Appearance and material have a uniform with the same name: ${name}`
+            `Appearance and material have a uniform with the same name: ${name}`,
           );
         }
         //>>includeEnd('debug');
 
         appearanceUniformMap[name] = getUniformFunction(
           appearanceUniforms,
-          name
+          name,
         );
       }
     }
@@ -1830,17 +1820,17 @@ function getUniforms(primitive, appearance, material, frameState) {
       Matrix4.multiply(
         viewMatrix,
         primitive._modelMatrix,
-        modifiedModelViewScratch
+        modifiedModelViewScratch,
       );
       Matrix4.multiplyByPoint(
         modifiedModelViewScratch,
         primitive.rtcCenter,
-        rtcScratch
+        rtcScratch,
       );
       Matrix4.setTranslation(
         modifiedModelViewScratch,
         rtcScratch,
-        modifiedModelViewScratch
+        modifiedModelViewScratch,
       );
       return modifiedModelViewScratch;
     };
@@ -1857,7 +1847,7 @@ function createCommands(
   twoPasses,
   colorCommands,
   pickCommands,
-  frameState
+  frameState,
 ) {
   const uniforms = getUniforms(primitive, appearance, material, frameState);
 
@@ -1867,7 +1857,7 @@ function createCommands(
       primitive,
       primitive._depthFailAppearance,
       primitive._depthFailAppearance.material,
-      frameState
+      frameState,
     );
   }
 
@@ -1954,7 +1944,7 @@ Primitive._updateBoundingVolumes = function (
   primitive,
   frameState,
   modelMatrix,
-  forceUpdate
+  forceUpdate,
 ) {
   let i;
   let length;
@@ -1969,17 +1959,16 @@ Primitive._updateBoundingVolumes = function (
         primitive._boundingSphereWC[i] = BoundingSphere.transform(
           boundingSphere,
           modelMatrix,
-          primitive._boundingSphereWC[i]
+          primitive._boundingSphereWC[i],
         );
         if (!frameState.scene3DOnly) {
           primitive._boundingSphere2D[i] = BoundingSphere.clone(
             primitive._boundingSphereCV[i],
-            primitive._boundingSphere2D[i]
+            primitive._boundingSphere2D[i],
           );
-          primitive._boundingSphere2D[i].center.x = 0.0;
           primitive._boundingSphereMorph[i] = BoundingSphere.union(
             primitive._boundingSphereWC[i],
-            primitive._boundingSphereCV[i]
+            primitive._boundingSphereCV[i],
           );
         }
       }
@@ -1997,7 +1986,7 @@ Primitive._updateBoundingVolumes = function (
       const pixelSizeInMeters = frameState.camera.getPixelSize(
         boundingSphere,
         frameState.context.drawingBufferWidth,
-        frameState.context.drawingBufferHeight
+        frameState.context.drawingBufferHeight,
       );
       const sizeInMeters = pixelSizeInMeters * pixelSize;
       boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
@@ -2013,7 +2002,7 @@ function updateAndQueueCommands(
   modelMatrix,
   cull,
   debugShowBoundingVolume,
-  twoPasses
+  twoPasses,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -2021,7 +2010,7 @@ function updateAndQueueCommands(
     !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)
   ) {
     throw new DeveloperError(
-      "Primitive.modelMatrix is only supported in 3D mode."
+      "Primitive.modelMatrix is only supported in 3D mode.",
     );
   }
   //>>includeEnd('debug');
@@ -2107,7 +2096,7 @@ Primitive.prototype.update = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
     throw new DeveloperError(
-      "RTC rendering is only available for 3D only scenes."
+      "RTC rendering is only available for 3D only scenes.",
     );
   }
   //>>includeEnd('debug');
@@ -2123,7 +2112,7 @@ Primitive.prototype.update = function (frameState) {
   if (this._batchTable.attributes.length > 0) {
     if (ContextLimits.maximumVertexTextureImageUnits === 0) {
       throw new RuntimeError(
-        "Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero."
+        "Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.",
       );
     }
     this._batchTable.update(frameState);
@@ -2201,26 +2190,17 @@ Primitive.prototype.update = function (frameState) {
   const twoPasses = appearance.closed && translucent;
 
   if (createRS) {
-    const rsFunc = defaultValue(
-      this._createRenderStatesFunction,
-      createRenderStates
-    );
+    const rsFunc = this._createRenderStatesFunction ?? createRenderStates;
     rsFunc(this, context, appearance, twoPasses);
   }
 
   if (createSP) {
-    const spFunc = defaultValue(
-      this._createShaderProgramFunction,
-      createShaderProgram
-    );
+    const spFunc = this._createShaderProgramFunction ?? createShaderProgram;
     spFunc(this, frameState, appearance);
   }
 
   if (createRS || createSP) {
-    const commandFunc = defaultValue(
-      this._createCommandsFunction,
-      createCommands
-    );
+    const commandFunc = this._createCommandsFunction ?? createCommands;
     commandFunc(
       this,
       appearance,
@@ -2229,14 +2209,12 @@ Primitive.prototype.update = function (frameState) {
       twoPasses,
       this._colorCommands,
       this._pickCommands,
-      frameState
+      frameState,
     );
   }
 
-  const updateAndQueueCommandsFunc = defaultValue(
-    this._updateAndQueueCommandsFunction,
-    updateAndQueueCommands
-  );
+  const updateAndQueueCommandsFunc =
+    this._updateAndQueueCommandsFunction ?? updateAndQueueCommands;
   updateAndQueueCommandsFunc(
     this,
     frameState,
@@ -2245,7 +2223,7 @@ Primitive.prototype.update = function (frameState) {
     this.modelMatrix,
     this.cull,
     this.debugShowBoundingVolume,
-    twoPasses
+    twoPasses,
   );
 };
 
@@ -2255,11 +2233,11 @@ function transformBoundingSphere(boundingSphere, offset, offsetAttribute) {
   if (offsetAttribute === GeometryOffsetAttribute.TOP) {
     const origBS = BoundingSphere.clone(
       boundingSphere,
-      offsetBoundingSphereScratch1
+      offsetBoundingSphereScratch1,
     );
     const offsetBS = BoundingSphere.clone(
       boundingSphere,
-      offsetBoundingSphereScratch2
+      offsetBoundingSphereScratch2,
     );
     offsetBS.center = Cartesian3.add(offsetBS.center, offset, offsetBS.center);
     boundingSphere = BoundingSphere.union(origBS, offsetBS, boundingSphere);
@@ -2267,7 +2245,7 @@ function transformBoundingSphere(boundingSphere, offset, offsetAttribute) {
     boundingSphere.center = Cartesian3.add(
       boundingSphere.center,
       offset,
-      boundingSphere.center
+      boundingSphere.center,
     );
   }
 
@@ -2278,13 +2256,13 @@ function createGetFunction(batchTable, instanceIndex, attributeIndex) {
   return function () {
     const attributeValue = batchTable.getBatchedAttribute(
       instanceIndex,
-      attributeIndex
+      attributeIndex,
     );
     const attribute = batchTable.attributes[attributeIndex];
     const componentsPerAttribute = attribute.componentsPerAttribute;
     const value = ComponentDatatype.createTypedArray(
       attribute.componentDatatype,
-      componentsPerAttribute
+      componentsPerAttribute,
     );
     if (defined(attributeValue.constructor.pack)) {
       attributeValue.constructor.pack(attributeValue, value, 0);
@@ -2300,7 +2278,7 @@ function createSetFunction(
   instanceIndex,
   attributeIndex,
   primitive,
-  name
+  name,
 ) {
   return function (value) {
     //>>includeStart('debug', pragmas.debug);
@@ -2311,7 +2289,7 @@ function createSetFunction(
       value.length > 4
     ) {
       throw new DeveloperError(
-        "value must be and array with length between 1 and 4."
+        "value must be and array with length between 1 and 4.",
       );
     }
     //>>includeEnd('debug');
@@ -2319,7 +2297,7 @@ function createSetFunction(
     batchTable.setBatchedAttribute(
       instanceIndex,
       attributeIndex,
-      attributeValue
+      attributeValue,
     );
     if (name === "offset") {
       primitive._recomputeBoundingSpheres = true;
@@ -2342,13 +2320,13 @@ function createBoundingSphereProperties(primitive, properties, index) {
           transformBoundingSphere(
             boundingSphere,
             Cartesian3.fromArray(offset.get(), 0, offsetScratch),
-            primitive._offsetInstanceExtend[index]
+            primitive._offsetInstanceExtend[index],
           );
         }
         if (defined(modelMatrix)) {
           boundingSphere = BoundingSphere.transform(
             boundingSphere,
-            modelMatrix
+            modelMatrix,
           );
         }
       }
@@ -2393,7 +2371,7 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
   }
   if (!defined(this._batchTable)) {
     throw new DeveloperError(
-      "must call update before calling getGeometryInstanceAttributes"
+      "must call update before calling getGeometryInstanceAttributes",
     );
   }
   //>>includeEnd('debug');

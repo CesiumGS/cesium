@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -100,14 +97,10 @@
           loadingDescendantLimit: viewer.scene.globe.loadingDescendantLimit,
           preloadAncestors: viewer.scene.globe.preloadAncestors,
           preloadSiblings: viewer.scene.globe.preloadSiblings,
-          fillHighlightColor: Cesium.defined(
-            viewer.scene.globe.fillHighlightColor
-          )
+          fillHighlightColor: Cesium.defined(viewer.scene.globe.fillHighlightColor)
             ? viewer.scene.globe.fillHighlightColor.toCssColorString()
             : "rgba(255, 255, 0, 0.5)",
-          fillHighlightEnabled: Cesium.defined(
-            viewer.scene.globe.fillHighlightColor
-          ),
+          fillHighlightEnabled: Cesium.defined(viewer.scene.globe.fillHighlightColor),
         };
 
         Cesium.knockout.track(viewModel);
@@ -134,7 +127,7 @@
         function updateFillHighlight() {
           if (viewModel.fillHighlightEnabled) {
             viewer.scene.globe.fillHighlightColor = Cesium.Color.fromCssColorString(
-              viewModel.fillHighlightColor
+              viewModel.fillHighlightColor,
             );
           } else {
             viewer.scene.globe.fillHighlightColor = undefined;

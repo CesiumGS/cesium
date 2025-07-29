@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
@@ -19,7 +19,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function TileMetadata(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const tile = options.tile;
   const metadataClass = options.class;
 
@@ -100,7 +100,7 @@ TileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
   return MetadataEntity.hasPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -145,7 +145,7 @@ TileMetadata.prototype.setProperty = function (propertyId, value) {
     propertyId,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -160,7 +160,7 @@ TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -177,7 +177,7 @@ TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
     semantic,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 

@@ -141,8 +141,9 @@ describe(
 
     function updateUntilDone(cluster) {
       return pollToPromise(function () {
-        const ready = !cluster._enabledDirty && !cluster._clusterDirty;
+        const ready = cluster.ready;
         cluster.update(scene.frameState);
+        scene.renderForSpecs();
         return ready;
       });
     }
@@ -158,7 +159,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -168,7 +169,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        depth
+        depth,
       );
 
       const frameState = scene.frameState;
@@ -200,7 +201,7 @@ describe(
       label.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -210,7 +211,7 @@ describe(
       label.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        depth
+        depth,
       );
 
       const frameState = scene.frameState;
@@ -241,7 +242,7 @@ describe(
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -251,7 +252,7 @@ describe(
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        depth
+        depth,
       );
 
       const frameState = scene.frameState;
@@ -282,7 +283,7 @@ describe(
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -292,7 +293,7 @@ describe(
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        depth
+        depth,
       );
 
       cluster.enabled = true;
@@ -313,7 +314,7 @@ describe(
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -323,7 +324,7 @@ describe(
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        depth
+        depth,
       );
 
       const frameState = scene.frameState;
@@ -355,13 +356,13 @@ describe(
       cluster.getPoint(entity);
 
       expect(
-        cluster._collectionIndicesByEntity[entity.id].billboardIndex
+        cluster._collectionIndicesByEntity[entity.id].billboardIndex,
       ).toBeDefined();
       expect(
-        cluster._collectionIndicesByEntity[entity.id].labelIndex
+        cluster._collectionIndicesByEntity[entity.id].labelIndex,
       ).toBeDefined();
       expect(
-        cluster._collectionIndicesByEntity[entity.id].pointIndex
+        cluster._collectionIndicesByEntity[entity.id].pointIndex,
       ).toBeDefined();
     });
 
@@ -436,7 +437,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -446,7 +447,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        depth
+        depth,
       );
 
       const frameState = scene.frameState;
@@ -477,7 +478,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -487,7 +488,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, 0),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -497,7 +498,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0, scene.canvas.clientHeight),
-        depth
+        depth,
       );
 
       entity = new Entity();
@@ -507,7 +508,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        depth
+        depth,
       );
 
       const frameState = scene.frameState;
@@ -538,7 +539,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        farDepth
+        farDepth,
       );
 
       entity = new Entity();
@@ -548,7 +549,7 @@ describe(
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        farDepth
+        farDepth,
       );
 
       const frameState = scene.frameState;
@@ -562,7 +563,7 @@ describe(
         expect(cluster._clusterLabelCollection.length).toEqual(1);
 
         const position = Cartesian3.clone(
-          cluster._clusterLabelCollection.get(0).position
+          cluster._clusterLabelCollection.get(0).position,
         );
 
         scene.camera.moveForward(1.0e-6);
@@ -572,7 +573,7 @@ describe(
         expect(cluster._clusterLabelCollection).toBeDefined();
         expect(cluster._clusterLabelCollection.length).toEqual(1);
         expect(cluster._clusterLabelCollection.get(0).position).toEqual(
-          position
+          position,
         );
       });
     });
@@ -581,14 +582,13 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      cluster.clusterEvent.addEventListener(function (
-        clusteredEntities,
-        cluster
-      ) {
-        cluster.billboard.show = true;
-        cluster.billboard.image = createBillboardImage();
-        cluster.label.text = "cluster";
-      });
+      cluster.clusterEvent.addEventListener(
+        function (clusteredEntities, cluster) {
+          cluster.billboard.show = true;
+          cluster.billboard.image = createBillboardImage();
+          cluster.label.text = "cluster";
+        },
+      );
 
       let entity = new Entity();
       let point = cluster.getPoint(entity);
@@ -597,7 +597,7 @@ describe(
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
-        farDepth
+        farDepth,
       );
 
       entity = new Entity();
@@ -607,7 +607,7 @@ describe(
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        farDepth
+        farDepth,
       );
 
       const frameState = scene.frameState;
@@ -637,7 +637,7 @@ describe(
       dataSource._visualizers = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         cluster,
-        dataSource
+        dataSource,
       );
 
       const entityCollection = dataSource.entities;
@@ -646,7 +646,7 @@ describe(
         position: SceneTransforms.drawingBufferToWorldCoordinates(
           scene,
           new Cartesian2(0.0, 0.0),
-          depth
+          depth,
         ),
         billboard: {
           image: createBillboardImage(),
@@ -660,7 +660,7 @@ describe(
         position: SceneTransforms.drawingBufferToWorldCoordinates(
           scene,
           new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-          depth
+          depth,
         ),
         billboard: {
           image: createBillboardImage(),
@@ -693,5 +693,5 @@ describe(
       expect(cluster._billboardCollection.length).toEqual(2);
     });
   },
-  "WebGL"
+  "WebGL",
 );

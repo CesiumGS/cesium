@@ -49,15 +49,16 @@ function PolylineVolumeGeometryUpdater(entity, scene) {
     entity,
     "polylineVolume",
     entity.polylineVolume,
-    undefined
+    undefined,
   );
 }
 
 if (defined(Object.create)) {
   PolylineVolumeGeometryUpdater.prototype = Object.create(
-    GeometryUpdater.prototype
+    GeometryUpdater.prototype,
   );
-  PolylineVolumeGeometryUpdater.prototype.constructor = PolylineVolumeGeometryUpdater;
+  PolylineVolumeGeometryUpdater.prototype.constructor =
+    PolylineVolumeGeometryUpdater;
 }
 
 /**
@@ -69,14 +70,14 @@ if (defined(Object.create)) {
  * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 PolylineVolumeGeometryUpdater.prototype.createFillGeometryInstance = function (
-  time
+  time,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -91,14 +92,14 @@ PolylineVolumeGeometryUpdater.prototype.createFillGeometryInstance = function (
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
-      this._fillProperty.getValue(time)
+      this._fillProperty.getValue(time),
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-    distanceDisplayCondition
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
+  const distanceDisplayConditionAttribute =
+    DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+      distanceDisplayCondition,
+    );
   if (this._materialProperty instanceof ColorMaterialProperty) {
     let currentColor;
     if (
@@ -138,52 +139,51 @@ PolylineVolumeGeometryUpdater.prototype.createFillGeometryInstance = function (
  *
  * @exception {DeveloperError} This instance does not represent an outlined geometry.
  */
-PolylineVolumeGeometryUpdater.prototype.createOutlineGeometryInstance = function (
-  time
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("time", time);
+PolylineVolumeGeometryUpdater.prototype.createOutlineGeometryInstance =
+  function (time) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("time", time);
 
-  if (!this._outlineEnabled) {
-    throw new DeveloperError(
-      "This instance does not represent an outlined geometry."
+    if (!this._outlineEnabled) {
+      throw new DeveloperError(
+        "This instance does not represent an outlined geometry.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    const entity = this._entity;
+    const isAvailable = entity.isAvailable(time);
+    const outlineColor = Property.getValueOrDefault(
+      this._outlineColorProperty,
+      time,
+      Color.BLACK,
+      scratchColor,
     );
-  }
-  //>>includeEnd('debug');
+    const distanceDisplayCondition =
+      this._distanceDisplayConditionProperty.getValue(time);
 
-  const entity = this._entity;
-  const isAvailable = entity.isAvailable(time);
-  const outlineColor = Property.getValueOrDefault(
-    this._outlineColorProperty,
-    time,
-    Color.BLACK,
-    scratchColor
-  );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-
-  return new GeometryInstance({
-    id: entity,
-    geometry: new PolylineVolumeOutlineGeometry(this._options),
-    attributes: {
-      show: new ShowGeometryInstanceAttribute(
-        isAvailable &&
-          entity.isShowing &&
-          this._showProperty.getValue(time) &&
-          this._showOutlineProperty.getValue(time)
-      ),
-      color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-      distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-        distanceDisplayCondition
-      ),
-    },
-  });
-};
+    return new GeometryInstance({
+      id: entity,
+      geometry: new PolylineVolumeOutlineGeometry(this._options),
+      attributes: {
+        show: new ShowGeometryInstanceAttribute(
+          isAvailable &&
+            entity.isShowing &&
+            this._showProperty.getValue(time) &&
+            this._showOutlineProperty.getValue(time),
+        ),
+        color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
+        distanceDisplayCondition:
+          DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+            distanceDisplayCondition,
+          ),
+      },
+    });
+  };
 
 PolylineVolumeGeometryUpdater.prototype._isHidden = function (
   entity,
-  polylineVolume
+  polylineVolume,
 ) {
   return (
     !defined(polylineVolume.positions) ||
@@ -194,7 +194,7 @@ PolylineVolumeGeometryUpdater.prototype._isHidden = function (
 
 PolylineVolumeGeometryUpdater.prototype._isDynamic = function (
   entity,
-  polylineVolume
+  polylineVolume,
 ) {
   return (
     !polylineVolume.positions.isConstant || //
@@ -207,7 +207,7 @@ PolylineVolumeGeometryUpdater.prototype._isDynamic = function (
 
 PolylineVolumeGeometryUpdater.prototype._setStaticOptions = function (
   entity,
-  polylineVolume
+  polylineVolume,
 ) {
   const granularity = polylineVolume.granularity;
   const cornerType = polylineVolume.cornerType;
@@ -220,11 +220,11 @@ PolylineVolumeGeometryUpdater.prototype._setStaticOptions = function (
     : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
   options.polylinePositions = polylineVolume.positions.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.polylinePositions
+    options.polylinePositions,
   );
   options.shapePositions = polylineVolume.shape.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.shape
+    options.shape,
   );
   options.granularity = defined(granularity)
     ? granularity.getValue(Iso8601.MINIMUM_VALUE)
@@ -234,7 +234,8 @@ PolylineVolumeGeometryUpdater.prototype._setStaticOptions = function (
     : undefined;
 };
 
-PolylineVolumeGeometryUpdater.DynamicGeometryUpdater = DynamicPolylineVolumeGeometryUpdater;
+PolylineVolumeGeometryUpdater.DynamicGeometryUpdater =
+  DynamicPolylineVolumeGeometryUpdater;
 
 /**
  * @private
@@ -242,27 +243,28 @@ PolylineVolumeGeometryUpdater.DynamicGeometryUpdater = DynamicPolylineVolumeGeom
 function DynamicPolylineVolumeGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 }
 
 if (defined(Object.create)) {
   DynamicPolylineVolumeGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
-  DynamicPolylineVolumeGeometryUpdater.prototype.constructor = DynamicPolylineVolumeGeometryUpdater;
+  DynamicPolylineVolumeGeometryUpdater.prototype.constructor =
+    DynamicPolylineVolumeGeometryUpdater;
 }
 
 DynamicPolylineVolumeGeometryUpdater.prototype._isHidden = function (
   entity,
   polylineVolume,
-  time
+  time,
 ) {
   const options = this._options;
   return (
@@ -272,7 +274,7 @@ DynamicPolylineVolumeGeometryUpdater.prototype._isHidden = function (
       this,
       entity,
       polylineVolume,
-      time
+      time,
     )
   );
 };
@@ -280,25 +282,25 @@ DynamicPolylineVolumeGeometryUpdater.prototype._isHidden = function (
 DynamicPolylineVolumeGeometryUpdater.prototype._setOptions = function (
   entity,
   polylineVolume,
-  time
+  time,
 ) {
   const options = this._options;
   options.polylinePositions = Property.getValueOrUndefined(
     polylineVolume.positions,
     time,
-    options.polylinePositions
+    options.polylinePositions,
   );
   options.shapePositions = Property.getValueOrUndefined(
     polylineVolume.shape,
-    time
+    time,
   );
   options.granularity = Property.getValueOrUndefined(
     polylineVolume.granularity,
-    time
+    time,
   );
   options.cornerType = Property.getValueOrUndefined(
     polylineVolume.cornerType,
-    time
+    time,
   );
 };
 export default PolylineVolumeGeometryUpdater;

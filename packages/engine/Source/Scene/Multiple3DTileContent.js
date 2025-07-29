@@ -6,7 +6,6 @@ import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
@@ -52,6 +51,11 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
   // used to help short-circuit computations after a tile was canceled.
   this._cancelCount = 0;
 
+  // The number of contents that turned out to be external tilesets
+  // in createInnerContent. When all contents are external tilesets,
+  // then tile.hasRenderableContent will become `false`
+  this._externalTilesetCount = 0;
+
   const contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
   this._requests = new Array(contentCount);
@@ -66,7 +70,7 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
     });
 
     const serverKey = RequestScheduler.getServerKey(
-      contentResource.getUrlComponent()
+      contentResource.getUrlComponent(),
     );
 
     this._innerContentResources[i] = contentResource;
@@ -301,7 +305,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     set: function () {
       //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
-        "Multiple3DTileContent cannot have group metadata"
+        "Multiple3DTileContent cannot have group metadata",
       );
       //>>includeEnd('debug');
     },
@@ -328,7 +332,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
 function updatePendingRequests(multipleContents, deltaRequestCount) {
   multipleContents._requestsInFlight += deltaRequestCount;
-  multipleContents.tileset.statistics.numberOfPendingRequests += deltaRequestCount;
+  multipleContents.tileset.statistics.numberOfPendingRequests +=
+    deltaRequestCount;
 }
 
 function cancelPendingRequests(multipleContents, originalContentState) {
@@ -366,7 +371,8 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
   // if we can schedule all the requests at once. If not, no requests are
   // scheduled
   if (!canScheduleAllRequests(this._serverKeys)) {
-    this.tileset.statistics.numberOfAttemptedRequests += this._serverKeys.length;
+    this.tileset.statistics.numberOfAttemptedRequests +=
+      this._serverKeys.length;
     return;
   }
 
@@ -381,7 +387,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
       this,
       i,
       originalCancelCount,
-      this._tile._contentState
+      this._tile._contentState,
     );
   }
 
@@ -420,13 +426,12 @@ function requestInnerContent(
   multipleContents,
   index,
   originalCancelCount,
-  originalContentState
+  originalContentState,
 ) {
   // it is important to clone here. The fetchArrayBuffer() below here uses
   // throttling, but other uses of the resources do not.
-  const contentResource = multipleContents._innerContentResources[
-    index
-  ].clone();
+  const contentResource =
+    multipleContents._innerContentResources[index].clone();
   const tile = multipleContents.tile;
 
   // Always create a new request. If the tile gets canceled, this
@@ -496,7 +501,7 @@ async function createInnerContents(multipleContents) {
   }
 
   const promises = arrayBuffers.map((arrayBuffer, i) =>
-    createInnerContent(multipleContents, arrayBuffer, i)
+    createInnerContent(multipleContents, arrayBuffer, i),
   );
 
   // Even if we had a partial success (in which case the inner promise will be handled, but the content will not be returned), mark that we finished creating
@@ -504,6 +509,16 @@ async function createInnerContents(multipleContents) {
   const contents = await Promise.all(promises);
   multipleContents._contentsCreated = true;
   multipleContents._contents = contents.filter(defined);
+
+  // If each content is an external tileset, then the tile
+  // itself does not have any renderable content
+  if (
+    multipleContents._externalTilesetCount === multipleContents._contents.length
+  ) {
+    const tile = multipleContents._tile;
+    tile.hasRenderableContent = false;
+  }
+
   return contents;
 }
 
@@ -517,20 +532,19 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
   try {
     const preprocessed = preprocess3DTileContent(arrayBuffer);
 
+    const tileset = multipleContents._tileset;
+    const resource = multipleContents._innerContentResources[index];
+    const tile = multipleContents._tile;
+
     if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
-      throw new RuntimeError(
-        "External tilesets are disallowed inside multiple contents"
-      );
+      multipleContents._externalTilesetCount++;
+      tile.hasTilesetContent = true;
     }
 
     multipleContents._disableSkipLevelOfDetail =
       multipleContents._disableSkipLevelOfDetail ||
       preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
       preprocessed.contentType === Cesium3DTileContentType.VECTOR;
-
-    const tileset = multipleContents._tileset;
-    const resource = multipleContents._innerContentResources[index];
-    const tile = multipleContents._tile;
 
     let content;
     const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
@@ -541,13 +555,13 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
           tile,
           resource,
           preprocessed.binaryPayload.buffer,
-          0
-        )
+          0,
+        ),
       );
     } else {
       // JSON formats
       content = await Promise.resolve(
-        contentFactory(tileset, tile, resource, preprocessed.jsonPayload)
+        contentFactory(tileset, tile, resource, preprocessed.jsonPayload),
       );
     }
 

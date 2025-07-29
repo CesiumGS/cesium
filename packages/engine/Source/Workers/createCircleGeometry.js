@@ -8,10 +8,10 @@ function createCircleGeometry(circleGeometry, offset) {
     circleGeometry = CircleGeometry.unpack(circleGeometry, offset);
   }
   circleGeometry._ellipseGeometry._center = Cartesian3.clone(
-    circleGeometry._ellipseGeometry._center
+    circleGeometry._ellipseGeometry._center,
   );
   circleGeometry._ellipseGeometry._ellipsoid = Ellipsoid.clone(
-    circleGeometry._ellipseGeometry._ellipsoid
+    circleGeometry._ellipseGeometry._ellipsoid,
   );
   return CircleGeometry.createGeometry(circleGeometry);
 }

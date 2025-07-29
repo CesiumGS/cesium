@@ -1,7 +1,7 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import CullingVolume from "./CullingVolume.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -36,11 +36,11 @@ import Matrix4 from "./Matrix4.js";
  * frustum.far = 50.0 * maxRadii;
  */
 function OrthographicOffCenterFrustum(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The left clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.left = options.left;
@@ -48,7 +48,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The right clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.right = options.right;
@@ -56,7 +56,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The top clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.top = options.top;
@@ -64,7 +64,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The bottom clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.bottom = options.bottom;
@@ -75,7 +75,7 @@ function OrthographicOffCenterFrustum(options) {
    * @type {number}
    * @default 1.0
    */
-  this.near = defaultValue(options.near, 1.0);
+  this.near = options.near ?? 1.0;
   this._near = this.near;
 
   /**
@@ -83,7 +83,7 @@ function OrthographicOffCenterFrustum(options) {
    * @type {number}
    * @default 500000000.0;
    */
-  this.far = defaultValue(options.far, 500000000.0);
+  this.far = options.far ?? 500000000.0;
   this._far = this.far;
 
   this._cullingVolume = new CullingVolume();
@@ -101,7 +101,7 @@ function update(frustum) {
     !defined(frustum.far)
   ) {
     throw new DeveloperError(
-      "right, left, top, bottom, near, or far parameters are not set."
+      "right, left, top, bottom, near, or far parameters are not set.",
     );
   }
   //>>includeEnd('debug');
@@ -123,7 +123,7 @@ function update(frustum) {
     }
     if (frustum.near <= 0 || frustum.near > frustum.far) {
       throw new DeveloperError(
-        "near must be greater than zero and less than far."
+        "near must be greater than zero and less than far.",
       );
     }
     //>>includeEnd('debug');
@@ -141,7 +141,7 @@ function update(frustum) {
       frustum.top,
       frustum.near,
       frustum.far,
-      frustum._orthographicMatrix
+      frustum._orthographicMatrix,
     );
   }
 }
@@ -182,7 +182,7 @@ const negateScratch = new Cartesian3();
 OrthographicOffCenterFrustum.prototype.computeCullingVolume = function (
   position,
   direction,
-  up
+  up,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(position)) {
@@ -314,14 +314,14 @@ OrthographicOffCenterFrustum.prototype.getPixelDimensions = function (
   drawingBufferHeight,
   distance,
   pixelRatio,
-  result
+  result,
 ) {
   update(this);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
     throw new DeveloperError(
-      "Both drawingBufferWidth and drawingBufferHeight are required."
+      "Both drawingBufferWidth and drawingBufferHeight are required.",
     );
   }
   if (drawingBufferWidth <= 0) {
@@ -416,7 +416,7 @@ OrthographicOffCenterFrustum.prototype.equals = function (other) {
 OrthographicOffCenterFrustum.prototype.equalsEpsilon = function (
   other,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return (
     other === this ||
@@ -426,37 +426,37 @@ OrthographicOffCenterFrustum.prototype.equalsEpsilon = function (
         this.right,
         other.right,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.left,
         other.left,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.top,
         other.top,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.bottom,
         other.bottom,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.near,
         other.near,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.far,
         other.far,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ))
   );
 };

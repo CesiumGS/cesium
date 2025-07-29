@@ -22,7 +22,7 @@ describe("Core/TaskProcessor", function () {
   it("throws runtime error if browser is not supported", async function () {
     spyOn(FeatureDetection, "supportsEsmWebWorkers").and.returnValue(false);
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/Build/TestWorkers/returnParameters.js")
+      absolutize("../Specs/Build/TestWorkers/returnParameters.js"),
     );
 
     expect(() => taskProcessor.scheduleTask()).toThrowError(RuntimeError);
@@ -30,7 +30,7 @@ describe("Core/TaskProcessor", function () {
 
   it("works with a simple worker", async function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnParameters.js")
+      absolutize("../Build/Specs/TestWorkers/returnParameters.js"),
     );
 
     const parameters = {
@@ -41,7 +41,7 @@ describe("Core/TaskProcessor", function () {
     };
 
     await expectAsync(taskProcessor.scheduleTask(parameters)).toBeResolvedTo(
-      parameters
+      parameters,
     );
   });
 
@@ -49,7 +49,7 @@ describe("Core/TaskProcessor", function () {
     window.CESIUM_WORKERS = undefined;
 
     TaskProcessor._workerModulePrefix = absolutize(
-      "../Build/Specs/TestWorkers/"
+      "../Build/Specs/TestWorkers/",
     );
     taskProcessor = new TaskProcessor("returnParameters.js");
 
@@ -61,7 +61,7 @@ describe("Core/TaskProcessor", function () {
     };
 
     await expectAsync(taskProcessor.scheduleTask(parameters)).toBeResolvedTo(
-      parameters
+      parameters,
     );
   });
 
@@ -82,7 +82,7 @@ describe("Core/TaskProcessor", function () {
 
     expect(blobSpy).toHaveBeenCalledWith(
       [`import "http://test.com/source/Workers/transferTypedArrayTest.js";`],
-      { type: "application/javascript" }
+      { type: "application/javascript" },
     );
 
     // Reset old values for BASE_URL
@@ -101,13 +101,13 @@ describe("Core/TaskProcessor", function () {
 
     expect(blobSpy).toHaveBeenCalledWith(
       [`import "http://test.com/Workers/testing.js";`],
-      { type: "application/javascript" }
+      { type: "application/javascript" },
     );
   });
 
   it("can be destroyed", function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/Build/TestWorkers/returnParameters.js")
+      absolutize("../Specs/Build/TestWorkers/returnParameters.js"),
     );
 
     expect(taskProcessor.isDestroyed()).toEqual(false);
@@ -119,7 +119,7 @@ describe("Core/TaskProcessor", function () {
 
   it("can transfer array buffer", async function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnByteLength.js")
+      absolutize("../Build/Specs/TestWorkers/returnByteLength.js"),
     );
 
     const byteLength = 100;
@@ -140,7 +140,7 @@ describe("Core/TaskProcessor", function () {
 
   it("can transfer array buffer back from worker", async function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/transferArrayBuffer.js")
+      absolutize("../Build/Specs/TestWorkers/transferArrayBuffer.js"),
     );
 
     const byteLength = 100;
@@ -155,7 +155,7 @@ describe("Core/TaskProcessor", function () {
 
   it("rejects promise if worker throws", async function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/throwError.js")
+      absolutize("../Build/Specs/TestWorkers/throwError.js"),
     );
 
     const message = "foo";
@@ -164,13 +164,13 @@ describe("Core/TaskProcessor", function () {
     };
 
     await expectAsync(
-      taskProcessor.scheduleTask(parameters)
+      taskProcessor.scheduleTask(parameters),
     ).toBeRejectedWithError(Error, message);
   });
 
   it("rejects promise if worker returns a non-clonable result", async function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnNonCloneable.js")
+      absolutize("../Build/Specs/TestWorkers/returnNonCloneable.js"),
     );
 
     const message = "foo";
@@ -179,13 +179,13 @@ describe("Core/TaskProcessor", function () {
     };
 
     await expectAsync(taskProcessor.scheduleTask(parameters)).toBeRejectedWith(
-      jasmine.stringContaining("postMessage failed")
+      jasmine.stringContaining("postMessage failed"),
     );
   });
 
   it("successful task raises the taskCompletedEvent", async function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnParameters.js")
+      absolutize("../Build/Specs/TestWorkers/returnParameters.js"),
     );
 
     const parameters = {
@@ -195,11 +195,10 @@ describe("Core/TaskProcessor", function () {
       },
     };
     let eventRaised = false;
-    const removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(
-      function () {
+    const removeListenerCallback =
+      TaskProcessor.taskCompletedEvent.addEventListener(function () {
         eventRaised = true;
-      }
-    );
+      });
 
     await expectAsync(taskProcessor.scheduleTask(parameters)).toBeResolved();
     expect(eventRaised).toBe(true);
@@ -208,7 +207,7 @@ describe("Core/TaskProcessor", function () {
 
   it("unsuccessful task raises the taskCompletedEvent with error", async function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnNonCloneable.js")
+      absolutize("../Build/Specs/TestWorkers/returnNonCloneable.js"),
     );
 
     const message = "foo";
@@ -217,12 +216,11 @@ describe("Core/TaskProcessor", function () {
     };
 
     let eventRaised = false;
-    const removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(
-      function (error) {
+    const removeListenerCallback =
+      TaskProcessor.taskCompletedEvent.addEventListener(function (error) {
         eventRaised = true;
         expect(error).toBeDefined();
-      }
-    );
+      });
 
     await expectAsync(taskProcessor.scheduleTask(parameters)).toBeRejected();
     expect(eventRaised).toBe(true);
@@ -232,7 +230,7 @@ describe("Core/TaskProcessor", function () {
   it("can load and compile web assembly module", async function () {
     const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5)
+      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5),
     );
     const result = await taskProcessor.initWebAssemblyModule({
       wasmBinaryFile: binaryUrl,
@@ -249,7 +247,7 @@ describe("Core/TaskProcessor", function () {
   it("uses a backup module if web assembly is not supported", async function () {
     const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5)
+      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5),
     );
 
     spyOn(FeatureDetection, "supportsWebAssembly").and.returnValue(false);
@@ -267,7 +265,7 @@ describe("Core/TaskProcessor", function () {
   it("throws runtime error if web assembly is not supported and no backup is provided", async function () {
     const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5)
+      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5),
     );
 
     spyOn(FeatureDetection, "supportsWebAssembly").and.returnValue(false);
@@ -275,7 +273,7 @@ describe("Core/TaskProcessor", function () {
     await expectAsync(
       taskProcessor.initWebAssemblyModule({
         wasmBinaryFile: binaryUrl,
-      })
+      }),
     ).toBeRejectedWithError(RuntimeError);
   });
 });

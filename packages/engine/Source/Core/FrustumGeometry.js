@@ -3,7 +3,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
@@ -42,12 +41,12 @@ function FrustumGeometry(options) {
   const frustum = options.frustum;
   const orientation = options.orientation;
   const origin = options.origin;
-  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
   // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
-  // creating multiple FrustumGeometrys. This way the near plane of one frustum doesn't overlap
+  // creating multiple FrustumGeometry objects. This way the near plane of one frustum doesn't overlap
   // the far plane of another.
-  const drawNearPlane = defaultValue(options._drawNearPlane, true);
+  const drawNearPlane = options._drawNearPlane ?? true;
 
   let frustumType;
   let frustumPackedLength;
@@ -94,7 +93,7 @@ FrustumGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const frustumType = value._frustumType;
   const frustum = value._frustum;
@@ -138,7 +137,7 @@ FrustumGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const frustumType = array[startingIndex++];
 
@@ -147,14 +146,14 @@ FrustumGeometry.unpack = function (array, startingIndex, result) {
     frustum = PerspectiveFrustum.unpack(
       array,
       startingIndex,
-      scratchPackPerspective
+      scratchPackPerspective,
     );
     startingIndex += PerspectiveFrustum.packedLength;
   } else {
     frustum = OrthographicFrustum.unpack(
       array,
       startingIndex,
-      scratchPackOrthographic
+      scratchPackOrthographic,
     );
     startingIndex += OrthographicFrustum.packedLength;
   }
@@ -164,13 +163,13 @@ FrustumGeometry.unpack = function (array, startingIndex, result) {
   const orientation = Quaternion.unpack(
     array,
     startingIndex,
-    scratchPackQuaternion
+    scratchPackQuaternion,
   );
   startingIndex += Quaternion.packedLength;
   const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
-    scratchVertexFormat
+    scratchVertexFormat,
   );
   startingIndex += VertexFormat.packedLength;
   const drawNearPlane = array[startingIndex] === 1.0;
@@ -206,7 +205,7 @@ function getAttributes(
   st,
   normal,
   tangent,
-  bitangent
+  bitangent,
 ) {
   const stOffset = (offset / 3) * 2;
 
@@ -271,15 +270,15 @@ FrustumGeometry._computeNearFarPlanes = function (
   positions,
   xDirection,
   yDirection,
-  zDirection
+  zDirection,
 ) {
   const rotationMatrix = Matrix3.fromQuaternion(
     orientation,
-    scratchRotationMatrix
+    scratchRotationMatrix,
   );
-  let x = defaultValue(xDirection, scratchXDirection);
-  let y = defaultValue(yDirection, scratchYDirection);
-  let z = defaultValue(zDirection, scratchZDirection);
+  let x = xDirection ?? scratchXDirection;
+  let y = yDirection ?? scratchYDirection;
+  let z = zDirection ?? scratchZDirection;
 
   x = Matrix3.getColumn(rotationMatrix, 0, x);
   y = Matrix3.getColumn(rotationMatrix, 1, y);
@@ -300,11 +299,11 @@ FrustumGeometry._computeNearFarPlanes = function (
     const viewProjection = Matrix4.multiply(
       projection,
       view,
-      scratchInverseMatrix
+      scratchInverseMatrix,
     );
     inverseViewProjection = Matrix4.inverse(
       viewProjection,
-      scratchInverseMatrix
+      scratchInverseMatrix,
     );
   } else {
     inverseView = Matrix4.inverseTransformation(view, scratchInverseMatrix);
@@ -323,7 +322,7 @@ FrustumGeometry._computeNearFarPlanes = function (
     for (let j = 0; j < 4; ++j) {
       let corner = Cartesian4.clone(
         frustumCornersNDC[j],
-        scratchFrustumCorners[j]
+        scratchFrustumCorners[j],
       );
 
       if (!defined(inverseViewProjection)) {
@@ -353,7 +352,7 @@ FrustumGeometry._computeNearFarPlanes = function (
         corner = Matrix4.multiplyByVector(
           inverseViewProjection,
           corner,
-          corner
+          corner,
         );
 
         // Reverse perspective divide
@@ -396,7 +395,7 @@ FrustumGeometry.createGeometry = function (frustumGeometry) {
     orientation,
     frustumType,
     frustum,
-    positions
+    positions,
   );
 
   // -x plane
@@ -513,7 +512,7 @@ FrustumGeometry.createGeometry = function (frustumGeometry) {
       st,
       negativeX,
       negativeZ,
-      y
+      y,
     ); // -x
     offset += 3 * 4;
     getAttributes(
@@ -524,7 +523,7 @@ FrustumGeometry.createGeometry = function (frustumGeometry) {
       st,
       negativeY,
       negativeZ,
-      negativeX
+      negativeX,
     ); // -y
     offset += 3 * 4;
     getAttributes(offset, normals, tangents, bitangents, st, x, z, y); // +x

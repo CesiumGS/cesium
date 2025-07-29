@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -38,7 +35,7 @@
 
         if (!scene.pickPositionSupported) {
           window.alert(
-            "This browser does not support pickPosition or getting position from pickFromRay."
+            "This browser does not support pickPosition or getting position from pickFromRay.",
           );
         }
 
@@ -50,7 +47,7 @@
         });
 
         const tileset = await Cesium.Cesium3DTileset.fromUrl(
-          "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json"
+          "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
         );
         viewer.scene.primitives.add(tileset);
 
@@ -66,12 +63,12 @@
         const blueCartographic = new Cesium.Cartographic(
           -1.3196863177294136,
           0.6988508714746624,
-          30.0
+          30.0,
         );
         let redCartographic = new Cesium.Cartographic(
           -1.319671841889412,
           0.6989153500784591,
-          30.0
+          30.0,
         );
 
         const blueSphere = viewer.entities.add({
@@ -100,9 +97,7 @@
             positions: arrowPositions,
             width: 10,
             arcType: Cesium.ArcType.NONE,
-            material: new Cesium.PolylineArrowMaterialProperty(
-              Cesium.Color.YELLOW
-            ),
+            material: new Cesium.PolylineArrowMaterialProperty(Cesium.Color.YELLOW),
           },
         });
 
@@ -115,7 +110,7 @@
           for (i = 0; i < pickedFeatures.length; ++i) {
             pickedFeatures[i].color = Cesium.Color.fromAlpha(
               Cesium.Color.WHITE,
-              pickedFeatures[i].color.alpha
+              pickedFeatures[i].color.alpha,
             );
           }
           for (i = 0; i < intersectionMarkers.length; ++i) {
@@ -133,7 +128,7 @@
               pickedFeatures.push(object);
               object.color = Cesium.Color.fromAlpha(
                 Cesium.Color.YELLOW,
-                object.color.alpha
+                object.color.alpha,
               );
             }
             intersectionMarkers.push(
@@ -143,7 +138,7 @@
                   radii: new Cesium.Cartesian3(3.0, 3.0, 3.0),
                   material: Cesium.Color.RED,
                 },
-              })
+              }),
             );
           }
         }
@@ -154,7 +149,7 @@
           const end = Cesium.Cartographic.toCartesian(redCartographic);
           const direction = Cesium.Cartesian3.normalize(
             Cesium.Cartesian3.subtract(end, start, new Cesium.Cartesian3()),
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           const ray = new Cesium.Ray(start, direction);
 

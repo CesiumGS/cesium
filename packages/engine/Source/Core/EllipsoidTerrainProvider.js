@@ -1,4 +1,4 @@
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
@@ -24,22 +24,23 @@ import TerrainProvider from "./TerrainProvider.js";
  * @see TerrainProvider
  */
 function EllipsoidTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._tilingScheme = options.tilingScheme;
   if (!defined(this._tilingScheme)) {
     this._tilingScheme = new GeographicTilingScheme({
-      ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
+      ellipsoid: options.ellipsoid ?? Ellipsoid.default,
     });
   }
 
   // Note: the 64 below does NOT need to match the actual vertex dimensions, because
   // the ellipsoid is significantly smoother than actual terrain.
-  this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-    this._tilingScheme.ellipsoid,
-    64,
-    this._tilingScheme.getNumberOfXTilesAtLevel(0)
-  );
+  this._levelZeroMaximumGeometricError =
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      this._tilingScheme.ellipsoid,
+      64,
+      this._tilingScheme.getNumberOfXTilesAtLevel(0),
+    );
 
   this._errorEvent = new Event();
 }
@@ -114,7 +115,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof EllipsoidTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -141,7 +142,7 @@ EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const width = 16;
   const height = 16;
@@ -150,7 +151,7 @@ EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
       buffer: new Uint8Array(width * height),
       width: width,
       height: height,
-    })
+    }),
   );
 };
 
@@ -161,7 +162,7 @@ EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
  * @returns {number} The maximum geometric error.
  */
 EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function (
-  level
+  level,
 ) {
   return this._levelZeroMaximumGeometricError / (1 << level);
 };
@@ -177,7 +178,7 @@ EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function (
 EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
@@ -193,7 +194,7 @@ EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
 EllipsoidTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
