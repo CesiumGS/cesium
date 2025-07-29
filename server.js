@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { performance } from "perf_hooks";
-import request from "request";
 import { URL } from "url";
 
 import chokidar from "chokidar";
@@ -319,7 +318,6 @@ async function generateDevelopmentBuild() {
     return result;
   }
 
-  const upstreamProxy = argv["upstream-proxy"];
   const bypassUpstreamProxyHosts = {};
   if (argv["bypass-upstream-proxy-hosts"]) {
     argv["bypass-upstream-proxy-hosts"].split(",").forEach(function (host) {
@@ -344,54 +342,6 @@ async function generateDevelopmentBuild() {
       req.remote = remoteUrl;
     }
     next();
-  });
-
-  //eslint-disable-next-line no-unused-vars
-  app.get("/proxy{/*remote}", function (req, res, next) {
-    let remoteUrl = req.remote;
-    if (!remoteUrl) {
-      // look for request like http://localhost:8080/proxy/?http%3A%2F%2Fexample.com%2Ffile%3Fquery%3D1
-      remoteUrl = Object.keys(req.query)[0];
-      if (remoteUrl) {
-        const baseURL = `${req.protocol}://${req.headers.host}/`;
-        remoteUrl = new URL(remoteUrl, baseURL);
-      }
-    }
-
-    if (!remoteUrl) {
-      return res.status(400).send("No url specified.");
-    }
-
-    if (!remoteUrl.protocol) {
-      remoteUrl.protocol = "http:";
-    }
-
-    let proxy;
-    if (upstreamProxy && !(remoteUrl.host in bypassUpstreamProxyHosts)) {
-      proxy = upstreamProxy;
-    }
-
-    // encoding : null means "body" passed to the callback will be raw bytes
-
-    request.get(
-      {
-        url: remoteUrl.toString(),
-        headers: filterHeaders(req, req.headers),
-        encoding: null,
-        proxy: proxy,
-      },
-      //eslint-disable-next-line no-unused-vars
-      function (error, response, body) {
-        let code = 500;
-
-        if (response) {
-          code = response.statusCode;
-          res.header(filterHeaders(req, response.headers));
-        }
-
-        res.status(code).send(body);
-      },
-    );
   });
 
   const server = app.listen(
