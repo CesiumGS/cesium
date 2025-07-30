@@ -34,8 +34,8 @@ const ITwinData = {};
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {string} iModelId The id of the iModel to load
- * @param {string} [changesetId] The id of the changeset to load, if not provided the latest changesets will be used
  * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to the internally created {@link Cesium3DTileset}.
+ * @param {string} [changesetId] The id of the changeset to load, if not provided the latest changesets will be used
  * @returns {Promise<Cesium3DTileset | undefined>} A promise that will resolve to the created 3D tileset or <code>undefined</code> if there is no completed export for the given iModel id
  *
  * @throws {RuntimeError} If no exports for the given iModel are found
@@ -44,20 +44,13 @@ const ITwinData = {};
  */
 ITwinData.createTilesetFromIModelId = async function (
   iModelId,
-  changesetId,
   options,
+  changesetId,
 ) {
   const { exports } = await ITwinPlatform.getExports(iModelId, changesetId);
 
-  if (exports.length === 0) {
-    if (defined(changesetId)) {
-      throw new RuntimeError(
-        `No exports found for this iModel: ${iModelId} and changeset: ${changesetId}`,
-      );
-    } else {
-      throw new RuntimeError(`No exports found for this iModel: ${iModelId}`);
-    }
-  } else if (
+  if (
+    exports.length > 0 &&
     exports.every((exportObj) => {
       return exportObj.status === ITwinPlatform.ExportStatus.Invalid;
     })
