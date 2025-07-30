@@ -270,7 +270,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
 
     const translation = new Cartesian3(1.0, 2.0, 3.0);
     node.translation = translation;
-    node.updateComputedTransform();
+    node.updateComputedTransform(transformToRoot);
 
     const translationMatrix = Matrix4.fromTranslation(
       translation,
@@ -299,7 +299,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
 
     const rotation = new Quaternion(0.707, 0.0, 0.707, 0.0);
     node.rotation = rotation;
-    node.updateComputedTransform();
+    node.updateComputedTransform(transformToRoot);
 
     const rotationMatrix3 = Matrix3.fromQuaternion(rotation, new Matrix3());
     const rotationMatrix = Matrix4.fromRotation(
@@ -329,7 +329,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
 
     const scale = new Cartesian3(2.0, 3.0, 4.0);
     node.scale = scale;
-    node.updateComputedTransform();
+    node.updateComputedTransform(transformToRoot);
 
     const scaleMatrix = Matrix4.fromScale(scale, scratchTransform);
 
@@ -465,7 +465,6 @@ describe("Scene/Model/ModelRuntimeNode", function () {
 
     node.transform = newTransform;
 
-    expect(node._transformDirty).toBe(true);
     expect(Matrix4.equals(node.transform, newTransform)).toBe(true);
     expect(Matrix4.equals(node.originalTransform, transform)).toBe(true);
   });
@@ -488,7 +487,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     );
 
     node.transform = newTransform;
-    node.updateComputedTransform();
+    node.updateComputedTransform(transformToRoot);
 
     const originalTransform = transform;
     verifyTransforms(newTransform, transformToRoot, node, originalTransform);

@@ -39,10 +39,14 @@ PickingPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
   const instances = runtimeNode.node.instances;
+  const instanceCount = renderResources.instanceCount;
 
   if (renderResources.hasPropertyTable) {
     processPickTexture(renderResources, primitive, instances, context);
-  } else if (defined(instances)) {
+  } else if (
+    defined(instances) ||
+    (defined(instanceCount) && instanceCount > 0)
+  ) {
     // For instanced meshes, a pick color vertex attribute is used.
     processInstancedPickIds(renderResources, context);
   } else {
@@ -179,6 +183,10 @@ function processInstancedPickIds(renderResources, context) {
     pickIdsTypedArray[i * 4 + 1] = Color.floatToByte(pickColor.green);
     pickIdsTypedArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
     pickIdsTypedArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
+
+    if (model.instances._instances.length > i) {
+      model.instances._instances[i]._pickId = pickId;
+    }
   }
 
   model._pickIds = pickIds;

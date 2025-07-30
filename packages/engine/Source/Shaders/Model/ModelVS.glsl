@@ -82,6 +82,14 @@ void main()
 
         modelView = instanceModelView;
         normal = instanceModelViewInverseTranspose;
+        #elif defined(USE_API_INSTANCING)
+        mat4 instanceModelView;
+        mat3 instanceModelViewInverseTranspose;
+
+        RuntimeModelInstancingStage(attributes, instanceModelView, instanceModelViewInverseTranspose);
+        
+        modelView = instanceModelView;
+        normal = instanceModelViewInverseTranspose;
         #else
         instancingStage(attributes);
         #endif
