@@ -223,6 +223,9 @@ class ModelInstance {
    * @private
    */
   getRelativeScaledTransform(model, frameState, result) {
+    if (!model.ready) {
+      return this._relativeTransform;
+    }
     let scale = model.scale;
     const radius = model.sceneGraph.rootBoundingSphere.radius;
 
