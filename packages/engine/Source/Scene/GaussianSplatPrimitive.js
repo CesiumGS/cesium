@@ -148,6 +148,13 @@ function GaussianSplatPrimitive(options) {
    * @see {@link GaussianSplatTextureGenerator}
    */
   this.gaussianSplatTexture = undefined;
+
+  this.positionMegaTexture = undefined;
+  this.colorMegaTexture = undefined;
+  this.covarianceMegaTexture = undefined;
+  this.sh1MegaTexture = undefined;
+  this.sh2MegaTexture = undefined;
+  this.sh3MegaTexture = undefined;
   /**
    * The last width of the Gaussian splat texture.
    * This is used to track changes in the texture size and update the primitive accordingly.
@@ -699,6 +706,13 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   });
 
   primitive._drawCommand = command;
+};
+
+GaussianSplatPrimitive.prototype.buildMegaTextures = function (
+  frameState,
+  visibleTiles,
+) {
+  // const tileset = this._tileset;
 };
 
 /**
