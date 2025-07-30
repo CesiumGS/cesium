@@ -33,7 +33,7 @@
   ],
   "dependencies": {
     "@cesium/wasm-splats": "^0.1.0-alpha.2",
-    "@spz-loader/core": "0.1.0",
+    "@spz-loader/core": "^0.3.0",
     "@tweenjs/tween.js": "^25.0.0",
     "@zip.js/zip.js": "^2.7.34",
     "autolinker": "^4.0.0",
