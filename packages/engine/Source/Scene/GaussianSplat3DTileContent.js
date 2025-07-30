@@ -8,6 +8,13 @@ import destroyObject from "../Core/destroyObject.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
+const GaussianSplatTextureGeneratorState = {
+  UNINITIALIZED: 0,
+  PENDING: 1,
+  READY: 2,
+  ERROR: 3,
+};
+
 /**
  * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-spz-splat-compression/extensions/2.0/Khronos/KHR_spz_gaussian_splats_compression|KHR_spz_gaussian_splats_compression} extension.
  * <p>
@@ -37,9 +44,9 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @type {undefined|Float32Array}
    * @private
    */
-  this._originalPositions = undefined;
-  this._originalRotations = undefined;
-  this._originalScales = undefined;
+  // this._originalPositions = undefined;
+  // this._originalRotations = undefined;
+  // this._originalScales = undefined;
 
   /**
    * glTF primitive data that contains the Gaussian splat data needed for rendering.
@@ -78,6 +85,9 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @private
    */
   this._transformed = false;
+
+  this._textureGeneratorState =
+    GaussianSplatTextureGeneratorState.UNINITIALIZED;
 }
 
 Object.defineProperties(GaussianSplat3DTileContent.prototype, {
@@ -376,7 +386,47 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
       this._transformed = true;
     }
 
-    return;
+    if (
+      this._textureGeneratorState ===
+      GaussianSplatTextureGeneratorState.UNINITIALIZED
+    ) {
+      const attributePositions = ModelUtility.getAttributeBySemantic(
+        this.splatPrimitive,
+        VertexAttributeSemantic.POSITION,
+      ).typedArray;
+
+      const attributeRotations = ModelUtility.getAttributeBySemantic(
+        this.splatPrimitive,
+        VertexAttributeSemantic.ROTATION,
+      ).typedArray;
+
+      const attributeScales = ModelUtility.getAttributeBySemantic(
+        this.splatPrimitive,
+        VertexAttributeSemantic.SCALE,
+      ).typedArray;
+
+      // Create texture data. Colors are already how we want them.
+      this._positionTextureData = makePositionTextureData(attributePositions);
+      this._covarianceTextureData = makeCovarianceTextureData(
+        attributeScales,
+        attributeRotations,
+        this.pointsLength,
+      );
+
+      if (this.shDegree > 0) {
+        const packedData = packSphericalHarmonicData(this);
+        this._sh1TextureData = makeSh1TextureData(packedData);
+
+        if (this.shDegree > 1) {
+          this._sh2TextureData = makeSh2TextureData(packedData);
+        }
+
+        if (this.shDegree > 2) {
+          this._sh3TextureData = makeSh3TextureData(packedData);
+        }
+      }
+      return;
+    }
   }
 
   frameState.afterRender.push(() => true);
@@ -391,26 +441,13 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
-    this._originalPositions = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
-        VertexAttributeSemantic.POSITION,
-      ).typedArray,
+    const { l, n } = degreeAndCoefFromAttributes(
+      this.splatPrimitive.attributes,
     );
+    this.shDegree = l;
+    this.shCoefficientCount = n;
 
-    this._originalRotations = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
-        VertexAttributeSemantic.ROTATION,
-      ).typedArray,
-    );
-
-    this._originalScales = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
-        VertexAttributeSemantic.SCALE,
-      ).typedArray,
-    );
+    this._packedShData = packSphericalHarmonicData(this);
 
     return;
   }
@@ -537,5 +574,307 @@ GaussianSplat3DTileContent.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+/**
+ * Determine Spherical Harmonics degree from attributes
+ * @param {} attribute
+ * @returns
+ */
+function degreeAndCoefFromAttributes(attributes) {
+  const prefix = "_SH_DEGREE_";
+  const shAttributes = attributes.filter((attr) =>
+    attr.name.startsWith(prefix),
+  );
+
+  switch (shAttributes.length) {
+    default:
+    case 0:
+      return { l: 0, n: 0 };
+    case 3:
+      return { l: 1, n: 9 };
+    case 8:
+      return { l: 2, n: 24 };
+    case 15:
+      return { l: 3, n: 45 };
+  }
+}
+
+const buffer = new ArrayBuffer(4);
+const floatView = new Float32Array(buffer);
+const intView = new Uint32Array(buffer);
+
+function float32ToFloat16(float32) {
+  floatView[0] = float32;
+  const bits = intView[0];
+
+  const sign = (bits >> 31) & 0x1;
+  const exponent = (bits >> 23) & 0xff;
+  const mantissa = bits & 0x7fffff;
+
+  let half;
+
+  if (exponent === 0xff) {
+    half = (sign << 15) | (0x1f << 10) | (mantissa ? 0x200 : 0);
+  } else if (exponent === 0) {
+    half = sign << 15;
+  } else {
+    const newExponent = exponent - 127 + 15;
+    if (newExponent >= 31) {
+      half = (sign << 15) | (0x1f << 10);
+    } else if (newExponent <= 0) {
+      half = sign << 15;
+    } else {
+      half = (sign << 15) | (newExponent << 10) | (mantissa >>> 13);
+    }
+  }
+
+  return half;
+}
+
+//duplicated from vertexbufferloader. new splat utils?
+function extractSHDegreeAndCoef(attribute) {
+  const prefix = "_SH_DEGREE_";
+  const separator = "_COEF_";
+
+  const lStart = prefix.length;
+  const coefIndex = attribute.indexOf(separator, lStart);
+
+  const l = parseInt(attribute.slice(lStart, coefIndex), 10);
+  const n = parseInt(attribute.slice(coefIndex + separator.length), 10);
+
+  return { l, n };
+}
+
+function baseAndStrideFromSHDegree(degree) {
+  switch (degree) {
+    case 1:
+      return { base: 0, stride: 9 };
+    case 2:
+      return { base: 9, stride: 24 };
+    case 3:
+      return { base: 24, stride: 45 };
+  }
+}
+
+/**
+ * Packs spherical harmonic data into half-precision floats.
+ * @param {*} data - The input data to pack.
+ * @param {*} shDegree - The spherical harmonic degree.
+ * @returns {Float32Array} - The packed data.
+ */
+function packSphericalHarmonicData(tileContent) {
+  const degree = tileContent.shDegree;
+  const coefs = tileContent.shCoefficientCount;
+  const totalLength = tileContent.pointsLength * coefs;
+  const packedData = new Uint16Array(totalLength);
+
+  const shAttributes = tileContent.splatPrimitive.attributes.filter((attr) =>
+    attr.name.startsWith("_SH_DEGREE_"),
+  );
+  const { base, stride } = baseAndStrideFromSHDegree(degree);
+
+  shAttributes.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+    return 0;
+  });
+
+  for (let i = 0; i < shAttributes.length; i++) {
+    const { n } = extractSHDegreeAndCoef(shAttributes[i].name);
+    for (let j = 0; j < tileContent.pointsLength; j++) {
+      const idx = j * stride + base + n * 3;
+      const src = j * 3;
+      packedData[idx] = float32ToFloat16(shAttributes[i].typedArray[src]);
+      packedData[idx + 1] = float32ToFloat16(
+        shAttributes[i].typedArray[src + 1],
+      );
+      packedData[idx + 2] = float32ToFloat16(
+        shAttributes[i].typedArray[src + 2],
+      );
+    }
+  }
+  return packedData;
+}
+
+function makePositionTextureData(positionData) {
+  const packedData = new Uint32Array(positionData.length);
+  let j = 0;
+  for (let i = 0; i < positionData.length; i += 3) {
+    packedData[j] =
+      float32ToFloat16(positionData[i]) |
+      (float32ToFloat16(positionData[i + 1]) << 16);
+    packedData[j + 1] = float32ToFloat16(positionData[i + 2]);
+    j += 2;
+  }
+  return packedData;
+}
+
+function makeCovarianceTextureData(scaleData, rotationData, count) {
+  const packedData = new Uint32Array(scaleData.length + rotationData.length);
+  for (let i = 0; i < count; i++) {
+    const r = rotationData[4 * i + 3];
+    const x = rotationData[4 * i + 0];
+    const y = rotationData[4 * i + 1];
+    const z = rotationData[4 * i + 2];
+    const rotMatrix = [
+      1.0 - 2.0 * (y * y + z * z),
+      2.0 * (x * y + z * r),
+      2.0 * (x * z - y * r),
+      2.0 * (x * y - z * r),
+      1.0 - 2.0 * (x * x + z * z),
+      2.0 * (y * z + x * r),
+      2.0 * (x * z + y * r),
+      2.0 * (y * z - x * r),
+      1.0 - 2.0 * (x * x + y * y),
+    ];
+
+    const scaleBy2 = [
+      scaleData[3 * i + 0] * 2.0,
+      scaleData[3 * i + 1] * 2.0,
+      scaleData[3 * i + 2] * 2.0,
+    ];
+
+    const M = [
+      rotMatrix[0] * scaleBy2[0],
+      rotMatrix[1] * scaleBy2[0],
+      rotMatrix[2] * scaleBy2[0],
+      rotMatrix[3] * scaleBy2[1],
+      rotMatrix[4] * scaleBy2[1],
+      rotMatrix[5] * scaleBy2[1],
+      rotMatrix[6] * scaleBy2[2],
+      rotMatrix[7] * scaleBy2[2],
+      rotMatrix[8] * scaleBy2[2],
+    ];
+
+    const sigma = [
+      M[0] * M[0] + M[3] * M[3] + M[6] * M[6],
+      M[0] * M[1] + M[3] * M[4] + M[6] * M[7],
+      M[0] * M[2] + M[3] * M[5] + M[6] * M[8],
+      M[1] * M[1] + M[4] * M[4] + M[7] * M[7],
+      M[1] * M[2] + M[4] * M[5] + M[7] * M[8],
+      M[2] * M[2] + M[5] * M[5] + M[8] * M[8],
+    ];
+
+    let covFactor = Number.MIN_SAFE_INTEGER;
+    for (let j = 0; j < sigma.length; j++) {
+      covFactor = Math.max(covFactor, sigma[j]);
+    }
+    packedData[8 * i + 0] =
+      float32ToFloat16(sigma[0] / covFactor) |
+      (float32ToFloat16(sigma[1] / covFactor) << 16);
+    packedData[8 * i + 1] =
+      float32ToFloat16(sigma[2] / covFactor) |
+      (float32ToFloat16(sigma[3] / covFactor) << 16);
+    packedData[8 * i + 2] =
+      float32ToFloat16(sigma[4] / covFactor) |
+      (float32ToFloat16(sigma[5] / covFactor) << 16);
+    packedData[8 * i + 3] = float32ToFloat16(covFactor);
+  }
+  return packedData;
+}
+
+function makeSh1TextureData(packedFloatData) {
+  const sh1Data = new Uint32Array(packedFloatData.length);
+  const { base, stride } = baseAndStrideFromSHDegree(1);
+  let j = 0;
+  for (let i = 0; i < packedFloatData.length; i += stride) {
+    const idx = i + base * 3;
+    sh1Data[j] =
+      float32ToFloat16(packedFloatData[idx]) |
+      (float32ToFloat16(packedFloatData[idx + 1]) << 16);
+    sh1Data[j + 1] =
+      float32ToFloat16(packedFloatData[idx + 2]) |
+      (float32ToFloat16(packedFloatData[idx + 3]) << 16);
+    sh1Data[j + 2] =
+      float32ToFloat16(packedFloatData[idx + 4]) |
+      (float32ToFloat16(packedFloatData[idx + 5]) << 16);
+    sh1Data[j + 3] =
+      float32ToFloat16(packedFloatData[idx + 6]) |
+      (float32ToFloat16(packedFloatData[idx + 7]) << 16);
+    sh1Data[j + 4] = float32ToFloat16(packedFloatData[idx + 8]);
+    j += 5;
+  }
+  return sh1Data;
+}
+
+function makeSh2TextureData(packedFloatData) {
+  const sh2Data = new Uint32Array(packedFloatData.length);
+  const { base, stride } = baseAndStrideFromSHDegree(2);
+  let j = 0;
+  for (let i = 0; i < packedFloatData.length; i += stride) {
+    const idx = i + base * 3;
+    sh2Data[j] =
+      float32ToFloat16(packedFloatData[idx]) |
+      (float32ToFloat16(packedFloatData[idx + 1]) << 16);
+    sh2Data[j + 1] =
+      float32ToFloat16(packedFloatData[idx + 2]) |
+      (float32ToFloat16(packedFloatData[idx + 3]) << 16);
+    sh2Data[j + 2] =
+      float32ToFloat16(packedFloatData[idx + 4]) |
+      (float32ToFloat16(packedFloatData[idx + 5]) << 16);
+    sh2Data[j + 3] =
+      float32ToFloat16(packedFloatData[idx + 6]) |
+      (float32ToFloat16(packedFloatData[idx + 7]) << 16);
+    sh2Data[j + 4] =
+      float32ToFloat16(packedFloatData[idx + 8]) |
+      (float32ToFloat16(packedFloatData[idx + 9]) << 16);
+    sh2Data[j + 5] =
+      float32ToFloat16(packedFloatData[idx + 10]) |
+      (float32ToFloat16(packedFloatData[idx + 11]) << 16);
+    sh2Data[j + 6] =
+      float32ToFloat16(packedFloatData[idx + 12]) |
+      (float32ToFloat16(packedFloatData[idx + 13]) << 16);
+    sh2Data[j + 7] = float32ToFloat16(packedFloatData[idx + 14]);
+    j += 8;
+  }
+  return sh2Data;
+}
+
+function makeSh3TextureData(packedFloatData, count) {
+  const { base, stride } = baseAndStrideFromSHDegree(3);
+  const sh3Data = new Uint32Array((count * stride) / 2 + 1); // N * 21 / 2 + 1
+
+  let j = 0;
+  for (let i = 0; i < packedFloatData.length; i += stride) {
+    const idx = i + base * 3;
+    sh3Data[j] =
+      float32ToFloat16(packedFloatData[idx]) |
+      (float32ToFloat16(packedFloatData[idx + 1]) << 16);
+    sh3Data[j + 1] =
+      float32ToFloat16(packedFloatData[idx + 2]) |
+      (float32ToFloat16(packedFloatData[idx + 3]) << 16);
+    sh3Data[j + 2] =
+      float32ToFloat16(packedFloatData[idx + 4]) |
+      (float32ToFloat16(packedFloatData[idx + 5]) << 16);
+    sh3Data[j + 3] =
+      float32ToFloat16(packedFloatData[idx + 6]) |
+      (float32ToFloat16(packedFloatData[idx + 7]) << 16);
+    sh3Data[j + 4] =
+      float32ToFloat16(packedFloatData[idx + 8]) |
+      (float32ToFloat16(packedFloatData[idx + 9]) << 16);
+    sh3Data[j + 5] =
+      float32ToFloat16(packedFloatData[idx + 10]) |
+      (float32ToFloat16(packedFloatData[idx + 11]) << 16);
+    sh3Data[j + 6] =
+      float32ToFloat16(packedFloatData[idx + 12]) |
+      (float32ToFloat16(packedFloatData[idx + 13]) << 16);
+    sh3Data[j + 7] =
+      float32ToFloat16(packedFloatData[idx + 14]) |
+      (float32ToFloat16(packedFloatData[idx + 15]) << 16);
+    sh3Data[j + 8] =
+      float32ToFloat16(packedFloatData[idx + 16]) |
+      (float32ToFloat16(packedFloatData[idx + 17]) << 16);
+    sh3Data[j + 9] =
+      float32ToFloat16(packedFloatData[idx + 18]) |
+      (float32ToFloat16(packedFloatData[idx + 19]) << 16);
+    sh3Data[j + 10] = float32ToFloat16(packedFloatData[idx + 20]);
+    j += 11;
+  }
+  return sh3Data;
+}
 
 export default GaussianSplat3DTileContent;
