@@ -90,15 +90,11 @@ RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
       continue;
     }
 
-    //const oldtransform = modelInstance.relativeTransform ?? Matrix4.IDENTITY;
-
     const transform = modelInstance.getRelativeScaledTransform(
       model,
       frameState,
       relativeScaledTransformScratch,
     );
-    // console.log("transform ", transform);
-    // console.log("relativeScaledTransform ", newtransform);
     const offset = elements * i;
 
     transformsTypedArray[offset + 0] = transform[0];

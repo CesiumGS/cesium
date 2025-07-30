@@ -223,15 +223,11 @@ class ModelInstance {
     const radius = model.sceneGraph.rootBoundingSphere.radius;
 
     const boundingSphere = this.getBoundingSphere(model, scratchBoundingSphere);
-    const bw = frameState.context.drawingBufferWidth;
-    const bh = frameState.context.drawingBufferHeight;
     const scaleInPixels = frameState.camera.getPixelSize(
       boundingSphere,
-      bw,
-      bh,
+      frameState.context.drawingBufferWidth,
+      frameState.context.drawingBufferHeight,
     ); //meters per pixel
-
-    //console.log("instance ", scaleInPixels, this);
 
     // metersPerPixel is always > 0.0
     const pixelsPerMeter = 1.0 / scaleInPixels;
@@ -242,8 +238,6 @@ class ModelInstance {
     if (diameterInPixels < model.minimumPixelSize) {
       scale = (model.minimumPixelSize * scaleInPixels) / diameter;
     }
-
-    //console.log("scale ", scale);
 
     return Matrix4.multiplyByUniformScale(
       this._relativeTransform,
