@@ -406,8 +406,8 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
       ).typedArray;
 
       // Create texture data. Colors are already how we want them.
-      this._positionTextureData = makePositionTextureData(attributePositions);
-      this._covarianceTextureData = makeCovarianceTextureData(
+      this.positionTextureData = makePositionTextureData(attributePositions);
+      this.covarianceTextureData = makeCovarianceTextureData(
         attributeScales,
         attributeRotations,
         this.pointsLength,
@@ -415,14 +415,14 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
 
       if (this.shDegree > 0) {
         const packedData = packSphericalHarmonicData(this);
-        this._sh1TextureData = makeSh1TextureData(packedData);
+        this.sh1TextureData = makeSh1TextureData(packedData);
 
         if (this.shDegree > 1) {
-          this._sh2TextureData = makeSh2TextureData(packedData);
+          this.sh2TextureData = makeSh2TextureData(packedData);
         }
 
         if (this.shDegree > 2) {
-          this._sh3TextureData = makeSh3TextureData(packedData);
+          this.sh3TextureData = makeSh3TextureData(packedData);
         }
       }
       return;

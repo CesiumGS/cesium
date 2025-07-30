@@ -2,12 +2,7 @@ import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
-import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import Sampler from "../Renderer/Sampler.js";
-import Texture from "../Renderer/Texture.js";
 import GaussianSplatRenderResources from "./GaussianSplatRenderResources.js";
 import BlendingState from "./BlendingState.js";
 import Pass from "../Renderer/Pass.js";
@@ -31,6 +26,9 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
+import GaussianSplatMegatexture from "./GaussianSplatMegatexture.js";
+import PixelFormat from "../Core/PixelFormat.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4B = new Matrix4();
@@ -44,22 +42,22 @@ const GaussianSplatSortingState = {
   ERROR: 4,
 };
 
-function createGaussianSplatTexture(context, splatTextureData) {
-  return new Texture({
-    context: context,
-    source: {
-      width: splatTextureData.width,
-      height: splatTextureData.height,
-      arrayBufferView: splatTextureData.data,
-    },
-    preMultiplyAlpha: false,
-    skipColorSpaceConversion: true,
-    pixelFormat: PixelFormat.RGBA_INTEGER,
-    pixelDatatype: PixelDatatype.UNSIGNED_INT,
-    flipY: false,
-    sampler: Sampler.NEAREST,
-  });
-}
+// function createGaussianSplatTexture(context, splatTextureData) {
+//   return new Texture({
+//     context: context,
+//     source: {
+//       width: splatTextureData.width,
+//       height: splatTextureData.height,
+//       arrayBufferView: splatTextureData.data,
+//     },
+//     preMultiplyAlpha: false,
+//     skipColorSpaceConversion: true,
+//     pixelFormat: PixelFormat.RGBA_INTEGER,
+//     pixelDatatype: PixelDatatype.UNSIGNED_INT,
+//     flipY: false,
+//     sampler: Sampler.NEAREST,
+//   });
+// }
 
 /** A primitive that renders Gaussian splats.
  * <p>
@@ -500,71 +498,71 @@ GaussianSplatPrimitive.transformTile = function (tile) {
  * @param {FrameState} frameState
  * @private
  */
-GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
-  primitive._gaussianSplatTexturePending = true;
-  const promise = GaussianSplatTextureGenerator.generateFromAttributes({
-    attributes: {
-      positions: new Float32Array(primitive._positions),
-      scales: new Float32Array(primitive._scales),
-      rotations: new Float32Array(primitive._rotations),
-      colors: new Uint8Array(primitive._colors),
-    },
-    count: primitive._numSplats,
-  });
-  if (!defined(promise)) {
-    primitive._gaussianSplatTexturePending = false;
-    return;
-  }
-  promise
-    .then((splatTextureData) => {
-      if (!primitive._gaussianSplatTexture) {
-        // First frame, so create the texture.
-        primitive.gaussianSplatTexture = createGaussianSplatTexture(
-          frameState.context,
-          splatTextureData,
-        );
-      } else if (
-        primitive._lastTextureHeight !== splatTextureData.height ||
-        primitive._lastTextureWidth !== splatTextureData.width
-      ) {
-        const oldTex = primitive.gaussianSplatTexture;
-        primitive._gaussianSplatTexture = createGaussianSplatTexture(
-          frameState.context,
-          splatTextureData,
-        );
-        oldTex.destroy();
-      } else {
-        primitive.gaussianSplatTexture.copyFrom({
-          source: {
-            width: splatTextureData.width,
-            height: splatTextureData.height,
-            arrayBufferView: splatTextureData.data,
-          },
-        });
-      }
+// GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
+//   primitive._gaussianSplatTexturePending = true;
+//   const promise = GaussianSplatTextureGenerator.generateFromAttributes({
+//     attributes: {
+//       positions: new Float32Array(primitive._positions),
+//       scales: new Float32Array(primitive._scales),
+//       rotations: new Float32Array(primitive._rotations),
+//       colors: new Uint8Array(primitive._colors),
+//     },
+//     count: primitive._numSplats,
+//   });
+//   if (!defined(promise)) {
+//     primitive._gaussianSplatTexturePending = false;
+//     return;
+//   }
+//   promise
+//     .then((splatTextureData) => {
+//       if (!primitive._gaussianSplatTexture) {
+//         // First frame, so create the texture.
+//         primitive.gaussianSplatTexture = createGaussianSplatTexture(
+//           frameState.context,
+//           splatTextureData,
+//         );
+//       } else if (
+//         primitive._lastTextureHeight !== splatTextureData.height ||
+//         primitive._lastTextureWidth !== splatTextureData.width
+//       ) {
+//         const oldTex = primitive.gaussianSplatTexture;
+//         primitive._gaussianSplatTexture = createGaussianSplatTexture(
+//           frameState.context,
+//           splatTextureData,
+//         );
+//         oldTex.destroy();
+//       } else {
+//         primitive.gaussianSplatTexture.copyFrom({
+//           source: {
+//             width: splatTextureData.width,
+//             height: splatTextureData.height,
+//             arrayBufferView: splatTextureData.data,
+//           },
+//         });
+//       }
 
-      primitive._lastTextureHeight = splatTextureData.height;
-      primitive._lastTextureWidth = splatTextureData.width;
+//       primitive._lastTextureHeight = splatTextureData.height;
+//       primitive._lastTextureWidth = splatTextureData.width;
 
-      primitive._hasGaussianSplatTexture = true;
-      primitive._needsGaussianSplatTexture = false;
-      primitive._gaussianSplatTexturePending = false;
+//       primitive._hasGaussianSplatTexture = true;
+//       primitive._needsGaussianSplatTexture = false;
+//       primitive._gaussianSplatTexturePending = false;
 
-      if (
-        !defined(primitive._indexes) ||
-        primitive._indexes.length < primitive._numSplats
-      ) {
-        primitive._indexes = new Uint32Array(primitive._numSplats);
-      }
-      for (let i = 0; i < primitive._numSplats; ++i) {
-        primitive._indexes[i] = i;
-      }
-    })
-    .catch((error) => {
-      console.error("Error generating Gaussian splat texture:", error);
-      primitive._gaussianSplatTexturePending = false;
-    });
-};
+//       if (
+//         !defined(primitive._indexes) ||
+//         primitive._indexes.length < primitive._numSplats
+//       ) {
+//         primitive._indexes = new Uint32Array(primitive._numSplats);
+//       }
+//       for (let i = 0; i < primitive._numSplats; ++i) {
+//         primitive._indexes[i] = i;
+//       }
+//     })
+//     .catch((error) => {
+//       console.error("Error generating Gaussian splat texture:", error);
+//       primitive._gaussianSplatTexturePending = false;
+//     });
+// };
 
 /**
  * Builds the draw command for the Gaussian splat primitive.
@@ -708,12 +706,64 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   primitive._drawCommand = command;
 };
 
-GaussianSplatPrimitive.prototype.buildMegaTextures = function (
-  frameState,
-  visibleTiles,
+GaussianSplatPrimitive.prototype.initMegaTextures = function (
+  context,
+  shDegree,
 ) {
-  // const tileset = this._tileset;
+  this.positionMegaTexture = new GaussianSplatMegatexture({
+    context: context,
+    width: 16384,
+    height: 16384,
+    pixelFormat: PixelFormat.RGBA_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+  });
+  this.colorMegaTexture = new GaussianSplatMegatexture({
+    context: context,
+    width: 16384,
+    height: 16384,
+    pixelFormat: PixelFormat.RGBA_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+  });
+  this.covarianceMegaTexture = new GaussianSplatMegatexture({
+    context: context,
+    width: 16384,
+    height: 16384,
+    pixelFormat: PixelFormat.RGBA_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+  });
+
+  if (shDegree > 0) {
+    this.sh1MegaTexture = new GaussianSplatMegatexture({
+      context: context,
+      width: 16384,
+      height: 16384,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    });
+  }
+
+  if (shDegree > 1) {
+    this.sh2MegaTexture = new GaussianSplatMegatexture({
+      context: context,
+      width: 16384,
+      height: 16384,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    });
+  }
+
+  if (shDegree > 2) {
+    this.sh3MegaTexture = new GaussianSplatMegatexture({
+      context: context,
+      width: 16384,
+      height: 16384,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    });
+  }
 };
+
+const scratchAttributeRefs = [];
 
 /**
  * Updates the Gaussian splat primitive for the current frame.
@@ -727,6 +777,14 @@ GaussianSplatPrimitive.prototype.buildMegaTextures = function (
  */
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
+
+  if (!this._hasGaussianSplatTexture) {
+    const shDegree = defined(tileset.root.content.shDegree)
+      ? tileset.root.content.shDegree
+      : tileset.root.children[0].content.shDegree;
+    this.initMegaTextures(frameState.context, shDegree);
+    this._hasGaussianSplatTexture = true;
+  }
 
   if (!defined(this._rootTransform)) {
     this._rootTransform = tileset.root.computedTransform;
@@ -776,63 +834,53 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         (total, tile) => total + tile.content.pointsLength,
         0,
       );
-      const aggregateAttributeValues = (
-        componentDatatype,
-        getAttributeCallback,
-      ) => {
-        let aggregate;
-        let offset = 0;
-        for (const tile of tiles) {
-          const primitive = tile.content.splatPrimitive;
-          const attribute = getAttributeCallback(primitive);
-          if (!defined(aggregate)) {
-            aggregate = ComponentDatatype.createTypedArray(
-              componentDatatype,
-              totalElements *
-                AttributeType.getNumberOfComponents(attribute.type),
-            );
-          }
-          aggregate.set(attribute.typedArray, offset);
-          offset += attribute.typedArray.length;
-        }
-        return aggregate;
-      };
 
-      this._positions = aggregateAttributeValues(
-        ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.POSITION,
-          ),
+      scratchAttributeRefs.length = 0;
+      for (const tile of tiles) {
+        scratchAttributeRefs.push(tile.content.positionTextureData);
+      }
+      this.positionMegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      scratchAttributeRefs.length = 0;
+      for (const tile of tiles) {
+        scratchAttributeRefs.push(tile.content.covarianceTextureData);
+      }
+      this.covarianceMegaTexture.insertTextureDataMultiple(
+        scratchAttributeRefs,
       );
 
-      this._scales = aggregateAttributeValues(
-        ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
+      scratchAttributeRefs.length = 0;
+      for (const tile of tiles) {
+        scratchAttributeRefs.push(
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.SCALE,
-          ),
-      );
-
-      this._rotations = aggregateAttributeValues(
-        ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.ROTATION,
-          ),
-      );
-
-      this._colors = aggregateAttributeValues(
-        ComponentDatatype.UNSIGNED_BYTE,
-        (splatPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            tile.content.splatPrimitive,
             VertexAttributeSemantic.COLOR,
-          ),
-      );
+          ).typedArray,
+        );
+      }
+      this.colorMegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+
+      const shDegree = tiles[0].content.shDegree;
+      if (shDegree > 0) {
+        scratchAttributeRefs.length = 0;
+        for (const tile of tiles) {
+          scratchAttributeRefs.push(tile.content.sh1TextureData);
+        }
+        this.sh1MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      }
+      if (shDegree > 1) {
+        scratchAttributeRefs.length = 0;
+        for (const tile of tiles) {
+          scratchAttributeRefs.push(tile.content.sh2TextureData);
+        }
+        this.sh2MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      }
+      if (shDegree > 2) {
+        scratchAttributeRefs.length = 0;
+        for (const tile of tiles) {
+          scratchAttributeRefs.push(tile.content.sh3TextureData);
+        }
+        this.sh3MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      }
 
       this._numSplats = totalElements;
       this.selectedTileLength = tileset._selectedTiles.length;
@@ -842,12 +890,12 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
 
-    if (this._needsGaussianSplatTexture) {
-      if (!this._gaussianSplatTexturePending) {
-        GaussianSplatPrimitive.generateSplatTexture(this, frameState);
-      }
-      return;
-    }
+    // if (this._needsGaussianSplatTexture) {
+    //   if (!this._gaussianSplatTexturePending) {
+    //     GaussianSplatPrimitive.generateSplatTexture(this, frameState);
+    //   }
+    //   return;
+    // }
 
     Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
     Matrix4.multiply(

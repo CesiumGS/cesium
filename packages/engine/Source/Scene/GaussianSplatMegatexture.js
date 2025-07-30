@@ -74,8 +74,10 @@ function GaussianSplatMegatexture(options) {
 
   this._texture = new Texture({
     context,
-    width: this._width,
-    height: this._height,
+    source: {
+      width: this._width,
+      height: this._height,
+    },
     pixelFormat: this._pixelFormat,
     pixelDatatype: this._pixelDatatype,
     preMultiplyAlpha: false,
