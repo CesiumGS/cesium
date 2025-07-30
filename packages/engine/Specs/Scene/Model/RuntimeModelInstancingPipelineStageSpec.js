@@ -94,6 +94,7 @@ describe(
           _pipelineResources: [],
           statistics: new ModelStatistics(),
           sceneGraph: new ModelSceneGraph(),
+          scale: 1,
         },
         runtimeNode: {
           node: node,
@@ -192,6 +193,8 @@ describe(
       const transformsTypedArray =
         RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
           modelInstances,
+          renderResources.model,
+          scene.frameState,
         );
 
       expect(transformsTypedArray.length).toEqual(
@@ -299,10 +302,11 @@ describe(
       ]);
 
       const newTransformsTypedArray =
-        RuntimeModelInstancingPipelineStage._getTransformsTypedArray([
-          sampleInstance3,
-          sampleInstance4,
-        ]);
+        RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
+          [sampleInstance3, sampleInstance4],
+          renderResources.model,
+          scene.frameState,
+        );
 
       expect(newTransformsTypedArray.length).toEqual(
         newExpectedTransformsTypedArray.length,
