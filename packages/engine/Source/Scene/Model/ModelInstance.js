@@ -214,11 +214,15 @@ class ModelInstance {
     return BoundingSphere.fromBoundingSpheres(instanceBoundingSpheres, result);
   }
 
+  /**
+   * Scale the relativeTransform for a model instance based on screen parameters.
+   * @param {Model} model The model being instanced.
+   * @param {frameState} frameState The frame state
+   * @param {Matrix4} [result] If provided, the Matrix4 in which to store the result.
+   * @returns {Matrix4} The scaled relative instance transform.
+   * @private
+   */
   getRelativeScaledTransform(model, frameState, result) {
-    if (!model.ready) {
-      return Matrix4.IDENTITY;
-    }
-
     let scale = model.scale;
     const radius = model.sceneGraph.rootBoundingSphere.radius;
 
