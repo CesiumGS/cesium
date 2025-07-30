@@ -157,9 +157,12 @@ ITwinPlatform.apiEndpoint = new Resource({
  *
  * @throws {RuntimeError} If the iTwin API request is not successful
  */
-ITwinPlatform.getExports = async function (iModelId) {
+ITwinPlatform.getExports = async function (iModelId, changesetId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iModelId", iModelId);
+  if (defined(changesetId)) {
+    Check.typeOf.string("changesetId", changesetId);
+  }
   if (
     !defined(ITwinPlatform.defaultAccessToken) &&
     !defined(ITwinPlatform.defaultShareKey)
@@ -190,6 +193,9 @@ ITwinPlatform.getExports = async function (iModelId) {
   /* global CESIUM_VERSION */
   if (typeof CESIUM_VERSION !== "undefined") {
     resource.appendQueryParameters({ clientVersion: CESIUM_VERSION });
+  }
+  if (defined(changesetId)) {
+    resource.appendQueryParameters({ changesetId: changesetId });
   }
 
   try {
