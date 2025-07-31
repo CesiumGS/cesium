@@ -8,7 +8,7 @@ import destroyObject from "../Core/destroyObject.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
-const GaussianSplatTextureGeneratorState = {
+export const GaussianSplatTextureGeneratorState = {
   UNINITIALIZED: 0,
   PENDING: 1,
   READY: 2,
@@ -390,9 +390,16 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
       this._textureGeneratorState ===
       GaussianSplatTextureGeneratorState.UNINITIALIZED
     ) {
+      this._textureGeneratorState = GaussianSplatTextureGeneratorState.PENDING;
+
       const attributePositions = ModelUtility.getAttributeBySemantic(
         this.splatPrimitive,
         VertexAttributeSemantic.POSITION,
+      ).typedArray;
+
+      const attributeColors = ModelUtility.getAttributeBySemantic(
+        this.splatPrimitive,
+        VertexAttributeSemantic.COLOR,
       ).typedArray;
 
       const attributeRotations = ModelUtility.getAttributeBySemantic(
@@ -406,7 +413,8 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
       ).typedArray;
 
       // Create texture data. Colors are already how we want them.
-      this.positionTextureData = makePositionTextureData(attributePositions);
+      this.positionTextureData = attributePositions;
+      this.colorTextureData = makeColorTextureData(attributeColors);
       this.covarianceTextureData = makeCovarianceTextureData(
         attributeScales,
         attributeRotations,
@@ -425,8 +433,10 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
           this.sh3TextureData = makeSh3TextureData(packedData);
         }
       }
-      return;
+
+      this._textureGeneratorState = GaussianSplatTextureGeneratorState.READY;
     }
+    return;
   }
 
   frameState.afterRender.push(() => true);
@@ -439,16 +449,17 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   if (this._resourcesLoaded) {
     this.splatPrimitive = loader.components.scene.nodes[0].primitives[0];
     this.worldTransform = loader.components.scene.nodes[0].matrix;
+
+    // const { l, n } = degreeAndCoefFromAttributes(
+    //   this.splatPrimitive.attributes,
+    // );
+    // this.shDegree = l;
+    // this.shCoefficientCount = n;
+
+    // this._packedShData = packSphericalHarmonicData(this);
+    this.shDegree = 0;
+    this.shCoefficientCount = 0;
     this._ready = true;
-
-    const { l, n } = degreeAndCoefFromAttributes(
-      this.splatPrimitive.attributes,
-    );
-    this.shDegree = l;
-    this.shCoefficientCount = n;
-
-    this._packedShData = packSphericalHarmonicData(this);
-
     return;
   }
 
@@ -580,6 +591,7 @@ GaussianSplat3DTileContent.prototype.destroy = function () {
  * @param {} attribute
  * @returns
  */
+/* eslint-disable-next-line no-unused-vars */
 function degreeAndCoefFromAttributes(attributes) {
   const prefix = "_SH_DEGREE_";
   const shAttributes = attributes.filter((attr) =>
@@ -602,36 +614,51 @@ function degreeAndCoefFromAttributes(attributes) {
 const buffer = new ArrayBuffer(4);
 const floatView = new Float32Array(buffer);
 const intView = new Uint32Array(buffer);
-
+//Algorithm from ILM
+//https://github.com/mitsuba-renderer/openexr/blob/master/IlmBase/Half/half.cpp
 function float32ToFloat16(float32) {
   floatView[0] = float32;
-  const bits = intView[0];
+  const f_int = intView[0];
 
-  const sign = (bits >> 31) & 0x1;
-  const exponent = (bits >> 23) & 0xff;
-  const mantissa = bits & 0x7fffff;
+  const sign = (f_int >> 16) & 0x00008000;
+  let exp = ((f_int >> 23) & 0x000000ff) - (127 - 15);
+  let frac = f_int & 0x007fffff;
 
-  let half;
-
-  if (exponent === 0xff) {
-    half = (sign << 15) | (0x1f << 10) | (mantissa ? 0x200 : 0);
-  } else if (exponent === 0) {
-    half = sign << 15;
-  } else {
-    const newExponent = exponent - 127 + 15;
-    if (newExponent >= 31) {
-      half = (sign << 15) | (0x1f << 10);
-    } else if (newExponent <= 0) {
-      half = sign << 15;
-    } else {
-      half = (sign << 15) | (newExponent << 10) | (mantissa >>> 13);
+  if (exp <= 0) {
+    if (exp < -10) {
+      return sign;
     }
+
+    frac = frac | 0x00800000;
+    const t = 14 - exp;
+    const a = (1 << (t - 1)) - 1;
+    const b = (frac >> t) & 1;
+
+    frac = (frac + a + b) >> t;
+    return sign | frac;
   }
 
-  return half;
+  if (exp === 0xff - (127 - 15)) {
+    if (frac === 0) {
+      return sign | 0x7c00;
+    }
+    frac >>= 13;
+    return sign | 0x7c00 | frac | (frac === 0 ? 1 : 0);
+  }
+
+  frac = frac + 0x00000fff + ((frac >> 13) & 1);
+  if (frac & 0x00800000) {
+    frac = 0;
+    exp += 1;
+  }
+
+  if (exp > 30) {
+    return sign | 0x7c00;
+  }
+
+  return sign | (exp << 10) | (frac >> 13);
 }
 
-//duplicated from vertexbufferloader. new splat utils?
 function extractSHDegreeAndCoef(attribute) {
   const prefix = "_SH_DEGREE_";
   const separator = "_COEF_";
@@ -663,7 +690,6 @@ function baseAndStrideFromSHDegree(degree) {
  * @returns {Float32Array} - The packed data.
  */
 function packSphericalHarmonicData(tileContent) {
-  const degree = tileContent.shDegree;
   const coefs = tileContent.shCoefficientCount;
   const totalLength = tileContent.pointsLength * coefs;
   const packedData = new Uint16Array(totalLength);
@@ -671,7 +697,6 @@ function packSphericalHarmonicData(tileContent) {
   const shAttributes = tileContent.splatPrimitive.attributes.filter((attr) =>
     attr.name.startsWith("_SH_DEGREE_"),
   );
-  const { base, stride } = baseAndStrideFromSHDegree(degree);
 
   shAttributes.sort((a, b) => {
     if (a.name < b.name) {
@@ -684,7 +709,8 @@ function packSphericalHarmonicData(tileContent) {
   });
 
   for (let i = 0; i < shAttributes.length; i++) {
-    const { n } = extractSHDegreeAndCoef(shAttributes[i].name);
+    const { l, n } = extractSHDegreeAndCoef(shAttributes[i].name);
+    const { base, stride } = baseAndStrideFromSHDegree(l);
     for (let j = 0; j < tileContent.pointsLength; j++) {
       const idx = j * stride + base + n * 3;
       const src = j * 3;
@@ -700,21 +726,20 @@ function packSphericalHarmonicData(tileContent) {
   return packedData;
 }
 
-function makePositionTextureData(positionData) {
-  const packedData = new Uint32Array(positionData.length);
-  let j = 0;
-  for (let i = 0; i < positionData.length; i += 3) {
-    packedData[j] =
-      float32ToFloat16(positionData[i]) |
-      (float32ToFloat16(positionData[i + 1]) << 16);
-    packedData[j + 1] = float32ToFloat16(positionData[i + 2]);
-    j += 2;
+function makeColorTextureData(colorData) {
+  const packedData = new Uint32Array(colorData.length / 4);
+  for (let i = 0; i < colorData.length; i += 4) {
+    const r = colorData[i];
+    const g = colorData[i + 1];
+    const b = colorData[i + 2];
+    const a = colorData[i + 3];
+    packedData[i / 4] = (r << 24) | (g << 16) | (b << 8) | a;
   }
   return packedData;
 }
 
 function makeCovarianceTextureData(scaleData, rotationData, count) {
-  const packedData = new Uint32Array(scaleData.length + rotationData.length);
+  const packedData = new Uint32Array(count * 4);
   for (let i = 0; i < count; i++) {
     const r = rotationData[4 * i + 3];
     const x = rotationData[4 * i + 0];
@@ -763,16 +788,17 @@ function makeCovarianceTextureData(scaleData, rotationData, count) {
     for (let j = 0; j < sigma.length; j++) {
       covFactor = Math.max(covFactor, sigma[j]);
     }
-    packedData[8 * i + 0] =
+    packedData[4 * i + 0] =
       float32ToFloat16(sigma[0] / covFactor) |
       (float32ToFloat16(sigma[1] / covFactor) << 16);
-    packedData[8 * i + 1] =
+    packedData[4 * i + 1] =
       float32ToFloat16(sigma[2] / covFactor) |
       (float32ToFloat16(sigma[3] / covFactor) << 16);
-    packedData[8 * i + 2] =
+    packedData[4 * i + 2] =
       float32ToFloat16(sigma[4] / covFactor) |
       (float32ToFloat16(sigma[5] / covFactor) << 16);
-    packedData[8 * i + 3] = float32ToFloat16(covFactor);
+    floatView[0] = covFactor;
+    packedData[4 * i + 3] = intView[0];
   }
   return packedData;
 }
