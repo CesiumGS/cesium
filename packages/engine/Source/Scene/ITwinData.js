@@ -38,7 +38,6 @@ const ITwinData = {};
  * @param {string} [changesetId] The id of the changeset to load, if not provided the latest changesets will be used
  * @returns {Promise<Cesium3DTileset | undefined>} A promise that will resolve to the created 3D tileset or <code>undefined</code> if there is no completed export for the given iModel id
  *
- * @throws {RuntimeError} If no exports for the given iModel are found
  * @throws {RuntimeError} If all exports for the given iModel are Invalid
  * @throws {RuntimeError} If the iTwin API request is not successful
  */

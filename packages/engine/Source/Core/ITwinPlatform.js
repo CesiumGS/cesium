@@ -153,6 +153,7 @@ ITwinPlatform.apiEndpoint = new Resource({
  * @private
  *
  * @param {string} iModelId iModel id
+ * @param {string} [changesetId] The id of the changeset to filter results by. If not provided, exports from the latest available changesets will be returned.
  * @returns {Promise<GetExportsResponse>}
  *
  * @throws {RuntimeError} If the iTwin API request is not successful
