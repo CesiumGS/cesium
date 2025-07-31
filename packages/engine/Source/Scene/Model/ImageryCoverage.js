@@ -1,4 +1,5 @@
 import defined from "../../Core/defined.js";
+import CesiumMath from "../../Core/Math.js";
 import Rectangle from "../../Core/Rectangle.js";
 
 import CartesianRectangle from "./CartesianRectangle.js";
@@ -7,7 +8,7 @@ const imageryBoundsScratch = new Rectangle();
 const overlappedRectangleScratch = new Rectangle();
 const clippedRectangleScratch = new Rectangle();
 const nativeInputRectangleScratch = new Rectangle();
-const nativeImageryBoundsScratch = new Rectangle();
+//const nativeImageryBoundsScratch = new Rectangle(); XXX_DRAPING unused
 const nativeClippedImageryBoundsScratch = new Rectangle();
 
 /**
@@ -31,7 +32,8 @@ const nativeClippedImageryBoundsScratch = new Rectangle();
  * <code>ImageryLayer.prototype._createTileImagerySkeletons</code>
  * See https://github.com/CesiumGS/cesium/blob/5eaa2280f495d8f300d9e1f0497118c97aec54c8/packages/engine/Source/Scene/ImageryLayer.js#L700
  * An instance of this class roughly corresponds to the <code>TileImagery</code>
- * that is created there.
+ * that is created there. Questions about the implementation here should
+ * be addressed to the original author.
  *
  * @private
  */
@@ -162,11 +164,15 @@ class ImageryCoverage {
       inputRectangle,
       nativeInputRectangle,
     );
+
+    // XXX_DRAPING Was unused?
+    /*
     const nativeImageryBounds = nativeImageryBoundsScratch;
     imageryTilingScheme.rectangleToNativeRectangle(
       imageryBounds,
       nativeImageryBounds,
     );
+    */
 
     // A function that returns an imagery rectangle, based on (x, y, level),
     // clipped to the imagery bounds (or undefined if there is no intersection
@@ -236,7 +242,12 @@ class ImageryCoverage {
    * the X/Y coordinates of the imagery that is overlapped by the given
    * input rectangle, based on the given imagery rectangle.
    *
-   * Extracted from _createTileImagerySkeletons.
+   * This was largely extracted from _createTileImagerySkeletons.
+   *
+   * Note that the resulting rectangle will always obey the `minX<=maxX`
+   * constraint, but `maxX` may be larger than the number of tiles along
+   * x in the given imagery level. The receiver is responsible for
+   * wrapping the results into the valid range.
    *
    * @param {Rectangle} inputRectangle The input rectangle
    * @param {Rectangle} imageryBounds The imagery bounds
@@ -254,12 +265,22 @@ class ImageryCoverage {
       inputRectangle,
       imageryBounds,
     );
+
+    // XXX_DRAPING: The wrapping that is happening here has to be
+    // verified. The "computeOverlappedRectangle" is doing some
+    // obscure "clamping" under certain conditions, as extracted
+    // from "_createTileImagerySkeletons", which may cause results
+    // that do not make sense here.
+    const nw = Rectangle.northwest(overlappedRectangle);
+    nw.longitude = CesiumMath.convertLongitudeRange(nw.longitude);
     const northwestTileCoordinates = imageryTilingScheme.positionToTileXY(
-      Rectangle.northwest(overlappedRectangle),
+      nw,
       imageryLevel,
     );
+    const se = Rectangle.southeast(overlappedRectangle);
+    se.longitude = CesiumMath.convertLongitudeRange(se.longitude);
     const southeastTileCoordinates = imageryTilingScheme.positionToTileXY(
-      Rectangle.southeast(overlappedRectangle),
+      se,
       imageryLevel,
     );
 
@@ -269,6 +290,7 @@ class ImageryCoverage {
     result.maxX = southeastTileCoordinates.x;
     result.maxY = southeastTileCoordinates.y;
 
+    /*/ XXX_DRAPING We have to get rid of this...
     // As extracted from _createTileImagerySkeletons:
     // If the southeast corner of the rectangle lies very close to the north or west side
     // of the southeast tile, we don't actually need the southernmost or easternmost
@@ -314,6 +336,24 @@ class ImageryCoverage {
     if (deltaEast < veryCloseX && result.maxX > result.minX) {
       --result.maxX;
     }
+    //*/
+
+    // For the case that the inputRectangle crosses the antimeridian,
+    // "west" (the westernmost side) may be 179° and "east" (the
+    // easternmost side) may be -179°.
+    // The "imageryTilingScheme.positionToTileXY" call returns coordinates
+    // that are wrapped into the valid range individually (!). This
+    // means that the tile x-coordinate for "west" (minX) may be larger
+    // than the tile x-coordinate for "east" (maxX). In this case,
+    // wrap the "maxX" around, based on the number of tiles along x.
+    if (result.minX > result.maxX) {
+      const numTilesX =
+        imageryTilingScheme.getNumberOfXTilesAtLevel(imageryLevel);
+      result.maxX += numTilesX;
+    }
+
+    // XXX_DRAPING
+    console.log("ImageryCoverage._computeImageryRange: result ", result);
 
     return result;
   }
@@ -383,6 +423,10 @@ class ImageryCoverage {
    * the texture coordinates that are contained in the given range of
    * imagery tile coordinates, referring to the given input rectangle.
    *
+   * The given imageryRange may contain x-coordinates that are larger than the
+   * number of tiles along x for the given imagery level. This method will
+   * wrap the coordinates to be in a valid range.
+   *
    * @param {ImageryLayer} imageryLayer The imagery layer
    * @param {CartesianRectangle} imageryRange The range of imagery tile coordinates
    * @param {number} imageryLevel The imagery level
@@ -402,11 +446,25 @@ class ImageryCoverage {
     nativeInputRectangle,
     computeClippedImageryRectangle,
   ) {
+    const imageryProvider = imageryLayer.imageryProvider;
+    const imageryTilingScheme = imageryProvider.tilingScheme;
+    const numTilesX =
+      imageryTilingScheme.getNumberOfXTilesAtLevel(imageryLevel);
+
     const imageryCoverages = [];
 
-    for (let i = imageryRange.minX; i <= imageryRange.maxX; i++) {
+    for (let rawX = imageryRange.minX; rawX <= imageryRange.maxX; rawX++) {
+      let x = rawX;
+      if (rawX >= numTilesX) {
+        x = rawX % numTilesX;
+        /// XXX_DRAPING Debug log
+        console.log(
+          `Wrapping ${rawX} to ${x} for ${numTilesX} tiles on level ${imageryLevel}`,
+        );
+      }
+
       const clippedImageryRectangleU = computeClippedImageryRectangle(
-        i,
+        x,
         imageryRange.maxY,
         imageryLevel,
       );
@@ -415,10 +473,10 @@ class ImageryCoverage {
         continue;
       }
 
-      for (let j = imageryRange.minY; j <= imageryRange.maxY; j++) {
+      for (let y = imageryRange.minY; y <= imageryRange.maxY; y++) {
         const clippedImageryRectangleV = computeClippedImageryRectangle(
-          i,
-          j,
+          x,
+          y,
           imageryLevel,
         );
 
@@ -439,10 +497,10 @@ class ImageryCoverage {
         // getImageryFromCacheAndCreateAllAncestorsAndAddReferences.
         // There is currently no way to have a single imagery, because
         // somewhere in TileImagery, the parent is assumed to be present.
-        const imagery = imageryLayer.getImageryFromCache(i, j, imageryLevel);
+        const imagery = imageryLayer.getImageryFromCache(x, y, imageryLevel);
         const imageryCoverage = new ImageryCoverage(
-          i,
-          j,
+          x,
+          y,
           imageryLevel,
           textureCoordinateRectangle,
           imagery,
