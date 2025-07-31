@@ -49,6 +49,18 @@ export default [
         "error",
         { vars: "all", args: "none", caughtErrors: "none" },
       ],
+      "no-restricted-syntax": [
+        "warn",
+        {
+          // The pattern of Array.push.apply() can lead to stack
+          // overflow errors when the source array is large.
+          // See https://github.com/CesiumGS/cesium/issues/12053
+          selector:
+            "CallExpression[callee.object.property.name=push][callee.property.name=apply]",
+          message:
+            "Avoid Array.push.apply(). Use addAllToArray() for arrays of unknown size, or the spread syntax for arrays that are known to be small",
+        },
+      ],
     },
   },
   {
