@@ -1,4 +1,5 @@
 import defined from "../../Core/defined.js";
+import CesiumMath from "../../Core/Math.js";
 import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -272,6 +273,9 @@ class ModelImageryMapping {
    * Computes the bounding rectangle of the given cartographic positions,
    * stores it in the given result, and returns it.
    *
+   * This is taken from <code>Rectangle.fromCartographicArray</code>, but
+   * operates on an iterable instead of an array.
+   *
    * If the given result is `undefined`, a new rectangle will be created
    * and returned.
    *
@@ -287,17 +291,37 @@ class ModelImageryMapping {
     if (!defined(result)) {
       result = new Rectangle();
     }
-    // One could store these directly in the result, but that would
-    // violate the constraint of the PI-related ranges..
     let north = Number.NEGATIVE_INFINITY;
     let south = Number.POSITIVE_INFINITY;
     let east = Number.NEGATIVE_INFINITY;
     let west = Number.POSITIVE_INFINITY;
+    let westOverIDL = Number.POSITIVE_INFINITY;
+    let eastOverIDL = Number.NEGATIVE_INFINITY;
+
     for (const cartographicPosition of cartographicPositions) {
       north = Math.max(north, cartographicPosition.latitude);
       south = Math.min(south, cartographicPosition.latitude);
       east = Math.max(east, cartographicPosition.longitude);
       west = Math.min(west, cartographicPosition.longitude);
+
+      const lonAdjusted =
+        cartographicPosition.longitude >= 0
+          ? cartographicPosition.longitude
+          : cartographicPosition.longitude + CesiumMath.TWO_PI;
+      westOverIDL = Math.min(westOverIDL, lonAdjusted);
+      eastOverIDL = Math.max(eastOverIDL, lonAdjusted);
+    }
+
+    if (east - west > eastOverIDL - westOverIDL) {
+      west = westOverIDL;
+      east = eastOverIDL;
+
+      if (east > CesiumMath.PI) {
+        east = east - CesiumMath.TWO_PI;
+      }
+      if (west > CesiumMath.PI) {
+        west = west - CesiumMath.TWO_PI;
+      }
     }
     result.north = north;
     result.south = south;
