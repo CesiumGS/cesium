@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- Updated all of the `ITwinData.*` functions to accept an `options` parameter instead of individual arguments to avoid confusion with multiple optional arguments. There is a fallback to the old signature that will be removed in 1.133 [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+
 #### Fixes :wrench:
 
 - Fixes incorrect polygon culling in 2D scene mode. [#1552](https://github.com/CesiumGS/cesium/issues/1552)
@@ -20,6 +24,7 @@
 #### Additions :tada:
 
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
+- Added the ability to load a specific changeset for iTwin Mesh Exports using `ITwinData.createTilesetFromIModelId` [#12778](https://github.com/CesiumGS/cesium/issues/12778)
 
 ## 1.131 - 2025-07-01
 

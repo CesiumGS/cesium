@@ -40,12 +40,10 @@
         });
         viewer.scene.skyAtmosphere.show = true;
 
-        const iTwinId = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
-        const realityMeshId = "85897090-3bcc-470b-bec7-20bb639cc1b9";
-        const tileset = await Cesium.ITwinData.createTilesetForRealityDataId(
-          iTwinId,
-          realityMeshId,
-        );
+        const tileset = await Cesium.ITwinData.createTilesetForRealityDataId({
+          iTwinId: "535a24a3-9b29-4e23-bb5d-9cedb524c743",
+          realityDataId: "85897090-3bcc-470b-bec7-20bb639cc1b9",
+        });
         viewer.scene.primitives.add(tileset);
         tileset.maximumScreenSpaceError = 2;
 

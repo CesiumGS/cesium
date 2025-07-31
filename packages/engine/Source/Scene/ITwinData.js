@@ -7,6 +7,7 @@ import Check from "../Core/Check.js";
 import KmlDataSource from "../DataSources/KmlDataSource.js";
 import GeoJsonDataSource from "../DataSources/GeoJsonDataSource.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS
@@ -26,26 +27,36 @@ const ITwinData = {};
  * If all exports are Invalid this will throw an error.
  *
  * @example
- * const tileset = await Cesium.ITwinData.createTilesetFromIModelId(iModelId);
+ * const tileset = await Cesium.ITwinData.createTilesetFromIModelId({ iModelId });
  * if (Cesium.defined(tileset)) {
  *   viewer.scene.primitives.add(tileset);
  * }
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @param {string} iModelId The id of the iModel to load
- * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to the internally created {@link Cesium3DTileset}.
- * @param {string} [changesetId] The id of the changeset to load, if not provided the latest changesets will be used
+ * @param {Object} options
+ * @param {string} options.iModelId The id of the iModel to load
+ * @param {Cesium3DTileset.ConstructorOptions} [options.tilesetOptions] Object containing options to pass to the internally created {@link Cesium3DTileset}.
+ * @param {string} [options.changesetId] The id of the changeset to load, if not provided the latest changesets will be used
  * @returns {Promise<Cesium3DTileset | undefined>} A promise that will resolve to the created 3D tileset or <code>undefined</code> if there is no completed export for the given iModel id
  *
  * @throws {RuntimeError} If all exports for the given iModel are Invalid
  * @throws {RuntimeError} If the iTwin API request is not successful
  */
-ITwinData.createTilesetFromIModelId = async function (
-  iModelId,
-  options,
-  changesetId,
-) {
+ITwinData.createTilesetFromIModelId = async function (options) {
+  let internalOptions = options;
+
+  if (typeof options === "string") {
+    // the old signature was (iModelId: string, options?: Cesium3DTileset.ConstructorOptions)
+    // grab the later arguments directly instead of in the params only for this special case
+    internalOptions = { iModelId: options, tilesetOptions: arguments[1] };
+    deprecationWarning(
+      "ITwinData.createTilesetFromIModelId",
+      "The arguments signature for ITwinData functions has changed in 1.132 in favor of a single options object. Please update your code. This fallback will be removed in 1.133",
+    );
+  }
+
+  const { iModelId, changesetId, tilesetOptions } = internalOptions;
   const { exports } = await ITwinPlatform.getExports(iModelId, changesetId);
 
   if (
@@ -77,7 +88,7 @@ ITwinData.createTilesetFromIModelId = async function (
     url: tilesetUrl,
   });
 
-  return Cesium3DTileset.fromUrl(resource, options);
+  return Cesium3DTileset.fromUrl(resource, tilesetOptions);
 };
 
 /**
@@ -89,20 +100,35 @@ ITwinData.createTilesetFromIModelId = async function (
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @param {string} iTwinId The id of the iTwin to load data from
- * @param {string} realityDataId The id of the reality data to load
- * @param {ITwinPlatform.RealityDataType} [type] The type of this reality data
- * @param {string} [rootDocument] The path of the root document for this reality data
+ * @param {Object} options
+ * @param {string} options.iTwinId The id of the iTwin to load data from
+ * @param {string} options.realityDataId The id of the reality data to load
+ * @param {ITwinPlatform.RealityDataType} [options.type] The type of this reality data
+ * @param {string} [options.rootDocument] The path of the root document for this reality data
  * @returns {Promise<Cesium3DTileset>}
  *
  * @throws {RuntimeError} if the type of reality data is not supported by this function
  */
-ITwinData.createTilesetForRealityDataId = async function (
-  iTwinId,
-  realityDataId,
-  type,
-  rootDocument,
-) {
+ITwinData.createTilesetForRealityDataId = async function (options) {
+  let internalOptions = options;
+
+  if (typeof options === "string") {
+    // the old signature was (iTwinId: string, realityDataId: string, type: RealityDataType, rootDocument: string)
+    // grab the later arguments directly instead of in the params only for this special case
+    internalOptions = {
+      iTwinId: options,
+      realityDataId: arguments[1],
+      type: arguments[2],
+      rootDocument: arguments[3],
+    };
+    deprecationWarning(
+      "ITwinData.createTilesetFromIModelId",
+      "The arguments signature for ITwinData functions has changed in 1.132 in favor of a single options object. Please update your code. This fallback will be removed in 1.133",
+    );
+  }
+  const { iTwinId, realityDataId } = internalOptions;
+  let { type, rootDocument } = internalOptions;
+
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("realityDataId", realityDataId);
@@ -152,20 +178,35 @@ ITwinData.createTilesetForRealityDataId = async function (
  * If the <code>type</code> or <code>rootDocument</code> are not provided this function
  * will first request the full metadata for the specified reality data to fill these values.
  *
- * @param {string} iTwinId The id of the iTwin to load data from
- * @param {string} realityDataId The id of the reality data to load
- * @param {ITwinPlatform.RealityDataType} [type] The type of this reality data
- * @param {string} [rootDocument] The path of the root document for this reality data
+ * @param {Object} options
+ * @param {string} options.iTwinId The id of the iTwin to load data from
+ * @param {string} options.realityDataId The id of the reality data to load
+ * @param {ITwinPlatform.RealityDataType} [options.type] The type of this reality data
+ * @param {string} [options.rootDocument] The path of the root document for this reality data
  * @returns {Promise<GeoJsonDataSource | KmlDataSource>}
  *
  * @throws {RuntimeError} if the type of reality data is not supported by this function
  */
-ITwinData.createDataSourceForRealityDataId = async function (
-  iTwinId,
-  realityDataId,
-  type,
-  rootDocument,
-) {
+ITwinData.createDataSourceForRealityDataId = async function (options) {
+  let internalOptions = options;
+
+  if (typeof options === "string") {
+    // the old signature was (iTwinId: string, realityDataId: string, type: RealityDataType, rootDocument: string)
+    // grab the later arguments directly instead of in the params only for this special case
+    internalOptions = {
+      iTwinId: options,
+      realityDataId: arguments[1],
+      type: arguments[2],
+      rootDocument: arguments[3],
+    };
+    deprecationWarning(
+      "ITwinData.createTilesetFromIModelId",
+      "The arguments signature for ITwinData functions has changed in 1.132 in favor of a single options object. Please update your code. This fallback will be removed in 1.133",
+    );
+  }
+  const { iTwinId, realityDataId } = internalOptions;
+  let { type, rootDocument } = internalOptions;
+
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("realityDataId", realityDataId);
@@ -214,16 +255,31 @@ ITwinData.createDataSourceForRealityDataId = async function (
 /**
  * Load data from the Geospatial Features API as GeoJSON.
  *
- * @param {string} iTwinId The id of the iTwin to load data from
- * @param {string} collectionId The id of the data collection to load
- * @param {number} [limit=10000] number of items per page, must be between 1 and 10,000 inclusive
+ * @param {Object} options
+ * @param {string} options.iTwinId The id of the iTwin to load data from
+ * @param {string} options.collectionId The id of the data collection to load
+ * @param {number} [options.limit=10000] number of items per page, must be between 1 and 10,000 inclusive
  * @returns {Promise<GeoJsonDataSource>}
  */
-ITwinData.loadGeospatialFeatures = async function (
-  iTwinId,
-  collectionId,
-  limit,
-) {
+ITwinData.loadGeospatialFeatures = async function (options) {
+  let internalOptions = options;
+
+  if (typeof options === "string") {
+    // the old signature was (iTwinId: string, collectionId: string, limit: number)
+    // grab the later arguments directly instead of in the params only for this special case
+    internalOptions = {
+      iTwinId: options,
+      collectionId: arguments[1],
+      limit: arguments[2],
+    };
+    deprecationWarning(
+      "ITwinData.createTilesetFromIModelId",
+      "The arguments signature for ITwinData functions has changed in 1.132 in favor of a single options object. Please update your code. This fallback will be removed in 1.133",
+    );
+  }
+
+  const { iTwinId, collectionId, limit } = internalOptions;
+
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("collectionId", collectionId);
