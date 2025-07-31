@@ -117,10 +117,14 @@ class ModelImageryMapping {
       boundingRectangle,
     );
 
+    const wrapped =
+      cartographicBoundingRectangle.west > cartographicBoundingRectangle.east;
+
     // Compute the projected positions, using the given projection
     const projectedPositions = ModelImageryMapping.createProjectedPositions(
       cartographicPositions,
       projection,
+      wrapped,
     );
 
     // Relativize the projected positions into the bounding rectangle
@@ -459,18 +463,27 @@ class ModelImageryMapping {
    * @param {Iterable<Cartographic>} cartographicPositions The cartographic
    * positions
    * @param {MapProjection} projection The projection to use
+   * @param {boolean} wrapped Whether the coordinates should be wrapped
+   * at the antimeridian. Negative longitude values will be brought
+   * into the positive range by adding 2*PI
    * @returns {Iterable<Cartesian3>} The projected positions
    */
-  static createProjectedPositions(cartographicPositions, projection) {
+  static createProjectedPositions(cartographicPositions, projection, wrapped) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("cartographicPositions", cartographicPositions);
     Check.defined("projection", projection);
     //>>includeEnd('debug');
 
+    const wrappedCartographic = new Cartographic();
     const projectedPosition = new Cartesian3();
     const projectedPositions = ModelImageryMapping.map(
       cartographicPositions,
       (c) => {
+        wrappedCartographic.latitude = c.latitude;
+        wrappedCartographic.longitude = c.longitude;
+        if (wrapped && wrappedCartographic.longitude < 0) {
+          wrappedCartographic.longitude += CesiumMath.TWO_PI;
+        }
         projection.project(c, projectedPosition);
         return projectedPosition;
       },
