@@ -16,8 +16,7 @@
 - Fixes Gaussian splats incorrectly rendering when `Cesium3DTileset.show` is `false`. [#12748](https://github.com/CesiumGS/cesium/pull/12748)
 - Fixed the PointCloudShading.normalShading parameter, to disable normal shading when set to false, even if the point cloud contains normals. [#11196](https://github.com/CesiumGS/cesium/issues/11196)
 - Updated GPU vertex transformations to reduce precision errors. [#4250](https://github.com/CesiumGS/cesium/issues/4250)
-- Updated `spz-loader` for Gaussian splats to version 0.3.0 [#12737](https://github.com/CesiumGS/cesium/issues/12737)
-  - Corrects issues with orientation where the splats themselves could be rotated incorrectly with respect to the model [#12749](https://github.com/CesiumGS/cesium/issues/12749)
+- Fixes Gaussian splats orientation with respect to glTF up-axis by updating `spz-loader` to version `0.3.0`. [#12737](https://github.com/CesiumGS/cesium/issues/12737), [#12749](https://github.com/CesiumGS/cesium/issues/12749)
 
 #### Additions :tada:
 
