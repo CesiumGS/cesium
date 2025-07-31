@@ -230,23 +230,13 @@ VoxelBoxShape.prototype.update = function (
   const min = minBounds;
   const max = maxBounds;
 
-  // Go from UV space to bounded UV space:
-  // delerp(posUv, minBoundsUv, maxBoundsUv)
-  // (posUv - minBoundsUv) / (maxBoundsUv - minBoundsUv)
-  // posUv / (maxBoundsUv - minBoundsUv) - minBoundsUv / (maxBoundsUv - minBoundsUv)
-  // scale = 1.0 / (maxBoundsUv - minBoundsUv)
-  // scale = 1.0 / ((maxBounds * 0.5 + 0.5) - (minBounds * 0.5 + 0.5))
-  // scale = 2.0 / (maxBounds - minBounds)
-  // offset = -minBoundsUv / ((maxBounds * 0.5 + 0.5) - (minBounds * 0.5 + 0.5))
-  // offset = -2.0 * (minBounds * 0.5 + 0.5) / (maxBounds - minBounds)
-  // offset = -scale * (minBounds * 0.5 + 0.5)
+  // Compute scale and translation to transform from UV space to bounded UV space
   shaderUniforms.boxUvToShapeUvScale = Cartesian3.fromElements(
     2.0 / (min.x === max.x ? 1.0 : max.x - min.x),
     2.0 / (min.y === max.y ? 1.0 : max.y - min.y),
     2.0 / (min.z === max.z ? 1.0 : max.z - min.z),
     shaderUniforms.boxUvToShapeUvScale,
   );
-
   shaderUniforms.boxUvToShapeUvTranslate = Cartesian3.fromElements(
     -shaderUniforms.boxUvToShapeUvScale.x * (min.x * 0.5 + 0.5),
     -shaderUniforms.boxUvToShapeUvScale.y * (min.y * 0.5 + 0.5),
@@ -258,6 +248,36 @@ VoxelBoxShape.prototype.update = function (
 
   return true;
 };
+
+/**
+ * Convert a UV coordinate to the shape's UV space.
+ * @private
+ * @param {Cartesian3} positionUV The UV coordinate to convert.
+ * @param {Cartesian3} result The Cartesian3 to store the result in.
+ * @returns {Cartesian3} The converted UV coordinate.
+ */
+VoxelBoxShape.prototype.convertUvToShapeUvSpace = function (
+  positionUV,
+  result,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("positionUV", positionUV);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const { boxUvToShapeUvScale, boxUvToShapeUvTranslate } =
+    this.shaderUniforms;
+
+  return Cartesian3.add(
+    Cartesian3.multiplyComponents(
+      positionUV,
+      boxUvToShapeUvScale,
+      result,
+    ),
+    boxUvToShapeUvTranslate,
+    result,
+  );
+}
 
 const scratchTileMinBounds = new Cartesian3();
 const scratchTileMaxBounds = new Cartesian3();

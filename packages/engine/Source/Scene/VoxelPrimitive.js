@@ -445,6 +445,8 @@ function VoxelPrimitive(options) {
     transformDirectionViewToLocal: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
     cameraDirectionUv: new Cartesian3(),
+    cameraTileCoordinates: new Cartesian4(),
+    cameraTileUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
@@ -1136,6 +1138,8 @@ const scratchNdcAabb = new Cartesian4();
 const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
 const scratchTransformPositionLocalToProjection = new Matrix4();
+const scratchCameraPositionShapeUv = new Cartesian3();
+const scratchCameraTileCoordinates = new Cartesian4();
 
 const transformPositionLocalToUv = Matrix4.fromRotationTranslation(
   Matrix3.fromUniformScale(0.5, new Matrix3()),
@@ -1313,6 +1317,24 @@ VoxelPrimitive.prototype.update = function (frameState) {
     uniforms.cameraDirectionUv,
     uniforms.cameraDirectionUv,
   );
+  const cameraTileCoordinates = getTileCoordinates(
+    this,
+    uniforms.cameraPositionUv,
+    scratchCameraTileCoordinates,
+  );
+  uniforms.cameraTileCoordinates = Cartesian4.fromElements(
+    Math.floor(cameraTileCoordinates.x),
+    Math.floor(cameraTileCoordinates.y),
+    Math.floor(cameraTileCoordinates.z),
+    cameraTileCoordinates.w,
+    uniforms.cameraTileCoordinates,
+  );
+  uniforms.cameraTileUv = Cartesian3.fromElements(
+    cameraTileCoordinates.x - Math.floor(cameraTileCoordinates.x),
+    cameraTileCoordinates.y - Math.floor(cameraTileCoordinates.y),
+    cameraTileCoordinates.z - Math.floor(cameraTileCoordinates.z),
+    uniforms.cameraTileUv,
+  );
   uniforms.stepSize = this._stepSizeMultiplier;
 
   // Render the primitive
@@ -1324,6 +1346,33 @@ VoxelPrimitive.prototype.update = function (frameState) {
   command.boundingVolume = this._shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+/**
+ * Converts a position in UV space to tile coordinates.
+ * 
+ * @param {VoxelPrimitive} primitive The primitive to get the tile coordinates for.
+ * @param {Cartesian3} positionUv The position in UV space to convert to tile coordinates.
+ * @param {Cartesian4} result The result object to store the tile coordinates.
+ * @returns {Cartesian4} The tile coordinates of the supplied position.
+ * @private
+ */
+function getTileCoordinates(primitive, positionUv, result) {
+  const shapeUv = primitive._shape.convertUvToShapeUvSpace(
+    positionUv,
+    scratchCameraPositionShapeUv,
+  );
+
+  const availableLevels = primitive._provider.availableLevels ?? 1;
+  const numTiles = 2 ** (availableLevels - 1);
+
+  return Cartesian4.fromElements(
+    shapeUv.x * numTiles,
+    shapeUv.y * numTiles,
+    shapeUv.z * numTiles,
+    availableLevels - 1,
+    result,
+  );
+}
 
 const scratchExaggerationScale = new Cartesian3();
 const scratchExaggerationCenter = new Cartesian3();

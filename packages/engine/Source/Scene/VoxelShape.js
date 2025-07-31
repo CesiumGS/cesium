@@ -111,6 +111,16 @@ Object.defineProperties(VoxelShape.prototype, {
 VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
 
 /**
+ * Converts a UV coordinate to the shape's UV space.
+ * @private
+ * @param {Cartesian3} positionUV The UV coordinate to convert.
+ * @param {Cartesian3} result The Cartesian3 to store the result in.
+ * @returns {Cartesian3} The converted UV coordinate.
+ */
+VoxelShape.prototype.convertUvToShapeUvSpace =
+  DeveloperError.throwInstantiationError;
+
+/**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
  * @private
