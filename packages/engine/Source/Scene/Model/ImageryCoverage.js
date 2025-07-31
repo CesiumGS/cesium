@@ -459,7 +459,7 @@ class ImageryCoverage {
         x = rawX % numTilesX;
         /// XXX_DRAPING Debug log
         console.log(
-          `Wrapping ${rawX} to ${x} for ${numTilesX} tiles on level ${imageryLevel}`,
+          `ImageryCoverage._computeImageryCoverages: Wrapping ${rawX} to ${x} for ${numTilesX} tiles on level ${imageryLevel}`,
         );
       }
 
@@ -491,6 +491,20 @@ class ImageryCoverage {
             undefined,
           );
 
+        // XXX_DRAPING Debug log...
+        Rectangle.debugPrintDirectly(
+          "ImageryCoverage._computeImageryCoverages: clippedImageryRectangleV",
+          clippedImageryRectangleV,
+        );
+        Rectangle.debugPrintDirectly(
+          "ImageryCoverage._computeImageryCoverages: nativeInputRectangle",
+          nativeInputRectangle,
+        );
+        console.log(
+          "ImageryCoverage._computeImageryCoverages: textureCoordinateRectangle",
+          textureCoordinateRectangle,
+        );
+
         // Note: The getImageryFromCache function will create the whole "chain"
         // of ancestor imageries, up to the root, and increases the reference
         // counter for each of them, even though it is not called
@@ -512,6 +526,10 @@ class ImageryCoverage {
   }
 
   /**
+   * XXX_DRAPING This function does not work for rectangles that have
+   * been converted to the "native" representation, because
+   * Rectangle.computeWidth is broken for these rectangles
+   *
    * Compute the coordinates of the first rectangle relative to the
    * second rectangle.
    *
@@ -540,6 +558,96 @@ class ImageryCoverage {
     result.maxX = (rectangleA.east - rectangleB.west) * invX;
     result.maxY = (rectangleA.north - rectangleB.south) * invY;
     return result;
+  }
+
+  /**
+   * XXX_DRAPING This function should replace _localizeToCartesianRectangle,
+   * but operates on Rectangles that are proper Cartographic rectangles,
+   * which is often not the case for the imagery-related computations that
+   * have been extracted from _createTileImagerySkeletons
+   *
+   * Compute the coordinates of the first rectangle relative to the
+   * second rectangle.
+   *
+   * The result will describe the bounds of the first rectangle
+   * in coordinates that are relative to the (west, south) and
+   * (width, height) of the second rectangle, wrapping the
+   * longitude at the antimeridian. This is suitable for
+   * describing the texture coordinates of the first
+   * rectangle within the second one.
+   *
+   * The result will be stored in the given result parameter, or
+   * in a new rectangle if the result was undefined.
+   *
+   * @param {Rectangle} rectangleA The first rectangle
+   * @param {Rectangle} rectangleB The second rectangle
+   * @param {CartesianRectangle} [result] The result
+   * @returns {CartesianRectangle} The result
+   */
+  static _localizeCartographicRectanglesToCartesianRectangle(
+    rectangleA,
+    rectangleB,
+    result,
+  ) {
+    if (!defined(result)) {
+      result = new CartesianRectangle();
+    }
+    const invX = 1.0 / rectangleB.width;
+    const invY = 1.0 / rectangleB.height;
+
+    const wa = CesiumMath.zeroToTwoPi(rectangleA.west);
+    const ea = CesiumMath.zeroToTwoPi(rectangleA.east);
+    const wb = CesiumMath.zeroToTwoPi(rectangleB.west);
+
+    const rawMinX = ImageryCoverage.wrappedDifference(
+      wa,
+      wb,
+      CesiumMath.TWO_PI,
+    );
+    const rawMaxX = ImageryCoverage.wrappedDifference(
+      ea,
+      wb,
+      CesiumMath.TWO_PI,
+    );
+
+    result.minX = rawMinX * invX;
+    result.minY = (rectangleA.south - rectangleB.south) * invY;
+    result.maxX = rawMaxX * invX;
+    result.maxY = (rectangleA.north - rectangleB.south) * invY;
+    return result;
+  }
+
+  /**
+   * Computes the difference between the given values, wrapped to
+   * the given wrapping value.
+   *
+   * The values will be brought into the range [0, wrap]. The
+   * result will be the signed (!) difference between both values,
+   * considering the wrapping of the values.
+   *
+   * For example:
+   * <code>wrappedDifference(0.9, 0.7, 1.0) = 0.2</code>
+   * <code>wrappedDifference(0.7, 0.9, 1.0) = -0.2</code>
+   * <code>wrappedDifference(1.1, 0.9, 1.0) = 0.2</code>
+   * <code>wrappedDifference(0.9, 1.1, 1.0) = -0.2</code>
+   *
+   * @param {number} a The first value
+   * @param {number} b The second value
+   * @param {number} wrap The wrapping value
+   * @returns The wrapped difference
+   */
+  static wrappedDifference(a, b, wrap) {
+    const wrappedA = (a %= wrap);
+    const wrappedB = (b %= wrap);
+    const diff = wrappedA - wrappedB;
+    const absDiff = Math.abs(diff);
+    if (absDiff < wrap - absDiff) {
+      return diff;
+    }
+    if (diff < 0) {
+      return diff + wrap;
+    }
+    return diff - wrap;
   }
 }
 
