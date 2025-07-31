@@ -195,7 +195,7 @@ ITwinPlatform.getExports = async function (iModelId, changesetId) {
   if (typeof CESIUM_VERSION !== "undefined") {
     resource.appendQueryParameters({ clientVersion: CESIUM_VERSION });
   }
-  if (defined(changesetId)) {
+  if (defined(changesetId) && changesetId !== "") {
     resource.appendQueryParameters({ changesetId: changesetId });
   }
 
