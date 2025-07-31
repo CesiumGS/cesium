@@ -22,6 +22,7 @@
 #### Additions :tada:
 
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
+- Added a new sandcastle example for 3D Gaussian Splatting, and updated the old one.
 
 ## 1.131 - 2025-07-01
 
