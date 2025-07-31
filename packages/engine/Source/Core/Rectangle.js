@@ -87,6 +87,42 @@ Object.defineProperties(Rectangle.prototype, {
 Rectangle.packedLength = 4;
 
 /**
+ * XXX_DRAPING
+ *
+ * Print the message and the rectangle for debugging, assuming that it stores values
+ * that are given in radians, and converting them to degrees for printing.
+ *
+ * Note that a rectangle may contain arbitrary values in arbitrary units (degrees, meters,
+ * furlongs, who knows). If the printed values do not make sense, try debugPrintDirectly.
+ *
+ * @param {string} message The message
+ * @param {Rectangle} rectangle The rectangle
+ */
+Rectangle.debugPrintRadiansAsDegrees = function (message, rectangle) {
+  console.log(message, " (converted from radians to degrees)");
+  console.log("  E ", CesiumMath.toDegrees(rectangle.east));
+  console.log("  S ", CesiumMath.toDegrees(rectangle.south));
+  console.log("  W ", CesiumMath.toDegrees(rectangle.west));
+  console.log("  N ", CesiumMath.toDegrees(rectangle.north));
+};
+/**
+ * XXX_DRAPING
+ *
+ * Print the message and the rectangle for debugging, directly, without assuming
+ * that the input is actually storing values in radians.
+ *
+ * @param {string} message The message
+ * @param {Rectangle} rectangle The rectangle
+ */
+Rectangle.debugPrintDirectly = function (message, rectangle) {
+  console.log(message, " (printed directly)");
+  console.log("  W ", rectangle.west);
+  console.log("  S ", rectangle.south);
+  console.log("  E ", rectangle.east);
+  console.log("  N ", rectangle.north);
+};
+
+/**
  * Stores the provided instance into the provided array.
  *
  * @param {Rectangle} value The value to pack.
