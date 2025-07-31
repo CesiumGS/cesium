@@ -26,6 +26,8 @@ const ITwinData = {};
  * We recommend waiting 10-20 seconds and trying to load the tileset again.
  * If all exports are Invalid this will throw an error.
  *
+ * See the {@link https://developer.bentley.com/apis/mesh-export/overview/|iTwin Platform Mesh Export API documentation} for more information on request parameters
+ *
  * @example
  * const tileset = await Cesium.ITwinData.createTilesetFromIModelId({ iModelId });
  * if (Cesium.defined(tileset)) {
