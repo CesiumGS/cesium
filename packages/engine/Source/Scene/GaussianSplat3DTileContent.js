@@ -803,9 +803,9 @@ function makeCovarianceTextureData(scaleData, rotationData, count) {
   return packedData;
 }
 
-function makeSh1TextureData(packedFloatData) {
-  const sh1Data = new Uint32Array(packedFloatData.length);
+function makeSh1TextureData(packedFloatData, count) {
   const { base, stride } = baseAndStrideFromSHDegree(1);
+  const sh1Data = new Uint32Array((count * stride) / 2 + 1); // N * 9 / 2 + 1
   let j = 0;
   for (let i = 0; i < packedFloatData.length; i += stride) {
     const idx = i + base * 3;
@@ -827,9 +827,9 @@ function makeSh1TextureData(packedFloatData) {
   return sh1Data;
 }
 
-function makeSh2TextureData(packedFloatData) {
-  const sh2Data = new Uint32Array(packedFloatData.length);
+function makeSh2TextureData(packedFloatData, count) {
   const { base, stride } = baseAndStrideFromSHDegree(2);
+  const sh2Data = new Uint32Array((count * stride) / 2 + 1); // N * 15 / 2 + 1
   let j = 0;
   for (let i = 0; i < packedFloatData.length; i += stride) {
     const idx = i + base * 3;

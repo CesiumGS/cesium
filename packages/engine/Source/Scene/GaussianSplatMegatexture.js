@@ -130,43 +130,45 @@ GaussianSplatMegatexture.prototype.insertTextureDataMultiple = function (
   startTexelOffset = 0,
 ) {
   const texelsPerRow = this.texture.width;
-  let totalTexels = 0;
   const texelSize = PixelFormat.componentsLength(this._pixelFormat);
-  const offsets = [];
 
-  for (let i = 0; i < dataArray.length; i++) {
-    const data = dataArray[i];
-    const texels = data.length / texelSize;
-    offsets.push({
-      index: i,
-      texelOffset: totalTexels + startTexelOffset,
-      texelCount: texels,
-    });
-    totalTexels += texels;
+  if (dataArray.length === 0) {
+    return;
   }
-  //handle case of only 1 tile so we avoid allocation of a new array
-  const TypedArrayConstructor = dataArray[0].constructor;
-  const bigArray = new TypedArrayConstructor(totalTexels * texelSize);
 
-  let dstOffset = 0;
-  for (let i = 0; i < dataArray.length; i++) {
-    const src = dataArray[i];
-    bigArray.set(src, dstOffset);
-    dstOffset += src.length;
+  let totalTexels = 0;
+  const TypedArrayConstructor = dataArray[0].constructor;
+  let aggregateData;
+  if (dataArray.length === 1) {
+    totalTexels = dataArray[0].length / texelSize;
+    aggregateData = dataArray[0];
+  } else {
+    for (let i = 0; i < dataArray.length; i++) {
+      const data = dataArray[i];
+      const texels = data.length / texelSize;
+      totalTexels += texels;
+    }
+    aggregateData = new TypedArrayConstructor(totalTexels * texelSize);
+
+    let dstOffset = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      const src = dataArray[i];
+      aggregateData.set(src, dstOffset);
+      dstOffset += src.length;
+    }
   }
 
   const startY = Math.floor(startTexelOffset / texelsPerRow);
   const rowsNeeded = Math.ceil(totalTexels / texelsPerRow);
-
   const paddedTexels = rowsNeeded * texelsPerRow;
   const finalArray =
     totalTexels < paddedTexels
       ? (() => {
           const padded = new TypedArrayConstructor(paddedTexels * texelSize);
-          padded.set(bigArray);
+          padded.set(aggregateData);
           return padded;
         })()
-      : bigArray;
+      : aggregateData;
 
   this.texture.copyFrom({
     source: {
@@ -178,7 +180,7 @@ GaussianSplatMegatexture.prototype.insertTextureDataMultiple = function (
     yOffset: startY,
   });
 
-  return offsets;
+  return;
 };
 
 export default GaussianSplatMegatexture;
