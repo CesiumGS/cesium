@@ -1,15 +1,5 @@
-// import Cartesian2 from "../Core/Cartesian2.js";
-// import Cartesian3 from "../Core/Cartesian3.js";
-// import ComponentDatatype from "../Core/ComponentDatatype.js";
-// import ContextLimits from "../Renderer/ContextLimits.js";
-// import defined from "../Core/defined.js";
-// import destroyObject from "../Core/destroyObject.js";
-// import DeveloperError from "../Core/DeveloperError.js";
-
-// import MetadataComponentType from "./MetadataComponentType.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
-// import RuntimeError from "../Core/RuntimeError.js";
 import Texture from "../Renderer/Texture.js";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
@@ -38,8 +28,8 @@ function GaussianSplatMegatexture(options) {
 
   const {
     context,
-    width = 16384, // Default width
-    height = 16384, // Default height
+    width = 16384,
+    height = 16384,
     pixelFormat = PixelFormat.RGBA_INTEGER,
     pixelDatatype = PixelDatatype.UNSIGNED_INT,
   } = options;
@@ -186,7 +176,6 @@ GaussianSplatMegatexture.prototype.insertTextureDataMultiple = function (
     dstOffset += src.length;
   }
 
-  //const startX = startTexelOffset % texelsPerRow;
   const startY = Math.floor(startTexelOffset / texelsPerRow);
   const rowsNeeded = Math.ceil(totalTexels / texelsPerRow);
 

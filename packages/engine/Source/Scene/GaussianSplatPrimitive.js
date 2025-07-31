@@ -598,17 +598,82 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
   shaderBuilder.addVarying("float", "v_splitDirection");
+  // shaderBuilder.addUniform(
+  //   "highp usampler2D",
+  //   "u_splatAttributeTexture",
+  //   ShaderDestination.VERTEX,
+  // );
+
   shaderBuilder.addUniform(
     "highp usampler2D",
-    "u_splatAttributeTexture",
+    "u_splatPositionTexture",
+    ShaderDestination.VERTEX,
+  );
+
+  shaderBuilder.addUniform(
+    "highp usampler2D",
+    "u_splatCovarianceTexture",
+    ShaderDestination.VERTEX,
+  );
+
+  shaderBuilder.addUniform(
+    "highp usampler2D",
+    "u_splatColorTexture",
     ShaderDestination.VERTEX,
   );
 
   const uniformMap = renderResources.uniformMap;
 
-  uniformMap.u_splatAttributeTexture = function () {
-    return primitive.gaussianSplatTexture;
+  uniformMap.u_splatPositionTexture = function () {
+    return primitive.positionMegaTexture.texture;
   };
+
+  uniformMap.u_splatCovarianceTexture = function () {
+    return primitive.covarianceMegaTexture.texture;
+  };
+
+  uniformMap.u_splatColorTexture = function () {
+    return primitive.colorMegaTexture.texture;
+  };
+
+  if (primitive.shDegree > 0) {
+    shaderBuilder.addDefine("SH1_ENABLED", "1");
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_splatSh1Texture",
+      ShaderDestination.VERTEX,
+    );
+
+    uniformMap.u_splatSh1Texture = function () {
+      return primitive.sh1MegaTexture.texture;
+    };
+  }
+
+  if (primitive.shDegree > 1) {
+    shaderBuilder.addDefine("SH2_ENABLED", "1");
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_splatSh2Texture",
+      ShaderDestination.VERTEX,
+    );
+
+    uniformMap.u_splatSh2Texture = function () {
+      return primitive.sh2MegaTexture.texture;
+    };
+  }
+
+  if (primitive.shDegree > 2) {
+    shaderBuilder.addDefine("SH3_ENABLED", "1");
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_splatSh3Texture",
+      ShaderDestination.VERTEX,
+    );
+
+    uniformMap.u_splatSh3Texture = function () {
+      return primitive.sh3MegaTexture.texture;
+    };
+  }
 
   uniformMap.u_splitDirection = function () {
     return primitive.splitDirection;
@@ -821,13 +886,13 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       tileset._selectedTiles.length !== this.selectedTileLength
     ) {
       this._numSplats = 0;
-      this._positions = undefined;
-      this._rotations = undefined;
-      this._scales = undefined;
-      this._colors = undefined;
+      // this._positions = undefined;
+      // this._rotations = undefined;
+      // this._scales = undefined;
+      // this._colors = undefined;
       this._indexes = undefined;
-      this._needsGaussianSplatTexture = true;
-      this._gaussianSplatTexturePending = false;
+      //  this._needsGaussianSplatTexture = true;
+      //   this._gaussianSplatTexturePending = false;
 
       const tiles = tileset._selectedTiles;
       const totalElements = tiles.reduce(
