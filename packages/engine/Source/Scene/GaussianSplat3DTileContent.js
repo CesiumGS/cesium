@@ -31,15 +31,14 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   }
 
   /**
-   * Original position, scale and rotation values for splats. Used to maintain
-   * consistency when multiple transforms may occur. Downstream consumers otherwise may not know
-   * the underlying data was modified.
+   * Local copies of attribute buffers with transformed values. Originals are kept in the gltf loader.
+   * These are the buffers that are used for rendering.
    * @type {undefined|Float32Array}
    * @private
    */
-  this._originalPositions = undefined;
-  this._originalRotations = undefined;
-  this._originalScales = undefined;
+  this._positions = undefined;
+  this._rotations = undefined;
+  this._scales = undefined;
 
   /**
    * glTF primitive data that contains the Gaussian splat data needed for rendering.
@@ -309,6 +308,24 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
       this._group = value;
     },
   },
+
+  positions: {
+    get: function () {
+      return this._positions;
+    },
+  },
+
+  rotations: {
+    get: function () {
+      return this._rotations;
+    },
+  },
+
+  scales: {
+    get: function () {
+      return this._scales;
+    },
+  },
 });
 
 /**
@@ -391,21 +408,21 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
-    this._originalPositions = new Float32Array(
+    this._positions = new Float32Array(
       ModelUtility.getAttributeBySemantic(
         this.splatPrimitive,
         VertexAttributeSemantic.POSITION,
       ).typedArray,
     );
 
-    this._originalRotations = new Float32Array(
+    this._rotations = new Float32Array(
       ModelUtility.getAttributeBySemantic(
         this.splatPrimitive,
         VertexAttributeSemantic.ROTATION,
       ).typedArray,
     );
 
-    this._originalScales = new Float32Array(
+    this._scales = new Float32Array(
       ModelUtility.getAttributeBySemantic(
         this.splatPrimitive,
         VertexAttributeSemantic.SCALE,
