@@ -61,6 +61,7 @@ export async function buildGalleryList(
       metadata = parse(file);
     } catch (error) {
       console.error("Error parsing", filePath);
+      console.error(error);
       continue;
     }
     if (!metadata) {
@@ -170,19 +171,19 @@ export async function buildGalleryList(
 }
 
 // if running the script directly using node
-/* global process */
 if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   const defaultGalleryDirectory = join(__dirname, "../gallery");
-  buildGalleryList(defaultGalleryDirectory)
-    .then(({ output, hasErrors }) => {
-      console.log("processed", output.entries.length, "sandcastles");
-      if (hasErrors) {
-        exit(1);
-      }
-    })
-    .catch((error) => {
-      console.error("Issue processing gallery");
-      console.error(error);
+  try {
+    const { output, hasErrors } = await buildGalleryList(
+      defaultGalleryDirectory,
+    );
+    console.log("processed", output.entries.length, "sandcastles");
+    if (hasErrors) {
       exit(1);
-    });
+    }
+  } catch (error) {
+    console.error("Issue processing gallery");
+    console.error(error);
+    exit(1);
+  }
 }
