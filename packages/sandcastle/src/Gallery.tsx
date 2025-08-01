@@ -5,6 +5,7 @@ import { getBaseUrl } from "./util/getBaseUrl";
 import classNames from "classnames";
 import { close, script, search } from "./icons";
 import { ProcessStatus } from "./util/ProcessStatus";
+import "../pagefind-client.d.ts";
 
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
