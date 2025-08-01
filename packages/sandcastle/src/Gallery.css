@@ -3,14 +3,40 @@
   flex-direction: column;
   height: 100%;
 
+  &.hidden {
+    display: none;
+  }
+
   .filters {
     display: flex;
     align-items: center;
-    gap: 0.3em;
+    gap: 8px;
     padding: 1rem 1.5rem 0.5rem 1rem;
 
     h2 {
       font-size: large;
+    }
+
+    .search-input {
+      /* Button width + padding on each side of it */
+      padding-inline-end: calc(16px + 2 * 4px);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 4px;
+      padding: 2px;
+      min-block-size: unset;
+
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+
+    .tag-select {
+      /* This helps prevent needing to resize when tags load */
+      min-width: 140px;
     }
   }
 
@@ -22,6 +48,13 @@
     overflow-y: auto;
   }
 
+  .empty-list {
+    padding: 12px;
+    border: 1px solid var(--stratakit-color-border-neutral-muted);
+    border-radius: 8px;
+    text-align: center;
+  }
+
   .card {
     position: relative;
     display: flex;
@@ -30,7 +63,7 @@
     background: var(--stratakit-color-bg-elevation-level-1);
     padding: 0.5rem;
     gap: 0.5rem;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     box-shadow: var(--stratakit-shadow-surface-sm);
     color: inherit;
