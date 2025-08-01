@@ -6,31 +6,33 @@
   .console-snapshot {
     display: flex;
     align-items: center;
-    gap: 0.3em;
-    padding: 0.3em;
+    gap: var(--stratakit-space-x1);
+    padding: var(--stratakit-space-x1);
     cursor: pointer;
     user-select: none;
-    border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+    border-bottom: var(--stratakit-ext-border-border) solid
+      var(--stratakit-color-border-neutral-muted);
 
     .title {
       /* Match the height of the badge to avoid flow shifts when adding them */
       height: 20px;
       align-content: center;
-      margin-right: 0.2rem;
+      margin-right: var(--stratakit-space-x1);
     }
   }
   .logs {
     overflow: auto;
-    padding: 0 0.5em;
+    padding: 0 var(--stratakit-space-x2);
 
     .message {
       display: flex;
-      gap: 0.5em;
-      margin: 0.3rem;
-      padding: 0.3rem 0 0.1rem;
+      gap: var(--stratakit-space-x2);
+      margin: var(--stratakit-space-x1);
+      padding: var(--stratakit-space-x1) 0 var(--stratakit-space-x05);
     }
     .message + .message {
-      border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+      border-top: var(--stratakit-ext-border-border) solid
+        var(--stratakit-color-border-neutral-muted);
     }
     .content {
       text-wrap: wrap;

@@ -13,6 +13,7 @@ import {
 import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
+import "./stratakit-ext-tokens.css";
 
 import { Button, Divider, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";

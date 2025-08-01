@@ -6,8 +6,9 @@
   .filters {
     display: flex;
     align-items: center;
-    gap: 0.3em;
-    padding: 1rem 1.5rem 0.5rem 1rem;
+    gap: var(--stratakit-space-x1);
+    padding: var(--stratakit-space-x4) var(--stratakit-space-x6)
+      var(--stratakit-space-x2) var(--stratakit-space-x4);
 
     h2 {
       font-size: large;
@@ -17,8 +18,8 @@
   .list {
     display: flex;
     flex-direction: column;
-    padding: 0.5rem;
-    gap: 1rem;
+    padding: var(--stratakit-space-x2);
+    gap: var(--stratakit-space-x4);
     overflow-y: auto;
   }
 
@@ -28,9 +29,9 @@
     align-items: center;
     flex: 1 0 116px;
     background: var(--stratakit-color-bg-elevation-level-1);
-    padding: 0.5rem;
-    gap: 0.5rem;
-    border-radius: 5px;
+    padding: var(--stratakit-space-x2);
+    gap: var(--stratakit-space-x2);
+    border-radius: var(--stratakit-ext-radius-md);
     cursor: pointer;
     box-shadow: var(--stratakit-shadow-surface-sm);
     color: inherit;
@@ -54,7 +55,7 @@
       text-overflow: ellipsis;
       overflow: hidden;
       --code-btn-width: 20px;
-      max-width: calc(100% - var(--code-btn-width) - 0.5rem);
+      max-width: calc(100% - var(--code-btn-width) - var(--stratakit-space-x2));
     }
 
     .description {
@@ -72,13 +73,13 @@
     .labels {
       display: flex;
       justify-items: start;
-      gap: 0.3rem;
+      gap: var(--stratakit-space-x1);
     }
 
     .open-code-btn {
       position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
+      top: var(--stratakit-space-x2);
+      right: var(--stratakit-space-x2);
     }
   }
 }
