@@ -11,12 +11,22 @@
 - Fixed an issue where draped imagery on tilesets was not updated based on the visibility of the imagery layer. [#12742](https://github.com/CesiumGS/cesium/issues/12742)
 - Fixes an exception when removing a Gaussian splat tileset from the scene primitives when it has more than one tile. [#12726](https://github.com/CesiumGS/cesium/pull/12726)
 - Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix. [#12721](https://github.com/CesiumGS/cesium/issues/12721), [#12718](https://github.com/CesiumGS/cesium/issues/12718)
+- Fixes label background translucency issue. [#12673](https://github.com/CesiumGS/cesium/issues/12673)
 - Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
 - Fixes Gaussian splats incorrectly rendering when `Cesium3DTileset.show` is `false`. [#12748](https://github.com/CesiumGS/cesium/pull/12748)
+- Fixed the PointCloudShading.normalShading parameter, to disable normal shading when set to false, even if the point cloud contains normals. [#11196](https://github.com/CesiumGS/cesium/issues/11196)
+- Updated GPU vertex transformations to reduce precision errors. [#4250](https://github.com/CesiumGS/cesium/issues/4250)
+- Fixes Gaussian splats orientation with respect to glTF up-axis by updating `spz-loader` to version `0.3.0`. [#12737](https://github.com/CesiumGS/cesium/issues/12737), [#12749](https://github.com/CesiumGS/cesium/issues/12749)
 
 #### Additions :tada:
 
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
+- Add wrapR property to Sampler and Texture3D, to support the newly added third dimension wrap.[#12701](https://github.com/CesiumGS/cesium/pull/12701)
+- Added the ability to load a specific changeset for iTwin Mesh Exports using `ITwinData.createTilesetFromIModelId` [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Updated all of the `ITwinData.*` functions to accept an `options` parameter instead of individual arguments to avoid confusion with multiple optional arguments. There is a fallback to the old signature that will be removed in 1.133 [#12778](https://github.com/CesiumGS/cesium/issues/12778)
 
 ## 1.131 - 2025-07-01
 
@@ -2438,11 +2448,13 @@ _This is an npm-only release to fix a publishing issue_.
 
 - Clipping planes on tilesets now use the root tile's transform, or the root tile's bounding sphere if a transform is not defined. [#7034](https://github.com/CesiumGS/cesium/pull/7034)
   - This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
+
   ```javascript
   clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
     tileset.boundingSphere.center,
   );
   ```
+
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.
 
 ### Additions :tada:
@@ -4288,6 +4300,7 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
+
     - `TimeInterval.fromIso8601` now takes a single options parameter. Code that looked like:
 
             TimeInterval.fromIso8601(intervalString, true, true, data);
@@ -4300,6 +4313,7 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
+
     - `interval.intersect(otherInterval)` -> `TimeInterval.intersect(interval, otherInterval)`
     - `interval.contains(date)` -> `TimeInterval.contains(interval, date)`
 
