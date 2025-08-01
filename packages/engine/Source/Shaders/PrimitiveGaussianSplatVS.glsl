@@ -28,6 +28,7 @@ const float SH_C3[7] = float[7](
         -0.59004358
 );
 
+//Retrieve SH coefficient. Currently RG32UI format
 uvec2 loadSHCoeff(uint splatID, int index) {
     ivec2 shTexSize = textureSize(u_gaussianSplatSHTexture, 0);
     uint dims = coefficientCount[uint(u_shDegree)-1u];
@@ -37,6 +38,7 @@ uvec2 loadSHCoeff(uint splatID, int index) {
     return texelFetch(u_gaussianSplatSHTexture, shPosCoord, 0).rg;
 }
 
+//Unpack RG32UI half float coefficients to vec3
 vec3 halfToVec3(uvec2 packed) {
     return vec3(unpackHalf2x16(packed.x), unpackHalf2x16(packed.y).x);
 }
