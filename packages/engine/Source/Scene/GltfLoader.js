@@ -2396,9 +2396,10 @@ function loadInstanceFeaturesLegacy(
 }
 
 /**
- * Get mesh primitives
- * @param {object} mesh
- * @returns {object[]}
+ * Get an array of primitives for a given mesh. If the EXT_mesh_primitive_restart extension is present, use it to combine groups of primitives.
+ * If the extension is not present or its spec is violated, return the original mesh.primitives.
+ * @param {object} mesh A mesh from the glTF meshes array
+ * @returns {object[]} An array of mesh primitives
  * @private
  */
 function getMeshPrimitives(mesh) {
