@@ -30,7 +30,8 @@
  */
 vec4 czm_modelToWindowCoordinates(vec4 position)
 {
-    vec4 q = czm_modelViewProjection * position;                // clip coordinates
+    vec4 positionEC = czm_modelView * position;
+    vec4 q = czm_projection * positionEC;
     q.xyz /= q.w;                                                // normalized device coordinates
     q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // window coordinates
     return q;

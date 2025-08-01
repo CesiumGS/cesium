@@ -1,0 +1,206 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  shouldAnimate: true,
+  shadows: true,
+});
+
+const scene = viewer.scene;
+let model;
+
+function getColorBlendMode(colorBlendMode) {
+  return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
+}
+
+function getColor(color) {
+  return Cesium.Color[color.toUpperCase()];
+}
+
+// The viewModel tracks the state of our mini application.
+const viewModel = {
+  color: "White",
+  colors: ["White", "Red", "Green", "Blue", "Yellow", "Gray"],
+  alpha: 1.0,
+  colorBlendMode: "Highlight",
+  colorBlendModes: ["Highlight", "Replace", "Mix"],
+  colorBlendAmount: 0.5,
+  colorBlendAmountEnabled: false,
+};
+
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+
+// Bind the viewModel to the DOM elements of the UI that call for it.
+const toolbar = document.getElementById("toolbar");
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout
+  .getObservable(viewModel, "color")
+  .subscribe(function (newValue) {
+    model.color = Cesium.Color.fromAlpha(
+      getColor(newValue),
+      Number(viewModel.alpha),
+    );
+  });
+
+Cesium.knockout
+  .getObservable(viewModel, "alpha")
+  .subscribe(function (newValue) {
+    model.color = Cesium.Color.fromAlpha(
+      getColor(viewModel.color),
+      Number(newValue),
+    );
+  });
+
+Cesium.knockout
+  .getObservable(viewModel, "colorBlendMode")
+  .subscribe(function (newValue) {
+    const colorBlendMode = getColorBlendMode(newValue);
+    model.colorBlendMode = colorBlendMode;
+    viewModel.colorBlendAmountEnabled =
+      colorBlendMode === Cesium.ColorBlendMode.MIX;
+  });
+
+Cesium.knockout
+  .getObservable(viewModel, "colorBlendAmount")
+  .subscribe(function (newValue) {
+    model.colorBlendAmount = Number(newValue);
+  });
+
+async function createModel(url, height, heading, pitch, roll) {
+  height = height ?? 0.0;
+  heading = heading ?? 0.0;
+  pitch = pitch ?? 0.0;
+  roll = roll ?? 0.0;
+  const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+
+  const origin = Cesium.Cartesian3.fromDegrees(
+    -123.0744619,
+    44.0503706,
+    height,
+  );
+  const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+    origin,
+    hpr,
+  );
+
+  scene.primitives.removeAll(); // Remove previous model
+  try {
+    model = scene.primitives.add(
+      await Cesium.Model.fromGltfAsync({
+        url: url,
+        modelMatrix: modelMatrix,
+        minimumPixelSize: 128,
+      }),
+    );
+
+    model.readyEvent.addEventListener(() => {
+      model.color = Cesium.Color.fromAlpha(
+        getColor(viewModel.color),
+        Number(viewModel.alpha),
+      );
+      model.colorBlendMode = getColorBlendMode(viewModel.colorBlendMode);
+      model.colorBlendAmount = Number(viewModel.colorBlendAmount);
+      // Play and loop all animations at half-speed
+      model.activeAnimations.addAll({
+        multiplier: 0.5,
+        loop: Cesium.ModelAnimationLoop.REPEAT,
+      });
+
+      const camera = viewer.camera;
+
+      // Zoom to model
+      const controller = scene.screenSpaceCameraController;
+      const r =
+        2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+      controller.minimumZoomDistance = r * 0.5;
+
+      const center = model.boundingSphere.center;
+      const heading = Cesium.Math.toRadians(230.0);
+      const pitch = Cesium.Math.toRadians(-20.0);
+      camera.lookAt(
+        center,
+        new Cesium.HeadingPitchRange(heading, pitch, r * 2.0),
+      );
+    });
+  } catch (error) {
+    window.alert(error);
+  }
+}
+
+const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+handler.setInputAction(function (movement) {
+  const pick = scene.pick(movement.endPosition);
+  if (
+    Cesium.defined(pick) &&
+    Cesium.defined(pick.node) &&
+    Cesium.defined(pick.mesh)
+  ) {
+    // Output glTF node and mesh under the mouse.
+    console.log(`node: ${pick.node.name}. mesh: ${pick.mesh.name}`);
+  }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+///////////////////////////////////////////////////////////////////////////
+
+const options = [
+  {
+    text: "Aircraft",
+    onselect: function () {
+      const height = 5000.0;
+      const heading = 0.0;
+      const pitch = Cesium.Math.toRadians(10.0);
+      const roll = Cesium.Math.toRadians(-20.0);
+      createModel(
+        "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+        height,
+        heading,
+        pitch,
+        roll,
+      );
+    },
+  },
+  {
+    text: "Drone",
+    onselect: function () {
+      const height = 150.0;
+      const heading = 0.0;
+      const pitch = Cesium.Math.toRadians(10.0);
+      const roll = Cesium.Math.toRadians(-20.0);
+      createModel(
+        "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
+        height,
+        heading,
+        pitch,
+        roll,
+      );
+    },
+  },
+  {
+    text: "Ground Vehicle",
+    onselect: function () {
+      createModel("../../SampleData/models/GroundVehicle/GroundVehicle.glb");
+    },
+  },
+  {
+    text: "Milk Truck",
+    onselect: function () {
+      createModel(
+        "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+      );
+    },
+  },
+  {
+    text: "Skinned Character",
+    onselect: function () {
+      createModel("../../SampleData/models/CesiumMan/Cesium_Man.glb");
+    },
+  },
+];
+
+Sandcastle.addToolbarMenu(options);
+
+Sandcastle.addToggleButton("Shadows", viewer.shadows, function (checked) {
+  viewer.shadows = checked;
+});

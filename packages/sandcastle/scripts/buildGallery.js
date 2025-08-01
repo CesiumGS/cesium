@@ -75,7 +75,7 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
     // Validate metadata
 
     if (
-      check(!/^[a-zA-Z0-9-]+$/.test(slug), `"${slug}" is not a valid slug`) ||
+      check(!/^[a-zA-Z0-9-.]+$/.test(slug), `"${slug}" is not a valid slug`) ||
       check(!title, `${slug} - Missing title`) ||
       check(!description, `${slug} - Missing description`)
     ) {
@@ -106,7 +106,7 @@ export function buildGalleryList(galleryDirectory, includeDevelopment = true) {
       title: title,
       thumbnail: thumbnail,
       description: description,
-      labels: labels,
+      labels: labels ?? [],
       isNew: false,
     });
     if (legacyId) {

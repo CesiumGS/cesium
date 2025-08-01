@@ -1,13 +1,42 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { Allotment } from "allotment";
+import {
+  MouseEventHandler,
+  ReactElement,
+  ReactNode,
+  RefObject,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
 
-import { Button, Root } from "@itwin/itwinui-react/bricks";
+import { Button, Divider, Tooltip } from "@stratakit/bricks";
+import { Icon, Root } from "@stratakit/foundations";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Gallery, { GalleryItem } from "./Gallery.js";
 import Bucket from "./Bucket.tsx";
-import SandcastleEditor, { SandcastleEditorRef } from "./SandcastleEditor.tsx";
+import SandcastleEditor from "./SandcastleEditor.tsx";
+import {
+  add,
+  image,
+  moon,
+  share as shareIcon,
+  script,
+  settings,
+  sun,
+  windowPopout,
+} from "./icons.ts";
+import {
+  ConsoleMessage,
+  ConsoleMessageType,
+  ConsoleMirror,
+} from "./ConsoleMirror.tsx";
+import { useLocalStorage } from "./util/useLocalStorage.ts";
+import { getBaseUrl } from "./util/getBaseUrl.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -21,12 +50,117 @@ const defaultHtmlCode = `<style>
 <div id="toolbar"></div>
 `;
 
-function getBaseUrl() {
-  // omits query string and hash
-  return `${location.protocol}//${location.host}${location.pathname}`;
+const GALLERY_BASE = __GALLERY_BASE_URL__;
+
+type RightSideRef = {
+  toggleExpanded: () => void;
+};
+
+function RightSideAllotment({
+  ref,
+  children,
+  consoleCollapsedHeight,
+  consoleExpanded,
+  setConsoleExpanded,
+}: {
+  ref: RefObject<RightSideRef | null>;
+  children: ReactElement<typeof Allotment.Pane>[];
+  consoleCollapsedHeight: number;
+  consoleExpanded: boolean;
+  setConsoleExpanded: (expanded: boolean) => void;
+}) {
+  const rightSideRef = useRef<AllotmentHandle>(null);
+  const rightSideSizes = useRef<number[]>([0, 0]);
+
+  useImperativeHandle(ref, () => {
+    return {
+      toggleExpanded: () => toggleExpanded(),
+    };
+  });
+
+  const [previousConsoleHeight, setPreviousConsoleHeight] = useState<
+    number | undefined
+  >(undefined);
+
+  function toggleExpanded() {
+    const [top, bottom] = rightSideSizes.current;
+    const totalHeight = top + bottom;
+    if (!consoleExpanded) {
+      const targetHeight = previousConsoleHeight ?? 200;
+      rightSideRef.current?.resize([totalHeight - targetHeight, targetHeight]);
+    } else {
+      setPreviousConsoleHeight(bottom);
+      rightSideRef.current?.resize([
+        totalHeight - consoleCollapsedHeight,
+        consoleCollapsedHeight,
+      ]);
+    }
+    setConsoleExpanded(!consoleExpanded);
+  }
+
+  return (
+    <Allotment
+      vertical
+      ref={rightSideRef}
+      defaultSizes={[100, 0]}
+      onChange={(sizes) => {
+        if (previousConsoleHeight) {
+          // Unset this because we just dragged
+          setPreviousConsoleHeight(undefined);
+        }
+        rightSideSizes.current = sizes;
+      }}
+      onDragEnd={(sizes) => {
+        const [, consoleSize] = sizes;
+        if (consoleSize <= consoleCollapsedHeight && consoleExpanded) {
+          setConsoleExpanded(false);
+        } else if (consoleSize > consoleCollapsedHeight && !consoleExpanded) {
+          setConsoleExpanded(true);
+        }
+      }}
+      onReset={() => {
+        const [top, bottom] = rightSideSizes.current;
+        const totalHeight = top + bottom;
+        rightSideRef.current?.resize([
+          totalHeight - consoleCollapsedHeight,
+          consoleCollapsedHeight,
+        ]);
+        setConsoleExpanded(false);
+      }}
+    >
+      {children}
+    </Allotment>
+  );
 }
 
-const GALLERY_BASE = __GALLERY_BASE_URL__;
+function AppBarButton({
+  children,
+  onClick,
+  active = false,
+  label,
+}: {
+  children: ReactNode;
+  onClick: MouseEventHandler;
+  active?: boolean;
+  label: string;
+}) {
+  if (active) {
+    return (
+      <Tooltip content={label} type="label" placement="right">
+        <Button tone="accent" onClick={onClick}>
+          {children}
+        </Button>
+      </Tooltip>
+    );
+  }
+  return (
+    <Tooltip content={label} type="label" placement="right">
+      <Button variant="ghost" onClick={onClick}>
+        {children}
+      </Button>
+    </Tooltip>
+  );
+}
 
 export type SandcastleAction =
   | { type: "reset" }
@@ -36,9 +170,25 @@ export type SandcastleAction =
   | { type: "setAndRun"; code?: string; html?: string };
 
 function App() {
-  const [darkTheme, setDarkTheme] = useState(false);
+  const [theme, setTheme] = useLocalStorage<"dark" | "light">(
+    "sandcastle/theme",
+    "dark",
+  );
+  const rightSideRef = useRef<RightSideRef>(null);
+  const consoleCollapsedHeight = 26;
+  const [consoleExpanded, setConsoleExpanded] = useState(false);
 
-  const editorRef = useRef<SandcastleEditorRef>(null);
+  const cesiumVersion = __CESIUM_VERSION__;
+  const versionString = __COMMIT_SHA__ ? `Commit: ${__COMMIT_SHA__}` : "";
+
+  const startOnEditor = !!(window.location.search || window.location.hash);
+  const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">(
+    startOnEditor ? "editor" : "gallery",
+  );
+  const [title, setTitle] = useState("New Sandcastle");
+
+  // This is used to avoid a "double render" when loading from the URL
+  const [readyForViewer, setReadyForViewer] = useState(false);
 
   type CodeState = {
     code: string;
@@ -100,6 +250,24 @@ function App() {
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [galleryLoaded, setGalleryLoaded] = useState(false);
 
+  const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
+  function appendConsole(type: ConsoleMessageType, message: string) {
+    setConsoleMessages((prevConsoleMessages) => [
+      ...prevConsoleMessages,
+      { type, message, id: crypto.randomUUID() },
+    ]);
+    if (!consoleExpanded && type !== "log") {
+      rightSideRef.current?.toggleExpanded();
+    }
+  }
+
+  function resetConsole() {
+    // the console should only be cleared by the Bucket when the viewer page
+    // has actually reloaded and stopped sending console statements
+    // otherwise some could bleed into the "next run"
+    setConsoleMessages([]);
+  }
+
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
   }
@@ -108,75 +276,12 @@ function App() {
     console.log("would highlight line", lineNumber, "but not implemented yet");
   }
 
-  function formatJs() {
-    editorRef.current?.formatCode();
-  }
-
-  function nextHighestVariableName(code: string, name: string) {
-    const otherDeclarations = [
-      ...code.matchAll(new RegExp(`(const|let|var)\\s+${name}\\d*\\s=`, "g")),
-    ].length;
-    const variableName = `${name}${otherDeclarations + 1}`;
-    return variableName;
-  }
-
-  function appendCode(snippet: string, run = false) {
-    let spacerNewline = "\n";
-    if (codeState.code.endsWith("\n")) {
-      spacerNewline = "";
-    }
-    const newCode = `${codeState.code}${spacerNewline}\n${snippet.trim()}\n`;
-    dispatch({
-      type: run ? "setAndRun" : "setCode",
-      code: newCode,
-    });
-  }
-
-  function addButton() {
-    appendCode(
-      `
-Sandcastle.addToolbarButton("New Button", function () {
-  // your code here
-});`,
-      false,
-    );
-  }
-
-  function addToggle() {
-    const variableName = nextHighestVariableName(codeState.code, "toggleValue");
-
-    appendCode(
-      `
-let ${variableName} = true;
-Sandcastle.addToggleButton("Toggle", ${variableName}, function (checked) {
-  ${variableName} = checked;
-});`,
-      false,
-    );
-  }
-
-  function addMenu() {
-    const variableName = nextHighestVariableName(codeState.code, "options");
-
-    appendCode(
-      `
-const ${variableName} = [
-  {
-    text: "Option 1",
-    onselect: function () {
-      // your code here, the first option is always run at load
-    },
-  },
-];
-Sandcastle.addToolbarMenu(${variableName});`,
-      false,
-    );
-  }
-
   function resetSandcastle() {
     dispatch({ type: "reset" });
 
     window.history.pushState({}, "", getBaseUrl());
+
+    setTitle("New Sandcastle");
   }
 
   function share() {
@@ -229,6 +334,8 @@ Sandcastle.addToolbarMenu(${variableName});`,
         code: code,
         html: html,
       });
+      setTitle(galleryItem.title);
+      setReadyForViewer(true);
     },
     [galleryItems],
   );
@@ -265,6 +372,7 @@ Sandcastle.addToolbarMenu(${variableName});`,
             code: data.code,
             html: data.html,
           });
+          setReadyForViewer(true);
         } else if (searchParams.has("src")) {
           const legacyId = searchParams.get("src");
           if (!legacyId) {
@@ -287,6 +395,8 @@ Sandcastle.addToolbarMenu(${variableName});`,
             return;
           }
           loadGalleryItem(galleryId);
+        } else {
+          setReadyForViewer(true);
         }
       }
     },
@@ -304,68 +414,153 @@ Sandcastle.addToolbarMenu(${variableName});`,
     return () => window.removeEventListener("popstate", pushStateListener);
   }, [loadFromUrl]);
 
-  const versionString = __COMMIT_SHA__;
-
   return (
-    <Root colorScheme={darkTheme ? "dark" : "light"} density="dense" id="root">
-      <div className="toolbar">
-        <Button onClick={() => resetSandcastle()}>New</Button>
-        <Button onClick={() => runSandcastle()}>Run (F8)</Button>
-        <Button onClick={() => formatJs()}>Format</Button>
-        <Button onClick={() => addButton()}>Add button</Button>
-        <Button onClick={() => addToggle()}>Add toggle</Button>
-        <Button onClick={() => addMenu()}>Add menu</Button>
-        <Button onClick={() => share()}>Share</Button>
-        <Button onClick={() => openStandalone()}>Standalone</Button>
-        <div className="spacer"></div>
-        {versionString && <pre>Commit: {versionString.substring(0, 7)}</pre>}
-        <Button onClick={() => setDarkTheme(!darkTheme)}>Swap Theme</Button>
-      </div>
-      <Allotment>
-        <Allotment.Pane minSize={400}>
-          <SandcastleEditor
-            ref={editorRef}
-            darkTheme={darkTheme}
-            onJsChange={(value: string = "") =>
-              dispatch({ type: "setCode", code: value })
+    <Root
+      id="root"
+      className="sandcastle-root"
+      density="dense"
+      colorScheme={theme}
+      synchronizeColorScheme
+    >
+      <header className="header">
+        <a className="logo" href={getBaseUrl()}>
+          <img
+            src={
+              theme === "dark"
+                ? "./images/Cesium_Logo_overlay.png"
+                : "./images/Cesium_Logo_Color_Overlay.png"
             }
-            onHtmlChange={(value: string = "") =>
-              dispatch({ type: "setHtml", html: value })
-            }
-            onRun={() => dispatch({ type: "runSandcastle" })}
-            js={codeState.code}
-            html={codeState.html}
+            style={{ width: "118px" }}
           />
-        </Allotment.Pane>
-        <Allotment.Pane minSize={400}>
-          <div className="viewer-bucket">
-            <Bucket
-              code={codeState.committedCode}
-              html={codeState.committedHtml}
-              runNumber={codeState.runNumber}
-              highlightLine={(lineNumber) => highlightLine(lineNumber)}
+        </a>
+        <div className="metadata">{title}</div>
+        <Button tone="accent" onClick={() => share()}>
+          <Icon href={shareIcon} /> Share
+        </Button>
+        <Divider aria-orientation="vertical" />
+        <Button onClick={() => openStandalone()}>
+          Standalone <Icon href={windowPopout} />
+        </Button>
+        <div className="flex-spacer"></div>
+        <div className="version">
+          {versionString && <pre>{versionString.substring(0, 7)} - </pre>}
+          <pre>{cesiumVersion}</pre>
+        </div>
+      </header>
+      <div className="application-bar">
+        <AppBarButton
+          onClick={() => setLeftPanel("gallery")}
+          active={leftPanel === "gallery"}
+          label="Gallery"
+        >
+          <Icon href={image} size="large" />
+        </AppBarButton>
+        <AppBarButton
+          onClick={() => setLeftPanel("editor")}
+          active={leftPanel === "editor"}
+          label="Editor"
+        >
+          <Icon href={script} size="large" />
+        </AppBarButton>
+        <Divider />
+        <AppBarButton
+          onClick={() => {
+            resetSandcastle();
+            setLeftPanel("editor");
+          }}
+          label="New Sandcastle"
+        >
+          <Icon href={add} size="large" />
+        </AppBarButton>
+        <div className="flex-spacer"></div>
+        <Divider />
+        <AppBarButton
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          label="Toggle Theme"
+        >
+          <Icon href={theme === "dark" ? moon : sun} size="large" />
+        </AppBarButton>
+        <AppBarButton label="Settings" onClick={() => {}}>
+          <Icon href={settings} size="large" />
+        </AppBarButton>
+      </div>
+      <Allotment defaultSizes={[40, 60]}>
+        <Allotment.Pane minSize={400} className="left-panel">
+          {leftPanel === "editor" && (
+            <SandcastleEditor
+              darkTheme={theme === "dark"}
+              onJsChange={(value: string = "") =>
+                dispatch({ type: "setCode", code: value })
+              }
+              onHtmlChange={(value: string = "") =>
+                dispatch({ type: "setHtml", html: value })
+              }
+              onRun={() => runSandcastle()}
+              js={codeState.code}
+              html={codeState.html}
+              setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
             />
-          </div>
+          )}
+          {leftPanel === "gallery" && (
+            <Gallery
+              demos={galleryItems}
+              loadDemo={(item, switchToCode) => {
+                // Load the gallery item every time it's clicked
+                loadGalleryItem(item.id);
+
+                const searchParams = new URLSearchParams(
+                  window.location.search,
+                );
+                if (
+                  !searchParams.has("id") ||
+                  (searchParams.has("id") && searchParams.get("id") !== item.id)
+                ) {
+                  // only push state if it's not the current url to prevent duplicated in history
+                  window.history.pushState(
+                    {},
+                    "",
+                    `${getBaseUrl()}?id=${item.id}`,
+                  );
+                }
+                if (switchToCode) {
+                  setLeftPanel("editor");
+                }
+              }}
+            />
+          )}
+        </Allotment.Pane>
+        <Allotment.Pane className="right-panel">
+          <RightSideAllotment
+            ref={rightSideRef}
+            consoleCollapsedHeight={consoleCollapsedHeight}
+            consoleExpanded={consoleExpanded}
+            setConsoleExpanded={setConsoleExpanded}
+          >
+            <Allotment.Pane minSize={200}>
+              {readyForViewer && (
+                <Bucket
+                  code={codeState.committedCode}
+                  html={codeState.committedHtml}
+                  runNumber={codeState.runNumber}
+                  highlightLine={(lineNumber) => highlightLine(lineNumber)}
+                  appendConsole={appendConsole}
+                  resetConsole={resetConsole}
+                />
+              )}
+            </Allotment.Pane>
+            <Allotment.Pane
+              preferredSize={consoleCollapsedHeight}
+              minSize={consoleCollapsedHeight}
+            >
+              <ConsoleMirror
+                logs={consoleMessages}
+                expanded={consoleExpanded}
+                toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
+              />
+            </Allotment.Pane>
+          </RightSideAllotment>
         </Allotment.Pane>
       </Allotment>
-      <div className="gallery">
-        <Gallery
-          demos={galleryItems}
-          loadDemo={(item) => {
-            // Load the gallery item every time it's clicked
-            loadGalleryItem(item.id);
-
-            const searchParams = new URLSearchParams(window.location.search);
-            if (
-              !searchParams.has("id") ||
-              (searchParams.has("id") && searchParams.get("id") !== item.id)
-            ) {
-              // only push state if it's not the current url to prevent duplicated in history
-              window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
-            }
-          }}
-        />
-      </div>
     </Root>
   );
 }
