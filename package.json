@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.131.0",
+  "version": "1.132.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -51,8 +51,8 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "^18.3.0",
-    "@cesium/widgets": "^12.3.0"
+    "@cesium/engine": "^19.0.0",
+    "@cesium/widgets": "^13.0.0"
   },
   "devDependencies": {
     "@cesium/eslint-config": "^12.0.0",
@@ -60,8 +60,8 @@
     "chokidar": "^4.0.1",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
-    "esbuild": "^0.25.0",
-    "eslint": "^9.1.1",
+    "esbuild": "^0.25.8",
+    "eslint": "^9.32.0",
     "eslint-plugin-html": "^8.1.1",
     "express": "^5.1.0",
     "globals": "^16.0.0",
@@ -76,7 +76,7 @@
     "gulp-zip": "^6.0.0",
     "husky": "^9.0.7",
     "istanbul-lib-instrument": "^6.0.0",
-    "jasmine-core": "^5.0.1",
+    "jasmine-core": "^5.9.0",
     "jsdoc": "^3.6.7",
     "karma": "^6.3.20",
     "karma-chrome-launcher": "^3.1.0",
@@ -95,9 +95,8 @@
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
     "open": "^10.0.2",
-    "prettier": "3.6.1",
+    "prettier": "3.6.2",
     "prismjs": "^1.28.0",
-    "request": "^2.79.0",
     "rimraf": "^6.0.1",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^5.3.2",
