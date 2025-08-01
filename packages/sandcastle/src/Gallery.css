@@ -16,6 +16,28 @@
     h2 {
       font-size: large;
     }
+
+    .search-input {
+      /* Button width + padding on each side of it */
+      padding-inline-end: calc(16px + 2 * 4px);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 4px;
+      padding: 2px;
+      min-block-size: unset;
+
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+
+    .tag-select {
+      /* This helps prevent needing to resize when tags load */
+      min-width: 140px;
+    }
   }
 
   .list {

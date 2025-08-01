@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./Gallery.css";
-import { Badge, Button, IconButton, Select } from "@stratakit/bricks";
+import { Badge, IconButton, Select, Spinner, TextBox } from "@stratakit/bricks";
 import { getBaseUrl } from "./util/getBaseUrl";
-import { Input } from "@stratakit/bricks/TextBox";
 import classNames from "classnames";
-import { script } from "./icons";
+import { close, script, search } from "./icons";
+import { ProcessStatus } from "./util/ProcessStatus";
 
 const GALLERY_BASE = __GALLERY_BASE_URL__;
 
@@ -32,6 +32,7 @@ export function GallerySearch({
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentTag, setCurrentTag] = useState<string | "All">("All");
+  const [searchState, setSearchState] = useState<ProcessStatus>("NOT_STARTED");
 
   const requestId = useRef<number>(0);
 
@@ -40,9 +41,12 @@ export function GallerySearch({
       if (!pagefind.current) {
         return;
       }
+
+      setSearchState("IN_PROGRESS");
       const searchString = searchTerm;
       if (!searchString || searchString === "") {
         setSearchResults(null);
+        setSearchState("COMPLETE");
         return;
       }
       const thisRequestId = ++requestId.current;
@@ -66,6 +70,7 @@ export function GallerySearch({
 
       if (thisRequestId === requestId.current) {
         setSearchResults(resultData);
+        setSearchState("COMPLETE");
       }
     }
 
@@ -104,35 +109,49 @@ export function GallerySearch({
 
   return (
     <>
-      {!!searchTerm && (
-        <Button
-          onClick={() => {
-            setSearchTerm("");
-            if (inputRef.current) {
-              inputRef.current.value = "";
+      {searchState === "IN_PROGRESS" && <Spinner />}
+      <TextBox.Root className="search-input">
+        <TextBox.Icon href={search} />
+        <TextBox.Input
+          ref={inputRef}
+          disabled={!pagefindLoaded}
+          onChange={(e) => {
+            if (debounceTimeout.current) {
+              clearInterval(debounceTimeout.current);
             }
+            const newSearchTerm = e.target.value;
+            pagefind.current?.preload(newSearchTerm);
+            if (newSearchTerm === "") {
+              // Instantly update for a more reactive feel when clearing the input
+              console.log("early clear");
+              setSearchTerm("");
+              return;
+            }
+            debounceTimeout.current = setTimeout(() => {
+              setSearchTerm(newSearchTerm);
+            }, 300);
           }}
-        >
-          Clear
-        </Button>
-      )}
-      <Input
-        ref={inputRef}
-        disabled={!pagefindLoaded}
-        onChange={(e) => {
-          if (debounceTimeout.current) {
-            clearInterval(debounceTimeout.current);
-          }
-          const newSearchTerm = e.target.value;
-          pagefind.current?.preload(newSearchTerm);
-          debounceTimeout.current = setTimeout(() => {
-            setSearchTerm(newSearchTerm);
-          }, 300);
-        }}
-        placeholder="Filter demos..."
-      />
+          placeholder="Search gallery"
+        />
+        {!!searchTerm && (
+          <IconButton
+            className="clear-btn"
+            icon={close}
+            label="Clear"
+            onClick={(e) => {
+              console.log(e);
+              setSearchTerm("");
+              if (inputRef.current) {
+                inputRef.current.value = "";
+                inputRef.current.focus();
+              }
+            }}
+          ></IconButton>
+        )}
+      </TextBox.Root>
       <Select.Root>
         <Select.HtmlSelect
+          className="tag-select"
           disabled={!pagefindLoaded}
           onChange={(e) => {
             setCurrentTag(e.target.value);
