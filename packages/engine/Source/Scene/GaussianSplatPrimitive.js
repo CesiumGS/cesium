@@ -31,10 +31,12 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
+import ContextLimits from "../Renderer/ContextLimits.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
+const scratchMatrix4D = new Matrix4();
 
 const GaussianSplatSortingState = {
   IDLE: 0,
@@ -43,6 +45,25 @@ const GaussianSplatSortingState = {
   SORTED: 3,
   ERROR: 4,
 };
+
+function createGaussianSplatSHTexture(context, shData) {
+  const texture = new Texture({
+    context: context,
+    source: {
+      width: shData.width,
+      height: shData.height,
+      arrayBufferView: shData.data,
+    },
+    preMultiplyAlpha: false,
+    skipColorSpaceConversion: true,
+    pixelFormat: PixelFormat.RG_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    flipY: false,
+    sampler: Sampler.NEAREST,
+  });
+
+  return texture;
+}
 
 function createGaussianSplatTexture(context, splatTextureData) {
   return new Texture({
@@ -148,6 +169,14 @@ function GaussianSplatPrimitive(options) {
    * @see {@link GaussianSplatTextureGenerator}
    */
   this.gaussianSplatTexture = undefined;
+
+  /**
+   * The texture used to store the spherical harmonics coefficients for the Gaussian splats.
+   * @type {undefined|Texture}
+   * @private
+   */
+  this.gaussianSplatSHTexture = undefined;
+
   /**
    * The last width of the Gaussian splat texture.
    * This is used to track changes in the texture size and update the primitive accordingly.
@@ -601,10 +630,63 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
 
+  shaderBuilder.addUniform("float", "u_shDegree", ShaderDestination.VERTEX);
+
+  shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
+
+  shaderBuilder.addUniform(
+    "vec3",
+    "u_cameraPositionWC",
+    ShaderDestination.VERTEX,
+  );
+
+  shaderBuilder.addUniform(
+    "mat3",
+    "u_inverseModelRotation",
+    ShaderDestination.VERTEX,
+  );
+
   const uniformMap = renderResources.uniformMap;
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
+  };
+
+  if (primitive._shDegree > 0) {
+    shaderBuilder.addDefine(
+      "HAS_SPHERICAL_HARMONICS",
+      "1",
+      ShaderDestination.VERTEX,
+    );
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_gaussianSplatSHTexture",
+      ShaderDestination.VERTEX,
+    );
+    uniformMap.u_gaussianSplatSHTexture = function () {
+      return primitive.gaussianSplatSHTexture;
+    };
+  }
+  uniformMap.u_shDegree = function () {
+    return primitive._shDegree;
+  };
+
+  uniformMap.u_cameraPositionWC = function () {
+    return Cartesian3.clone(frameState.camera.positionWC);
+  };
+
+  uniformMap.u_inverseModelRotation = function () {
+    const tileset = primitive._tileset;
+    const modelMatrix = Matrix4.multiply(
+      tileset.modelMatrix,
+      Matrix4.fromArray(tileset.root.transform),
+      scratchMatrix4A,
+    );
+    const inverseModelRotation = Matrix4.getRotation(
+      Matrix4.inverse(modelMatrix, scratchMatrix4C),
+      scratchMatrix4D,
+    );
+    return inverseModelRotation;
   };
 
   uniformMap.u_splitDirection = function () {
@@ -756,6 +838,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._scales = undefined;
       this._colors = undefined;
       this._indexes = undefined;
+      this._shData = undefined;
       this._needsGaussianSplatTexture = true;
       this._gaussianSplatTexturePending = false;
 
@@ -784,6 +867,31 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           offset += attribute.typedArray.length;
         }
         return aggregate;
+      };
+
+      const aggregateShData = () => {
+        let offset = 0;
+        for (const tile of tiles) {
+          const shData = tile.content._packedShData;
+          if (tile.content.shDegree > 0) {
+            if (!defined(this._shData)) {
+              let coefs;
+              switch (tile.content.shDegree) {
+                case 1:
+                  coefs = 9;
+                  break;
+                case 2:
+                  coefs = 24;
+                  break;
+                case 3:
+                  coefs = 45;
+              }
+              this._shData = new Uint32Array(totalElements * (coefs * (2 / 3)));
+            }
+            this._shData.set(shData, offset);
+            offset += shData.length;
+          }
+        }
       };
 
       this._positions = aggregateAttributeValues(
@@ -822,6 +930,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           ),
       );
 
+      aggregateShData();
+      this._shDegree = tiles[0].content.shDegree;
+
       this._numSplats = totalElements;
       this.selectedTileLength = tileset._selectedTiles.length;
     }
@@ -833,6 +944,36 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     if (this._needsGaussianSplatTexture) {
       if (!this._gaussianSplatTexturePending) {
         GaussianSplatPrimitive.generateSplatTexture(this, frameState);
+        if (defined(this._shData)) {
+          const oldTex = this.gaussianSplatSHTexture;
+          const width = ContextLimits.maximumTextureSize;
+          const dims = tileset._selectedTiles[0].content.shCoefficientCount / 3;
+          const splatsPerRow = Math.floor(width / dims);
+          const floatsPerRow = splatsPerRow * (dims * 2);
+          const texBuf = new Uint32Array(
+            width * Math.ceil(this._numSplats / splatsPerRow) * 2,
+          );
+
+          let dataIndex = 0;
+          for (let i = 0; dataIndex < this._shData.length; i += width * 2) {
+            texBuf.set(
+              this._shData.subarray(dataIndex, dataIndex + floatsPerRow),
+              i,
+            );
+            dataIndex += floatsPerRow;
+          }
+          this.gaussianSplatSHTexture = createGaussianSplatSHTexture(
+            frameState.context,
+            {
+              data: texBuf,
+              width: width,
+              height: Math.ceil(this._numSplats / splatsPerRow),
+            },
+          );
+          if (defined(oldTex)) {
+            oldTex.destroy();
+          }
+        }
       }
       return;
     }

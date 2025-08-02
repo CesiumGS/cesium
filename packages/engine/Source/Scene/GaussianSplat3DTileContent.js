@@ -78,6 +78,20 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @private
    */
   this._transformed = false;
+
+  /**
+   * The degree of the spherical harmonics used for the Gaussian splats.
+   * @type {number}
+   * @private
+   */
+  this.shDegree = 0;
+
+  /**
+   * The number of spherical harmonic coefficients used for the Gaussian splats.
+   * @type {number}
+   * @private
+   */
+  this.shCoefficientCount = 0;
 }
 
 Object.defineProperties(GaussianSplat3DTileContent.prototype, {
@@ -312,6 +326,144 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
 });
 
 /**
+ * Determine Spherical Harmonics degree and coefficient count from attributes
+ * @param {Array} attributes - The list of attributes.
+ * @returns {Object} An object containing the degree (l) and coefficient (n).
+ */
+function degreeAndCoefFromAttributes(attributes) {
+  const prefix = "_SH_DEGREE_";
+  const shAttributes = attributes.filter((attr) =>
+    attr.name.startsWith(prefix),
+  );
+
+  switch (shAttributes.length) {
+    default:
+    case 0:
+      return { l: 0, n: 0 };
+    case 3:
+      return { l: 1, n: 9 };
+    case 8:
+      return { l: 2, n: 24 };
+    case 15:
+      return { l: 3, n: 45 };
+  }
+}
+
+/**
+ * Converts a 32-bit floating point number to a 16-bit floating point number.
+ * @param {Float} float32 input
+ * @returns {number} Half precision float
+ * @private
+ */
+const buffer = new ArrayBuffer(4);
+const floatView = new Float32Array(buffer);
+const intView = new Uint32Array(buffer);
+
+function float32ToFloat16(float32) {
+  floatView[0] = float32;
+  const bits = intView[0];
+
+  const sign = (bits >> 31) & 0x1;
+  const exponent = (bits >> 23) & 0xff;
+  const mantissa = bits & 0x7fffff;
+
+  let half;
+
+  if (exponent === 0xff) {
+    half = (sign << 15) | (0x1f << 10) | (mantissa ? 0x200 : 0);
+  } else if (exponent === 0) {
+    half = sign << 15;
+  } else {
+    const newExponent = exponent - 127 + 15;
+    if (newExponent >= 31) {
+      half = (sign << 15) | (0x1f << 10);
+    } else if (newExponent <= 0) {
+      half = sign << 15;
+    } else {
+      half = (sign << 15) | (newExponent << 10) | (mantissa >>> 13);
+    }
+  }
+
+  return half;
+}
+
+/**
+ * Extracts the spherical harmonic degree and coefficient from the attribute name.
+ * @param {String} attribute - The attribute name.
+ * @returns {Object} An object containing the degree (l) and coefficient (n).
+ * @private
+ */
+function extractSHDegreeAndCoef(attribute) {
+  const prefix = "_SH_DEGREE_";
+  const separator = "_COEF_";
+
+  const lStart = prefix.length;
+  const coefIndex = attribute.indexOf(separator, lStart);
+
+  const l = parseInt(attribute.slice(lStart, coefIndex), 10);
+  const n = parseInt(attribute.slice(coefIndex + separator.length), 10);
+
+  return { l, n };
+}
+
+/**
+ * Packs spherical harmonic data into half-precision floats.
+ * @param {*} data - The input data to pack.
+ * @param {*} shDegree - The spherical harmonic degree.
+ * @returns {Uint32Array} - The packed data.
+ */
+function packSphericalHarmonicData(tileContent) {
+  const degree = tileContent.shDegree;
+  const coefs = tileContent.shCoefficientCount;
+  const totalLength = tileContent.pointsLength * (coefs * (2 / 3)); //3 packs into 2
+  const packedData = new Uint32Array(totalLength);
+
+  const shAttributes = tileContent.splatPrimitive.attributes.filter((attr) =>
+    attr.name.startsWith("_SH_DEGREE_"),
+  );
+  let stride = 0;
+  const base = [0, 9, 24];
+  switch (degree) {
+    case 1:
+      stride = 9;
+      break;
+    case 2:
+      stride = 24;
+      break;
+    case 3:
+      stride = 45;
+      break;
+  }
+  shAttributes.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+
+    return 0;
+  });
+  const packedStride = stride * (2 / 3);
+  for (let i = 0; i < shAttributes.length; i++) {
+    const { l, n } = extractSHDegreeAndCoef(shAttributes[i].name);
+    for (let j = 0; j < tileContent.pointsLength; j++) {
+      //interleave the data
+      const packedBase = (base[l - 1] * 2) / 3;
+      const idx = j * packedStride + packedBase + n * 2;
+      const src = j * 3;
+      packedData[idx] =
+        float32ToFloat16(shAttributes[i].typedArray[src]) |
+        (float32ToFloat16(shAttributes[i].typedArray[src + 1]) << 16);
+      packedData[idx + 1] = float32ToFloat16(
+        shAttributes[i].typedArray[src + 2],
+      );
+    }
+  }
+  return packedData;
+}
+
+/**
  * Creates a new instance of {@link GaussianSplat3DTileContent} from a glTF or glb resource.
  *
  * @param {Cesium3DTileset} tileset - The tileset that this content belongs to.
@@ -411,6 +563,14 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
         VertexAttributeSemantic.SCALE,
       ).typedArray,
     );
+
+    const { l, n } = degreeAndCoefFromAttributes(
+      this.splatPrimitive.attributes,
+    );
+    this.shDegree = l;
+    this.shCoefficientCount = n;
+
+    this._packedShData = packSphericalHarmonicData(this);
 
     return;
   }
