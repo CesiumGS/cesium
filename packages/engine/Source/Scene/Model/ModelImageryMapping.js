@@ -1,4 +1,5 @@
 import defined from "../../Core/defined.js";
+import CesiumMath from "../../Core/Math.js";
 import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -11,6 +12,12 @@ import Check from "../../Core/Check.js";
 import AttributeType from "../AttributeType.js";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+
+// Scratch variables for boundingRectangleFromRectangle
+const boundingRectangleFromRectangleScratchCartographicSW = new Cartographic();
+const boundingRectangleFromRectangleScratchCartographicNE = new Cartographic();
+const boundingRectangleFromRectangleScratchProjectedSW = new Cartesian3();
+const boundingRectangleFromRectangleScratchProjectedNE = new Cartesian3();
 
 /**
  * A class for computing the texture coordinates of imagery that is
@@ -91,16 +98,33 @@ class ModelImageryMapping {
     // Convert the bounding `Rectangle`(!) of the cartographic positions
     // into a `BoundingRectangle`(!) using the given projection
     const boundingRectangle = new BoundingRectangle();
+    /*/ 
+    // XXX_DRAPING: BoundingRectangle.fromRectangle is broken, as
+    // it does not handle the antimeridian
     BoundingRectangle.fromRectangle(
       cartographicBoundingRectangle,
       projection,
       boundingRectangle,
     );
+    //*/
+    ModelImageryMapping.boundingRectangleFromRectangle(
+      cartographicBoundingRectangle,
+      projection,
+      boundingRectangle,
+    );
+    console.log(
+      "ModelPrimitiveImagery._createTextureCoordinates: boundingRectangle with antimeridian wrapping",
+      boundingRectangle,
+    );
+
+    const wrapped =
+      cartographicBoundingRectangle.west > cartographicBoundingRectangle.east;
 
     // Compute the projected positions, using the given projection
     const projectedPositions = ModelImageryMapping.createProjectedPositions(
       cartographicPositions,
       projection,
+      wrapped,
     );
 
     // Relativize the projected positions into the bounding rectangle
@@ -118,6 +142,51 @@ class ModelImageryMapping {
       );
 
     return texCoordsTypedArray;
+  }
+
+  /**
+   * Computes a bounding rectangle from a rectangle.
+   *
+   * This is similar to <code>BoundingRectangle.fromRectangle</code>, but
+   * does not make assumptions about whether the input rectangle is
+   * crossing the antimeridian or not.
+   *
+   * @param {Rectangle} rectangle The valid rectangle used to create a bounding rectangle.
+   * @param {object} projection The projection used to project the rectangle into 2D.
+   * @param {BoundingRectangle} [result] The object onto which to store the result.
+   * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
+   */
+  static boundingRectangleFromRectangle(rectangle, projection, result) {
+    if (!defined(result)) {
+      result = new BoundingRectangle();
+    }
+    const sw = Rectangle.southwest(
+      rectangle,
+      boundingRectangleFromRectangleScratchCartographicSW,
+    );
+    const ne = Rectangle.northeast(
+      rectangle,
+      boundingRectangleFromRectangleScratchCartographicNE,
+    );
+    // XXX_DRAPING This is the only relevant difference to BoundingRectangle.fromRectangle,
+    // but subsequent processing steps may have to be adjusted to take this into account:
+    if (sw.longitude > ne.longitude) {
+      ne.longitude += CesiumMath.TWO_PI;
+    }
+    const projectedSW = projection.project(
+      sw,
+      boundingRectangleFromRectangleScratchProjectedSW,
+    );
+    const projectedNE = projection.project(
+      ne,
+      boundingRectangleFromRectangleScratchProjectedNE,
+    );
+
+    result.x = projectedSW.x;
+    result.y = projectedSW.y;
+    result.width = projectedNE.x - projectedSW.x;
+    result.height = projectedNE.y - projectedSW.y;
+    return result;
   }
 
   /**
@@ -272,6 +341,9 @@ class ModelImageryMapping {
    * Computes the bounding rectangle of the given cartographic positions,
    * stores it in the given result, and returns it.
    *
+   * This is taken from <code>Rectangle.fromCartographicArray</code>, but
+   * operates on an iterable instead of an array.
+   *
    * If the given result is `undefined`, a new rectangle will be created
    * and returned.
    *
@@ -287,17 +359,37 @@ class ModelImageryMapping {
     if (!defined(result)) {
       result = new Rectangle();
     }
-    // One could store these directly in the result, but that would
-    // violate the constraint of the PI-related ranges..
     let north = Number.NEGATIVE_INFINITY;
     let south = Number.POSITIVE_INFINITY;
     let east = Number.NEGATIVE_INFINITY;
     let west = Number.POSITIVE_INFINITY;
+    let westOverIDL = Number.POSITIVE_INFINITY;
+    let eastOverIDL = Number.NEGATIVE_INFINITY;
+
     for (const cartographicPosition of cartographicPositions) {
       north = Math.max(north, cartographicPosition.latitude);
       south = Math.min(south, cartographicPosition.latitude);
       east = Math.max(east, cartographicPosition.longitude);
       west = Math.min(west, cartographicPosition.longitude);
+
+      const lonAdjusted =
+        cartographicPosition.longitude >= 0
+          ? cartographicPosition.longitude
+          : cartographicPosition.longitude + CesiumMath.TWO_PI;
+      westOverIDL = Math.min(westOverIDL, lonAdjusted);
+      eastOverIDL = Math.max(eastOverIDL, lonAdjusted);
+    }
+
+    if (east - west > eastOverIDL - westOverIDL) {
+      west = westOverIDL;
+      east = eastOverIDL;
+
+      if (east > CesiumMath.PI) {
+        east = east - CesiumMath.TWO_PI;
+      }
+      if (west > CesiumMath.PI) {
+        west = west - CesiumMath.TWO_PI;
+      }
     }
     result.north = north;
     result.south = south;
@@ -371,18 +463,27 @@ class ModelImageryMapping {
    * @param {Iterable<Cartographic>} cartographicPositions The cartographic
    * positions
    * @param {MapProjection} projection The projection to use
+   * @param {boolean} wrapped Whether the coordinates should be wrapped
+   * at the antimeridian. Negative longitude values will be brought
+   * into the positive range by adding 2*PI
    * @returns {Iterable<Cartesian3>} The projected positions
    */
-  static createProjectedPositions(cartographicPositions, projection) {
+  static createProjectedPositions(cartographicPositions, projection, wrapped) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("cartographicPositions", cartographicPositions);
     Check.defined("projection", projection);
     //>>includeEnd('debug');
 
+    const wrappedCartographic = new Cartographic();
     const projectedPosition = new Cartesian3();
     const projectedPositions = ModelImageryMapping.map(
       cartographicPositions,
       (c) => {
+        wrappedCartographic.latitude = c.latitude;
+        wrappedCartographic.longitude = c.longitude;
+        if (wrapped && wrappedCartographic.longitude < 0) {
+          wrappedCartographic.longitude += CesiumMath.TWO_PI;
+        }
         projection.project(c, projectedPosition);
         return projectedPosition;
       },
