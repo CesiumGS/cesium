@@ -46,11 +46,6 @@
         const lat = 39.9526;
 
         let position;
-        const headingPositionRoll = new Cesium.HeadingPitchRoll();
-        const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
-          "north",
-          "west",
-        );
 
         let instanceTransform;
         for (let i = 0; i < 10; i++) {
@@ -58,12 +53,7 @@
             lng + i * Math.random() * 0.0001,
             lat + i * 0.0001,
           );
-          instanceTransform = new Cesium.Transforms.headingPitchRollToFixedFrame(
-            position,
-            headingPositionRoll,
-            Cesium.Ellipsoid.WGS84,
-            fixedFrameTransform,
-          );
+          instanceTransform = new Cesium.Transforms.eastNorthUpToFixedFrame(position);
           model.instances.add(instanceTransform);
         }
 

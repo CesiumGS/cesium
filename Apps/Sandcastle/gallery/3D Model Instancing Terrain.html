@@ -585,22 +585,12 @@
         ];
 
         let position;
-        const headingPositionRoll = new Cesium.HeadingPitchRoll();
-        const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
-          "north",
-          "west",
-        );
 
         let instanceTransform;
         for (let i = 0; i < positions.length; i += 3) {
           const chunk = positions.slice(i, i + 3);
           position = Cesium.Cartesian3.fromDegrees(chunk[1], chunk[0], chunk[2]);
-          instanceTransform = new Cesium.Transforms.headingPitchRollToFixedFrame(
-            position,
-            headingPositionRoll,
-            Cesium.Ellipsoid.WGS84,
-            fixedFrameTransform,
-          );
+          instanceTransform = new Cesium.Transforms.eastNorthUpToFixedFrame(position);
           model.instances.add(instanceTransform);
         }
 
