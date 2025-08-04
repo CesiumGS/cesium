@@ -156,6 +156,8 @@ function ModelSceneGraph(options) {
   // Store articulations from the AGI_articulations extension
   // by name in a dictionary for easy retrieval.
   this._runtimeArticulations = {};
+
+  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 }
 
 Object.defineProperties(ModelSceneGraph.prototype, {
@@ -191,7 +193,6 @@ Object.defineProperties(ModelSceneGraph.prototype, {
     },
   },
 
-  // TODO: Should model.modelMatrix really be stored in this class? Or should it live only at the model level?
   /**
    * The axis-corrected model matrix.
    *
@@ -544,8 +545,7 @@ function traverseAndCreateSceneGraph(sceneGraph, model, node, transformToRoot) {
   const name = node.name;
   if (defined(name)) {
     const publicNode = new ModelNode(model, runtimeNode);
-    // TODO: Why does `_nodesByName` live on the model and not here?
-    model._nodesByName[name] = publicNode;
+    sceneGraph._nodesByName[name] = publicNode;
   }
 
   return index;
