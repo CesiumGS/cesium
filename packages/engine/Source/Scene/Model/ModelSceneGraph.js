@@ -5,6 +5,7 @@ import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
@@ -494,6 +495,12 @@ ModelSceneGraph.prototype.traverseAndCreateSceneGraph = function (
   node,
   transformToRoot,
 ) {
+  if (defined(node.instances) & this.hasInstances) {
+    throw new RuntimeError(
+      "Models with the EXT_mesh_gpu_instancing extension cannot use the ModelInstanceCollection class.",
+    );
+  }
+
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
   const transform = ModelUtility.getNodeTransform(node);
