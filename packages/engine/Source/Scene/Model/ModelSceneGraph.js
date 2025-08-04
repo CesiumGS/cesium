@@ -342,8 +342,7 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
   for (let i = 0; i < rootNodesLength; i++) {
     const rootNode = scene.nodes[i];
 
-    const rootNodeIndex = traverseAndCreateSceneGraph(
-      this,
+    const rootNodeIndex = this.traverseAndCreateSceneGraph(
       model,
       rootNode,
       transformToRoot,
@@ -478,7 +477,6 @@ function computeModelMatrix2D(sceneGraph, frameState) {
   );
 }
 
-// TODO: A private member function would be cleaner and easier to test.
 /**
  * Recursively traverse through the nodes in the scene graph to create
  * their runtime versions, using a post-order depth-first traversal.
@@ -491,7 +489,11 @@ function computeModelMatrix2D(sceneGraph, frameState) {
  *
  * @private
  */
-function traverseAndCreateSceneGraph(sceneGraph, model, node, transformToRoot) {
+ModelSceneGraph.prototype.traverseAndCreateSceneGraph = function (
+  model,
+  node,
+  transformToRoot,
+) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
   const transform = ModelUtility.getNodeTransform(node);
@@ -506,8 +508,7 @@ function traverseAndCreateSceneGraph(sceneGraph, model, node, transformToRoot) {
       new Matrix4(),
     );
 
-    const childIndex = traverseAndCreateSceneGraph(
-      sceneGraph,
+    const childIndex = this.traverseAndCreateSceneGraph(
       model,
       childNode,
       childNodeTransformToRoot,
@@ -521,7 +522,7 @@ function traverseAndCreateSceneGraph(sceneGraph, model, node, transformToRoot) {
     transform: transform,
     transformToRoot: transformToRoot,
     children: childrenIndices,
-    sceneGraph: sceneGraph,
+    sceneGraph: this,
   });
 
   const primitivesLength = node.primitives.length;
@@ -536,20 +537,20 @@ function traverseAndCreateSceneGraph(sceneGraph, model, node, transformToRoot) {
   }
 
   const index = node.index;
-  sceneGraph._runtimeNodes[index] = runtimeNode;
+  this._runtimeNodes[index] = runtimeNode;
   if (defined(node.skin)) {
-    sceneGraph._skinnedNodes.push(index);
+    this._skinnedNodes.push(index);
   }
 
   // Create and store the public version of the runtime node.
   const name = node.name;
   if (defined(name)) {
     const publicNode = new ModelNode(model, runtimeNode);
-    sceneGraph._nodesByName[name] = publicNode;
+    this._nodesByName[name] = publicNode;
   }
 
   return index;
-}
+};
 
 const scratchModelPositionMin = new Cartesian3();
 const scratchModelPositionMax = new Cartesian3();
