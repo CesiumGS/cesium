@@ -29,7 +29,7 @@ RayShapeIntersection intersectBox(in Ray ray, in vec3 minBound, in vec3 maxBound
 
     float firstExit = minComponent(exits);
     bvec3 isFirstExit = equal(exits, vec3(firstExit));
-    vec3 exitNormal = vec3(isLastEntry) * directions;
+    vec3 exitNormal = vec3(isFirstExit) * directions;
     vec4 exit = vec4(exitNormal, firstExit);
 
     if (entry.w > exit.w) {
