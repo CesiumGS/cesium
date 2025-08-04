@@ -37,8 +37,7 @@
         try {
           model = await Cesium.Model.fromGltfAsync({
             url: "../../SampleData/models/wind_turbine.glb",
-            minimumPixelSize: 48,
-            scale: 0.3,
+            minimumPixelSize: 32,
           });
           viewer.scene.primitives.add(model);
         } catch (error) {
