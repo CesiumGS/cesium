@@ -236,7 +236,6 @@ RuntimeModelInstancingPipelineStage._createUniforms = function (
 
   const uniformMap = {
     u_instance_nodeTransform: () => {
-      // TODO: Assumes model centered at earth origin
       const transform = Matrix4.multiplyByUniformScale(
         // The transform for the scene graph computed by multiplying the
         // components transform by the the axisCorrectionMatrix
