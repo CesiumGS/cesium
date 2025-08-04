@@ -24,7 +24,6 @@ describe(
   function () {
     let scene;
 
-    const rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
     let polygon;
     const backgroundColor = [0, 0, 128, 255];
     let polylines;
@@ -40,7 +39,9 @@ describe(
         scene.backgroundColor,
       );
       scene.primitives.destroyPrimitives = false;
-      scene.camera.setView({ destination: rectangle });
+      scene.camera.setView({
+        destination: Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0),
+      });
     });
 
     afterAll(function () {
@@ -54,7 +55,7 @@ describe(
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({
             vertexFormat: vertexFormat,
-            rectangle: rectangle,
+            rectangle: Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0),
           }),
         }),
         asynchronous: false,
@@ -82,6 +83,19 @@ describe(
       polylines = polylines && polylines.destroy();
     });
 
+    function itRenders(initialColor = backgroundColor) {
+      it("renders", function () {
+        expect(scene).toRender(initialColor);
+
+        scene.primitives.removeAll();
+        scene.primitives.add(polygon);
+
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(backgroundColor);
+        });
+      });
+    }
+
     function renderMaterial(material, ignoreBackground, callback) {
       ignoreBackground = ignoreBackground ?? false;
       polygon.appearance.material = material;
@@ -100,116 +114,63 @@ describe(
       });
     }
 
-    function renderPolylineMaterial(material) {
-      polyline.material = material;
-      expect(scene).toRender(backgroundColor);
-
-      scene.primitives.removeAll();
-      scene.primitives.add(polylines);
-
-      let result;
-      expect(scene).toRenderAndCall(function (rgba) {
-        result = rgba;
-        expect(rgba).not.toEqual(backgroundColor);
-      });
-      return result;
-    }
-
     function verifyMaterial(type) {
-      const material = new Material({
-        strict: true,
-        fabric: {
-          type: type,
-        },
+      describe(`${type} built-in material`, function () {
+        beforeEach(function () {
+          const material = new Material({
+            strict: true,
+            fabric: {
+              type: type,
+            },
+          });
+          polygon.appearance.material = material;
+        });
+
+        itRenders();
       });
-      renderMaterial(material);
     }
 
     function verifyPolylineMaterial(type) {
-      const material = new Material({
-        strict: true,
-        fabric: {
-          type: type,
-        },
+      describe(`${type} built-in material`, function () {
+        it("renders", function () {
+          const material = new Material({
+            strict: true,
+            fabric: {
+              type: type,
+            },
+          });
+
+          polyline.material = material;
+          expect(scene).toRender(backgroundColor);
+
+          scene.primitives.removeAll();
+          scene.primitives.add(polylines);
+
+          expect(scene).notToRender(backgroundColor);
+        });
       });
-      renderPolylineMaterial(material);
     }
 
-    it("draws Color built-in material", function () {
-      verifyMaterial("Color");
-    });
+    verifyMaterial("Color");
+    verifyMaterial("Image");
+    verifyMaterial("DiffuseMap");
+    verifyMaterial("AlphaMap");
+    verifyMaterial("SpecularMap");
+    verifyMaterial("EmissionMap");
+    verifyMaterial("BumpMap");
+    verifyMaterial("NormalMap");
+    verifyMaterial("Grid");
+    verifyMaterial("Stripe");
+    verifyMaterial("Checkerboard");
+    verifyMaterial("Dot");
+    verifyMaterial("Water");
+    verifyMaterial("RimLighting");
+    verifyMaterial("Fade");
 
-    it("draws Image built-in material", function () {
-      verifyMaterial("Image");
-    });
-
-    it("draws DiffuseMap built-in material", function () {
-      verifyMaterial("DiffuseMap");
-    });
-
-    it("draws AlphaMap built-in material", function () {
-      verifyMaterial("AlphaMap");
-    });
-
-    it("draws SpecularMap built-in material", function () {
-      verifyMaterial("SpecularMap");
-    });
-
-    it("draws EmissionMap built-in material", function () {
-      verifyMaterial("EmissionMap");
-    });
-
-    it("draws BumpMap built-in material", function () {
-      verifyMaterial("BumpMap");
-    });
-
-    it("draws NormalMap built-in material", function () {
-      verifyMaterial("NormalMap");
-    });
-
-    it("draws Grid built-in material", function () {
-      verifyMaterial("Grid");
-    });
-
-    it("draws Stripe built-in material", function () {
-      verifyMaterial("Stripe");
-    });
-
-    it("draws Checkerboard built-in material", function () {
-      verifyMaterial("Checkerboard");
-    });
-
-    it("draws Dot built-in material", function () {
-      verifyMaterial("Dot");
-    });
-
-    it("draws Water built-in material", function () {
-      verifyMaterial("Water");
-    });
-
-    it("draws RimLighting built-in material", function () {
-      verifyMaterial("RimLighting");
-    });
-
-    it("draws Fade built-in material", function () {
-      verifyMaterial("Fade");
-    });
-
-    it("draws PolylineArrow built-in material", function () {
-      verifyPolylineMaterial("PolylineArrow");
-    });
-
-    it("draws PolylineDash built-in material", function () {
-      verifyPolylineMaterial("PolylineDash");
-    });
-
-    it("draws PolylineGlow built-in material", function () {
-      verifyPolylineMaterial("PolylineGlow");
-    });
-
-    it("draws PolylineOutline built-in material", function () {
-      verifyPolylineMaterial("PolylineOutline");
-    });
+    verifyPolylineMaterial("PolylineArrow");
+    verifyPolylineMaterial("PolylineDash");
+    verifyPolylineMaterial("PolylineGlow");
+    verifyPolylineMaterial("PolylineOutline");
 
     it("gets the material type", function () {
       const material = new Material({
