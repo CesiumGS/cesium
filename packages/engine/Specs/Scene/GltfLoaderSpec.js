@@ -128,6 +128,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const meshPrimitiveRestartTestData =
+      "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -4170,6 +4172,14 @@ describe(
       expect(clearcoatRoughnessFactor).toBe(0.2);
       expect(clearcoatRoughnessTexture.texture.width).toBe(256);
       expect(clearcoatNormalTexture.texture.width).toBe(256);
+    });
+
+    it("loads model with EXT_mesh_primitive_restart extension", async function () {
+      const gltfLoader = await loadGltf(meshPrimitiveRestartTestData);
+
+      const primitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(primitives.length).toBe(2);
     });
 
     it("parses copyright field", function () {

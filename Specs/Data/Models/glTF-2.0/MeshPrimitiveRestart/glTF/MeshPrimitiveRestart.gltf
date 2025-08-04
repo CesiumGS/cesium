@@ -1,0 +1,221 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.2.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "name": "Positions Accessor 0",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        0.5,
+        0.5,
+        0
+      ],
+      "min": [
+        -0.5,
+        -0.5,
+        0
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "name": "Indices Accessor 0",
+      "type": "SCALAR",
+      "componentType": 5125,
+      "count": 3,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "name": "Indices Accessor 1",
+      "type": "SCALAR",
+      "componentType": 5125,
+      "count": 3,
+      "bufferView": 1,
+      "byteOffset": 12
+    },
+    {
+      "name": "Indices Accessor 2",
+      "type": "SCALAR",
+      "componentType": 5125,
+      "count": 3,
+      "bufferView": 1,
+      "byteOffset": 24
+    },
+    {
+      "name": "Indices Accessor 3",
+      "type": "SCALAR",
+      "componentType": 5125,
+      "count": 3,
+      "bufferView": 1,
+      "byteOffset": 36
+    },
+    {
+      "name": "All indices 0",
+      "type": "SCALAR",
+      "componentType": 5125,
+      "count": 7,
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "name": "All indices 1",
+      "type": "SCALAR",
+      "componentType": 5125,
+      "count": 7,
+      "bufferView": 2,
+      "byteOffset": 28
+    },
+    {
+      "name": "Positions Accessor 1",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        1.5,
+        1.5,
+        0
+      ],
+      "min": [
+        0.5,
+        0.5,
+        0
+      ],
+      "bufferView": 3,
+      "byteOffset": 0
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 48,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 48,
+      "byteLength": 48,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 96,
+      "byteLength": 56
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 152,
+      "byteLength": 48,
+      "byteStride": 12,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "MeshPrimitiveRestart.bin",
+      "byteLength": 200
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0,
+          1,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0,
+          0,
+          1,
+          1
+        ]
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 5,
+          "material": 0,
+          "indices": 1
+        },
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 5,
+          "material": 0,
+          "indices": 2
+        },
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 6,
+          "material": 1,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 6,
+          "material": 1,
+          "indices": 4
+        }
+      ],
+      "extensions": {
+        "EXT_mesh_primitive_restart": {
+          "primitiveGroups": [
+            {
+              "primitives": [
+                0,
+                1
+              ],
+              "indices": 5
+            },
+            {
+              "primitives": [
+                2,
+                3
+              ],
+              "indices": 6
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_mesh_primitive_restart"
+  ]
+}
