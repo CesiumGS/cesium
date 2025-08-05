@@ -2,6 +2,7 @@ import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import ModelInstance from "./ModelInstance.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 
 /**
  * A collection of {@link ModelInstance} used for rendering multiple copies of a {@link Model} mesh with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
@@ -48,6 +49,7 @@ import ModelInstance from "./ModelInstance.js";
 function ModelInstanceCollection(options) {
   this._instances = [];
   this._dirty = false;
+  this._model = options.model ?? undefined;
 
   this.initialize(options.instances);
 }
@@ -102,6 +104,13 @@ ModelInstanceCollection.prototype.add = function (transform) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("transform", transform);
   //>>includeEnd('debug');
+
+  if (this._model._loader._hasMeshGpuInstancing) {
+    throw new RuntimeError(
+      "Models with the EXT_mesh_gpu_instancing extension cannot use the ModelInstanceCollection class.",
+    );
+  }
+
   const instance = new ModelInstance(transform, this);
   this._instances.push(instance);
   return instance;

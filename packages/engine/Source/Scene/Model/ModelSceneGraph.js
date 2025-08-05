@@ -131,6 +131,7 @@ function ModelSceneGraph(options) {
 
   this._modelInstances = new ModelInstanceCollection({
     instances: options.modelInstances,
+    model: options.model,
   });
   this._model = options.model;
 
