@@ -26,7 +26,8 @@ ModelInstancesUpdateStage.update = function (
   frameState,
 ) {
   if (
-    !sceneGraph.modelInstances._dirty ||
+    (!sceneGraph.modelInstances._dirty &&
+      sceneGraph._model.minimumPixelSize === 0) ||
     !sceneGraph._model._drawCommandsBuilt
   ) {
     return;
