@@ -7,6 +7,10 @@ import ModelInstance from "./ModelInstance.js";
  * A collection of {@link ModelInstance} used for rendering multiple copies of a {@link Model} mesh with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
  * Instances are added and removed from the collection using {@link ModelInstanceCollection#add}
  * and {@link ModelInstanceCollection#remove}.
+ *
+ * @param {object} options An object containing the following options
+ * @param {ModelInstance[]} [options.instances] The API-level model instances
+ *
  * @alias ModelInstanceCollection
  * @constructor
  *
@@ -41,9 +45,11 @@ import ModelInstance from "./ModelInstance.js";
  * viewer.scene.primitives.add(model);
  * model.instances.add(instanceModelMatrix);
  */
-function ModelInstanceCollection() {
+function ModelInstanceCollection(options) {
   this._instances = [];
   this._dirty = false;
+
+  this.initialize(options.instances);
 }
 
 Object.defineProperties(ModelInstanceCollection.prototype, {
@@ -60,6 +66,18 @@ Object.defineProperties(ModelInstanceCollection.prototype, {
     },
   },
 });
+
+ModelInstanceCollection.prototype.initialize = function (transforms) {
+  if (!defined(transforms)) {
+    return;
+  }
+
+  for (let i = 0; i < transforms.length; i++) {
+    const transform = transforms[i];
+    const instance = new ModelInstance(transform);
+    this._instances.push(instance);
+  }
+};
 
 /**
  * Creates and adds an instance with the specified transform to the collection.
