@@ -316,6 +316,12 @@ ModelSceneGraph.prototype.initialize = function (model, components) {
   Check.typeOf.object("modelComponents", components);
   //>>includeEnd('debug');
 
+  if (model._loader._hasMeshGpuInstancing & this.hasInstances) {
+    throw new RuntimeError(
+      "Models with the EXT_mesh_gpu_instancing extension cannot use the ModelInstanceCollection class.",
+    );
+  }
+
   this._components = components;
 
   this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
@@ -521,12 +527,6 @@ ModelSceneGraph.prototype.traverseAndCreateSceneGraph = function (
   node,
   transformToRoot,
 ) {
-  if (defined(node.instances) & this.hasInstances) {
-    throw new RuntimeError(
-      "Models with the EXT_mesh_gpu_instancing extension cannot use the ModelInstanceCollection class.",
-    );
-  }
-
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
   const transform = ModelUtility.getNodeTransform(node);
