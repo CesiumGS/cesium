@@ -537,7 +537,7 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
           },
         });
       }
-
+      primitive._vertexArray = undefined;
       primitive._lastTextureHeight = splatTextureData.height;
       primitive._lastTextureWidth = splatTextureData.width;
 
@@ -603,8 +603,9 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   const uniformMap = renderResources.uniformMap;
 
+  const textureCache = primitive.gaussianSplatTexture;
   uniformMap.u_splatAttributeTexture = function () {
-    return primitive.gaussianSplatTexture;
+    return textureCache;
   };
 
   uniformMap.u_splitDirection = function () {
@@ -682,12 +683,13 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     scratchMatrix4B,
   );
 
+  const vertexArrayCache = primitive._vertexArray;
   const command = new DrawCommand({
     boundingVolume: tileset.boundingSphere,
     modelMatrix: modelMatrix,
     uniformMap: uniformMap,
     renderState: renderState,
-    vertexArray: primitive._vertexArray,
+    vertexArray: vertexArrayCache,
     shaderProgram: shaderProgram,
     cull: renderStateOptions.cull.enabled,
     pass: Pass.GAUSSIAN_SPLATS,
