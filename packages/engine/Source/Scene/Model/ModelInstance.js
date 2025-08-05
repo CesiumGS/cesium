@@ -223,7 +223,7 @@ class ModelInstance {
    * @private
    */
   getRelativeScaledTransform(model, frameState, result) {
-    if (!model.ready) {
+    if (!model.ready || !(model.minimumPixelSize > 0)) {
       return this._relativeTransform;
     }
     let scale = model.scale;

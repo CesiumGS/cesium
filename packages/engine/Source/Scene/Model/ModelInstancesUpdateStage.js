@@ -38,6 +38,7 @@ ModelInstancesUpdateStage.update = function (
   }
 
   updateRuntimeNode(runtimeNode, sceneGraph, frameState);
+  sceneGraph.modelInstances._dirty = false;
 };
 
 /**
