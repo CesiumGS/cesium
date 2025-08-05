@@ -242,6 +242,11 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   /**
    * The bounding sphere containing all the primitives in the scene graph
    * in model space
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
    */
   rootBoundingSphere: {
     get: function () {
@@ -253,6 +258,11 @@ Object.defineProperties(ModelSceneGraph.prototype, {
    * The transform for the scene graph computed by multiplying the
    * components transform by the the axisCorrectionMatrix
    * glTF * AxisCorrection
+   *
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @private
    */
   rootTransform: {
     get: function () {
@@ -260,6 +270,13 @@ Object.defineProperties(ModelSceneGraph.prototype, {
     },
   },
 
+  /**
+   * Accessor to ModelInstanceCollection to support runtime instancing
+   *
+   * @type {ModelInstanceCollection}
+   *
+   * @private
+   */
   modelInstances: {
     get: function () {
       return this._modelInstances;
@@ -269,6 +286,14 @@ Object.defineProperties(ModelSceneGraph.prototype, {
     },
   },
 
+  /**
+   * Model has runtime instances
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
   hasInstances: {
     get: function () {
       return this._modelInstances && this._modelInstances.length > 0;
