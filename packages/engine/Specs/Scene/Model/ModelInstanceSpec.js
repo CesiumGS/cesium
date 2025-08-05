@@ -139,16 +139,15 @@ describe(
         fixedFrameTransform,
       );
 
-      const instance = new ModelInstance(instanceModelMatrix);
-
       const model = await loadAndZoomToModelAsync(
         {
           gltf: sampleGltfUrl,
-          instances: [instance],
-          modelMatrix: Matrix4.IDENTITY,
+          instances: [instanceModelMatrix],
         },
         scene,
       );
+
+      const instance = model.instances.get(0);
 
       const boundingSphere = instance.getBoundingSphere(model);
 
@@ -177,12 +176,10 @@ describe(
         fixedFrameTransform,
       );
 
-      const instance = new ModelInstance(instanceModelMatrix);
-
       const model = await loadAndZoomToModelAsync(
         {
           gltf: sampleGltfUrl,
-          instances: [instance],
+          instances: [instanceModelMatrix],
           modelMatrix: new Matrix4.fromTranslation(
             new Cartesian3(
               1253565.1903550967,
@@ -193,6 +190,8 @@ describe(
         },
         scene,
       );
+
+      const instance = model.instances.get(0);
 
       const boundingSphere = instance.getBoundingSphere(model);
 

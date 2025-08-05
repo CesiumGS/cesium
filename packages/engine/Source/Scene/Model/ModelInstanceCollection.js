@@ -49,9 +49,9 @@ import RuntimeError from "../../Core/RuntimeError.js";
 function ModelInstanceCollection(options) {
   this._instances = [];
   this._dirty = false;
-  this._model = options.model ?? undefined;
+  this._model = options?.model ?? undefined;
 
-  this.initialize(options.instances);
+  this.initialize(options?.instances);
 }
 
 Object.defineProperties(ModelInstanceCollection.prototype, {
@@ -105,7 +105,7 @@ ModelInstanceCollection.prototype.add = function (transform) {
   Check.typeOf.object("transform", transform);
   //>>includeEnd('debug');
 
-  if (this._model._loader._hasMeshGpuInstancing) {
+  if (this._model?._loader._hasMeshGpuInstancing) {
     throw new RuntimeError(
       "Models with the EXT_mesh_gpu_instancing extension cannot use the ModelInstanceCollection class.",
     );
