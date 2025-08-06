@@ -2,16 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <!-- Use Chrome Frame in IE -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta
       name="description"
-      content="Use the split property to only show layers on one side of a slider."
+      content="View the same 3D Tiles power station dataset with Gaussian splatting (or Gaussian splats) rendering versus triangle-based mesh rendering."
     />
-    <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials, Showcases" />
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -38,7 +39,6 @@
       #slider:hover {
         cursor: ew-resize;
       }
-
       .split-label {
         position: absolute;
         top: 50%;
@@ -58,36 +58,41 @@
         right: 0;
       }
     </style>
-
     <div id="cesiumContainer" class="fullSize">
       <div id="slider"></div>
-      <div class="split-label left">Earth at Night</div>
-      <div class="split-label right">Arc GIS World<br />Street Map</div>
+      <div class="split-label left">3D Tiles<br />Gaussian splats</div>
+      <div class="split-label right">3D Tiles<br />Mesh</div>
     </div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
-
     <script id="cesium_sandcastle_script">
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-            Cesium.ArcGisMapServerImageryProvider.fromUrl(
-              "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
-            ),
-          ),
-          baseLayerPicker: false,
-          infoBox: false,
-          geocoder: false,
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        const layers = viewer.imageryLayers;
-        const earthAtNight = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(3812),
-        );
-        earthAtNight.splitDirection = Cesium.SplitDirection.LEFT; // Only show to the left of the slider.
-        layers.add(earthAtNight);
+        try {
+          const left = await Cesium.Cesium3DTileset.fromIonAssetId(3591160);
+          viewer.scene.primitives.add(left);
+          left.splitDirection = Cesium.SplitDirection.LEFT;
+
+          viewer.zoomTo(
+            left,
+            new Cesium.HeadingPitchRange(
+              Cesium.Math.toRadians(-50),
+              Cesium.Math.toRadians(-20),
+              100.0,
+            ),
+          );
+
+          const right = await Cesium.Cesium3DTileset.fromIonAssetId(3443919);
+          viewer.scene.primitives.add(right);
+          right.splitDirection = Cesium.SplitDirection.RIGHT;
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // Sync the position of the slider with the split position
         const slider = document.getElementById("slider");
@@ -125,7 +130,6 @@
         handler.setInputAction(function () {
           moveActive = false;
         }, Cesium.ScreenSpaceEventType.PINCH_END);
-
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

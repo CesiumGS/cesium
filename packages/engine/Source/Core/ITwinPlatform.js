@@ -153,13 +153,17 @@ ITwinPlatform.apiEndpoint = new Resource({
  * @private
  *
  * @param {string} iModelId iModel id
+ * @param {string} [changesetId] The id of the changeset to filter results by. If not provided, exports from the latest available changesets will be returned.
  * @returns {Promise<GetExportsResponse>}
  *
  * @throws {RuntimeError} If the iTwin API request is not successful
  */
-ITwinPlatform.getExports = async function (iModelId) {
+ITwinPlatform.getExports = async function (iModelId, changesetId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iModelId", iModelId);
+  if (defined(changesetId)) {
+    Check.typeOf.string("changesetId", changesetId);
+  }
   if (
     !defined(ITwinPlatform.defaultAccessToken) &&
     !defined(ITwinPlatform.defaultShareKey)
@@ -190,6 +194,9 @@ ITwinPlatform.getExports = async function (iModelId) {
   /* global CESIUM_VERSION */
   if (typeof CESIUM_VERSION !== "undefined") {
     resource.appendQueryParameters({ clientVersion: CESIUM_VERSION });
+  }
+  if (defined(changesetId) && changesetId !== "") {
+    resource.appendQueryParameters({ changesetId: changesetId });
   }
 
   try {

@@ -68,6 +68,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SharedContext from "../Renderer/SharedContext.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
@@ -132,15 +133,22 @@ function Scene(options) {
   let creditContainer = options.creditContainer;
   let creditViewport = options.creditViewport;
 
-  const contextOptions = clone(options.contextOptions);
-
   //>>includeStart('debug', pragmas.debug);
   if (!defined(canvas)) {
     throw new DeveloperError("options and options.canvas are required.");
   }
   //>>includeEnd('debug');
+
+  const countReferences = options.contextOptions instanceof SharedContext;
+  if (countReferences) {
+    this._context = options.contextOptions.createSceneContext(canvas);
+  } else {
+    const contextOptions = clone(options.contextOptions);
+    this._context = new Context(canvas, contextOptions);
+  }
+  const context = this._context;
+
   const hasCreditContainer = defined(creditContainer);
-  const context = new Context(canvas, contextOptions);
   if (!hasCreditContainer) {
     creditContainer = document.createElement("div");
     creditContainer.style.position = "absolute";
@@ -167,14 +175,13 @@ function Scene(options) {
   this._creditContainer = creditContainer;
 
   this._canvas = canvas;
-  this._context = context;
   this._computeEngine = new ComputeEngine(context);
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
-  this._primitives = new PrimitiveCollection();
-  this._groundPrimitives = new PrimitiveCollection();
+  this._primitives = new PrimitiveCollection({ countReferences });
+  this._groundPrimitives = new PrimitiveCollection({ countReferences });
 
   this._globeHeight = undefined;
   this._globeHeightDirty = true;
@@ -4201,6 +4208,8 @@ function render(scene) {
   passState.blendingEnabled = undefined;
   passState.scissorTest = undefined;
   passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
+
+  context.beginFrame();
 
   if (defined(scene.globe)) {
     scene.globe.beginFrame(frameState);
