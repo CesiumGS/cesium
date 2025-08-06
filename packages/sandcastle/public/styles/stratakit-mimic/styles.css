@@ -10,12 +10,12 @@
  * changed to avoid namespace conflicts. Each is set up to still "inject" into the
  * CSS @layers that the stratakit styles sets up to accurately get variables
  */
-@import "./Field.css";
-@import "./Button.css";
-@import "./Select.css";
-@import "./Icon.css";
-@import "./Switch.css";
-@import "./Label.css";
+@import "./components/Field.css";
+@import "./components/Button.css";
+@import "./components/Select.css";
+@import "./components/Icon.css";
+@import "./components/Switch.css";
+@import "./components/Label.css";
 
 /*
  * Extra tokens missing from stratakit as well as some targeted adjustments to
