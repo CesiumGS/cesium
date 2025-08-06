@@ -761,6 +761,15 @@ function Scene(options) {
    */
   this.light = new SunLight();
 
+  /**
+   * Whether or not to enable edge visibility rendering for 3D tiles.
+   * When enabled, creates a framebuffer with multiple render targets
+   * for advanced edge detection and visibility techniques.
+   * @type {boolean}
+   * @default false
+   */
+  this._enableEdgeVisibility = true;
+
   // Give frameState, camera, and screen space camera controller initial state before rendering
   updateFrameNumber(this, 0.0, JulianDate.now());
   this.updateFrameState();
@@ -2567,6 +2576,31 @@ function performTranslucent3DTilesClassification(
   );
 }
 
+function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES);
+
+  const view = scene._view;
+  const originalFramebuffer = passState.framebuffer;
+
+  // Bind the edge framebuffer for multi-target rendering
+  if (
+    scene._enableEdgeVisibility &&
+    defined(view.edgeFramebuffer.framebuffer)
+  ) {
+    passState.framebuffer = view.edgeFramebuffer.framebuffer;
+  }
+
+  // performPass
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES];
+  const commandCount = frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES];
+  for (let j = 0; j < commandCount; ++j) {
+    executeCommand(commands[j], scene, passState);
+  }
+
+  // Restore original framebuffer
+  passState.framebuffer = originalFramebuffer;
+}
+
 /**
  * Execute the draw commands for all the render passes.
  *
@@ -2709,6 +2743,10 @@ function executeCommands(scene, passState) {
     }
 
     let commandCount;
+
+    // Draw edges
+    performCesium3DTileEdgesPass(scene, passState, frustumCommands);
+
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
@@ -3714,6 +3752,18 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 
   const useInvertClassification = (environmentState.useInvertClassification =
     !picking && defined(passState.framebuffer) && scene.invertClassification);
+
+  // Update edge framebuffer for 3D tile edge rendering
+  const useEdgeFramebuffer = !picking && scene._enableEdgeVisibility;
+  if (useEdgeFramebuffer) {
+    view.edgeFramebuffer.update(
+      context,
+      view.viewport,
+      scene._hdr,
+      scene.msaaSamples,
+    );
+  }
+
   if (useInvertClassification) {
     let depthFramebuffer;
     if (frameState.invertClassificationColor.alpha === 1.0) {
@@ -4218,6 +4268,27 @@ function render(scene) {
   scene.updateEnvironment();
   scene.updateAndExecuteCommands(passState, backgroundColor);
   scene.resolveFramebuffers(passState);
+
+  // Test EdgeFramebuffer: Clear to red if enabled
+  if (
+    scene._enableEdgeVisibility &&
+    defined(scene._view.edgeFramebuffer.framebuffer)
+  ) {
+    const originalFramebuffer = passState.framebuffer;
+    passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+    scene._view.edgeFramebuffer.clear(
+      scene.context,
+      passState,
+      new Color(1.0, 0.0, 0.0, 1.0),
+    );
+    passState.framebuffer = originalFramebuffer;
+  }
+
+  // Testing
+  // if (scene._enableEdgeVisibility && defined(scene._view.edgeFramebuffer.framebuffer)) {
+  //   passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+  //   // scene._view.edgeFramebuffer.clear(scene.context, passState, new Color(1.0, 0.0, 0.0, 1.0));
+  // }
 
   passState.framebuffer = undefined;
   executeOverlayCommands(scene, passState);

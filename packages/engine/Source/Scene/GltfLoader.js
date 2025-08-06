@@ -2019,6 +2019,27 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
+  const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
+  if (defined(edgeVisibilityExtension)) {
+    // visibility
+    const accessor =
+      loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
+    if (!defined(accessor)) {
+      throw new RuntimeError("Edge visibility accessor not found!");
+    }
+    const values = loadAccessor(loader, accessor);
+    console.log(values);
+    // if (edgeVisibilityExtension.visibility) {
+    //   console.log("Visibility accessor index:", edgeVisibilityExtension.visibility);
+    // }
+
+    // silhouette normals
+    // const snAccessor = loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
+    // if (edgeVisibilityExtension.silhouetteNormals) {
+    //   console.log("SilhouetteNormals accessor index:", edgeVisibilityExtension.silhouetteNormals);
+    // }
+  }
+
   const spzExtension = extensions.KHR_spz_gaussian_splats_compression;
   if (defined(spzExtension)) {
     needsPostProcessing = true;
