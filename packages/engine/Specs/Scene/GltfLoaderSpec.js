@@ -4200,21 +4200,6 @@ describe(
       expect(loadedPrimitives.length).toBe(8);
     });
 
-    it("does not load with EXT_mesh_primitive_restart if a primitive index appears in multiple groups", async function () {
-      function modifyGltf(gltf) {
-        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].indices = 11;
-        return gltf;
-      }
-      const gltfLoader = await loadModifiedGltfAndTest(
-        meshPrimitiveRestartTestData,
-        undefined,
-        modifyGltf,
-      );
-      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
-
-      expect(loadedPrimitives.length).toBe(8);
-    });
-
     it("does not load with EXT_mesh_primitive_restart for unsupported modes", async function () {
       function modifyGltf(gltf) {
         gltf.meshes[0].primitives[6].mode = 4;

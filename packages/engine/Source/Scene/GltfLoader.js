@@ -2451,7 +2451,8 @@ function getMeshPrimitives(mesh) {
       // Spec: all primitives must have same topology.
       if (
         undefined === thisPrimitive?.indices ||
-        thisPrimitive.mode !== primitive.mode
+        thisPrimitive.mode !== primitive.mode ||
+        thisPrimitive.material !== primitive.material
       ) {
         return meshPrimitives;
       }
