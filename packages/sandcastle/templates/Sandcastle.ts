@@ -114,24 +114,27 @@ const Sandcastle = {
     toolbarId?: string,
   ) {
     Sandcastle.declare(onchange);
+
     const input = document.createElement("input");
     input.checked = checked;
     input.type = "checkbox";
     input.style.pointerEvents = "none";
-    input.className = "🥝-checkbox";
+    input.className = "stratakit-mimic-switch";
+
     const label = document.createElement("label");
     label.appendChild(document.createTextNode(text));
     label.style.pointerEvents = "none";
-    label.className = "🥝-label";
-    const button = document.createElement("div");
-    // button.type = "button";
-    button.className = "🥝-field";
-    button.dataset.kiwiLabelPlacement = "after";
-    button.dataset.kiwiControlType = "checkable";
-    button.appendChild(input);
-    button.appendChild(label);
+    label.className = "stratakit-mimic-label";
 
-    button.onclick = function () {
+    const field = document.createElement("div");
+    // button.type = "button";
+    field.className = "stratakit-mimic-field";
+    field.dataset.kiwiLabelPlacement = "after";
+    field.dataset.kiwiControlType = "checkable";
+    field.appendChild(input);
+    field.appendChild(label);
+
+    field.onclick = function () {
       Sandcastle.reset();
       Sandcastle.highlight(onchange);
       input.checked = !input.checked;
@@ -142,7 +145,7 @@ const Sandcastle = {
     if (!toolbar) {
       throw new Error(`Toolbar not found: ${toolbarId}`);
     }
-    toolbar.appendChild(button);
+    toolbar.appendChild(field);
   },
 
   /**
@@ -154,9 +157,10 @@ const Sandcastle = {
    */
   addToolbarButton(text: string, onclick: () => void, toolbarId?: string) {
     Sandcastle.declare(onclick);
+
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "🥝-button";
+    button.className = "stratakit-mimic-button";
     button.dataset.kiwiVariant = "solid";
     button.dataset.kiwiTone = "neutral";
     button.onclick = function () {
@@ -165,6 +169,7 @@ const Sandcastle = {
       onclick();
     };
     button.textContent = text;
+
     const toolbar = document.getElementById(toolbarId || "toolbar");
     if (!toolbar) {
       throw new Error(`Toolbar not found: ${toolbarId}`);
@@ -196,7 +201,7 @@ const Sandcastle = {
    */
   addToolbarMenu(options: SelectOption[], toolbarId?: string) {
     const menu = document.createElement("select");
-    menu.className = "🥝-button 🥝-select";
+    menu.className = "stratakit-mimic-button stratakit-mimic-select";
     menu.dataset.kiwiVariant = "solid";
     menu.dataset.kiwiTone = "neutral";
     menu.onchange = function () {
@@ -208,13 +213,12 @@ const Sandcastle = {
     };
 
     const wrapper = document.createElement("div");
-    wrapper.className = "🥝-select-root";
+    wrapper.className = "stratakit-mimic-select-root";
     wrapper.appendChild(menu);
 
     // generate element direct from html string https://stackoverflow.com/a/35385518/7416863
-    // TODO: this feels wrong but is necessary for the icon...
     const icon = document.createElement("template");
-    icon.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 16 16" class="🥝-icon 🥝-disclosure-arrow 🥝-select-arrow" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 10 5 7h6l-3 3Z" clip-rule="evenodd"></path></svg>`;
+    icon.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 16 16" class="stratakit-mimic-icon stratakit-mimic-disclosure-arrow stratakit-mimic-select-arrow" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 10 5 7h6l-3 3Z" clip-rule="evenodd"></path></svg>`;
     wrapper.appendChild(icon.content.firstChild!);
 
     const toolbar = document.getElementById(toolbarId || "toolbar");
