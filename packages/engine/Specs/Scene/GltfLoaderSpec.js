@@ -4200,10 +4200,9 @@ describe(
       expect(loadedPrimitives.length).toBe(8);
     });
 
-    it("does not load with EXT_mesh_primitive_restart for unsupported modes", async function () {
+    it("does not load with EXT_mesh_primitive_restart if a primitive appears more than once in a group", async function () {
       function modifyGltf(gltf) {
-        gltf.meshes[0].primitives[6].mode = 4;
-        gltf.meshes[0].primitives[7].mode = 4;
+        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].primitives[1] = 6;
         return gltf;
       }
       const gltfLoader = await loadModifiedGltfAndTest(
@@ -4216,9 +4215,10 @@ describe(
       expect(loadedPrimitives.length).toBe(8);
     });
 
-    it("does not load with EXT_mesh_primitive_restart if primitives have different materials", async function () {
+    it("does not load with EXT_mesh_primitive_restart for unsupported modes", async function () {
       function modifyGltf(gltf) {
-        gltf.meshes[0].primitives[7].material = 0;
+        gltf.meshes[0].primitives[6].mode = 4;
+        delete gltf.meshes[0].primitives[0].mode;
         return gltf;
       }
       const gltfLoader = await loadModifiedGltfAndTest(
@@ -4246,7 +4246,7 @@ describe(
       expect(loadedPrimitives.length).toBe(8);
     });
 
-    it("does not load with EXT_mesh_primitive_restart if a primitive does not define a indices property", async function () {
+    it("does not load with EXT_mesh_primitive_restart if a primitive does not define an indices property", async function () {
       function modifyGltf(gltf) {
         delete gltf.meshes[0].primitives[0].indices;
         return gltf;
