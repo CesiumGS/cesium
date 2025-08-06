@@ -1,3 +1,4 @@
+import addAllToArray from "../Core/addAllToArray.js";
 import clone from "../Core/clone.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
@@ -1452,15 +1453,15 @@ Cesium3DTileStyle.prototype.getVariables = function () {
   let variables = [];
 
   if (defined(this.color) && defined(this.color.getVariables)) {
-    variables.push.apply(variables, this.color.getVariables());
+    addAllToArray(variables, this.color.getVariables());
   }
 
   if (defined(this.show) && defined(this.show.getVariables)) {
-    variables.push.apply(variables, this.show.getVariables());
+    addAllToArray(variables, this.show.getVariables());
   }
 
   if (defined(this.pointSize) && defined(this.pointSize.getVariables)) {
-    variables.push.apply(variables, this.pointSize.getVariables());
+    addAllToArray(variables, this.pointSize.getVariables());
   }
 
   // Remove duplicates

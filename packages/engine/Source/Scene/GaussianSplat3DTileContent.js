@@ -513,8 +513,15 @@ GaussianSplat3DTileContent.prototype.isDestroyed = function () {
  */
 GaussianSplat3DTileContent.prototype.destroy = function () {
   this.splatPrimitive = undefined;
-  this._tileset.gaussianSplatPrimitive.destroy();
+
+  if (
+    defined(this._tileset.gaussianSplatPrimitive) &&
+    !this._tileset.gaussianSplatPrimitive.isDestroyed()
+  ) {
+    this._tileset.gaussianSplatPrimitive.destroy();
+  }
   this._tileset.gaussianSplatPrimitive = undefined;
+
   this._tile = undefined;
   this._tileset = undefined;
   this._resource = undefined;

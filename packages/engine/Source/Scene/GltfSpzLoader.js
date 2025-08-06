@@ -194,7 +194,9 @@ GltfSpzLoader.prototype.process = function (frameState) {
     return false;
   }
 
-  const decodePromise = loadSpz(this._bufferViewTypedArray);
+  const decodePromise = loadSpz(this._bufferViewTypedArray, {
+    unpackOptions: { coordinateSystem: "UNSPECIFIED" },
+  });
 
   if (!defined(decodePromise)) {
     return false;
