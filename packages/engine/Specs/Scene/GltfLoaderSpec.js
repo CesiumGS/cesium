@@ -4175,11 +4175,123 @@ describe(
     });
 
     it("loads model with EXT_mesh_primitive_restart extension", async function () {
+      const gltf = await Resource.fetchJson({
+        url: meshPrimitiveRestartTestData,
+      });
       const gltfLoader = await loadGltf(meshPrimitiveRestartTestData);
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
 
-      const primitives = gltfLoader.components.nodes[0]["primitives"];
+      expect(gltf.meshes[0].primitives.length).toBe(8);
+      expect(loadedPrimitives.length).toBe(4);
+    });
 
-      expect(primitives.length).toBe(2);
+    it("does not load with EXT_mesh_primitive_restart if a primitive appears in multiple groups", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].primitives[1] = 5;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a primitive index appears in multiple groups", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].indices = 11;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart for unsupported modes", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].primitives[6].mode = 4;
+        gltf.meshes[0].primitives[7].mode = 4;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if primitives have different materials", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].primitives[7].material = 0;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if primitives have different modes", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].primitives[7].mode = 3;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a primitive does not define a indices property", async function () {
+      function modifyGltf(gltf) {
+        delete gltf.meshes[0].primitives[0].indices;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a group's indices accessor is invalid", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].indices = 13;
+        return gltf;
+      }
+
+      await expectAsync(
+        loadModifiedGltfAndTest(
+          meshPrimitiveRestartTestData,
+          undefined,
+          modifyGltf,
+        ),
+      ).toBeRejectedWithError(
+        RuntimeError,
+        /Failed to load glTF\nFailed to load index buffer\nindexDataType is required and must be a valid IndexDatatype constant./,
+      );
     });
 
     it("parses copyright field", function () {
