@@ -90,6 +90,9 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
       byteOffset,
       batchTableJsonByteLength,
     );
+    if (Object.keys(batchTableJson).length === 0) {
+      batchTableJson = undefined;
+    }
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -99,6 +102,8 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
         byteOffset,
         batchTableBinaryByteLength,
       );
+      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+      batchTableBinary = new Uint8Array(batchTableBinary);
       byteOffset += batchTableBinaryByteLength;
     }
   }
@@ -175,12 +180,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     parsedContent.batchLength = batchLength;
   }
 
-  if (defined(batchTableBinary) || defined(batchTableJson)) {
-    // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-    // Note: The batchTableBinary may be undefined here, which will cause a
-    // zero-length array to be created. Whatever "parsedContent" is: Consumers
-    // will have to anticipate that.
-    batchTableBinary = new Uint8Array(batchTableBinary);
+  if (defined(batchTableJson) || defined(batchTableBinary)) {
     parsedContent.batchTableJson = batchTableJson;
     parsedContent.batchTableBinary = batchTableBinary;
   }
