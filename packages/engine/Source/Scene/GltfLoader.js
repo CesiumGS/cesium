@@ -2021,23 +2021,41 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
 
   const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
   if (defined(edgeVisibilityExtension)) {
-    // visibility
-    const accessor =
+    primitivePlan.needsEdgeVisibility = true;
+
+    // Load visibility data
+    const visibilityAccessor =
       loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
-    if (!defined(accessor)) {
+    if (!defined(visibilityAccessor)) {
       throw new RuntimeError("Edge visibility accessor not found!");
     }
-    const values = loadAccessor(loader, accessor);
-    console.log(values);
-    // if (edgeVisibilityExtension.visibility) {
-    //   console.log("Visibility accessor index:", edgeVisibilityExtension.visibility);
-    // }
+    const visibilityValues = loadAccessor(loader, visibilityAccessor);
 
-    // silhouette normals
-    // const snAccessor = loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
-    // if (edgeVisibilityExtension.silhouetteNormals) {
-    //   console.log("SilhouetteNormals accessor index:", edgeVisibilityExtension.silhouetteNormals);
-    // }
+    // Store edge visibility data in primitive plan
+    primitivePlan.edgeVisibility = {
+      visibility: visibilityValues,
+      material: edgeVisibilityExtension.material,
+    };
+
+    // Load silhouette normals if present
+    if (defined(edgeVisibilityExtension.silhouetteNormals)) {
+      const silhouetteNormalsAccessor =
+        loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
+      if (defined(silhouetteNormalsAccessor)) {
+        const silhouetteNormalsValues = loadAccessor(
+          loader,
+          silhouetteNormalsAccessor,
+        );
+        primitivePlan.edgeVisibility.silhouetteNormals =
+          silhouetteNormalsValues;
+      }
+    }
+
+    // Load line strings if present
+    if (defined(edgeVisibilityExtension.lineStrings)) {
+      primitivePlan.edgeVisibility.lineStrings =
+        edgeVisibilityExtension.lineStrings;
+    }
   }
 
   const spzExtension = extensions.KHR_spz_gaussian_splats_compression;
