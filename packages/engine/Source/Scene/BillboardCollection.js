@@ -1118,7 +1118,7 @@ function writeCompressedAttrib1(
     }
   }
 
-  const imageWidth = billboard.width ?? 0;
+  const imageWidth = Math.round(billboard.width ?? 0);
   billboardCollection._maxSize = Math.max(
     billboardCollection._maxSize,
     imageWidth,
