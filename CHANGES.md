@@ -7,6 +7,7 @@
 #### Breaking Changes :mega:
 
 - Removed the argument fallback in `ITwinData.*` functions. Please switch to the new options argument signature [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+- Fixed a crash that could happen when loading PNTS (point cloud) data that contained a batch table without a binary part [#11166](https://github.com/CesiumGS/cesium/issues/11166)
 
 ## 1.132 - 2025-08-01
 
