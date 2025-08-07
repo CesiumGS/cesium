@@ -175,8 +175,11 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     parsedContent.batchLength = batchLength;
   }
 
-  if (defined(batchTableBinary)) {
+  if (defined(batchTableBinary) || defined(batchTableJson)) {
     // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+    // Note: The batchTableBinary may be undefined here, which will cause a
+    // zero-length array to be created. Whatever "parsedContent" is: Consumers
+    // will have to anticipate that.
     batchTableBinary = new Uint8Array(batchTableBinary);
     parsedContent.batchTableJson = batchTableJson;
     parsedContent.batchTableBinary = batchTableBinary;
