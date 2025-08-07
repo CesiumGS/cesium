@@ -31,6 +31,7 @@
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
 - Add wrapR property to Sampler and Texture3D, to support the newly added third dimension wrap.[#12701](https://github.com/CesiumGS/cesium/pull/12701)
 - Added the ability to load a specific changeset for iTwin Mesh Exports using `ITwinData.createTilesetFromIModelId` [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+- Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
 
 #### Deprecated :hourglass_flowing_sand:
 
@@ -2462,7 +2463,6 @@ _This is an npm-only release to fix a publishing issue_.
     tileset.boundingSphere.center,
   );
   ```
-
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.
 
 ### Additions :tada:
@@ -4308,7 +4308,6 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
-
     - `TimeInterval.fromIso8601` now takes a single options parameter. Code that looked like:
 
             TimeInterval.fromIso8601(intervalString, true, true, data);
@@ -4321,7 +4320,6 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
-
     - `interval.intersect(otherInterval)` -> `TimeInterval.intersect(interval, otherInterval)`
     - `interval.contains(date)` -> `TimeInterval.contains(interval, date)`
 

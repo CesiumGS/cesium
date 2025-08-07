@@ -25,7 +25,7 @@
     {
       "name": "Indices Accessor 0",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 3,
       "bufferView": 1,
       "byteOffset": 0
@@ -33,63 +33,63 @@
     {
       "name": "Indices Accessor 1",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 3,
       "bufferView": 1,
-      "byteOffset": 12
+      "byteOffset": 8
     },
     {
       "name": "Indices Accessor 2",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
+      "count": 3,
+      "bufferView": 1,
+      "byteOffset": 16
+    },
+    {
+      "name": "Indices Accessor 3",
+      "type": "SCALAR",
+      "componentType": 5123,
       "count": 3,
       "bufferView": 1,
       "byteOffset": 24
     },
     {
-      "name": "Indices Accessor 3",
-      "type": "SCALAR",
-      "componentType": 5125,
-      "count": 3,
-      "bufferView": 1,
-      "byteOffset": 36
-    },
-    {
       "name": "Indices Accessor 4",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 2,
       "bufferView": 1,
-      "byteOffset": 48
+      "byteOffset": 32
     },
     {
       "name": "Indices Accessor 5",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 2,
       "bufferView": 1,
-      "byteOffset": 56
+      "byteOffset": 36
     },
     {
       "name": "Indices Accessor 6",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 2,
       "bufferView": 1,
-      "byteOffset": 64
+      "byteOffset": 40
     },
     {
       "name": "Indices Accessor 7",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 2,
       "bufferView": 1,
-      "byteOffset": 72
+      "byteOffset": 44
     },
     {
       "name": "All indices 0",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 7,
       "bufferView": 2,
       "byteOffset": 0
@@ -97,26 +97,26 @@
     {
       "name": "All indices 1",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 7,
       "bufferView": 2,
-      "byteOffset": 28
+      "byteOffset": 16
     },
     {
       "name": "All indices 2",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 5,
       "bufferView": 2,
-      "byteOffset": 56
+      "byteOffset": 32
     },
     {
       "name": "All indices 3",
       "type": "SCALAR",
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 5,
       "bufferView": 2,
-      "byteOffset": 76
+      "byteOffset": 44
     },
     {
       "name": "Positions Accessor 1",
@@ -148,17 +148,17 @@
     {
       "buffer": 0,
       "byteOffset": 48,
-      "byteLength": 80,
+      "byteLength": 48,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 128,
-      "byteLength": 96
+      "byteOffset": 96,
+      "byteLength": 56
     },
     {
       "buffer": 0,
-      "byteOffset": 224,
+      "byteOffset": 152,
       "byteLength": 48,
       "byteStride": 12,
       "target": 34962
@@ -167,7 +167,7 @@
   "buffers": [
     {
       "uri": "MeshPrimitiveRestart.bin",
-      "byteLength": 272
+      "byteLength": 200
     }
   ],
   "materials": [
