@@ -199,15 +199,8 @@ IonResource.prototype._makeRequest = function (options) {
     return Resource.prototype._makeRequest.call(this, options);
   }
 
-  if (!defined(options.headers)) {
-    options.headers = {};
-  }
+  addClientHeaders(options);
   options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
-  options.headers["X-Cesium-Client"] = "CesiumJS";
-  /* global CESIUM_VERSION */
-  if (typeof CESIUM_VERSION !== "undefined") {
-    options.headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
-  }
 
   return Resource.prototype._makeRequest.call(this, options);
 };
@@ -233,8 +226,21 @@ IonResource._createEndpointResource = function (assetId, options) {
     resourceOptions.queryParameters = { access_token: accessToken };
   }
 
+  addClientHeaders(resourceOptions);
+
   return server.getDerivedResource(resourceOptions);
 };
+
+function addClientHeaders(options) {
+  if (!defined(options.headers)) {
+    options.headers = {};
+  }
+  options.headers["X-Cesium-Client"] = "CesiumJS";
+  /* global CESIUM_VERSION */
+  if (typeof CESIUM_VERSION !== "undefined") {
+    options.headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
+  }
+}
 
 function retryCallback(that, error) {
   const ionRoot = that._ionRoot ?? that;
