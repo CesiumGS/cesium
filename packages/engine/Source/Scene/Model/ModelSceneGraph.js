@@ -1048,9 +1048,7 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   }
 
   // Add edge commands to the edge pass
-  if (defined(primitiveDrawCommand.edgeCommands)) {
-    addAllToArray(edgeCommands, primitiveDrawCommand.edgeCommands);
-  }
+  primitiveDrawCommand.pushEdgeCommands(frameState, edgeCommands);
 }
 
 /**

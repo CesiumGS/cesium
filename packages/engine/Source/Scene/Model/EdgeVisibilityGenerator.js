@@ -1,10 +1,9 @@
 import defined from "../../Core/defined.js";
-import DrawCommand from "../../Renderer/DrawCommand.js";
-import Pass from "../../Renderer/Pass.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import VertexArray from "../../Renderer/VertexArray.js";
 
 /**
  * Generates edge geometry and draw commands for the EXT_mesh_primitive_edge_visibility extension.
@@ -104,9 +103,25 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
     usage: BufferUsage.STATIC_DRAW,
   });
 
-  return {
+  // Create vertex array for edge rendering
+  const vertexArray = new VertexArray({
+    context: context,
     indexBuffer: indexBuffer,
-    positionBuffer: positionBuffer,
+    attributes: [
+      {
+        index: 0,
+        vertexBuffer: positionBuffer,
+        componentsPerAttribute: 3,
+        componentDatatype: ComponentDatatype.FLOAT,
+        offsetInBytes: 0,
+        strideInBytes: 0,
+        normalize: false,
+      },
+    ],
+  });
+
+  return {
+    vertexArray: vertexArray,
     indexCount: edgeIndices.length,
     primitiveType: PrimitiveType.LINES,
   };
@@ -130,49 +145,5 @@ function addEdge(v0, v1, positions, edgeIndices, edgePositions, edgeNormals) {
   // For now, we'll reference the main position buffer
   // In a full implementation, you might want to create a separate position buffer for edges
 }
-
-/**
- * Create a draw command for edge rendering
- * @param {Object} edgeGeometry The generated edge geometry
- * @param {PrimitiveRenderResources} renderResources The render resources
- * @param {FrameState} frameState The frame state
- * @returns {DrawCommand} The edge draw command
- * @private
- */
-EdgeVisibilityGenerator.createEdgeDrawCommand = function (
-  edgeGeometry,
-  renderResources,
-  frameState,
-) {
-  const shaderProgram = renderResources.shaderProgram;
-  const uniformMap = renderResources.uniformMap;
-  const model = renderResources.model;
-
-  const drawCommand = new DrawCommand({
-    modelMatrix: model.modelMatrix,
-    primitiveType: edgeGeometry.primitiveType,
-    vertexArray: {
-      indexBuffer: edgeGeometry.indexBuffer,
-      attributes: [
-        {
-          index: 0,
-          vertexBuffer: edgeGeometry.positionBuffer,
-          componentsPerAttribute: 3,
-          componentDatatype: ComponentDatatype.FLOAT,
-          offsetInBytes: 0,
-          strideInBytes: 0,
-          normalize: false,
-        },
-      ],
-    },
-    shaderProgram: shaderProgram,
-    uniformMap: uniformMap,
-    pass: Pass.CESIUM_3D_TILE_EDGES,
-    count: edgeGeometry.indexCount,
-    owner: model,
-  });
-
-  return drawCommand;
-};
 
 export default EdgeVisibilityGenerator;

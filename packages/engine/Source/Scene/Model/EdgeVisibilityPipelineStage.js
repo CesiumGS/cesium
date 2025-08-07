@@ -48,23 +48,15 @@ EdgeVisibilityPipelineStage.process = function (
     ShaderDestination.BOTH,
   );
 
-  // Generate edge geometry
+  // Generate edge geometry data
   const edgeGeometry = EdgeVisibilityGenerator.generateEdgeGeometry(
     primitive,
     frameState.context,
   );
 
+  // Store edge geometry data for ModelDrawCommand to use
   if (defined(edgeGeometry)) {
-    // Create edge draw command
-    const edgeDrawCommand = EdgeVisibilityGenerator.createEdgeDrawCommand(
-      edgeGeometry,
-      renderResources,
-      frameState,
-    );
-
-    // Store edge command for later submission
-    renderResources.edgeCommands = renderResources.edgeCommands || [];
-    renderResources.edgeCommands.push(edgeDrawCommand);
+    renderResources.edgeGeometry = edgeGeometry;
   }
 
   // TODO: get information from model maybe?
