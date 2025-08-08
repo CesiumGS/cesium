@@ -14,6 +14,7 @@ import {
   Primitive,
   TextureMagnificationFilter,
   TextureMinificationFilter,
+  DeveloperError,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -1117,6 +1118,18 @@ describe(
       const material = Material.fromType(Material.DiffuseMapType);
       renderMaterial(material);
       material.destroy();
+    });
+
+    it("throws when loaded async and image loading fails", async function () {
+      spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
+        return Promise.reject(new DeveloperError("Image loading failed"));
+      });
+
+      await expectAsync(
+        Material.fromTypeAsync("DiffuseMap", {
+          image: "i_dont_exist.png",
+        }),
+      ).toBeRejectedWithDeveloperError("Image loading failed");
     });
   },
   "WebGL",

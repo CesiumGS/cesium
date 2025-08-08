@@ -336,6 +336,15 @@ function Material(options) {
    */
   this._initializationPromises = [];
 
+  /**
+   * An error that occurred in async operations during material initialization.
+   * Only one error is stored.
+   *
+   * @type {Error|undefined}
+   * @private
+   */
+  this._initializationError = undefined;
+
   initializeMaterial(options, this);
   Object.defineProperties(this, {
     type: {
@@ -442,6 +451,10 @@ Material.fromTypeAsync = async function (type, uniforms, options) {
   // Recursively collect initialization promises for this material and its submaterials.
   getInitializationPromises(material, initializationPromises);
   await Promise.all(initializationPromises);
+
+  if (defined(material._initializationError)) {
+    throw material._initializationError;
+  }
 
   return material;
 };
@@ -1028,7 +1041,8 @@ function loadTexture2DImageForUniform(material, uniformId) {
         image: image,
       });
     })
-    .catch(function () {
+    .catch(function (error) {
+      material._initializationError = error;
       const texture = material._textures[uniformId];
       if (defined(texture) && texture !== material._defaultTexture) {
         texture.destroy();
@@ -1099,12 +1113,16 @@ function loadCubeMapImagesForUniform(material, uniformId) {
   ];
 
   const allPromise = Promise.all(promises);
-  allPromise.then(function (images) {
-    material._loadedCubeMaps.push({
-      id: uniformId,
-      images: images,
+  allPromise
+    .then(function (images) {
+      material._loadedCubeMaps.push({
+        id: uniformId,
+        images: images,
+      });
+    })
+    .catch(function (error) {
+      material._initializationError = error;
     });
-  });
 
   material._texturePaths[uniformId] = path;
 
