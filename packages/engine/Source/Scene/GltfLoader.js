@@ -2462,7 +2462,7 @@ function getMeshPrimitives(mesh) {
     primitives[firstPrimitiveIndex] = primitive;
   }
 
-  return primitives.filter((x) => x !== undefined);
+  return primitives.filter(defined);
 }
 
 /**
