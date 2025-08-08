@@ -151,8 +151,9 @@ ITwinData.createTilesetForRealityDataId = async function ({
   );
 
   // The maximum screen space error was defined to default to 4 for
-  // reality data tilesets. This will only be overridden if it was
-  // specified in the tilesetOptions explicitly.
+  // reality data tilesets, because they did not show the expected
+  // amount of detail with the default value of 16. Values that are
+  // given in the tilesetOptions should still override that default.
   const internalTilesetOptions = {
     maximumScreenSpaceError: 4,
     ...tilesetOptions,
