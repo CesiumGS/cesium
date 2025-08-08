@@ -351,6 +351,34 @@ function Material(options) {
       value: this.type,
       writable: false,
     },
+
+    /**
+     * The {@link TextureMinificationFilter} to apply to this material's textures.
+     * @type {TextureMinificationFilter}
+     * @default TextureMinificationFilter.LINEAR
+     */
+    minificationFilter: {
+      get: function () {
+        return this._minificationFilter;
+      },
+      set: function (value) {
+        this._minificationFilter = value;
+      },
+    },
+
+    /**
+     * The {@link TextureMagnificationFilter} to apply to this material's textures.
+     * @type {TextureMagnificationFilter}
+     * @default TextureMagnificationFilter.LINEAR
+     */
+    magnificationFilter: {
+      get: function () {
+        return this._magnificationFilter;
+      },
+      set: function (value) {
+        this._magnificationFilter = value;
+      },
+    },
   });
 
   if (!defined(Material._uniformList[this.type])) {
@@ -369,12 +397,6 @@ Material._uniformList = {};
  *
  * @param {string} type The base material type.
  * @param {object} [uniforms] Overrides for the default uniforms.
- * @param {object} [options] Object with the following properties:
- * @param {boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
- * @param {boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
- *                           with this material is expected to appear translucent.
- * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
- * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
  * @returns {Material} New material object.
  *
  * @exception {DeveloperError} material with that type does not exist.
@@ -384,7 +406,7 @@ Material._uniformList = {};
  *   color: new Cesium.Color(1.0, 0.0, 0.0, 1.0)
  * });
  */
-Material.fromType = function (type, uniforms, options) {
+Material.fromType = function (type, uniforms) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(Material._materialCache.getMaterial(type))) {
     throw new DeveloperError(`material with type '${type}' does not exist.`);
@@ -392,7 +414,6 @@ Material.fromType = function (type, uniforms, options) {
   //>>includeEnd('debug');
 
   const material = new Material({
-    ...options,
     fabric: {
       type: type,
     },
@@ -415,12 +436,6 @@ Material.fromType = function (type, uniforms, options) {
  *
  * @param {string} type The base material type.
  * @param {object} [uniforms] Overrides for the default uniforms.
- * @param {object} [options] Object with the following properties:
- * @param {boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
- * @param {boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
- *                           with this material is expected to appear translucent.
- * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
- * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
  * @returns {Promise<Material>} A promise that resolves to a new material object when all resources are loaded.
  *
  * @exception {DeveloperError} material with that type does not exist.
@@ -430,7 +445,7 @@ Material.fromType = function (type, uniforms, options) {
  *    image: '../Images/Cesium_Logo_overlay.png'
  * });
  */
-Material.fromTypeAsync = async function (type, uniforms, options) {
+Material.fromTypeAsync = async function (type, uniforms) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(Material._materialCache.getMaterial(type))) {
     throw new DeveloperError(`material with type '${type}' does not exist.`);
@@ -441,7 +456,6 @@ Material.fromTypeAsync = async function (type, uniforms, options) {
   // Unlike Material.fromType, we need to specify the uniforms in the Material constructor up front,
   // or else anything that needs to be async loaded won't be kicked off until the next Update call.
   const material = new Material({
-    ...options,
     fabric: {
       type: type,
       uniforms: uniforms,
@@ -451,6 +465,7 @@ Material.fromTypeAsync = async function (type, uniforms, options) {
   // Recursively collect initialization promises for this material and its submaterials.
   getInitializationPromises(material, initializationPromises);
   await Promise.all(initializationPromises);
+  initializationPromises.length = 0;
 
   if (defined(material._initializationError)) {
     throw material._initializationError;

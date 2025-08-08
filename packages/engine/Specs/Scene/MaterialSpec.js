@@ -682,27 +682,17 @@ describe(
     });
 
     it("creates material with custom texture filter", async function () {
-      const materialLinear = await Material.fromTypeAsync(
-        "DiffuseMap",
-        {
-          image: "./Data/Images/BlueOverRed.png",
-        },
-        {
-          minificationFilter: TextureMinificationFilter.LINEAR,
-          magnificationFilter: TextureMagnificationFilter.LINEAR,
-        },
-      );
+      const materialLinear = await Material.fromTypeAsync("DiffuseMap", {
+        image: "./Data/Images/BlueOverRed.png",
+      });
+      materialLinear.minificationFilter = TextureMinificationFilter.LINEAR;
+      materialLinear.magnificationFilter = TextureMagnificationFilter.LINEAR;
 
-      const materialNearest = await Material.fromTypeAsync(
-        "DiffuseMap",
-        {
-          image: "./Data/Images/BlueOverRed.png",
-        },
-        {
-          minificationFilter: TextureMinificationFilter.NEAREST,
-          magnificationFilter: TextureMagnificationFilter.NEAREST,
-        },
-      );
+      const materialNearest = await Material.fromTypeAsync("DiffuseMap", {
+        image: "./Data/Images/BlueOverRed.png",
+      });
+      materialNearest.minificationFilter = TextureMinificationFilter.NEAREST;
+      materialNearest.magnificationFilter = TextureMagnificationFilter.NEAREST;
 
       const purple = [127, 0, 127, 255];
 
