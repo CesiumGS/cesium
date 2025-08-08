@@ -4270,19 +4270,19 @@ function render(scene) {
   scene.resolveFramebuffers(passState);
 
   // Test EdgeFramebuffer: Clear to red if enabled
-  if (
-    scene._enableEdgeVisibility &&
-    defined(scene._view.edgeFramebuffer.framebuffer)
-  ) {
-    const originalFramebuffer = passState.framebuffer;
-    passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
-    scene._view.edgeFramebuffer.clear(
-      scene.context,
-      passState,
-      new Color(1.0, 0.0, 0.0, 1.0),
-    );
-    passState.framebuffer = originalFramebuffer;
-  }
+  // if (
+  //   scene._enableEdgeVisibility &&
+  //   defined(scene._view.edgeFramebuffer.framebuffer)
+  // ) {
+  //   const originalFramebuffer = passState.framebuffer;
+  //   passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+  //   scene._view.edgeFramebuffer.clear(
+  //     scene.context,
+  //     passState,
+  //     new Color(1.0, 0.0, 0.0, 1.0),
+  //   );
+  //   passState.framebuffer = originalFramebuffer;
+  // }
 
   // Testing
   // if (scene._enableEdgeVisibility && defined(scene._view.edgeFramebuffer.framebuffer)) {

@@ -1468,8 +1468,13 @@ function loadIndices(
   // after loading and post-processing.
   const outputTypedArrayOnly = loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
-  const outputTypedArray =
+  let outputTypedArray =
     loadAttributesAsTypedArray || loadForCpuOperations || loadForClassification;
+
+  // Allow features to force loading indices as a typed array (e.g. edge visibility test)
+  if (loader._forceLoadIndicesTypedArray === true) {
+    outputTypedArray = true;
+  }
 
   // Determine what to load right now:
   //
@@ -2019,23 +2024,34 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
-  if (defined(edgeVisibilityExtension)) {
-    primitivePlan.needsEdgeVisibility = true;
+  // Edge Visibility Test
+  const testEdgeVisibilityExtension =
+    createTestEdgeVisibilityExtension(gltfPrimitive);
 
-    // Load visibility data
-    const visibilityAccessor =
-      loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
-    if (!defined(visibilityAccessor)) {
-      throw new RuntimeError("Edge visibility accessor not found!");
+  const edgeVisibilityExtension =
+    testEdgeVisibilityExtension ||
+    extensions.EXT_mesh_primitive_edge_visibility;
+  const hasEdgeVisibility = defined(edgeVisibilityExtension);
+  if (hasEdgeVisibility) {
+    console.log("Extension data:", edgeVisibilityExtension);
+    if (testEdgeVisibilityExtension) {
+      console.log("GltfLoader: Using test edge visibility data");
+      primitive.edgeVisibility = {
+        visibility: edgeVisibilityExtension.testVisibilityData,
+        material: edgeVisibilityExtension.material,
+      };
+    } else {
+      const visibilityAccessor =
+        loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
+      if (!defined(visibilityAccessor)) {
+        throw new RuntimeError("Edge visibility accessor not found!");
+      }
+      const visibilityValues = loadAccessor(loader, visibilityAccessor);
+      primitive.edgeVisibility = {
+        visibility: visibilityValues,
+        material: edgeVisibilityExtension.material,
+      };
     }
-    const visibilityValues = loadAccessor(loader, visibilityAccessor);
-
-    // Store edge visibility data in primitive plan
-    primitivePlan.edgeVisibility = {
-      visibility: visibilityValues,
-      material: edgeVisibilityExtension.material,
-    };
 
     // Load silhouette normals if present
     if (defined(edgeVisibilityExtension.silhouetteNormals)) {
@@ -2125,6 +2141,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
 
   const indices = gltfPrimitive.indices;
   if (defined(indices)) {
+    // If edge visibility is present, force indices typed array to be loaded.
+    if (hasEdgeVisibility) {
+      loader._forceLoadIndicesTypedArray = true;
+    }
     const indicesPlan = loadIndices(
       loader,
       indices,
@@ -2178,6 +2198,48 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   primitive.primitiveType = primitiveType;
 
   return primitive;
+}
+
+// temp test for edge visibility
+function createTestEdgeVisibilityExtension(gltfPrimitive) {
+  if (
+    !defined(gltfPrimitive.indices) ||
+    gltfPrimitive.mode !== PrimitiveType.TRIANGLES
+  ) {
+    return undefined;
+  }
+
+  console.log(
+    "Creating test edge visibility data for primitive with indices:",
+    gltfPrimitive.indices,
+  );
+
+  // Test case 1: Simple 2-triangle quad with shared silhouette edge
+  // Triangles: [0,1,2, 0,2,3]
+  // Edge visibility: [VISIBLE,HIDDEN,SILHOUETTE, HIDDEN,VISIBLE,HIDDEN] = [2,0,1, 0,2,0]
+  // Expected bytes: [18, 2] = [00010010, 00000010]
+  const testVisibilityBuffer1 = new Uint8Array([18, 2]);
+
+  // Test case 2 and 3 available if needed:
+  // const testVisibilityBuffer2 = new Uint8Array([226, 2]);
+  // const testVisibilityBuffer3 = new Uint8Array([170]);
+
+  // Use test case 1 by default - can be changed for different tests
+  const testVisibilityBuffer = testVisibilityBuffer1;
+
+  console.log("Test visibility buffer:", Array.from(testVisibilityBuffer));
+  console.log(
+    "Test visibility buffer (binary):",
+    Array.from(testVisibilityBuffer)
+      .map((b) => b.toString(2).padStart(8, "0"))
+      .join(" "),
+  );
+
+  return {
+    testVisibilityData: testVisibilityBuffer,
+    material: undefined,
+    visibility: 999,
+  };
 }
 
 function loadPrimitiveOutline(loader, outlineExtension) {

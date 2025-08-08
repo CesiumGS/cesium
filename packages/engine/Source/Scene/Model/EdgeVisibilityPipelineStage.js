@@ -1,7 +1,7 @@
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
+// import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import EdgeVisibilityGenerator from "./EdgeVisibilityGenerator.js";
-import EdgeVisibilityStageVS from "../../Shaders/Model/EdgeVisibilityStageVS.js";
-import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
+// import EdgeVisibilityStageVS from "../../Shaders/Model/EdgeVisibilityStageVS.js";
+// import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
 import defined from "../../Core/defined.js";
 
 /**
@@ -17,8 +17,6 @@ const EdgeVisibilityPipelineStage = {
 };
 
 /**
- * Process a primitive. This modifies the following parts of the render
- * resources:
  * <ul>
  *  <li>Generates edge geometry from the visibility data</li>
  *  <li>Creates separate draw commands for edges assigned to CESIUM_3D_TILE_EDGES pass</li>
@@ -39,16 +37,23 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
-  const shaderBuilder = renderResources.shaderBuilder;
+  console.log(
+    "EdgeVisibilityPipelineStage: Processing primitive with edge visibility data",
+  );
+  console.log("Edge visibility data:", primitive.edgeVisibility);
+
+  // const shaderBuilder = renderResources.shaderBuilder;
   // const uniformMap = renderResources.uniformMap;
 
-  shaderBuilder.addDefine(
-    "HAS_EDGE_VISIBILITY",
-    undefined,
-    ShaderDestination.BOTH,
-  );
+  // COMMENTED OUT FOR CONSOLE LOGGING ONLY - NO RENDERING
+  // shaderBuilder.addDefine(
+  //   "HAS_EDGE_VISIBILITY",
+  //   undefined,
+  //   ShaderDestination.BOTH,
+  // );
 
   // Generate edge geometry data
+  console.log("EdgeVisibilityPipelineStage: Generating edge geometry...");
   const edgeGeometry = EdgeVisibilityGenerator.generateEdgeGeometry(
     primitive,
     frameState.context,
@@ -56,32 +61,21 @@ EdgeVisibilityPipelineStage.process = function (
 
   // Store edge geometry data for ModelDrawCommand to use
   if (defined(edgeGeometry)) {
-    renderResources.edgeGeometry = edgeGeometry;
+    // renderResources.edgeGeometry = edgeGeometry;
+    console.log(
+      "EdgeVisibilityPipelineStage: Edge geometry generated successfully",
+    );
+    console.log("Edge geometry details:", {
+      indexCount: edgeGeometry.indexCount,
+      primitiveType: edgeGeometry.primitiveType,
+    });
+  } else {
+    console.log("EdgeVisibilityPipelineStage: No edge geometry generated");
   }
 
-  // TODO: get information from model maybe?
-  // const model = renderResources.model;
-  // shaderBuilder.addUniform(
-  //   "vec4",
-  //   "model_edgeColor",
-  //   ShaderDestination.FRAGMENT,
-  // );
-  // uniformMap.model_edgeColor = function () {
-  //   return model.edgeColor || [0.0, 0.0, 0.0, 1.0];
-  // };
-
-  // shaderBuilder.addUniform(
-  //   "bool",
-  //   "model_showEdges",
-  //   ShaderDestination.FRAGMENT,
-  // );
-  // uniformMap.model_showEdges = function () {
-  //   return model.showEdges !== false;
-  // };
-
-  // Add shader code for edge rendering
-  shaderBuilder.addVertexLines(EdgeVisibilityStageVS);
-  shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
+  // COMMENTED OUT - Add shader code for edge rendering
+  // shaderBuilder.addVertexLines(EdgeVisibilityStageVS);
+  // shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
 };
 
 export default EdgeVisibilityPipelineStage;
