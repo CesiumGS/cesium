@@ -19,14 +19,16 @@
     }
 
     .search-input {
-      /* Button width + padding on each side of it */
-      padding-inline-end: calc(16px + 2 * 4px);
+      --button-width: calc(12px + 2 * var(--stratakit-space-x05));
+      padding-inline-end: calc(
+        var(--button-width) + 2 * var(--stratakit-space-x1)
+      );
     }
 
     .clear-btn {
       position: absolute;
-      right: 4px;
-      padding: 2px;
+      right: var(--stratakit-space-x1);
+      padding: var(--stratakit-space-x05);
       min-block-size: unset;
 
       svg {
@@ -50,7 +52,7 @@
   }
 
   .empty-list {
-    padding: 12px;
+    padding: var(--stratakit-space-x3);
     border: 1px solid var(--stratakit-color-border-neutral-muted);
     border-radius: 8px;
     text-align: center;
