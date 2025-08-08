@@ -22,6 +22,7 @@ export default [
       "packages/sandcastle/public/",
       "packages/sandcastle/templates/Sandcastle.d.ts",
       "packages/sandcastle/templates/Sandcastle.js",
+      "packages/sandcastle/gallery/pagefind/",
       "packages/engine/Source/Scene/GltfPipeline/**/*",
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",
@@ -39,7 +40,13 @@ export default [
     ...configCesium.configs.node,
   },
   {
-    files: [".github/**/*.js", "scripts/**/*.js", "gulpfile.js", "server.js"],
+    files: [
+      ".github/**/*.js",
+      "scripts/**/*.js",
+      "packages/sandcastle/scripts/**/*.js",
+      "gulpfile.js",
+      "server.js",
+    ],
     ...configCesium.configs.node,
     languageOptions: {
       ...configCesium.configs.node.languageOptions,
@@ -48,6 +55,7 @@ export default [
   },
   {
     files: ["packages/**/*.js", "Apps/**/*.js", "Specs/**/*.js", "**/*.html"],
+    ignores: ["packages/sandcastle/scripts/**/*.js"],
     ...configCesium.configs.browser,
     plugins: { html },
     rules: {

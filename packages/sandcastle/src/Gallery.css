@@ -3,6 +3,10 @@
   flex-direction: column;
   height: 100%;
 
+  &.hidden {
+    display: none;
+  }
+
   .filters {
     display: flex;
     align-items: center;
@@ -13,6 +17,28 @@
     h2 {
       font-size: large;
     }
+
+    .search-input {
+      /* Button width + padding on each side of it */
+      padding-inline-end: calc(16px + 2 * 4px);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 4px;
+      padding: 2px;
+      min-block-size: unset;
+
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+
+    .tag-select {
+      /* This helps prevent needing to resize when tags load */
+      min-width: 140px;
+    }
   }
 
   .list {
@@ -21,6 +47,13 @@
     padding: var(--stratakit-space-x2);
     gap: var(--stratakit-space-x4);
     overflow-y: auto;
+  }
+
+  .empty-list {
+    padding: 12px;
+    border: 1px solid var(--stratakit-color-border-neutral-muted);
+    border-radius: 8px;
+    text-align: center;
   }
 
   .card {

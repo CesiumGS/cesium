@@ -1,5 +1,5 @@
-import { Editor, Monaco, OnChange } from "@monaco-editor/react";
-import { editor, KeyCode, KeyMod } from "monaco-editor";
+import { Editor, Monaco, OnChange, loader } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 import { RefObject, useImperativeHandle, useRef, useState } from "react";
 import * as prettier from "prettier";
 import * as babelPlugin from "prettier/plugins/babel";
@@ -11,6 +11,37 @@ import { Button, Kbd, Tooltip } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { play, textAlignLeft } from "./icons";
 import { setupSandcastleSnippets } from "./setupSandcastleSnippets";
+
+import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
+import JsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
+import CssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
+import HtmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
+import TsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
+
+// this setup is needed for Vite to properly build/load the workers
+// see the readme https://github.com/suren-atoyan/monaco-react#loader-config
+self.MonacoEnvironment = {
+  getWorker(_, label) {
+    if (label === "json") {
+      return new JsonWorker();
+    }
+    if (label === "css" || label === "scss" || label === "less") {
+      return new CssWorker();
+    }
+    if (label === "html" || label === "handlebars" || label === "razor") {
+      return new HtmlWorker();
+    }
+    if (label === "typescript" || label === "javascript") {
+      return new TsWorker();
+    }
+    return new EditorWorker();
+  },
+};
+
+// This ensures we bundle monaco and load locally instead of from the CDN. This allows
+// Sandcastle to work fully "offline" on a local network or in an environment without
+// open network access
+loader.config({ monaco });
 
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
@@ -40,7 +71,7 @@ function SandcastleEditor({
 }) {
   const [activeTab, setActiveTab] = useState<"js" | "html">("js");
 
-  const internalEditorRef = useRef<editor.IStandaloneCodeEditor>(null);
+  const internalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   useImperativeHandle(ref, () => {
     return {
       formatCode() {
@@ -54,7 +85,7 @@ function SandcastleEditor({
   }
 
   function handleEditorDidMount(
-    editor: editor.IStandaloneCodeEditor,
+    editor: monaco.editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) {
     internalEditorRef.current = editor;
@@ -65,6 +96,8 @@ function SandcastleEditor({
         onRunSandcastle();
       },
     });
+
+    const { KeyCode, KeyMod } = monaco;
 
     monaco.editor.addKeybindingRules([
       // Remove some default keybindings that get in the way
