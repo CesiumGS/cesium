@@ -1471,7 +1471,8 @@ function loadIndices(
   let outputTypedArray =
     loadAttributesAsTypedArray || loadForCpuOperations || loadForClassification;
 
-  // Allow features to force loading indices as a typed array (e.g. edge visibility test)
+  // TODO: Allow features to force loading indices as a typed array
+  // edge visibility test. Do we need to declare loadForEdgeVisibility?
   if (loader._forceLoadIndicesTypedArray === true) {
     outputTypedArray = true;
   }
@@ -2053,7 +2054,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       };
     }
 
-    // Load silhouette normals if present
+    // Load silhouette normals
     if (defined(edgeVisibilityExtension.silhouetteNormals)) {
       const silhouetteNormalsAccessor =
         loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
@@ -2062,12 +2063,11 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
           loader,
           silhouetteNormalsAccessor,
         );
-        primitivePlan.edgeVisibility.silhouetteNormals =
-          silhouetteNormalsValues;
+        primitive.edgeVisibility.silhouetteNormals = silhouetteNormalsValues;
       }
     }
 
-    // Load line strings if present
+    // Load line strings
     if (defined(edgeVisibilityExtension.lineStrings)) {
       primitivePlan.edgeVisibility.lineStrings =
         edgeVisibilityExtension.lineStrings;
@@ -2158,6 +2158,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     if (defined(indicesPlan)) {
       primitivePlan.indicesPlan = indicesPlan;
       primitive.indices = indicesPlan.indices;
+    }
+
+    if (hasEdgeVisibility) {
+      loader._forceLoadIndicesTypedArray = undefined;
     }
   }
 
