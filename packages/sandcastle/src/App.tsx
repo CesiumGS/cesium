@@ -4,6 +4,7 @@ import {
   ReactNode,
   RefObject,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useReducer,
@@ -26,7 +27,7 @@ import {
   moon,
   share as shareIcon,
   script,
-  settings,
+  settings as settingsIcon,
   sun,
   windowPopout,
 } from "./icons.ts";
@@ -35,8 +36,18 @@ import {
   ConsoleMessageType,
   ConsoleMirror,
 } from "./ConsoleMirror.tsx";
-import { useLocalStorage } from "./util/useLocalStorage.ts";
 import { getBaseUrl } from "./util/getBaseUrl.ts";
+import { SettingsModal } from "./SettingsModal.tsx";
+import {
+  Popover,
+  PopoverArrow,
+  PopoverDescription,
+  PopoverDisclosure,
+  PopoverHeading,
+  PopoverProvider,
+} from "@ariakit/react";
+import { SettingsContext } from "./SettingsContext.ts";
+import "./Popover.css";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -170,10 +181,7 @@ export type SandcastleAction =
   | { type: "setAndRun"; code?: string; html?: string };
 
 function App() {
-  const [theme, setTheme] = useLocalStorage<"dark" | "light">(
-    "sandcastle/theme",
-    "dark",
-  );
+  const { settings, updateSettings } = useContext(SettingsContext);
   const rightSideRef = useRef<RightSideRef>(null);
   const consoleCollapsedHeight = 26;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
@@ -185,7 +193,10 @@ function App() {
   const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">(
     startOnEditor ? "editor" : "gallery",
   );
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const [title, setTitle] = useState("New Sandcastle");
+  const [description, setDescription] = useState("");
 
   // This is used to avoid a "double render" when loading from the URL
   const [readyForViewer, setReadyForViewer] = useState(false);
@@ -282,6 +293,7 @@ function App() {
     window.history.pushState({}, "", getBaseUrl());
 
     setTitle("New Sandcastle");
+    setDescription("");
   }
 
   function share() {
@@ -335,6 +347,7 @@ function App() {
         html: html,
       });
       setTitle(galleryItem.title);
+      setDescription(galleryItem.description);
       setReadyForViewer(true);
     },
     [galleryItems],
@@ -419,21 +432,31 @@ function App() {
       id="root"
       className="sandcastle-root"
       density="dense"
-      colorScheme={theme}
+      colorScheme={settings.theme}
       synchronizeColorScheme
     >
       <header className="header">
         <a className="logo" href={getBaseUrl()}>
           <img
             src={
-              theme === "dark"
+              settings.theme === "dark"
                 ? "./images/Cesium_Logo_overlay.png"
                 : "./images/Cesium_Logo_Color_Overlay.png"
             }
             style={{ width: "118px" }}
           />
         </a>
-        <div className="metadata">{title}</div>
+        <PopoverProvider>
+          <PopoverDisclosure
+            render={<div className="metadata">{title}</div>}
+            disabled={false}
+          />
+          <Popover className="popover">
+            <PopoverArrow className="arrow" />
+            <PopoverHeading className="heading">{title}</PopoverHeading>
+            <PopoverDescription>{description}</PopoverDescription>
+          </Popover>
+        </PopoverProvider>
         <Button tone="accent" onClick={() => share()}>
           <Icon href={shareIcon} /> Share
         </Button>
@@ -475,20 +498,30 @@ function App() {
         <div className="flex-spacer"></div>
         <Divider />
         <AppBarButton
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onClick={() =>
+            updateSettings({
+              theme: settings.theme === "dark" ? "light" : "dark",
+            })
+          }
           label="Toggle Theme"
         >
-          <Icon href={theme === "dark" ? moon : sun} size="large" />
+          <Icon href={settings.theme === "dark" ? moon : sun} size="large" />
         </AppBarButton>
-        <AppBarButton label="Settings" onClick={() => {}}>
-          <Icon href={settings} size="large" />
+        <AppBarButton
+          label="Settings"
+          onClick={() => {
+            setSettingsOpen(true);
+          }}
+        >
+          <Icon href={settingsIcon} size="large" />
         </AppBarButton>
+        <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
       <Allotment defaultSizes={[40, 60]}>
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
-              darkTheme={theme === "dark"}
+              darkTheme={settings.theme === "dark"}
               onJsChange={(value: string = "") =>
                 dispatch({ type: "setCode", code: value })
               }
