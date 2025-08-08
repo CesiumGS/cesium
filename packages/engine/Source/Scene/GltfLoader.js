@@ -2450,7 +2450,7 @@ function getMeshPrimitives(mesh) {
       // Spec: all primitives must use indexed geometry and a given primitive may appear in at most one group.
       // Spec: all primitives must have same topology.
       if (
-        undefined === thisPrimitive?.indices ||
+        !defined(thisPrimitive?.indices) ||
         thisPrimitive.mode !== primitive.mode
       ) {
         return meshPrimitives;
