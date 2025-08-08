@@ -8,6 +8,10 @@
 
 - Removed the argument fallback in `ITwinData.*` functions. Please switch to the new options argument signature [#12778](https://github.com/CesiumGS/cesium/issues/12778)
 
+#### Additions :tada:
+
+- Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
+
 ## 1.132 - 2025-08-01
 
 ### @cesium/engine
@@ -31,7 +35,6 @@
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
 - Add wrapR property to Sampler and Texture3D, to support the newly added third dimension wrap.[#12701](https://github.com/CesiumGS/cesium/pull/12701)
 - Added the ability to load a specific changeset for iTwin Mesh Exports using `ITwinData.createTilesetFromIModelId` [#12778](https://github.com/CesiumGS/cesium/issues/12778)
-- Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
 
 #### Deprecated :hourglass_flowing_sand:
 
