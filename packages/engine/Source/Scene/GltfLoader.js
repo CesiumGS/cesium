@@ -2422,7 +2422,7 @@ function getMeshPrimitives(mesh) {
     // Spec: the group must not be empty and all indices must be valid array indices into mesh.primitives.
     const firstPrimitiveIndex = group.primitives[0];
     if (
-      undefined === firstPrimitiveIndex ||
+      !defined(firstPrimitiveIndex) ||
       !meshPrimitives[firstPrimitiveIndex]
     ) {
       return meshPrimitives;
