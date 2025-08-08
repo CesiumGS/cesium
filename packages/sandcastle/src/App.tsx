@@ -501,15 +501,23 @@ function App() {
               setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
             />
           )}
-          {leftPanel === "gallery" && (
-            <Gallery
-              demos={galleryItems}
-              loadDemo={(item, switchToCode) => {
-                // Load the gallery item every time it's clicked
-                loadGalleryItem(item.id);
+          <Gallery
+            hidden={leftPanel !== "gallery"}
+            galleryItems={galleryItems}
+            loadDemo={(item, switchToCode) => {
+              // Load the gallery item every time it's clicked
+              loadGalleryItem(item.id);
 
-                const searchParams = new URLSearchParams(
-                  window.location.search,
+              const searchParams = new URLSearchParams(window.location.search);
+              if (
+                !searchParams.has("id") ||
+                (searchParams.has("id") && searchParams.get("id") !== item.id)
+              ) {
+                // only push state if it's not the current url to prevent duplicated in history
+                window.history.pushState(
+                  {},
+                  "",
+                  `${getBaseUrl()}?id=${item.id}`,
                 );
                 if (
                   !searchParams.has("id") ||
@@ -525,9 +533,9 @@ function App() {
                 if (switchToCode) {
                   setLeftPanel("editor");
                 }
-              }}
-            />
-          )}
+              }
+            }}
+          />
         </Allotment.Pane>
         <Allotment.Pane className="right-panel">
           <RightSideAllotment
