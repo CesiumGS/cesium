@@ -4275,7 +4275,7 @@ describe(
         ),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load glTF\nFailed to load index buffer\nindexDatatype is required and must be a valid IndexDatatype constant.",
+        /Failed to load glTF\nFailed to load index buffer\nindexDatatype is required and must be a valid IndexDatatype constant./,
       );
     });
 
