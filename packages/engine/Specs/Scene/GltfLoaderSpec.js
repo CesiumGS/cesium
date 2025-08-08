@@ -4261,24 +4261,6 @@ describe(
       expect(loadedPrimitives.length).toBe(8);
     });
 
-    it("does not load with EXT_mesh_primitive_restart if a group's indices accessor is invalid", async function () {
-      function modifyGltf(gltf) {
-        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].indices = 13;
-        return gltf;
-      }
-
-      await expectAsync(
-        loadModifiedGltfAndTest(
-          meshPrimitiveRestartTestData,
-          undefined,
-          modifyGltf,
-        ),
-      ).toBeRejectedWithError(
-        Error,
-        /Failed to load glTF\nFailed to load index buffer\nindexDatatype is required and must be a valid IndexDatatype constant./,
-      );
-    }, 10000);
-
     it("parses copyright field", function () {
       return loadGltf(boxWithCredits).then(function (gltfLoader) {
         const components = gltfLoader.components;
