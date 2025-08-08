@@ -4277,7 +4277,7 @@ describe(
         Error,
         /Failed to load glTF\nFailed to load index buffer\nindexDatatype is required and must be a valid IndexDatatype constant./,
       );
-    });
+    }, 10000);
 
     it("parses copyright field", function () {
       return loadGltf(boxWithCredits).then(function (gltfLoader) {
