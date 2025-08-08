@@ -126,17 +126,6 @@ describe("ITwinData", () => {
       expect(tilesetSpy).toHaveBeenCalledTimes(1);
       expect(tilesetSpy.calls.mostRecent().args[1]).toEqual(tilesetOptions);
     });
-
-    it("passes tileset options through to the tileset constructor DEPRECATED arguments", async () => {
-      spyOn(ITwinPlatform, "getExports").and.resolveTo({
-        exports: [createMockExport(1, ITwinPlatform.ExportStatus.Complete)],
-      });
-      const tilesetSpy = spyOn(Cesium3DTileset, "fromUrl");
-      const tilesetOptions = { show: false };
-      await ITwinData.createTilesetFromIModelId("imodel-id-1", tilesetOptions);
-      expect(tilesetSpy).toHaveBeenCalledTimes(1);
-      expect(tilesetSpy.calls.mostRecent().args[1]).toEqual(tilesetOptions);
-    });
   });
 
   describe("createTilesetForRealityDataId", () => {
@@ -237,23 +226,6 @@ describe("ITwinData", () => {
         type: ITwinPlatform.RealityDataType.Cesium3DTiles,
         rootDocument: "root/document/path.json",
       });
-
-      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
-        maximumScreenSpaceError: 4,
-      });
-    });
-
-    it("creates a tileset from the constructed blob url using DEPRECATED arguments", async () => {
-      const tilesetUrl =
-        "https://example.com/root/document/path.json?auth=token";
-      getUrlSpy.and.resolveTo(tilesetUrl);
-
-      await ITwinData.createTilesetForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.Cesium3DTiles,
-        "root/document/path.json",
-      );
 
       expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
         maximumScreenSpaceError: 4,
@@ -367,22 +339,6 @@ describe("ITwinData", () => {
       expect(kmlSpy).not.toHaveBeenCalled();
     });
 
-    it("creates a GeoJsonDataSource from the constructed blob url if the type is GeoJSON using DEPRECATED arguments", async () => {
-      const tilesetUrl =
-        "https://example.com/root/document/path.json?auth=token";
-      getUrlSpy.and.resolveTo(tilesetUrl);
-
-      await ITwinData.createDataSourceForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.GeoJSON,
-        "root/document/path.json",
-      );
-
-      expect(geojsonSpy).toHaveBeenCalledOnceWith(tilesetUrl);
-      expect(kmlSpy).not.toHaveBeenCalled();
-    });
-
     it("creates a KmlDataSource from the constructed blob url if the type is KML", async () => {
       const tilesetUrl =
         "https://example.com/root/document/path.json?auth=token";
@@ -394,22 +350,6 @@ describe("ITwinData", () => {
         type: ITwinPlatform.RealityDataType.KML,
         rootDocument: "root/document/path.json",
       });
-
-      expect(kmlSpy).toHaveBeenCalledOnceWith(tilesetUrl);
-      expect(geojsonSpy).not.toHaveBeenCalled();
-    });
-
-    it("creates a KmlDataSource from the constructed blob url if the type is KML using DEPRECATED arguments", async () => {
-      const tilesetUrl =
-        "https://example.com/root/document/path.json?auth=token";
-      getUrlSpy.and.resolveTo(tilesetUrl);
-
-      await ITwinData.createDataSourceForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.KML,
-        "root/document/path.json",
-      );
 
       expect(kmlSpy).toHaveBeenCalledOnceWith(tilesetUrl);
       expect(geojsonSpy).not.toHaveBeenCalled();
@@ -483,15 +423,6 @@ describe("ITwinData", () => {
         iTwinId: "itwin-id-1",
         collectionId: "collection-id-1",
       });
-
-      expect(geojsonSpy).toHaveBeenCalledTimes(1);
-      expect(geojsonSpy.calls.mostRecent().args[0].url).toEqual(
-        "https://api.bentley.com/geospatial-features/itwins/itwin-id-1/ogc/collections/collection-id-1/items?limit=10000&client=CesiumJS",
-      );
-    });
-
-    it("creates a GeoJsonDataSource from the constructed blob url if the type is GeoJSON using DEPRECATED arguments", async () => {
-      await ITwinData.loadGeospatialFeatures("itwin-id-1", "collection-id-1");
 
       expect(geojsonSpy).toHaveBeenCalledTimes(1);
       expect(geojsonSpy.calls.mostRecent().args[0].url).toEqual(
