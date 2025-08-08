@@ -12,12 +12,13 @@
     grid-area: header;
     display: flex;
     align-items: center;
-    padding: 0.5em 1em 0.5em 0.5em;
-    gap: 0.5em;
+    padding: var(--stratakit-space-x2);
+    padding-right: var(--stratakit-space-x4);
+    gap: var(--stratakit-space-x2);
     background: var(--stratakit-color-bg-page-depth);
 
     .metadata {
-      margin-left: 0.5em;
+      margin-left: var(--stratakit-space-x2);
       color: var(--stratakit-color-text-accent-strong);
     }
 
@@ -30,13 +31,13 @@
     grid-area: app-bar;
     display: flex;
     flex-direction: column;
-    padding: 0.5em;
-    gap: 0.5em;
+    padding: var(--stratakit-space-x2);
+    gap: var(--stratakit-space-x2);
     background: var(--stratakit-color-bg-page-depth);
 
     button {
       /* Force buttons to be square */
-      padding: 8px;
+      padding: var(--stratakit-space-x2);
     }
   }
 

@@ -1,0 +1,470 @@
+@layer itwinui.components {
+  /*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+  .stratakit-mimic-button {
+    --✨color--default: var(--stratakit-color-text-neutral-primary);
+    --✨gap: var(--stratakit-space-x1);
+    --✨height: 1.5rem;
+    --✨padding-inline: var(--stratakit-space-x3);
+    --✨padding-block: var(--stratakit-space-x1);
+
+    --✨shadow-border: 0px 0px 0px 1px var(--🥝button-border-color) inset;
+
+    --✨glow--bg-hover: var(--stratakit-color-glow-hue)
+      var(--stratakit-color-bg-glow-base-hover-\%);
+    --✨glow--bg-press: var(--stratakit-color-glow-hue)
+      var(--stratakit-color-bg-glow-base-pressed-\%);
+
+    --✨border--active: var(--stratakit-color-border-accent-strong);
+    --✨bg--active: var(--stratakit-color-bg-glow-on-surface-accent-pressed);
+
+    /* #region Variant: solid */
+    --✨bg--solid-neutral-default: var(--stratakit-color-bg-neutral-base);
+    --✨bg--solid-accent-default: var(--stratakit-color-bg-accent-base);
+    --✨bg--solid-hover: color-mix(
+      in oklch,
+      var(--🥝button-bg--solid-default) 100%,
+      var(--✨glow--bg-hover)
+    );
+    --✨bg--solid-pressed: color-mix(
+      in oklch,
+      var(--🥝button-bg--solid-default) 100%,
+      var(--✨glow--bg-press)
+    );
+    --✨bg--solid-disabled: var(--stratakit-color-bg-glow-on-surface-disabled);
+
+    --✨shadow--solid:
+      var(--stratakit-shadow-button-base-inset), var(--✨shadow-border),
+      var(--stratakit-shadow-button-base-drop);
+
+    --✨border--solid-neutral-default: var(
+      --stratakit-color-border-shadow-base
+    );
+    --✨border--solid-neutral-hover: color-mix(
+      in oklch,
+      var(--✨border--solid-neutral-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-base-hover-\%)
+    );
+    --✨border--solid-neutral-pressed: color-mix(
+      in oklch,
+      var(--✨border--solid-neutral-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-base-pressed-\%)
+    );
+    --✨border--solid-neutral-disabled: transparent;
+
+    --✨border--solid-accent-default: var(
+      --stratakit-color-border-shadow-strong
+    );
+    --✨border--solid-accent-hover: color-mix(
+      in oklch,
+      var(--✨border--solid-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-strong-hover-\%)
+    );
+    --✨border--solid-accent-pressed: color-mix(
+      in oklch,
+      var(--✨border--solid-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-strong-pressed-\%)
+    );
+    --✨border--solid-accent-disabled: transparent;
+    /* #endregion */
+
+    /* #region Variant: outline */
+    --✨bg--outline-default: transparent;
+    --✨bg--outline-hover: var(
+      --stratakit-color-bg-glow-on-surface-neutral-hover
+    );
+    --✨bg--outline-pressed: var(
+      --stratakit-color-bg-glow-on-surface-neutral-pressed
+    );
+    --✨bg--outline-disabled: transparent;
+    --✨border--outline-default: var(--stratakit-color-border-neutral-base);
+    --✨border--outline-hover: color-mix(
+      in oklch,
+      var(--✨border--outline-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-base-hover-\%)
+    );
+    --✨border--outline-pressed: color-mix(
+      in oklch,
+      var(--✨border--outline-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-base-pressed-\%)
+    );
+    --✨border--outline-disabled: var(
+      --stratakit-color-border-glow-on-surface-disabled
+    );
+
+    --✨bg--outline-accent-default: transparent;
+    --✨bg--outline-accent-hover: var(
+      --stratakit-color-bg-glow-on-surface-accent-hover
+    );
+    --✨bg--outline-accent-pressed: var(
+      --stratakit-color-bg-glow-on-surface-accent-pressed
+    );
+    --✨bg--outline-accent-disabled: transparent;
+
+    --✨color--outline-accent-default: var(
+      --stratakit-color-text-accent-strong
+    );
+    --✨color--outline-accent-hover: color-mix(
+      in oklch,
+      var(--✨color--outline-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-text-glow-strong-hover-\%)
+    );
+    --✨color--outline-accent-pressed: color-mix(
+      in oklch,
+      var(--✨color--outline-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-text-glow-strong-pressed-\%)
+    );
+
+    --✨icon--outline-accent-default: var(--stratakit-color-icon-accent-strong);
+    --✨icon--outline-accent-hover: color-mix(
+      in oklch,
+      var(--✨icon--outline-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-icon-glow-strong-hover-\%)
+    );
+    --✨icon--outline-accent-pressed: color-mix(
+      in oklch,
+      var(--✨icon--outline-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-icon-glow-strong-pressed-\%)
+    );
+
+    --✨border--outline-accent-default: var(
+      --stratakit-color-border-accent-base
+    );
+    --✨border--outline-accent-hover: color-mix(
+      in oklch,
+      var(--✨border--outline-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-strong-hover-\%)
+    );
+    --✨border--outline-accent-pressed: color-mix(
+      in oklch,
+      var(--✨border--outline-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-strong-pressed-\%)
+    );
+    --✨border--outline-accent-disabled: var(
+      --stratakit-color-border-glow-on-surface-disabled
+    );
+    /* #endregion */
+
+    /* #region Variant: ghost */
+    --✨bg--ghost-default: transparent;
+    --✨bg--ghost-hover: var(
+      --stratakit-color-bg-glow-on-surface-neutral-hover
+    );
+    --✨bg--ghost-pressed: var(
+      --stratakit-color-bg-glow-on-surface-neutral-pressed
+    );
+    --✨bg--ghost-disabled: transparent;
+
+    --✨bg--ghost-accent-default: transparent;
+    --✨bg--ghost-accent-hover: var(
+      --stratakit-color-bg-glow-on-surface-accent-hover
+    );
+    --✨bg--ghost-accent-pressed: var(
+      --stratakit-color-bg-glow-on-surface-accent-pressed
+    );
+    --✨bg--ghost-accent-disabled: transparent;
+
+    --✨color--ghost-accent-default: var(--stratakit-color-text-accent-strong);
+    --✨color--ghost-accent-hover: color-mix(
+      in oklch,
+      var(--✨color--ghost-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-text-glow-strong-hover-\%)
+    );
+    --✨color--ghost-accent-pressed: color-mix(
+      in oklch,
+      var(--✨color--ghost-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-text-glow-strong-pressed-\%)
+    );
+    --✨icon--ghost-accent-default: var(--stratakit-color-icon-accent-strong);
+    --✨icon--ghost-accent-hover: color-mix(
+      in oklch,
+      var(--✨icon--ghost-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-icon-glow-strong-hover-\%)
+    );
+    --✨icon--ghost-accent-pressed: color-mix(
+      in oklch,
+      var(--✨icon--ghost-accent-default) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-icon-glow-strong-pressed-\%)
+    );
+    /* #endregion */
+
+    @layer base {
+      text-decoration: none;
+      line-height: 1.2;
+      user-select: none;
+      cursor: pointer;
+      font-size: var(--stratakit-font-size-12);
+      font-weight: 500;
+      border: none;
+      position: relative;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      gap: var(--✨gap);
+
+      min-block-size: var(--✨height);
+      border-radius: 4px;
+      padding-inline: var(--🥝button-padding-inline, var(--✨padding-inline));
+      padding-block: var(--✨padding-block);
+      --🥝ghost-inline-offset: var(--✨padding-inline);
+      --🥝ghost-block-offset: var(--✨padding-block);
+
+      background-color: var(--🥝button-background-color);
+      box-shadow: var(--✨shadow-border);
+      color: var(--🥝button-color, var(--✨color--default));
+      transition: background-color 150ms ease-out;
+      -webkit-tap-highlight-color: var(
+        --stratakit-color-bg-glow-on-surface-neutral-pressed
+      );
+      --🥝icon-color: var(
+          --🌀button-state--default,
+          var(--stratakit-color-icon-neutral-base)
+        )
+        var(--🌀button-state--hover, var(--stratakit-color-icon-neutral-hover))
+        var(
+          --🌀button-state--pressed,
+          var(--stratakit-color-icon-neutral-hover)
+        )
+        var(--🌀button-state--active, var(--stratakit-color-icon-accent-strong));
+    }
+
+    @layer modifiers {
+      &:where([data-kiwi-variant="solid"]) {
+        --🥝button-background-color: var(
+            --🌀button-state--default,
+            var(--🥝button-bg--solid-default)
+          )
+          var(--🌀button-state--hover, var(--✨bg--solid-hover))
+          var(--🌀button-state--pressed, var(--✨bg--solid-pressed))
+          var(--🌀button-state--active, var(--✨bg--active))
+          var(--🌀button-state--disabled, var(--✨bg--solid-disabled));
+        box-shadow: var(--🌀button-state--default, var(--✨shadow--solid))
+          var(--🌀button-state--hover, var(--✨shadow--solid))
+          var(--🌀button-state--pressed, var(--✨shadow-border))
+          var(--🌀button-state--active, var(--✨shadow-border))
+          var(--🌀button-state--disabled, none);
+
+        &:where([data-kiwi-tone="neutral"]) {
+          --🥝button-bg--solid-default: var(--✨bg--solid-neutral-default);
+          --🥝button-border-color: var(
+              --🌀button-state--default,
+              var(--✨border--solid-neutral-default)
+            )
+            var(--🌀button-state--hover, var(--✨border--solid-neutral-hover))
+            var(
+              --🌀button-state--pressed,
+              var(--✨border--solid-neutral-pressed)
+            )
+            var(
+              --🌀button-state--disabled,
+              var(--✨border--solid-neutral-disabled)
+            );
+        }
+
+        &:where([data-kiwi-tone="accent"]) {
+          --🥝button-bg--solid-default: var(--✨bg--solid-accent-default);
+          --🥝button-border-color: var(
+              --🌀button-state--default,
+              var(--✨border--solid-accent-default)
+            )
+            var(--🌀button-state--hover, var(--✨border--solid-accent-hover))
+            var(
+              --🌀button-state--pressed,
+              var(--✨border--solid-accent-pressed)
+            )
+            var(
+              --🌀button-state--disabled,
+              var(--✨border--solid-accent-disabled)
+            );
+
+          --🥝button-color: var(--stratakit-color-text-neutral-emphasis);
+          --🥝icon-color: var(--stratakit-color-icon-neutral-emphasis);
+          -webkit-tap-highlight-color: var(
+            --stratakit-color-bg-glow-on-surface-accent-pressed
+          );
+        }
+      }
+
+      &:where([data-kiwi-variant="outline"]) {
+        &:where([data-kiwi-tone="neutral"]) {
+          --🥝button-background-color: var(
+              --🌀button-state--default,
+              var(--✨bg--outline-default)
+            )
+            var(--🌀button-state--hover, var(--✨bg--outline-hover))
+            var(--🌀button-state--pressed, var(--✨bg--outline-pressed))
+            var(--🌀button-state--active, var(--✨bg--active))
+            var(--🌀button-state--disabled, var(--✨bg--outline-disabled));
+          --🥝button-border-color: var(
+              --🌀button-state--default,
+              var(--✨border--outline-default)
+            )
+            var(--🌀button-state--hover, var(--✨border--outline-hover))
+            var(--🌀button-state--pressed, var(--✨border--outline-pressed))
+            var(--🌀button-state--disabled, var(--✨border--outline-disabled));
+        }
+
+        &:where([data-kiwi-tone="accent"]) {
+          --🥝button-background-color: var(
+              --🌀button-state--default,
+              var(--✨bg--outline-accent-default)
+            )
+            var(--🌀button-state--hover, var(--✨bg--outline-accent-hover))
+            var(--🌀button-state--pressed, var(--✨bg--outline-accent-pressed))
+            var(--🌀button-state--active, var(--✨bg--active))
+            var(
+              --🌀button-state--disabled,
+              var(--✨bg--outline-accent-disabled)
+            );
+          --🥝button-border-color: var(
+              --🌀button-state--default,
+              var(--✨border--outline-accent-default)
+            )
+            var(--🌀button-state--hover, var(--✨border--outline-accent-hover))
+            var(
+              --🌀button-state--pressed,
+              var(--✨border--outline-accent-pressed)
+            )
+            var(
+              --🌀button-state--disabled,
+              var(--✨border--outline-accent-disabled)
+            );
+          --🥝button-color: var(
+              --🌀button-state--default,
+              var(--✨color--outline-accent-default)
+            )
+            var(--🌀button-state--hover, var(--✨color--outline-accent-hover))
+            var(
+              --🌀button-state--pressed,
+              var(--✨color--outline-accent-pressed)
+            );
+          --🥝icon-color: var(
+              --🌀button-state--default,
+              var(--✨icon--outline-accent-default)
+            )
+            var(--🌀button-state--hover, var(--✨icon--outline-accent-hover))
+            var(
+              --🌀button-state--pressed,
+              var(--✨icon--outline-accent-pressed)
+            );
+        }
+      }
+
+      &:where([data-kiwi-variant="ghost"]) {
+        --🥝button-border-color: transparent;
+
+        &:where([data-kiwi-tone="neutral"]) {
+          --🥝button-background-color: var(
+              --🌀button-state--default,
+              var(--✨bg--ghost-default)
+            )
+            var(--🌀button-state--hover, var(--✨bg--ghost-hover))
+            var(--🌀button-state--pressed, var(--✨bg--ghost-pressed))
+            var(--🌀button-state--active, var(--✨bg--active))
+            var(--🌀button-state--disabled, var(--✨bg--ghost-disabled));
+        }
+
+        &:where([data-kiwi-tone="accent"]) {
+          --🥝button-background-color: var(
+              --🌀button-state--default,
+              var(--✨bg--ghost-accent-default)
+            )
+            var(--🌀button-state--hover, var(--✨bg--ghost-accent-hover))
+            var(--🌀button-state--pressed, var(--✨bg--ghost-accent-pressed))
+            var(--🌀button-state--active, var(--✨bg--active))
+            var(--🌀button-state--disabled, var(--✨bg--ghost-accent-disabled));
+          --🥝button-color: var(
+              --🌀button-state--default,
+              var(--✨color--ghost-accent-default)
+            )
+            var(--🌀button-state--hover, var(--✨color--ghost-accent-hover))
+            var(--🌀button-state--pressed, var(--✨color--ghost-accent-pressed));
+          --🥝icon-color: var(
+              --🌀button-state--default,
+              var(--✨icon--ghost-accent-default)
+            )
+            var(--🌀button-state--hover, var(--✨icon--ghost-accent-hover))
+            var(--🌀button-state--pressed, var(--✨icon--ghost-accent-pressed));
+        }
+      }
+    }
+
+    @layer states {
+      @media (any-hover: hover) {
+        &:where(:hover) {
+          --🌀button-state: var(--🌀button-state--hover);
+        }
+      }
+
+      /* Reuse hover state when an associated popover is open. */
+      &:where([data-has-popover-open]) {
+        --🌀button-state: var(--🌀button-state--hover);
+      }
+
+      &:where(:active) {
+        --🌀button-state: var(--🌀button-state--pressed);
+      }
+
+      &:where([aria-pressed="true"]) {
+        --🌀button-state: var(--🌀button-state--active);
+        --🥝button-border-color: var(--✨border--active);
+      }
+
+      &:where(:disabled, [aria-disabled="true"]) {
+        --🌀button-state: var(--🌀button-state--disabled);
+        color: var(--stratakit-color-text-neutral-disabled);
+        cursor: not-allowed;
+        -webkit-tap-highlight-color: transparent;
+        --🥝icon-color: var(--stratakit-color-icon-neutral-disabled);
+      }
+    }
+
+    @layer base.🌀 {
+      /* Cyclic toggles for default/hover/pressed/active/disabled states. See https://kizu.dev/cyclic-toggles/ */
+      --🌀button-state: var(--🌀button-state--default);
+      --🌀button-state--default: var(--🌀button-state,);
+      --🌀button-state--hover: var(--🌀button-state,);
+      --🌀button-state--pressed: var(--🌀button-state,);
+      --🌀button-state--active: var(--🌀button-state,);
+      --🌀button-state--disabled: var(--🌀button-state,);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .stratakit-mimic-button {
+      background-color: ButtonFace;
+      border: 1px solid ButtonBorder;
+      color: ButtonText;
+
+      &:where([aria-pressed="true"]) {
+        background-color: SelectedItem;
+        color: SelectedItemText;
+      }
+
+      &:where(:disabled, [aria-disabled="true"]) {
+        border-color: GrayText;
+        color: GrayText;
+      }
+    }
+  }
+}

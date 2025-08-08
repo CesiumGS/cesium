@@ -1,0 +1,200 @@
+@layer itwinui.components {
+  /*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+  .stratakit-mimic-switch {
+    --✨width: 2rem;
+    --✨thumb-size: 1rem;
+
+    --✨radius: 9999px;
+    --✨checked-translateX: 75%;
+    --✨pressed-scaleX: 1.75;
+
+    --✨shadow-border: 0px 0px 0px 1px var(--stratakit-color-border-shadow-base)
+      inset;
+
+    --✨glow--border-hover: var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-base-hover-\%);
+    --✨glow--border-press: var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-base-pressed-\%);
+    --✨glow--border-checked: var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-strong-hover-\%);
+    --✨glow--bg-hover: var(--stratakit-color-glow-hue)
+      var(--stratakit-color-bg-glow-base-hover-\%);
+    --✨glow--bg-checked-hover: var(--stratakit-color-glow-hue)
+      var(--stratakit-color-bg-glow-strong-hover-\%);
+
+    --✨bg--default: var(--stratakit-color-bg-page-base);
+    --✨bg--hover: color-mix(
+      in oklch,
+      var(--✨bg--default) 100%,
+      var(--✨glow--bg-hover)
+    );
+    --✨bg--checked: var(--stratakit-color-bg-accent-base);
+    --✨bg--checked-hover: color-mix(
+      in oklch,
+      var(--✨bg--checked) 100%,
+      var(--✨glow--bg-checked-hover)
+    );
+
+    --✨border--default: var(--stratakit-color-border-neutral-base);
+    --✨border--hover: color-mix(
+      in oklch,
+      var(--✨border--default) 100%,
+      var(--✨glow--border-hover)
+    );
+    --✨border--pressed: color-mix(
+      in oklch,
+      var(--✨border--default) 100%,
+      var(--✨glow--border-press)
+    );
+    --✨border--checked: color-mix(
+      in oklch,
+      var(--✨bg--checked) 100%,
+      var(--✨glow--border-checked)
+    );
+    --✨border--disabled: var(
+      --stratakit-color-border-glow-on-surface-disabled
+    );
+
+    @layer base {
+      appearance: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+
+      display: inline-grid;
+      align-items: center;
+
+      position: relative;
+      border-radius: var(--✨radius);
+      inline-size: var(--✨width);
+      block-size: auto; /* Necessary to override iOS Safari UA styles */
+
+      background-color: var(--🌀switch-state--default, var(--✨bg--default))
+        var(--🌀switch-state--hover, var(--✨bg--hover))
+        var(--🌀switch-state--pressed, var(--✨bg--hover))
+        var(--🌀switch-state--checked, var(--✨bg--checked))
+        var(--🌀switch-state--checked-hover, var(--✨bg--checked-hover))
+        var(--🌀switch-state--disabled, var(--✨bg--default));
+      border-color: var(--🌀switch-state--default, var(--✨border--default))
+        var(--🌀switch-state--hover, var(--✨border--hover))
+        var(--🌀switch-state--pressed, var(--✨border--pressed))
+        var(--🌀switch-state--checked, var(--✨border--checked))
+        var(--🌀switch-state--checked-hover, var(--✨border--checked))
+        var(--🌀switch-state--disabled, var(--✨border--disabled));
+      transition: all 150ms ease-out;
+      transition-property: background-color, border-color;
+      -webkit-tap-highlight-color: var(
+        --stratakit-color-bg-glow-on-surface-accent-pressed
+      );
+
+      &::before,
+      &::after {
+        content: "";
+        display: block;
+        grid-area: 1 / 1 / -1 / -1;
+      }
+
+      /* This pseudo-element increases the tap target size so it's >=24px tall  */
+      &::before {
+        position: absolute;
+        inline-size: var(--✨width);
+        block-size: var(--stratakit-space-x6);
+        margin: -1px; /* account for border */
+      }
+
+      /* This pseudo-element creates the "thumb" */
+      &::after {
+        block-size: var(--✨thumb-size);
+        inline-size: var(--✨thumb-size);
+        margin: calc(0.125rem - 1px) /* sizing-2 - 1px to account for border */;
+        background-color: var(--🥝switch-thumb-color);
+        box-shadow:
+          var(--stratakit-shadow-button-base-inset), var(--✨shadow-border),
+          var(--stratakit-shadow-button-base-drop);
+        border-radius: var(--🥝switch-thumb-radius, var(--✨radius));
+        transform-origin: left;
+        transform: var(--🥝switch-thumb-transform);
+
+        @media (prefers-reduced-motion: no-preference) {
+          transition: all 150ms ease-out;
+          transition-property: transform, border-radius;
+          will-change: transform, border-radius;
+        }
+      }
+    }
+
+    @layer states {
+      --🥝switch-thumb-color: var(--stratakit-color-bg-neutral-inverse);
+
+      @media (any-hover: hover) {
+        &:where(:hover) {
+          --🌀switch-state: var(--🌀switch-state--hover);
+        }
+      }
+
+      &:where(:checked, [aria-checked="true"]) {
+        --🌀switch-state: var(--🌀switch-state--checked);
+        --🥝switch-thumb-transform: translateX(var(--✨checked-translateX));
+
+        @media (any-hover: hover) {
+          &:where(:hover) {
+            --🌀switch-state: var(--🌀switch-state--checked-hover);
+          }
+        }
+      }
+
+      &:where(:active) {
+        --🌀switch-state: var(--🌀switch-state--pressed);
+
+        /* https://css-tricks.com/various-methods-for-expanding-a-box-while-preserving-the-border-radius/#aa-changing-scale */
+        --🥝switch-thumb-transform: scaleX(var(--✨pressed-scaleX));
+        --🥝switch-thumb-radius: calc(
+            var(--✨radius) / var(--✨pressed-scaleX)
+          ) /
+          var(--✨radius);
+      }
+
+      &:where(:disabled, [aria-disabled="true"]) {
+        --🌀switch-state: var(--🌀switch-state--disabled);
+        --🥝switch-thumb-color: var(--stratakit-color-icon-neutral-disabled);
+        cursor: not-allowed;
+        -webkit-tap-highlight-color: transparent;
+
+        &::after {
+          box-shadow: none;
+        }
+      }
+    }
+
+    @layer base.🌀 {
+      /* Cyclic toggles for default/hover/pressed/checked/checked+hover states. See https://kizu.dev/cyclic-toggles/ */
+      --🌀switch-state: var(--🌀switch-state--default);
+      --🌀switch-state--default: var(--🌀switch-state,);
+      --🌀switch-state--hover: var(--🌀switch-state,);
+      --🌀switch-state--pressed: var(--🌀switch-state,);
+      --🌀switch-state--checked: var(--🌀switch-state,);
+      --🌀switch-state--checked-hover: var(--🌀switch-state,);
+      --🌀switch-state--disabled: var(--🌀switch-state,);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .stratakit-switch {
+      border-color: CanvasText;
+      --🥝switch-thumb-color: CanvasText;
+
+      &:where(:checked, [aria-checked="true"]) {
+        background-color: SelectedItem;
+        --🥝switch-thumb-color: SelectedItemText;
+      }
+
+      &:where(:disabled, [aria-disabled="true"]) {
+        background-color: Canvas;
+        border-color: GrayText;
+        --🥝switch-thumb-color: GrayText;
+      }
+    }
+  }
+}

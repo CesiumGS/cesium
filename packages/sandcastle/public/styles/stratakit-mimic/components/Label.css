@@ -1,0 +1,31 @@
+@layer itwinui.components {
+  /*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+  .stratakit-mimic-label {
+    @layer base {
+      color: var(--stratakit-color-text-neutral-secondary);
+      cursor: default;
+      font-size: var(--stratakit-font-size-12);
+
+      &:is(label) {
+        cursor: pointer;
+        -webkit-tap-highlight-color: var(
+          --stratakit-color-bg-glow-on-surface-neutral-pressed
+        );
+      }
+    }
+
+    @layer states {
+      &:has(+ :where(:disabled, [aria-disabled="true"])) {
+        color: var(--stratakit-color-text-neutral-disabled);
+
+        &:is(label) {
+          cursor: not-allowed;
+          -webkit-tap-highlight-color: transparent;
+        }
+      }
+    }
+  }
+}

@@ -41,15 +41,13 @@
     />
     <style>
       /*
-      * Minimal styles copied from the bucket.css styleshee to avoid FOUC reflow
+      * Minimal styles copied from the bucket.css stylesheet to avoid FOUC and reflow
       */
       html {
         height: 100%;
       }
 
       body {
-        background: #000;
-        color: #eee;
         font-family: sans-serif;
         font-size: 9pt;
         padding: 0;
@@ -58,29 +56,30 @@
         height: 100%;
         overflow: hidden;
 
-        background-image: var(--_rings), var(--_gradient);
+        /* Matches --stratakit-color-text-neutral-primary */
+        color: oklch(99.06% 0.002 247.84);
 
-        /* TODO: these should pull from the stratakit directly somehow eventually */
-        --stratakit-color-border-neutral-muted: oklch(91.52% 0.005 258.33);
-        --stratakit-color-bg-page-base: oklch(99.06% 0.002 247.84);
-        --stratakit-color-bg-page-depth: oklch(94.86% 0.002 247.84);
-
-        --stratakit-color-border-neutral-muted: oklch(32.63% 0.014 268.32);
-        --stratakit-color-bg-page-base: oklch(24.37% 0.006 268.32);
-        --stratakit-color-bg-page-depth: oklch(22.52% 0.005 268.32);
+        /* Matches --stratakit-color-border-neutral-muted */
+        --ring-color: oklch(32.63% 0.014 268.32);
+        /* Matches --stratakit-color-bg-page-depth */
+        --bg-dark: oklch(22.52% 0.005 268.32);
+        /* Matches --stratakit-color-bg-path-base */
+        --bg-lighter: oklch(24.37% 0.006 268.32);
 
         --_rings: repeating-radial-gradient(
           circle at center,
-          var(--stratakit-color-border-neutral-muted) 1px,
-          var(--stratakit-color-border-neutral-muted) 3px,
+          var(--ring-color) 1px,
+          var(--ring-color) 3px,
           transparent 3px,
           transparent 25px
         );
         --_gradient: linear-gradient(
           180deg,
-          var(--stratakit-color-bg-page-base) 0%,
-          var(--stratakit-color-bg-page-depth) 100%
+          var(--bg-lighter) 0%,
+          var(--bg-dark) 100%
         );
+
+        background-image: var(--_rings), var(--_gradient);
       }
 
       #loadingOverlay {
@@ -98,6 +97,8 @@
         position: relative;
         top: 50%;
         margin-top: -0.5em;
+        font-size: 2em;
+        font-weight: bold;
       }
 
       .sandcastle-loading #loadingOverlay {
@@ -108,6 +109,12 @@
         display: none;
       }
     </style>
+    <script type="module">
+      import { unstable_loadStyles } from "@stratakit/foundations";
+
+      unstable_loadStyles(document);
+    </script>
+    <link rel="stylesheet" href="/styles/stratakit-mimic/styles.css" />
     <script>
       window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
     </script>
