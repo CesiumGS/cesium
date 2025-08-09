@@ -1,8 +1,12 @@
 // import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import EdgeVisibilityGenerator from "./EdgeVisibilityGenerator.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+import VertexArray from "../../Renderer/VertexArray.js";
+import defined from "../../Core/defined.js";
+import IndexDatatype from "../../Core/IndexDatatype.js";
 // import EdgeVisibilityStageVS from "../../Shaders/Model/EdgeVisibilityStageVS.js";
 // import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
-import defined from "../../Core/defined.js";
 
 /**
  * The edge visibility pipeline stage configures the shader to render edges
@@ -32,7 +36,6 @@ EdgeVisibilityPipelineStage.process = function (
   primitive,
   frameState,
 ) {
-  // Check if this primitive has edge visibility data
   if (!defined(primitive.edgeVisibility)) {
     return;
   }
@@ -41,16 +44,6 @@ EdgeVisibilityPipelineStage.process = function (
     "EdgeVisibilityPipelineStage: Processing primitive with edge visibility data",
   );
   console.log("Edge visibility data:", primitive.edgeVisibility);
-
-  // const shaderBuilder = renderResources.shaderBuilder;
-  // const uniformMap = renderResources.uniformMap;
-
-  // COMMENTED OUT FOR CONSOLE LOGGING ONLY - NO RENDERING
-  // shaderBuilder.addDefine(
-  //   "HAS_EDGE_VISIBILITY",
-  //   undefined,
-  //   ShaderDestination.BOTH,
-  // );
 
   // Generate edge geometry data
   console.log("EdgeVisibilityPipelineStage: Generating edge geometry...");
@@ -61,10 +54,49 @@ EdgeVisibilityPipelineStage.process = function (
 
   // Store edge geometry data for ModelDrawCommand to use
   if (defined(edgeGeometry)) {
-    // renderResources.edgeGeometry = edgeGeometry;
-    console.log(
-      "EdgeVisibilityPipelineStage: Edge geometry generated successfully",
-    );
+    const indexDatatype =
+      edgeGeometry.edgeIndices instanceof Uint32Array
+        ? IndexDatatype.UNSIGNED_INT
+        : IndexDatatype.UNSIGNED_SHORT;
+    const indexBuffer = Buffer.createIndexBuffer({
+      context: frameState.context,
+      typedArray: edgeGeometry.edgeIndices,
+      usage: BufferUsage.STATIC_DRAW,
+      indexDatatype: indexDatatype,
+    });
+
+    const attributes = [];
+    for (let i = 0; i < renderResources.attributes.length; i++) {
+      const a = renderResources.attributes[i];
+      attributes.push({
+        index: a.index,
+        vertexBuffer: a.vertexBuffer,
+        componentsPerAttribute: a.componentsPerAttribute,
+        componentDatatype: a.componentDatatype,
+        offsetInBytes: a.offsetInBytes,
+        strideInBytes: a.strideInBytes,
+        normalize: a.normalize,
+      });
+    }
+
+    const vertexArray = new VertexArray({
+      context: frameState.context,
+      indexBuffer: indexBuffer,
+      attributes: attributes,
+    });
+
+    // Expose to ModelDrawCommand so it can derive the edge command
+    renderResources.edgeGeometry = {
+      vertexArray: vertexArray,
+      indexCount: edgeGeometry.indexCount,
+      primitiveType: edgeGeometry.primitiveType,
+      edgeNormals: edgeGeometry.edgeNormals,
+    };
+
+    // Track resources for cleanup with the model
+    const model = renderResources.model;
+    model._pipelineResources.push(indexBuffer, vertexArray);
+
     console.log("Edge geometry details:", {
       indexCount: edgeGeometry.indexCount,
       primitiveType: edgeGeometry.primitiveType,
@@ -73,7 +105,6 @@ EdgeVisibilityPipelineStage.process = function (
     console.log("EdgeVisibilityPipelineStage: No edge geometry generated");
   }
 
-  // COMMENTED OUT - Add shader code for edge rendering
   // shaderBuilder.addVertexLines(EdgeVisibilityStageVS);
   // shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
 };

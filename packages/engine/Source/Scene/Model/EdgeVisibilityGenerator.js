@@ -1,9 +1,5 @@
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
-// import Buffer from "../../Renderer/Buffer.js";
-// import BufferUsage from "../../Renderer/BufferUsage.js";
-// import ComponentDatatype from "../../Core/ComponentDatatype.js";
-// import VertexArray from "../../Renderer/VertexArray.js";
 
 /**
  * Generates edge geometry and draw commands for the EXT_mesh_primitive_edge_visibility extension.
@@ -185,8 +181,17 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
   );
 
   const edgeIndices = [];
-  const edgePositions = [];
   const edgeNormals = [];
+
+  // silhouetteNormal
+  const silhouetteNormalsValues = edgeVisibility.silhouetteNormals;
+  const hasSilhouetteNormals = defined(silhouetteNormalsValues);
+  const normalPairs = hasSilhouetteNormals
+    ? ArrayBuffer.isView(silhouetteNormalsValues)
+      ? silhouetteNormalsValues
+      : new Uint32Array(silhouetteNormalsValues)
+    : undefined;
+  let nextSilhouetteNormalIndex = 0;
 
   // Create iterator for processing visibility data
   const iterator = createEdgeVisibilityIterator(visibility, triangleCount);
@@ -212,7 +217,12 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
         edgeVisibility === EdgeVisibility.VISIBLE ||
         edgeVisibility === EdgeVisibility.SILHOUETTE
       ) {
-        addEdge(v0, v1, positions, edgeIndices, edgePositions, edgeNormals);
+        // Associate a normal pair for silhouettes if available
+        const normalPair =
+          edgeVisibility === EdgeVisibility.SILHOUETTE && defined(normalPairs)
+            ? normalPairs[nextSilhouetteNormalIndex++]
+            : undefined;
+        addEdge(v0, v1, edgeIndices, edgeNormals, normalPair);
         console.log(`      Added edge ${v0}-${v1} to geometry`);
       }
     }
@@ -225,42 +235,30 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
     return undefined;
   }
 
-  // COMMENTED OUT - Create buffers (for console logging only)
-  // const indexBuffer = Buffer.createIndexBuffer({
-  //   context: context,
-  //   typedArray: new Uint16Array(edgeIndices),
-  //   usage: BufferUsage.STATIC_DRAW,
-  // });
+  // Pick the typed array type to match the base indices (Uint16Array/Uint32Array)
+  const baseIndices = indicesArray;
+  const EdgeIndexArrayType =
+    baseIndices instanceof Uint32Array ? Uint32Array : Uint16Array;
 
-  // const positionBuffer = Buffer.createVertexBuffer({
-  //   context: context,
-  //   typedArray: new Float32Array(edgePositions),
-  //   usage: BufferUsage.STATIC_DRAW,
-  // });
+  const edgeIndexTyped = new EdgeIndexArrayType(edgeIndices);
 
-  // // Create vertex array for edge rendering
-  // const vertexArray = new VertexArray({
-  //   context: context,
-  //   indexBuffer: indexBuffer,
-  //   attributes: [
-  //     {
-  //       index: 0,
-  //       vertexBuffer: positionBuffer,
-  //       componentsPerAttribute: 3,
-  //       componentDatatype: ComponentDatatype.FLOAT,
-  //       offsetInBytes: 0,
-  //       strideInBytes: 0,
-  //       normalize: false,
-  //     },
-  //   ],
-  // });
+  // Pack edge normals parallel to edge segments if any silhouettes exist.
+  // Use 0xffffffff sentinel for edges without normals.
+  let edgeNormalsTyped;
+  if (edgeNormals.length > 0 && edgeNormals.some((n) => defined(n))) {
+    edgeNormalsTyped = new Uint32Array(edgeIndices.length / 2);
+    let writeIndex = 0;
+    for (let i = 0; i < edgeNormalsTyped.length; i++) {
+      const n = edgeNormals[writeIndex++];
+      edgeNormalsTyped[i] = defined(n) ? n : 0xffffffff >>> 0;
+    }
+  }
 
-  // Return minimal data for logging purposes only
   return {
-    // vertexArray: vertexArray,
-    indexCount: edgeIndices.length,
+    indexCount: edgeIndexTyped.length,
     primitiveType: PrimitiveType.LINES,
-    edgeIndices: edgeIndices,
+    edgeIndices: edgeIndexTyped,
+    edgeNormals: edgeNormalsTyped,
   };
 };
 
@@ -268,19 +266,18 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
  * Add an edge to the edge geometry
  * @param {number} v0 First vertex index
  * @param {number} v1 Second vertex index
- * @param {Object} positions Position attribute data
  * @param {Array} edgeIndices Array to store edge indices
- * @param {Array} edgePositions Array to store edge positions
  * @param {Array} edgeNormals Array to store edge normals
  * @private
  */
-function addEdge(v0, v1, positions, edgeIndices, edgePositions, edgeNormals) {
+function addEdge(v0, v1, edgeIndices, edgeNormals, normalPair) {
   // Add indices for line segment
   edgeIndices.push(v0, v1);
 
-  // Add positions (assuming positions are already in the main geometry)
-  // For now, we'll reference the main position buffer
-  // In a full implementation, you might want to create a separate position buffer for edges
+  // Track the edge normal if provided
+  if (defined(edgeNormals)) {
+    edgeNormals.push(normalPair);
+  }
 }
 
 export default EdgeVisibilityGenerator;
