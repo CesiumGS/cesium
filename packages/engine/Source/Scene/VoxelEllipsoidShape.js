@@ -780,6 +780,42 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForTile = function (
   );
 };
 
+/**
+ * Convert a UV coordinate to the shape's UV space.
+ * @private
+ * @param {Cartesian3} positionUV The UV coordinate to convert.
+ * @param {Cartesian3} result The Cartesian3 to store the result in.
+ * @returns {Cartesian3} The converted UV coordinate.
+ */
+VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
+  positionUV,
+  result,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("positionUV", positionUV);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  // Convert from Cartesian UV space [0, 1] to Cartesian local space [-1, 1]
+  const positionLocal = Cartesian3.fromElements(
+    positionUV.x * 2.0 - 1.0,
+    positionUV.y * 2.0 - 1.0,
+    positionUV.z * 2.0 - 1.0,
+    result,
+  );
+
+  const radius = Math.hypot(positionLocal.x, positionLocal.y);
+  const longitude = Math.atan2(positionLocal.y, positionLocal.x);
+
+  // TODO: Fix this crude spherical approximation, to be consistent with convertUvToEllipsoid.glsl
+  const latitude = Math.atan2(positionLocal.z, radius);
+  const height = Math.hypot(radius, positionLocal.z) - 1.0;
+
+  // TODO: Assume we always have shape bounds? Then simplify convertShapeToShapeUvSpace and implement here.
+
+  return Cartesian3.fromElements(longitude, latitude, height, result);
+};
+
 const sampleSizeScratch = new Cartesian3();
 const scratchTileMinBounds = new Cartesian3();
 const scratchTileMaxBounds = new Cartesian3();

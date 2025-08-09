@@ -1349,7 +1349,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
 /**
  * Converts a position in UV space to tile coordinates.
- * 
+ *
  * @param {VoxelPrimitive} primitive The primitive to get the tile coordinates for.
  * @param {Cartesian3} positionUv The position in UV space to convert to tile coordinates.
  * @param {Cartesian4} result The result object to store the tile coordinates.
@@ -1726,12 +1726,12 @@ function setTraversalUniforms(traversal, uniforms) {
  * @private
  */
 function checkShapeDefines(primitive) {
-  const { shapeDefines } = primitive._shape;
-  const shapeDefinesChanged = Object.keys(shapeDefines).some(
-    (key) => shapeDefines[key] !== primitive._shapeDefinesOld[key],
+  const { shaderDefines } = primitive._shape;
+  const shapeDefinesChanged = Object.keys(shaderDefines).some(
+    (key) => shaderDefines[key] !== primitive._shapeDefinesOld[key],
   );
   if (shapeDefinesChanged) {
-    primitive._shapeDefinesOld = clone(shapeDefines, true);
+    primitive._shapeDefinesOld = clone(shaderDefines, true);
   }
   return shapeDefinesChanged;
 }

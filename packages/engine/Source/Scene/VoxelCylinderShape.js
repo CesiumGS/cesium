@@ -483,6 +483,39 @@ VoxelCylinderShape.prototype.update = function (
   return true;
 };
 
+/**
+ * Convert a UV coordinate to the shape's UV space.
+ * @private
+ * @param {Cartesian3} positionUV The UV coordinate to convert.
+ * @param {Cartesian3} result The Cartesian3 to store the result in.
+ * @returns {Cartesian3} The converted UV coordinate.
+ */
+VoxelCylinderShape.prototype.convertUvToShapeUvSpace = function (
+  positionUV,
+  result,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("positionUV", positionUV);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  // Convert from Cartesian UV space [0, 1] to Cartesian local space [-1, 1]
+  const positionLocal = Cartesian3.fromElements(
+    positionUV.x * 2.0 - 1.0,
+    positionUV.y * 2.0 - 1.0,
+    positionUV.z * 2.0 - 1.0,
+    result,
+  );
+
+  const radius = Math.hypot(positionLocal.x, positionLocal.y);
+  const angle = Math.atan2(positionLocal.y, positionLocal.x);
+  const height = positionLocal.z;
+
+  // TODO: Assume we always have shape bounds? Then simplify convertShapeToShapeUvSpace and implement here.
+
+  return Cartesian3.fromElements(radius, angle, height, result);
+};
+
 const scratchMinBounds = new Cartesian3();
 const scratchMaxBounds = new Cartesian3();
 
