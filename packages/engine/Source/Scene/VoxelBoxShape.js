@@ -20,41 +20,10 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @private
  */
 function VoxelBoxShape() {
-  /**
-   * An oriented bounding box containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @private
-   * @type {OrientedBoundingBox}
-   * @readonly
-   */
-  this.orientedBoundingBox = new OrientedBoundingBox();
-
-  /**
-   * A bounding sphere containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @private
-   * @type {BoundingSphere}
-   * @readonly
-   */
-  this.boundingSphere = new BoundingSphere();
-
-  /**
-   * A transformation matrix containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @private
-   * @type {Matrix4}
-   * @readonly
-   */
-  this.boundTransform = new Matrix4();
-
-  /**
-   * A transformation matrix containing the shape, ignoring the bounds.
-   * The update function must be called before accessing this value.
-   * @private
-   * @type {Matrix4}
-   * @readonly
-   */
-  this.shapeTransform = new Matrix4();
+  this._orientedBoundingBox = new OrientedBoundingBox();
+  this._boundingSphere = new BoundingSphere();
+  this._boundTransform = new Matrix4();
+  this._shapeTransform = new Matrix4();
 
   /**
    * The minimum bounds of the shape.
@@ -70,36 +39,115 @@ function VoxelBoxShape() {
    */
   this._maxBounds = VoxelBoxShape.DefaultMaxBounds.clone();
 
-  /**
-   * @private
-   * @type {Object<string, any>}
-   * @readonly
-   */
-  this.shaderUniforms = {
+  this._shaderUniforms = {
     renderMinBounds: new Cartesian3(),
     renderMaxBounds: new Cartesian3(),
     boxUvToShapeUvScale: new Cartesian3(),
     boxUvToShapeUvTranslate: new Cartesian3(),
   };
 
-  /**
-   * @private
-   * @type {Object<string, any>}
-   * @readonly
-   */
-  this.shaderDefines = {
+  this._shaderDefines = {
     BOX_INTERSECTION_INDEX: undefined,
     BOX_HAS_SHAPE_BOUNDS: undefined,
   };
 
+  this._shaderMaximumIntersectionsLength = 0; // not known until update
+}
+
+Object.defineProperties(VoxelBoxShape.prototype, {
+  /**
+   * An oriented bounding box containing the bounded shape.
+   *
+   * @memberof VoxelBoxShape.prototype
+   * @type {OrientedBoundingBox}
+   * @readonly
+   * @private
+   */
+  orientedBoundingBox: {
+    get: function () {
+      return this._orientedBoundingBox;
+    },
+  },
+
+  /**
+   * A bounding sphere containing the bounded shape.
+   *
+   * @memberof VoxelBoxShape.prototype
+   * @type {BoundingSphere}
+   * @readonly
+   * @private
+   */
+  boundingSphere: {
+    get: function () {
+      return this._boundingSphere;
+    },
+  },
+
+  /**
+   * A transformation matrix containing the bounded shape.
+   *
+   * @memberof VoxelBoxShape.prototype
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  boundTransform: {
+    get: function () {
+      return this._boundTransform;
+    },
+  },
+
+  /**
+   * A transformation matrix containing the shape, ignoring the bounds.
+   *
+   * @memberof VoxelBoxShape.prototype
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  shapeTransform: {
+    get: function () {
+      return this._shapeTransform;
+    },
+  },
+
+  /**
+   * @memberof VoxelBoxShape.prototype
+   * @type {Object<string, any>}
+   * @readonly
+   * @private
+   */
+  shaderUniforms: {
+    get: function () {
+      return this._shaderUniforms;
+    },
+  },
+
+  /**
+   * @memberof VoxelBoxShape.prototype
+   * @type {Object<string, any>}
+   * @readonly
+   * @private
+   */
+  shaderDefines: {
+    get: function () {
+      return this._shaderDefines;
+    },
+  },
+
   /**
    * The maximum number of intersections against the shape for any ray direction.
-   * @private
+   * @memberof VoxelBoxShape.prototype
    * @type {number}
    * @readonly
+   * @private
    */
-  this.shaderMaximumIntersectionsLength = 0; // not known until update
-}
+  shaderMaximumIntersectionsLength: {
+    get: function () {
+      return this._shaderMaximumIntersectionsLength;
+    },
+  },
+});
 
 const scratchCenter = new Cartesian3();
 const scratchScale = new Cartesian3();
@@ -177,29 +225,30 @@ VoxelBoxShape.prototype.update = function (
     return false;
   }
 
-  this.shapeTransform = Matrix4.clone(modelMatrix, this.shapeTransform);
+  this._shapeTransform = Matrix4.clone(modelMatrix, this._shapeTransform);
 
-  this.orientedBoundingBox = getBoxChunkObb(
+  this._orientedBoundingBox = getBoxChunkObb(
     renderMinBounds,
     renderMaxBounds,
-    this.shapeTransform,
-    this.orientedBoundingBox,
+    this._shapeTransform,
+    this._orientedBoundingBox,
   );
 
   // All of the box bounds go from -1 to +1, so the model matrix scale can be
   // used as the oriented bounding box half axes.
-  this.boundTransform = Matrix4.fromRotationTranslation(
-    this.orientedBoundingBox.halfAxes,
-    this.orientedBoundingBox.center,
-    this.boundTransform,
+  this._boundTransform = Matrix4.fromRotationTranslation(
+    this._orientedBoundingBox.halfAxes,
+    this._orientedBoundingBox.center,
+    this._boundTransform,
   );
 
-  this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-    this.orientedBoundingBox,
-    this.boundingSphere,
+  this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
+    this._orientedBoundingBox,
+    this._boundingSphere,
   );
 
-  const { shaderUniforms, shaderDefines } = this;
+  const shaderUniforms = this._shaderUniforms;
+  const shaderDefines = this._shaderDefines;
 
   // To keep things simple, clear the defines every time
   for (const key in shaderDefines) {
@@ -244,7 +293,7 @@ VoxelBoxShape.prototype.update = function (
     shaderUniforms.boxUvToShapeUvTranslate,
   );
 
-  this.shaderMaximumIntersectionsLength = intersectionCount;
+  this._shaderMaximumIntersectionsLength = intersectionCount;
 
   return true;
 };
@@ -265,26 +314,20 @@ VoxelBoxShape.prototype.convertUvToShapeUvSpace = function (
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  const { boxUvToShapeUvScale, boxUvToShapeUvTranslate } =
-    this.shaderUniforms;
+  const { boxUvToShapeUvScale, boxUvToShapeUvTranslate } = this._shaderUniforms;
 
   return Cartesian3.add(
-    Cartesian3.multiplyComponents(
-      positionUV,
-      boxUvToShapeUvScale,
-      result,
-    ),
+    Cartesian3.multiplyComponents(positionUV, boxUvToShapeUvScale, result),
     boxUvToShapeUvTranslate,
     result,
   );
-}
+};
 
 const scratchTileMinBounds = new Cartesian3();
 const scratchTileMaxBounds = new Cartesian3();
 
 /**
  * Computes an oriented bounding box for a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
@@ -329,7 +372,7 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
   return getBoxChunkObb(
     tileMinBounds,
     tileMaxBounds,
-    this.shapeTransform,
+    this._shapeTransform,
     result,
   );
 };
@@ -338,7 +381,6 @@ const sampleSizeScratch = new Cartesian3();
 
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
@@ -405,7 +447,7 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForSample = function (
   return getBoxChunkObb(
     sampleMinBounds,
     sampleMaxBounds,
-    this.shapeTransform,
+    this._shapeTransform,
     result,
   );
 };

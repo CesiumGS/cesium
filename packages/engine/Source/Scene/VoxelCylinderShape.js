@@ -22,41 +22,10 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @private
  */
 function VoxelCylinderShape() {
-  /**
-   * An oriented bounding box containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @private
-   * @type {OrientedBoundingBox}
-   * @readonly
-   */
-  this.orientedBoundingBox = new OrientedBoundingBox();
-
-  /**
-   * A bounding sphere containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @private
-   * @type {BoundingSphere}
-   * @readonly
-   */
-  this.boundingSphere = new BoundingSphere();
-
-  /**
-   * A transformation matrix containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @private
-   * @type {Matrix4}
-   * @readonly
-   */
-  this.boundTransform = new Matrix4();
-
-  /**
-   * A transformation matrix containing the shape, ignoring the bounds.
-   * The update function must be called before accessing this value.
-   * @private
-   * @type {Matrix4}
-   * @readonly
-   */
-  this.shapeTransform = new Matrix4();
+  this._orientedBoundingBox = new OrientedBoundingBox();
+  this._boundingSphere = new BoundingSphere();
+  this._boundTransform = new Matrix4();
+  this._shapeTransform = new Matrix4();
 
   /**
    * The minimum bounds of the shape, corresponding to minimum radius, angle, and height.
@@ -72,12 +41,7 @@ function VoxelCylinderShape() {
    */
   this._maxBounds = VoxelCylinderShape.DefaultMaxBounds.clone();
 
-  /**
-   * @private
-   * @type {Object<string, any>}
-   * @readonly
-   */
-  this.shaderUniforms = {
+  this._shaderUniforms = {
     cylinderRenderRadiusMinMax: new Cartesian2(),
     cylinderRenderAngleMinMax: new Cartesian2(),
     cylinderRenderHeightMinMax: new Cartesian2(),
@@ -88,12 +52,7 @@ function VoxelCylinderShape() {
     cylinderShapeUvAngleRangeZeroMid: 0.0,
   };
 
-  /**
-   * @private
-   * @type {Object<string, any>}
-   * @readonly
-   */
-  this.shaderDefines = {
+  this._shaderDefines = {
     CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE: undefined,
@@ -113,14 +72,103 @@ function VoxelCylinderShape() {
     CYLINDER_INTERSECTION_INDEX_ANGLE: undefined,
   };
 
+  this._shaderMaximumIntersectionsLength = 0; // not known until update
+}
+
+Object.defineProperties(VoxelCylinderShape.prototype, {
+  /**
+   * An oriented bounding box containing the bounded shape.
+   *
+   * @memberof VoxelCylinderShape.prototype
+   * @type {OrientedBoundingBox}
+   * @readonly
+   * @private
+   */
+  orientedBoundingBox: {
+    get: function () {
+      return this._orientedBoundingBox;
+    },
+  },
+
+  /**
+   * A bounding sphere containing the bounded shape.
+   *
+   * @memberof VoxelCylinderShape.prototype
+   * @type {BoundingSphere}
+   * @readonly
+   * @private
+   */
+  boundingSphere: {
+    get: function () {
+      return this._boundingSphere;
+    },
+  },
+
+  /**
+   * A transformation matrix containing the bounded shape.
+   *
+   * @memberof VoxelCylinderShape.prototype
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  boundTransform: {
+    get: function () {
+      return this._boundTransform;
+    },
+  },
+
+  /**
+   * A transformation matrix containing the shape, ignoring the bounds.
+   *
+   * @memberof VoxelCylinderShape.prototype
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  shapeTransform: {
+    get: function () {
+      return this._shapeTransform;
+    },
+  },
+
+  /**
+   * @memberof VoxelCylinderShape.prototype
+   * @type {Object<string, any>}
+   * @readonly
+   * @private
+   */
+  shaderUniforms: {
+    get: function () {
+      return this._shaderUniforms;
+    },
+  },
+
+  /**
+   * @memberof VoxelCylinderShape.prototype
+   * @type {Object<string, any>}
+   * @readonly
+   * @private
+   */
+  shaderDefines: {
+    get: function () {
+      return this._shaderDefines;
+    },
+  },
+
   /**
    * The maximum number of intersections against the shape for any ray direction.
-   * @private
+   * @memberof VoxelCylinderShape.prototype
    * @type {number}
    * @readonly
+   * @private
    */
-  this.shaderMaximumIntersectionsLength = 0; // not known until update
-}
+  shaderMaximumIntersectionsLength: {
+    get: function () {
+      return this._shaderMaximumIntersectionsLength;
+    },
+  },
+});
 
 const scratchScale = new Cartesian3();
 const scratchClipMinBounds = new Cartesian3();
@@ -205,24 +253,24 @@ VoxelCylinderShape.prototype.update = function (
     return false;
   }
 
-  this.shapeTransform = Matrix4.clone(modelMatrix, this.shapeTransform);
+  this._shapeTransform = Matrix4.clone(modelMatrix, this._shapeTransform);
 
-  this.orientedBoundingBox = getCylinderChunkObb(
+  this._orientedBoundingBox = getCylinderChunkObb(
     renderMinBounds,
     renderMaxBounds,
-    this.shapeTransform,
-    this.orientedBoundingBox,
+    this._shapeTransform,
+    this._orientedBoundingBox,
   );
 
-  this.boundTransform = Matrix4.fromRotationTranslation(
-    this.orientedBoundingBox.halfAxes,
-    this.orientedBoundingBox.center,
-    this.boundTransform,
+  this._boundTransform = Matrix4.fromRotationTranslation(
+    this._orientedBoundingBox.halfAxes,
+    this._orientedBoundingBox.center,
+    this._boundTransform,
   );
 
-  this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-    this.orientedBoundingBox,
-    this.boundingSphere,
+  this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
+    this._orientedBoundingBox,
+    this._boundingSphere,
   );
 
   const shapeIsDefaultRadius =
@@ -271,7 +319,8 @@ VoxelCylinderShape.prototype.update = function (
   const renderHasAngle =
     renderIsAngleRegular || renderIsAngleFlipped || renderIsAngleRangeZero;
 
-  const { shaderUniforms, shaderDefines } = this;
+  const shaderUniforms = this._shaderUniforms;
+  const shaderDefines = this._shaderDefines;
 
   // To keep things simple, clear the defines every time
   for (const key in shaderDefines) {
@@ -429,7 +478,7 @@ VoxelCylinderShape.prototype.update = function (
     }
   }
 
-  this.shaderMaximumIntersectionsLength = intersectionCount;
+  this._shaderMaximumIntersectionsLength = intersectionCount;
 
   return true;
 };
@@ -439,7 +488,6 @@ const scratchMaxBounds = new Cartesian3();
 
 /**
  * Computes an oriented bounding box for a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
@@ -484,7 +532,7 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForTile = function (
   return getCylinderChunkObb(
     tileMinBounds,
     tileMaxBounds,
-    this.shapeTransform,
+    this._shapeTransform,
     result,
   );
 };
@@ -493,7 +541,6 @@ const sampleSizeScratch = new Cartesian3();
 
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
@@ -557,7 +604,7 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
   return getCylinderChunkObb(
     sampleMinBounds,
     sampleMaxBounds,
-    this.shapeTransform,
+    this._shapeTransform,
     result,
   );
 };

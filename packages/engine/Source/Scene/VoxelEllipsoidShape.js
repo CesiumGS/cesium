@@ -23,41 +23,10 @@ import Rectangle from "../Core/Rectangle.js";
  * @private
  */
 function VoxelEllipsoidShape() {
-  /**
-   * An oriented bounding box containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @type {OrientedBoundingBox}
-   * @readonly
-   * @private
-   */
-  this.orientedBoundingBox = new OrientedBoundingBox();
-
-  /**
-   * A bounding sphere containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @type {BoundingSphere}
-   * @readonly
-   * @private
-   */
-  this.boundingSphere = new BoundingSphere();
-
-  /**
-   * A transformation matrix containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @type {Matrix4}
-   * @readonly
-   * @private
-   */
-  this.boundTransform = new Matrix4();
-
-  /**
-   * A transformation matrix containing the shape, ignoring the bounds.
-   * The update function must be called before accessing this value.
-   * @type {Matrix4}
-   * @readonly
-   * @private
-   */
-  this.shapeTransform = new Matrix4();
+  this._orientedBoundingBox = new OrientedBoundingBox();
+  this._boundingSphere = new BoundingSphere();
+  this._boundTransform = new Matrix4();
+  this._shapeTransform = new Matrix4();
 
   /**
    * @type {Rectangle}
@@ -95,12 +64,7 @@ function VoxelEllipsoidShape() {
    */
   this._rotation = new Matrix3();
 
-  /**
-   * @type {Object<string, any>}
-   * @readonly
-   * @private
-   */
-  this.shaderUniforms = {
+  this._shaderUniforms = {
     ellipsoidRadiiUv: new Cartesian3(),
     eccentricitySquared: 0.0,
     evoluteScale: new Cartesian2(),
@@ -114,12 +78,7 @@ function VoxelEllipsoidShape() {
     clipMinMaxHeight: new Cartesian2(),
   };
 
-  /**
-   * @type {Object<string, any>}
-   * @readonly
-   * @private
-   */
-  this.shaderDefines = {
+  this._shaderDefines = {
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF: undefined,
@@ -142,14 +101,103 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN: undefined,
   };
 
+  this._shaderMaximumIntersectionsLength = 0; // not known until update
+}
+
+Object.defineProperties(VoxelEllipsoidShape.prototype, {
+  /**
+   * An oriented bounding box containing the bounded shape.
+   *
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {OrientedBoundingBox}
+   * @readonly
+   * @private
+   */
+  orientedBoundingBox: {
+    get: function () {
+      return this._orientedBoundingBox;
+    },
+  },
+
+  /**
+   * A bounding sphere containing the bounded shape.
+   *
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {BoundingSphere}
+   * @readonly
+   * @private
+   */
+  boundingSphere: {
+    get: function () {
+      return this._boundingSphere;
+    },
+  },
+
+  /**
+   * A transformation matrix containing the bounded shape.
+   *
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  boundTransform: {
+    get: function () {
+      return this._boundTransform;
+    },
+  },
+
+  /**
+   * A transformation matrix containing the shape, ignoring the bounds.
+   *
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  shapeTransform: {
+    get: function () {
+      return this._shapeTransform;
+    },
+  },
+
+  /**
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {Object<string, any>}
+   * @readonly
+   * @private
+   */
+  shaderUniforms: {
+    get: function () {
+      return this._shaderUniforms;
+    },
+  },
+
+  /**
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {Object<string, any>}
+   * @readonly
+   * @private
+   */
+  shaderDefines: {
+    get: function () {
+      return this._shaderDefines;
+    },
+  },
+
   /**
    * The maximum number of intersections against the shape for any ray direction.
+   * @memberof VoxelEllipsoidShape.prototype
    * @type {number}
    * @readonly
    * @private
    */
-  this.shaderMaximumIntersectionsLength = 0; // not known until update
-}
+  shaderMaximumIntersectionsLength: {
+    get: function () {
+      return this._shaderMaximumIntersectionsLength;
+    },
+  },
+});
 
 const scratchActualMinBounds = new Cartesian3();
 const scratchShapeMinBounds = new Cartesian3();
@@ -300,31 +348,31 @@ VoxelEllipsoidShape.prototype.update = function (
     scratchRenderRectangle,
   );
 
-  this.orientedBoundingBox = getEllipsoidChunkObb(
+  this._orientedBoundingBox = getEllipsoidChunkObb(
     renderRectangle,
     renderMinBounds.z,
     renderMaxBounds.z,
     this._ellipsoid,
     this._translation,
     this._rotation,
-    this.orientedBoundingBox,
+    this._orientedBoundingBox,
   );
 
-  this.shapeTransform = Matrix4.fromRotationTranslation(
+  this._shapeTransform = Matrix4.fromRotationTranslation(
     Matrix3.setScale(this._rotation, shapeOuterExtent, scratchRotationScale),
     this._translation,
-    this.shapeTransform,
+    this._shapeTransform,
   );
 
-  this.boundTransform = Matrix4.fromRotationTranslation(
-    this.orientedBoundingBox.halfAxes,
-    this.orientedBoundingBox.center,
-    this.boundTransform,
+  this._boundTransform = Matrix4.fromRotationTranslation(
+    this._orientedBoundingBox.halfAxes,
+    this._orientedBoundingBox.center,
+    this._boundTransform,
   );
 
-  this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-    this.orientedBoundingBox,
-    this.boundingSphere,
+  this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
+    this._orientedBoundingBox,
+    this._boundingSphere,
   );
 
   // Longitude
@@ -415,7 +463,8 @@ VoxelEllipsoidShape.prototype.update = function (
     shapeIsLatitudeMinOverHalf;
   const shapeHasLatitude = shapeHasLatitudeMax || shapeHasLatitudeMin;
 
-  const { shaderUniforms, shaderDefines } = this;
+  const shaderUniforms = this._shaderUniforms;
+  const shaderDefines = this._shaderDefines;
 
   // To keep things simple, clear the defines every time
   for (const key in shaderDefines) {
@@ -659,7 +708,7 @@ VoxelEllipsoidShape.prototype.update = function (
     }
   }
 
-  this.shaderMaximumIntersectionsLength = intersectionCount;
+  this._shaderMaximumIntersectionsLength = intersectionCount;
 
   return true;
 };
@@ -668,7 +717,6 @@ const scratchRectangle = new Rectangle();
 
 /**
  * Computes an oriented bounding box for a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
@@ -738,7 +786,6 @@ const scratchTileMaxBounds = new Cartesian3();
 
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
