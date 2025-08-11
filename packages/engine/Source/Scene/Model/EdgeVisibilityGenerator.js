@@ -29,20 +29,20 @@ const EdgeVisibility = {
  * @returns {string} The visibility name
  * @private
  */
-function getVisibilityName(visibility) {
-  switch (visibility) {
-    case EdgeVisibility.HIDDEN:
-      return "HIDDEN";
-    case EdgeVisibility.SILHOUETTE:
-      return "SILHOUETTE";
-    case EdgeVisibility.VISIBLE:
-      return "VISIBLE";
-    case EdgeVisibility.VISIBLE_DUPLICATE:
-      return "VISIBLE_DUPLICATE";
-    default:
-      return `UNKNOWN(${visibility})`;
-  }
-}
+// function getVisibilityName(visibility) {
+//   switch (visibility) {
+//     case EdgeVisibility.HIDDEN:
+//       return "HIDDEN";
+//     case EdgeVisibility.SILHOUETTE:
+//       return "SILHOUETTE";
+//     case EdgeVisibility.VISIBLE:
+//       return "VISIBLE";
+//     case EdgeVisibility.VISIBLE_DUPLICATE:
+//       return "VISIBLE_DUPLICATE";
+//     default:
+//       return `UNKNOWN(${visibility})`;
+//   }
+// }
 
 /**
  * Creates an iterator for processing edge visibility data similar to iTwin.js CompactEdges
@@ -67,17 +67,11 @@ function createEdgeVisibilityIterator(visibilityBuffer, triangleCount) {
         edges: [],
       };
 
-      console.log(`Processing triangle ${triangleIndex}`);
-
       // Process 3 edges for this triangle
       for (let i = 0; i < 3; i++) {
         const byteIndex = Math.floor(bitIndex / 4);
         const bitOffset = (bitIndex % 4) * 2;
         const visibility = (visibilityBuffer[byteIndex] >> bitOffset) & 0x3;
-
-        console.log(
-          `  Edge ${i}: bitIndex=${bitIndex}, byteIndex=${byteIndex}, bitOffset=${bitOffset}, visibility=${visibility}`,
-        );
 
         triangle.edges.push({
           edgeIndex: edgeIndex,
@@ -136,23 +130,8 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
   );
 
   if (!defined(visibility) || !defined(indices) || !defined(positions)) {
-    console.log("EdgeVisibilityGenerator: Missing required data", {
-      hasVisibility: defined(visibility),
-      hasIndices: defined(indices),
-      hasPositions: defined(positions),
-    });
     return undefined;
   }
-
-  console.log("EdgeVisibilityGenerator: Debugging indices structure:", {
-    indices: indices,
-    indicesType: typeof indices,
-    indicesLength: indices.length,
-    indicesTypedArray: indices.typedArray,
-    indicesTypedArrayLength: indices.typedArray
-      ? indices.typedArray.length
-      : "undefined",
-  });
 
   // Get actual indices array - could be direct array or typedArray property
   const indicesArray = indices.typedArray || indices;
@@ -172,13 +151,6 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
       trianglesFromVisibility,
     );
   }
-
-  console.log(`EdgeVisibilityGenerator: Processing ${triangleCount} triangles`);
-  console.log(`Visibility buffer length: ${visibility.length} bytes`);
-  const expectedBytes = Math.ceil((triangleCount * 3 * 2) / 8);
-  console.log(
-    `Expected buffer length (for ${triangleCount} tris): ${expectedBytes} bytes`,
-  );
 
   const edgeIndices = [];
   const edgeNormals = [];
@@ -208,10 +180,6 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
       const v0 = indicesArray[v0Index];
       const v1 = indicesArray[v1Index];
 
-      console.log(
-        `    Edge ${v0}-${v1}: visibility=${edgeVisibility} (${getVisibilityName(edgeVisibility)})`,
-      );
-
       // Add visible edges (excluding HIDDEN and VISIBLE_DUPLICATE to avoid redundancy)
       if (
         edgeVisibility === EdgeVisibility.VISIBLE ||
@@ -223,15 +191,11 @@ EdgeVisibilityGenerator.generateEdgeGeometry = function (primitive, context) {
             ? normalPairs[nextSilhouetteNormalIndex++]
             : undefined;
         addEdge(v0, v1, edgeIndices, edgeNormals, normalPair);
-        console.log(`      Added edge ${v0}-${v1} to geometry`);
       }
     }
   }
 
-  console.log(`Generated ${edgeIndices.length / 2} edge segments`);
-
   if (edgeIndices.length === 0) {
-    console.log("EdgeVisibilityGenerator: No edges to render");
     return undefined;
   }
 
