@@ -4,14 +4,10 @@ import VertexArray from "../../Renderer/VertexArray.js";
 import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import Pass from "../../Renderer/Pass.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import PrimitiveOutlineGenerator from "./PrimitiveOutlineGenerator.js";
 
 /**
  * Pipeline stage for generating edge geometry from EXT_mesh_primitive_edge_visibility data.
- * Uses PrimitiveOutlineGenerator to create quad-based geometry for proper edge rendering.
  *
  * @namespace EdgeVisibilityPipelineStage
  *
@@ -22,8 +18,6 @@ const EdgeVisibilityPipelineStage = {
 };
 
 /**
- * Processes a primitive with edge visibility data and generates edge geometry.
- * Extracts visible edges and uses PrimitiveOutlineGenerator for proper quad-based edge rendering.
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
@@ -39,27 +33,15 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
-  // Extract visible edges from EXT_mesh_primitive_edge_visibility data
-  const outlineIndices = extractVisibleEdgesAsOutlineIndices(primitive);
-  if (!defined(outlineIndices) || outlineIndices.length === 0) {
+  // Extract visible edges as line indices (pairs of vertex indices)
+  const edgeIndices = extractVisibleEdgesAsLineIndices(primitive);
+  if (!defined(edgeIndices) || edgeIndices.length === 0) {
     return;
   }
 
-  // Get original vertex count and triangle indices from the primitive (not render resources)
-  const vertexCount = primitive.attributes[0].count;
-  const triangleIndices = primitive.indices.typedArray;
-
-  // Use PrimitiveOutlineGenerator to create proper quad-based edge geometry
-  const generator = new PrimitiveOutlineGenerator({
-    triangleIndices: triangleIndices.slice(), // Copy to avoid modifying original
-    outlineIndices: outlineIndices,
-    originalVertexCount: vertexCount,
-  });
-
-  // Create edge geometry using the generator's output and primitive data
-  const edgeGeometry = createEdgeGeometry(
-    generator,
-    primitive,
+  // Create edge geometry using existing attributes and line indices
+  const edgeGeometry = createLineEdgeGeometry(
+    edgeIndices,
     renderResources,
     frameState.context,
   );
@@ -72,7 +54,7 @@ EdgeVisibilityPipelineStage.process = function (
   renderResources.edgeGeometry = {
     vertexArray: edgeGeometry.vertexArray,
     indexCount: edgeGeometry.indexCount,
-    primitiveType: PrimitiveType.TRIANGLES, // Quads rendered as triangles
+    primitiveType: PrimitiveType.LINES, // Render as lines
     pass: Pass.CESIUM_3D_TILE, // Use regular 3D tile pass for testing
   };
 
@@ -82,19 +64,16 @@ EdgeVisibilityPipelineStage.process = function (
     edgeGeometry.indexBuffer,
     edgeGeometry.vertexArray,
   );
-
-  // Add shaders for edge rendering
-  addEdgeShaders(renderResources);
 };
 
 /**
  * Extracts visible edge segments from EXT_mesh_primitive_edge_visibility data
- * and converts them to the format expected by PrimitiveOutlineGenerator.
+ * and converts them to line indices for GL_LINES rendering.
  * @param {ModelComponents.Primitive} primitive The primitive with edge visibility data
- * @returns {number[]} Array of outline indices (pairs of vertex indices)
+ * @returns {number[]} Array of line indices (pairs of vertex indices)
  * @private
  */
-function extractVisibleEdgesAsOutlineIndices(primitive) {
+function extractVisibleEdgesAsLineIndices(primitive) {
   const edgeVisibility = primitive.edgeVisibility;
   const visibility = edgeVisibility.visibility;
   const indices = primitive.indices;
@@ -105,7 +84,7 @@ function extractVisibleEdgesAsOutlineIndices(primitive) {
 
   const triangleIndexArray = indices.typedArray;
   const vertexCount = primitive.attributes[0].count;
-  const outlinePairs = [];
+  const lineIndices = [];
   const seenEdgeHashes = new Set();
 
   let bitOffset = 0; // 2 bits per edge in order (v0:v1, v1:v2, v2:v0)
@@ -145,168 +124,47 @@ function extractVisibleEdgesAsOutlineIndices(primitive) {
 
         if (!seenEdgeHashes.has(hash)) {
           seenEdgeHashes.add(hash);
-          outlinePairs.push(small, big);
+          lineIndices.push(a, b); // Add line segment
         }
       }
     }
   }
 
-  return outlinePairs;
+  return lineIndices;
 }
 
 /**
- * Creates edge geometry using PrimitiveOutlineGenerator output.
- * Reads vertex data from primitive attributes and creates updated geometry.
- * @param {PrimitiveOutlineGenerator} generator The outline generator
- * @param {ModelComponents.Primitive} primitive The original primitive
+ * Creates simple line edge geometry using existing vertex attributes.
+ * @param {number[]} edgeIndices The line indices (pairs of vertex indices)
  * @param {PrimitiveRenderResources} renderResources The render resources
  * @param {Context} context The rendering context
  * @returns {Object} Edge geometry with vertex array and index buffer
  * @private
  */
-function createEdgeGeometry(generator, primitive, renderResources, context) {
-  // Get the outline coordinates from the generator
-  const outlineCoordinates = generator.outlineCoordinates;
-  const updatedTriangleIndices = generator.updatedTriangleIndices;
-
-  if (!defined(outlineCoordinates) || outlineCoordinates.length === 0) {
+function createLineEdgeGeometry(edgeIndices, renderResources, context) {
+  if (!defined(edgeIndices) || edgeIndices.length === 0) {
     return undefined;
   }
 
-  // Create vertex buffer for outline coordinates
-  const outlineBuffer = Buffer.createVertexBuffer({
-    context: context,
-    typedArray: outlineCoordinates,
-    usage: BufferUsage.STATIC_DRAW,
-  });
-
-  // Update primitive attributes using their original typedArray data
-  const updatedAttributes = [];
-  for (let i = 0; i < primitive.attributes.length; i++) {
-    const primitiveAttr = primitive.attributes[i];
-
-    if (!defined(primitiveAttr.typedArray)) {
-      continue; // Skip attributes without typedArray
-    }
-
-    const updatedTypedArray = generator.updateAttribute(
-      primitiveAttr.typedArray,
-    );
-
-    const updatedBuffer = Buffer.createVertexBuffer({
-      context: context,
-      typedArray: updatedTypedArray,
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    // Use attribute properties directly from primitive
-    const componentsPerAttribute =
-      primitiveAttr.type === "VEC3"
-        ? 3
-        : primitiveAttr.type === "VEC2"
-          ? 2
-          : primitiveAttr.type === "SCALAR"
-            ? 1
-            : 4;
-
-    updatedAttributes.push({
-      index: i, // Use simple indexing
-      vertexBuffer: updatedBuffer,
-      componentDatatype: primitiveAttr.componentDatatype,
-      componentsPerAttribute: componentsPerAttribute,
-      offsetInBytes: 0,
-      strideInBytes: 0,
-    });
-  }
-
-  // Add outline coordinates attribute
-  updatedAttributes.push({
-    index: updatedAttributes.length,
-    vertexBuffer: outlineBuffer,
-    componentDatatype: ComponentDatatype.FLOAT,
-    componentsPerAttribute: 3,
-    offsetInBytes: 0,
-    strideInBytes: 0,
-  });
-
-  // Create index buffer for updated triangle indices
+  // Create index buffer for line indices
   const indexBuffer = Buffer.createIndexBuffer({
     context: context,
-    typedArray: updatedTriangleIndices,
+    typedArray: new Uint16Array(edgeIndices),
     usage: BufferUsage.STATIC_DRAW,
-    indexDatatype: IndexDatatype.fromTypedArray(updatedTriangleIndices),
+    indexDatatype: IndexDatatype.UNSIGNED_SHORT,
   });
 
-  // Create vertex array
   const vertexArray = new VertexArray({
     context: context,
     indexBuffer: indexBuffer,
-    attributes: updatedAttributes,
+    attributes: renderResources.attributes,
   });
 
   return {
     vertexArray: vertexArray,
     indexBuffer: indexBuffer,
-    indexCount: updatedTriangleIndices.length,
-    vertexCount: outlineCoordinates.length / 3,
+    indexCount: edgeIndices.length,
   };
-}
-
-/**
- * Adds edge shader support to the render resources.
- * Uses outline coordinates generated by PrimitiveOutlineGenerator.
- * @param {PrimitiveRenderResources} renderResources The render resources
- * @private
- */
-function addEdgeShaders(renderResources) {
-  const shaderBuilder = renderResources.shaderBuilder;
-  const uniformMap = renderResources.uniformMap;
-
-  // Add outline coordinates attribute
-  shaderBuilder.addAttribute("vec3", "a_outlineCoordinates");
-  shaderBuilder.addVarying("vec3", "v_outlineCoordinates");
-
-  // Add uniforms for edge rendering control
-  shaderBuilder.addUniform(
-    "bool",
-    "model_showEdges",
-    ShaderDestination.FRAGMENT,
-  );
-  shaderBuilder.addUniform(
-    "vec4",
-    "model_edgeColor",
-    ShaderDestination.FRAGMENT,
-  );
-
-  // Set up uniforms
-  uniformMap.model_showEdges = function () {
-    return true; // Always show edges
-  };
-  uniformMap.model_edgeColor = function () {
-    return [1.0, 0.0, 0.0, 1.0]; // Red edges
-  };
-
-  // Add vertex shader lines (pass through outline coordinates)
-  shaderBuilder.addVertexLines([
-    "void edgeVisibilityStage() {",
-    "    v_outlineCoordinates = a_outlineCoordinates;",
-    "}",
-  ]);
-
-  // Add fragment shader function (use outline coordinates for edge rendering)
-  shaderBuilder.addFragmentLines([
-    "void edgeVisibilityStage(inout czm_modelMaterial material) {",
-    "    if (model_showEdges) {",
-    "        // Use outline coordinates to determine if this fragment is part of an edge",
-    "        vec3 coord = v_outlineCoordinates;",
-    "        float edgeIntensity = max(coord.x, max(coord.y, coord.z));",
-    "        if (edgeIntensity > 0.5) {",
-    "            material.diffuse = model_edgeColor.rgb;",
-    "            material.alpha = model_edgeColor.a;",
-    "        }",
-    "    }",
-    "}",
-  ]);
 }
 
 export default EdgeVisibilityPipelineStage;
