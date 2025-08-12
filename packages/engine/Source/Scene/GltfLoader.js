@@ -2070,8 +2070,8 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       primitivePlan.edgeVisibility.lineStrings =
         edgeVisibilityExtension.lineStrings;
     }
-    needsPostProcessing = true;
-    primitivePlan.needsOutlines = true;
+    // needsPostProcessing = true;
+    // primitivePlan.needsOutlines = true;
   }
 
   const spzExtension = extensions.KHR_spz_gaussian_splats_compression;

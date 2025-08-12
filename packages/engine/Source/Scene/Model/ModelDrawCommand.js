@@ -799,8 +799,27 @@ function deriveEdgeCommand(command, renderResources, model) {
   edgeCommand.primitiveType = edgeGeometry.primitiveType;
   edgeCommand.count = edgeGeometry.indexCount;
 
-  // Set pass for edge rendering
-  edgeCommand.pass = Pass.CESIUM_3D_TILE_EDGES;
+  // Set pass for edge rendering (use the pass specified in edgeGeometry)
+  edgeCommand.pass = edgeGeometry.pass;
+
+  // Modify render state to ensure edges are visible
+  const renderState = clone(command.renderState, true);
+
+  // Disable depth testing to ensure edges are always visible
+  renderState.depthTest = {
+    enabled: false,
+  };
+
+  // Disable backface culling for edges
+  renderState.cull = {
+    enabled: false,
+  };
+
+  edgeCommand.renderState = RenderState.fromCache(renderState);
+
+  // Use the same bounding volume as the original command to avoid culling issues
+  // The edge geometry should be within the same bounds as the original mesh
+  edgeCommand.boundingVolume = command.boundingVolume;
 
   // Edges don't cast or receive shadows
   edgeCommand.castShadows = false;
