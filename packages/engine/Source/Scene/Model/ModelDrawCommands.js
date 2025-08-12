@@ -14,6 +14,8 @@ import ModelFS from "../../Shaders/Model/ModelFS.js";
 import ModelUtility from "./ModelUtility.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 
+const modelMatrixScratch = new Matrix4();
+
 /**
  * Internal functions to build draw commands for models.
  *
@@ -213,6 +215,17 @@ ModelDrawCommands.createCommandModelMatrix = function (
   }
 
   if (sceneGraph.hasInstances) {
+    if (use2D) {
+      const inverseAxisCorrection = Matrix4.inverse(
+        sceneGraph._axisCorrectionMatrix,
+        modelMatrixScratch,
+      );
+      return Matrix4.multiplyTransformation(
+        sceneGraph._computedModelMatrix2D,
+        inverseAxisCorrection,
+        result,
+      );
+    }
     return modelMatrix;
   }
 
