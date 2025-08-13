@@ -1,5 +1,10 @@
 import { ReactNode, useCallback } from "react";
-import { initialSettings, Settings, SettingsContext } from "./SettingsContext";
+import {
+  availableFonts,
+  initialSettings,
+  Settings,
+  SettingsContext,
+} from "./SettingsContext";
 import { useLocalStorage } from "react-use";
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -13,15 +18,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return JSON.stringify({
           theme: value.theme ?? initialSettings.theme,
           fontSize: value.fontSize ?? initialSettings.fontSize,
+          fontFamily: value.fontFamily ?? initialSettings.fontFamily,
+          fontLigatures: value.fontLigatures ?? initialSettings.fontLigatures,
         });
       },
       deserializer: (value) => {
         // This allows us to guarantee all expected values are set AND any unknown
         // values are removed from the settings object
         const parsedValue = JSON.parse(value);
+        let fontFamily = parsedValue.fontFamily ?? initialSettings.fontFamily;
+        if (!(fontFamily in availableFonts)) {
+          // sanitize while loading to avoid removed fonts or user editied values
+          fontFamily = "droid-sans";
+        }
         return {
           theme: parsedValue.theme ?? initialSettings.theme,
           fontSize: parsedValue.fontSize ?? initialSettings.fontSize,
+          fontFamily: fontFamily,
+          fontLigatures:
+            parsedValue.fontLigatures ?? initialSettings.fontLigatures,
         };
       },
     },

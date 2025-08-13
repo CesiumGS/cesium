@@ -1,8 +1,12 @@
 import { Dialog, DialogDismiss, DialogHeading } from "@ariakit/react";
 import "./SettingsModal.css";
 import { useContext } from "react";
-import { SettingsContext } from "./SettingsContext";
-import { Button } from "@stratakit/bricks";
+import {
+  AvailableFontId,
+  availableFonts,
+  SettingsContext,
+} from "./SettingsContext";
+import { Button, Field, Select, Switch } from "@stratakit/bricks";
 
 export function SettingsModal({
   open,
@@ -13,13 +17,11 @@ export function SettingsModal({
 }) {
   const { settings, updateSettings } = useContext(SettingsContext);
 
+  const selectedFont = availableFonts[settings.fontFamily];
+
   return (
     <Dialog open={open} onClose={() => setOpen(false)} className="dialog">
-      <DialogHeading className="heading">Success</DialogHeading>
-      <p className="description">
-        Your payment has been successfully processed. We have emailed your
-        receipt.
-      </p>
+      <DialogHeading className="heading">Settings</DialogHeading>
       <p>Theme: {settings.theme}</p>
       <Button
         onClick={() => {
@@ -44,6 +46,35 @@ export function SettingsModal({
       >
         Change Font Size
       </Button>
+      <Select.Root>
+        <Select.HtmlSelect
+          className="tag-select"
+          value={settings.fontFamily}
+          onChange={(e) => {
+            updateSettings({ fontFamily: e.target.value as AvailableFontId });
+          }}
+        >
+          {Object.entries(availableFonts).map(([id, family]) => (
+            <option value={id} key={id}>
+              {family.readableName}
+            </option>
+          ))}
+        </Select.HtmlSelect>
+      </Select.Root>
+      <Field.Root>
+        <Field.Control
+          render={
+            <Switch
+              defaultChecked={settings.fontLigatures}
+              onChange={(e) => {
+                updateSettings({ fontLigatures: e.target.checked });
+              }}
+              disabled={!selectedFont.supportsLigatures}
+            />
+          }
+        />
+        <Field.Label>Use Font Ligatures</Field.Label>
+      </Field.Root>
       <div>
         <DialogDismiss className="button">OK</DialogDismiss>
       </div>

@@ -90,9 +90,8 @@
   gap: 1rem;
   overflow: auto;
   border-radius: 0.75rem;
-  background-color: white;
+  background-color: var(--stratakit-color-bg-page-base);
   padding: 1rem;
-  color: black;
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   --inset: 0.75rem;
 }
