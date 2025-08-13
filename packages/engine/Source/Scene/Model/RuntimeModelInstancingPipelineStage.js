@@ -9,9 +9,11 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import InstancingStageCommon from "../../Shaders/Model/InstancingStageCommon.js";
 import RuntimeModelInstancingPipelineStageVS from "../../Shaders/Model/RuntimeModelInstancingPipelineStageVS.js";
+import SceneMode from "../SceneMode.js";
 
 const nodeTransformScratch = new Matrix4();
 const relativeScaledTransformScratch = new Matrix4();
+const scratchCartesian3 = new Cartesian3();
 
 /**
  * The runtime model instancing pipeline stage is responsible for handling GPU mesh instancing
@@ -84,6 +86,20 @@ RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
   const count = modelInstances.length;
   const transformsTypedArray = new Float32Array(count * elements);
 
+  const useBoundingSphere2D =
+    !frameState.scene3DOnly && model.sceneGraph._projectTo2D;
+  const useModelMatrix2D =
+    frameState.mode !== SceneMode.SCENE3D && !useBoundingSphere2D;
+
+  const modelTranslation = Matrix4.getTranslation(
+    model.modelMatrix,
+    scratchCartesian3,
+  );
+  let earthCenteredInstances = false;
+  if (Cartesian3.equals(modelTranslation, Cartesian3.ZERO)) {
+    earthCenteredInstances = true;
+  }
+
   for (let i = 0; i < count; i++) {
     const modelInstance = modelInstances[i];
     if (!defined(modelInstance)) {
@@ -110,7 +126,10 @@ RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
     transformsTypedArray[offset + 10] = transform[10];
     transformsTypedArray[offset + 11] = transform[14];
 
-    const translation = modelInstance.center ?? Cartesian3.ZERO;
+    let translation = modelInstance.center ?? Cartesian3.ZERO;
+    if (useModelMatrix2D && earthCenteredInstances) {
+      translation = modelInstance.getCenter2D(frameState.mapProjection);
+    }
 
     EncodedCartesian3.writeElements(
       translation,
