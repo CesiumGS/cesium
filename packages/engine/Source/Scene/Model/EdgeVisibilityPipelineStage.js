@@ -5,6 +5,7 @@ import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Pass from "../../Renderer/Pass.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
 
 /**
  * Pipeline stage for generating edge geometry from EXT_mesh_primitive_edge_visibility data.
@@ -33,15 +34,15 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
-  // Extract visible edges as line indices (pairs of vertex indices)
-  const edgeIndices = extractVisibleEdgesAsLineIndices(primitive);
-  if (!defined(edgeIndices) || edgeIndices.length === 0) {
+  // Check if we have the required edge visibility data
+  if (!defined(primitive.edgeVisibility.visibility)) {
     return;
   }
 
-  // Create edge geometry using existing attributes and line indices
-  const edgeGeometry = createLineEdgeGeometry(
-    edgeIndices,
+  // Create a simple edge geometry that doesn't require typed array access
+  // This approach uses the edge visibility buffer directly in shaders
+  const edgeGeometry = createEdgeGeometryFromVisibilityBuffer(
+    primitive,
     renderResources,
     frameState.context,
   );
@@ -54,8 +55,8 @@ EdgeVisibilityPipelineStage.process = function (
   renderResources.edgeGeometry = {
     vertexArray: edgeGeometry.vertexArray,
     indexCount: edgeGeometry.indexCount,
-    primitiveType: PrimitiveType.LINES, // Render as lines
-    pass: Pass.CESIUM_3D_TILE, // Use regular 3D tile pass for testing
+    primitiveType: PrimitiveType.TRIANGLES, // Use triangles for quad-based edges
+    pass: Pass.CESIUM_3D_TILE,
   };
 
   // Track resources for cleanup
@@ -67,104 +68,167 @@ EdgeVisibilityPipelineStage.process = function (
 };
 
 /**
- * Extracts visible edge segments from EXT_mesh_primitive_edge_visibility data
- * and converts them to line indices for GL_LINES rendering.
+ * Creates edge geometry from EXT_mesh_primitive_edge_visibility data by properly
+ * decoding the visibility bitfield and mapping edges to vertex endpoints.
  * @param {ModelComponents.Primitive} primitive The primitive with edge visibility data
- * @returns {number[]} Array of line indices (pairs of vertex indices)
- * @private
- */
-function extractVisibleEdgesAsLineIndices(primitive) {
-  const edgeVisibility = primitive.edgeVisibility;
-  const visibility = edgeVisibility.visibility;
-  const indices = primitive.indices;
-
-  if (!defined(visibility) || !defined(indices)) {
-    return [];
-  }
-
-  const triangleIndexArray = indices.typedArray;
-  const vertexCount = primitive.attributes[0].count;
-  const lineIndices = [];
-  const seenEdgeHashes = new Set();
-
-  let bitOffset = 0; // 2 bits per edge in order (v0:v1, v1:v2, v2:v0)
-  const totalIndices = triangleIndexArray.length;
-
-  for (let i = 0; i + 2 < totalIndices; i += 3) {
-    const v0 = triangleIndexArray[i];
-    const v1 = triangleIndexArray[i + 1];
-    const v2 = triangleIndexArray[i + 2];
-
-    // Iterate the 3 edges in order
-    const edgeVertices = [
-      [v0, v1],
-      [v1, v2],
-      [v2, v0],
-    ];
-
-    for (let e = 0; e < 3; e++) {
-      const byteIndex = Math.floor(bitOffset / 4);
-      const bitPairOffset = (bitOffset % 4) * 2;
-
-      if (byteIndex >= visibility.length) {
-        break;
-      }
-
-      const byte = visibility[byteIndex];
-      const visibility2Bit = (byte >> bitPairOffset) & 0x3;
-      bitOffset++;
-
-      // Extract SILHOUETTE (1) and VISIBLE (2) edges
-      if (visibility2Bit === 1 || visibility2Bit === 2) {
-        const a = edgeVertices[e][0];
-        const b = edgeVertices[e][1];
-        const small = Math.min(a, b);
-        const big = Math.max(a, b);
-        const hash = small * vertexCount + big;
-
-        if (!seenEdgeHashes.has(hash)) {
-          seenEdgeHashes.add(hash);
-          lineIndices.push(a, b); // Add line segment
-        }
-      }
-    }
-  }
-
-  return lineIndices;
-}
-
-/**
- * Creates simple line edge geometry using existing vertex attributes.
- * @param {number[]} edgeIndices The line indices (pairs of vertex indices)
  * @param {PrimitiveRenderResources} renderResources The render resources
  * @param {Context} context The rendering context
  * @returns {Object} Edge geometry with vertex array and index buffer
  * @private
  */
-function createLineEdgeGeometry(edgeIndices, renderResources, context) {
-  if (!defined(edgeIndices) || edgeIndices.length === 0) {
+function createEdgeGeometryFromVisibilityBuffer(
+  primitive,
+  renderResources,
+  context,
+) {
+  const edgeVisibility = primitive.edgeVisibility;
+  if (!defined(edgeVisibility.visibility)) {
     return undefined;
   }
 
-  // Create index buffer for line indices
+  // Extract visible edges by decoding the visibility bitfield
+  const visibleEdges = extractVisibleEdges(primitive);
+  if (!visibleEdges || visibleEdges.length === 0) {
+    return undefined;
+  }
+
+  // Create quad geometry for each visible edge
+  const verticesPerEdge = 4; // quad vertices
+  const indicesPerEdge = 6; // 2 triangles per quad
+  const edgeCount = visibleEdges.length;
+  const totalVertices = edgeCount * verticesPerEdge;
+  const totalIndices = edgeCount * indicesPerEdge;
+
+  // Create edge parameter buffer - each vertex has [triangleIndex, edgeInTriangle, quadCorner, unused]
+  // The shader will use triangleIndex and edgeInTriangle to look up the actual vertex indices
+  const edgeParameters = new Float32Array(totalVertices * 4);
+
+  for (let edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++) {
+    const edge = visibleEdges[edgeIndex];
+    const baseVertex = edgeIndex * verticesPerEdge;
+
+    // Quad corners: 0=bottom-left, 1=bottom-right, 2=top-right, 3=top-left
+    for (let corner = 0; corner < 4; corner++) {
+      const vertexIndex = (baseVertex + corner) * 4;
+      edgeParameters[vertexIndex] = edge.triangleIndex; // Triangle index for this edge
+      edgeParameters[vertexIndex + 1] = edge.edgeInTriangle; // Edge within triangle (0, 1, or 2)
+      edgeParameters[vertexIndex + 2] = corner; // Quad corner identifier
+      edgeParameters[vertexIndex + 3] = edge.visibility; // Visibility value for potential use
+    }
+  }
+
+  // Create indices for triangulated quads
+  const indices = new Uint32Array(totalIndices);
+  for (let edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++) {
+    const baseVertex = edgeIndex * verticesPerEdge;
+    const baseIndex = edgeIndex * indicesPerEdge;
+
+    // First triangle: 0-1-2
+    indices[baseIndex] = baseVertex;
+    indices[baseIndex + 1] = baseVertex + 1;
+    indices[baseIndex + 2] = baseVertex + 2;
+
+    // Second triangle: 0-2-3
+    indices[baseIndex + 3] = baseVertex;
+    indices[baseIndex + 4] = baseVertex + 2;
+    indices[baseIndex + 5] = baseVertex + 3;
+  }
+
+  // Create buffers
+  const edgeParameterBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: edgeParameters,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
   const indexBuffer = Buffer.createIndexBuffer({
     context: context,
-    typedArray: new Uint16Array(edgeIndices),
+    typedArray: indices,
     usage: BufferUsage.STATIC_DRAW,
-    indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+    indexDatatype: IndexDatatype.UNSIGNED_INT,
   });
+
+  // Create vertex array with edge parameters
+  const attributes = [
+    {
+      index: 0, // Edge parameters attribute
+      vertexBuffer: edgeParameterBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      offsetInBytes: 0,
+      strideInBytes: 16, // 4 floats
+    },
+  ];
 
   const vertexArray = new VertexArray({
     context: context,
+    attributes: attributes,
     indexBuffer: indexBuffer,
-    attributes: renderResources.attributes,
   });
 
   return {
     vertexArray: vertexArray,
     indexBuffer: indexBuffer,
-    indexCount: edgeIndices.length,
+    indexCount: totalIndices,
   };
+}
+
+/**
+ * Extracts visible edges from the EXT_mesh_primitive_edge_visibility data by
+ * properly decoding the packed 2-bit visibility values. Since we can't access
+ * the index buffer during pipeline processing, we'll create a deferred approach
+ * that stores the visibility data for later processing in the shader.
+ * @param {ModelComponents.Primitive} primitive The primitive with edge visibility data
+ * @returns {Array} Array of edge visibility information
+ * @private
+ */
+function extractVisibleEdges(primitive) {
+  const edgeVisibility = primitive.edgeVisibility;
+  const visibilityBuffer = edgeVisibility.visibility;
+
+  // Get triangle count from indices
+  const indices = primitive.indices;
+  if (!defined(indices) || !defined(indices.count)) {
+    return undefined;
+  }
+
+  const triangleCount = indices.count / 3;
+
+  // Get visibility data - this is a packed bitfield with 2 bits per edge
+  const visibilityData = visibilityBuffer.buffer;
+  const visibilityBytes = new Uint8Array(visibilityData);
+
+  const edges = [];
+
+  // Process each triangle's edges
+  for (let triangleIndex = 0; triangleIndex < triangleCount; triangleIndex++) {
+    // Three edges per triangle
+    for (let edgeInTriangle = 0; edgeInTriangle < 3; edgeInTriangle++) {
+      const globalEdgeIndex = triangleIndex * 3 + edgeInTriangle;
+
+      // Extract 2-bit visibility value from packed data
+      const byteIndex = Math.floor(globalEdgeIndex / 4); // 4 edges per byte (2 bits each)
+      const bitOffset = (globalEdgeIndex % 4) * 2;
+
+      if (byteIndex < visibilityBytes.length) {
+        const visibilityByte = visibilityBytes[byteIndex];
+        const visibility = (visibilityByte >> bitOffset) & 0x03;
+
+        // Only include visible edges (SILHOUETTE=1, VISIBLE=2, VISIBLE_DUPLICATE=3)
+        // HIDDEN=0 edges are skipped
+        if (visibility > 0) {
+          // Store triangle index and edge-in-triangle for shader lookup
+          edges.push({
+            triangleIndex: triangleIndex,
+            edgeInTriangle: edgeInTriangle,
+            visibility: visibility,
+          });
+        }
+      }
+    }
+  }
+
+  return edges;
 }
 
 export default EdgeVisibilityPipelineStage;
