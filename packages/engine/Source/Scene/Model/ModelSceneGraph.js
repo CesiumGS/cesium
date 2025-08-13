@@ -518,11 +518,6 @@ function updateComputedModelMatrix2D(sceneGraph, frameState) {
 
 function computeModelMatrix2D(sceneGraph, frameState) {
   const modelMatrix = sceneGraph._model.modelMatrix;
-  // sceneGraph._modelMatrix2D = Transforms.basisTo2D(
-  //   frameState.mapProjection,
-  //   modelMatrix,
-  //   sceneGraph._modelMatrix2D,
-  // );
   const translation = Matrix4.getTranslation(
     modelMatrix,
     scratchComputedTranslation,

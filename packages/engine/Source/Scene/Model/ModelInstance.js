@@ -296,11 +296,12 @@ class ModelInstance {
         scratchTransform,
       );
 
-      instanceTransform = Matrix4.multiplyTransformation(
-        instanceTransform,
-        sceneGraph._axisCorrectionMatrix,
-        scratchTransform,
-      );
+      // ToDo: check if needed
+      // instanceTransform = Matrix4.multiplyTransformation(
+      //   instanceTransform,
+      //   sceneGraph._axisCorrectionMatrix,
+      //   scratchTransform,
+      // );
     } else {
       instanceTransform = Matrix4.multiplyTransformation(
         this.transform,
@@ -320,6 +321,16 @@ class ModelInstance {
       primitiveMatrix,
       result,
     );
+  }
+
+  getCenter2D(mapProjection, result) {
+    result = result ?? new Cartesian3();
+    const instanceTransform = Transforms.basisTo2D(
+      mapProjection,
+      this.transform,
+      scratchTransform,
+    );
+    return Matrix4.getTranslation(instanceTransform, result);
   }
 }
 
