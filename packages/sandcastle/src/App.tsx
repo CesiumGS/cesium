@@ -353,6 +353,33 @@ function App() {
     [galleryItems],
   );
 
+  const loadDemo = useCallback(
+    function loadDemo(item: GalleryItem, switchToCode: boolean) {
+      // Load the gallery item every time it's clicked
+      loadGalleryItem(item.id);
+
+      const searchParams = new URLSearchParams(window.location.search);
+      if (
+        !searchParams.has("id") ||
+        (searchParams.has("id") && searchParams.get("id") !== item.id)
+      ) {
+        // only push state if it's not the current url to prevent duplicated in history
+        window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+        if (
+          !searchParams.has("id") ||
+          (searchParams.has("id") && searchParams.get("id") !== item.id)
+        ) {
+          // only push state if it's not the current url to prevent duplicated in history
+          window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+        }
+        if (switchToCode) {
+          setLeftPanel("editor");
+        }
+      }
+    },
+    [loadGalleryItem],
+  );
+
   useEffect(() => {
     let ignore = false;
     async function fetchGallery() {
@@ -457,7 +484,7 @@ function App() {
             <PopoverDescription>{description}</PopoverDescription>
           </Popover>
         </PopoverProvider>
-        <Button tone="accent" onClick={() => share()}>
+        <Button tone="accent" onClick={share}>
           <Icon href={shareIcon} /> Share
         </Button>
         <Divider aria-orientation="vertical" />
@@ -537,37 +564,7 @@ function App() {
           <Gallery
             hidden={leftPanel !== "gallery"}
             galleryItems={galleryItems}
-            loadDemo={(item, switchToCode) => {
-              // Load the gallery item every time it's clicked
-              loadGalleryItem(item.id);
-
-              const searchParams = new URLSearchParams(window.location.search);
-              if (
-                !searchParams.has("id") ||
-                (searchParams.has("id") && searchParams.get("id") !== item.id)
-              ) {
-                // only push state if it's not the current url to prevent duplicated in history
-                window.history.pushState(
-                  {},
-                  "",
-                  `${getBaseUrl()}?id=${item.id}`,
-                );
-                if (
-                  !searchParams.has("id") ||
-                  (searchParams.has("id") && searchParams.get("id") !== item.id)
-                ) {
-                  // only push state if it's not the current url to prevent duplicated in history
-                  window.history.pushState(
-                    {},
-                    "",
-                    `${getBaseUrl()}?id=${item.id}`,
-                  );
-                }
-                if (switchToCode) {
-                  setLeftPanel("editor");
-                }
-              }
-            }}
+            loadDemo={loadDemo}
           />
         </Allotment.Pane>
         <Allotment.Pane className="right-panel">

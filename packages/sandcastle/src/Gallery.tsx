@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import "./Gallery.css";
 import { Badge, IconButton, Select, Spinner, TextBox } from "@stratakit/bricks";
 import { getBaseUrl } from "./util/getBaseUrl";
@@ -171,7 +171,7 @@ export function GallerySearch({
   );
 }
 
-export function GalleryCard({
+export const GalleryCard = memo(function GalleryCard({
   item,
   loadDemo,
 }: {
@@ -213,7 +213,7 @@ export function GalleryCard({
       />
     </a>
   );
-}
+});
 
 function Gallery({
   galleryItems,
