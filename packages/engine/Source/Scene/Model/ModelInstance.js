@@ -5,10 +5,11 @@ import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
+import Transforms from "../../Core/Transforms.js";
 
 const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
-const scratchBoundingSphereTransform = new Matrix4();
+const scratchTransform = new Matrix4();
 const scratchBoundingSphere = new BoundingSphere();
 /**
  * A copy of a {@link Model} mesh, known as an instance, used for rendering multiple copies with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
@@ -205,8 +206,9 @@ class ModelInstance {
           sceneGraph,
           runtimeNode,
           primitiveBoundingSphere,
+          false,
+          undefined,
         );
-
         instanceBoundingSpheres.push(boundingSphere);
       }
     }
@@ -273,6 +275,8 @@ class ModelInstance {
     sceneGraph,
     runtimeNode,
     primitiveBoundingSphere,
+    useInstanceTransform2D,
+    mapProjection,
     result,
   ) {
     result = result ?? new BoundingSphere();
@@ -283,11 +287,34 @@ class ModelInstance {
       runtimeNode.computedTransform,
       new Matrix4(),
     );
-    const primitiveMatrix = this.computeModelMatrix(
+
+    let instanceTransform;
+    if (useInstanceTransform2D) {
+      instanceTransform = Transforms.basisTo2D(
+        mapProjection,
+        this.transform,
+        scratchTransform,
+      );
+
+      instanceTransform = Matrix4.multiplyTransformation(
+        instanceTransform,
+        sceneGraph._axisCorrectionMatrix,
+        scratchTransform,
+      );
+    } else {
+      instanceTransform = Matrix4.multiplyTransformation(
+        this.transform,
+        rootTransform,
+        scratchTransform,
+      );
+    }
+
+    const primitiveMatrix = Matrix4.multiplyTransformation(
       modelMatrix,
-      rootTransform,
-      scratchBoundingSphereTransform,
+      instanceTransform,
+      scratchTransform,
     );
+
     return BoundingSphere.transform(
       primitiveBoundingSphere,
       primitiveMatrix,

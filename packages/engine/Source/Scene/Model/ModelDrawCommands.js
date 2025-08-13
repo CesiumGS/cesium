@@ -13,8 +13,9 @@ import ModelVS from "../../Shaders/Model/ModelVS.js";
 import ModelFS from "../../Shaders/Model/ModelFS.js";
 import ModelUtility from "./ModelUtility.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 
-const modelMatrixScratch = new Matrix4();
+const scratchCartesian3 = new Cartesian3();
 
 /**
  * Internal functions to build draw commands for models.
@@ -141,6 +142,8 @@ function buildDrawCommandForModel(
     sceneGraph,
     runtimeNode,
     primitiveBoundingSphere,
+    frameState.mapProjection,
+    useModelMatrix2D,
   );
 
   // Initialize render state with default values
@@ -216,15 +219,23 @@ ModelDrawCommands.createCommandModelMatrix = function (
 
   if (sceneGraph.hasInstances) {
     if (use2D) {
-      const inverseAxisCorrection = Matrix4.inverse(
-        sceneGraph._axisCorrectionMatrix,
-        modelMatrixScratch,
-      );
-      return Matrix4.multiplyTransformation(
-        sceneGraph._computedModelMatrix2D,
-        inverseAxisCorrection,
-        result,
-      );
+      // earth centered model
+      // const translation = Matrix4.getTranslation(modelMatrix, scratchCartesian3);
+      // if (Cartesian3.equals(translation, Cartesian3.ZERO)) {
+      //   return sceneGraph._computedModelMatrix2D
+      // }
+
+      //model centered on earth surface
+      // const inverseAxisCorrection = Matrix4.inverse(
+      //   sceneGraph._axisCorrectionMatrix,
+      //   modelMatrixScratch,
+      // );
+      // return Matrix4.multiplyTransformation(
+      //   sceneGraph._computedModelMatrix2D,
+      //   inverseAxisCorrection,
+      //   result,
+      // );
+      return sceneGraph._modelMatrix2D;
     }
     return modelMatrix;
   }
@@ -260,6 +271,8 @@ ModelDrawCommands.createCommandBoundingSphere = function (
   sceneGraph,
   runtimeNode,
   primitiveBoundingSphere,
+  mapProjection,
+  useModelMatrix2D = false,
   result,
 ) {
   if (!defined(result)) {
@@ -267,6 +280,21 @@ ModelDrawCommands.createCommandBoundingSphere = function (
   }
 
   if (sceneGraph.hasInstances) {
+    let useInstanceTransform2D = false;
+
+    const translation = Matrix4.getTranslation(
+      commandModelMatrix,
+      scratchCartesian3,
+    );
+    if (useModelMatrix2D && Cartesian3.equals(translation, Cartesian3.ZERO)) {
+      useInstanceTransform2D = true;
+      // commandModelMatrix = Matrix4.multiplyTransformation(
+      //   commandModelMatrix,
+      //   sceneGraph._axisCorrectionMatrix,
+      //   modelMatrixScratch
+      // )
+    }
+
     const instanceBoundingSpheres = [];
 
     for (const modelInstance of sceneGraph.modelInstances._instances) {
@@ -275,6 +303,8 @@ ModelDrawCommands.createCommandBoundingSphere = function (
         sceneGraph,
         runtimeNode,
         primitiveBoundingSphere,
+        useInstanceTransform2D,
+        mapProjection,
       );
       instanceBoundingSpheres.push(boundingSphere);
     }
@@ -327,6 +357,8 @@ ModelDrawCommands.updateDrawCommand = function (
     sceneGraph,
     runtimeNode,
     primitiveBoundingSphere,
+    frameState.mapProjection,
+    useModelMatrix2D,
     drawCommand.boundingVolume,
   );
 };
