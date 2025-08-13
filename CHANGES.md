@@ -12,6 +12,10 @@
 
 - Removes the minimum tile threshold of four for WMTS. [#4372](https://github.com/CesiumGS/cesium/issues/4372)
 
+#### Additions :tada:
+
+- Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
+
 ## 1.132 - 2025-08-01
 
 ### @cesium/engine
