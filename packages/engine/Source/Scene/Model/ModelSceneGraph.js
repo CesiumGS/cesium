@@ -483,7 +483,10 @@ function computeModelMatrix2D(sceneGraph, frameState) {
     scratchComputedTranslation,
   );
 
-  if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
+  if (
+    !Cartesian3.equals(translation, Cartesian3.ZERO) ||
+    sceneGraph.hasInstances
+  ) {
     sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,
