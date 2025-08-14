@@ -11,6 +11,7 @@ const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
 const scratchTransform = new Matrix4();
 const scratchBoundingSphere = new BoundingSphere();
+const scratchCartesian3 = new Cartesian3();
 /**
  * A copy of a {@link Model} mesh, known as an instance, used for rendering multiple copies with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
  * @see {@link ModelInstanceCollection} for a collection of instances.
@@ -193,8 +194,11 @@ class ModelInstance {
    * viewer.camera.flyToBoundingSphere(boundingSphere);
    */
   getBoundingSphere(model, useBoundingSphere2D, mapProjection, result) {
-    const modelMatrix = model.modelMatrix;
+    let modelMatrix = model.modelMatrix;
     const sceneGraph = model.sceneGraph;
+    if (useBoundingSphere2D) {
+      modelMatrix = sceneGraph._modelMatrix2D;
+    }
     const instanceBoundingSpheres = [];
 
     for (const runtimeNode of sceneGraph._runtimeNodes) {
@@ -314,19 +318,19 @@ class ModelInstance {
     );
 
     let instanceTransform;
-    if (useInstanceTransform2D) {
+    const modelTranslation = Matrix4.getTranslation(
+      modelMatrix,
+      scratchCartesian3,
+    );
+    if (
+      useInstanceTransform2D &
+      Cartesian3.equals(modelTranslation, Cartesian3.ZERO)
+    ) {
       instanceTransform = Transforms.basisTo2D(
         mapProjection,
         this.transform,
         scratchTransform,
       );
-
-      // ToDo: check if needed
-      // instanceTransform = Matrix4.multiplyTransformation(
-      //   instanceTransform,
-      //   sceneGraph._axisCorrectionMatrix,
-      //   scratchTransform,
-      // );
     } else {
       instanceTransform = Matrix4.multiplyTransformation(
         this.transform,
