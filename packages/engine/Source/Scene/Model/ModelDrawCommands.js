@@ -274,11 +274,7 @@ ModelDrawCommands.createCommandBoundingSphere = function (
       );
       instanceBoundingSpheres.push(boundingSphere);
     }
-    const combinedBoundingSphere = BoundingSphere.fromBoundingSpheres(
-      instanceBoundingSpheres,
-      result,
-    );
-    return combinedBoundingSphere;
+    return BoundingSphere.fromBoundingSpheres(instanceBoundingSpheres, result);
   }
 
   return BoundingSphere.transform(
