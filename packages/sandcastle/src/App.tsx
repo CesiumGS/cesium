@@ -38,16 +38,7 @@ import {
 } from "./ConsoleMirror.tsx";
 import { getBaseUrl } from "./util/getBaseUrl.ts";
 import { SettingsModal } from "./SettingsModal.tsx";
-import {
-  Popover,
-  PopoverArrow,
-  PopoverDescription,
-  PopoverDisclosure,
-  PopoverHeading,
-  PopoverProvider,
-} from "@ariakit/react";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
-import "./Popover.css";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -198,7 +189,6 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [title, setTitle] = useState("New Sandcastle");
-  const [description, setDescription] = useState("");
 
   // This is used to avoid a "double render" when loading from the URL
   const [readyForViewer, setReadyForViewer] = useState(false);
@@ -295,7 +285,6 @@ function App() {
     window.history.pushState({}, "", getBaseUrl());
 
     setTitle("New Sandcastle");
-    setDescription("");
   }
 
   function share() {
@@ -349,7 +338,6 @@ function App() {
         html: html,
       });
       setTitle(galleryItem.title);
-      setDescription(galleryItem.description);
       setReadyForViewer(true);
     },
     [galleryItems],
@@ -475,17 +463,7 @@ function App() {
             style={{ width: "118px" }}
           />
         </a>
-        <PopoverProvider>
-          <PopoverDisclosure
-            render={<div className="metadata">{title}</div>}
-            disabled={false}
-          />
-          <Popover className="popover">
-            <PopoverArrow className="arrow" />
-            <PopoverHeading className="heading">{title}</PopoverHeading>
-            <PopoverDescription>{description}</PopoverDescription>
-          </Popover>
-        </PopoverProvider>
+        <div className="metadata">{title}</div>
         <Button tone="accent" onClick={share}>
           <Icon href={shareIcon} /> Share
         </Button>
