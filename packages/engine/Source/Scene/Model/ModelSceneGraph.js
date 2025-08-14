@@ -155,7 +155,6 @@ function ModelSceneGraph(options) {
 
   // Model matrix in 2D without axis correction, etc.
   this._modelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
-  this._inverseModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
   this._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
@@ -529,13 +528,8 @@ function computeModelMatrix2D(sceneGraph, frameState) {
       modelMatrix,
       sceneGraph._modelMatrix2D,
     );
-    sceneGraph._inverseModelMatrix2D = Matrix4.inverseTransformation(
-      sceneGraph._modelMatrix2D,
-      sceneGraph._inverseModelMatrix2D,
-    );
   } else {
     sceneGraph._modelMatrix2D = Matrix4.IDENTITY;
-    sceneGraph._inverseModelMatrix2D = Matrix4.IDENTITY;
   }
 }
 
