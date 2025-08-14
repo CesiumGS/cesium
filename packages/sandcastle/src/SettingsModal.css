@@ -1,6 +1,16 @@
 .settings-row {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+
+  & :nth-child(2) {
+    flex-shrink: 0;
+  }
+
+  .caption {
+    color: var(--stratakit-color-text-neutral-tertiary);
+    max-width: 80%;
+  }
 
   .multi-option {
     display: flex;

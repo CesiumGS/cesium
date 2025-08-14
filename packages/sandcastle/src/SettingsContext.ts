@@ -24,18 +24,20 @@ export const availableFonts: Record<AvailableFontId, FontDefinition> = {
   },
 };
 
+export type LeftPanel = "editor" | "gallery";
+
 export type Settings = {
   theme: "dark" | "light";
-  fontSize: "large" | "small";
   fontFamily: AvailableFontId;
   fontLigatures: boolean;
+  defaultPanel: LeftPanel;
 };
 
 export const initialSettings: Settings = {
   theme: "dark",
-  fontSize: "large",
   fontFamily: "droid-sans",
   fontLigatures: false,
+  defaultPanel: "gallery",
 };
 
 export const SettingsContext = createContext<{

@@ -46,7 +46,7 @@ import {
   PopoverHeading,
   PopoverProvider,
 } from "@ariakit/react";
-import { SettingsContext } from "./SettingsContext.ts";
+import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 import "./Popover.css";
 
 const defaultJsCode = `import * as Cesium from "cesium";
@@ -189,8 +189,10 @@ function App() {
   const cesiumVersion = __CESIUM_VERSION__;
   const versionString = __COMMIT_SHA__ ? `Commit: ${__COMMIT_SHA__}` : "";
 
-  const startOnEditor = !!(window.location.search || window.location.hash);
-  const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">(
+  const isStartingWithCode = !!(window.location.search || window.location.hash);
+  const startOnEditor =
+    isStartingWithCode || settings.defaultPanel === "editor";
+  const [leftPanel, setLeftPanel] = useState<LeftPanel>(
     startOnEditor ? "editor" : "gallery",
   );
   const [settingsOpen, setSettingsOpen] = useState(false);

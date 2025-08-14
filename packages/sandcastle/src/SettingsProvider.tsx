@@ -17,9 +17,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         // Build a new object so we always set only the settings we know about
         return JSON.stringify({
           theme: value.theme ?? initialSettings.theme,
-          fontSize: value.fontSize ?? initialSettings.fontSize,
           fontFamily: value.fontFamily ?? initialSettings.fontFamily,
           fontLigatures: value.fontLigatures ?? initialSettings.fontLigatures,
+          defaultPanel: value.defaultPanel ?? initialSettings.defaultPanel,
         });
       },
       deserializer: (value) => {
@@ -33,10 +33,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         }
         return {
           theme: parsedValue.theme ?? initialSettings.theme,
-          fontSize: parsedValue.fontSize ?? initialSettings.fontSize,
           fontFamily: fontFamily,
           fontLigatures:
             parsedValue.fontLigatures ?? initialSettings.fontLigatures,
+          defaultPanel:
+            parsedValue.defaultPanel ?? initialSettings.defaultPanel,
         };
       },
     },

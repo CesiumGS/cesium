@@ -3,9 +3,17 @@ import { useContext } from "react";
 import {
   AvailableFontId,
   availableFonts,
+  LeftPanel,
   SettingsContext,
 } from "./SettingsContext";
-import { Button, Field, IconButton, Select, Switch } from "@stratakit/bricks";
+import {
+  Button,
+  Field,
+  IconButton,
+  Select,
+  Switch,
+  Text,
+} from "@stratakit/bricks";
 import {
   SandcastleDialog,
   SandcastleDialogFooter,
@@ -97,6 +105,29 @@ export function SettingsModal({
             </Field.Label>
           </Field.Root>
         </div>
+      </div>
+      <div className="settings-row">
+        <div>
+          Starting panel
+          <Text variant="caption-lg" className="caption">
+            Dictates which panel to start on when not loading a specific
+            Sandcastle
+          </Text>
+        </div>
+        <Select.Root>
+          <Select.HtmlSelect
+            className="tag-select"
+            value={settings.defaultPanel}
+            onChange={(e) => {
+              updateSettings({
+                defaultPanel: e.target.value as LeftPanel,
+              });
+            }}
+          >
+            <option value="gallery">Gallery</option>
+            <option value="editor">Editor</option>
+          </Select.HtmlSelect>
+        </Select.Root>
       </div>
       <SandcastleDialogFooter>
         <DialogDismiss render={<Button>Done</Button>}></DialogDismiss>
