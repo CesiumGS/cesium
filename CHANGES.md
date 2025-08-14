@@ -7,6 +7,7 @@
 #### Breaking Changes :mega:
 
 - Removed the argument fallback in `ITwinData.*` functions. Please switch to the new options argument signature [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+- Allow passing tileset constructor options to the tileset that is created with `ITwinData.createTilesetForRealityDataId` [#12709](https://github.com/CesiumGS/cesium/issues/12709)
 
 #### Fixes :wrench:
 
