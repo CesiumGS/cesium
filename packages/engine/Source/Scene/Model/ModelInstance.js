@@ -11,7 +11,6 @@ const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
 const scratchTransform = new Matrix4();
 const scratchBoundingSphere = new BoundingSphere();
-const scratchCartesian3 = new Cartesian3();
 /**
  * A copy of a {@link Model} mesh, known as an instance, used for rendering multiple copies with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
  * @see {@link ModelInstanceCollection} for a collection of instances.
@@ -194,11 +193,7 @@ class ModelInstance {
    * viewer.camera.flyToBoundingSphere(boundingSphere);
    */
   getBoundingSphere(model, useBoundingSphere2D, mapProjection, result) {
-    let modelMatrix = model.modelMatrix;
     const sceneGraph = model.sceneGraph;
-    if (useBoundingSphere2D) {
-      modelMatrix = sceneGraph._modelMatrix2D;
-    }
     const instanceBoundingSpheres = [];
 
     for (const runtimeNode of sceneGraph._runtimeNodes) {
@@ -206,7 +201,7 @@ class ModelInstance {
       for (const runtimePrimitive of runtimePrimitives) {
         const primitiveBoundingSphere = runtimePrimitive.boundingSphere;
         const boundingSphere = this.getPrimitiveBoundingSphere(
-          modelMatrix,
+          model.modelMatrix,
           sceneGraph,
           runtimeNode,
           primitiveBoundingSphere,
@@ -318,17 +313,17 @@ class ModelInstance {
     );
 
     let instanceTransform;
-    const modelTranslation = Matrix4.getTranslation(
-      modelMatrix,
-      scratchCartesian3,
-    );
-    if (
-      useInstanceTransform2D &
-      Cartesian3.equals(modelTranslation, Cartesian3.ZERO)
-    ) {
-      instanceTransform = Transforms.basisTo2D(
-        mapProjection,
+    let primitiveMatrix;
+
+    if (useInstanceTransform2D) {
+      const combinedTransform = Matrix4.multiplyTransformation(
+        modelMatrix,
         this.transform,
+        new Matrix4(),
+      );
+      primitiveMatrix = Transforms.basisTo2D(
+        mapProjection,
+        combinedTransform,
         scratchTransform,
       );
     } else {
@@ -337,13 +332,12 @@ class ModelInstance {
         rootTransform,
         scratchTransform,
       );
+      primitiveMatrix = Matrix4.multiplyTransformation(
+        modelMatrix,
+        instanceTransform,
+        scratchTransform,
+      );
     }
-
-    const primitiveMatrix = Matrix4.multiplyTransformation(
-      modelMatrix,
-      instanceTransform,
-      scratchTransform,
-    );
 
     return BoundingSphere.transform(
       primitiveBoundingSphere,
