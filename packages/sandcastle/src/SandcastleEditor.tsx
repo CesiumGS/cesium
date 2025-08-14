@@ -1,6 +1,13 @@
 import { Editor, Monaco, OnChange, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { RefObject, useImperativeHandle, useRef, useState } from "react";
+import {
+  RefObject,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import * as prettier from "prettier";
 import * as babelPlugin from "prettier/plugins/babel";
 import * as estreePlugin from "prettier/plugins/estree";
@@ -17,6 +24,7 @@ import JsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
 import CssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import HtmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import TsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
+import { availableFonts, SettingsContext } from "./SettingsContext";
 
 // this setup is needed for Vite to properly build/load the workers
 // see the readme https://github.com/suren-atoyan/monaco-react#loader-config
@@ -70,8 +78,22 @@ function SandcastleEditor({
   setJs: (newCode: string) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"js" | "html">("js");
-
   const internalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
+
+  const {
+    settings: { fontFamily, fontLigatures },
+  } = useContext(SettingsContext);
+  useEffect(() => {
+    internalEditorRef.current?.updateOptions({
+      fontFamily: availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
+    });
+  }, [fontFamily]);
+  useEffect(() => {
+    internalEditorRef.current?.updateOptions({
+      fontLigatures: fontLigatures,
+    });
+  }, [fontLigatures]);
+
   useImperativeHandle(ref, () => {
     return {
       formatCode() {
@@ -295,6 +317,9 @@ Sandcastle.addToolbarMenu(${variableName});`);
             placeholder: "// Select a demo from the gallery to load.",
             renderWhitespace: "trailing",
             tabSize: 2,
+            fontFamily:
+              availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
+            fontLigatures: fontLigatures,
           }}
           path={activeTab === "js" ? "script.js" : "index.html"}
           language={activeTab === "js" ? "javascript" : "html"}
