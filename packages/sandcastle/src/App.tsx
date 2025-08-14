@@ -519,20 +519,10 @@ function App() {
                   "",
                   `${getBaseUrl()}?id=${item.id}`,
                 );
-                if (
-                  !searchParams.has("id") ||
-                  (searchParams.has("id") && searchParams.get("id") !== item.id)
-                ) {
-                  // only push state if it's not the current url to prevent duplicated in history
-                  window.history.pushState(
-                    {},
-                    "",
-                    `${getBaseUrl()}?id=${item.id}`,
-                  );
-                }
-                if (switchToCode) {
-                  setLeftPanel("editor");
-                }
+              }
+
+              if (switchToCode) {
+                setLeftPanel("editor");
               }
             }}
           />
