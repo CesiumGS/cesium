@@ -153,6 +153,9 @@ function ModelSceneGraph(options) {
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   this._computedModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
+  // Model matrix in 2D without axis correction, etc.
+  this._modelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
+
   this._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   // Store articulations from the AGI_articulations extension
@@ -476,14 +479,9 @@ function computeModelMatrix(
 
 const scratchComputedTranslation = new Cartesian3();
 
-function computeModelMatrix2D(sceneGraph, frameState) {
+function updateComputedModelMatrix2D(sceneGraph, frameState) {
   const computedModelMatrix = sceneGraph._computedModelMatrix;
-  const translation = Matrix4.getTranslation(
-    computedModelMatrix,
-    scratchComputedTranslation,
-  );
-
-  if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
+  if (sceneGraph.hasInstances) {
     sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,
@@ -508,6 +506,23 @@ function computeModelMatrix2D(sceneGraph, frameState) {
     sceneGraph._computedModelMatrix2D,
     sceneGraph._boundingSphere2D,
   );
+}
+
+function computeModelMatrix2D(sceneGraph, frameState) {
+  const modelMatrix = sceneGraph._model.modelMatrix;
+  const translation = Matrix4.getTranslation(
+    modelMatrix,
+    scratchComputedTranslation,
+  );
+  if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
+    sceneGraph._modelMatrix2D = Transforms.basisTo2D(
+      frameState.mapProjection,
+      modelMatrix,
+      sceneGraph._modelMatrix2D,
+    );
+  } else {
+    sceneGraph._modelMatrix2D = Matrix4.IDENTITY;
+  }
 }
 
 /**
@@ -952,6 +967,7 @@ ModelSceneGraph.prototype.updateModelMatrix = function (
   );
 
   if (frameState.mode !== SceneMode.SCENE3D) {
+    updateComputedModelMatrix2D(this, frameState);
     computeModelMatrix2D(this, frameState);
   }
 

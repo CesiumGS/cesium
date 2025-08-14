@@ -135,10 +135,12 @@ function buildDrawCommandForModel(
       ? runtimePrimitive.boundingSphere2D
       : runtimePrimitive.boundingSphere;
   const boundingSphere = ModelDrawCommands.createCommandBoundingSphere(
-    modelMatrix,
+    model.modelMatrix,
     sceneGraph,
     runtimeNode,
     primitiveBoundingSphere,
+    frameState.mapProjection,
+    useModelMatrix2D,
   );
 
   // Initialize render state with default values
@@ -213,6 +215,9 @@ ModelDrawCommands.createCommandModelMatrix = function (
   }
 
   if (sceneGraph.hasInstances) {
+    if (use2D) {
+      return sceneGraph._modelMatrix2D;
+    }
     return modelMatrix;
   }
 
@@ -247,6 +252,8 @@ ModelDrawCommands.createCommandBoundingSphere = function (
   sceneGraph,
   runtimeNode,
   primitiveBoundingSphere,
+  mapProjection,
+  useModelMatrix2D = false,
   result,
 ) {
   if (!defined(result)) {
@@ -262,10 +269,11 @@ ModelDrawCommands.createCommandBoundingSphere = function (
         sceneGraph,
         runtimeNode,
         primitiveBoundingSphere,
+        useModelMatrix2D,
+        mapProjection,
       );
       instanceBoundingSpheres.push(boundingSphere);
     }
-
     return BoundingSphere.fromBoundingSpheres(instanceBoundingSpheres, result);
   }
 
@@ -307,10 +315,12 @@ ModelDrawCommands.updateDrawCommand = function (
       ? runtimePrimitive.boundingSphere2D
       : runtimePrimitive.boundingSphere;
   ModelDrawCommands.createCommandBoundingSphere(
-    modelMatrix,
+    model.modelMatrix,
     sceneGraph,
     runtimeNode,
     primitiveBoundingSphere,
+    frameState.mapProjection,
+    useModelMatrix2D,
     drawCommand.boundingVolume,
   );
 };
