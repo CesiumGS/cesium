@@ -109,6 +109,7 @@ RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
     const transform = modelInstance.getRelativeScaledTransform(
       model,
       frameState,
+      useModelMatrix2D,
       relativeScaledTransformScratch,
     );
     const offset = elements * i;
