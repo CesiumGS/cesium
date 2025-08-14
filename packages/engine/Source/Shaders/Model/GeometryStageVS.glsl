@@ -1,3 +1,4 @@
+#ifndef CUSTOM_GEOMETRY_STAGE
 vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 normal)
 {
     vec4 computedPosition;
@@ -40,3 +41,4 @@ vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 no
 
     return computedPosition;
 }
+#endif
