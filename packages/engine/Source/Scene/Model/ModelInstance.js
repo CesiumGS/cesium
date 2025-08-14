@@ -224,9 +224,32 @@ class ModelInstance {
    * @returns {Matrix4} The scaled relative instance transform.
    * @private
    */
-  getRelativeScaledTransform(model, frameState, result) {
+  getRelativeScaledTransform(model, frameState, useModelMatrix2D, result) {
+    let relativeTransform = this._relativeTransform;
+    if (useModelMatrix2D) {
+      const transform2D = Transforms.basisTo2D(
+        frameState.mapProjection,
+        this.transform,
+        scratchTransform,
+      );
+      const translationRotationScale = scratchTranslationRotationScale;
+      translationRotationScale.translation = Cartesian3.ZERO;
+      translationRotationScale.scale = Matrix4.getScale(
+        transform2D,
+        translationRotationScale.scale,
+      );
+
+      const rotation = Matrix4.getRotation(transform2D, scratchRotation);
+      translationRotationScale.rotation = Quaternion.fromRotationMatrix(
+        rotation,
+        translationRotationScale.rotation,
+      );
+      relativeTransform = Matrix4.fromTranslationRotationScale(
+        translationRotationScale,
+      );
+    }
     if (!model.ready || !(model.minimumPixelSize > 0)) {
-      return this._relativeTransform;
+      return relativeTransform;
     }
     let scale = model.scale;
     const radius = model.sceneGraph.rootBoundingSphere.radius;
@@ -248,11 +271,7 @@ class ModelInstance {
       scale = (model.minimumPixelSize * scaleInPixels) / diameter;
     }
 
-    return Matrix4.multiplyByUniformScale(
-      this._relativeTransform,
-      scale,
-      result,
-    );
+    return Matrix4.multiplyByUniformScale(relativeTransform, scale, result);
   }
 
   /**
