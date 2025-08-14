@@ -90,6 +90,9 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
       byteOffset,
       batchTableJsonByteLength,
     );
+    if (Object.keys(batchTableJson).length === 0) {
+      batchTableJson = undefined;
+    }
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -99,6 +102,8 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
         byteOffset,
         batchTableBinaryByteLength,
       );
+      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+      batchTableBinary = new Uint8Array(batchTableBinary);
       byteOffset += batchTableBinaryByteLength;
     }
   }
@@ -175,9 +180,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     parsedContent.batchLength = batchLength;
   }
 
-  if (defined(batchTableBinary)) {
-    // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-    batchTableBinary = new Uint8Array(batchTableBinary);
+  if (defined(batchTableJson) || defined(batchTableBinary)) {
     parsedContent.batchTableJson = batchTableJson;
     parsedContent.batchTableBinary = batchTableBinary;
   }

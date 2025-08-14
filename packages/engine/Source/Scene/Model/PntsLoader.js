@@ -549,17 +549,21 @@ function makeAttributes(loader, parsedContent, context) {
 function makeStructuralMetadata(parsedContent, customAttributeOutput) {
   const batchLength = parsedContent.batchLength;
   const pointsLength = parsedContent.pointsLength;
+  const batchTableJson = parsedContent.batchTableJson;
   const batchTableBinary = parsedContent.batchTableBinary;
 
   // If there are batch IDs, parse as a property table. Otherwise, parse
   // as property attributes.
   const parseAsPropertyAttributes = !defined(parsedContent.batchIds);
-
-  if (defined(batchTableBinary) || parsedContent.hasDracoBatchTable) {
+  if (
+    defined(batchTableBinary) ||
+    defined(batchTableJson) ||
+    parsedContent.hasDracoBatchTable
+  ) {
     const count = batchLength ?? pointsLength;
     return parseBatchTable({
       count: count,
-      batchTable: parsedContent.batchTableJson,
+      batchTable: batchTableJson,
       binaryBody: batchTableBinary,
       parseAsPropertyAttributes: parseAsPropertyAttributes,
       customAttributeOutput: customAttributeOutput,
