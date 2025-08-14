@@ -192,7 +192,7 @@ class ModelInstance {
    * const boundingSphere = modelInstance.getBoundingSphere(model);
    * viewer.camera.flyToBoundingSphere(boundingSphere);
    */
-  getBoundingSphere(model, result) {
+  getBoundingSphere(model, useBoundingSphere2D, mapProjection, result) {
     const modelMatrix = model.modelMatrix;
     const sceneGraph = model.sceneGraph;
     const instanceBoundingSpheres = [];
@@ -206,8 +206,8 @@ class ModelInstance {
           sceneGraph,
           runtimeNode,
           primitiveBoundingSphere,
-          false,
-          undefined,
+          useBoundingSphere2D,
+          mapProjection,
         );
         instanceBoundingSpheres.push(boundingSphere);
       }
@@ -254,7 +254,13 @@ class ModelInstance {
     let scale = model.scale;
     const radius = model.sceneGraph.rootBoundingSphere.radius;
 
-    const boundingSphere = this.getBoundingSphere(model, scratchBoundingSphere);
+    const boundingSphere = this.getBoundingSphere(
+      model,
+      useModelMatrix2D,
+      frameState.mapProjection,
+      scratchBoundingSphere,
+    );
+
     const scaleInPixels = frameState.camera.getPixelSize(
       boundingSphere,
       frameState.context.drawingBufferWidth,
