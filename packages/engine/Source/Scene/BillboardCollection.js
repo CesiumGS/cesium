@@ -1366,7 +1366,7 @@ function writeCompressedAttribute3(
     isHeightReferenceClamp(billboard.heightReference) &&
     frameState.context.depthTexture;
   if (!defined(disableDepthTestDistance)) {
-    disableDepthTestDistance = clampToGround ? 5000.0 : 0.0;
+    disableDepthTestDistance = clampToGround ? 50000.0 : 0.0;
   }
 
   disableDepthTestDistance *= disableDepthTestDistance;
