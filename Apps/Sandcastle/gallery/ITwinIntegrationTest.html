@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use Viewer to start building new applications or easily embed Cesium into existing applications."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        Cesium.ITwinPlatform.defaultShareKey =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiI2NTEwMzUzMi02MmU3LTRmZGQtOWNlNy1iODIxYmEyMmI5NjMiLCJleHAiOjE3NzcwNTU4MTh9.Q9MgsWWkc6bb1zHUJ7ahZjxPtaTWEjpNvRln7NS3faM";
+
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
+        scene.globe.show = true;
+        const station = await Cesium.ITwinData.createTilesetFromIModelId({
+          iModelId: "669dde67-eb69-4e0b-bcf2-f722eee94746",
+        });
+        scene.primitives.add(station);
+
+        // Example data from a Metrostation.bim saved view
+        const savedViewData = {
+          cameraOn: true,
+          origin: [-50.20252266797269, 56.989460084120665, -93.48021229168089],
+          extents: [224.2601166976935, 165.04873366794442, 249.514861628184],
+          angles: {
+            pitch: -26.15946129868821,
+            roll: -43.25863504612565,
+            yaw: 25.103938995163002,
+          },
+          camera: {
+            lens: 45.95389015950363,
+            focusDist: 264.45767738020345,
+            eye: [-37.863420740019635, -118.27234989806642, 132.40005835408053],
+          },
+        };
+
+        const rows = [
+          [
+            -0.007357864592832313, 0.9804561979367872, 0.19659986204464436,
+            1255641.5519893507,
+          ],
+          [
+            -0.6559516195525271, 0.14366280316126617, -0.7410050416793829,
+            -4732698.684827632,
+          ],
+          [
+            -0.75476707309941, -0.13441221267127085, 0.6420747794842614,
+            4073546.2460685894,
+          ],
+        ];
+        const totalRows = [...rows[0], ...rows[1], ...rows[2]];
+        // console.log(totalRows);
+        // const ecefTransform = Cesium.Matrix4.fromRowMajorArray(totalRows);
+        // console.log(ecefTransform);
+        const ecefTransformArray = [
+          rows[0][0],
+          rows[1][0],
+          rows[2][0],
+          0,
+          rows[0][1],
+          rows[1][1],
+          rows[2][1],
+          0,
+          rows[0][2],
+          rows[1][2],
+          rows[2][2],
+          0,
+          rows[0][3],
+          rows[1][3],
+          rows[2][3],
+          1,
+        ];
+        const ecefTransform = Cesium.Matrix4.fromColumnMajorArray(ecefTransformArray);
+        // console.log(ecefTransform);
+
+        const cesiumView = {};
+
+        if (savedViewData.cameraOn) {
+          const position = savedViewData.camera.eye;
+          const fov =
+            2.0 *
+            Math.atan2(savedViewData.extents[0] / 2.0, savedViewData.camera.focusDist);
+
+          // TODO problem: don't have a way to get ecef location corresponding to this saved view, without iModel backend
+          // So use null island?
+          // const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+          // const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+
+          // heading = -Z
+          // pitch = -Y
+          // roll = +X
+
+          // yaw = +Z
+          // pitch = -Y
+          // roll =+X
+
+          const rotation = new Cesium.HeadingPitchRoll(
+            Cesium.Math.toRadians(savedViewData.angles.yaw),
+            Cesium.Math.toRadians(savedViewData.angles.pitch),
+            Cesium.Math.toRadians(savedViewData.angles.roll),
+          );
+          const matrix = Cesium.Matrix3.fromHeadingPitchRoll(rotation);
+
+          const testOrientation = {
+            heading: Cesium.Math.toRadians(90), // east, default value is 0.0 (north)
+            pitch: Cesium.Math.toRadians(-90), // default value (looking down)
+            roll: 0.0, // default value
+          };
+
+          const up = Cesium.Matrix3.getRow(matrix, 1, new Cesium.Cartesian3());
+          const direction = Cesium.Matrix3.getRow(matrix, 2, new Cesium.Cartesian3());
+          const dirScale = Cesium.Matrix3.multiplyByScalar(
+            direction,
+            -1,
+            new Cesium.Cartesian3(),
+          );
+          const dirUp = { direction: dirScale, up: up };
+
+          cesiumView.destination = new Cesium.Cartesian3(
+            position[0],
+            position[1],
+            position[2],
+          );
+          cesiumView.endTransform = ecefTransform;
+          // cesiumView.orientation = testOrientation;
+
+          // viewer.camera.frustum.fov = fov;
+          viewer.camera.setView(cesiumView);
+        }
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>
