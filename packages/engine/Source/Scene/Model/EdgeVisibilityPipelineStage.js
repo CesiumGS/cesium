@@ -3,89 +3,17 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Pass from "../../Renderer/Pass.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Texture from "../../Renderer/Texture.js";
-import PixelFormat from "../../Core/PixelFormat.js";
-import PixelDatatype from "../../Renderer/PixelDatatype.js";
-import Sampler from "../../Renderer/Sampler.js";
-import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
-import TextureMagnificationFilter from "../../Renderer/TextureMagnificationFilter.js";
-import ModelReader from "./ModelReader.js";
+import OrthographicOffCenterFrustum from "../../Core/OrthographicOffCenterFrustum.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
-/**
- * Holds an array of indices into a VertexTable. Each index is a 24-bit unsigned integer.
- * Similar to iTwin.js VertexIndices class - private helper for EdgeVisibilityPipelineStage.
- * @private
- */
-class VertexIndices {
-  constructor(data) {
-    this.data = data;
-    if (this.data.length % 3 !== 0) {
-      throw new Error("VertexIndices data length must be a multiple of 3");
-    }
-  }
-
-  get length() {
-    return this.data.length / 3;
-  }
-
-  static encodeIndex(index, bytes, byteIndex) {
-    if (byteIndex + 2 >= bytes.length) {
-      throw new Error("Byte index out of bounds");
-    }
-    bytes[byteIndex + 0] = index & 0x000000ff;
-    bytes[byteIndex + 1] = (index & 0x0000ff00) >> 8;
-    bytes[byteIndex + 2] = (index & 0x00ff0000) >> 16;
-  }
-
-  setNthIndex(n, value) {
-    VertexIndices.encodeIndex(value, this.data, n * 3);
-  }
-
-  getNthIndex(n) {
-    return this.decodeIndex(n);
-  }
-
-  decodeIndex(index) {
-    if (index >= this.length) {
-      throw new Error("Index out of bounds");
-    }
-    const byteIndex = index * 3;
-    return (
-      this.data[byteIndex] |
-      (this.data[byteIndex + 1] << 8) |
-      (this.data[byteIndex + 2] << 16)
-    );
-  }
-}
-
-/**
- * Utility function to set a 24-bit unsigned integer in a byte array.
- * Private helper for EdgeVisibilityPipelineStage.
- * @private
- */
-function setUint24(array, byteIndex, value) {
-  array[byteIndex + 0] = value & 0xff;
-  array[byteIndex + 1] = (value >> 8) & 0xff;
-  array[byteIndex + 2] = (value >> 16) & 0xff;
-}
-
-/**
- * Pipeline stage for generating edge geometry from EXT_mesh_primitive_edge_visibility data.
- *
- * @namespace EdgeVisibilityPipelineStage
- *
- * @private
- */
 const EdgeVisibilityPipelineStage = {
   name: "EdgeVisibilityPipelineStage",
 };
 
-// Update Function -----------------------------------------------------------------------------------------------------------------------
 /**
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {FrameState} frameState The frame state
@@ -96,27 +24,312 @@ EdgeVisibilityPipelineStage.process = function (
   primitive,
   frameState,
 ) {
-  console.log("=== EdgeVisibilityPipelineStage.process called ===");
-  console.log("primitive.edgeVisibility:", primitive.edgeVisibility);
-
   if (!defined(primitive.edgeVisibility)) {
-    console.log("No edge visibility data found, returning");
     return;
   }
 
-  // Check if we have the required edge visibility data
-  if (!defined(primitive.edgeVisibility.visibility)) {
+  const shaderBuilder = renderResources.shaderBuilder;
+  const uniformMap = renderResources.uniformMap;
+
+  console.log("EdgeVisibilityPipelineStage: Starting shader builder setup");
+
+  // Add define for edge visibility
+  shaderBuilder.addDefine(
+    "HAS_EDGE_VISIBILITY",
+    undefined,
+    ShaderDestination.VERTEX,
+  );
+  console.log("EdgeVisibilityPipelineStage: Added HAS_EDGE_VISIBILITY define");
+
+  // Add uniform for camera position in view space (for silhouette calculation)
+  shaderBuilder.addUniform(
+    "vec3",
+    "czm_edgeViewerPositionWC",
+    ShaderDestination.VERTEX,
+  );
+  uniformMap.czm_edgeViewerPositionWC = function () {
+    return frameState.camera.positionWC;
+  };
+
+  // Add uniform for view matrix
+  shaderBuilder.addUniform(
+    "mat4",
+    "czm_edgeViewMatrix",
+    ShaderDestination.VERTEX,
+  );
+  uniformMap.czm_edgeViewMatrix = function () {
+    return frameState.context.uniformState.view;
+  };
+
+  // Add uniform for normal matrix
+  shaderBuilder.addUniform(
+    "mat3",
+    "czm_edgeNormalMatrix",
+    ShaderDestination.VERTEX,
+  );
+  uniformMap.czm_edgeNormalMatrix = function () {
+    return frameState.context.uniformState.normal;
+  };
+
+  // Add uniform for model-view matrix
+  shaderBuilder.addUniform(
+    "mat4",
+    "czm_edgeModelViewMatrix",
+    ShaderDestination.VERTEX,
+  );
+  uniformMap.czm_edgeModelViewMatrix = function () {
+    return frameState.context.uniformState.modelView;
+  };
+
+  // Check if orthographic projection
+  const isOrthographic =
+    frameState.camera.frustum instanceof OrthographicOffCenterFrustum;
+
+  // Add uniform for orthographic flag
+  shaderBuilder.addUniform(
+    "bool",
+    "czm_edgeIsOrthographic",
+    ShaderDestination.VERTEX,
+  );
+  uniformMap.czm_edgeIsOrthographic = function () {
+    return isOrthographic;
+  };
+
+  // Add edge type attribute for shader
+  console.log("EdgeVisibilityPipelineStage: Adding attributes and varyings");
+  const edgeTypeLocation = shaderBuilder.addAttribute("float", "a_edgeType");
+  console.log(
+    "EdgeVisibilityPipelineStage: a_edgeType location:",
+    edgeTypeLocation,
+  );
+
+  // Add varying to pass edge type from vertex to fragment shader
+  shaderBuilder.addVarying("float", "v_edgeType");
+  console.log("EdgeVisibilityPipelineStage: Added v_edgeType varying");
+
+  const edgePos0Location = shaderBuilder.addAttribute("vec3", "a_edgePos0");
+  const edgePos1Location = shaderBuilder.addAttribute("vec3", "a_edgePos1");
+  const currentTriThirdLocation = shaderBuilder.addAttribute(
+    "vec3",
+    "a_currentTriThird",
+  ); // 当前三角形第三点位置
+
+  console.log("EdgeVisibilityPipelineStage: Position attribute locations:", {
+    edgePos0: edgePos0Location,
+    edgePos1: edgePos1Location,
+    currentTriThird: currentTriThirdLocation,
+  });
+
+  // Add varyings to pass positions to fragment shader
+  shaderBuilder.addVarying("vec3", "v_edgePos0");
+  shaderBuilder.addVarying("vec3", "v_edgePos1");
+  shaderBuilder.addVarying("vec3", "v_currentTriThird");
+  console.log("EdgeVisibilityPipelineStage: Added position varyings");
+
+  // Add silhouette mate data if available
+  if (defined(primitive.edgeVisibility.silhouetteMates)) {
+    const mateTriThirdLocation = shaderBuilder.addAttribute(
+      "vec3",
+      "a_mateTriThird",
+    ); // 相邻三角形第三点位置
+    shaderBuilder.addVarying("vec3", "v_mateTriThird");
+
+    console.log(
+      "EdgeVisibilityPipelineStage: a_mateTriThird location:",
+      mateTriThirdLocation,
+    );
+
+    // Define to indicate silhouette mates are available
+    shaderBuilder.addDefine(
+      "HAS_SILHOUETTE_MATES",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+    console.log(
+      "EdgeVisibilityPipelineStage: Added HAS_SILHOUETTE_MATES define",
+    );
+  }
+
+  // Add vertex/fragment shader functions for edge visibility
+  console.log("EdgeVisibilityPipelineStage: Adding shader functions");
+  shaderBuilder.addFunction(
+    "isEdgeVisible",
+    "bool isEdgeVisible(float edgeType)",
+    ShaderDestination.BOTH, // Available in both vertex and fragment shaders
+  );
+  shaderBuilder.addFunctionLines("isEdgeVisible", [
+    "// Edge types: 0=hidden, 1=silhouette, 2=hard, 3=repeated",
+    "if (edgeType < 0.5) {", // HIDDEN
+    "  return false;",
+    "}",
+    "if (edgeType > 1.5 && edgeType < 2.5) {", // HARD
+    "  return true;",
+    "}",
+    "if (edgeType > 0.5 && edgeType < 1.5) {", // SILHOUETTE
+    "  // For silhouette edges, we need proper face normal calculation",
+    "  // TODO: Implement proper silhouette calculation with mate vertex data",
+    "  // For now, assume visible - needs position lookup via mateVertexIndex",
+    "  return true;",
+    "}",
+    "return false;", // REPEATED or unknown
+  ]);
+
+  // Debug: check ShaderBuilder state
+  console.log(
+    "EdgeVisibilityPipelineStage: ShaderBuilder attribute locations:",
+    shaderBuilder._attributeLocations,
+  );
+  console.log(
+    "EdgeVisibilityPipelineStage: ShaderBuilder vertex varyings:",
+    shaderBuilder._vertexShaderParts.varyingLines,
+  );
+  console.log(
+    "EdgeVisibilityPipelineStage: ShaderBuilder fragment varyings:",
+    shaderBuilder._fragmentShaderParts.varyingLines,
+  );
+
+  // Add edge varying lines to the existing setDynamicVaryings function
+  shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
+    "#ifdef HAS_EDGE_VISIBILITY",
+    "v_edgeType = a_edgeType;",
+    "v_edgePos0 = (czm_edgeModelViewMatrix * vec4(a_edgePos0, 1.0)).xyz;",
+    "v_edgePos1 = (czm_edgeModelViewMatrix * vec4(a_edgePos1, 1.0)).xyz;",
+    "v_currentTriThird = (czm_edgeModelViewMatrix * vec4(a_currentTriThird, 1.0)).xyz;",
+    "#ifdef HAS_SILHOUETTE_MATES",
+    "v_mateTriThird = (czm_edgeModelViewMatrix * vec4(a_mateTriThird, 1.0)).xyz;",
+    "#endif",
+    "#endif",
+  ]);
+
+  // Add fragment shader code with real silhouette calculation
+  shaderBuilder.addFragmentLines([
+    "#ifdef HAS_EDGE_VISIBILITY",
+    "// Check edge visibility",
+    "if (v_edgeType < 0.5) {", // HIDDEN
+    "  discard;",
+    "}",
+    "else if (v_edgeType > 1.5 && v_edgeType < 2.5) {", // HARD - always visible
+    "  // Keep hard edges",
+    "}",
+    "else if (v_edgeType > 0.5 && v_edgeType < 1.5) {", // SILHOUETTE
+    "#ifdef HAS_SILHOUETTE_MATES",
+    "  // Calculate normals of two triangles sharing this edge",
+    "  vec3 edge1 = v_edgePos1 - v_edgePos0;",
+    "  vec3 currentTriNormal = cross(edge1, v_currentTriThird - v_edgePos0);",
+    "  vec3 mateTriNormal = cross(edge1, v_mateTriThird - v_edgePos0);",
+    "",
+    "  // Normalize normals",
+    "  float len1 = length(currentTriNormal);",
+    "  float len2 = length(mateTriNormal);",
+    "  if (len1 < 1e-10 || len2 < 1e-10) {",
+    "    discard; // Degenerate triangle",
+    "  }",
+    "  currentTriNormal = normalize(currentTriNormal);",
+    "  mateTriNormal = normalize(mateTriNormal);",
+    "",
+    "  // Calculate view direction",
+    "  vec3 viewDir;",
+    "  if (czm_edgeIsOrthographic) {",
+    "    viewDir = vec3(0.0, 0.0, 1.0); // Orthographic: view direction is +Z",
+    "  } else {",
+    "    // Perspective: view direction from fragment to eye",
+    "    vec3 avgPos = (v_edgePos0 + v_edgePos1) * 0.5;",
+    "    viewDir = normalize(-avgPos);",
+    "  }",
+    "",
+    "  // Calculate facing for both triangles",
+    "  float facing1 = dot(currentTriNormal, viewDir);",
+    "  float facing2 = dot(mateTriNormal, viewDir);",
+    "",
+    "  // Apply small tolerance to avoid flickering",
+    "  float tolerance = 2.5e-4;",
+    "",
+    "  // If both triangles face the same direction, discard silhouette",
+    "  if (facing1 * facing2 > tolerance) {",
+    "    discard;",
+    "  }",
+    "#else",
+    "  // No mate data available, assume visible",
+    "#endif",
+    "}",
+    "else {", // REPEATED or unknown
+    "  discard;",
+    "}",
+    "#endif",
+  ]);
+
+  // Helper function for silhouette calculation
+  shaderBuilder.addFunction(
+    "calculateTriangleFacing",
+    "float calculateTriangleFacing(vec3 v0, vec3 v1, vec3 v2, vec3 viewDirection)",
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addFunctionLines("calculateTriangleFacing", [
+    "// Calculate triangle normal in view space",
+    "vec3 edge1 = v1 - v0;",
+    "vec3 edge2 = v2 - v0;",
+    "vec3 normal = cross(edge1, edge2);",
+    "float len = length(normal);",
+    "if (len < 1e-10) {",
+    "  return 0.0; // Degenerate triangle",
+    "}",
+    "normal = normalize(normal);",
+    "// Return dot product with view direction",
+    "// Positive = front-facing, negative = back-facing",
+    "return dot(normal, viewDirection);",
+  ]);
+
+  // Function to check if silhouette edge should be rendered
+  shaderBuilder.addFunction(
+    "isSilhouetteVisible",
+    "bool isSilhouetteVisible(vec3 v0, vec3 v1, vec3 v2, vec3 mateV, vec3 viewDirection)",
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addFunctionLines("isSilhouetteVisible", [
+    "// Calculate facing of current triangle (v0, v1, v2)",
+    "float facing1 = calculateTriangleFacing(v0, v1, v2, viewDirection);",
+    "// Calculate facing of adjacent triangle (v0, v1, mateV)",
+    "// The mate vertex forms the other triangle sharing edge v0-v1",
+    "float facing2 = calculateTriangleFacing(v0, v1, mateV, viewDirection);",
+    "",
+    "// Render silhouette only if one triangle is front-facing and other is back-facing",
+    "// According to EXT_mesh_primitive_edge_visibility spec:",
+    "// 'render unless both adjacent triangles are front-facing or both are back-facing'",
+    "bool bothFrontFacing = (facing1 > 0.0) && (facing2 > 0.0);",
+    "bool bothBackFacing = (facing1 <= 0.0) && (facing2 <= 0.0);",
+    "",
+    "return !(bothFrontFacing || bothBackFacing);",
+  ]);
+
+  // Check if silhouette normals are available for more accurate calculation
+  if (defined(primitive.edgeVisibility.silhouetteNormals)) {
+    console.log("Silhouette normals available, enhanced calculation possible");
+    // TODO: Implement enhanced silhouette calculation with pre-computed normals
+  } else if (defined(primitive.edgeVisibility.silhouetteMates)) {
+    console.log("Silhouette mates available, can compute normals dynamically");
+    // TODO: Add silhouetteMates as vertex attributes for shader calculation
+  } else {
+    console.log("No silhouette data, using simplified edge visibility");
+  }
+
+  // Extract visible edges as line indices (pairs of vertex indices)
+  const edgeResult = extractVisibleEdgesAsLineIndices(primitive);
+  if (
+    !defined(edgeResult) ||
+    !defined(edgeResult.lineIndices) ||
+    edgeResult.lineIndices.length === 0
+  ) {
     return;
   }
 
-  // Create a simple edge geometry that doesn't require typed array access
-  // This approach uses the edge visibility buffer directly in shaders
-  const edgeGeometry = createEdgeGeometryFromVisibilityBuffer(
-    primitive,
+  // Create edge geometry using existing attributes and line indices
+  const edgeGeometry = createLineEdgeGeometry(
+    edgeResult.lineIndices,
+    edgeResult.edgeData,
+    primitive.edgeVisibility, // Pass edge visibility data for silhouette mates
     renderResources,
     frameState.context,
   );
-
   if (!defined(edgeGeometry)) {
     return;
   }
@@ -125,19 +338,8 @@ EdgeVisibilityPipelineStage.process = function (
   renderResources.edgeGeometry = {
     vertexArray: edgeGeometry.vertexArray,
     indexCount: edgeGeometry.indexCount,
-    primitiveType: PrimitiveType.TRIANGLES, // Use triangles for quad-based edges
+    primitiveType: PrimitiveType.LINES,
     pass: Pass.CESIUM_3D_TILE,
-    edgeLUT: edgeGeometry.edgeLUT, // Edge lookup texture
-    edgeCount: edgeGeometry.edgeCount,
-    // Uniforms for shader
-    edgeParams: [
-      edgeGeometry.lutWidth,
-      edgeGeometry.lutHeight,
-      edgeGeometry.edgeCount, // numSegments (all edges are segments for hard edges)
-      0, // silhouettePadding (not used for hard edges)
-    ],
-    // Reference to original indices for GPU lookup
-    originalIndicesBuffer: primitive.indices,
   };
 
   // Track resources for cleanup
@@ -145,318 +347,376 @@ EdgeVisibilityPipelineStage.process = function (
   model._pipelineResources.push(
     edgeGeometry.indexBuffer,
     edgeGeometry.vertexArray,
-    edgeGeometry.edgeLUT,
   );
+  if (defined(edgeGeometry.edgeTypeBuffer)) {
+    model._pipelineResources.push(edgeGeometry.edgeTypeBuffer);
+  }
+  if (defined(edgeGeometry.edgePos0Buffer)) {
+    model._pipelineResources.push(edgeGeometry.edgePos0Buffer);
+  }
+  if (defined(edgeGeometry.edgePos1Buffer)) {
+    model._pipelineResources.push(edgeGeometry.edgePos1Buffer);
+  }
+  if (defined(edgeGeometry.currentTriThirdBuffer)) {
+    model._pipelineResources.push(edgeGeometry.currentTriThirdBuffer);
+  }
+  if (defined(edgeGeometry.mateTriThirdBuffer)) {
+    model._pipelineResources.push(edgeGeometry.mateTriThirdBuffer);
+  }
 };
 
-// Buffer & LUT creation -------------------------------------------------------------------------------------------------------------------
 /**
- * Creates edge geometry from EXT_mesh_primitive_edge_visibility data using texture LUT.
- * Uses RGBA8 texture for edge lookup table with 24-bit edge indices.
+ * Extracts visible edge segments from EXT_mesh_primitive_edge_visibility data
+ * and converts them to line indices for GL_LINES rendering.
+ * Only includes edges that need to be processed: silhouette (1) and hard (2).
  * @param {ModelComponents.Primitive} primitive The primitive with edge visibility data
- * @param {PrimitiveRenderResources} renderResources The render resources
- * @param {Context} context The rendering context
- * @returns {Object} Edge geometry with vertex array and texture LUT
+ * @returns {{lineIndices:number[], edgeData:Object[], silhouetteEdgeCount:number}}
  * @private
  */
-function createEdgeGeometryFromVisibilityBuffer(
-  primitive,
-  renderResources,
-  context,
-) {
+function extractVisibleEdgesAsLineIndices(primitive) {
   const edgeVisibility = primitive.edgeVisibility;
-  if (!defined(edgeVisibility.visibility)) {
-    return undefined;
-  }
-
-  // Extract visible edges by decoding the visibility bitfield
-  const visibleEdges = extractVisibleEdges(primitive);
-  if (!visibleEdges || visibleEdges.length === 0) {
-    return undefined;
-  }
-
-  const numTotalEdges = visibleEdges.length;
-
-  console.log("=== EdgeVisibilityPipelineStage Debug ===");
-  console.log(`Total visible edges: ${numTotalEdges}`);
-  console.log("Visible edges data:", visibleEdges);
-
-  const vertexIndices = new VertexIndices(
-    new Uint8Array(numTotalEdges * 6 * 3),
-  );
-  for (let i = 0; i < numTotalEdges; i++) {
-    for (let j = 0; j < 6; j++) {
-      const vertexIndex = i * 6 + j;
-      console.log(`Setting vertex ${vertexIndex} to edge index ${i}`);
-      vertexIndices.setNthIndex(vertexIndex, i); // Each vertex of the quad stores the same edge index
-      // Verify it was set correctly
-      const readBack = vertexIndices.getNthIndex(vertexIndex);
-      console.log(
-        `  Verification: vertex ${vertexIndex} now has value ${readBack}`,
-      );
-    }
-  }
-
-  console.log(
-    `VertexIndices created: ${vertexIndices.length} vertices (${numTotalEdges} edges × 6 vertices/edge)`,
-  );
-
-  // Debug: Show decoded vertex indices (not raw bytes)
-  const decodedIndices = [];
-  for (let i = 0; i < Math.min(18, vertexIndices.length); i++) {
-    decodedIndices.push(`${i}:${vertexIndices.decodeIndex(i)}`);
-  }
-  console.log("First few vertex indices (decoded):", decodedIndices.join(", "));
-
-  // Also show raw bytes for verification
-  console.log(
-    "Raw vertex index bytes (first 18):",
-    Array.from(vertexIndices.data.slice(0, 18))
-      .map((b, i) => `${i}:${b}`)
-      .join(", "),
-  );
-
-  // Create edge LUT texture data
-  // Each edge occupies 6 bytes: triangleIndex(3) + edgeInTriangle(1) + padding(2)
-  const bytesPerEdge = 6;
-  const totalBytes = numTotalEdges * bytesPerEdge;
-
-  // Calculate texture dimensions with row alignment
-  // Width must be multiple of 3 to avoid cross-row sampling (width % 3 == 0)
-  // Since each texel is 4 bytes (RGBA), and we need 6 bytes per edge (1.5 texels),
-  // we need width * 4 to be multiple of 12 (LCM of 6 and 4)
-  let width = Math.ceil(Math.sqrt(totalBytes / 4));
-  while (width % 3 !== 0) {
-    width++;
-  }
-
-  const texelsNeeded = Math.ceil(totalBytes / 4);
-  const height = Math.ceil(texelsNeeded / width);
-  const textureSize = width * height * 4; // RGBA8
-
-  const lutData = new Uint8Array(textureSize);
-  lutData.fill(0); // Initialize with zeros
-
-  console.log(
-    `LUT dimensions: ${width}x${height}, total bytes: ${textureSize}`,
-  );
-  console.log(`Bytes per edge: ${bytesPerEdge}, total edges: ${numTotalEdges}`);
-
-  // Fill edge LUT data using iTwin.js pattern
-  // Store index0 and index1 (actual vertex indices) in LUT for GPU lookup
-  for (let i = 0; i < numTotalEdges; i++) {
-    const edge = visibleEdges[i];
-
-    // Store vertex indices in LUT following iTwin.js pattern
-    const byteOffset = i * bytesPerEdge;
-
-    // index0 (24-bit) using setUint24 - first vertex of edge
-    setUint24(lutData, byteOffset, edge.index0);
-
-    // index1 (24-bit) using setUint24 - second vertex of edge
-    setUint24(lutData, byteOffset + 3, edge.index1);
-
-    // Verify 24-bit encoding by decoding both indices back
-    const decodedIndex0 =
-      lutData[byteOffset] |
-      (lutData[byteOffset + 1] << 8) |
-      (lutData[byteOffset + 2] << 16);
-    const decodedIndex1 =
-      lutData[byteOffset + 3] |
-      (lutData[byteOffset + 4] << 8) |
-      (lutData[byteOffset + 5] << 16);
-
-    console.log(
-      `Edge ${i}: triangle=${edge.triangleIndex}, edgeInTriangle=${edge.edgeInTriangle}, vertices=${edge.index0}→${edge.index1}, visibility=${edge.visibility}`,
-    );
-    console.log(
-      `  Stored at byte offset ${byteOffset}: [${lutData[byteOffset]}, ${lutData[byteOffset + 1]}, ${lutData[byteOffset + 2]}, ${lutData[byteOffset + 3]}, ${lutData[byteOffset + 4]}, ${lutData[byteOffset + 5]}]`,
-    );
-    console.log(
-      `  Verification: decoded indices = ${decodedIndex0}, ${decodedIndex1} (should be ${edge.index0}, ${edge.index1})`,
-    );
-  }
-
-  // Print the complete LUT data for verification
-  console.log("Complete LUT data (first 64 bytes):");
-  const lutPreview = Array.from(lutData.slice(0, Math.min(64, lutData.length)));
-  console.log(lutPreview.map((b, i) => `${i}:${b}`).join(", "));
-
-  // Create edge LUT texture
-  const edgeLUT = new Texture({
-    context: context,
-    width: width,
-    height: height,
-    pixelFormat: PixelFormat.RGBA,
-    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    source: {
-      width: width,
-      height: height,
-      arrayBufferView: lutData,
-    },
-    sampler: new Sampler({
-      minificationFilter: TextureMinificationFilter.NEAREST,
-      magnificationFilter: TextureMagnificationFilter.NEAREST,
-    }),
-  });
-
-  // Create vertex buffer for edge indices using VertexIndices data
-  const edgeIndexBuffer = Buffer.createVertexBuffer({
-    context: context,
-    typedArray: vertexIndices.data, // Use the 24-bit encoded data directly
-    usage: BufferUsage.STATIC_DRAW,
-  });
-
-  // Create vertex array with 24-bit edge index attribute
-  const attributes = [
-    {
-      index: 0, // a_pos attribute (24-bit edge index)
-      vertexBuffer: edgeIndexBuffer,
-      componentsPerAttribute: 3, // 3 bytes for 24-bit index
-      componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-      offsetInBytes: 0,
-      strideInBytes: 3, // 3 bytes per vertex
-    },
-  ];
-
-  // Create render index buffer with: each edge forms 2 triangles (6 vertices)
-  // Each edge: 0,2,1, 1,2,3 pattern for quad triangulation
-  const renderIndices = new Uint32Array(numTotalEdges * 6);
-  for (let i = 0; i < numTotalEdges; i++) {
-    const baseVertex = i * 6;
-
-    // First triangle: 0,2,1
-    renderIndices[i * 6 + 0] = baseVertex + 0;
-    renderIndices[i * 6 + 1] = baseVertex + 2;
-    renderIndices[i * 6 + 2] = baseVertex + 1;
-
-    // Second triangle: 1,2,3
-    renderIndices[i * 6 + 3] = baseVertex + 1;
-    renderIndices[i * 6 + 4] = baseVertex + 2;
-    renderIndices[i * 6 + 5] = baseVertex + 3;
-  }
-
-  const renderIndexBuffer = Buffer.createIndexBuffer({
-    context: context,
-    typedArray: renderIndices,
-    usage: BufferUsage.STATIC_DRAW,
-    indexDatatype: IndexDatatype.UNSIGNED_INT,
-  });
-
-  const vertexArray = new VertexArray({
-    context: context,
-    attributes: attributes,
-    indexBuffer: renderIndexBuffer,
-  });
-
-  console.log("=== Edge Geometry Summary ===");
-  console.log(
-    `Created ${numTotalEdges} edges with ${numTotalEdges * 6} total vertices`,
-  );
-  console.log(`LUT texture: ${width}x${height} (${width * height * 4} bytes)`);
-  console.log(`Vertex indices buffer: ${vertexIndices.data.length} bytes`);
-  console.log(`Render indices buffer: ${renderIndices.length * 4} bytes`);
-  console.log("=====================================");
-
-  return {
-    vertexArray: vertexArray,
-    indexBuffer: renderIndexBuffer,
-    indexCount: numTotalEdges * 6, // 6 indices per edge
-    edgeLUT: edgeLUT,
-    edgeCount: numTotalEdges,
-    lutWidth: width,
-    lutHeight: height,
-  };
-}
-
-// Decode edge visibility information from the primitive ------------------------------------------------------------------------------------
-/**
- * @param {ModelComponents.Primitive} primitive The primitive with edge visibility data
- * @returns {Array} Array of edge visibility information with actual vertex indices
- * @private
- */
-function extractVisibleEdges(primitive) {
-  const edgeVisibility = primitive.edgeVisibility;
-  const visibilityBuffer = edgeVisibility.visibility;
-
-  // Get triangle count from indices
+  const visibility = edgeVisibility.visibility;
   const indices = primitive.indices;
-  if (!defined(indices) || !defined(indices.count)) {
-    return undefined;
+
+  if (!defined(visibility) || !defined(indices)) {
+    return [];
   }
 
-  const triangleCount = indices.count / 3;
+  const triangleIndexArray = indices.typedArray;
+  const vertexCount = primitive.attributes[0].count;
+  const lineIndices = [];
+  const edgeData = []; // Store additional edge data for shader
+  const seenEdgeHashes = new Set();
+  let silhouetteEdgeCount = 0; // Track silhouette edges for silhouetteMates mapping
 
-  // Read the actual vertex indices from the index buffer
-  const indexArray = ModelReader.readIndicesAsTypedArray(indices);
+  // 2 bits per edge in order (v0:v1, v1:v2, v2:v0)
+  let bitOffset = 0;
+  const totalIndices = triangleIndexArray.length;
 
-  console.log("=== extractVisibleEdges Debug ===");
-  console.log(`Triangle count: ${triangleCount}`);
-  console.log(`Index array length: ${indexArray.length}`);
-  console.log(`Index array type: ${indexArray.constructor.name}`);
-  console.log("First few indices:", Array.from(indexArray.slice(0, 12)));
+  for (let i = 0; i + 2 < totalIndices; i += 3) {
+    const v0 = triangleIndexArray[i];
+    const v1 = triangleIndexArray[i + 1];
+    const v2 = triangleIndexArray[i + 2];
 
-  // Get visibility data - this is a packed bitfield with 2 bits per edge
-  const visibilityData = visibilityBuffer.buffer;
-  const visibilityBytes = new Uint8Array(visibilityData);
-
-  const edges = [];
-
-  // Process each triangle's edges
-  for (let triangleIndex = 0; triangleIndex < triangleCount; triangleIndex++) {
-    // Get the three vertex indices for this triangle
-    const vertexA = indexArray[triangleIndex * 3 + 0];
-    const vertexB = indexArray[triangleIndex * 3 + 1];
-    const vertexC = indexArray[triangleIndex * 3 + 2];
-
-    // Three edges per triangle: AB, BC, CA
-    const triangleEdges = [
-      { a: vertexA, b: vertexB, edgeInTriangle: 0 },
-      { a: vertexB, b: vertexC, edgeInTriangle: 1 },
-      { a: vertexC, b: vertexA, edgeInTriangle: 2 },
+    // Iterate the 3 edges in order
+    const edgeVertices = [
+      [v0, v1],
+      [v1, v2],
+      [v2, v0],
     ];
 
-    for (let edgeInTriangle = 0; edgeInTriangle < 3; edgeInTriangle++) {
-      const globalEdgeIndex = triangleIndex * 3 + edgeInTriangle;
+    for (let e = 0; e < 3; e++) {
+      const byteIndex = Math.floor(bitOffset / 4);
+      const bitPairOffset = (bitOffset % 4) * 2;
+      if (byteIndex >= visibility.length) {
+        break;
+      }
 
-      // Extract 2-bit visibility value from packed data
-      const byteIndex = Math.floor(globalEdgeIndex / 4); // 4 edges per byte (2 bits each)
-      const bitOffset = (globalEdgeIndex % 4) * 2;
+      const byte = visibility[byteIndex];
+      const visibility2Bit = (byte >> bitPairOffset) & 0x3;
+      bitOffset++;
 
-      if (byteIndex < visibilityBytes.length) {
-        const visibilityByte = visibilityBytes[byteIndex];
-        const visibility = (visibilityByte >> bitOffset) & 0x03;
+      // Only include edges that need processing
+      let shouldIncludeEdge = false;
+      switch (visibility2Bit) {
+        case 0: // HIDDEN - never rendered
+          shouldIncludeEdge = false;
+          break;
+        case 1: // SILHOUETTE - needs shader visibility calculation
+          shouldIncludeEdge = true;
+          break;
+        case 2: // HARD - always rendered
+          shouldIncludeEdge = true;
+          break;
+        case 3: // REPEATED - ignore (duplicate of another edge)
+          shouldIncludeEdge = false;
+          break;
+      }
 
-        // Only include hard edges (VISIBLE=2)
-        // Skip HIDDEN=0, SILHOUETTE=1, VISIBLE_DUPLICATE=3
-        if (visibility === 2) {
-          const edge = triangleEdges[edgeInTriangle];
+      if (shouldIncludeEdge) {
+        const a = edgeVertices[e][0];
+        const b = edgeVertices[e][1];
+        const small = Math.min(a, b);
+        const big = Math.max(a, b);
+        const hash = small * vertexCount + big;
 
-          // Store actual vertex indices following iTwin.js pattern
-          // index0 = min, index1 = max for consistent edge orientation
-          const index0 = Math.min(edge.a, edge.b);
-          const index1 = Math.max(edge.a, edge.b);
+        if (!seenEdgeHashes.has(hash)) {
+          seenEdgeHashes.add(hash);
+          lineIndices.push(a, b); // Add line segment
 
-          edges.push({
-            index0: index0,
-            index1: index1,
-            triangleIndex: triangleIndex,
-            edgeInTriangle: edgeInTriangle,
-            visibility: visibility,
+          // For silhouette edges, we need to track the mate vertex index
+          let mateVertexIndex = -1;
+          if (visibility2Bit === 1) {
+            // SILHOUETTE
+            // silhouetteMates[silhouetteEdgeCount] gives the third vertex of the adjacent triangle
+            mateVertexIndex = silhouetteEdgeCount;
+            silhouetteEdgeCount++;
+          }
+
+          edgeData.push({
+            edgeType: visibility2Bit, // Store edge type for shader
+            triangleIndex: Math.floor(i / 3),
+            edgeIndex: e,
+            mateVertexIndex: mateVertexIndex, // Index into silhouetteMates array (-1 if not silhouette)
+            currentTriangleVertices: [v0, v1, v2], // Store for silhouette calculation
           });
-
-          console.log(
-            `Visible edge ${edges.length - 1}: triangle=${triangleIndex}, edge=${edgeInTriangle}, vertices=${edge.a},${edge.b} → indices=${index0},${index1}, visibility=${visibility}`,
-          );
         }
       }
     }
   }
 
-  console.log(`Total visible edges extracted: ${edges.length}`);
-  console.log("===================================");
+  return { lineIndices, edgeData, silhouetteEdgeCount };
+}
 
-  return edges;
+/**
+ * Creates line edge geometry with per-edge data for silhouette calculation.
+ * @param {number[]} edgeIndices The line indices (pairs of vertex indices)
+ * @param {Object[]} edgeData Edge metadata (type, triangle info, mate indices)
+ * @param {Object} edgeVisibility The edge visibility data containing silhouetteMates
+ * @param {PrimitiveRenderResources} renderResources The render resources
+ * @param {Context} context The rendering context
+ * @returns {Object|undefined} Edge geometry with vertex array and index buffer
+ * @private
+ */
+function createLineEdgeGeometry(
+  edgeIndices,
+  edgeData,
+  edgeVisibility,
+  renderResources,
+  context,
+) {
+  if (!defined(edgeIndices) || edgeIndices.length === 0) {
+    return undefined;
+  }
+
+  // Get original vertex positions from primitive
+  const positionAttribute = renderResources.attributes.find(
+    (attr) => attr.semantic === "POSITION" || attr.index === 0,
+  );
+  if (!defined(positionAttribute)) {
+    console.error("No position attribute found for edge geometry");
+    return undefined;
+  }
+
+  // Determine appropriate index datatype based on max vertex index
+  const maxVertexIndex = Math.max(...edgeIndices);
+  const useUint32 = maxVertexIndex > 65535;
+  const indexDatatype = useUint32
+    ? IndexDatatype.UNSIGNED_INT
+    : IndexDatatype.UNSIGNED_SHORT;
+  const indexTypedArray = useUint32
+    ? new Uint32Array(edgeIndices)
+    : new Uint16Array(edgeIndices);
+
+  // Create index buffer for line indices
+  const indexBuffer = Buffer.createIndexBuffer({
+    context: context,
+    typedArray: indexTypedArray,
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: indexDatatype,
+  });
+
+  // Create per-edge attributes for silhouette calculation
+  const edgeCount = edgeIndices.length / 2;
+
+  // Helper to get vertex position from buffer
+  function getVertexPosition(vertexIndex, positionBuffer, componentDatatype) {
+    const bytesPerComponent =
+      ComponentDatatype.getSizeInBytes(componentDatatype);
+    const componentsPerVertex = 3; // vec3
+    const offset = vertexIndex * componentsPerVertex * bytesPerComponent;
+
+    if (componentDatatype === ComponentDatatype.FLOAT) {
+      const view = new Float32Array(positionBuffer, offset, 3);
+      return [view[0], view[1], view[2]];
+    }
+    // Add other datatypes if needed
+    return [0, 0, 0];
+  }
+
+  // Read position data
+  const positionBuffer = positionAttribute.vertexBuffer._buffer;
+  const positionComponentDatatype = positionAttribute.componentDatatype;
+
+  // Create attribute arrays
+  const edgeTypeArray = new Float32Array(edgeCount * 2);
+
+  const edgePos0Array = new Float32Array(edgeCount * 2 * 3); // 2 vertices * 3 components
+  const edgePos1Array = new Float32Array(edgeCount * 2 * 3);
+  const currentTriThirdArray = new Float32Array(edgeCount * 2 * 3);
+
+  let mateTriThirdArray = null;
+  if (defined(edgeVisibility.silhouetteMates)) {
+    mateTriThirdArray = new Float32Array(edgeCount * 2 * 3);
+  }
+
+  for (let i = 0; i < edgeCount; i++) {
+    const edgeInfo = edgeData[i];
+    const edgeType = edgeInfo.edgeType;
+
+    // Edge vertices
+    const v0Index = edgeIndices[i * 2];
+    const v1Index = edgeIndices[i * 2 + 1];
+
+    // Positions
+    const v0Pos = getVertexPosition(
+      v0Index,
+      positionBuffer,
+      positionComponentDatatype,
+    );
+    const v1Pos = getVertexPosition(
+      v1Index,
+      positionBuffer,
+      positionComponentDatatype,
+    );
+
+    // Current triangle third vertex position
+    const currentTriVertices = edgeInfo.currentTriangleVertices;
+    let thirdVertexIndex = -1;
+    for (let j = 0; j < 3; j++) {
+      if (
+        currentTriVertices[j] !== v0Index &&
+        currentTriVertices[j] !== v1Index
+      ) {
+        thirdVertexIndex = currentTriVertices[j];
+        break;
+      }
+    }
+    const thirdPos =
+      thirdVertexIndex >= 0
+        ? getVertexPosition(
+            thirdVertexIndex,
+            positionBuffer,
+            positionComponentDatatype,
+          )
+        : [0, 0, 0];
+
+    // For both vertices of this edge, set the same data
+    for (let vtx = 0; vtx < 2; vtx++) {
+      const baseIndex = i * 2 + vtx;
+
+      // Edge type
+      edgeTypeArray[baseIndex] = edgeType;
+
+      // Edge positions
+      edgePos0Array[baseIndex * 3] = v0Pos[0];
+      edgePos0Array[baseIndex * 3 + 1] = v0Pos[1];
+      edgePos0Array[baseIndex * 3 + 2] = v0Pos[2];
+
+      edgePos1Array[baseIndex * 3] = v1Pos[0];
+      edgePos1Array[baseIndex * 3 + 1] = v1Pos[1];
+      edgePos1Array[baseIndex * 3 + 2] = v1Pos[2];
+
+      // Current triangle third vertex
+      currentTriThirdArray[baseIndex * 3] = thirdPos[0];
+      currentTriThirdArray[baseIndex * 3 + 1] = thirdPos[1];
+      currentTriThirdArray[baseIndex * 3 + 2] = thirdPos[2];
+
+      // Mate triangle third vertex (if available)
+      if (
+        mateTriThirdArray &&
+        edgeType === 1 &&
+        edgeInfo.mateVertexIndex >= 0
+      ) {
+        const silhouetteMates = edgeVisibility.silhouetteMates.typedArray;
+        const mateVertexIndex = silhouetteMates[edgeInfo.mateVertexIndex];
+        const matePos = getVertexPosition(
+          mateVertexIndex,
+          positionBuffer,
+          positionComponentDatatype,
+        );
+        mateTriThirdArray[baseIndex * 3] = matePos[0];
+        mateTriThirdArray[baseIndex * 3 + 1] = matePos[1];
+        mateTriThirdArray[baseIndex * 3 + 2] = matePos[2];
+      } else if (mateTriThirdArray) {
+        // Default position for non-silhouette edges
+        mateTriThirdArray[baseIndex * 3] = 0;
+        mateTriThirdArray[baseIndex * 3 + 1] = 0;
+        mateTriThirdArray[baseIndex * 3 + 2] = 0;
+      }
+    }
+  }
+
+  // Create vertex buffers and add to attributes
+  const createBuffer = (data) =>
+    Buffer.createVertexBuffer({
+      context: context,
+      typedArray: data,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+
+  const edgeTypeBuffer = createBuffer(edgeTypeArray);
+  const edgePos0Buffer = createBuffer(edgePos0Array);
+  const edgePos1Buffer = createBuffer(edgePos1Array);
+  const currentTriThirdBuffer = createBuffer(currentTriThirdArray);
+
+  // Add attributes to VAO
+  const shaderBuilder = renderResources.shaderBuilder;
+
+  const edgeAttributes = [
+    ...renderResources.attributes,
+    {
+      index: shaderBuilder._attributeLocations.a_edgeType,
+      vertexBuffer: edgeTypeBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    {
+      index: shaderBuilder._attributeLocations.a_edgePos0,
+      vertexBuffer: edgePos0Buffer,
+      componentsPerAttribute: 3,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    {
+      index: shaderBuilder._attributeLocations.a_edgePos1,
+      vertexBuffer: edgePos1Buffer,
+      componentsPerAttribute: 3,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    {
+      index: shaderBuilder._attributeLocations.a_currentTriThird,
+      vertexBuffer: currentTriThirdBuffer,
+      componentsPerAttribute: 3,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+  ];
+
+  let mateTriThirdBuffer = null;
+  if (mateTriThirdArray) {
+    mateTriThirdBuffer = createBuffer(mateTriThirdArray);
+    const mateLocation = shaderBuilder._attributeLocations.a_mateTriThird;
+    if (defined(mateLocation)) {
+      edgeAttributes.push({
+        index: mateLocation,
+        vertexBuffer: mateTriThirdBuffer,
+        componentsPerAttribute: 3,
+        componentDatatype: ComponentDatatype.FLOAT,
+        normalize: false,
+      });
+    }
+    console.log("Silhouette mate positions prepared for", edgeCount, "edges");
+  }
+
+  const vertexArray = new VertexArray({
+    context: context,
+    indexBuffer: indexBuffer,
+    attributes: edgeAttributes,
+  });
+
+  return {
+    vertexArray: vertexArray,
+    indexBuffer: indexBuffer,
+    indexCount: edgeIndices.length,
+    edgeTypeBuffer: edgeTypeBuffer,
+    edgePos0Buffer: edgePos0Buffer,
+    edgePos1Buffer: edgePos1Buffer,
+    currentTriThirdBuffer: currentTriThirdBuffer,
+    mateTriThirdBuffer: mateTriThirdBuffer,
+  };
 }
 
 export default EdgeVisibilityPipelineStage;
