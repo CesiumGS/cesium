@@ -33,13 +33,12 @@ EdgeVisibilityPipelineStage.process = function (
 
   console.log("EdgeVisibilityPipelineStage: Starting shader builder setup");
 
-  // Add define for edge visibility
+  // Add define for edge visibility in both vertex and fragment shaders
   shaderBuilder.addDefine(
     "HAS_EDGE_VISIBILITY",
     undefined,
-    ShaderDestination.VERTEX,
+    ShaderDestination.BOTH,
   );
-  console.log("EdgeVisibilityPipelineStage: Added HAS_EDGE_VISIBILITY define");
 
   // Add uniform for camera position in view space (for silhouette calculation)
   shaderBuilder.addUniform(
@@ -112,7 +111,7 @@ EdgeVisibilityPipelineStage.process = function (
   const currentTriThirdLocation = shaderBuilder.addAttribute(
     "vec3",
     "a_currentTriThird",
-  ); // 当前三角形第三点位置
+  );
 
   console.log("EdgeVisibilityPipelineStage: Position attribute locations:", {
     edgePos0: edgePos0Location,
@@ -126,12 +125,12 @@ EdgeVisibilityPipelineStage.process = function (
   shaderBuilder.addVarying("vec3", "v_currentTriThird");
   console.log("EdgeVisibilityPipelineStage: Added position varyings");
 
-  // Add silhouette mate data if available
+  // Add silhouette mate
   if (defined(primitive.edgeVisibility.silhouetteMates)) {
     const mateTriThirdLocation = shaderBuilder.addAttribute(
       "vec3",
       "a_mateTriThird",
-    ); // 相邻三角形第三点位置
+    );
     shaderBuilder.addVarying("vec3", "v_mateTriThird");
 
     console.log(
@@ -139,7 +138,6 @@ EdgeVisibilityPipelineStage.process = function (
       mateTriThirdLocation,
     );
 
-    // Define to indicate silhouette mates are available
     shaderBuilder.addDefine(
       "HAS_SILHOUETTE_MATES",
       undefined,
@@ -163,13 +161,13 @@ EdgeVisibilityPipelineStage.process = function (
     "  return false;",
     "}",
     "if (edgeType > 1.5 && edgeType < 2.5) {", // HARD
-    "  return true;",
+    "  return false;",
     "}",
     "if (edgeType > 0.5 && edgeType < 1.5) {", // SILHOUETTE
     "  // For silhouette edges, we need proper face normal calculation",
     "  // TODO: Implement proper silhouette calculation with mate vertex data",
     "  // For now, assume visible - needs position lookup via mateVertexIndex",
-    "  return true;",
+    "  return false;",
     "}",
     "return false;", // REPEATED or unknown
   ]);
@@ -201,62 +199,35 @@ EdgeVisibilityPipelineStage.process = function (
     "#endif",
   ]);
 
-  // Add fragment shader code with real silhouette calculation
-  shaderBuilder.addFragmentLines([
-    "#ifdef HAS_EDGE_VISIBILITY",
-    "// Check edge visibility",
-    "if (v_edgeType < 0.5) {", // HIDDEN
-    "  discard;",
-    "}",
-    "else if (v_edgeType > 1.5 && v_edgeType < 2.5) {", // HARD - always visible
-    "  // Keep hard edges",
-    "}",
-    "else if (v_edgeType > 0.5 && v_edgeType < 1.5) {", // SILHOUETTE
-    "#ifdef HAS_SILHOUETTE_MATES",
-    "  // Calculate normals of two triangles sharing this edge",
-    "  vec3 edge1 = v_edgePos1 - v_edgePos0;",
-    "  vec3 currentTriNormal = cross(edge1, v_currentTriThird - v_edgePos0);",
-    "  vec3 mateTriNormal = cross(edge1, v_mateTriThird - v_edgePos0);",
-    "",
-    "  // Normalize normals",
-    "  float len1 = length(currentTriNormal);",
-    "  float len2 = length(mateTriNormal);",
-    "  if (len1 < 1e-10 || len2 < 1e-10) {",
-    "    discard; // Degenerate triangle",
-    "  }",
-    "  currentTriNormal = normalize(currentTriNormal);",
-    "  mateTriNormal = normalize(mateTriNormal);",
-    "",
-    "  // Calculate view direction",
-    "  vec3 viewDir;",
-    "  if (czm_edgeIsOrthographic) {",
-    "    viewDir = vec3(0.0, 0.0, 1.0); // Orthographic: view direction is +Z",
-    "  } else {",
-    "    // Perspective: view direction from fragment to eye",
-    "    vec3 avgPos = (v_edgePos0 + v_edgePos1) * 0.5;",
-    "    viewDir = normalize(-avgPos);",
-    "  }",
-    "",
-    "  // Calculate facing for both triangles",
-    "  float facing1 = dot(currentTriNormal, viewDir);",
-    "  float facing2 = dot(mateTriNormal, viewDir);",
-    "",
-    "  // Apply small tolerance to avoid flickering",
-    "  float tolerance = 2.5e-4;",
-    "",
-    "  // If both triangles face the same direction, discard silhouette",
-    "  if (facing1 * facing2 > tolerance) {",
-    "    discard;",
-    "  }",
-    "#else",
-    "  // No mate data available, assume visible",
-    "#endif",
-    "}",
-    "else {", // REPEATED or unknown
-    "  discard;",
-    "}",
-    "#endif",
-  ]);
+  // Create a shader stage file content for edge visibility with color coding
+  const EdgeVisibilityStageFS =
+    "void edgeVisibilityStage(inout vec4 color)\n" +
+    "{\n" +
+    "#ifdef HAS_EDGE_VISIBILITY\n" +
+    "    // Color code different edge types\n" +
+    "    if (v_edgeType < 0.5) { // HIDDEN (0)\n" +
+    "        color = vec4(0.0, 0.0, 0.0, 0.0); // Transparent for hidden edges\n" +
+    "    }\n" +
+    "    else if (v_edgeType > 0.5 && v_edgeType < 1.5) { // SILHOUETTE (1) - RED\n" +
+    "        color = vec4(1.0, 0.0, 0.0, 1.0);\n" +
+    "    }\n" +
+    "    else if (v_edgeType > 1.5 && v_edgeType < 2.5) { // HARD (2) - GREEN\n" +
+    "        color = vec4(0.0, 1.0, 0.0, 1.0);\n" +
+    "    }\n" +
+    "    else if (v_edgeType > 2.5 && v_edgeType < 3.5) { // REPEATED (3) - BLUE\n" +
+    "        color = vec4(0.0, 0.0, 1.0, 1.0);\n" +
+    "    }\n" +
+    "    else { // Unknown - YELLOW\n" +
+    "        color = vec4(1.0, 1.0, 0.0, 1.0);\n" +
+    "    }\n" +
+    "#endif\n" +
+    "}\n";
+
+  // Add the fragment shader stage like other pipeline stages
+  shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
+  console.log(
+    "EdgeVisibilityPipelineStage: Added processEdgeVisibility function to fragment shader",
+  );
 
   // Helper function for silhouette calculation
   shaderBuilder.addFunction(
@@ -301,19 +272,17 @@ EdgeVisibilityPipelineStage.process = function (
     "return !(bothFrontFacing || bothBackFacing);",
   ]);
 
-  // Check if silhouette normals are available for more accurate calculation
-  if (defined(primitive.edgeVisibility.silhouetteNormals)) {
-    console.log("Silhouette normals available, enhanced calculation possible");
-    // TODO: Implement enhanced silhouette calculation with pre-computed normals
-  } else if (defined(primitive.edgeVisibility.silhouetteMates)) {
-    console.log("Silhouette mates available, can compute normals dynamically");
-    // TODO: Add silhouetteMates as vertex attributes for shader calculation
-  } else {
-    console.log("No silhouette data, using simplified edge visibility");
-  }
+  // if (defined(primitive.edgeVisibility.silhouetteNormals)) {
+  //   console.log("Silhouette normals available, enhanced calculation possible");
+  // } else if (defined(primitive.edgeVisibility.silhouetteMates)) {
+  //   console.log("Silhouette mates available, can compute normals dynamically");
+  // } else {
+  //   console.log("No silhouette data, using simplified edge visibility");
+  // }
 
   // Extract visible edges as line indices (pairs of vertex indices)
   const edgeResult = extractVisibleEdgesAsLineIndices(primitive);
+
   if (
     !defined(edgeResult) ||
     !defined(edgeResult.lineIndices) ||
@@ -330,9 +299,22 @@ EdgeVisibilityPipelineStage.process = function (
     renderResources,
     frameState.context,
   );
+
   if (!defined(edgeGeometry)) {
     return;
   }
+
+  // Build the shader program for edge rendering
+  // NOTE: We don't build a separate shader program here because it causes
+  // compilation issues with czm_log_depth_main. Comment for now
+  // const edgeShaderProgram = shaderBuilder.buildShaderProgram(
+  //   frameState.context,
+  // );
+  // renderResources.model._pipelineResources.push(edgeShaderProgram);
+
+  console.log(
+    "EdgeVisibilityPipelineStage: Edge shader program will use main model shader",
+  );
 
   // Store edge geometry for ModelDrawCommand to create edge commands
   renderResources.edgeGeometry = {
@@ -340,6 +322,7 @@ EdgeVisibilityPipelineStage.process = function (
     indexCount: edgeGeometry.indexCount,
     primitiveType: PrimitiveType.LINES,
     pass: Pass.CESIUM_3D_TILE,
+    // shaderProgram will be set by ModelDrawCommand from the main model
   };
 
   // Track resources for cleanup
@@ -499,7 +482,13 @@ function createLineEdgeGeometry(
   }
 
   // Determine appropriate index datatype based on max vertex index
-  const maxVertexIndex = Math.max(...edgeIndices);
+  let maxVertexIndex = 0;
+  for (let i = 0; i < edgeIndices.length; i++) {
+    if (edgeIndices[i] > maxVertexIndex) {
+      maxVertexIndex = edgeIndices[i];
+    }
+  }
+
   const useUint32 = maxVertexIndex > 65535;
   const indexDatatype = useUint32
     ? IndexDatatype.UNSIGNED_INT

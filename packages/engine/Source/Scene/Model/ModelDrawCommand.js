@@ -572,6 +572,11 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     return;
   }
 
+  // Skip original geometry if edge commands exist
+  if (defined(this._edgeCommand)) {
+    return result;
+  }
+
   pushCommand(result, this._originalCommand, use2D);
 
   return result;
@@ -798,6 +803,11 @@ function deriveEdgeCommand(command, renderResources, model) {
   edgeCommand.vertexArray = edgeGeometry.vertexArray;
   edgeCommand.primitiveType = edgeGeometry.primitiveType;
   edgeCommand.count = edgeGeometry.indexCount;
+
+  // Use the edge shader program if available
+  if (defined(edgeGeometry.shaderProgram)) {
+    edgeCommand.shaderProgram = edgeGeometry.shaderProgram;
+  }
 
   // Set pass for edge rendering (use the pass specified in edgeGeometry)
   edgeCommand.pass = edgeGeometry.pass;

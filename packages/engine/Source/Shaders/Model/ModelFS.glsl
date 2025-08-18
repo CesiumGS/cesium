@@ -119,6 +119,10 @@ void main()
     atmosphereStage(color, attributes);
     #endif
 
+    #ifdef HAS_EDGE_VISIBILITY
+    edgeVisibilityStage(color);
+    #endif
+
     #endif
     // When not picking metadata END
     //========================================================================
