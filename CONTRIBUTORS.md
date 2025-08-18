@@ -429,3 +429,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Matt Schwartz](https://github.com/mzschwartz5)
 - [Easy Mahaffey](https://github.com/easymaahffey)
 - [Pamela Augustine](https://github.com/pamelaAugustine)
+- [Hyungjuun Roh](https://github.com/juunie-roh)
