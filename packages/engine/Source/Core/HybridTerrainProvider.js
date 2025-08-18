@@ -20,6 +20,9 @@ import Frozen from "./Frozen.js";
  * tileRanges.set(15, { x: [55852, 55871], y: [9556, 9575] });
  * tileRanges.set(16, { x: [111704, 111742], y: [19112, 19150] });
  *
+ * const customProvider = await CesiumTerrainProvider.fromUrl("your-terrain-source");
+ * const worldTerrain = await CesiumTerrainProvider.fromUrl("world-terrain-source");
+ *
  * const hybridTerrain = new Cesium.HybridTerrainProvider({
  *   regions: [
  *     {
