@@ -110,6 +110,7 @@ RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
       model,
       frameState,
       useModelMatrix2D,
+      earthCenteredInstances,
       relativeScaledTransformScratch,
     );
     const offset = elements * i;

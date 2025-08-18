@@ -223,14 +223,23 @@ class ModelInstance {
    * @returns {Matrix4} The scaled relative instance transform.
    * @private
    */
-  getRelativeScaledTransform(model, frameState, useModelMatrix2D, result) {
+  getRelativeScaledTransform(
+    model,
+    frameState,
+    useModelMatrix2D,
+    earthCenteredInstances,
+    result,
+  ) {
     let relativeTransform = this._relativeTransform;
     if (useModelMatrix2D) {
-      const transform2D = Transforms.basisTo2D(
-        frameState.mapProjection,
-        this.transform,
-        scratchTransform,
-      );
+      let transform2D = this._relativeTransform;
+      if (earthCenteredInstances) {
+        transform2D = Transforms.basisTo2D(
+          frameState.mapProjection,
+          this.transform,
+          scratchTransform,
+        );
+      }
       const translationRotationScale = scratchTranslationRotationScale;
       translationRotationScale.translation = Cartesian3.ZERO;
       translationRotationScale.scale = Matrix4.getScale(
