@@ -56,6 +56,7 @@
           },
         };
 
+        // Ecef transform for Metrostation, obtained via debugging DTA
         const rows = [
           [
             -0.007357864592832313, 0.9804561979367872, 0.19659986204464436,
@@ -70,30 +71,6 @@
             4073546.2460685894,
           ],
         ];
-        const totalRows = [...rows[0], ...rows[1], ...rows[2]];
-        // console.log(totalRows);
-        // const ecefTransform = Cesium.Matrix4.fromRowMajorArray(totalRows);
-        // console.log(ecefTransform);
-        const ecefTransformArray = [
-          rows[0][0],
-          rows[1][0],
-          rows[2][0],
-          0,
-          rows[0][1],
-          rows[1][1],
-          rows[2][1],
-          0,
-          rows[0][2],
-          rows[1][2],
-          rows[2][2],
-          0,
-          rows[0][3],
-          rows[1][3],
-          rows[2][3],
-          1,
-        ];
-        const ecefTransform = Cesium.Matrix4.fromColumnMajorArray(ecefTransformArray);
-        // console.log(ecefTransform);
 
         const cesiumView = {};
 
@@ -104,7 +81,7 @@
             Math.atan2(savedViewData.extents[0] / 2.0, savedViewData.camera.focusDist);
 
           // TODO problem: don't have a way to get ecef location corresponding to this saved view, without iModel backend
-          // So use null island?
+          // Null island
           // const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
           // const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
@@ -117,37 +94,71 @@
           // roll =+X
 
           const rotation = new Cesium.HeadingPitchRoll(
-            Cesium.Math.toRadians(savedViewData.angles.yaw),
+            Cesium.Math.toRadians(-1 * savedViewData.angles.yaw),
             Cesium.Math.toRadians(savedViewData.angles.pitch),
             Cesium.Math.toRadians(savedViewData.angles.roll),
           );
           const matrix = Cesium.Matrix3.fromHeadingPitchRoll(rotation);
 
-          const testOrientation = {
-            heading: Cesium.Math.toRadians(90), // east, default value is 0.0 (north)
-            pitch: Cesium.Math.toRadians(-90), // default value (looking down)
-            roll: 0.0, // default value
-          };
-
           const up = Cesium.Matrix3.getRow(matrix, 1, new Cesium.Cartesian3());
           const direction = Cesium.Matrix3.getRow(matrix, 2, new Cesium.Cartesian3());
-          const dirScale = Cesium.Matrix3.multiplyByScalar(
+          const dirScale = Cesium.Cartesian3.multiplyByScalar(
             direction,
             -1,
             new Cesium.Cartesian3(),
           );
-          const dirUp = { direction: dirScale, up: up };
 
-          cesiumView.destination = new Cesium.Cartesian3(
-            position[0],
-            position[1],
-            position[2],
+          // Convert rows to column-major array
+          // Probably not necessary, can use Cesium.Matrix4.fromRowMajorArray
+          const ecefTransformArray = [
+            rows[0][0],
+            rows[1][0],
+            rows[2][0],
+            0,
+            rows[0][1],
+            rows[1][1],
+            rows[2][1],
+            0,
+            rows[0][2],
+            rows[1][2],
+            rows[2][2],
+            0,
+            rows[0][3],
+            rows[1][3],
+            rows[2][3],
+            1,
+          ];
+          const ecefTransform = Cesium.Matrix4.fromColumnMajorArray(ecefTransformArray);
+
+          // This works when you directly set viewer.camera.position, direction, up, but not when you use viewer.camera.setView() - why?
+          const newPos = Cesium.Matrix4.multiplyByPoint(
+            ecefTransform,
+            new Cesium.Cartesian3(position.x, position.y, position.z),
+            viewer.camera.position,
           );
-          cesiumView.endTransform = ecefTransform;
-          // cesiumView.orientation = testOrientation;
+          const newDir = Cesium.Matrix4.multiplyByPointAsVector(
+            ecefTransform,
+            new Cesium.Cartesian3(dirScale.x, dirScale.y, dirScale.z),
+            viewer.camera.direction,
+          );
+          const newUp = Cesium.Matrix4.multiplyByPointAsVector(
+            ecefTransform,
+            new Cesium.Cartesian3(up.x, up.y, up.z),
+            viewer.camera.up,
+          );
 
-          // viewer.camera.frustum.fov = fov;
-          viewer.camera.setView(cesiumView);
+          // cesiumView.destination = newPos;
+          // cesiumView.direction = newDir;
+          // cesiumView.up = newUp;
+
+          const frustum = new Cesium.PerspectiveFrustum();
+          frustum.aspectRatio = viewer.camera.frustum.aspectRatio;
+          frustum.fov = fov;
+          frustum.near = 0.01;
+          frustum.far = 1000000;
+
+          viewer.camera.frustum = frustum;
+          // viewer.camera.setView(cesiumView);
         }
 
         //Sandcastle_End
