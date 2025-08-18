@@ -481,7 +481,12 @@ const scratchComputedTranslation = new Cartesian3();
 
 function updateComputedModelMatrix2D(sceneGraph, frameState) {
   const computedModelMatrix = sceneGraph._computedModelMatrix;
-  if (sceneGraph.hasInstances) {
+  const translation = Matrix4.getTranslation(
+    computedModelMatrix,
+    scratchComputedTranslation,
+  );
+
+  if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
     sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,
