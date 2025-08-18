@@ -1,14 +1,15 @@
-import defined from "../Core/defined.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import BlendingState from "./BlendingState.js";
+import Cartesian2 from "../Core/Cartesian2.js";
+import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import CullFace from "./CullFace.js";
-import getClippingFunction from "./getClippingFunction.js";
+import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
+import PrimitiveType from "../Core/PrimitiveType.js";
+import processVoxelProperties from "./processVoxelProperties.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 import VoxelRenderResources from "./VoxelRenderResources.js";
-import processVoxelProperties from "./processVoxelProperties.js";
 
 /**
  * @function
@@ -27,23 +28,9 @@ function buildVoxelDrawCommands(primitive, context) {
     renderResources;
 
   if (clippingPlanesLength > 0) {
-    // Extract the getClippingPlane function from the getClippingFunction string.
-    // This is a bit of a hack.
     const functionId = "getClippingPlane";
-    const entireFunction = getClippingFunction(clippingPlanes, context);
-    const functionSignatureBegin = 0;
-    const functionSignatureEnd = entireFunction.indexOf(")") + 1;
-    const functionBodyBegin =
-      entireFunction.indexOf("{", functionSignatureEnd) + 1;
-    const functionBodyEnd = entireFunction.indexOf("}", functionBodyBegin);
-    const functionSignature = entireFunction.slice(
-      functionSignatureBegin,
-      functionSignatureEnd,
-    );
-    const functionBody = entireFunction.slice(
-      functionBodyBegin,
-      functionBodyEnd,
-    );
+    const functionSignature = `vec4 ${functionId}(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)`;
+    const functionBody = getClippingPlaneFunctionBody(clippingPlanes, context);
     shaderBuilder.addFunction(
       functionId,
       functionSignature,
@@ -131,6 +118,38 @@ function buildVoxelDrawCommands(primitive, context) {
   primitive._drawCommand = drawCommand;
   primitive._drawCommandPick = drawCommandPick;
   primitive._drawCommandPickVoxel = drawCommandPickVoxel;
+}
+
+const textureResolutionScratch = new Cartesian2();
+
+function getClippingPlaneFunctionBody(clippingPlaneCollection, context) {
+  const textureResolution = ClippingPlaneCollection.getTextureResolution(
+    clippingPlaneCollection,
+    context,
+    textureResolutionScratch,
+  );
+  const width = textureResolution.x;
+  const height = textureResolution.y;
+
+  const pixelWidth = 1.0 / width;
+  const pixelHeight = 1.0 / height;
+
+  let pixelWidthString = `${pixelWidth}`;
+  if (pixelWidthString.indexOf(".") === -1) {
+    pixelWidthString += ".0";
+  }
+  let pixelHeightString = `${pixelHeight}`;
+  if (pixelHeightString.indexOf(".") === -1) {
+    pixelHeightString += ".0";
+  }
+
+  return `int pixY = clippingPlaneNumber / ${width};
+    int pixX = clippingPlaneNumber - (pixY * ${width});
+    // Sample from center of pixel
+    float u = (float(pixX) + 0.5) * ${pixelWidthString};
+    float v = (float(pixY) + 0.5) * ${pixelHeightString};
+    vec4 plane = texture(packedClippingPlanes, vec2(u, v));
+    return czm_transformPlane(plane, transform);`;
 }
 
 export default buildVoxelDrawCommands;

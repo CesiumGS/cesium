@@ -473,6 +473,7 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
   // In RGBA FLOAT, A plane is 4 floats packed to a RGBA.
   // In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal,
   // so 8 bits or 2 pixels in RGBA.
+  // TODO: 8 bits sounds wrong. 8 bits is 1 component of 1 pixel in an unsigned byte RGBA.
   const pixelsNeeded = useFloatTexture ? this.length : this.length * 2;
 
   if (defined(clippingPlanesTexture)) {

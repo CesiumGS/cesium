@@ -8,7 +8,7 @@ import VoxelFS from "../Shaders/Voxels/VoxelFS.js";
 import VoxelVS from "../Shaders/Voxels/VoxelVS.js";
 import IntersectionUtils from "../Shaders/Voxels/IntersectionUtils.js";
 import IntersectDepth from "../Shaders/Voxels/IntersectDepth.js";
-import IntersectClippingPlanes from "../Shaders/Voxels/IntersectClippingPlanes.js";
+import IntersectPlane from "../Shaders/Voxels/IntersectPlane.js";
 import IntersectLongitude from "../Shaders/Voxels/IntersectLongitude.js";
 import IntersectBox from "../Shaders/Voxels/IntersectBox.js";
 import IntersectCylinder from "../Shaders/Voxels/IntersectCylinder.js";
@@ -116,8 +116,10 @@ function VoxelRenderResources(primitive) {
     "#line 0",
     Octree,
     VoxelUtils,
-    IntersectionUtils,
     Megatexture,
+    IntersectionUtils,
+    IntersectPlane,
+    IntersectDepth,
   ]);
 
   if (clippingPlanesLength > 0) {
@@ -138,9 +140,8 @@ function VoxelRenderResources(primitive) {
         ShaderDestination.FRAGMENT,
       );
     }
-    shaderBuilder.addFragmentLines([IntersectClippingPlanes]);
   }
-  shaderBuilder.addFragmentLines([IntersectDepth]);
+
   if (primitive._depthTest) {
     shaderBuilder.addDefine(
       "DEPTH_TEST",

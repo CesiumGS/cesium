@@ -22,6 +22,7 @@ vec4 intersectPlane(in Ray ray, in vec4 plane) {
     return vec4(n, t);
 }
 
+#ifdef CLIPPING_PLANES
 void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
     vec4 backSide = vec4(-ray.dir, -INF_HIT);
     vec4 farSide = vec4(ray.dir, +INF_HIT);
@@ -76,3 +77,4 @@ void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
         setShapeIntersection(ix, CLIPPING_PLANES_INTERSECTION_INDEX, clippingVolume);
     #endif
 }
+#endif
