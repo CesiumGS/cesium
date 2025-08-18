@@ -95,6 +95,7 @@ describe(
           statistics: new ModelStatistics(),
           sceneGraph: new ModelSceneGraph(),
           scale: 1,
+          minimumPixelSize: 0,
         },
         runtimeNode: {
           node: node,
@@ -285,7 +286,11 @@ describe(
       const sampleInstance3 = new ModelInstance(instanceModelMatrix3);
       const sampleInstance4 = new ModelInstance(instanceModelMatrix4);
 
+      // mock resources for ModelInstancesUpdateStage
       sceneGraph.modelInstances._instances = [sampleInstance3, sampleInstance4];
+      sceneGraph._model = {
+        minimumPixelSize: 0,
+      };
       const frameState = {
         mode: SceneMode.SCENE3D,
       };
