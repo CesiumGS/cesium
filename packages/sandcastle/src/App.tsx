@@ -505,14 +505,11 @@ function App() {
             hidden={leftPanel !== "gallery"}
             galleryItems={galleryItems}
             loadDemo={(item, switchToCode) => {
-              // Load the gallery item every time it's clicked
-              loadGalleryItem(item.id);
-
               const searchParams = new URLSearchParams(window.location.search);
-              if (
-                !searchParams.has("id") ||
-                (searchParams.has("id") && searchParams.get("id") !== item.id)
-              ) {
+              const isAlreadyActive =
+                searchParams.has("id") && searchParams.get("id") === item.id;
+
+              if (!isAlreadyActive) {
                 // only push state if it's not the current url to prevent duplicated in history
                 window.history.pushState(
                   {},
@@ -522,7 +519,13 @@ function App() {
               }
 
               if (switchToCode) {
+                if (!isAlreadyActive) {
+                  loadGalleryItem(item.id);
+                }
                 setLeftPanel("editor");
+              } else {
+                // Load the gallery item every time it's clicked ro act as a "rerun" button
+                loadGalleryItem(item.id);
               }
             }}
           />

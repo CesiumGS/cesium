@@ -206,8 +206,11 @@ export function GalleryCard({
       <IconButton
         icon={script}
         label="Open code"
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           loadDemo(item, true);
+          return false;
         }}
         className="open-code-btn"
       />
