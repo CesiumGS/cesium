@@ -5,6 +5,7 @@ import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
@@ -23,6 +24,7 @@ import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import ModelType from "./ModelType.js";
+import ModelInstanceCollection from "./ModelInstanceCollection.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
@@ -32,8 +34,8 @@ import addAllToArray from "../../Core/addAllToArray.js";
  * An in memory representation of the scene graph for a {@link Model}
  *
  * @param {object} options An object containing the following options
- * @param {Model} options.model The model this scene graph belongs to
- * @param {ModelComponents} options.modelComponents The model components describing the model
+ * @param {ModelInstance[]} [options.modelInstances] The API-level model instances
+ * @param {Model} [options.model] The API-level model instances
  *
  * @alias ModelSceneGraph
  * @constructor
@@ -42,22 +44,6 @@ import addAllToArray from "../../Core/addAllToArray.js";
  */
 function ModelSceneGraph(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  const components = options.modelComponents;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.model", options.model);
-  Check.typeOf.object("options.modelComponents", components);
-  //>>includeEnd('debug');
-
-  /**
-   * A reference to the {@link Model} that owns this scene graph.
-   *
-   * @type {Model}
-   * @readonly
-   *
-   * @private
-   */
-  this._model = options.model;
 
   /**
    * The model components that represent the contents of the 3D model file.
@@ -67,7 +53,7 @@ function ModelSceneGraph(options) {
    *
    * @private
    */
-  this._components = components;
+  this._components = undefined;
 
   /**
    * Pipeline stages to apply across the model.
@@ -143,6 +129,16 @@ function ModelSceneGraph(options) {
    */
   this.modelPipelineStages = [];
 
+  this._modelInstances = new ModelInstanceCollection({
+    instances: options.modelInstances,
+    model: options.model,
+  });
+  this._model = options.model;
+
+  // An un-transformed boundingSphere in world space
+  this._rootBoundingSphere = new BoundingSphere();
+  this._rootTransform = Matrix4.clone(Matrix4.IDENTITY);
+
   // The scene graph's bounding sphere is model space, so that
   // the model's bounding sphere can be recomputed when given a
   // new model matrix.
@@ -151,25 +147,40 @@ function ModelSceneGraph(options) {
   // The 2D bounding sphere is in world space. This is checked
   // by the draw commands to see if the model is over the IDL,
   // and if so, renders the primitives using extra commands.
+  this._projectTo2D = false;
   this._boundingSphere2D = undefined;
 
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   this._computedModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
-  this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
-    components.upAxis,
-    components.forwardAxis,
-    new Matrix4(),
-  );
+  this._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   // Store articulations from the AGI_articulations extension
   // by name in a dictionary for easy retrieval.
   this._runtimeArticulations = {};
 
-  initialize(this);
+  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 }
 
 Object.defineProperties(ModelSceneGraph.prototype, {
+  /**
+   * Whether to accurately project the positions of the model
+   * corresponding to this scene graph in 2D. If false, the
+   * model will use less memory and will still render in 2D / CV
+   * mode, but its positions may be inaccurate
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   *
+   */
+  projectTo2D: {
+    get: function () {
+      return this._projectTo2D;
+    },
+  },
+
   /**
    * The model components this scene graph represents.
    *
@@ -216,6 +227,7 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   /**
    * The bounding sphere containing all the primitives in the scene graph
    * in model space.
+   * TODO is this redundant with rootBoundingSphere?
    *
    * @type {BoundingSphere}
    * @readonly
@@ -227,27 +239,120 @@ Object.defineProperties(ModelSceneGraph.prototype, {
       return this._boundingSphere;
     },
   },
+
+  /**
+   * The bounding sphere containing all the primitives in the scene graph
+   * in model space
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
+   */
+  rootBoundingSphere: {
+    get: function () {
+      return this._rootBoundingSphere;
+    },
+  },
+
+  /**
+   * The transform for the scene graph computed by multiplying the
+   * components transform by the the axisCorrectionMatrix
+   * glTF * AxisCorrection
+   *
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @private
+   */
+  rootTransform: {
+    get: function () {
+      return this._rootTransform;
+    },
+  },
+
+  /**
+   * Accessor to ModelInstanceCollection to support runtime instancing
+   *
+   * @type {ModelInstanceCollection}
+   *
+   * @private
+   */
+  modelInstances: {
+    get: function () {
+      return this._modelInstances;
+    },
+    set: function (value) {
+      this._modelInstances = value;
+    },
+  },
+
+  /**
+   * Model has runtime instances
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  hasInstances: {
+    get: function () {
+      return this._modelInstances && this._modelInstances.length > 0;
+    },
+  },
 });
 
-function initialize(sceneGraph) {
-  const components = sceneGraph._components;
-  const scene = components.scene;
-  const model = sceneGraph._model;
+/**
+ * Initializes the scene graph based on a model and its components
+ *
+ * @param {Model} model the for which to construct the scene graph
+ * @param {Components} components the components for the model loaded with ResourceLoader
+ *
+ * @private
+ */
+ModelSceneGraph.prototype.initialize = function (model, components) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("model", model);
+  Check.typeOf.object("modelComponents", components);
+  //>>includeEnd('debug');
+
+  if (model._loader._hasMeshGpuInstancing & this.hasInstances) {
+    throw new RuntimeError(
+      "Models with the EXT_mesh_gpu_instancing extension cannot use the ModelInstanceCollection class.",
+    );
+  }
+
+  this._components = components;
+
+  this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
+    components.upAxis,
+    components.forwardAxis,
+    this._axisCorrectionMatrix,
+  );
+
+  this._projectTo2D = model._projectTo2D;
+  this._computedModelScale = model._computedScale;
 
   // If the model has a height reference that modifies the model matrix,
   // it will be accounted for in updateModelMatrix.
   const modelMatrix = model.modelMatrix;
-  computeModelMatrix(sceneGraph, modelMatrix);
+  this._rootTransform = computeRootTransform(this, this._rootTransform);
+  this._computedModelMatrix = computeModelMatrix(
+    modelMatrix,
+    this._computedModelScale,
+    this._rootTransform,
+    this._computedModelMatrix,
+  );
 
   const articulations = components.articulations;
   const articulationsLength = articulations.length;
 
-  const runtimeArticulations = sceneGraph._runtimeArticulations;
+  const runtimeArticulations = this._runtimeArticulations;
   for (let i = 0; i < articulationsLength; i++) {
     const articulation = articulations[i];
     const runtimeArticulation = new ModelArticulation({
       articulation: articulation,
-      sceneGraph: sceneGraph,
+      sceneGraph: this,
     });
 
     const name = runtimeArticulation.name;
@@ -257,30 +362,31 @@ function initialize(sceneGraph) {
   const nodes = components.nodes;
   const nodesLength = nodes.length;
 
-  // Initialize this array to be the same size as the nodes array in
+  // Set this array to be the same size as the nodes array in
   // the model file. This is so the node indices remain the same. However,
   // only nodes reachable from the scene's root node will be populated, the
   // rest will be undefined
-  sceneGraph._runtimeNodes = new Array(nodesLength);
+  this._runtimeNodes.length = nodesLength;
 
+  const scene = components.scene;
   const rootNodes = scene.nodes;
   const rootNodesLength = rootNodes.length;
   const transformToRoot = Matrix4.IDENTITY;
   for (let i = 0; i < rootNodesLength; i++) {
     const rootNode = scene.nodes[i];
 
-    const rootNodeIndex = traverseAndCreateSceneGraph(
-      sceneGraph,
+    const rootNodeIndex = this.traverseAndCreateSceneGraph(
+      model,
       rootNode,
       transformToRoot,
     );
 
-    sceneGraph._rootNodes.push(rootNodeIndex);
+    this._rootNodes.push(rootNodeIndex);
   }
 
   // Handle skins after all runtime nodes are created
   const skins = components.skins;
-  const runtimeSkins = sceneGraph._runtimeSkins;
+  const runtimeSkins = this._runtimeSkins;
 
   const skinsLength = skins.length;
   for (let i = 0; i < skinsLength; i++) {
@@ -288,16 +394,16 @@ function initialize(sceneGraph) {
     runtimeSkins.push(
       new ModelSkin({
         skin: skin,
-        sceneGraph: sceneGraph,
+        sceneGraph: this,
       }),
     );
   }
 
-  const skinnedNodes = sceneGraph._skinnedNodes;
+  const skinnedNodes = this._skinnedNodes;
   const skinnedNodesLength = skinnedNodes.length;
   for (let i = 0; i < skinnedNodesLength; i++) {
     const skinnedNodeIndex = skinnedNodes[i];
-    const skinnedNode = sceneGraph._runtimeNodes[skinnedNodeIndex];
+    const skinnedNode = this._runtimeNodes[skinnedNodeIndex];
 
     // Use the index of the skin in the model components to find
     // the corresponding runtime skin.
@@ -309,30 +415,63 @@ function initialize(sceneGraph) {
   }
 
   // Ensure articulations are applied with their initial values to their target nodes.
-  sceneGraph.applyArticulations();
+  this.applyArticulations();
+};
+
+/**
+ * Multiplies the components transform by the the axisCorrectionMatrix
+ * glTF * AxisCorrection
+ * @param {ModelSceneGraph} sceneGraph
+ * @param {Matrix4} result
+ * @returns {Matrix4}
+ *
+ * @private
+ */
+function computeRootTransform(sceneGraph, result) {
+  const components = sceneGraph._components;
+  const axisCorrectionMatrix = sceneGraph._axisCorrectionMatrix;
+
+  const transform = Matrix4.multiplyTransformation(
+    components.transform,
+    axisCorrectionMatrix,
+    result,
+  );
+
+  return transform;
 }
 
-function computeModelMatrix(sceneGraph, modelMatrix) {
-  const components = sceneGraph._components;
-  const model = sceneGraph._model;
-
-  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
+/**
+ * Scale the model matrix by computed model scale
+ * then apply the root transform
+ *
+ * rootTransform = glTF * AxisCorrection
+ *
+ * computedModelMatrix = modelMatrix * glTF * AxisCorrection
+ *
+ * @param {Matrix4} modelMatrix
+ * @param {Matrix4} rootTransform
+ * @param {Matrix4} result
+ * @returns {Matrix4}
+ */
+function computeModelMatrix(
+  modelMatrix,
+  computedModelScale,
+  rootTransform,
+  result,
+) {
+  modelMatrix = Matrix4.multiplyByUniformScale(
     modelMatrix,
-    components.transform,
-    sceneGraph._computedModelMatrix,
+    computedModelScale,
+    result,
   );
 
-  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
-    sceneGraph._computedModelMatrix,
-    sceneGraph._axisCorrectionMatrix,
-    sceneGraph._computedModelMatrix,
+  const transform = Matrix4.multiplyTransformation(
+    modelMatrix,
+    rootTransform,
+    result,
   );
 
-  sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
-    sceneGraph._computedModelMatrix,
-    model.computedScale,
-    sceneGraph._computedModelMatrix,
-  );
+  return transform;
 }
 
 const scratchComputedTranslation = new Cartesian3();
@@ -376,13 +515,18 @@ function computeModelMatrix2D(sceneGraph, frameState) {
  * their runtime versions, using a post-order depth-first traversal.
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph
+ * @param {Model} model The model for which the scene graph applies
  * @param {ModelComponents.Node} node The current node
  * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
  * @returns {number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
+ModelSceneGraph.prototype.traverseAndCreateSceneGraph = function (
+  model,
+  node,
+  transformToRoot,
+) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
   const transform = ModelUtility.getNodeTransform(node);
@@ -397,8 +541,8 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
       new Matrix4(),
     );
 
-    const childIndex = traverseAndCreateSceneGraph(
-      sceneGraph,
+    const childIndex = this.traverseAndCreateSceneGraph(
+      model,
       childNode,
       childNodeTransformToRoot,
     );
@@ -411,7 +555,7 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
     transform: transform,
     transformToRoot: transformToRoot,
     children: childrenIndices,
-    sceneGraph: sceneGraph,
+    sceneGraph: this,
   });
 
   const primitivesLength = node.primitives.length;
@@ -420,27 +564,26 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
       new ModelRuntimePrimitive({
         primitive: node.primitives[i],
         node: node,
-        model: sceneGraph._model,
+        model: model,
       }),
     );
   }
 
   const index = node.index;
-  sceneGraph._runtimeNodes[index] = runtimeNode;
+  this._runtimeNodes[index] = runtimeNode;
   if (defined(node.skin)) {
-    sceneGraph._skinnedNodes.push(index);
+    this._skinnedNodes.push(index);
   }
 
   // Create and store the public version of the runtime node.
   const name = node.name;
   if (defined(name)) {
-    const model = sceneGraph._model;
     const publicNode = new ModelNode(model, runtimeNode);
-    model._nodesByName[name] = publicNode;
+    this._nodesByName[name] = publicNode;
   }
 
   return index;
-}
+};
 
 const scratchModelPositionMin = new Cartesian3();
 const scratchModelPositionMax = new Cartesian3();
@@ -451,14 +594,15 @@ const scratchPrimitivePositionMax = new Cartesian3();
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
  * If the model is used for classification, a {@link ClassificationModelDrawCommand}
  * is generated for each primitive instead.
- *
+ * Updates the bounding sphere for the scene graph and each primitive.
+ * @param {Model} model the mode to generate the draw commands for
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
  *
  * @private
  */
-ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
-  const modelRenderResources = this.buildRenderResources(frameState);
+ModelSceneGraph.prototype.buildDrawCommands = function (model, frameState) {
+  const modelRenderResources = this.buildRenderResources(model, frameState);
   this.computeBoundingVolumes(modelRenderResources);
   this.createDrawCommands(modelRenderResources, frameState);
 };
@@ -473,7 +617,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
  *   `runtimeNode.configurePipeline`, and `runtimePrimitive.configurePipeline`
  * - create the `ModelRenderResources`, `NodeRenderResources`, and
  *   `PrimitiveRenderResources`
- * - Process the render resources with the respective pipelines
+ * - Process the render resources with the stages of the respective pipelines
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -481,14 +625,13 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
  *
  * @private
  */
-ModelSceneGraph.prototype.buildRenderResources = function (frameState) {
-  const model = this._model;
+ModelSceneGraph.prototype.buildRenderResources = function (model, frameState) {
   const modelRenderResources = new ModelRenderResources(model);
 
   // Reset the memory counts before running the pipeline
   model.statistics.clear();
 
-  this.configurePipeline(frameState);
+  this.configurePipeline(model, frameState);
   const modelPipelineStages = this.modelPipelineStages;
 
   for (let i = 0; i < modelPipelineStages.length; i++) {
@@ -503,6 +646,14 @@ ModelSceneGraph.prototype.buildRenderResources = function (frameState) {
     // be no corresponding runtime node and therefore should be skipped.
     if (!defined(runtimeNode)) {
       continue;
+    }
+
+    // If any transforms are dirty, update them now before using the computed transform
+    if (runtimeNode.isComputedTransformDirty) {
+      this.updateRuntimeNodeTransforms(
+        runtimeNode,
+        runtimeNode.transformToRoot,
+      );
     }
 
     runtimeNode.configurePipeline();
@@ -573,15 +724,13 @@ ModelSceneGraph.prototype.buildRenderResources = function (frameState) {
 ModelSceneGraph.prototype.computeBoundingVolumes = function (
   modelRenderResources,
 ) {
-  const model = this._model;
-
-  const modelPositionMin = Cartesian3.fromElements(
+  const scenePositionMin = Cartesian3.fromElements(
     Number.MAX_VALUE,
     Number.MAX_VALUE,
     Number.MAX_VALUE,
     scratchModelPositionMin,
   );
-  const modelPositionMax = Cartesian3.fromElements(
+  const scenePositionMax = Cartesian3.fromElements(
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
@@ -622,44 +771,40 @@ ModelSceneGraph.prototype.computeBoundingVolumes = function (
       );
 
       Cartesian3.minimumByComponent(
-        modelPositionMin,
+        scenePositionMin,
         primitivePositionMin,
-        modelPositionMin,
+        scenePositionMin,
       );
       Cartesian3.maximumByComponent(
-        modelPositionMax,
+        scenePositionMax,
         primitivePositionMax,
-        modelPositionMax,
+        scenePositionMax,
       );
     }
   }
 
-  this._boundingSphere = BoundingSphere.fromCornerPoints(
-    modelPositionMin,
-    modelPositionMax,
-    new BoundingSphere(),
+  let boundingSphere = this._rootBoundingSphere;
+  boundingSphere = BoundingSphere.fromCornerPoints(
+    scenePositionMin,
+    scenePositionMax,
+    boundingSphere,
   );
 
-  this._boundingSphere = BoundingSphere.transformWithoutScale(
-    this._boundingSphere,
+  boundingSphere = BoundingSphere.transformWithoutScale(
+    boundingSphere,
     this._axisCorrectionMatrix,
-    this._boundingSphere,
+    boundingSphere,
   );
 
-  this._boundingSphere = BoundingSphere.transform(
-    this._boundingSphere,
+  boundingSphere = BoundingSphere.transform(
+    boundingSphere,
     this._components.transform,
-    this._boundingSphere,
+    boundingSphere,
   );
 
-  model._boundingSphere = BoundingSphere.transform(
-    this._boundingSphere,
-    model.modelMatrix,
-    model._boundingSphere,
-  );
-
-  model._initialRadius = model._boundingSphere.radius;
-  model._boundingSphere.radius *= model._clampedScale;
+  this._rootBoundingSphere = boundingSphere;
+  // TODO: resolve model space bounding sphere
+  this._boundingSphere = BoundingSphere.clone(boundingSphere);
 };
 
 /**
@@ -707,15 +852,14 @@ ModelSceneGraph.prototype.createDrawCommands = function (
  * Configure the model pipeline stages. If the pipeline needs to be re-run, call
  * this method again to ensure the correct sequence of pipeline stages are
  * used.
- *
+ * @param {Model} model the model to be evaluated for configuring the pipeline
  * @param {FrameState} frameState
  * @private
  */
-ModelSceneGraph.prototype.configurePipeline = function (frameState) {
+ModelSceneGraph.prototype.configurePipeline = function (model, frameState) {
   const modelPipelineStages = this.modelPipelineStages;
   modelPipelineStages.length = 0;
 
-  const model = this._model;
   const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
 
   if (defined(model.color)) {
@@ -777,7 +921,7 @@ ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
     }
 
     const disableAnimations =
-      frameState.mode !== SceneMode.SCENE3D && this._model._projectTo2D;
+      frameState.mode !== SceneMode.SCENE3D && this._projectTo2D;
     if (updateForAnimations && !disableAnimations) {
       this.updateJointMatrices();
     }
@@ -790,23 +934,50 @@ ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
       }
     }
   }
+  this.modelInstances._dirty = false;
 };
 
 ModelSceneGraph.prototype.updateModelMatrix = function (
   modelMatrix,
+  computedScale,
   frameState,
 ) {
-  computeModelMatrix(this, modelMatrix);
+  this._rootTransform = computeRootTransform(this, this._rootTransform);
+  this._computedModelScale = computedScale;
+  this._computedModelMatrix = computeModelMatrix(
+    modelMatrix,
+    this._computedModelScale,
+    this._rootTransform,
+    this._computedModelMatrix,
+  );
+
   if (frameState.mode !== SceneMode.SCENE3D) {
     computeModelMatrix2D(this, frameState);
   }
 
   // Mark all root nodes as dirty. Any and all children will be
-  // affected recursively in the update stage.
+  // affected recursively in ModelMatrixUpdateStage.
   const rootNodes = this._rootNodes;
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
-    node._transformDirty = true;
+    node._isComputedTransformDirty = true;
+  }
+};
+
+/**
+ * Recursively updates the <code>transformToRoot</code> and <code>computedTransform</code> properties for each node in the hierarchy, starting at the specified root node.
+ * @param {RuntimeNode} runtimeNode The runtime node to update. Children's <code>transformToRoot</code> and <code>computedTransform</code> properties will be recursively updated.
+ * @param {Matrix4} transformToRoot The new transform to root to be applied to this node
+ */
+ModelSceneGraph.prototype.updateRuntimeNodeTransforms = function (
+  runtimeNode,
+  transformToRoot,
+) {
+  transformToRoot = runtimeNode.updateComputedTransform(transformToRoot);
+
+  for (const index of runtimeNode.children) {
+    const childRuntimeNode = this._runtimeNodes[index];
+    this.updateRuntimeNodeTransforms(childRuntimeNode, transformToRoot);
   }
 };
 
@@ -998,7 +1169,7 @@ const scratchPushDrawCommandOptions = {
  *
  * @private
  */
-ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
+ModelSceneGraph.prototype.pushDrawCommands = function (model, frameState) {
   // If a model has silhouettes, the commands that draw the silhouettes for
   // each primitive can only be invoked after the entire model has drawn.
   // Otherwise, the silhouette may draw on top of the model. This requires
@@ -1009,7 +1180,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   // Since this function is called each frame, the options object is
   // preallocated in a scratch variable
   const pushDrawCommandOptions = scratchPushDrawCommandOptions;
-  pushDrawCommandOptions.hasSilhouette = this._model.hasSilhouette(frameState);
+  pushDrawCommandOptions.hasSilhouette = model.hasSilhouette(frameState);
   pushDrawCommandOptions.frameState = frameState;
 
   forEachRuntimePrimitive(

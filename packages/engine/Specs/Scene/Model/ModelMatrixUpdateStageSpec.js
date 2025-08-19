@@ -105,13 +105,14 @@ describe(
         model: model,
         primitive: mockPrimitive,
       });
+      runtimePrimitive.boundingSphere = new BoundingSphere();
       runtimePrimitive.drawCommand = new ModelDrawCommand({
         command: rootDrawCommand,
         primitiveRenderResources: renderResources,
       });
       spyOn(runtimePrimitive, "configurePipeline");
       rootNode.runtimePrimitives.push(runtimePrimitive);
-      rootNode._transformDirty = true;
+      rootNode._isComputedTransformDirty = true;
 
       const leafNode = getChildLeafNode(model);
       const leafDrawCommand = clone(drawCommand);
@@ -122,25 +123,26 @@ describe(
         model: model,
         primitive: mockPrimitive,
       });
+      runtimePrimitive.boundingSphere = new BoundingSphere();
       runtimePrimitive.drawCommand = new ModelDrawCommand({
         command: leafDrawCommand,
         primitiveRenderResources: renderResources,
       });
       spyOn(runtimePrimitive, "configurePipeline");
       leafNode.runtimePrimitives.push(runtimePrimitive);
-      leafNode._transformDirty = true;
+      leafNode._isComputedTransformDirty = true;
     }
 
     function applyTransform(node, transform) {
       const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
-      expect(node._transformDirty).toEqual(false);
+      expect(node._isComputedTransformDirty).toEqual(false);
 
       node.transform = Matrix4.multiplyTransformation(
         node.transform,
         transform,
         new Matrix4(),
       );
-      expect(node._transformDirty).toEqual(true);
+      expect(node._isComputedTransformDirty).toEqual(true);
 
       expect(
         Matrix4.equals(node.originalTransform, expectedOriginalTransform),
