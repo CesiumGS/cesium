@@ -47,22 +47,7 @@ function Batch(
   this.subscriptions = new AssociativeArray();
   this.showsUpdated = new AssociativeArray();
   this.itemsToRemove = [];
-  this.invalidated = false;
-
-  let removeMaterialSubscription;
-  if (defined(depthFailMaterialProperty)) {
-    removeMaterialSubscription =
-      depthFailMaterialProperty.definitionChanged.addEventListener(
-        Batch.prototype.onMaterialChanged,
-        this,
-      );
-  }
-  this.removeMaterialSubscription = removeMaterialSubscription;
 }
-
-Batch.prototype.onMaterialChanged = function () {
-  this.invalidated = true;
-};
 
 Batch.prototype.isMaterial = function (updater) {
   const material = this.depthFailMaterialProperty;
@@ -391,9 +376,6 @@ Batch.prototype.destroy = function () {
   if (defined(oldPrimitive)) {
     primitives.remove(oldPrimitive);
   }
-  if (defined(this.removeMaterialSubscription)) {
-    this.removeMaterialSubscription();
-  }
 };
 
 /**
@@ -451,12 +433,9 @@ StaticGeometryColorBatch.prototype.add = function (time, updater) {
 function removeItem(items, updater) {
   const length = items.length;
   for (let i = length - 1; i >= 0; i--) {
-    const item = items[i];
-    if (item.remove(updater)) {
-      if (item.updaters.length === 0) {
-        items.splice(i, 1);
-        item.destroy();
-      }
+    if (items[i].remove(updater)) {
+      // If the item is now empty, delete it (deferred until the next update,
+      // in case a new updater is added to the same item first).
       return true;
     }
   }
@@ -493,22 +472,13 @@ function updateItems(batch, items, time, isUpdated) {
   let i;
   for (i = length - 1; i >= 0; i--) {
     const item = items[i];
-    if (item.invalidated) {
+    if (item.updaters.length === 0) {
       items.splice(i, 1);
-      const updaters = item.updaters.values;
-      const updatersLength = updaters.length;
-      for (let h = 0; h < updatersLength; h++) {
-        batch.add(time, updaters[h]);
-      }
       item.destroy();
     }
   }
 
-  length = items.length;
-  for (i = 0; i < length; ++i) {
-    isUpdated = items[i].update(time) && isUpdated;
-  }
-  return isUpdated;
+  return items.every(item => item.update(time));
 }
 
 StaticGeometryColorBatch.prototype.update = function (time) {

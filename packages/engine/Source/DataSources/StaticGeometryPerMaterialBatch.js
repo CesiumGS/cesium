@@ -43,19 +43,9 @@ function Batch(
   this.depthFailMaterial = undefined;
   this.updatersWithAttributes = new AssociativeArray();
   this.attributes = new AssociativeArray();
-  this.invalidated = false;
-  this.removeMaterialSubscription =
-    materialProperty.definitionChanged.addEventListener(
-      Batch.prototype.onMaterialChanged,
-      this,
-    );
   this.subscriptions = new AssociativeArray();
   this.showsUpdated = new AssociativeArray();
 }
-
-Batch.prototype.onMaterialChanged = function () {
-  this.invalidated = true;
-};
 
 Batch.prototype.isMaterial = function (updater) {
   const material = this.materialProperty;
@@ -378,7 +368,6 @@ Batch.prototype.destroy = function () {
   if (defined(oldPrimitive)) {
     primitives.remove(oldPrimitive);
   }
-  this.removeMaterialSubscription();
 };
 
 /**
@@ -426,40 +415,27 @@ StaticGeometryPerMaterialBatch.prototype.remove = function (updater) {
   const items = this._items;
   const length = items.length;
   for (let i = length - 1; i >= 0; i--) {
-    const item = items[i];
-    if (item.remove(updater)) {
-      if (item.updaters.length === 0) {
-        items.splice(i, 1);
-        item.destroy();
-      }
+    if (items[i].remove(updater)) {
+      // If the item is now empty, delete it (deferred until the next update,
+      // in case a new updater is added to the same item first).
       break;
     }
   }
 };
 
 StaticGeometryPerMaterialBatch.prototype.update = function (time) {
-  let i;
   const items = this._items;
   const length = items.length;
 
-  for (i = length - 1; i >= 0; i--) {
+  for (let i = length - 1; i >= 0; i--) {
     const item = items[i];
-    if (item.invalidated) {
+    if (item.updaters.length === 0) {
       items.splice(i, 1);
-      const updaters = item.updaters.values;
-      const updatersLength = updaters.length;
-      for (let h = 0; h < updatersLength; h++) {
-        this.add(time, updaters[h]);
-      }
       item.destroy();
     }
   }
 
-  let isUpdated = true;
-  for (i = 0; i < items.length; i++) {
-    isUpdated = items[i].update(time) && isUpdated;
-  }
-  return isUpdated;
+  return items.every(item => item.update(time));
 };
 
 StaticGeometryPerMaterialBatch.prototype.getBoundingSphere = function (
