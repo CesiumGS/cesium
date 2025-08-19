@@ -122,7 +122,7 @@ function buildDrawCommandForModel(
     frameState.mode !== SceneMode.SCENE3D && !useBoundingSphere2D;
 
   const runtimeNode = primitiveRenderResources.runtimeNode;
-  const modelMatrix = ModelDrawCommands.createCommandModelMatrix(
+  const commandModelMatrix = ModelDrawCommands.createCommandModelMatrix(
     model.modelMatrix,
     sceneGraph,
     runtimeNode,
@@ -135,10 +135,13 @@ function buildDrawCommandForModel(
       ? runtimePrimitive.boundingSphere2D
       : runtimePrimitive.boundingSphere;
   const boundingSphere = ModelDrawCommands.createCommandBoundingSphere(
-    modelMatrix,
+    model,
+    commandModelMatrix,
     sceneGraph,
     runtimeNode,
     primitiveBoundingSphere,
+    frameState.mapProjection,
+    useModelMatrix2D,
   );
 
   // Initialize render state with default values
@@ -148,7 +151,7 @@ function buildDrawCommandForModel(
   );
 
   renderState.cull.face = ModelUtility.getCullFace(
-    modelMatrix,
+    commandModelMatrix,
     primitiveRenderResources.primitiveType,
   );
   renderState = RenderState.fromCache(renderState);
@@ -168,7 +171,7 @@ function buildDrawCommandForModel(
 
   const command = new DrawCommand({
     boundingVolume: boundingSphere,
-    modelMatrix: modelMatrix,
+    modelMatrix: commandModelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,
     vertexArray: vertexArray,
@@ -213,6 +216,9 @@ ModelDrawCommands.createCommandModelMatrix = function (
   }
 
   if (sceneGraph.hasInstances) {
+    if (use2D) {
+      return sceneGraph._modelMatrix2D;
+    }
     return modelMatrix;
   }
 
@@ -243,10 +249,13 @@ ModelDrawCommands.createCommandModelMatrix = function (
  * @returns {BoundingSphere}
  */
 ModelDrawCommands.createCommandBoundingSphere = function (
+  model,
   commandModelMatrix,
   sceneGraph,
   runtimeNode,
   primitiveBoundingSphere,
+  mapProjection,
+  useModelMatrix2D = false,
   result,
 ) {
   if (!defined(result)) {
@@ -258,14 +267,15 @@ ModelDrawCommands.createCommandBoundingSphere = function (
 
     for (const modelInstance of sceneGraph.modelInstances._instances) {
       const boundingSphere = modelInstance.getPrimitiveBoundingSphere(
-        commandModelMatrix,
+        model.modelMatrix,
         sceneGraph,
         runtimeNode,
         primitiveBoundingSphere,
+        useModelMatrix2D,
+        mapProjection,
       );
       instanceBoundingSpheres.push(boundingSphere);
     }
-
     return BoundingSphere.fromBoundingSpheres(instanceBoundingSpheres, result);
   }
 
@@ -289,7 +299,7 @@ ModelDrawCommands.updateDrawCommand = function (
   const useModelMatrix2D =
     frameState.mode !== SceneMode.SCENE3D && !useBoundingSphere2D;
 
-  const modelMatrix = ModelDrawCommands.createCommandModelMatrix(
+  const commandModelMatrix = ModelDrawCommands.createCommandModelMatrix(
     model.modelMatrix,
     sceneGraph,
     runtimeNode,
@@ -298,7 +308,7 @@ ModelDrawCommands.updateDrawCommand = function (
   );
 
   drawCommand.cullFace = ModelUtility.getCullFace(
-    modelMatrix,
+    commandModelMatrix,
     drawCommand.primitiveType,
   );
 
@@ -307,10 +317,13 @@ ModelDrawCommands.updateDrawCommand = function (
       ? runtimePrimitive.boundingSphere2D
       : runtimePrimitive.boundingSphere;
   ModelDrawCommands.createCommandBoundingSphere(
-    modelMatrix,
+    model,
+    commandModelMatrix,
     sceneGraph,
     runtimeNode,
     primitiveBoundingSphere,
+    frameState.mapProjection,
+    useModelMatrix2D,
     drawCommand.boundingVolume,
   );
 };

@@ -5,10 +5,11 @@ import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
+import Transforms from "../../Core/Transforms.js";
 
 const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
-const scratchBoundingSphereTransform = new Matrix4();
+const scratchTransform = new Matrix4();
 const scratchBoundingSphere = new BoundingSphere();
 /**
  * A copy of a {@link Model} mesh, known as an instance, used for rendering multiple copies with GPU instancing. Instancing is useful for efficiently rendering a large number of the same model, such as trees in a forest or vehicles in a parking lot.
@@ -191,8 +192,7 @@ class ModelInstance {
    * const boundingSphere = modelInstance.getBoundingSphere(model);
    * viewer.camera.flyToBoundingSphere(boundingSphere);
    */
-  getBoundingSphere(model, result) {
-    const modelMatrix = model.modelMatrix;
+  getBoundingSphere(model, useBoundingSphere2D, mapProjection, result) {
     const sceneGraph = model.sceneGraph;
     const instanceBoundingSpheres = [];
 
@@ -201,12 +201,13 @@ class ModelInstance {
       for (const runtimePrimitive of runtimePrimitives) {
         const primitiveBoundingSphere = runtimePrimitive.boundingSphere;
         const boundingSphere = this.getPrimitiveBoundingSphere(
-          modelMatrix,
+          model.modelMatrix,
           sceneGraph,
           runtimeNode,
           primitiveBoundingSphere,
+          useBoundingSphere2D,
+          mapProjection,
         );
-
         instanceBoundingSpheres.push(boundingSphere);
       }
     }
@@ -222,14 +223,52 @@ class ModelInstance {
    * @returns {Matrix4} The scaled relative instance transform.
    * @private
    */
-  getRelativeScaledTransform(model, frameState, result) {
+  getRelativeScaledTransform(
+    model,
+    frameState,
+    useModelMatrix2D,
+    earthCenteredInstances,
+    result,
+  ) {
+    let relativeTransform = this._relativeTransform;
+    if (useModelMatrix2D) {
+      let transform2D = this._relativeTransform;
+      if (earthCenteredInstances) {
+        transform2D = Transforms.basisTo2D(
+          frameState.mapProjection,
+          this.transform,
+          scratchTransform,
+        );
+      }
+      const translationRotationScale = scratchTranslationRotationScale;
+      translationRotationScale.translation = Cartesian3.ZERO;
+      translationRotationScale.scale = Matrix4.getScale(
+        transform2D,
+        translationRotationScale.scale,
+      );
+
+      const rotation = Matrix4.getRotation(transform2D, scratchRotation);
+      translationRotationScale.rotation = Quaternion.fromRotationMatrix(
+        rotation,
+        translationRotationScale.rotation,
+      );
+      relativeTransform = Matrix4.fromTranslationRotationScale(
+        translationRotationScale,
+      );
+    }
     if (!model.ready || !(model.minimumPixelSize > 0)) {
-      return this._relativeTransform;
+      return relativeTransform;
     }
     let scale = model.scale;
     const radius = model.sceneGraph.rootBoundingSphere.radius;
 
-    const boundingSphere = this.getBoundingSphere(model, scratchBoundingSphere);
+    const boundingSphere = this.getBoundingSphere(
+      model,
+      useModelMatrix2D,
+      frameState.mapProjection,
+      scratchBoundingSphere,
+    );
+
     const scaleInPixels = frameState.camera.getPixelSize(
       boundingSphere,
       frameState.context.drawingBufferWidth,
@@ -246,11 +285,7 @@ class ModelInstance {
       scale = (model.minimumPixelSize * scaleInPixels) / diameter;
     }
 
-    return Matrix4.multiplyByUniformScale(
-      this._relativeTransform,
-      scale,
-      result,
-    );
+    return Matrix4.multiplyByUniformScale(relativeTransform, scale, result);
   }
 
   /**
@@ -273,6 +308,8 @@ class ModelInstance {
     sceneGraph,
     runtimeNode,
     primitiveBoundingSphere,
+    useInstanceTransform2D,
+    mapProjection,
     result,
   ) {
     result = result ?? new BoundingSphere();
@@ -283,16 +320,49 @@ class ModelInstance {
       runtimeNode.computedTransform,
       new Matrix4(),
     );
-    const primitiveMatrix = this.computeModelMatrix(
-      modelMatrix,
-      rootTransform,
-      scratchBoundingSphereTransform,
-    );
+
+    let instanceTransform;
+    let primitiveMatrix;
+
+    if (useInstanceTransform2D) {
+      const combinedTransform = Matrix4.multiplyTransformation(
+        modelMatrix,
+        this.transform,
+        new Matrix4(),
+      );
+      primitiveMatrix = Transforms.basisTo2D(
+        mapProjection,
+        combinedTransform,
+        scratchTransform,
+      );
+    } else {
+      instanceTransform = Matrix4.multiplyTransformation(
+        this.transform,
+        rootTransform,
+        scratchTransform,
+      );
+      primitiveMatrix = Matrix4.multiplyTransformation(
+        modelMatrix,
+        instanceTransform,
+        scratchTransform,
+      );
+    }
+
     return BoundingSphere.transform(
       primitiveBoundingSphere,
       primitiveMatrix,
       result,
     );
+  }
+
+  getCenter2D(mapProjection, result) {
+    result = result ?? new Cartesian3();
+    const instanceTransform = Transforms.basisTo2D(
+      mapProjection,
+      this.transform,
+      scratchTransform,
+    );
+    return Matrix4.getTranslation(instanceTransform, result);
   }
 }
 

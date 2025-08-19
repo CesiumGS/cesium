@@ -96,6 +96,7 @@ describe(
           sceneGraph: new ModelSceneGraph(),
           scale: 1,
           minimumPixelSize: 0,
+          modelMatrix: Matrix4.IDENTITY,
         },
         runtimeNode: {
           node: node,
