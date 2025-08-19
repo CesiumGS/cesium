@@ -2579,20 +2579,12 @@ function performTranslucent3DTilesClassification(
 function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
   scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES);
 
-  const view = scene._view;
   const originalFramebuffer = passState.framebuffer;
-
-  // Bind the edge framebuffer for multi-target rendering
-  if (
-    scene._enableEdgeVisibility &&
-    defined(view.edgeFramebuffer.framebuffer)
-  ) {
-    passState.framebuffer = view.edgeFramebuffer.framebuffer;
-  }
 
   // performPass
   const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES];
   const commandCount = frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES];
+
   for (let j = 0; j < commandCount; ++j) {
     executeCommand(commands[j], scene, passState);
   }
@@ -2626,7 +2618,9 @@ function executeCommands(scene, passState) {
   // early-z, but we would have to draw it in each frustum.
   // Do not render environment primitives during a pick pass since they do not generate picking commands.
   if (!picking) {
-    renderEnvironment(scene, passState);
+    // TEMP: Comment out environment rendering to test EdgeFramebuffer
+    // renderEnvironment(scene, passState);
+    // console.log("TEMP: Environment rendering disabled for EdgeFramebuffer testing");
   }
 
   const {
@@ -2703,16 +2697,18 @@ function executeCommands(scene, passState) {
     }
 
     if (globeTranslucencyState.translucent) {
-      uniformState.updatePass(Pass.GLOBE);
-      globeTranslucencyState.executeGlobeCommands(
-        frustumCommands,
-        executeCommand,
-        globeTranslucencyFramebuffer,
-        scene,
-        passState,
-      );
+      // TEMP: Comment out globe rendering to test EdgeFramebuffer
+      // uniformState.updatePass(Pass.GLOBE);
+      // globeTranslucencyState.executeGlobeCommands(
+      //   frustumCommands,
+      //   executeCommand,
+      //   globeTranslucencyFramebuffer,
+      //   scene,
+      //   passState,
+      // );
     } else {
-      performPass(frustumCommands, Pass.GLOBE);
+      // TEMP: Comment out globe rendering to test EdgeFramebuffer
+      // performPass(frustumCommands, Pass.GLOBE);
     }
 
     if (useGlobeDepthFramebuffer) {
@@ -2895,16 +2891,17 @@ function executeCommands(scene, passState) {
     uniformState.updateFrustum(frustum);
 
     if (globeTranslucencyState.translucent) {
-      uniformState.updatePass(Pass.GLOBE);
-      globeTranslucencyState.executeGlobeCommands(
-        frustumCommands,
-        executeIdCommand,
-        globeTranslucencyFramebuffer,
-        scene,
-        passState,
-      );
+      // TEMP: Comment out globe ID pass rendering to test EdgeFramebuffer
+      // uniformState.updatePass(Pass.GLOBE);
+      // globeTranslucencyState.executeGlobeCommands(
+      //   frustumCommands,
+      //   executeIdCommand,
+      //   globeTranslucencyFramebuffer,
+      //   scene,
+      //   passState,
+      // );
     } else {
-      performIdPass(frustumCommands, Pass.GLOBE);
+      // performIdPass(frustumCommands, Pass.GLOBE);
     }
 
     if (clearGlobeDepth) {
@@ -2933,41 +2930,41 @@ function executeCommands(scene, passState) {
  *
  * @private
  */
-function renderEnvironment(scene, passState) {
-  const { context, environmentState, view } = scene;
+// function renderEnvironment(scene, passState) {
+//   const { context, environmentState, view } = scene;
 
-  context.uniformState.updatePass(Pass.ENVIRONMENT);
+//   context.uniformState.updatePass(Pass.ENVIRONMENT);
 
-  if (defined(environmentState.skyBoxCommand)) {
-    executeCommand(environmentState.skyBoxCommand, scene, passState);
-  }
+//   if (defined(environmentState.skyBoxCommand)) {
+//     executeCommand(environmentState.skyBoxCommand, scene, passState);
+//   }
 
-  if (environmentState.isSkyAtmosphereVisible) {
-    executeCommand(environmentState.skyAtmosphereCommand, scene, passState);
-  }
+//   if (environmentState.isSkyAtmosphereVisible) {
+//     executeCommand(environmentState.skyAtmosphereCommand, scene, passState);
+//   }
 
-  if (environmentState.isSunVisible) {
-    environmentState.sunDrawCommand.execute(context, passState);
-    if (scene.sunBloom && !environmentState.useWebVR) {
-      let framebuffer;
-      if (environmentState.useGlobeDepthFramebuffer) {
-        framebuffer = view.globeDepth.framebuffer;
-      } else if (environmentState.usePostProcess) {
-        framebuffer = view.sceneFramebuffer.framebuffer;
-      } else {
-        framebuffer = environmentState.originalFramebuffer;
-      }
-      scene._sunPostProcess.execute(context);
-      scene._sunPostProcess.copy(context, framebuffer);
-      passState.framebuffer = framebuffer;
-    }
-  }
+//   if (environmentState.isSunVisible) {
+//     environmentState.sunDrawCommand.execute(context, passState);
+//     if (scene.sunBloom && !environmentState.useWebVR) {
+//       let framebuffer;
+//       if (environmentState.useGlobeDepthFramebuffer) {
+//         framebuffer = view.globeDepth.framebuffer;
+//       } else if (environmentState.usePostProcess) {
+//         framebuffer = view.sceneFramebuffer.framebuffer;
+//       } else {
+//         framebuffer = environmentState.originalFramebuffer;
+//       }
+//       scene._sunPostProcess.execute(context);
+//       scene._sunPostProcess.copy(context, framebuffer);
+//       passState.framebuffer = framebuffer;
+//     }
+//   }
 
-  // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-  if (environmentState.isMoonVisible) {
-    environmentState.moonCommand.execute(context, passState);
-  }
-}
+//   // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+//   if (environmentState.isMoonVisible) {
+//     environmentState.moonCommand.execute(context, passState);
+//   }
+// }
 
 /**
  * Execute compute commands from the scene's environment state and computeCommandList

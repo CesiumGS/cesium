@@ -2027,7 +2027,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
 
   // Edge Visibility Test
   const testEdgeVisibilityExtension = null;
-  // createTestEdgeVisibilityExtension(gltfPrimitive);
+  // = createTestEdgeVisibilityExtension(gltfPrimitive);
 
   const edgeVisibilityExtension =
     testEdgeVisibilityExtension ||
@@ -2204,7 +2204,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   return primitive;
 }
 
-// // temp test for edge visibility
+// temp test for edge visibility
 // function createTestEdgeVisibilityExtension(gltfPrimitive) {
 //   if (
 //     !defined(gltfPrimitive.indices) ||

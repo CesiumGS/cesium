@@ -18,10 +18,10 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
 function EdgeFramebuffer(options) {
   options = options || {};
 
-  // Create framebuffer manager with multi-render target support
-  // Color attachment 0: color, Color attachment 1: ID
+  // Create framebuffer manager with single color output for testing
+  // TEMP: Using single color output instead of MRT to avoid GL errors
   this._framebufferManager = new FramebufferManager({
-    colorAttachmentsLength: 2, // Color + ID textures
+    colorAttachmentsLength: 1, // Single color texture only
     depthStencil: true,
     supportsDepthTexture: true,
   });
@@ -124,7 +124,8 @@ EdgeFramebuffer.prototype.update = function (
 
     // Get the textures from the framebuffer manager
     this._colorTexture = this._framebufferManager.getColorTexture(0); // Color attachment 0
-    this._idTexture = this._framebufferManager.getColorTexture(1); // ID attachment 1
+    // TEMP: Single color attachment only, no ID texture
+    this._idTexture = undefined; // No ID attachment for now
     this._depthStencilTexture =
       this._framebufferManager.getDepthStencilTexture();
   }

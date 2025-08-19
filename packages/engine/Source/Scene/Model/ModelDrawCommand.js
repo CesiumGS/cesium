@@ -572,8 +572,9 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     return;
   }
 
-  // Skip original geometry if edge commands exist
+  // Push edge commands if they exist
   if (defined(this._edgeCommand)) {
+    pushCommand(result, this._edgeCommand, use2D);
     return result;
   }
 
@@ -811,21 +812,6 @@ function deriveEdgeCommand(command, renderResources, model) {
 
   // Set pass for edge rendering (use the pass specified in edgeGeometry)
   edgeCommand.pass = edgeGeometry.pass;
-
-  // Modify render state to ensure edges are visible
-  const renderState = clone(command.renderState, true);
-
-  // Disable depth testing to ensure edges are always visible
-  renderState.depthTest = {
-    enabled: false,
-  };
-
-  // Disable backface culling for edges
-  renderState.cull = {
-    enabled: false,
-  };
-
-  edgeCommand.renderState = RenderState.fromCache(renderState);
 
   // Use the same bounding volume as the original command to avoid culling issues
   // The edge geometry should be within the same bounds as the original mesh

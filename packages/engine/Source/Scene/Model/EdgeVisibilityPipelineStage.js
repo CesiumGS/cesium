@@ -321,7 +321,7 @@ EdgeVisibilityPipelineStage.process = function (
     vertexArray: edgeGeometry.vertexArray,
     indexCount: edgeGeometry.indexCount,
     primitiveType: PrimitiveType.LINES,
-    pass: Pass.CESIUM_3D_TILE,
+    pass: Pass.CESIUM_3D_TILE_EDGES,
     // shaderProgram will be set by ModelDrawCommand from the main model
   };
 
