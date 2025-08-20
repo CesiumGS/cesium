@@ -1283,9 +1283,6 @@ function makeTileMultipleContents(
       ? tileset._geometricError
       : tileHeader.geometricError * 2.0;
 
-  const parentBoundingVolume =
-    parentTile._header.oldBoundingVolume ?? tileHeader.boundingVolume;
-
   // TODO: Need to update statistics.numberOfTilesTotal?
   const deepCopy = true;
   const baseTileJson = clone(tileHeader, deepCopy);
@@ -1294,8 +1291,10 @@ function makeTileMultipleContents(
 
   const tileJson = clone(baseTileJson, deepCopy);
   tileJson.geometricError = parentGeometricError;
-  tileJson.oldBoundingVolume = clone(tileHeader.boundingVolume, deepCopy);
-  tileJson.boundingVolume = clone(parentBoundingVolume, deepCopy);
+  tileJson.boundingVolume = clone(
+    tileset.root._header.boundingVolume,
+    deepCopy,
+  );
 
   const tile = makeTile(content, baseResource, tileJson, parentTile);
   tile.implicitCoordinates = implicitCoordinates;
