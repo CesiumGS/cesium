@@ -381,7 +381,10 @@ StaticGroundPolylinePerMaterialBatch.prototype.update = function (time) {
     }
   }
 
-  return items.every(item => item.update(time));
+  return items.reduce(
+    (isUpdated, item) => isUpdated && item.update(time),
+    false,
+  );
 };
 
 StaticGroundPolylinePerMaterialBatch.prototype.getBoundingSphere = function (

@@ -468,9 +468,7 @@ function moveItems(batch, items, time) {
 }
 
 function updateItems(batch, items, time, isUpdated) {
-  let length = items.length;
-  let i;
-  for (i = length - 1; i >= 0; i--) {
+  for (let i = items.length - 1; i >= 0; i--) {
     const item = items[i];
     if (item.updaters.length === 0) {
       items.splice(i, 1);
@@ -478,7 +476,10 @@ function updateItems(batch, items, time, isUpdated) {
     }
   }
 
-  return items.every(item => item.update(time));
+  return items.reduce(
+    (isUpdated, item) => isUpdated && item.update(time),
+    isUpdated,
+  );
 }
 
 StaticGeometryColorBatch.prototype.update = function (time) {
