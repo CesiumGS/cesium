@@ -184,13 +184,30 @@ GeometryPipelineStage.process = function (
     );
   }
 
+  shaderBuilder.addUniform("vec3", "u_ellipsoidRadii");
+  shaderBuilder.addUniform("vec3", "u_ellipsoidRadiiSquared");
+
+  const ellipsoid = frameState.mapProjection.ellipsoid;
+  const uniformMap = renderResources.uniformMap;
+
+  uniformMap.u_ellipsoidRadii = function () {
+    return ellipsoid.radii;
+  };
+  uniformMap.u_ellipsoidRadiiSquared = function () {
+    return ellipsoid.radiiSquared;
+  };
+
   handleBitangents(shaderBuilder, primitive.attributes);
 
   if (primitive.primitiveType === PrimitiveType.POINTS) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  shaderBuilder.addVertexLines(GeometryStageVS);
+  if (model._customGeometryStageVS) {
+    shaderBuilder.addVertexLines(model._customGeometryStageVS);
+  } else {
+    shaderBuilder.addVertexLines(GeometryStageVS);
+  }
   shaderBuilder.addFragmentLines(GeometryStageFS);
 };
 
