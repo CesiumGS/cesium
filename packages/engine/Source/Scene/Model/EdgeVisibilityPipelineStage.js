@@ -20,6 +20,55 @@ import ModelUtility from "./ModelUtility.js";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
+/**
+ * Utility class for handling 24-bit vertex indices in edge data.
+ * Based on iTwin.js VertexIndices implementation.
+ * @private
+ */
+class VertexIndices {
+  constructor(data) {
+    this.data = data;
+    if (this.data.length % 3 !== 0) {
+      throw new Error("VertexIndices data length must be a multiple of 3");
+    }
+  }
+
+  get length() {
+    return this.data.length / 3;
+  }
+
+  static encodeIndex(index, bytes, byteIndex) {
+    if (byteIndex + 2 >= bytes.length) {
+      throw new Error("Byte index out of bounds");
+    }
+    bytes[byteIndex + 0] = index & 0x000000ff;
+    bytes[byteIndex + 1] = (index & 0x0000ff00) >> 8;
+    bytes[byteIndex + 2] = (index & 0x00ff0000) >> 16;
+  }
+
+  setNthIndex(n, value) {
+    VertexIndices.encodeIndex(value, this.data, n * 3);
+  }
+
+  getNthIndex(n) {
+    return this.decodeIndex(n);
+  }
+
+  decodeIndex(index) {
+    if (index >= this.length) {
+      throw new Error("Index out of bounds");
+    }
+    const byteIndex = index * 3;
+    return (
+      this.data[byteIndex] |
+      (this.data[byteIndex + 1] << 8) |
+      (this.data[byteIndex + 2] << 16)
+    );
+  }
+}
+
+// setUint24 function removed - now using VertexIndices.encodeIndex instead
+
 const EdgeVisibilityPipelineStage = {
   name: "EdgeVisibilityPipelineStage",
 };
@@ -40,6 +89,7 @@ EdgeVisibilityPipelineStage.process = function (
   }
 
   const shaderBuilder = renderResources.shaderBuilder;
+  // eslint-disable-next-line no-unused-vars
   const uniformMap = renderResources.uniformMap;
 
   // Add HAS_EDGE_VISIBILITY define
@@ -52,52 +102,50 @@ EdgeVisibilityPipelineStage.process = function (
   // Must add EdgeVisibilityStageFS when HAS_EDGE_VISIBILITY is defined
   shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
 
-  // Add edge index attribute for LUT lookup - let Cesium assign location
-  const edgeIndexLocation = shaderBuilder.addAttribute("float", "a_edgeIndex");
-  // Add varying for edge type (flat to avoid interpolation)
-  shaderBuilder.addVarying("float", "v_edgeType");
-
-  // Add edge LUT uniform and texture coordinates calculation
+  // Add edge LUT uniform for accessing edge endpoint data
   shaderBuilder.addUniform("sampler2D", "u_edgeLUT", ShaderDestination.VERTEX);
-  shaderBuilder.addUniform("vec2", "u_edgeLUTSize", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("vec4", "u_edgeParams", ShaderDestination.VERTEX); // [width, height, numSegments, padding]
 
-  // Add vertex LUT for position sampling
-  shaderBuilder.addUniform(
-    "sampler2D",
-    "u_vertexLUT",
-    ShaderDestination.VERTEX,
-  );
-  shaderBuilder.addUniform("vec2", "u_vertexLUTSize", ShaderDestination.VERTEX);
+  // Add edge type attribute (simplified - no LUT lookup needed)
+  const edgeIndexLocation = shaderBuilder.addAttribute("float", "a_edgeType");
+  // Add quad index attribute (which vertex in the quad: 0-5)
+  const quadIndexLocation = shaderBuilder.addAttribute("float", "a_quadIndex");
+  // Add varying for edge type (flat to avoid interpolation)
+  shaderBuilder.addVarying("float", "v_edgeType", "flat");
 
-  // Add decodeUInt24 function (similar to iTwin.js) - add to vertex shader directly
+  // Add iTwin.js style edge expansion shader functions
   shaderBuilder.addVertexLines([
-    "float decodeUInt24(vec3 v) {",
-    "  return dot(v, vec3(1.0, 256.0, 256.0 * 256.0));",
-    "}",
-  ]);
-
-  shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
     "#ifdef HAS_EDGE_VISIBILITY",
-    "  // Get edge index and look up edge type from LUT",
-    "  float edgeIndex = a_edgeIndex;",
-    "  ",
-    "  // Sample edge type from LUT",
-    "  vec2 lutSize = u_edgeLUTSize;",
-    "  float texelsPerEdge = 2.0;",
-    "  float baseTexelIndex = floor(edgeIndex) * texelsPerEdge;",
-    "  ",
-    "  // Sample first texel (contains edge type in alpha)",
-    "  float row0 = floor(baseTexelIndex / lutSize.x);",
-    "  float col0 = baseTexelIndex - row0 * lutSize.x;",
-    "  vec2 texCoord0 = (vec2(col0, row0) + 0.5) / lutSize;",
-    "  vec4 lutData0 = texture(u_edgeLUT, texCoord0);",
-    "  ",
-    "  // Extract edge type from alpha channel",
-    "  v_edgeType = lutData0.a;",
+    "// Decode 24-bit index from vec3",
+    "float decodeUInt24(vec3 rgb) {",
+    "  return rgb.x + rgb.y * 256.0 + rgb.z * 65536.0;",
+    "}",
+    "",
+    "// Get edge LUT coordinates for texel access",
+    "vec2 getEdgeLUTCoords(float edgeIndex) {",
+    "  float texelIndex = edgeIndex * 1.5; // Each edge takes 1.5 texels (6 bytes / 4 bytes per texel)",
+    "  float y = floor(texelIndex / u_edgeParams.x);",
+    "  float x = texelIndex - y * u_edgeParams.x;",
+    "  return vec2((x + 0.5) / u_edgeParams.x, (y + 0.5) / u_edgeParams.y);",
+    "}",
+    "",
+    "// Expand edge to screen-space quad",
+    "vec3 expandEdgeToScreenQuad(vec3 basePos, float quadIndex, float edgeIndex) {",
+    "  // For now, return base position - will implement screen-space expansion later",
+    "  return basePos;",
+    "}",
     "#endif",
   ]);
 
-  // Extract visible edges as line indices (pairs of vertex indices)
+  // Override setDynamicVaryingsVS to set varyings (CPU quad style)
+  shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
+    "#ifdef HAS_EDGE_VISIBILITY",
+    "  // Pass edge type from attribute to varying (flat interpolation)",
+    "  v_edgeType = a_edgeType;",
+    "  // Position is already set up on CPU side - no need to modify here",
+    "#endif",
+  ]);
+
   const edgeResult = extractVisibleEdgesAsLineIndices(primitive);
 
   if (
@@ -105,7 +153,9 @@ EdgeVisibilityPipelineStage.process = function (
     !defined(edgeResult.lineIndices) ||
     edgeResult.lineIndices.length === 0
   ) {
-    console.log("EdgeVisibilityPipelineStage: No visible edges found");
+    console.log(
+      "EdgeVisibilityPipelineStage: No visible edges found - EARLY EXIT",
+    );
     return;
   }
 
@@ -116,80 +166,28 @@ EdgeVisibilityPipelineStage.process = function (
     );
   }
 
-  // Create edge LUT texture
-  const edgeLUT = createEdgeLUTTexture(
-    edgeResult.lineIndices,
-    edgeResult.edgeData,
-    frameState.context,
-  );
-  if (!defined(edgeLUT)) {
-    return;
-  }
-
-  // Create vertex LUT texture for position sampling
-  const vertexLUT = createVertexLUTTexture(primitive, frameState.context);
-  if (!defined(vertexLUT)) {
-    console.warn(
-      "EdgeVisibilityPipelineStage: Failed to create vertex LUT, using fallback",
-    );
-    // Don't return, continue with simplified approach
-  }
-
-  // Add edge LUT to uniform map
-  uniformMap.u_edgeLUT = function () {
-    return edgeLUT.texture;
-  };
-
-  uniformMap.u_edgeLUTSize = function () {
-    return [edgeLUT.width, edgeLUT.height];
-  };
-
-  // Add vertex LUT to uniform map (if available)
-  if (defined(vertexLUT)) {
-    uniformMap.u_vertexLUT = function () {
-      return vertexLUT.texture;
-    };
-
-    uniformMap.u_vertexLUTSize = function () {
-      return [vertexLUT.width, vertexLUT.height];
-    };
-  } else {
-    // Fallback: create dummy uniforms
-    uniformMap.u_vertexLUT = function () {
-      return edgeLUT.texture; // Use edge LUT as fallback
-    };
-
-    uniformMap.u_vertexLUTSize = function () {
-      return [1.0, 1.0];
-    };
-  }
-
-  // Use iTwin.js style edge geometry creation with quads
-  const edgeGeometry = createEdgeQuadGeometry(
+  // TEMP: Use CPU-side quad creation (working version) instead of LUT style
+  const edgeGeometry = createCPUQuadEdgeGeometry(
     edgeResult.lineIndices,
     edgeResult.edgeData,
     renderResources,
     frameState.context,
     edgeIndexLocation,
+    quadIndexLocation,
   );
 
   if (!defined(edgeGeometry)) {
-    console.log("EdgeVisibilityPipelineStage: Failed to create edge geometry");
-    return;
-  }
-
-  // Only log for test cases
-  if (edgeResult.lineIndices.length <= 20) {
     console.log(
-      `EdgeVisibilityPipelineStage: TEST CASE - Created edge geometry with ${edgeGeometry.indexCount} indices`,
+      "EdgeVisibilityPipelineStage: Failed to create edge geometry - EARLY EXIT",
     );
+    return;
   }
 
   // Store edge geometry for ModelDrawCommand to create edge commands
   renderResources.edgeGeometry = {
     vertexArray: edgeGeometry.vertexArray,
     indexCount: edgeGeometry.indexCount,
-    primitiveType: PrimitiveType.LINES, // TEMP: Use lines for simpler debugging
+    primitiveType: PrimitiveType.TRIANGLES,
     pass: Pass.CESIUM_3D_TILE_EDGES,
   };
 
@@ -684,7 +682,14 @@ function createEdgeGeometryWithTypes(
   }
 
   // Use original mesh vertex indices directly
-  const useUint32 = Math.max(...edgeIndices) > 65535;
+  // Find max index without spread operator to avoid stack overflow
+  let maxIndex = 0;
+  for (let i = 0; i < edgeIndices.length; i++) {
+    if (edgeIndices[i] > maxIndex) {
+      maxIndex = edgeIndices[i];
+    }
+  }
+  const useUint32 = maxIndex > 65535;
   const indexDatatype = useUint32
     ? IndexDatatype.UNSIGNED_INT
     : IndexDatatype.UNSIGNED_SHORT;
@@ -771,7 +776,14 @@ function createSimpleLineEdgeGeometry(edgeIndices, renderResources, context) {
   }
 
   // Use original mesh vertex indices directly
-  const useUint32 = Math.max(...edgeIndices) > 65535;
+  // Find max index without spread operator to avoid stack overflow
+  let maxIndex = 0;
+  for (let i = 0; i < edgeIndices.length; i++) {
+    if (edgeIndices[i] > maxIndex) {
+      maxIndex = edgeIndices[i];
+    }
+  }
+  const useUint32 = maxIndex > 65535;
   const indexDatatype = useUint32
     ? IndexDatatype.UNSIGNED_INT
     : IndexDatatype.UNSIGNED_SHORT;
@@ -808,6 +820,7 @@ function createSimpleLineEdgeGeometry(edgeIndices, renderResources, context) {
  * @returns {Object|undefined} Object with texture, width, and height properties
  * @private
  */
+// eslint-disable-next-line no-unused-vars
 function createEdgeLUTTexture(edgeIndices, edgeData, context) {
   if (!defined(edgeData) || edgeData.length === 0) {
     return undefined;
@@ -845,19 +858,15 @@ function createEdgeLUTTexture(edgeIndices, edgeData, context) {
     // First texel: v0 endpoint indices (24-bit) + edge type
     const texel0Index = i * texelsPerEdge * 4;
 
-    // Pack v0Index (24-bit) into RGB of first texel
-    textureData[texel0Index] = v0Index & 0xff; // Low 8 bits
-    textureData[texel0Index + 1] = (v0Index >> 8) & 0xff; // Mid 8 bits
-    textureData[texel0Index + 2] = (v0Index >> 16) & 0xff; // High 8 bits
+    // Pack v0Index (24-bit) into RGB of first texel using VertexIndices helper
+    VertexIndices.encodeIndex(v0Index, textureData, texel0Index);
     textureData[texel0Index + 3] = edgeInfo.edgeType; // Edge type in alpha (0-255 range)
 
     // Second texel: v1 endpoint indices (24-bit)
     const texel1Index = texel0Index + 4;
 
-    // Pack v1Index (24-bit) into RGB of second texel
-    textureData[texel1Index] = v1Index & 0xff; // Low 8 bits
-    textureData[texel1Index + 1] = (v1Index >> 8) & 0xff; // Mid 8 bits
-    textureData[texel1Index + 2] = (v1Index >> 16) & 0xff; // High 8 bits
+    // Pack v1Index (24-bit) into RGB of second texel using VertexIndices helper
+    VertexIndices.encodeIndex(v1Index, textureData, texel1Index);
     textureData[texel1Index + 3] = 255; // Alpha channel: opaque
   }
 
@@ -868,33 +877,6 @@ function createEdgeLUTTexture(edgeIndices, edgeData, context) {
     textureData[texelIndex + 1] = 0;
     textureData[texelIndex + 2] = 0;
     textureData[texelIndex + 3] = 255;
-  }
-
-  // Only log for small test cases and add detailed LUT info (AFTER filling data)
-  if (edgeCount <= 10) {
-    console.log("=== TEST CASE LUT DEBUG ===");
-    console.log("Edge type distribution:", edgeTypeCounts);
-    console.log("LUT texture dimensions:", textureWidth, "x", textureHeight);
-    console.log("Total texels:", actualTexels);
-
-    // Log detailed edge data and LUT contents
-    for (let i = 0; i < Math.min(edgeCount, 5); i++) {
-      const edgeInfo = edgeData[i];
-      const v0Index = edgeIndices[i * 2];
-      const v1Index = edgeIndices[i * 2 + 1];
-      const texel0Index = i * texelsPerEdge * 4; // First texel for this edge
-
-      console.log(
-        `Edge ${i}: type=${edgeInfo.edgeType}, v0=${v0Index}, v1=${v1Index}`,
-      );
-      console.log(
-        `  LUT texel ${i * texelsPerEdge}: [${textureData[texel0Index]}, ${textureData[texel0Index + 1]}, ${textureData[texel0Index + 2]}, ${textureData[texel0Index + 3]}]`,
-      );
-      console.log(
-        `  Expected: v0Index=${v0Index} -> [${v0Index & 0xff}, ${(v0Index >> 8) & 0xff}, ${(v0Index >> 16) & 0xff}, ${edgeInfo.edgeType}]`,
-      );
-    }
-    console.log("=== END LUT DEBUG ===");
   }
 
   // Create texture
@@ -1066,6 +1048,7 @@ function createEdgeGeometryWithLUT(
  * @returns {Object|undefined} Edge geometry with vertex array and index buffer
  * @private
  */
+// eslint-disable-next-line no-unused-vars
 function createEdgeQuadGeometry(
   edgeIndices,
   edgeData,
@@ -1118,19 +1101,6 @@ function createEdgeQuadGeometry(
     for (let v = 0; v < verticesPerEdge; v++) {
       edgeIndexArray[i * verticesPerEdge + v] = edgeIndex;
     }
-  }
-
-  // DEBUG: Log edge index array for test cases
-  if (edgeCount <= 10) {
-    console.log("=== EDGE INDEX DEBUG ===");
-    console.log("Edge count:", edgeCount);
-    console.log("Vertices per edge:", verticesPerEdge);
-    console.log("Total vertices:", totalVertices);
-    console.log("Edge index array:", Array.from(edgeIndexArray));
-    console.log("Edge index buffer location:", edgeIndexLocation);
-    console.log("Array length:", edgeIndexArray.length);
-    console.log("Expected length:", totalVertices);
-    console.log("=== END EDGE INDEX DEBUG ===");
   }
 
   const edgeIndexBuffer = Buffer.createVertexBuffer({
@@ -1230,12 +1200,548 @@ function createEdgeQuadGeometry(
 }
 
 /**
+ * Creates CPU-side quad edge geometry with flat interpolation (working version)
+ * Each edge is rendered as a quad (2 triangles = 6 vertices) created on CPU
+ * @param {number[]} edgeIndices Array of edge vertex indices
+ * @param {Object[]} edgeData Array of edge metadata including edge types
+ * @param {Object} renderResources The render resources
+ * @param {Context} context The rendering context
+ * @param {number} edgeIndexLocation The shader location for edge index attribute
+ * @param {number} quadIndexLocation The shader location for quad index attribute
+ * @returns {Object|undefined} Edge geometry with vertex array and index buffer
+ * @private
+ */
+function createCPUQuadEdgeGeometry(
+  edgeIndices,
+  edgeData,
+  renderResources,
+  context,
+  edgeIndexLocation,
+  quadIndexLocation,
+) {
+  if (!defined(edgeIndices) || edgeIndices.length === 0) {
+    return undefined;
+  }
+
+  const numEdges = edgeData.length;
+  const verticesPerEdge = 6; // 6 vertices per edge (2 triangles)
+  const totalVertices = numEdges * verticesPerEdge;
+
+  // Get original vertex positions from primitive
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
+    renderResources.runtimePrimitive.primitive,
+    VertexAttributeSemantic.POSITION,
+  );
+
+  let originalPositions;
+  if (defined(positionAttribute.typedArray)) {
+    originalPositions = positionAttribute.typedArray;
+  } else {
+    try {
+      originalPositions =
+        ModelReader.readAttributeAsTypedArray(positionAttribute);
+    } catch (error) {
+      console.error("Cannot access position data:", error);
+      return undefined;
+    }
+  }
+
+  // Create actual quad vertices in CPU (not just endpoints)
+  const edgePositionArray = new Float32Array(totalVertices * 3);
+  // Create quad index array (identifies which vertex in the quad: 0-5)
+  const quadIndexArray = new Float32Array(totalVertices);
+  let posIdx = 0;
+
+  for (let i = 0; i < numEdges; i++) {
+    const v0Index = edgeIndices[i * 2];
+    const v1Index = edgeIndices[i * 2 + 1];
+
+    // Get positions for both endpoints
+    const v0Pos = [
+      originalPositions[v0Index * 3],
+      originalPositions[v0Index * 3 + 1],
+      originalPositions[v0Index * 3 + 2],
+    ];
+    const v1Pos = [
+      originalPositions[v1Index * 3],
+      originalPositions[v1Index * 3 + 1],
+      originalPositions[v1Index * 3 + 2],
+    ];
+
+    // Calculate edge direction and perpendicular offset
+    const edgeDir = [
+      v1Pos[0] - v0Pos[0],
+      v1Pos[1] - v0Pos[1],
+      v1Pos[2] - v0Pos[2],
+    ];
+
+    // Calculate edge length for proper scaling
+    const edgeLength = Math.sqrt(
+      edgeDir[0] * edgeDir[0] +
+        edgeDir[1] * edgeDir[1] +
+        edgeDir[2] * edgeDir[2],
+    );
+
+    // Use a better perpendicular direction (try Y-axis if edge is mostly horizontal)
+    let perpDir = [0.0, 1.0, 0.0]; // Default to Y-up
+    if (
+      Math.abs(edgeDir[1]) > Math.abs(edgeDir[0]) &&
+      Math.abs(edgeDir[1]) > Math.abs(edgeDir[2])
+    ) {
+      // If edge is mostly Y-direction, use X-axis
+      perpDir = [1.0, 0.0, 0.0];
+    }
+
+    const offset = Math.max(5.0, edgeLength * 0.02); // Adaptive line width
+    const perpOffset = [
+      perpDir[0] * offset,
+      perpDir[1] * offset,
+      perpDir[2] * offset,
+    ];
+
+    // Create quad vertices: v0_bottom, v0_top, v1_bottom, v1_top
+    const v0Bottom = [
+      v0Pos[0] - perpOffset[0],
+      v0Pos[1] - perpOffset[1],
+      v0Pos[2] - perpOffset[2],
+    ];
+    const v0Top = [
+      v0Pos[0] + perpOffset[0],
+      v0Pos[1] + perpOffset[1],
+      v0Pos[2] + perpOffset[2],
+    ];
+    const v1Bottom = [
+      v1Pos[0] - perpOffset[0],
+      v1Pos[1] - perpOffset[1],
+      v1Pos[2] - perpOffset[2],
+    ];
+    const v1Top = [
+      v1Pos[0] + perpOffset[0],
+      v1Pos[1] + perpOffset[1],
+      v1Pos[2] + perpOffset[2],
+    ];
+
+    // Create 6 vertices for 2 triangles (quad)
+    // Triangle 1: v0Bottom, v1Bottom, v0Top
+    // Triangle 2: v0Top, v1Bottom, v1Top
+    const quadVertices = [
+      { p: v0Bottom, quadIndex: 0 }, // Triangle 1
+      { p: v1Bottom, quadIndex: 1 },
+      { p: v0Top, quadIndex: 2 },
+      { p: v0Top, quadIndex: 2 }, // Triangle 2
+      { p: v1Bottom, quadIndex: 1 },
+      { p: v1Top, quadIndex: 3 },
+    ];
+
+    for (let j = 0; j < 6; j++) {
+      const vertex = quadVertices[j];
+      edgePositionArray[posIdx++] = vertex.p[0];
+      edgePositionArray[posIdx++] = vertex.p[1];
+      edgePositionArray[posIdx++] = vertex.p[2];
+
+      // Update quad index
+      quadIndexArray[i * 6 + j] = vertex.quadIndex;
+    }
+  }
+
+  // Create position buffer
+  const edgePositionBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: edgePositionArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  const quadIndexBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: quadIndexArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  // Create edge type buffer (normalized 0-1 values for shader)
+  // Shader expects normalized values and multiplies by 255
+  const edgeTypeArray = new Float32Array(totalVertices);
+  for (let i = 0; i < numEdges; i++) {
+    const edgeType = edgeData[i].edgeType;
+    const normalizedEdgeType = edgeType / 255.0; // Normalize to 0-1 range
+    const baseVertex = i * verticesPerEdge;
+    for (let j = 0; j < verticesPerEdge; j++) {
+      edgeTypeArray[baseVertex + j] = normalizedEdgeType;
+    }
+  }
+
+  const edgeTypeBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: edgeTypeArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  // Create index buffer for triangles (sequential indices)
+  const triangleIndices = new Array(totalVertices);
+  for (let i = 0; i < totalVertices; i++) {
+    triangleIndices[i] = i;
+  }
+
+  const useUint32 = totalVertices > 65535;
+  const indexDatatype = useUint32
+    ? IndexDatatype.UNSIGNED_INT
+    : IndexDatatype.UNSIGNED_SHORT;
+  const indexTypedArray = useUint32
+    ? new Uint32Array(triangleIndices)
+    : new Uint16Array(triangleIndices);
+
+  const indexBuffer = Buffer.createIndexBuffer({
+    context: context,
+    typedArray: indexTypedArray,
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: indexDatatype,
+  });
+
+  // Create attributes for CPU-side quad geometry
+  const edgeAttributes = [
+    // Real position attribute (3 components)
+    {
+      index: 0, // Use position attribute location
+      vertexBuffer: edgePositionBuffer,
+      componentsPerAttribute: 3,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    // Edge type attribute (for shader - use edgeIndexLocation)
+    {
+      index: edgeIndexLocation,
+      vertexBuffer: edgeTypeBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    // Quad index attribute
+    {
+      index: quadIndexLocation,
+      vertexBuffer: quadIndexBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+  ];
+
+  const vertexArray = new VertexArray({
+    context: context,
+    indexBuffer: indexBuffer,
+    attributes: edgeAttributes,
+  });
+
+  // DEBUG: Log first few vertices for test cases
+  if (numEdges <= 3) {
+    for (let i = 0; i < Math.min(6, totalVertices); i++) {
+      // eslint-disable-next-line no-unused-vars
+      const x = edgePositionArray[i * 3];
+      // eslint-disable-next-line no-unused-vars
+      const y = edgePositionArray[i * 3 + 1];
+      // eslint-disable-next-line no-unused-vars
+      const z = edgePositionArray[i * 3 + 2];
+    }
+  }
+
+  return {
+    vertexArray: vertexArray,
+    indexBuffer: indexBuffer,
+    indexCount: totalVertices,
+    edgeIndexBuffer: edgeTypeBuffer, // Reuse for debugging
+    quadIndexBuffer: quadIndexBuffer,
+  };
+}
+
+/**
+ * Creates iTwin.js style edge geometry with quads for line rendering
+ * Each edge is rendered as a quad (2 triangles = 6 vertices) using VertexIndices
+ * @param {number[]} edgeIndices Array of edge vertex indices
+ * @param {Object[]} edgeData Array of edge metadata including edge types
+ * @param {Object} renderResources The render resources
+ * @param {Context} context The rendering context
+ * @param {number} edgeIndexLocation The shader location for edge index attribute
+ * @returns {Object|undefined} Edge geometry with vertex array and index buffer
+ * @private
+ */
+// eslint-disable-next-line no-unused-vars
+function createITwinStyleEdgeGeometry(
+  edgeIndices,
+  edgeData,
+  renderResources,
+  context,
+  edgeIndexLocation,
+  quadIndexLocation,
+) {
+  console.log("createITwinStyleEdgeGeometry called:");
+  console.log("  - edgeIndices length:", edgeIndices?.length || 0);
+  console.log("  - edgeData length:", edgeData?.length || 0);
+
+  if (!defined(edgeIndices) || edgeIndices.length === 0) {
+    console.log("  - EARLY EXIT: No edge indices");
+    return undefined;
+  }
+
+  const numEdges = edgeData.length;
+
+  // iTwin.js style: each edge becomes a quad (6 vertices forming 2 triangles)
+  const verticesPerEdge = 6; // 6 vertices per edge (2 triangles)
+  const totalVertices = numEdges * verticesPerEdge;
+
+  console.log("  - numEdges:", numEdges);
+  console.log("  - totalVertices:", totalVertices);
+
+  // SIMPLIFIED: Create position buffer directly with edge endpoint positions
+  // Get original vertex positions from primitive
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
+    renderResources.runtimePrimitive.primitive,
+    VertexAttributeSemantic.POSITION,
+  );
+
+  let originalPositions;
+  if (defined(positionAttribute.typedArray)) {
+    originalPositions = positionAttribute.typedArray;
+  } else {
+    try {
+      originalPositions =
+        ModelReader.readAttributeAsTypedArray(positionAttribute);
+    } catch (error) {
+      console.error("Cannot access position data:", error);
+      return undefined;
+    }
+  }
+
+  // Create edge index buffer (each vertex stores the edge index for LUT lookup)
+  const edgeIndexArray = new Float32Array(totalVertices); // Edge index for each vertex
+  // Create quad index array (identifies which vertex in the quad: 0-3)
+  const quadIndexArray = new Float32Array(totalVertices);
+  // eslint-disable-next-line no-unused-vars, prefer-const
+  let posIdx = 0;
+
+  for (let i = 0; i < numEdges; i++) {
+    const v0Index = edgeIndices[i * 2];
+    const v1Index = edgeIndices[i * 2 + 1];
+
+    // Get positions for both endpoints
+    // eslint-disable-next-line no-unused-vars
+    const v0Pos = [
+      originalPositions[v0Index * 3],
+      originalPositions[v0Index * 3 + 1],
+      originalPositions[v0Index * 3 + 2],
+    ];
+    // eslint-disable-next-line no-unused-vars
+    const v1Pos = [
+      originalPositions[v1Index * 3],
+      originalPositions[v1Index * 3 + 1],
+      originalPositions[v1Index * 3 + 2],
+    ];
+
+    // iTwin.js style: All 6 vertices store the SAME edge endpoints
+    // The shader will use quadIndex to determine screen-space offset
+    // This creates a proper rectangle in screen space, not model space
+
+    for (let j = 0; j < 6; j++) {
+      const vertexIndex = i * 6 + j;
+
+      // All 6 vertices store the same edge index (for LUT lookup)
+      edgeIndexArray[vertexIndex] = i; // Edge index in the LUT
+
+      // Set quadIndex following iTwin.js pattern (derived from gl_VertexID % 6)
+      if (j === 0) {
+        quadIndexArray[vertexIndex] = 0.0; // First triangle, first vertex
+      } else if (j === 2 || j === 3) {
+        quadIndexArray[vertexIndex] = 1.0; // Middle vertices
+      } else if (j === 1 || j === 4) {
+        quadIndexArray[vertexIndex] = 2.0; // Side vertices
+      } else {
+        // j === 5
+        quadIndexArray[vertexIndex] = 3.0; // Last vertex
+      }
+    }
+  }
+
+  // Create edge index buffer (for LUT lookup)
+  const edgeIndexBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: edgeIndexArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  // quadIndexArray already filled in the loop above
+
+  const quadIndexBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: quadIndexArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  // Create edge type buffer (normalized 0-1 values for shader)
+  // Shader expects normalized values and multiplies by 255
+  const edgeTypeArray = new Float32Array(totalVertices);
+  for (let i = 0; i < numEdges; i++) {
+    const edgeType = edgeData[i].edgeType;
+    const normalizedEdgeType = edgeType / 255.0; // Normalize to 0-1 range
+    const baseVertex = i * verticesPerEdge;
+    for (let j = 0; j < verticesPerEdge; j++) {
+      edgeTypeArray[baseVertex + j] = normalizedEdgeType;
+    }
+  }
+
+  const edgeTypeBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: edgeTypeArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  // Create index buffer for triangles (sequential indices)
+  const triangleIndices = new Array(totalVertices);
+  for (let i = 0; i < totalVertices; i++) {
+    triangleIndices[i] = i;
+  }
+
+  const useUint32 = totalVertices > 65535;
+  const indexDatatype = useUint32
+    ? IndexDatatype.UNSIGNED_INT
+    : IndexDatatype.UNSIGNED_SHORT;
+  const indexTypedArray = useUint32
+    ? new Uint32Array(triangleIndices)
+    : new Uint16Array(triangleIndices);
+
+  const indexBuffer = Buffer.createIndexBuffer({
+    context: context,
+    typedArray: indexTypedArray,
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: indexDatatype,
+  });
+
+  // Create attributes for iTwin.js style LUT-based edge geometry
+  const edgeAttributes = [
+    // Edge index attribute (for LUT lookup - replaces position)
+    {
+      index: 0, // Use position attribute location for edge index
+      vertexBuffer: edgeIndexBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    // Edge type attribute (for shader - use edgeIndexLocation)
+    {
+      index: edgeIndexLocation,
+      vertexBuffer: edgeTypeBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    // Quad index attribute
+    {
+      index: quadIndexLocation,
+      vertexBuffer: quadIndexBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+  ];
+
+  const vertexArray = new VertexArray({
+    context: context,
+    indexBuffer: indexBuffer,
+    attributes: edgeAttributes,
+  });
+
+  // DEBUG: Log first few vertices for test cases
+  if (numEdges <= 3) {
+    console.log("DEBUG: First few edge indices:");
+    for (let i = 0; i < Math.min(6, totalVertices); i++) {
+      console.log(
+        `  Vertex ${i}: edgeIndex = ${edgeIndexArray[i]}, quadIndex = ${quadIndexArray[i]}`,
+      );
+    }
+
+    console.log("DEBUG: First few edge types:");
+    for (let i = 0; i < Math.min(6, totalVertices); i++) {
+      console.log(
+        `  Vertex ${i}: edgeType = ${edgeTypeArray[i]}, quadIndex = ${quadIndexArray[i]}`,
+      );
+    }
+  }
+
+  console.log("createITwinStyleEdgeGeometry SUCCESS:");
+  console.log("  - totalVertices:", totalVertices);
+  console.log("  - indexCount:", totalVertices);
+
+  return {
+    vertexArray: vertexArray,
+    indexBuffer: indexBuffer,
+    indexCount: totalVertices,
+    edgeIndexBuffer: edgeTypeBuffer, // Reuse for debugging
+    quadIndexBuffer: quadIndexBuffer,
+  };
+}
+
+/**
+ * Creates iTwin.js style edge LUT data with endpoint indices and normals
+ * @param {number[]} edgeIndices Array of edge vertex indices
+ * @param {Object[]} edgeData Array of edge metadata
+ * @returns {Uint8Array} Edge LUT data in iTwin.js format
+ * @private
+ */
+// eslint-disable-next-line no-unused-vars
+function createITwinStyleEdgeLUT(edgeIndices, edgeData) {
+  const numEdges = edgeData.length;
+
+  // iTwin.js format: 6 bytes per segment edge (2 × 24-bit indices)
+  // For silhouette edges: 10 bytes (2 × 24-bit indices + 4 bytes normals)
+  let totalBytes = 0;
+  // eslint-disable-next-line no-unused-vars
+  // let numSilhouettes = 0;
+
+  for (let i = 0; i < numEdges; i++) {
+    if (edgeData[i].edgeType === 1) {
+      // Silhouette
+      totalBytes += 10;
+      // numSilhouettes++;
+    } else {
+      // Segment edge
+      totalBytes += 6;
+    }
+  }
+
+  const lutData = new Uint8Array(totalBytes);
+  let byteOffset = 0;
+
+  for (let i = 0; i < numEdges; i++) {
+    const v0Index = edgeIndices[i * 2];
+    const v1Index = edgeIndices[i * 2 + 1];
+    const edgeType = edgeData[i].edgeType;
+
+    // Set first endpoint (24-bit) using VertexIndices helper
+    VertexIndices.encodeIndex(v0Index, lutData, byteOffset);
+    byteOffset += 3;
+
+    // Set second endpoint (24-bit) using VertexIndices helper
+    VertexIndices.encodeIndex(v1Index, lutData, byteOffset);
+    byteOffset += 3;
+
+    // For silhouette edges, add normal pair data
+    if (edgeType === 1) {
+      // Add 4 bytes of normal data (placeholder for now)
+      // TODO: Extract actual normal pair data from glTF extension
+      lutData[byteOffset++] = 0; // Normal pair data byte 0
+      lutData[byteOffset++] = 0; // Normal pair data byte 1
+      lutData[byteOffset++] = 0; // Normal pair data byte 2
+      lutData[byteOffset++] = 0; // Normal pair data byte 3
+    }
+  }
+
+  return lutData;
+}
+
+/**
  * Creates a vertex LUT texture containing vertex position data
  * @param {Object} primitive The primitive containing vertex data
  * @param {Context} context The rendering context
  * @returns {Object|undefined} Object with texture and dimensions
  * @private
  */
+// eslint-disable-next-line no-unused-vars
 function createVertexLUTTexture(primitive, context) {
   // Find the position attribute using ModelUtility
   const positionAttribute = ModelUtility.getAttributeBySemantic(

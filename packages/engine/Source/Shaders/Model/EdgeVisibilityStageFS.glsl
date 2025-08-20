@@ -11,8 +11,8 @@ void edgeVisibilityStage(inout vec4 color)
     else if (edgeTypeInt > 0.5 && edgeTypeInt < 1.5) { // SILHOUETTE (1) - RED
         color = vec4(1.0, 0.0, 0.0, 1.0);
     }
-    else if (edgeTypeInt > 1.5 && edgeTypeInt < 2.5) { // HARD (2) - GREEN
-        color = vec4(0.0, 1.0, 0.0, 1.0);
+    else if (edgeTypeInt > 1.5 && edgeTypeInt < 2.5) { // HARD (2) - BRIGHT GREEN
+        color = vec4(0.0, 2.0, 0.0, 1.0); // Extra bright green
     }
     else if (edgeTypeInt > 2.5 && edgeTypeInt < 3.5) { // REPEATED (3) - BLUE
         color = vec4(0.0, 0.0, 1.0, 1.0);
