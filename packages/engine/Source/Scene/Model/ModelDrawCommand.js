@@ -1,5 +1,6 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian2 from "../../Core/Cartesian2.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
@@ -627,6 +628,8 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
   const use2D = shouldUse2DCommands(this, frameState);
   pushCommand(result, this._edgeCommand, use2D);
 
+  // Edge command pushed
+
   return result;
 };
 
@@ -805,21 +808,46 @@ function deriveEdgeCommand(command, renderResources, model) {
   edgeCommand.primitiveType = edgeGeometry.primitiveType;
   edgeCommand.count = edgeGeometry.indexCount;
 
-  // Use the edge shader program if available
+  // Use the edge shader program if available, otherwise use the original command's shader
+  // The original command's shader should already include our edge rendering modifications
   if (defined(edgeGeometry.shaderProgram)) {
     edgeCommand.shaderProgram = edgeGeometry.shaderProgram;
+  } else {
+    // IMPORTANT: Use the original command's shader program which includes our modifications
+    edgeCommand.shaderProgram = command.shaderProgram;
+    // Also copy the uniform map from original command
+    edgeCommand.uniformMap = command.uniformMap;
   }
 
   // Set pass for edge rendering (use the pass specified in edgeGeometry)
   edgeCommand.pass = edgeGeometry.pass;
 
-  // Use the same bounding volume as the original command to avoid culling issues
-  // The edge geometry should be within the same bounds as the original mesh
-  edgeCommand.boundingVolume = command.boundingVolume;
+  // DEBUG: Disable depth testing to ensure edges are visible
+  const originalRenderState = command.renderState;
+  const edgeRenderState = RenderState.fromCache({
+    ...originalRenderState,
+    depthTest: {
+      enabled: false, // Disable depth testing for debugging
+    },
+    cull: {
+      enabled: false, // Disable culling for debugging
+    },
+  });
+  edgeCommand.renderState = edgeRenderState;
+
+  // Edge command created
+
+  // Use a very large bounding volume to avoid culling issues
+  edgeCommand.boundingVolume = new BoundingSphere(
+    Cartesian3.ZERO,
+    Number.MAX_VALUE,
+  );
 
   // Edges don't cast or receive shadows
   edgeCommand.castShadows = false;
   edgeCommand.receiveShadows = false;
+
+  // Debug removed to reduce noise
 
   return edgeCommand;
 }

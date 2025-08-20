@@ -6,8 +6,8 @@ import IndexDatatype from "../../Core/IndexDatatype.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Pass from "../../Renderer/Pass.js";
-import OrthographicOffCenterFrustum from "../../Core/OrthographicOffCenterFrustum.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
 
 const EdgeVisibilityPipelineStage = {
   name: "EdgeVisibilityPipelineStage",
@@ -29,256 +29,37 @@ EdgeVisibilityPipelineStage.process = function (
   }
 
   const shaderBuilder = renderResources.shaderBuilder;
-  const uniformMap = renderResources.uniformMap;
 
   console.log("EdgeVisibilityPipelineStage: Starting shader builder setup");
 
-  // Add define for edge visibility in both vertex and fragment shaders
+  // Step 3: Add basic functionality to create edge rendering
   shaderBuilder.addDefine(
     "HAS_EDGE_VISIBILITY",
     undefined,
     ShaderDestination.BOTH,
   );
 
-  // Add uniform for camera position in view space (for silhouette calculation)
-  shaderBuilder.addUniform(
-    "vec3",
-    "czm_edgeViewerPositionWC",
-    ShaderDestination.VERTEX,
+  // Must add EdgeVisibilityStageFS when HAS_EDGE_VISIBILITY is defined
+  shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
+
+  console.log(
+    "EdgeVisibilityPipelineStage: Added HAS_EDGE_VISIBILITY define and fragment shader",
   );
-  uniformMap.czm_edgeViewerPositionWC = function () {
-    return frameState.camera.positionWC;
-  };
 
-  // Add uniform for view matrix
-  shaderBuilder.addUniform(
-    "mat4",
-    "czm_edgeViewMatrix",
-    ShaderDestination.VERTEX,
-  );
-  uniformMap.czm_edgeViewMatrix = function () {
-    return frameState.context.uniformState.view;
-  };
-
-  // Add uniform for normal matrix
-  shaderBuilder.addUniform(
-    "mat3",
-    "czm_edgeNormalMatrix",
-    ShaderDestination.VERTEX,
-  );
-  uniformMap.czm_edgeNormalMatrix = function () {
-    return frameState.context.uniformState.normal;
-  };
-
-  // Add uniform for model-view matrix
-  shaderBuilder.addUniform(
-    "mat4",
-    "czm_edgeModelViewMatrix",
-    ShaderDestination.VERTEX,
-  );
-  uniformMap.czm_edgeModelViewMatrix = function () {
-    return frameState.context.uniformState.modelView;
-  };
-
-  // Check if orthographic projection
-  const isOrthographic =
-    frameState.camera.frustum instanceof OrthographicOffCenterFrustum;
-
-  // Add uniform for orthographic flag
-  shaderBuilder.addUniform(
-    "bool",
-    "czm_edgeIsOrthographic",
-    ShaderDestination.VERTEX,
-  );
-  uniformMap.czm_edgeIsOrthographic = function () {
-    return isOrthographic;
-  };
-
-  // Add edge type attribute for shader
-  console.log("EdgeVisibilityPipelineStage: Adding attributes and varyings");
+  // Add edge type attribute and varying for color coding
   const edgeTypeLocation = shaderBuilder.addAttribute("float", "a_edgeType");
-  console.log(
-    "EdgeVisibilityPipelineStage: a_edgeType location:",
-    edgeTypeLocation,
-  );
-
-  // Add varying to pass edge type from vertex to fragment shader
   shaderBuilder.addVarying("float", "v_edgeType");
-  console.log("EdgeVisibilityPipelineStage: Added v_edgeType varying");
 
-  const edgePos0Location = shaderBuilder.addAttribute("vec3", "a_edgePos0");
-  const edgePos1Location = shaderBuilder.addAttribute("vec3", "a_edgePos1");
-  const currentTriThirdLocation = shaderBuilder.addAttribute(
-    "vec3",
-    "a_currentTriThird",
-  );
-
-  console.log("EdgeVisibilityPipelineStage: Position attribute locations:", {
-    edgePos0: edgePos0Location,
-    edgePos1: edgePos1Location,
-    currentTriThird: currentTriThirdLocation,
-  });
-
-  // Add varyings to pass positions to fragment shader
-  shaderBuilder.addVarying("vec3", "v_edgePos0");
-  shaderBuilder.addVarying("vec3", "v_edgePos1");
-  shaderBuilder.addVarying("vec3", "v_currentTriThird");
-  console.log("EdgeVisibilityPipelineStage: Added position varyings");
-
-  // Add silhouette mate
-  if (defined(primitive.edgeVisibility.silhouetteMates)) {
-    const mateTriThirdLocation = shaderBuilder.addAttribute(
-      "vec3",
-      "a_mateTriThird",
-    );
-    shaderBuilder.addVarying("vec3", "v_mateTriThird");
-
-    console.log(
-      "EdgeVisibilityPipelineStage: a_mateTriThird location:",
-      mateTriThirdLocation,
-    );
-
-    shaderBuilder.addDefine(
-      "HAS_SILHOUETTE_MATES",
-      undefined,
-      ShaderDestination.BOTH,
-    );
-    console.log(
-      "EdgeVisibilityPipelineStage: Added HAS_SILHOUETTE_MATES define",
-    );
-  }
-
-  // Add vertex/fragment shader functions for edge visibility
-  console.log("EdgeVisibilityPipelineStage: Adding shader functions");
-  shaderBuilder.addFunction(
-    "isEdgeVisible",
-    "bool isEdgeVisible(float edgeType)",
-    ShaderDestination.BOTH, // Available in both vertex and fragment shaders
-  );
-  shaderBuilder.addFunctionLines("isEdgeVisible", [
-    "// Edge types: 0=hidden, 1=silhouette, 2=hard, 3=repeated",
-    "if (edgeType < 0.5) {", // HIDDEN
-    "  return false;",
-    "}",
-    "if (edgeType > 1.5 && edgeType < 2.5) {", // HARD
-    "  return false;",
-    "}",
-    "if (edgeType > 0.5 && edgeType < 1.5) {", // SILHOUETTE
-    "  // For silhouette edges, we need proper face normal calculation",
-    "  // TODO: Implement proper silhouette calculation with mate vertex data",
-    "  // For now, assume visible - needs position lookup via mateVertexIndex",
-    "  return false;",
-    "}",
-    "return false;", // REPEATED or unknown
-  ]);
-
-  // Debug: check ShaderBuilder state
-  console.log(
-    "EdgeVisibilityPipelineStage: ShaderBuilder attribute locations:",
-    shaderBuilder._attributeLocations,
-  );
-  console.log(
-    "EdgeVisibilityPipelineStage: ShaderBuilder vertex varyings:",
-    shaderBuilder._vertexShaderParts.varyingLines,
-  );
-  console.log(
-    "EdgeVisibilityPipelineStage: ShaderBuilder fragment varyings:",
-    shaderBuilder._fragmentShaderParts.varyingLines,
-  );
-
-  // Add edge varying lines to the existing setDynamicVaryings function
+  // Add vertex shader code to pass edge type to fragment shader
   shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
     "#ifdef HAS_EDGE_VISIBILITY",
     "v_edgeType = a_edgeType;",
-    "v_edgePos0 = (czm_edgeModelViewMatrix * vec4(a_edgePos0, 1.0)).xyz;",
-    "v_edgePos1 = (czm_edgeModelViewMatrix * vec4(a_edgePos1, 1.0)).xyz;",
-    "v_currentTriThird = (czm_edgeModelViewMatrix * vec4(a_currentTriThird, 1.0)).xyz;",
-    "#ifdef HAS_SILHOUETTE_MATES",
-    "v_mateTriThird = (czm_edgeModelViewMatrix * vec4(a_mateTriThird, 1.0)).xyz;",
-    "#endif",
     "#endif",
   ]);
 
-  // Create a shader stage file content for edge visibility with color coding
-  const EdgeVisibilityStageFS =
-    "void edgeVisibilityStage(inout vec4 color)\n" +
-    "{\n" +
-    "#ifdef HAS_EDGE_VISIBILITY\n" +
-    "    // Color code different edge types\n" +
-    "    if (v_edgeType < 0.5) { // HIDDEN (0)\n" +
-    "        color = vec4(0.0, 0.0, 0.0, 0.0); // Transparent for hidden edges\n" +
-    "    }\n" +
-    "    else if (v_edgeType > 0.5 && v_edgeType < 1.5) { // SILHOUETTE (1) - RED\n" +
-    "        color = vec4(1.0, 0.0, 0.0, 1.0);\n" +
-    "    }\n" +
-    "    else if (v_edgeType > 1.5 && v_edgeType < 2.5) { // HARD (2) - GREEN\n" +
-    "        color = vec4(0.0, 1.0, 0.0, 1.0);\n" +
-    "    }\n" +
-    "    else if (v_edgeType > 2.5 && v_edgeType < 3.5) { // REPEATED (3) - BLUE\n" +
-    "        color = vec4(0.0, 0.0, 1.0, 1.0);\n" +
-    "    }\n" +
-    "    else { // Unknown - YELLOW\n" +
-    "        color = vec4(1.0, 1.0, 0.0, 1.0);\n" +
-    "    }\n" +
-    "#endif\n" +
-    "}\n";
-
-  // Add the fragment shader stage like other pipeline stages
-  shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
   console.log(
-    "EdgeVisibilityPipelineStage: Added processEdgeVisibility function to fragment shader",
+    "EdgeVisibilityPipelineStage: Added edge type attribute and varying",
   );
-
-  // Helper function for silhouette calculation
-  shaderBuilder.addFunction(
-    "calculateTriangleFacing",
-    "float calculateTriangleFacing(vec3 v0, vec3 v1, vec3 v2, vec3 viewDirection)",
-    ShaderDestination.VERTEX,
-  );
-  shaderBuilder.addFunctionLines("calculateTriangleFacing", [
-    "// Calculate triangle normal in view space",
-    "vec3 edge1 = v1 - v0;",
-    "vec3 edge2 = v2 - v0;",
-    "vec3 normal = cross(edge1, edge2);",
-    "float len = length(normal);",
-    "if (len < 1e-10) {",
-    "  return 0.0; // Degenerate triangle",
-    "}",
-    "normal = normalize(normal);",
-    "// Return dot product with view direction",
-    "// Positive = front-facing, negative = back-facing",
-    "return dot(normal, viewDirection);",
-  ]);
-
-  // Function to check if silhouette edge should be rendered
-  shaderBuilder.addFunction(
-    "isSilhouetteVisible",
-    "bool isSilhouetteVisible(vec3 v0, vec3 v1, vec3 v2, vec3 mateV, vec3 viewDirection)",
-    ShaderDestination.VERTEX,
-  );
-  shaderBuilder.addFunctionLines("isSilhouetteVisible", [
-    "// Calculate facing of current triangle (v0, v1, v2)",
-    "float facing1 = calculateTriangleFacing(v0, v1, v2, viewDirection);",
-    "// Calculate facing of adjacent triangle (v0, v1, mateV)",
-    "// The mate vertex forms the other triangle sharing edge v0-v1",
-    "float facing2 = calculateTriangleFacing(v0, v1, mateV, viewDirection);",
-    "",
-    "// Render silhouette only if one triangle is front-facing and other is back-facing",
-    "// According to EXT_mesh_primitive_edge_visibility spec:",
-    "// 'render unless both adjacent triangles are front-facing or both are back-facing'",
-    "bool bothFrontFacing = (facing1 > 0.0) && (facing2 > 0.0);",
-    "bool bothBackFacing = (facing1 <= 0.0) && (facing2 <= 0.0);",
-    "",
-    "return !(bothFrontFacing || bothBackFacing);",
-  ]);
-
-  // if (defined(primitive.edgeVisibility.silhouetteNormals)) {
-  //   console.log("Silhouette normals available, enhanced calculation possible");
-  // } else if (defined(primitive.edgeVisibility.silhouetteMates)) {
-  //   console.log("Silhouette mates available, can compute normals dynamically");
-  // } else {
-  //   console.log("No silhouette data, using simplified edge visibility");
-  // }
 
   // Extract visible edges as line indices (pairs of vertex indices)
   const edgeResult = extractVisibleEdgesAsLineIndices(primitive);
@@ -288,33 +69,27 @@ EdgeVisibilityPipelineStage.process = function (
     !defined(edgeResult.lineIndices) ||
     edgeResult.lineIndices.length === 0
   ) {
+    console.log("EdgeVisibilityPipelineStage: No visible edges found");
     return;
   }
 
-  // Create edge geometry using existing attributes and line indices
-  const edgeGeometry = createLineEdgeGeometry(
+  console.log(
+    `EdgeVisibilityPipelineStage: Found ${edgeResult.lineIndices.length / 2} edges to render`,
+  );
+
+  // Create edge geometry with edge type data
+  const edgeGeometry = createEdgeGeometryWithTypes(
     edgeResult.lineIndices,
     edgeResult.edgeData,
-    primitive.edgeVisibility, // Pass edge visibility data for silhouette mates
     renderResources,
     frameState.context,
+    edgeTypeLocation,
   );
 
   if (!defined(edgeGeometry)) {
+    console.log("EdgeVisibilityPipelineStage: Failed to create edge geometry");
     return;
   }
-
-  // Build the shader program for edge rendering
-  // NOTE: We don't build a separate shader program here because it causes
-  // compilation issues with czm_log_depth_main. Comment for now
-  // const edgeShaderProgram = shaderBuilder.buildShaderProgram(
-  //   frameState.context,
-  // );
-  // renderResources.model._pipelineResources.push(edgeShaderProgram);
-
-  console.log(
-    "EdgeVisibilityPipelineStage: Edge shader program will use main model shader",
-  );
 
   // Store edge geometry for ModelDrawCommand to create edge commands
   renderResources.edgeGeometry = {
@@ -322,30 +97,11 @@ EdgeVisibilityPipelineStage.process = function (
     indexCount: edgeGeometry.indexCount,
     primitiveType: PrimitiveType.LINES,
     pass: Pass.CESIUM_3D_TILE_EDGES,
-    // shaderProgram will be set by ModelDrawCommand from the main model
   };
 
-  // Track resources for cleanup
-  const model = renderResources.model;
-  model._pipelineResources.push(
-    edgeGeometry.indexBuffer,
-    edgeGeometry.vertexArray,
+  console.log(
+    "EdgeVisibilityPipelineStage: Created edge geometry with type data",
   );
-  if (defined(edgeGeometry.edgeTypeBuffer)) {
-    model._pipelineResources.push(edgeGeometry.edgeTypeBuffer);
-  }
-  if (defined(edgeGeometry.edgePos0Buffer)) {
-    model._pipelineResources.push(edgeGeometry.edgePos0Buffer);
-  }
-  if (defined(edgeGeometry.edgePos1Buffer)) {
-    model._pipelineResources.push(edgeGeometry.edgePos1Buffer);
-  }
-  if (defined(edgeGeometry.currentTriThirdBuffer)) {
-    model._pipelineResources.push(edgeGeometry.currentTriThirdBuffer);
-  }
-  if (defined(edgeGeometry.mateTriThirdBuffer)) {
-    model._pipelineResources.push(edgeGeometry.mateTriThirdBuffer);
-  }
 };
 
 /**
@@ -411,8 +167,8 @@ function extractVisibleEdgesAsLineIndices(primitive) {
         case 2: // HARD - always rendered
           shouldIncludeEdge = true;
           break;
-        case 3: // REPEATED - ignore (duplicate of another edge)
-          shouldIncludeEdge = false;
+        case 3: // REPEATED - TEMP: include for testing blue color
+          shouldIncludeEdge = true; // TEMP: was false
           break;
       }
 
@@ -451,45 +207,396 @@ function extractVisibleEdgesAsLineIndices(primitive) {
   return { lineIndices, edgeData, silhouetteEdgeCount };
 }
 
+// /**
+//  * Creates line edge geometry with per-edge data for silhouette calculation.
+//  * This creates a separate VAO for edge domain rendering with edge-local indices.
+//  * @param {number[]} edgeIndices The line indices (pairs of vertex indices from original mesh)
+//  * @param {Object[]} edgeData Edge metadata (type, triangle info, mate indices)
+//  * @param {Object} edgeVisibility The edge visibility data containing silhouetteMates
+//  * @param {PrimitiveRenderResources} renderResources The render resources
+//  * @param {Context} context The rendering context
+//  * @returns {Object|undefined} Edge geometry with vertex array and index buffer
+//  * @private
+//  */
+// function createLineEdgeGeometry(
+//   edgeIndices,
+//   edgeData,
+//   edgeVisibility,
+//   renderResources,
+//   context,
+// ) {
+//   if (!defined(edgeIndices) || edgeIndices.length === 0) {
+//     return undefined;
+//   }
+
+//   // Get original vertex positions from primitive
+//   const positionAttribute = renderResources.attributes.find(
+//     (attr) => attr.semantic === "POSITION" || attr.index === 0,
+//   );
+//   if (!defined(positionAttribute)) {
+//     console.error("No position attribute found for edge geometry");
+//     return undefined;
+//   }
+
+//   const edgeCount = edgeIndices.length / 2;
+
+//   // Create edge-local indices: [0,1, 2,3, 4,5, ...] for GL_LINES
+//   // This matches the edge domain attribute layout (2 vertices per edge)
+//   const edgeLocalIndices = new Array(edgeIndices.length);
+//   for (let i = 0; i < edgeLocalIndices.length; i++) {
+//     edgeLocalIndices[i] = i;
+//   }
+
+//   // Determine appropriate index datatype based on edge vertex count
+//   const useUint32 = edgeLocalIndices.length > 65535;
+//   const indexDatatype = useUint32
+//     ? IndexDatatype.UNSIGNED_INT
+//     : IndexDatatype.UNSIGNED_SHORT;
+//   const indexTypedArray = useUint32
+//     ? new Uint32Array(edgeLocalIndices)
+//     : new Uint16Array(edgeLocalIndices);
+
+//   // Create index buffer for edge-local line indices
+//   const indexBuffer = Buffer.createIndexBuffer({
+//     context: context,
+//     typedArray: indexTypedArray,
+//     usage: BufferUsage.STATIC_DRAW,
+//     indexDatatype: indexDatatype,
+//   });
+
+//   // Helper to get vertex position from buffer
+//   function getVertexPosition(vertexIndex, positionBuffer, componentDatatype) {
+//     const bytesPerComponent =
+//       ComponentDatatype.getSizeInBytes(componentDatatype);
+//     const componentsPerVertex = 3; // vec3
+//     const offset = vertexIndex * componentsPerVertex * bytesPerComponent;
+
+//     if (componentDatatype === ComponentDatatype.FLOAT) {
+//       const view = new Float32Array(positionBuffer, offset, 3);
+//       return [view[0], view[1], view[2]];
+//     }
+//     // Add other datatypes if needed
+//     return [0, 0, 0];
+//   }
+
+//   // Read position data from original mesh
+//   const positionBuffer = positionAttribute.vertexBuffer._buffer;
+//   const positionComponentDatatype = positionAttribute.componentDatatype;
+
+//   // Create edge domain attribute arrays (length = edgeIndices.length = 2 * edgeCount)
+//   const edgeVertexCount = edgeIndices.length; // Total vertices in edge domain
+
+//   // Edge domain position buffer: each edge endpoint gets its own position
+//   const edgePositionArray = new Float32Array(edgeVertexCount * 3);
+//   const edgeTypeArray = new Float32Array(edgeVertexCount);
+//   const edgePos0Array = new Float32Array(edgeVertexCount * 3);
+//   const edgePos1Array = new Float32Array(edgeVertexCount * 3);
+//   const currentTriThirdArray = new Float32Array(edgeVertexCount * 3);
+
+//   let mateTriThirdArray = null;
+//   if (defined(edgeVisibility.silhouetteMates)) {
+//     mateTriThirdArray = new Float32Array(edgeVertexCount * 3);
+//   }
+
+//   // Fill edge domain attributes
+//   for (let i = 0; i < edgeCount; i++) {
+//     const edgeInfo = edgeData[i];
+//     const edgeType = edgeInfo.edgeType;
+
+//     // Original mesh vertex indices for this edge
+//     const v0Index = edgeIndices[i * 2];
+//     const v1Index = edgeIndices[i * 2 + 1];
+
+//     // Get positions from original mesh
+//     const v0Pos = getVertexPosition(
+//       v0Index,
+//       positionBuffer,
+//       positionComponentDatatype,
+//     );
+//     const v1Pos = getVertexPosition(
+//       v1Index,
+//       positionBuffer,
+//       positionComponentDatatype,
+//     );
+
+//     // Current triangle third vertex position
+//     const currentTriVertices = edgeInfo.currentTriangleVertices;
+//     let thirdVertexIndex = -1;
+//     for (let j = 0; j < 3; j++) {
+//       if (
+//         currentTriVertices[j] !== v0Index &&
+//         currentTriVertices[j] !== v1Index
+//       ) {
+//         thirdVertexIndex = currentTriVertices[j];
+//         break;
+//       }
+//     }
+//     const thirdPos =
+//       thirdVertexIndex >= 0
+//         ? getVertexPosition(
+//             thirdVertexIndex,
+//             positionBuffer,
+//             positionComponentDatatype,
+//           )
+//         : [0, 0, 0];
+
+//     // Get mate position for silhouette edges
+//     let matePos = [0, 0, 0];
+//     if (edgeType === 1 && defined(edgeVisibility.silhouetteMates) && edgeInfo.mateVertexIndex >= 0) {
+//       const silhouetteMates = edgeVisibility.silhouetteMates.typedArray;
+//       const mateVertexIndex = silhouetteMates[edgeInfo.mateVertexIndex];
+//       matePos = getVertexPosition(
+//         mateVertexIndex,
+//         positionBuffer,
+//         positionComponentDatatype,
+//       );
+//     }
+
+//     // Fill data for both edge endpoints (edge domain vertices)
+//     const edgeVertex0Index = i * 2;     // First endpoint of edge i
+//     const edgeVertex1Index = i * 2 + 1; // Second endpoint of edge i
+
+//     // First edge endpoint (corresponds to v0 in original mesh)
+//     edgePositionArray[edgeVertex0Index * 3] = v0Pos[0];
+//     edgePositionArray[edgeVertex0Index * 3 + 1] = v0Pos[1];
+//     edgePositionArray[edgeVertex0Index * 3 + 2] = v0Pos[2];
+
+//     edgeTypeArray[edgeVertex0Index] = edgeType;
+
+//     edgePos0Array[edgeVertex0Index * 3] = v0Pos[0];
+//     edgePos0Array[edgeVertex0Index * 3 + 1] = v0Pos[1];
+//     edgePos0Array[edgeVertex0Index * 3 + 2] = v0Pos[2];
+
+//     edgePos1Array[edgeVertex0Index * 3] = v1Pos[0];
+//     edgePos1Array[edgeVertex0Index * 3 + 1] = v1Pos[1];
+//     edgePos1Array[edgeVertex0Index * 3 + 2] = v1Pos[2];
+
+//     currentTriThirdArray[edgeVertex0Index * 3] = thirdPos[0];
+//     currentTriThirdArray[edgeVertex0Index * 3 + 1] = thirdPos[1];
+//     currentTriThirdArray[edgeVertex0Index * 3 + 2] = thirdPos[2];
+
+//     if (mateTriThirdArray) {
+//       mateTriThirdArray[edgeVertex0Index * 3] = matePos[0];
+//       mateTriThirdArray[edgeVertex0Index * 3 + 1] = matePos[1];
+//       mateTriThirdArray[edgeVertex0Index * 3 + 2] = matePos[2];
+//     }
+
+//     // Second edge endpoint (corresponds to v1 in original mesh)
+//     edgePositionArray[edgeVertex1Index * 3] = v1Pos[0];
+//     edgePositionArray[edgeVertex1Index * 3 + 1] = v1Pos[1];
+//     edgePositionArray[edgeVertex1Index * 3 + 2] = v1Pos[2];
+
+//     edgeTypeArray[edgeVertex1Index] = edgeType;
+
+//     edgePos0Array[edgeVertex1Index * 3] = v0Pos[0];
+//     edgePos0Array[edgeVertex1Index * 3 + 1] = v0Pos[1];
+//     edgePos0Array[edgeVertex1Index * 3 + 2] = v0Pos[2];
+
+//     edgePos1Array[edgeVertex1Index * 3] = v1Pos[0];
+//     edgePos1Array[edgeVertex1Index * 3 + 1] = v1Pos[1];
+//     edgePos1Array[edgeVertex1Index * 3 + 2] = v1Pos[2];
+
+//     currentTriThirdArray[edgeVertex1Index * 3] = thirdPos[0];
+//     currentTriThirdArray[edgeVertex1Index * 3 + 1] = thirdPos[1];
+//     currentTriThirdArray[edgeVertex1Index * 3 + 2] = thirdPos[2];
+
+//     if (mateTriThirdArray) {
+//       mateTriThirdArray[edgeVertex1Index * 3] = matePos[0];
+//       mateTriThirdArray[edgeVertex1Index * 3 + 1] = matePos[1];
+//       mateTriThirdArray[edgeVertex1Index * 3 + 2] = matePos[2];
+//     }
+//   }
+
+//   // Create vertex buffers for edge domain
+//   const createBuffer = (data) =>
+//     Buffer.createVertexBuffer({
+//       context: context,
+//       typedArray: data,
+//       usage: BufferUsage.STATIC_DRAW,
+//     });
+
+//   const edgePositionBuffer = createBuffer(edgePositionArray);
+//   const edgeTypeBuffer = createBuffer(edgeTypeArray);
+//   const edgePos0Buffer = createBuffer(edgePos0Array);
+//   const edgePos1Buffer = createBuffer(edgePos1Array);
+//   const currentTriThirdBuffer = createBuffer(currentTriThirdArray);
+
+//   // Create edge domain VAO attributes (completely separate from mesh domain)
+//   const shaderBuilder = renderResources.shaderBuilder;
+
+//   // Find the position attribute location (usually 0)
+//   const positionLocation = renderResources.attributes.find(
+//     (attr) => attr.semantic === "POSITION" || attr.index === 0,
+//   )?.index || 0;
+
+//   // Create edge domain attributes with all necessary basic attributes
+//   const edgeAttributes = [
+//     // Edge domain position (location 0 - replaces mesh position)
+//     {
+//       index: positionLocation,
+//       vertexBuffer: edgePositionBuffer,
+//       componentsPerAttribute: 3,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: false,
+//     },
+//     // Edge type attribute for color coding
+//     {
+//       index: shaderBuilder._attributeLocations.a_edgeType,
+//       vertexBuffer: edgeTypeBuffer,
+//       componentsPerAttribute: 1,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: false,
+//     },
+//   ];
+
+//   // Add basic attributes that Cesium's shader pipeline might require
+//   // Find original attributes and create dummy versions for edge domain
+//   const originalAttributes = renderResources.attributes;
+//   for (let i = 0; i < originalAttributes.length; i++) {
+//     const attr = originalAttributes[i];
+
+//     // Skip position (already handled) and edge-specific attributes
+//     if (attr.index === positionLocation ||
+//         attr.index === shaderBuilder._attributeLocations.a_edgeType) {
+//       continue;
+//     }
+
+//     // Create dummy buffer with same structure but for edge domain
+//     let dummyData;
+//     if (attr.componentsPerAttribute === 3) {
+//       dummyData = new Float32Array(edgeVertexCount * 3);
+//       // Fill with default values (e.g., normal = [0,0,1])
+//       if (attr.semantic === "NORMAL") {
+//         for (let j = 0; j < edgeVertexCount; j++) {
+//           dummyData[j * 3] = 0;
+//           dummyData[j * 3 + 1] = 0;
+//           dummyData[j * 3 + 2] = 1;
+//         }
+//       }
+//     } else if (attr.componentsPerAttribute === 4) {
+//       dummyData = new Float32Array(edgeVertexCount * 4);
+//       // Fill with default values (e.g., color = [1,1,1,1])
+//       for (let j = 0; j < edgeVertexCount; j++) {
+//         dummyData[j * 4] = 1;
+//         dummyData[j * 4 + 1] = 1;
+//         dummyData[j * 4 + 2] = 1;
+//         dummyData[j * 4 + 3] = 1;
+//       }
+//     } else if (attr.componentsPerAttribute === 1) {
+//       dummyData = new Float32Array(edgeVertexCount);
+//       // Fill with default values (e.g., featureId = 0)
+//       dummyData.fill(0);
+//     } else {
+//       // Skip unknown attribute types
+//       continue;
+//     }
+
+//     const dummyBuffer = createBuffer(dummyData);
+//     edgeAttributes.push({
+//       index: attr.index,
+//       vertexBuffer: dummyBuffer,
+//       componentsPerAttribute: attr.componentsPerAttribute,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: attr.normalize || false,
+//     });
+
+//     console.log(`Added dummy attribute for location ${attr.index} (${attr.semantic || 'unknown'}) to edge VAO`);
+//   }
+
+//   // Add additional edge attributes only if needed for silhouette calculation
+//   if (shaderBuilder._attributeLocations.a_edgePos0) {
+//     edgeAttributes.push({
+//       index: shaderBuilder._attributeLocations.a_edgePos0,
+//       vertexBuffer: edgePos0Buffer,
+//       componentsPerAttribute: 3,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: false,
+//     });
+//   }
+
+//   if (shaderBuilder._attributeLocations.a_edgePos1) {
+//     edgeAttributes.push({
+//       index: shaderBuilder._attributeLocations.a_edgePos1,
+//       vertexBuffer: edgePos1Buffer,
+//       componentsPerAttribute: 3,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: false,
+//     });
+//   }
+
+//   if (shaderBuilder._attributeLocations.a_currentTriThird) {
+//     edgeAttributes.push({
+//       index: shaderBuilder._attributeLocations.a_currentTriThird,
+//       vertexBuffer: currentTriThirdBuffer,
+//       componentsPerAttribute: 3,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: false,
+//     });
+//   }
+
+//   let mateTriThirdBuffer = null;
+//   if (mateTriThirdArray) {
+//     mateTriThirdBuffer = createBuffer(mateTriThirdArray);
+//     const mateLocation = shaderBuilder._attributeLocations.a_mateTriThird;
+//     if (defined(mateLocation)) {
+//       edgeAttributes.push({
+//         index: mateLocation,
+//         vertexBuffer: mateTriThirdBuffer,
+//         componentsPerAttribute: 3,
+//         componentDatatype: ComponentDatatype.FLOAT,
+//         normalize: false,
+//       });
+//     }
+//     console.log("Silhouette mate positions prepared for", edgeCount, "edges");
+//   }
+
+//   // Create edge domain VAO - completely separate from mesh domain
+//   const edgeVertexArray = new VertexArray({
+//     context: context,
+//     indexBuffer: indexBuffer,
+//     attributes: edgeAttributes,
+//   });
+
+//   console.log(`Created edge domain VAO with ${edgeVertexCount} vertices and ${edgeLocalIndices.length} indices`);
+//   console.log(`Edge domain uses local indices [0,1, 2,3, 4,5, ...] instead of mesh indices`);
+
+//   return {
+//     vertexArray: edgeVertexArray,
+//     indexBuffer: indexBuffer,
+//     indexCount: edgeLocalIndices.length,
+//     edgePositionBuffer: edgePositionBuffer,
+//     edgeTypeBuffer: edgeTypeBuffer,
+//     edgePos0Buffer: edgePos0Buffer,
+//     edgePos1Buffer: edgePos1Buffer,
+//     currentTriThirdBuffer: currentTriThirdBuffer,
+//     mateTriThirdBuffer: mateTriThirdBuffer,
+//   };
+// }
+
 /**
- * Creates line edge geometry with per-edge data for silhouette calculation.
+ * Creates edge geometry with edge type data for color coding
+ * This version adds edge type information while using original mesh positions
  * @param {number[]} edgeIndices The line indices (pairs of vertex indices)
- * @param {Object[]} edgeData Edge metadata (type, triangle info, mate indices)
- * @param {Object} edgeVisibility The edge visibility data containing silhouetteMates
+ * @param {Object[]} edgeData Edge metadata including edge types
  * @param {PrimitiveRenderResources} renderResources The render resources
  * @param {Context} context The rendering context
+ * @param {number} edgeTypeLocation The shader location for edge type attribute
  * @returns {Object|undefined} Edge geometry with vertex array and index buffer
  * @private
  */
-function createLineEdgeGeometry(
+function createEdgeGeometryWithTypes(
   edgeIndices,
   edgeData,
-  edgeVisibility,
   renderResources,
   context,
+  edgeTypeLocation,
 ) {
   if (!defined(edgeIndices) || edgeIndices.length === 0) {
     return undefined;
   }
 
-  // Get original vertex positions from primitive
-  const positionAttribute = renderResources.attributes.find(
-    (attr) => attr.semantic === "POSITION" || attr.index === 0,
-  );
-  if (!defined(positionAttribute)) {
-    console.error("No position attribute found for edge geometry");
-    return undefined;
-  }
-
-  // Determine appropriate index datatype based on max vertex index
-  let maxVertexIndex = 0;
-  for (let i = 0; i < edgeIndices.length; i++) {
-    if (edgeIndices[i] > maxVertexIndex) {
-      maxVertexIndex = edgeIndices[i];
-    }
-  }
-
-  const useUint32 = maxVertexIndex > 65535;
+  // Use original mesh vertex indices directly
+  const useUint32 = Math.max(...edgeIndices) > 65535;
   const indexDatatype = useUint32
     ? IndexDatatype.UNSIGNED_INT
     : IndexDatatype.UNSIGNED_SHORT;
@@ -505,190 +612,50 @@ function createLineEdgeGeometry(
     indexDatatype: indexDatatype,
   });
 
-  // Create per-edge attributes for silhouette calculation
-  const edgeCount = edgeIndices.length / 2;
+  // Get original vertex count from position attribute
+  const positionAttribute = renderResources.attributes.find(
+    (attr) => attr.semantic === "POSITION" || attr.index === 0,
+  );
+  const vertexCount = positionAttribute.count;
 
-  // Helper to get vertex position from buffer
-  function getVertexPosition(vertexIndex, positionBuffer, componentDatatype) {
-    const bytesPerComponent =
-      ComponentDatatype.getSizeInBytes(componentDatatype);
-    const componentsPerVertex = 3; // vec3
-    const offset = vertexIndex * componentsPerVertex * bytesPerComponent;
+  // Create edge type array - one value per original mesh vertex
+  const edgeTypeArray = new Float32Array(vertexCount);
+  edgeTypeArray.fill(0); // Default to HIDDEN (0)
 
-    if (componentDatatype === ComponentDatatype.FLOAT) {
-      const view = new Float32Array(positionBuffer, offset, 3);
-      return [view[0], view[1], view[2]];
-    }
-    // Add other datatypes if needed
-    return [0, 0, 0];
-  }
-
-  // Read position data
-  const positionBuffer = positionAttribute.vertexBuffer._buffer;
-  const positionComponentDatatype = positionAttribute.componentDatatype;
-
-  // Create attribute arrays
-  const edgeTypeArray = new Float32Array(edgeCount * 2);
-
-  const edgePos0Array = new Float32Array(edgeCount * 2 * 3); // 2 vertices * 3 components
-  const edgePos1Array = new Float32Array(edgeCount * 2 * 3);
-  const currentTriThirdArray = new Float32Array(edgeCount * 2 * 3);
-
-  let mateTriThirdArray = null;
-  if (defined(edgeVisibility.silhouetteMates)) {
-    mateTriThirdArray = new Float32Array(edgeCount * 2 * 3);
-  }
-
-  for (let i = 0; i < edgeCount; i++) {
+  // Fill edge type data based on which edges use each vertex
+  for (let i = 0; i < edgeData.length; i++) {
     const edgeInfo = edgeData[i];
     const edgeType = edgeInfo.edgeType;
-
-    // Edge vertices
     const v0Index = edgeIndices[i * 2];
     const v1Index = edgeIndices[i * 2 + 1];
 
-    // Positions
-    const v0Pos = getVertexPosition(
-      v0Index,
-      positionBuffer,
-      positionComponentDatatype,
-    );
-    const v1Pos = getVertexPosition(
-      v1Index,
-      positionBuffer,
-      positionComponentDatatype,
-    );
-
-    // Current triangle third vertex position
-    const currentTriVertices = edgeInfo.currentTriangleVertices;
-    let thirdVertexIndex = -1;
-    for (let j = 0; j < 3; j++) {
-      if (
-        currentTriVertices[j] !== v0Index &&
-        currentTriVertices[j] !== v1Index
-      ) {
-        thirdVertexIndex = currentTriVertices[j];
-        break;
-      }
-    }
-    const thirdPos =
-      thirdVertexIndex >= 0
-        ? getVertexPosition(
-            thirdVertexIndex,
-            positionBuffer,
-            positionComponentDatatype,
-          )
-        : [0, 0, 0];
-
-    // For both vertices of this edge, set the same data
-    for (let vtx = 0; vtx < 2; vtx++) {
-      const baseIndex = i * 2 + vtx;
-
-      // Edge type
-      edgeTypeArray[baseIndex] = edgeType;
-
-      // Edge positions
-      edgePos0Array[baseIndex * 3] = v0Pos[0];
-      edgePos0Array[baseIndex * 3 + 1] = v0Pos[1];
-      edgePos0Array[baseIndex * 3 + 2] = v0Pos[2];
-
-      edgePos1Array[baseIndex * 3] = v1Pos[0];
-      edgePos1Array[baseIndex * 3 + 1] = v1Pos[1];
-      edgePos1Array[baseIndex * 3 + 2] = v1Pos[2];
-
-      // Current triangle third vertex
-      currentTriThirdArray[baseIndex * 3] = thirdPos[0];
-      currentTriThirdArray[baseIndex * 3 + 1] = thirdPos[1];
-      currentTriThirdArray[baseIndex * 3 + 2] = thirdPos[2];
-
-      // Mate triangle third vertex (if available)
-      if (
-        mateTriThirdArray &&
-        edgeType === 1 &&
-        edgeInfo.mateVertexIndex >= 0
-      ) {
-        const silhouetteMates = edgeVisibility.silhouetteMates.typedArray;
-        const mateVertexIndex = silhouetteMates[edgeInfo.mateVertexIndex];
-        const matePos = getVertexPosition(
-          mateVertexIndex,
-          positionBuffer,
-          positionComponentDatatype,
-        );
-        mateTriThirdArray[baseIndex * 3] = matePos[0];
-        mateTriThirdArray[baseIndex * 3 + 1] = matePos[1];
-        mateTriThirdArray[baseIndex * 3 + 2] = matePos[2];
-      } else if (mateTriThirdArray) {
-        // Default position for non-silhouette edges
-        mateTriThirdArray[baseIndex * 3] = 0;
-        mateTriThirdArray[baseIndex * 3 + 1] = 0;
-        mateTriThirdArray[baseIndex * 3 + 2] = 0;
-      }
-    }
+    // Set edge type for both vertices of this edge
+    edgeTypeArray[v0Index] = edgeType;
+    edgeTypeArray[v1Index] = edgeType;
   }
 
-  // Create vertex buffers and add to attributes
-  const createBuffer = (data) =>
-    Buffer.createVertexBuffer({
-      context: context,
-      typedArray: data,
-      usage: BufferUsage.STATIC_DRAW,
-    });
+  console.log(
+    `Created edge type array with ${vertexCount} vertices, found ${edgeData.length} edges`,
+  );
 
-  const edgeTypeBuffer = createBuffer(edgeTypeArray);
-  const edgePos0Buffer = createBuffer(edgePos0Array);
-  const edgePos1Buffer = createBuffer(edgePos1Array);
-  const currentTriThirdBuffer = createBuffer(currentTriThirdArray);
+  // Create edge type buffer
+  const edgeTypeBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: edgeTypeArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
 
-  // Add attributes to VAO
-  const shaderBuilder = renderResources.shaderBuilder;
-
+  // Combine original mesh attributes with edge type attribute
   const edgeAttributes = [
-    ...renderResources.attributes,
+    ...renderResources.attributes, // Keep all original mesh attributes
     {
-      index: shaderBuilder._attributeLocations.a_edgeType,
+      index: edgeTypeLocation,
       vertexBuffer: edgeTypeBuffer,
       componentsPerAttribute: 1,
       componentDatatype: ComponentDatatype.FLOAT,
       normalize: false,
     },
-    {
-      index: shaderBuilder._attributeLocations.a_edgePos0,
-      vertexBuffer: edgePos0Buffer,
-      componentsPerAttribute: 3,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    },
-    {
-      index: shaderBuilder._attributeLocations.a_edgePos1,
-      vertexBuffer: edgePos1Buffer,
-      componentsPerAttribute: 3,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    },
-    {
-      index: shaderBuilder._attributeLocations.a_currentTriThird,
-      vertexBuffer: currentTriThirdBuffer,
-      componentsPerAttribute: 3,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    },
   ];
-
-  let mateTriThirdBuffer = null;
-  if (mateTriThirdArray) {
-    mateTriThirdBuffer = createBuffer(mateTriThirdArray);
-    const mateLocation = shaderBuilder._attributeLocations.a_mateTriThird;
-    if (defined(mateLocation)) {
-      edgeAttributes.push({
-        index: mateLocation,
-        vertexBuffer: mateTriThirdBuffer,
-        componentsPerAttribute: 3,
-        componentDatatype: ComponentDatatype.FLOAT,
-        normalize: false,
-      });
-    }
-    console.log("Silhouette mate positions prepared for", edgeCount, "edges");
-  }
 
   const vertexArray = new VertexArray({
     context: context,
@@ -701,11 +668,52 @@ function createLineEdgeGeometry(
     indexBuffer: indexBuffer,
     indexCount: edgeIndices.length,
     edgeTypeBuffer: edgeTypeBuffer,
-    edgePos0Buffer: edgePos0Buffer,
-    edgePos1Buffer: edgePos1Buffer,
-    currentTriThirdBuffer: currentTriThirdBuffer,
-    mateTriThirdBuffer: mateTriThirdBuffer,
   };
 }
+
+// /**
+//  * Creates simple line edge geometry using original mesh attributes
+//  * This is a simplified version that avoids the complex edge domain VAO issues
+//  * @param {number[]} edgeIndices The line indices (pairs of vertex indices)
+//  * @param {PrimitiveRenderResources} renderResources The render resources
+//  * @param {Context} context The rendering context
+//  * @returns {Object|undefined} Simple edge geometry with vertex array and index buffer
+//  * @private
+//  */
+// function createSimpleLineEdgeGeometry(edgeIndices, renderResources, context) {
+//   if (!defined(edgeIndices) || edgeIndices.length === 0) {
+//     return undefined;
+//   }
+
+//   // Use original mesh vertex indices directly
+//   const useUint32 = Math.max(...edgeIndices) > 65535;
+//   const indexDatatype = useUint32
+//     ? IndexDatatype.UNSIGNED_INT
+//     : IndexDatatype.UNSIGNED_SHORT;
+//   const indexTypedArray = useUint32
+//     ? new Uint32Array(edgeIndices)
+//     : new Uint16Array(edgeIndices);
+
+//   // Create index buffer for line indices
+//   const indexBuffer = Buffer.createIndexBuffer({
+//     context: context,
+//     typedArray: indexTypedArray,
+//     usage: BufferUsage.STATIC_DRAW,
+//     indexDatatype: indexDatatype,
+//   });
+
+//   // Use original mesh attributes directly - no edge domain complications
+//   const vertexArray = new VertexArray({
+//     context: context,
+//     indexBuffer: indexBuffer,
+//     attributes: renderResources.attributes, // Use original mesh attributes
+//   });
+
+//   return {
+//     vertexArray: vertexArray,
+//     indexBuffer: indexBuffer,
+//     indexCount: edgeIndices.length,
+//   };
+// }
 
 export default EdgeVisibilityPipelineStage;
