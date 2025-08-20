@@ -84,6 +84,13 @@ function VoxelRenderResources(primitive) {
   this.clippingPlanes = clippingPlanes;
   this.clippingPlanesLength = clippingPlanesLength;
 
+  // TODO: copy renderBoundPlanes onto primitive?
+  const renderBoundPlanes = primitive._shape.renderBoundPlanes;
+  const renderBoundPlanesLength = renderBoundPlanes?.length ?? 0;
+
+  this.renderBoundPlanes = renderBoundPlanes;
+  this.renderBoundPlanesLength = renderBoundPlanesLength;
+
   // Build shader
   shaderBuilder.addVertexLines([VoxelVS]);
 

@@ -5,6 +5,8 @@ import Check from "../Core/Check.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
+import VoxelBoundCollection from "./VoxelBoundCollection.js";
+import ClippingPlane from "./ClippingPlane.js";
 
 /**
  * A box {@link VoxelShape}.
@@ -39,9 +41,42 @@ function VoxelBoxShape() {
    */
   this._maxBounds = VoxelBoxShape.DefaultMaxBounds.clone();
 
+  /**
+   * The minimum render bounds of the shape.
+   * @type {Cartesian3}
+   * @private
+   */
+  this._renderMinBounds = VoxelBoxShape.DefaultMinBounds.clone();
+
+  /**
+   * The maximum render bounds of the shape.
+   * @type {Cartesian3}
+   * @private
+   */
+  this._renderMaxBounds = VoxelBoxShape.DefaultMaxBounds.clone();
+
+  const { DefaultMinBounds, DefaultMaxBounds } = VoxelBoxShape;
+  const boundPlanes = [
+    new ClippingPlane(
+      Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+      -DefaultMinBounds.x,
+    ),
+    new ClippingPlane(
+      Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()),
+      -DefaultMinBounds.y,
+    ),
+    new ClippingPlane(
+      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
+      -DefaultMinBounds.z,
+    ),
+    new ClippingPlane(Cartesian3.UNIT_X, DefaultMaxBounds.x),
+    new ClippingPlane(Cartesian3.UNIT_Y, DefaultMaxBounds.y),
+    new ClippingPlane(Cartesian3.UNIT_Z, DefaultMaxBounds.z),
+  ];
+
+  this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });
+
   this._shaderUniforms = {
-    renderMinBounds: new Cartesian3(),
-    renderMaxBounds: new Cartesian3(),
     boxUvToShapeUvScale: new Cartesian3(),
     boxUvToShapeUvTranslate: new Cartesian3(),
   };
@@ -66,6 +101,19 @@ Object.defineProperties(VoxelBoxShape.prototype, {
   orientedBoundingBox: {
     get: function () {
       return this._orientedBoundingBox;
+    },
+  },
+
+  /**
+   * A collection of planes used for the render bounds
+   * @memberof VoxelBoxShape.prototype
+   * @type {VoxelBoundCollection}
+   * @readonly
+   * @private
+   */
+  renderBoundPlanes: {
+    get: function () {
+      return this._renderBoundPlanes;
     },
   },
 
@@ -154,14 +202,6 @@ const scratchScale = new Cartesian3();
 const scratchRotation = new Matrix3();
 const scratchClipMinBounds = new Cartesian3();
 const scratchClipMaxBounds = new Cartesian3();
-const scratchRenderMinBounds = new Cartesian3();
-const scratchRenderMaxBounds = new Cartesian3();
-
-const transformLocalToUv = Matrix4.fromRotationTranslation(
-  Matrix3.fromUniformScale(0.5, new Matrix3()),
-  new Cartesian3(0.5, 0.5, 0.5),
-  new Matrix4(),
-);
 
 /**
  * Update the shape's state.
@@ -196,14 +236,24 @@ VoxelBoxShape.prototype.update = function (
     minBounds,
     clipMinBounds,
     clipMaxBounds,
-    scratchRenderMinBounds,
+    this._renderMinBounds,
   );
   const renderMaxBounds = Cartesian3.clamp(
     maxBounds,
     clipMinBounds,
     clipMaxBounds,
-    scratchRenderMaxBounds,
+    this._renderMaxBounds,
   );
+
+  // Update the render bounds planes
+  // TODO: after we switch to eye coordinate bounds, we will need to update the normals and transform the distances
+  const renderBoundPlanes = this._renderBoundPlanes;
+  renderBoundPlanes.get(0).distance = renderMinBounds.x;
+  renderBoundPlanes.get(1).distance = renderMinBounds.y;
+  renderBoundPlanes.get(2).distance = renderMinBounds.z;
+  renderBoundPlanes.get(3).distance = -renderMaxBounds.x;
+  renderBoundPlanes.get(4).distance = -renderMaxBounds.y;
+  renderBoundPlanes.get(5).distance = -renderMaxBounds.z;
 
   // Box is not visible if:
   // - any of the min render bounds exceed the max render bounds
@@ -262,17 +312,6 @@ VoxelBoxShape.prototype.update = function (
 
   shaderDefines["BOX_INTERSECTION_INDEX"] = intersectionCount;
   intersectionCount += 1;
-
-  shaderUniforms.renderMinBounds = Matrix4.multiplyByPoint(
-    transformLocalToUv,
-    renderMinBounds,
-    shaderUniforms.renderMinBounds,
-  );
-  shaderUniforms.renderMaxBounds = Matrix4.multiplyByPoint(
-    transformLocalToUv,
-    renderMaxBounds,
-    shaderUniforms.renderMaxBounds,
-  );
 
   shaderDefines["BOX_HAS_SHAPE_BOUNDS"] = true;
 

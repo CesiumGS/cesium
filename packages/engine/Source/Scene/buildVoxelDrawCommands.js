@@ -9,7 +9,10 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import processVoxelProperties from "./processVoxelProperties.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
+import VoxelBoundCollection from "./VoxelBoundCollection.js";
 import VoxelRenderResources from "./VoxelRenderResources.js";
+
+const textureResolutionScratch = new Cartesian2();
 
 /**
  * @function
@@ -24,13 +27,40 @@ function buildVoxelDrawCommands(primitive, context) {
 
   processVoxelProperties(renderResources, primitive);
 
-  const { shaderBuilder, clippingPlanes, clippingPlanesLength } =
-    renderResources;
+  const {
+    shaderBuilder,
+    clippingPlanes,
+    clippingPlanesLength,
+    renderBoundPlanes,
+    renderBoundPlanesLength,
+  } = renderResources;
 
   if (clippingPlanesLength > 0) {
     const functionId = "getClippingPlane";
-    const functionSignature = `vec4 ${functionId}(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)`;
-    const functionBody = getClippingPlaneFunctionBody(clippingPlanes, context);
+    const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber, mat4 transform)`;
+    const textureResolution = ClippingPlaneCollection.getTextureResolution(
+      clippingPlanes,
+      context,
+      textureResolutionScratch,
+    );
+    const functionBody = getPlaneFunctionBody(textureResolution);
+    shaderBuilder.addFunction(
+      functionId,
+      functionSignature,
+      ShaderDestination.FRAGMENT,
+    );
+    shaderBuilder.addFunctionLines(functionId, [functionBody]);
+  }
+
+  if (renderBoundPlanesLength > 0) {
+    const functionId = "getBoundPlane";
+    const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber, mat4 transform)`;
+    const textureResolution = VoxelBoundCollection.getTextureResolution(
+      renderBoundPlanes,
+      context,
+      textureResolutionScratch,
+    );
+    const functionBody = getPlaneFunctionBody(textureResolution);
     shaderBuilder.addFunction(
       functionId,
       functionSignature,
@@ -120,14 +150,7 @@ function buildVoxelDrawCommands(primitive, context) {
   primitive._drawCommandPickVoxel = drawCommandPickVoxel;
 }
 
-const textureResolutionScratch = new Cartesian2();
-
-function getClippingPlaneFunctionBody(clippingPlaneCollection, context) {
-  const textureResolution = ClippingPlaneCollection.getTextureResolution(
-    clippingPlaneCollection,
-    context,
-    textureResolutionScratch,
-  );
+function getPlaneFunctionBody(textureResolution) {
   const width = textureResolution.x;
   const height = textureResolution.y;
 
@@ -143,12 +166,12 @@ function getClippingPlaneFunctionBody(clippingPlaneCollection, context) {
     pixelHeightString += ".0";
   }
 
-  return `int pixY = clippingPlaneNumber / ${width};
-    int pixX = clippingPlaneNumber - (pixY * ${width});
+  return `int pixY = planeNumber / ${width};
+    int pixX = planeNumber - (pixY * ${width});
     // Sample from center of pixel
     float u = (float(pixX) + 0.5) * ${pixelWidthString};
     float v = (float(pixY) + 0.5) * ${pixelHeightString};
-    vec4 plane = texture(packedClippingPlanes, vec2(u, v));
+    vec4 plane = texture(packedPlanes, vec2(u, v));
     return czm_transformPlane(plane, transform);`;
 }
 

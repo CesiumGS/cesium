@@ -450,6 +450,7 @@ function VoxelPrimitive(options) {
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
+    renderBoundPlanesTexture: undefined,
     stepSize: 0,
     pickColor: new Color(),
   };
@@ -1160,6 +1161,7 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
  */
 VoxelPrimitive.prototype.update = function (frameState) {
   const provider = this._provider;
+  const uniforms = this._uniforms;
 
   // Update the custom shader in case it has texture uniforms.
   this._customShader.update(frameState);
@@ -1193,6 +1195,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
   if (!this._shapeVisible) {
     return;
+  }
+
+  // TODO: apply to all shape types. Move to shape.update? Would need to pass frameState.
+  if (this.shape === VoxelShapeType.BOX) {
+    // TODO: copy renderBoundPlanes from the shape to the primitive?
+    this._shape.renderBoundPlanes.update(frameState);
+    uniforms.renderBoundPlanesTexture = this._shape.renderBoundPlanes.texture;
   }
 
   // Update the traversal and prepare for rendering.
@@ -1242,7 +1251,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
 
   const leafNodeTexture = traversal.leafNodeTexture;
-  const uniforms = this._uniforms;
   if (defined(leafNodeTexture)) {
     uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
     uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
@@ -1381,7 +1389,6 @@ const scratchExaggerationTranslation = new Cartesian3();
 
 /**
  * Update the exaggerated bounds of a primitive to account for vertical exaggeration
- * Currently only applies to Ellipsoid shape type
  * @param {VoxelPrimitive} primitive
  * @param {FrameState} frameState
  * @private
