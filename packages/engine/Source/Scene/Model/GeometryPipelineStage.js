@@ -190,7 +190,11 @@ GeometryPipelineStage.process = function (
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  shaderBuilder.addVertexLines(GeometryStageVS);
+  if (model._customGeometryStageVS) {
+    shaderBuilder.addVertexLines(model._customGeometryStageVS);
+  } else {
+    shaderBuilder.addVertexLines(GeometryStageVS);
+  }
   shaderBuilder.addFragmentLines(GeometryStageFS);
 };
 
