@@ -628,8 +628,6 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
   const use2D = shouldUse2DCommands(this, frameState);
   pushCommand(result, this._edgeCommand, use2D);
 
-  // Edge command pushed
-
   return result;
 };
 
@@ -808,15 +806,9 @@ function deriveEdgeCommand(command, renderResources, model) {
   edgeCommand.primitiveType = edgeGeometry.primitiveType;
   edgeCommand.count = edgeGeometry.indexCount;
 
-  // Use the edge shader program if available, otherwise use the original command's shader
-  // The original command's shader should already include our edge rendering modifications
+  // Use the edge shader program if available
   if (defined(edgeGeometry.shaderProgram)) {
     edgeCommand.shaderProgram = edgeGeometry.shaderProgram;
-  } else {
-    // IMPORTANT: Use the original command's shader program which includes our modifications
-    edgeCommand.shaderProgram = command.shaderProgram;
-    // Also copy the uniform map from original command
-    edgeCommand.uniformMap = command.uniformMap;
   }
 
   // Set pass for edge rendering (use the pass specified in edgeGeometry)
@@ -834,8 +826,6 @@ function deriveEdgeCommand(command, renderResources, model) {
     },
   });
   edgeCommand.renderState = edgeRenderState;
-
-  // Edge command created
 
   // Use a very large bounding volume to avoid culling issues
   edgeCommand.boundingVolume = new BoundingSphere(

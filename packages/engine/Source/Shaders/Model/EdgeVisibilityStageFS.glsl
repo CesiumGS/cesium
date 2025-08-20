@@ -1,26 +1,24 @@
 void edgeVisibilityStage(inout vec4 color)
 {
-    #ifdef HAS_EDGE_VISIBILITY
-    // Color coding based on edge type:
-    // Type 1 (SILHOUETTE) = Red
-    // Type 2 (HARD) = Green  
-    // Type 3 (REPEATED) = Blue
-    // Type 0 (HIDDEN) = Default (should not be rendered)
+#ifdef HAS_EDGE_VISIBILITY
+    // Convert normalized edge type back to 0-255 range for proper classification
+    float edgeTypeInt = v_edgeType * 255.0;
     
-    float edgeType = v_edgeType;
-    
-    if (edgeType > 0.5 && edgeType < 1.5) {
-        // SILHOUETTE edges - Red
-        color = vec4(1.0, 0.0, 0.0, 1.0);
-    } else if (edgeType > 1.5 && edgeType < 2.5) {
-        // HARD edges - Green
-        color = vec4(0.0, 1.0, 0.0, 1.0);
-    } else if (edgeType > 2.5 && edgeType < 3.5) {
-        // REPEATED edges - Blue
-        color = vec4(0.0, 0.0, 1.0, 1.0);
-    } else {
-        // Default fallback (should not happen for visible edges)
-        color = vec4(1.0, 1.0, 1.0, 1.0); // White
+    // Color code different edge types
+    if (edgeTypeInt < 0.5) { // HIDDEN (0)
+        color = vec4(0.0, 0.0, 0.0, 0.0); // Transparent for hidden edges
     }
-    #endif
+    else if (edgeTypeInt > 0.5 && edgeTypeInt < 1.5) { // SILHOUETTE (1) - RED
+        color = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+    else if (edgeTypeInt > 1.5 && edgeTypeInt < 2.5) { // HARD (2) - GREEN
+        color = vec4(0.0, 1.0, 0.0, 1.0);
+    }
+    else if (edgeTypeInt > 2.5 && edgeTypeInt < 3.5) { // REPEATED (3) - BLUE
+        color = vec4(0.0, 0.0, 1.0, 1.0);
+    }
+    else { // Unknown - YELLOW (this will help us see if values are out of range)
+        color = vec4(1.0, 1.0, 0.0, 1.0);
+    }
+#endif
 }
