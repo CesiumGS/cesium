@@ -302,6 +302,22 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
 };
 
 /**
+ * Get the morton index of the tile's first child.
+ *
+ * @param {number} index The morton index of the tile.
+ * @returns {number} The first child's morton index.
+ * @private
+ */
+ImplicitSubtree.prototype.getChildMortonIndex = function (index) {
+  let bitsPerLevel = 2;
+  if (this._subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    bitsPerLevel = 3;
+  }
+
+  return index << bitsPerLevel;
+};
+
+/**
  * Parse all relevant information out of the subtree. This fetches any
  * external buffers that are used by the implicit tileset.
  *

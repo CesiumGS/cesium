@@ -348,13 +348,17 @@ function listChildSubtrees(content, subtree, bottomRow) {
  */
 function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
   const rootBitIndex = 0;
+  const rootMortonIndex = 0;
+  const rootLevel = 0;
   const rootParentIsPlaceholder = true;
   const rootTile = deriveChildTile(
     content,
     subtree,
     placeholderTile,
     childIndex,
+    rootMortonIndex,
     rootBitIndex,
+    rootLevel,
     rootParentIsPlaceholder,
   );
 
@@ -391,7 +395,9 @@ function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
         subtree,
         parentTile,
         childChildIndex,
+        childMortonIndex,
         childBitIndex,
+        level,
       );
       parentTile.children.push(childTile);
       statistics.numberOfTilesTotal++;
@@ -421,6 +427,27 @@ function getGeometricError(tileMetadata, implicitTileset, implicitCoordinates) {
   );
 }
 
+function isLeafTile(subtree, implicitTileset, level, mortonIndex) {
+  const numberOfChildren = implicitTileset.branchingFactor;
+  const childMortonIndex = subtree.getChildMortonIndex(mortonIndex);
+
+  for (let i = 0; i < numberOfChildren; ++i) {
+    if (level === implicitTileset.subtreeLevels - 1) {
+      if (subtree.childSubtreeIsAvailableAtIndex(childMortonIndex + i)) {
+        return false;
+      }
+    } else {
+      const childLevelOffset = subtree.getLevelOffset(level + 1);
+      const childBitIndex = childLevelOffset + childMortonIndex + i;
+      if (subtree.tileIsAvailableAtIndex(childBitIndex)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 /**
  * Given a parent tile and information about which child to create, derive
  * the properties of the child tile implicitly.
@@ -433,7 +460,9 @@ function getGeometricError(tileMetadata, implicitTileset, implicitCoordinates) {
  * @param {ImplicitSubtree} subtree The subtree the child tile belongs to
  * @param {Cesium3DTile} parentTile The parent of the new child tile
  * @param {number} childIndex The morton index of the child tile relative to its parent
+ * @param {number} childMortonIndex The morton index of the child tile relative to its subtree
  * @param {number} childBitIndex The index of the child tile within the tile's availability information.
+ * @param {number} childLevel The level of the child tile relative to the subtree.
  * @param {boolean} [parentIsPlaceholderTile=false] True if parentTile is a placeholder tile. This is true for the root of each subtree.
  * @returns {Cesium3DTile} The new child tile.
  * @private
@@ -443,7 +472,9 @@ function deriveChildTile(
   subtree,
   parentTile,
   childIndex,
+  childMortonIndex,
   childBitIndex,
+  childLevel,
   parentIsPlaceholderTile,
 ) {
   const implicitTileset = implicitContent._implicitTileset;
@@ -600,18 +631,25 @@ function deriveChildTile(
   delete rootHeader.metadata;
   const combinedTileJson = combine(tileJson, rootHeader, deep);
 
-  if (combinedTileJson.contents.length <= 1) {
-    return makeTileSingleContent(
-      implicitContent,
-      implicitTileset.baseResource,
-      combinedTileJson,
-      parentTile,
-      implicitCoordinates,
-      subtree,
-      tileMetadata,
-      hasImplicitContentMetadata,
-    );
-  }
+  // if (combinedTileJson.contents.length <= 1) {
+  //   return makeTileSingleContent(
+  //     implicitContent,
+  //     implicitTileset.baseResource,
+  //     combinedTileJson,
+  //     parentTile,
+  //     implicitCoordinates,
+  //     subtree,
+  //     tileMetadata,
+  //     hasImplicitContentMetadata,
+  //   );
+  // }
+
+  const isLeaf = isLeafTile(
+    subtree,
+    implicitTileset,
+    childLevel,
+    childMortonIndex,
+  );
 
   return makeTileMultipleContents(
     implicitContent,
@@ -623,6 +661,7 @@ function deriveChildTile(
     tileMetadata,
     hasImplicitContentMetadata,
     implicitTileset.contentCount,
+    isLeaf,
   );
 }
 
@@ -1205,25 +1244,25 @@ function makeTile(content, baseResource, tileJson, parentTile) {
   return new Cesium3DTile(content._tileset, baseResource, tileJson, parentTile);
 }
 
-function makeTileSingleContent(
-  content,
-  baseResource,
-  tileHeader,
-  parentTile,
-  implicitCoordinates,
-  subtree,
-  tileMetadata,
-  hasImplicitContentMetadata,
-) {
-  const tile = makeTile(content, baseResource, tileHeader, parentTile);
+// function makeTileSingleContent(
+//   content,
+//   baseResource,
+//   tileHeader,
+//   parentTile,
+//   implicitCoordinates,
+//   subtree,
+//   tileMetadata,
+//   hasImplicitContentMetadata,
+// ) {
+//   const tile = makeTile(content, baseResource, tileHeader, parentTile);
 
-  tile.implicitCoordinates = implicitCoordinates;
-  tile.implicitSubtree = subtree;
-  tile.metadata = tileMetadata;
-  tile.hasImplicitContentMetadata = hasImplicitContentMetadata;
+//   tile.implicitCoordinates = implicitCoordinates;
+//   tile.implicitSubtree = subtree;
+//   tile.metadata = tileMetadata;
+//   tile.hasImplicitContentMetadata = hasImplicitContentMetadata;
 
-  return tile;
-}
+//   return tile;
+// }
 
 function makeTileMultipleContents(
   content,
@@ -1235,9 +1274,17 @@ function makeTileMultipleContents(
   tileMetadata,
   hasImplicitContentMetadata,
   contentCount,
+  isLeaf,
 ) {
-  const isLeaf =
-    !defined(tileHeader.children) || tileHeader.children.length === 0;
+  const tileset = parentTile.tileset;
+
+  const parentGeometricError =
+    parentTile === tileset.root
+      ? tileset._geometricError
+      : tileHeader.geometricError * 2.0;
+
+  const parentBoundingVolume =
+    parentTile._header.oldBoundingVolume ?? tileHeader.boundingVolume;
 
   // TODO: Need to update statistics.numberOfTilesTotal?
   const deepCopy = true;
@@ -1246,8 +1293,9 @@ function makeTileMultipleContents(
   delete baseTileJson.contents;
 
   const tileJson = clone(baseTileJson, deepCopy);
-  tileJson.refine = "ADD";
-  tileJson.geometricError = parentTile._geometricError;
+  tileJson.geometricError = parentGeometricError;
+  tileJson.oldBoundingVolume = clone(tileHeader.boundingVolume, deepCopy);
+  tileJson.boundingVolume = clone(parentBoundingVolume, deepCopy);
 
   const tile = makeTile(content, baseResource, tileJson, parentTile);
   tile.implicitCoordinates = implicitCoordinates;
@@ -1259,13 +1307,8 @@ function makeTileMultipleContents(
   for (let i = 0; i < tileHeader.contents.length; ++i) {
     const contentHeader = tileHeader.contents[i];
     const childTileJson = clone(baseTileJson, deepCopy);
-    childTileJson.geometricError = 0.0;
+    childTileJson.geometricError = tileHeader.geometricError;
     childTileJson.content = clone(contentHeader, deepCopy);
-
-    if (!isLeaf) {
-      childTileJson.refine = "REPLACE";
-      childTileJson.geometricError = parentTile._geometricError * 0.5;
-    }
 
     const childTile = makeTile(content, baseResource, childTileJson, tile);
     childTile.implicitCoordinates = implicitCoordinates;
@@ -1279,7 +1322,6 @@ function makeTileMultipleContents(
 
     if (!isLeaf) {
       const grandchildTileJson = clone(baseTileJson, deepCopy);
-      grandchildTileJson.refine = "REPLACE";
       grandchildTileJson.geometricError = 0.0;
 
       const grandchildTile = makeTile(
