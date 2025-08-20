@@ -320,8 +320,8 @@ function extractVisibleEdges(primitive) {
           shouldIncludeEdge = true;
           // edgeTypeName = "HARD"; // Unused variable
           break;
-        case 3: // REPEATED - TEMP: include for testing blue color
-          shouldIncludeEdge = true; // TEMP: was false
+        case 3:
+          shouldIncludeEdge = false;
           // edgeTypeName = "REPEATED"; // Unused variable
           break;
       }
@@ -1292,7 +1292,7 @@ function createCPUQuadEdgeGeometry(
       perpDir = [1.0, 0.0, 0.0];
     }
 
-    const offset = Math.max(5.0, edgeLength * 0.02); // Adaptive line width
+    const offset = Math.max(1.0, edgeLength * 0.008);
     const perpOffset = [
       perpDir[0] * offset,
       perpDir[1] * offset,
