@@ -16,9 +16,9 @@ import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js"
 // import TextureWrap from "../../Renderer/TextureWrap.js";
 // import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
 // import TextureMagnificationFilter from "../../Renderer/TextureMagnificationFilter.js";
-import ModelUtility from "./ModelUtility.js";
-import ModelReader from "./ModelReader.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+// import ModelUtility from "./ModelUtility.js";
+// import ModelReader from "./ModelReader.js";
+// import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * Utility class for handling 24-bit vertex indices in edge data.
@@ -102,47 +102,16 @@ EdgeVisibilityPipelineStage.process = function (
   // Must add EdgeVisibilityStageFS when HAS_EDGE_VISIBILITY is defined
   shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
 
-  // Add edge LUT uniform for accessing edge endpoint data
-  shaderBuilder.addUniform("sampler2D", "u_edgeLUT", ShaderDestination.VERTEX);
-  shaderBuilder.addUniform("vec4", "u_edgeParams", ShaderDestination.VERTEX); // [width, height, numSegments, padding]
-
-  // Add edge type attribute (simplified - no LUT lookup needed)
+  // Add edge type attribute for color coding
   const edgeIndexLocation = shaderBuilder.addAttribute("float", "a_edgeType");
-  // Add quad index attribute (which vertex in the quad: 0-5)
-  const quadIndexLocation = shaderBuilder.addAttribute("float", "a_quadIndex");
   // Add varying for edge type (flat to avoid interpolation)
   shaderBuilder.addVarying("float", "v_edgeType", "flat");
 
-  // Add iTwin.js style edge expansion shader functions
-  shaderBuilder.addVertexLines([
-    "#ifdef HAS_EDGE_VISIBILITY",
-    "// Decode 24-bit index from vec3",
-    "float decodeUInt24(vec3 rgb) {",
-    "  return rgb.x + rgb.y * 256.0 + rgb.z * 65536.0;",
-    "}",
-    "",
-    "// Get edge LUT coordinates for texel access",
-    "vec2 getEdgeLUTCoords(float edgeIndex) {",
-    "  float texelIndex = edgeIndex * 1.5; // Each edge takes 1.5 texels (6 bytes / 4 bytes per texel)",
-    "  float y = floor(texelIndex / u_edgeParams.x);",
-    "  float x = texelIndex - y * u_edgeParams.x;",
-    "  return vec2((x + 0.5) / u_edgeParams.x, (y + 0.5) / u_edgeParams.y);",
-    "}",
-    "",
-    "// Expand edge to screen-space quad",
-    "vec3 expandEdgeToScreenQuad(vec3 basePos, float quadIndex, float edgeIndex) {",
-    "  // For now, return base position - will implement screen-space expansion later",
-    "  return basePos;",
-    "}",
-    "#endif",
-  ]);
-
-  // Override setDynamicVaryingsVS to set varyings (CPU quad style)
+  // Override setDynamicVaryingsVS to set varyings (simple line style)
   shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
     "#ifdef HAS_EDGE_VISIBILITY",
     "  // Pass edge type from attribute to varying (flat interpolation)",
     "  v_edgeType = a_edgeType;",
-    "  // Position is already set up on CPU side - no need to modify here",
     "#endif",
   ]);
 
@@ -166,14 +135,13 @@ EdgeVisibilityPipelineStage.process = function (
     );
   }
 
-  // Use CPU-side quad creation for thick edge rendering
-  const edgeGeometry = createCPUQuadEdgeGeometry(
+  // Use simple line rendering with original mesh positions
+  const edgeGeometry = createSimpleLineEdgeGeometry(
     edgeResult.edgeIndices,
     edgeResult.edgeData,
     renderResources,
     frameState.context,
     edgeIndexLocation,
-    quadIndexLocation,
   );
 
   if (!defined(edgeGeometry)) {
@@ -187,7 +155,7 @@ EdgeVisibilityPipelineStage.process = function (
   renderResources.edgeGeometry = {
     vertexArray: edgeGeometry.vertexArray,
     indexCount: edgeGeometry.indexCount,
-    primitiveType: PrimitiveType.TRIANGLES,
+    primitiveType: PrimitiveType.LINES, // Changed from TRIANGLES to LINES
     pass: Pass.CESIUM_3D_TILE_EDGES,
   };
 
@@ -760,58 +728,107 @@ function extractVisibleEdges(primitive) {
 //   };
 // }
 
-// /**
-//  * Creates simple line edge geometry using original mesh attributes
-//  * This is a simplified version that avoids the complex edge domain VAO issues
-//  * @param {number[]} edgeIndices The line indices (pairs of vertex indices)
-//  * @param {PrimitiveRenderResources} renderResources The render resources
-//  * @param {Context} context The rendering context
-//  * @returns {Object|undefined} Simple edge geometry with vertex array and index buffer
-//  * @private
-//  */
-// // eslint-disable-next-line no-unused-vars
-// function createSimpleLineEdgeGeometry(edgeIndices, renderResources, context) {
-//   if (!defined(edgeIndices) || edgeIndices.length === 0) {
-//     return undefined;
-//   }
+/**
+ * Creates simple line edge geometry using original mesh attributes with edge type support
+ * This version uses GL_LINES with original mesh positions and deduped line indices
+ * @param {number[]} edgeIndices The line indices (pairs of vertex indices)
+ * @param {Object[]} edgeData Edge metadata including edge types
+ * @param {PrimitiveRenderResources} renderResources The render resources
+ * @param {Context} context The rendering context
+ * @param {number} edgeTypeLocation The shader location for edge type attribute
+ * @returns {Object|undefined} Simple edge geometry with vertex array and index buffer
+ * @private
+ */
+function createSimpleLineEdgeGeometry(
+  edgeIndices,
+  edgeData,
+  renderResources,
+  context,
+  edgeTypeLocation,
+) {
+  if (!defined(edgeIndices) || edgeIndices.length === 0) {
+    return undefined;
+  }
 
-//   // Use original mesh vertex indices directly
-//   // Find max index without spread operator to avoid stack overflow
-//   let maxIndex = 0;
-//   for (let i = 0; i < edgeIndices.length; i++) {
-//     if (edgeIndices[i] > maxIndex) {
-//       maxIndex = edgeIndices[i];
-//     }
-//   }
-//   const useUint32 = maxIndex > 65535;
-//   const indexDatatype = useUint32
-//     ? IndexDatatype.UNSIGNED_INT
-//     : IndexDatatype.UNSIGNED_SHORT;
-//   const indexTypedArray = useUint32
-//     ? new Uint32Array(edgeIndices)
-//     : new Uint16Array(edgeIndices);
+  // Use original mesh vertex indices directly
+  // Find max index without spread operator to avoid stack overflow
+  let maxIndex = 0;
+  for (let i = 0; i < edgeIndices.length; i++) {
+    if (edgeIndices[i] > maxIndex) {
+      maxIndex = edgeIndices[i];
+    }
+  }
+  const useUint32 = maxIndex > 65535;
+  const indexDatatype = useUint32
+    ? IndexDatatype.UNSIGNED_INT
+    : IndexDatatype.UNSIGNED_SHORT;
+  const indexTypedArray = useUint32
+    ? new Uint32Array(edgeIndices)
+    : new Uint16Array(edgeIndices);
 
-//   // Create index buffer for line indices
-//   const indexBuffer = Buffer.createIndexBuffer({
-//     context: context,
-//     typedArray: indexTypedArray,
-//     usage: BufferUsage.STATIC_DRAW,
-//     indexDatatype: indexDatatype,
-//   });
+  // Create index buffer for line indices
+  const indexBuffer = Buffer.createIndexBuffer({
+    context: context,
+    typedArray: indexTypedArray,
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: indexDatatype,
+  });
 
-//   // Use original mesh attributes directly - no edge domain complications
-//   const vertexArray = new VertexArray({
-//     context: context,
-//     indexBuffer: indexBuffer,
-//     attributes: renderResources.attributes, // Use original mesh attributes
-//   });
+  // Get original vertex count from position attribute
+  const positionAttribute = renderResources.attributes.find(
+    (attr) => attr.semantic === "POSITION" || attr.index === 0,
+  );
+  const vertexCount = positionAttribute.count;
 
-//   return {
-//     vertexArray: vertexArray,
-//     indexBuffer: indexBuffer,
-//     indexCount: edgeIndices.length,
-//   };
-// }
+  // Create edge type array - one value per original mesh vertex
+  const edgeTypeArray = new Float32Array(vertexCount);
+  edgeTypeArray.fill(0); // Default to HIDDEN (0)
+
+  // Fill edge type data based on which edges use each vertex
+  for (let i = 0; i < edgeData.length; i++) {
+    const edgeInfo = edgeData[i];
+    const edgeType = edgeInfo.edgeType;
+    const v0Index = edgeIndices[i * 2];
+    const v1Index = edgeIndices[i * 2 + 1];
+
+    // Set edge type for both vertices of this edge
+    // Normalize to 0-1 range for shader
+    edgeTypeArray[v0Index] = edgeType / 255.0;
+    edgeTypeArray[v1Index] = edgeType / 255.0;
+  }
+
+  // Create edge type buffer
+  const edgeTypeBuffer = Buffer.createVertexBuffer({
+    context: context,
+    typedArray: edgeTypeArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  // Combine original mesh attributes with edge type attribute
+  const edgeAttributes = [
+    ...renderResources.attributes, // Keep all original mesh attributes
+    {
+      index: edgeTypeLocation,
+      vertexBuffer: edgeTypeBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+  ];
+
+  const vertexArray = new VertexArray({
+    context: context,
+    indexBuffer: indexBuffer,
+    attributes: edgeAttributes,
+  });
+
+  return {
+    vertexArray: vertexArray,
+    indexBuffer: indexBuffer,
+    indexCount: edgeIndices.length,
+    edgeTypeBuffer: edgeTypeBuffer,
+  };
+}
 
 // /**
 //  * Creates an edge LUT (lookup table) texture for storing edge type data
@@ -1199,257 +1216,257 @@ function extractVisibleEdges(primitive) {
 //   };
 // }
 
-/**
- * Creates CPU-side quad edge geometry with flat interpolation (working version)
- * Each edge is rendered as a quad (2 triangles = 6 vertices) created on CPU
- * @param {number[]} edgeIndices Array of edge vertex indices
- * @param {Object[]} edgeData Array of edge metadata including edge types
- * @param {Object} renderResources The render resources
- * @param {Context} context The rendering context
- * @param {number} edgeIndexLocation The shader location for edge index attribute
- * @param {number} quadIndexLocation The shader location for quad index attribute
- * @returns {Object|undefined} Edge geometry with vertex array and index buffer
- * @private
- */
-function createCPUQuadEdgeGeometry(
-  edgeIndices,
-  edgeData,
-  renderResources,
-  context,
-  edgeIndexLocation,
-  quadIndexLocation,
-) {
-  if (!defined(edgeIndices) || edgeIndices.length === 0) {
-    return undefined;
-  }
+// /**
+//  * Creates CPU-side quad edge geometry with flat interpolation (working version)
+//  * Each edge is rendered as a quad (2 triangles = 6 vertices) created on CPU
+//  * @param {number[]} edgeIndices Array of edge vertex indices
+//  * @param {Object[]} edgeData Array of edge metadata including edge types
+//  * @param {Object} renderResources The render resources
+//  * @param {Context} context The rendering context
+//  * @param {number} edgeIndexLocation The shader location for edge index attribute
+//  * @param {number} quadIndexLocation The shader location for quad index attribute
+//  * @returns {Object|undefined} Edge geometry with vertex array and index buffer
+//  * @private
+//  */
+// function createCPUQuadEdgeGeometry(
+//   edgeIndices,
+//   edgeData,
+//   renderResources,
+//   context,
+//   edgeIndexLocation,
+//   quadIndexLocation,
+// ) {
+//   if (!defined(edgeIndices) || edgeIndices.length === 0) {
+//     return undefined;
+//   }
 
-  const numEdges = edgeData.length;
-  const verticesPerEdge = 6; // 6 vertices per edge (2 triangles)
-  const totalVertices = numEdges * verticesPerEdge;
+//   const numEdges = edgeData.length;
+//   const verticesPerEdge = 6; // 6 vertices per edge (2 triangles)
+//   const totalVertices = numEdges * verticesPerEdge;
 
-  // Get original vertex positions from primitive
-  const positionAttribute = ModelUtility.getAttributeBySemantic(
-    renderResources.runtimePrimitive.primitive,
-    VertexAttributeSemantic.POSITION,
-  );
+//   // Get original vertex positions from primitive
+//   const positionAttribute = ModelUtility.getAttributeBySemantic(
+//     renderResources.runtimePrimitive.primitive,
+//     VertexAttributeSemantic.POSITION,
+//   );
 
-  let originalPositions;
-  if (defined(positionAttribute.typedArray)) {
-    originalPositions = positionAttribute.typedArray;
-  } else {
-    try {
-      originalPositions =
-        ModelReader.readAttributeAsTypedArray(positionAttribute);
-    } catch (error) {
-      console.error("Cannot access position data:", error);
-      return undefined;
-    }
-  }
+//   let originalPositions;
+//   if (defined(positionAttribute.typedArray)) {
+//     originalPositions = positionAttribute.typedArray;
+//   } else {
+//     try {
+//       originalPositions =
+//         ModelReader.readAttributeAsTypedArray(positionAttribute);
+//     } catch (error) {
+//       console.error("Cannot access position data:", error);
+//       return undefined;
+//     }
+//   }
 
-  // Create actual quad vertices in CPU (not just endpoints)
-  const edgePositionArray = new Float32Array(totalVertices * 3);
-  // Create quad index array (identifies which vertex in the quad: 0-5)
-  const quadIndexArray = new Float32Array(totalVertices);
-  let posIdx = 0;
+//   // Create actual quad vertices in CPU (not just endpoints)
+//   const edgePositionArray = new Float32Array(totalVertices * 3);
+//   // Create quad index array (identifies which vertex in the quad: 0-5)
+//   const quadIndexArray = new Float32Array(totalVertices);
+//   let posIdx = 0;
 
-  for (let i = 0; i < numEdges; i++) {
-    const v0Index = edgeIndices[i * 2];
-    const v1Index = edgeIndices[i * 2 + 1];
+//   for (let i = 0; i < numEdges; i++) {
+//     const v0Index = edgeIndices[i * 2];
+//     const v1Index = edgeIndices[i * 2 + 1];
 
-    // Get positions for both endpoints
-    const v0Pos = [
-      originalPositions[v0Index * 3],
-      originalPositions[v0Index * 3 + 1],
-      originalPositions[v0Index * 3 + 2],
-    ];
-    const v1Pos = [
-      originalPositions[v1Index * 3],
-      originalPositions[v1Index * 3 + 1],
-      originalPositions[v1Index * 3 + 2],
-    ];
+//     // Get positions for both endpoints
+//     const v0Pos = [
+//       originalPositions[v0Index * 3],
+//       originalPositions[v0Index * 3 + 1],
+//       originalPositions[v0Index * 3 + 2],
+//     ];
+//     const v1Pos = [
+//       originalPositions[v1Index * 3],
+//       originalPositions[v1Index * 3 + 1],
+//       originalPositions[v1Index * 3 + 2],
+//     ];
 
-    // Calculate edge direction and perpendicular offset
-    const edgeDir = [
-      v1Pos[0] - v0Pos[0],
-      v1Pos[1] - v0Pos[1],
-      v1Pos[2] - v0Pos[2],
-    ];
+//     // Calculate edge direction and perpendicular offset
+//     const edgeDir = [
+//       v1Pos[0] - v0Pos[0],
+//       v1Pos[1] - v0Pos[1],
+//       v1Pos[2] - v0Pos[2],
+//     ];
 
-    // Calculate edge length for proper scaling
-    const edgeLength = Math.sqrt(
-      edgeDir[0] * edgeDir[0] +
-        edgeDir[1] * edgeDir[1] +
-        edgeDir[2] * edgeDir[2],
-    );
+//     // Calculate edge length for proper scaling
+//     const edgeLength = Math.sqrt(
+//       edgeDir[0] * edgeDir[0] +
+//         edgeDir[1] * edgeDir[1] +
+//         edgeDir[2] * edgeDir[2],
+//     );
 
-    // Use a better perpendicular direction (try Y-axis if edge is mostly horizontal)
-    let perpDir = [0.0, 1.0, 0.0]; // Default to Y-up
-    if (
-      Math.abs(edgeDir[1]) > Math.abs(edgeDir[0]) &&
-      Math.abs(edgeDir[1]) > Math.abs(edgeDir[2])
-    ) {
-      // If edge is mostly Y-direction, use X-axis
-      perpDir = [1.0, 0.0, 0.0];
-    }
+//     // Use a better perpendicular direction (try Y-axis if edge is mostly horizontal)
+//     let perpDir = [0.0, 1.0, 0.0]; // Default to Y-up
+//     if (
+//       Math.abs(edgeDir[1]) > Math.abs(edgeDir[0]) &&
+//       Math.abs(edgeDir[1]) > Math.abs(edgeDir[2])
+//     ) {
+//       // If edge is mostly Y-direction, use X-axis
+//       perpDir = [1.0, 0.0, 0.0];
+//     }
 
-    const offset = Math.max(1.0, edgeLength * 0.008);
-    const perpOffset = [
-      perpDir[0] * offset,
-      perpDir[1] * offset,
-      perpDir[2] * offset,
-    ];
+//     const offset = Math.max(1.0, edgeLength * 0.008);
+//     const perpOffset = [
+//       perpDir[0] * offset,
+//       perpDir[1] * offset,
+//       perpDir[2] * offset,
+//     ];
 
-    // Create quad vertices: v0_bottom, v0_top, v1_bottom, v1_top
-    const v0Bottom = [
-      v0Pos[0] - perpOffset[0],
-      v0Pos[1] - perpOffset[1],
-      v0Pos[2] - perpOffset[2],
-    ];
-    const v0Top = [
-      v0Pos[0] + perpOffset[0],
-      v0Pos[1] + perpOffset[1],
-      v0Pos[2] + perpOffset[2],
-    ];
-    const v1Bottom = [
-      v1Pos[0] - perpOffset[0],
-      v1Pos[1] - perpOffset[1],
-      v1Pos[2] - perpOffset[2],
-    ];
-    const v1Top = [
-      v1Pos[0] + perpOffset[0],
-      v1Pos[1] + perpOffset[1],
-      v1Pos[2] + perpOffset[2],
-    ];
+//     // Create quad vertices: v0_bottom, v0_top, v1_bottom, v1_top
+//     const v0Bottom = [
+//       v0Pos[0] - perpOffset[0],
+//       v0Pos[1] - perpOffset[1],
+//       v0Pos[2] - perpOffset[2],
+//     ];
+//     const v0Top = [
+//       v0Pos[0] + perpOffset[0],
+//       v0Pos[1] + perpOffset[1],
+//       v0Pos[2] + perpOffset[2],
+//     ];
+//     const v1Bottom = [
+//       v1Pos[0] - perpOffset[0],
+//       v1Pos[1] - perpOffset[1],
+//       v1Pos[2] - perpOffset[2],
+//     ];
+//     const v1Top = [
+//       v1Pos[0] + perpOffset[0],
+//       v1Pos[1] + perpOffset[1],
+//       v1Pos[2] + perpOffset[2],
+//     ];
 
-    // Create 6 vertices for 2 triangles (quad)
-    // Triangle 1: v0Bottom, v1Bottom, v0Top
-    // Triangle 2: v0Top, v1Bottom, v1Top
-    const quadVertices = [
-      { p: v0Bottom, quadIndex: 0 }, // Triangle 1
-      { p: v1Bottom, quadIndex: 1 },
-      { p: v0Top, quadIndex: 2 },
-      { p: v0Top, quadIndex: 2 }, // Triangle 2
-      { p: v1Bottom, quadIndex: 1 },
-      { p: v1Top, quadIndex: 3 },
-    ];
+//     // Create 6 vertices for 2 triangles (quad)
+//     // Triangle 1: v0Bottom, v1Bottom, v0Top
+//     // Triangle 2: v0Top, v1Bottom, v1Top
+//     const quadVertices = [
+//       { p: v0Bottom, quadIndex: 0 }, // Triangle 1
+//       { p: v1Bottom, quadIndex: 1 },
+//       { p: v0Top, quadIndex: 2 },
+//       { p: v0Top, quadIndex: 2 }, // Triangle 2
+//       { p: v1Bottom, quadIndex: 1 },
+//       { p: v1Top, quadIndex: 3 },
+//     ];
 
-    for (let j = 0; j < 6; j++) {
-      const vertex = quadVertices[j];
-      edgePositionArray[posIdx++] = vertex.p[0];
-      edgePositionArray[posIdx++] = vertex.p[1];
-      edgePositionArray[posIdx++] = vertex.p[2];
+//     for (let j = 0; j < 6; j++) {
+//       const vertex = quadVertices[j];
+//       edgePositionArray[posIdx++] = vertex.p[0];
+//       edgePositionArray[posIdx++] = vertex.p[1];
+//       edgePositionArray[posIdx++] = vertex.p[2];
 
-      // Update quad index
-      quadIndexArray[i * 6 + j] = vertex.quadIndex;
-    }
-  }
+//       // Update quad index
+//       quadIndexArray[i * 6 + j] = vertex.quadIndex;
+//     }
+//   }
 
-  // Create position buffer
-  const edgePositionBuffer = Buffer.createVertexBuffer({
-    context: context,
-    typedArray: edgePositionArray,
-    usage: BufferUsage.STATIC_DRAW,
-  });
+//   // Create position buffer
+//   const edgePositionBuffer = Buffer.createVertexBuffer({
+//     context: context,
+//     typedArray: edgePositionArray,
+//     usage: BufferUsage.STATIC_DRAW,
+//   });
 
-  const quadIndexBuffer = Buffer.createVertexBuffer({
-    context: context,
-    typedArray: quadIndexArray,
-    usage: BufferUsage.STATIC_DRAW,
-  });
+//   const quadIndexBuffer = Buffer.createVertexBuffer({
+//     context: context,
+//     typedArray: quadIndexArray,
+//     usage: BufferUsage.STATIC_DRAW,
+//   });
 
-  // Create edge type buffer (normalized 0-1 values for shader)
-  // Shader expects normalized values and multiplies by 255
-  const edgeTypeArray = new Float32Array(totalVertices);
-  for (let i = 0; i < numEdges; i++) {
-    const edgeType = edgeData[i].edgeType;
-    const normalizedEdgeType = edgeType / 255.0; // Normalize to 0-1 range
-    const baseVertex = i * verticesPerEdge;
-    for (let j = 0; j < verticesPerEdge; j++) {
-      edgeTypeArray[baseVertex + j] = normalizedEdgeType;
-    }
-  }
+//   // Create edge type buffer (normalized 0-1 values for shader)
+//   // Shader expects normalized values and multiplies by 255
+//   const edgeTypeArray = new Float32Array(totalVertices);
+//   for (let i = 0; i < numEdges; i++) {
+//     const edgeType = edgeData[i].edgeType;
+//     const normalizedEdgeType = edgeType / 255.0; // Normalize to 0-1 range
+//     const baseVertex = i * verticesPerEdge;
+//     for (let j = 0; j < verticesPerEdge; j++) {
+//       edgeTypeArray[baseVertex + j] = normalizedEdgeType;
+//     }
+//   }
 
-  const edgeTypeBuffer = Buffer.createVertexBuffer({
-    context: context,
-    typedArray: edgeTypeArray,
-    usage: BufferUsage.STATIC_DRAW,
-  });
+//   const edgeTypeBuffer = Buffer.createVertexBuffer({
+//     context: context,
+//     typedArray: edgeTypeArray,
+//     usage: BufferUsage.STATIC_DRAW,
+//   });
 
-  // Create index buffer for triangles (sequential indices)
-  const triangleIndices = new Array(totalVertices);
-  for (let i = 0; i < totalVertices; i++) {
-    triangleIndices[i] = i;
-  }
+//   // Create index buffer for triangles (sequential indices)
+//   const triangleIndices = new Array(totalVertices);
+//   for (let i = 0; i < totalVertices; i++) {
+//     triangleIndices[i] = i;
+//   }
 
-  const useUint32 = totalVertices > 65535;
-  const indexDatatype = useUint32
-    ? IndexDatatype.UNSIGNED_INT
-    : IndexDatatype.UNSIGNED_SHORT;
-  const indexTypedArray = useUint32
-    ? new Uint32Array(triangleIndices)
-    : new Uint16Array(triangleIndices);
+//   const useUint32 = totalVertices > 65535;
+//   const indexDatatype = useUint32
+//     ? IndexDatatype.UNSIGNED_INT
+//     : IndexDatatype.UNSIGNED_SHORT;
+//   const indexTypedArray = useUint32
+//     ? new Uint32Array(triangleIndices)
+//     : new Uint16Array(triangleIndices);
 
-  const indexBuffer = Buffer.createIndexBuffer({
-    context: context,
-    typedArray: indexTypedArray,
-    usage: BufferUsage.STATIC_DRAW,
-    indexDatatype: indexDatatype,
-  });
+//   const indexBuffer = Buffer.createIndexBuffer({
+//     context: context,
+//     typedArray: indexTypedArray,
+//     usage: BufferUsage.STATIC_DRAW,
+//     indexDatatype: indexDatatype,
+//   });
 
-  // Create attributes for CPU-side quad geometry
-  const edgeAttributes = [
-    // Real position attribute (3 components)
-    {
-      index: 0, // Use position attribute location
-      vertexBuffer: edgePositionBuffer,
-      componentsPerAttribute: 3,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    },
-    // Edge type attribute (for shader - use edgeIndexLocation)
-    {
-      index: edgeIndexLocation,
-      vertexBuffer: edgeTypeBuffer,
-      componentsPerAttribute: 1,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    },
-    // Quad index attribute
-    {
-      index: quadIndexLocation,
-      vertexBuffer: quadIndexBuffer,
-      componentsPerAttribute: 1,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    },
-  ];
+//   // Create attributes for CPU-side quad geometry
+//   const edgeAttributes = [
+//     // Real position attribute (3 components)
+//     {
+//       index: 0, // Use position attribute location
+//       vertexBuffer: edgePositionBuffer,
+//       componentsPerAttribute: 3,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: false,
+//     },
+//     // Edge type attribute (for shader - use edgeIndexLocation)
+//     {
+//       index: edgeIndexLocation,
+//       vertexBuffer: edgeTypeBuffer,
+//       componentsPerAttribute: 1,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: false,
+//     },
+//     // Quad index attribute
+//     {
+//       index: quadIndexLocation,
+//       vertexBuffer: quadIndexBuffer,
+//       componentsPerAttribute: 1,
+//       componentDatatype: ComponentDatatype.FLOAT,
+//       normalize: false,
+//     },
+//   ];
 
-  const vertexArray = new VertexArray({
-    context: context,
-    indexBuffer: indexBuffer,
-    attributes: edgeAttributes,
-  });
+//   const vertexArray = new VertexArray({
+//     context: context,
+//     indexBuffer: indexBuffer,
+//     attributes: edgeAttributes,
+//   });
 
-  // DEBUG: Log first few vertices for test cases
-  if (numEdges <= 3) {
-    for (let i = 0; i < Math.min(6, totalVertices); i++) {
-      // eslint-disable-next-line no-unused-vars
-      const x = edgePositionArray[i * 3];
-      // eslint-disable-next-line no-unused-vars
-      const y = edgePositionArray[i * 3 + 1];
-      // eslint-disable-next-line no-unused-vars
-      const z = edgePositionArray[i * 3 + 2];
-    }
-  }
+//   // DEBUG: Log first few vertices for test cases
+//   if (numEdges <= 3) {
+//     for (let i = 0; i < Math.min(6, totalVertices); i++) {
+//       // eslint-disable-next-line no-unused-vars
+//       const x = edgePositionArray[i * 3];
+//       // eslint-disable-next-line no-unused-vars
+//       const y = edgePositionArray[i * 3 + 1];
+//       // eslint-disable-next-line no-unused-vars
+//       const z = edgePositionArray[i * 3 + 2];
+//     }
+//   }
 
-  return {
-    vertexArray: vertexArray,
-    indexBuffer: indexBuffer,
-    indexCount: totalVertices,
-    edgeIndexBuffer: edgeTypeBuffer, // Reuse for debugging
-    quadIndexBuffer: quadIndexBuffer,
-  };
-}
+//   return {
+//     vertexArray: vertexArray,
+//     indexBuffer: indexBuffer,
+//     indexCount: totalVertices,
+//     edgeIndexBuffer: edgeTypeBuffer, // Reuse for debugging
+//     quadIndexBuffer: quadIndexBuffer,
+//   };
+// }
 
 // /**
 //  * Creates iTwin.js style edge geometry with quads for line rendering
