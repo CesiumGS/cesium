@@ -16,9 +16,9 @@ import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js"
 // import TextureWrap from "../../Renderer/TextureWrap.js";
 // import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
 // import TextureMagnificationFilter from "../../Renderer/TextureMagnificationFilter.js";
-// import ModelUtility from "./ModelUtility.js";
-// import ModelReader from "./ModelReader.js";
-// import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelUtility from "./ModelUtility.js";
+import ModelReader from "./ModelReader.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * Utility class for handling 24-bit vertex indices in edge data.
@@ -135,8 +135,8 @@ EdgeVisibilityPipelineStage.process = function (
     );
   }
 
-  // Use simple line rendering with original mesh positions
-  const edgeGeometry = createSimpleLineEdgeGeometry(
+  // Use CPU-side line edge geometry with edge-domain vertices
+  const edgeGeometry = createCPULineEdgeGeometry(
     edgeResult.edgeIndices,
     edgeResult.edgeData,
     renderResources,
@@ -729,17 +729,17 @@ function extractVisibleEdges(primitive) {
 // }
 
 /**
- * Creates simple line edge geometry using original mesh attributes with edge type support
- * This version uses GL_LINES with original mesh positions and deduped line indices
- * @param {number[]} edgeIndices The line indices (pairs of vertex indices)
- * @param {Object[]} edgeData Edge metadata including edge types
+ * Creates CPU-side line edge geometry where each edge generates 2 vertices.
+ * This creates edge-domain vertices to avoid per-vertex attribute conflicts.
+ * @param {number[]} edgeIndices Array of edge vertex indices from original mesh
+ * @param {Object[]} edgeData Array of edge metadata including edge types
  * @param {PrimitiveRenderResources} renderResources The render resources
  * @param {Context} context The rendering context
  * @param {number} edgeTypeLocation The shader location for edge type attribute
- * @returns {Object|undefined} Simple edge geometry with vertex array and index buffer
+ * @returns {Object|undefined} Edge geometry with vertex array and index buffer
  * @private
  */
-function createSimpleLineEdgeGeometry(
+function createCPULineEdgeGeometry(
   edgeIndices,
   edgeData,
   renderResources,
@@ -750,63 +750,139 @@ function createSimpleLineEdgeGeometry(
     return undefined;
   }
 
-  // Use original mesh vertex indices directly
-  // Find max index without spread operator to avoid stack overflow
-  let maxIndex = 0;
-  for (let i = 0; i < edgeIndices.length; i++) {
-    if (edgeIndices[i] > maxIndex) {
-      maxIndex = edgeIndices[i];
+  const numEdges = edgeData.length;
+  const vertsPerEdge = 2;
+  const totalVerts = numEdges * vertsPerEdge;
+
+  // 取 POSITION 的实际 location，别写死 0
+  const posAttr =
+    renderResources.attributes.find((a) => a.semantic === "POSITION") ||
+    renderResources.attributes[0];
+  const positionLocation = posAttr?.index ?? 0;
+
+  // 取原始位置数据（和 CPU quads 一样的取法）
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
+    renderResources.runtimePrimitive.primitive,
+    VertexAttributeSemantic.POSITION,
+  );
+  const srcPos = defined(positionAttribute.typedArray)
+    ? positionAttribute.typedArray
+    : ModelReader.readAttributeAsTypedArray(positionAttribute);
+
+  // 生成 edge-domain 顶点：每条边复制两端点的位置
+  const edgePosArray = new Float32Array(totalVerts * 3);
+  const edgeTypeArray = new Float32Array(totalVerts);
+  let p = 0;
+
+  // DEBUG: Track edge type distribution
+  const edgeTypeStats = { 0: 0, 1: 0, 2: 0, 3: 0, invalid: 0 };
+
+  for (let i = 0; i < numEdges; i++) {
+    const a = edgeIndices[i * 2],
+      b = edgeIndices[i * 2 + 1];
+    const ax = srcPos[a * 3],
+      ay = srcPos[a * 3 + 1],
+      az = srcPos[a * 3 + 2];
+    const bx = srcPos[b * 3],
+      by = srcPos[b * 3 + 1],
+      bz = srcPos[b * 3 + 2];
+
+    // DEBUG: Check for invalid vertex indices
+    if (a >= srcPos.length / 3 || b >= srcPos.length / 3) {
+      console.error(
+        `Edge ${i}: Invalid vertex indices a=${a}, b=${b}, maxVertex=${srcPos.length / 3 - 1}`,
+      );
+    }
+
+    // v0
+    edgePosArray[p++] = ax;
+    edgePosArray[p++] = ay;
+    edgePosArray[p++] = az;
+    // v1
+    edgePosArray[p++] = bx;
+    edgePosArray[p++] = by;
+    edgePosArray[p++] = bz;
+
+    // per-edge -> per-vertex（两端点同一值），归一化到 0..1（你 FS 里会乘回 255）
+    const rawType = edgeData[i].edgeType;
+    const t = rawType / 255.0;
+
+    // DEBUG: Track edge type stats
+    if (rawType >= 0 && rawType <= 3) {
+      edgeTypeStats[rawType]++;
+    } else {
+      edgeTypeStats.invalid++;
+      console.warn(
+        `Edge ${i}: Invalid edge type ${rawType}, normalized to ${t}`,
+      );
+    }
+
+    edgeTypeArray[i * 2 + 0] = t;
+    edgeTypeArray[i * 2 + 1] = t;
+
+    // DEBUG: Log first few edges
+    if (i < 3) {
+      console.log(
+        `Edge ${i}: type=${rawType} (norm=${t.toFixed(3)}), a=${a}[${ax.toFixed(1)},${ay.toFixed(1)},${az.toFixed(1)}], b=${b}[${bx.toFixed(1)},${by.toFixed(1)},${bz.toFixed(1)}]`,
+      );
     }
   }
-  const useUint32 = maxIndex > 65535;
-  const indexDatatype = useUint32
-    ? IndexDatatype.UNSIGNED_INT
-    : IndexDatatype.UNSIGNED_SHORT;
-  const indexTypedArray = useUint32
-    ? new Uint32Array(edgeIndices)
-    : new Uint16Array(edgeIndices);
 
-  // Create index buffer for line indices
-  const indexBuffer = Buffer.createIndexBuffer({
-    context: context,
-    typedArray: indexTypedArray,
-    usage: BufferUsage.STATIC_DRAW,
-    indexDatatype: indexDatatype,
-  });
-
-  // Get original vertex count from position attribute
-  const positionAttribute = renderResources.attributes.find(
-    (attr) => attr.semantic === "POSITION" || attr.index === 0,
+  // DEBUG: Print edge type distribution
+  console.log("Edge type distribution:", edgeTypeStats);
+  console.log(`Total edges: ${numEdges}, Total vertices: ${totalVerts}`);
+  console.log(
+    "First few edgeType values:",
+    Array.from(edgeTypeArray.slice(0, 10)).map((v) => v.toFixed(3)),
   );
-  const vertexCount = positionAttribute.count;
 
-  // Create edge type array - one value per original mesh vertex
-  const edgeTypeArray = new Float32Array(vertexCount);
-  edgeTypeArray.fill(0); // Default to HIDDEN (0)
+  // Determine index type based on vertex count
+  const useU32 = totalVerts > 65535;
 
-  // Fill edge type data based on which edges use each vertex
-  for (let i = 0; i < edgeData.length; i++) {
-    const edgeInfo = edgeData[i];
-    const edgeType = edgeInfo.edgeType;
-    const v0Index = edgeIndices[i * 2];
-    const v1Index = edgeIndices[i * 2 + 1];
-
-    // Set edge type for both vertices of this edge
-    // Normalize to 0-1 range for shader
-    edgeTypeArray[v0Index] = edgeType / 255.0;
-    edgeTypeArray[v1Index] = edgeType / 255.0;
+  // DEBUG: Check for potential issues
+  console.log(
+    `Using ${useU32 ? "Uint32" : "Uint16"} indices for ${totalVerts} vertices`,
+  );
+  if (totalVerts > 65535 && !useU32) {
+    console.error(
+      "WARNING: Vertex count exceeds Uint16 range but using Uint16 indices!",
+    );
   }
 
-  // Create edge type buffer
+  // 顶点缓冲
+  const edgePosBuffer = Buffer.createVertexBuffer({
+    context,
+    typedArray: edgePosArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
   const edgeTypeBuffer = Buffer.createVertexBuffer({
-    context: context,
+    context,
     typedArray: edgeTypeArray,
     usage: BufferUsage.STATIC_DRAW,
   });
 
-  // Combine original mesh attributes with edge type attribute
-  const edgeAttributes = [
-    ...renderResources.attributes, // Keep all original mesh attributes
+  // 索引：按 LINES 连成 [0,1], [2,3], ... (每条边2个顶点，已经正确排列)
+  const idx = new Array(totalVerts);
+  for (let i = 0; i < totalVerts; i++) {
+    idx[i] = i;
+  }
+  const indexBuffer = Buffer.createIndexBuffer({
+    context,
+    typedArray: useU32 ? new Uint32Array(idx) : new Uint16Array(idx),
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: useU32
+      ? IndexDatatype.UNSIGNED_INT
+      : IndexDatatype.UNSIGNED_SHORT,
+  });
+
+  const attributes = [
+    {
+      index: positionLocation,
+      vertexBuffer: edgePosBuffer,
+      componentsPerAttribute: 3,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
     {
       index: edgeTypeLocation,
       vertexBuffer: edgeTypeBuffer,
@@ -816,18 +892,8 @@ function createSimpleLineEdgeGeometry(
     },
   ];
 
-  const vertexArray = new VertexArray({
-    context: context,
-    indexBuffer: indexBuffer,
-    attributes: edgeAttributes,
-  });
-
-  return {
-    vertexArray: vertexArray,
-    indexBuffer: indexBuffer,
-    indexCount: edgeIndices.length,
-    edgeTypeBuffer: edgeTypeBuffer,
-  };
+  const vertexArray = new VertexArray({ context, indexBuffer, attributes });
+  return { vertexArray, indexBuffer, indexCount: totalVerts };
 }
 
 // /**
