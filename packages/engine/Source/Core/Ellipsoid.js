@@ -254,6 +254,8 @@ Ellipsoid.MOON = Object.freeze(
   ),
 );
 
+Ellipsoid.MARS = Object.freeze(new Ellipsoid(3396190.0, 3396190.0, 3371726.0));
+
 Ellipsoid._default = Ellipsoid.WGS84;
 Object.defineProperties(Ellipsoid, {
   /**
