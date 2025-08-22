@@ -251,15 +251,18 @@ function App() {
   const [galleryLoaded, setGalleryLoaded] = useState(false);
 
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
-  function appendConsole(type: ConsoleMessageType, message: string) {
-    setConsoleMessages((prevConsoleMessages) => [
-      ...prevConsoleMessages,
-      { type, message, id: crypto.randomUUID() },
-    ]);
-    if (!consoleExpanded && type !== "log") {
-      rightSideRef.current?.toggleExpanded();
-    }
-  }
+  const appendConsole = useCallback(
+    function appendConsole(type: ConsoleMessageType, message: string) {
+      setConsoleMessages((prevConsoleMessages) => [
+        ...prevConsoleMessages,
+        { type, message, id: crypto.randomUUID() },
+      ]);
+      if (!consoleExpanded && type !== "log") {
+        rightSideRef.current?.toggleExpanded();
+      }
+    },
+    [consoleExpanded],
+  );
 
   function resetConsole() {
     // the console should only be cleared by the Bucket when the viewer page
@@ -383,6 +386,7 @@ function App() {
               const html =
                 files["Cesium-Sandcastle.html"]?.content ?? defaultHtmlCode;
               dispatch({ type: "setAndRun", code: code, html: html });
+              setTitle("Gist Import");
               setReadyForViewer(true);
             })
             .catch(function (error) {
@@ -419,7 +423,7 @@ function App() {
         }
       }
     },
-    [galleryLoaded, legacyIdMap, loadGalleryItem],
+    [galleryLoaded, legacyIdMap, loadGalleryItem, appendConsole],
   );
 
   useEffect(() => loadFromUrl(), [galleryLoaded, galleryItems, loadFromUrl]);
