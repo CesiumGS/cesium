@@ -8,6 +8,54 @@
   grid-template-columns: var(--app-bar-width) auto;
   grid-template-areas: "header header" "app-bar content";
 
+  --highlight-color-bg: var(--stratakit-color-bg-attention-muted);
+  --highlight-color-bg-hover: color-mix(
+    in oklch,
+    var(--stratakit-color-glow-hue) var(--stratakit-color-bg-glow-base-hover-\%),
+    var(--stratakit-color-bg-attention-muted)
+  );
+  --highlight-color-bg-pressed: color-mix(
+    in oklch,
+    var(--stratakit-color-glow-hue)
+      var(--stratakit-color-bg-glow-base-pressed-\%),
+    var(--stratakit-color-bg-attention-muted)
+  );
+  --highlight-color-text: var(--stratakit-color-text-neutral-primary);
+  --highlight-color-border: var(--stratakit-color-border-attention-muted);
+  --highlight-color-border-hover: color-mix(
+    in oklch,
+    var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-base-hover-\%),
+    var(--stratakit-color-border-attention-muted)
+  );
+  --highlight-color-border-pressed: color-mix(
+    in oklch,
+    var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-base-pressed-\%),
+    var(--stratakit-color-border-attention-muted)
+  );
+
+  --button-background-color: var(--stratakit-color-bg-neutral-base);
+  --button-background-color-hover:
+ color-mix(in oklch, var(--stratakit-color-bg-neutral-base) 100.0%, var(--stratakit-color-glow-hue) var(--stratakit-color-bg-glow-base-hover-\%));
+ --button-background-color-pressed: 
+ color-mix(in oklch, var(--stratakit-color-bg-neutral-base) 100.0%, var(--stratakit-color-glow-hue) var(--stratakit-color-bg-glow-base-pressed-\%));
+ --button-background-color-active: var(--stratakit-color-bg-glow-on-surface-accent-pressed);
+
+  --button-border-color: var(--stratakit-color-border-shadow-base);
+  --button-border-color-hover: color-mix(
+    in oklch,
+    var(--stratakit-color-border-shadow-base) 100%,
+    var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-base-hover-\%)
+  );
+  --button-border-color-pressed: color-mix(
+    in oklch,
+    var(--stratakit-color-border-shadow-base) 100%,
+    var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-base-pressed-\%)
+  );
+
   header {
     grid-area: header;
     display: flex;
@@ -53,4 +101,31 @@
   /* These control the styling of the Allotment dividers */
   --focus-border: var(--stratakit-color-border-accent-base);
   --separator-border: var(--stratakit-color-border-neutral-base);
+}
+
+mark {
+  background: var(--highlight-color-bg);
+  border-radius: 2px;
+  border: 1px solid var(--highlight-color-border);
+  color: var(--highlight-color-text);
+}
+
+mark > span {
+  color: var(--highlight-color-text);
+}
+
+code {
+  color: var(--stratakit-color-text-neutral-secondary);
+  background-color: var(--stratakit-color-bg-control-textbox);
+  padding: var(--stratakit-space-x1);
+  border-radius: 4px;
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+
+  justify-content: center;
+  align-items: center;
+  font-family: inherit;
+  font-weight: 500;
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-12);
+  line-height: 1.3333;
 }

@@ -21,13 +21,11 @@ export default defineConfig(() => {
   config.define = {
     ...config.define,
     __PAGE_BASE_URL__: JSON.stringify(process.env.BASE_URL),
-    __GALLERY_BASE_URL__: JSON.stringify(`${config.base}/gallery`),
   };
 
   const copyPlugin = viteStaticCopy({
     targets: [
       { src: "templates/Sandcastle.(d.ts|js)", dest: "templates" },
-      { src: "gallery", dest: "" },
     ],
   });
 

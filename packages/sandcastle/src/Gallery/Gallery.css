@@ -1,0 +1,282 @@
+.filter-menu label {
+  margin: var(--stratakit-space-x1);
+  font-size: var(--stratakit-font-size-10);
+  padding-inline: var(--stratakit-space-x1);
+}
+
+.filter-menu-item-chip {
+  width: 3ch;
+  min-block-size: 3ch;
+  font-size: var(--stratakit-font-size-10);
+  font-weight: 500;
+  line-height: 1;
+  justify-content: center;
+  margin-right: 0.6ch;
+}
+
+.filter-menu-item > svg {
+  align-self: center;
+}
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &.hidden {
+    display: none;
+  }
+
+  h2 {
+    font-size: var(--stratakit-font-size-20);
+    line-height: 1.4;
+  }
+
+  h3 {
+    font-size: var(--stratakit-font-size-16);
+    line-height: 1.5;
+  }
+
+  .filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--stratakit-space-x1);
+    padding: var(--stratakit-space-x2);
+
+    h2 {
+      flex-grow: 1;
+    }
+
+    form[role="search"] {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--stratakit-space-x1);
+      flex-grow: 2;
+    }
+
+    .gallery-search-input {
+      flex-grow: 2;
+      max-width: 300px;
+    }
+
+    .gallery-search-input-clear-btn {
+      position: absolute;
+      right: var(--stratakit-space-x1);
+      padding: 2px;
+      min-block-size: unset;
+
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+
+    .filter-menu-button {
+      justify-content: space-between;
+      text-transform: capitalize;
+    }
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    padding: var(--stratakit-space-x2);
+    gap: var(--stratakit-space-x2);
+    overflow-y: auto;
+  }
+
+  .empty-list div {
+    text-align: center;
+    color: var(--stratakit-color-text-neutral-secondary);
+    border: 1px solid var(--stratakit-color-border-neutral-muted);
+    padding: var(--stratakit-space-x4);
+    border-radius: 8px;
+  }
+
+  summary {
+    color: var(--stratakit-color-text-neutral-tertiary);
+
+    h3 {
+      color: var(--stratakit-color-text-neutral-secondary);
+      font-size: var(--stratakit-font-size-12);
+      line-height: 1.3333;
+      display: inline-block;
+      margin-right: 0.5ch;
+    }
+  }
+
+  .gallery-card-wrapper {
+    position: relative;
+
+    menu {
+      position: absolute;
+      top: var(--stratakit-space-x2);
+      right: var(--stratakit-space-x2);
+    }
+  }
+
+  .gallery-card {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    flex: 1 0 116px;
+    padding: var(--stratakit-space-x3);
+    gap: var(--stratakit-space-x1);
+    border-radius: 8px;
+    color: inherit;
+    transition: all 150ms ease-out;
+    background: var(--button-background-color);
+    box-shadow:
+      var(--stratakit-shadow-button-base-inset),
+      0px 0px 0px 1px var(--button-border-color) inset,
+      var(--stratakit-shadow-button-base-drop);
+
+    &:hover,
+    &:focus {
+      background: var(--button-background-color-hover);
+      box-shadow:
+        var(--stratakit-shadow-button-base-inset),
+        0px 0px 0px 1px var(--button-border-color-hover) inset,
+        var(--stratakit-shadow-button-base-drop);
+    }
+
+    &:active {
+      background: var(--button-background-color-pressed);
+      box-shadow: var(--stratakit-shadow-button-base-inset), 0px 0px 0px 1px var(--button-border-color-pressed) inset;
+    }
+
+    .gallery-card-thumbnail {
+      max-width: 220px;
+      width: 38.2%;
+      height: fit-content;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .gallery-card-thumbnail > span {
+      position: absolute;
+      bottom: var(--stratakit-space-x1);
+      right: var(--stratakit-space-x1);
+      background: var(--stratakit-color-bg-elevation-overlay);
+      color: var(--stratakit-color-text-neutral-primary);
+      opacity: 0.84;
+      padding: var(--stratakit-space-x1);
+      font-size: var(--stratakit-font-size-10);
+      line-height: 1;
+      border-radius: 2px;
+    }
+
+    img {
+      border-radius: 4px;
+      border: 1px solid var(--stratakit-color-border-neutral-base);
+      outline: 1px solid var(--stratakit-color-border-elevation-base);
+    }
+
+    section {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    header {
+      background: none;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      padding-top: 0;
+    }
+
+    h2 {
+      text-wrap: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 100%;
+    }
+
+    p {
+      font-size: var(--stratakit-font-size-14);
+      line-height: 1.4286;
+      color: var(--stratakit-color-text-neutral-secondary);
+    }
+
+    code {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--stratakit-color-text-neutral-tertiary);
+      padding: var(--stratakit-space-x1);
+      margin: var(--stratakit-space-x1) 0;
+      cursor: text;
+    }
+
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      justify-items: start;
+      gap: var(--stratakit-space-x1);
+      list-style: none;
+    }
+  }
+
+  .gallery-card-chip {
+    transition: all 150ms ease-out;
+    white-space: nowrap;
+
+    &:before {
+      transition: all 150ms ease-out;
+    }
+  }
+
+  .gallery-card-chip:hover,
+  .gallery-card-chip:focus,
+  .gallery-card-chip:active {
+    background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+    color: var(--stratakit-color-text-neutral-primary);
+
+    &:before {
+      border-color: var(--stratakit-color-border-glow-strong-default);
+      box-shadow: var(--stratakit-shadow-button-base-drop);
+    }
+  }
+
+  .gallery-card-chip:active {
+    background: var(--stratakit-color-bg-glow-on-surface-neutral-pressed);
+
+    &:before {
+      box-shadow: var(--stratakit-shadow-button-base-inset);
+    }
+  }
+
+  .gallery-card-chip[data-active="true"] {
+    background: var(--highlight-color-bg);
+    color: var(--highlight-color-text);
+
+    &:before {
+      border-color: var(--highlight-color-border);
+    }
+  }
+
+  .gallery-card-chip[data-active="true"]:hover,
+  .gallery-card-chip[data-active="true"]:focus {
+    background: var(--highlight-color-bg-hover);
+    color: var(--highlight-color-text-hover);
+
+    &:before {
+      border-color: var(--highlight-color-border-hover);
+    }
+  }
+
+  .gallery-card-chip[data-active="true"]:active {
+    background: var(--highlight-color-bg-pressed);
+    color: var(--highlight-color-text);
+
+    &:before {
+      border-color: var(--highlight-color-border-pressed);
+    }
+  }
+}
