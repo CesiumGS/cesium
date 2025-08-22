@@ -85,7 +85,6 @@
     }
 
     .title {
-      font-size: x-large;
       text-wrap: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;

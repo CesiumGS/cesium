@@ -29,6 +29,7 @@ import {
   settings,
   sun,
   windowPopout,
+  documentation,
 } from "./icons.ts";
 import {
   ConsoleMessage,
@@ -138,16 +139,18 @@ function AppBarButton({
   onClick,
   active = false,
   label,
+  onAuxClick,
 }: {
   children: ReactNode;
   onClick: MouseEventHandler;
   active?: boolean;
   label: string;
+  onAuxClick?: MouseEventHandler;
 }) {
   if (active) {
     return (
       <Tooltip content={label} type="label" placement="right">
-        <Button tone="accent" onClick={onClick}>
+        <Button tone="accent" onClick={onClick} onAuxClick={onAuxClick}>
           {children}
         </Button>
       </Tooltip>
@@ -155,7 +158,7 @@ function AppBarButton({
   }
   return (
     <Tooltip content={label} type="label" placement="right">
-      <Button variant="ghost" onClick={onClick}>
+      <Button variant="ghost" onClick={onClick} onAuxClick={onAuxClick}>
         {children}
       </Button>
     </Tooltip>
@@ -414,6 +417,11 @@ function App() {
     return () => window.removeEventListener("popstate", pushStateListener);
   }, [loadFromUrl]);
 
+  function openDocsPage() {
+    const docsUrl = "https://cesium.com/learn/cesiumjs/ref-doc/index.html";
+    window.open(docsUrl, "_blank")?.focus();
+  }
+
   return (
     <Root
       id="root"
@@ -471,6 +479,13 @@ function App() {
           label="New Sandcastle"
         >
           <Icon href={add} size="large" />
+        </AppBarButton>
+        <AppBarButton
+          label="Documentation"
+          onClick={openDocsPage}
+          onAuxClick={openDocsPage}
+        >
+          <Icon href={`${documentation}#icon-large`} size="large" />
         </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
