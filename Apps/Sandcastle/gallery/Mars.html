@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Mars terrain visualized using 3D Tiles, tiled and hosted by Cesium ion, and shown with points of interest and additional data layers."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, ion Assets, 3D Tiles" />
+    <title>Cesium Mars</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+      #toolbar .header {
+        font-weight: bold;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        Cesium.Ellipsoid.default = Cesium.Ellipsoid.MARS;
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: false,
+          baseLayer: false,
+          baseLayerPicker: false,
+          geocoder: false,
+          shadows: true,
+          globe: false,
+        });
+        const scene = viewer.scene;
+        const clock = viewer.clock;
+
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(3644333, {
+            enableCollision: true,
+          });
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(error);
+        }
+
+        // Define a callback property to dynamically change the width of polyline paths
+        const widthCallbackProperty = new Cesium.CallbackProperty(function (time) {
+          // Change width based on camera distance, via linear interpolation
+          const cameraDistance = viewer.camera.positionCartographic.height;
+          const minDistance = 0;
+          const maxDistance = 1e5;
+          const minWidth = 0;
+          const maxWidth = 20;
+          const t = Math.max(
+            0,
+            Math.min(1, (cameraDistance - minDistance) / (maxDistance - minDistance)),
+          );
+          const width = Cesium.Math.lerp(maxWidth, minWidth, t);
+          return width;
+        }, false);
+
+        let curiosity, perseverance;
+        try {
+          const dataSource = await Cesium.CzmlDataSource.load(
+            "../../SampleData/Mars.czml",
+          );
+          viewer.dataSources.add(dataSource);
+
+          const setupRover = function (entityId, startSol, outRover) {
+            outRover = dataSource.entities.getById(entityId);
+            const positionProperty = outRover.position;
+            outRover.orientation = new Cesium.VelocityOrientationProperty(
+              positionProperty,
+            );
+
+            const julianDateToSol = createJulianDateToSolConverter(
+              outRover.availability.start,
+              startSol,
+            );
+            outRover.label.text = new Cesium.CallbackProperty(function (time) {
+              return julianDateToSol(time);
+            }, false);
+
+            const roverPath = dataSource.entities.getById(`${entityId}Path`);
+            roverPath.polyline.width = widthCallbackProperty;
+
+            return outRover;
+          };
+
+          curiosity = setupRover("Curiosity", 3, curiosity);
+          perseverance = setupRover("Perseverance", 13, perseverance);
+        } catch (error) {
+          console.log(`Error loading CZML: ${error}`);
+        }
+
+        clock.shouldAnimate = true;
+
+        function createJulianDateToSolConverter(startJulianDate, startSol) {
+          return function (julianDate) {
+            const secondsPerSol = 24 * 60 * 60 + 39 * 60 + 35;
+            const differenceInSeconds = Cesium.JulianDate.secondsDifference(
+              julianDate,
+              startJulianDate,
+            );
+            const solNumber = Math.floor(differenceInSeconds / secondsPerSol) + startSol;
+            return `Sol ${solNumber}`;
+          };
+        }
+
+        // Spin Mars on first load but disable the spinning upon any input
+        const rotationSpeed = Cesium.Math.toRadians(0.1);
+        const removeRotation = viewer.scene.postRender.addEventListener(
+          function (scene, time) {
+            viewer.scene.camera.rotateRight(rotationSpeed);
+          },
+        );
+
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(
+          () => removeRotation(),
+          Cesium.ScreenSpaceEventType.LEFT_DOWN,
+        );
+        handler.setInputAction(
+          () => removeRotation(),
+          Cesium.ScreenSpaceEventType.RIGHT_DOWN,
+        );
+        handler.setInputAction(
+          () => removeRotation(),
+          Cesium.ScreenSpaceEventType.MIDDLE_DOWN,
+        );
+        handler.setInputAction(() => removeRotation(), Cesium.ScreenSpaceEventType.WHEEL);
+
+        // Toolbar options to track various rovers / entities
+        const flyToOrientation = new Cesium.HeadingPitchRoll(
+          0.22426651143535548,
+          -0.2624145362506527,
+          0.000006972977223185239,
+        );
+
+        let activeEntity;
+        let tracking = false;
+        const onSelectEntity = (entity) => {
+          activeEntity = entity;
+          removeRotation();
+          clock.currentTime = entity.availability.start;
+          scene.camera.flyTo({
+            destination: entity.position.getValue(clock.currentTime),
+            orientation: flyToOrientation,
+            easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+            complete: () => {
+              if (tracking) {
+                viewer.trackedEntity = activeEntity;
+              }
+            },
+          });
+        };
+
+        const options1 = [
+          {
+            text: "Fly to...",
+            onselect: () => {
+              scene.camera.flyHome(3.0);
+              activeEntity = undefined;
+            },
+          },
+          {
+            text: "Curiosity",
+            onselect: () => onSelectEntity(curiosity),
+          },
+          {
+            text: "Perseverance",
+            onselect: () => onSelectEntity(perseverance),
+          },
+        ];
+        Sandcastle.addToolbarMenu(options1);
+
+        Sandcastle.addToggleButton("Tracking", false, function (tracked) {
+          if (activeEntity && tracked) {
+            viewer.trackedEntity = activeEntity;
+            tracking = true;
+          } else {
+            viewer.trackedEntity = undefined;
+            tracking = false;
+          }
+        });
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>
