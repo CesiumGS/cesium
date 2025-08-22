@@ -573,11 +573,11 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     return;
   }
 
-  // Push edge commands if they exist
-  if (defined(this._edgeCommand)) {
-    pushCommand(result, this._edgeCommand, use2D);
-    return result;
-  }
+  // // Push edge commands if they exist
+  // if (defined(this._edgeCommand)) {
+  //   pushCommand(result, this._edgeCommand, use2D);
+  //   return result;
+  // }
 
   pushCommand(result, this._originalCommand, use2D);
 
@@ -813,6 +813,13 @@ function deriveEdgeCommand(command, renderResources, model) {
 
   // Set pass for edge rendering (use the pass specified in edgeGeometry)
   edgeCommand.pass = edgeGeometry.pass;
+
+  // Override uniformMap to set u_isEdgePass to true for the edge pass
+  const uniformMap = clone(command.uniformMap);
+  uniformMap.u_isEdgePass = function () {
+    return true; // This is the edge pass
+  };
+  edgeCommand.uniformMap = uniformMap;
 
   // DEBUG: Disable depth testing to ensure edges are visible
   const originalRenderState = command.renderState;

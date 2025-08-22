@@ -18,10 +18,11 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
 function EdgeFramebuffer(options) {
   options = options || {};
 
-  // Create framebuffer manager with single color output for testing
-  // TEMP: Using single color output instead of MRT to avoid GL errors
+  // Create framebuffer manager with multiple render targets (MRT)
+  // Color attachment 0: color
+  // Color attachment 1: ID for picking and edge detection
   this._framebufferManager = new FramebufferManager({
-    colorAttachmentsLength: 1, // Single color texture only
+    colorAttachmentsLength: 2, // MRT: Color + ID textures
     depthStencil: true,
     supportsDepthTexture: true,
   });
@@ -89,6 +90,8 @@ Object.defineProperties(EdgeFramebuffer.prototype, {
  * @param {Viewport} viewport The viewport.
  * @param {boolean} hdr Whether HDR is enabled.
  * @param {number} [msaaSamples=1] The number of MSAA samples.
+ * @param {Texture} [existingColorTexture] Optional existing color texture to reuse.
+ * @param {Texture} [existingDepthTexture] Optional existing depth texture to reuse.
  *
  * @returns {boolean} True if the framebuffer was updated; otherwise, false.
  */
@@ -97,6 +100,8 @@ EdgeFramebuffer.prototype.update = function (
   viewport,
   hdr,
   msaaSamples,
+  existingColorTexture,
+  existingDepthTexture,
 ) {
   const width = viewport.width;
   const height = viewport.height;
@@ -122,12 +127,14 @@ EdgeFramebuffer.prototype.update = function (
   if (this._framebufferManager.framebuffer) {
     this._framebuffer = this._framebufferManager.framebuffer;
 
-    // Get the textures from the framebuffer manager
-    this._colorTexture = this._framebufferManager.getColorTexture(0); // Color attachment 0
-    // TEMP: Single color attachment only, no ID texture
-    this._idTexture = undefined; // No ID attachment for now
-    this._depthStencilTexture =
-      this._framebufferManager.getDepthStencilTexture();
+    // Get the textures from the framebuffer manager or use existing ones
+    this._colorTexture = defined(existingColorTexture)
+      ? existingColorTexture
+      : this._framebufferManager.getColorTexture(0); // Color attachment 0
+    this._idTexture = this._framebufferManager.getColorTexture(1); // Color attachment 1: ID texture
+    this._depthStencilTexture = defined(existingDepthTexture)
+      ? existingDepthTexture
+      : this._framebufferManager.getDepthStencilTexture();
   }
 
   return changed;
@@ -161,6 +168,8 @@ EdgeFramebuffer.prototype.clear = function (context, passState, clearColor) {
  * @param {Context} context The context.
  * @param {Viewport} viewport The viewport.
  * @param {number} [msaaSamples=1] The number of MSAA samples.
+ * @param {Texture} [existingColorTexture] Optional existing color texture to reuse.
+ * @param {Texture} [existingDepthTexture] Optional existing depth texture to reuse.
  *
  * @returns {Framebuffer} The edge framebuffer.
  */
@@ -168,8 +177,17 @@ EdgeFramebuffer.prototype.getFramebuffer = function (
   context,
   viewport,
   msaaSamples,
+  existingColorTexture,
+  existingDepthTexture,
 ) {
-  this.update(context, viewport, msaaSamples);
+  this.update(
+    context,
+    viewport,
+    false,
+    msaaSamples,
+    existingColorTexture,
+    existingDepthTexture,
+  );
   return this._framebuffer;
 };
 

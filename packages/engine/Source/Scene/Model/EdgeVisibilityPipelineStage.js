@@ -42,6 +42,9 @@ EdgeVisibilityPipelineStage.process = function (
   );
   shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
 
+  // Add a uniform to distinguish between original geometry pass and edge pass
+  shaderBuilder.addUniform("bool", "u_isEdgePass", ShaderDestination.BOTH);
+
   // Add edge type attribute and varying
   const edgeTypeLocation = shaderBuilder.addAttribute("float", "a_edgeType");
   shaderBuilder.addVarying("float", "v_edgeType", "flat");
@@ -118,6 +121,11 @@ EdgeVisibilityPipelineStage.process = function (
   if (!defined(edgeGeometry)) {
     return;
   }
+
+  // Set default value for u_isEdgePass uniform (false for original geometry pass)
+  renderResources.uniformMap.u_isEdgePass = function () {
+    return false;
+  };
 
   // Store edge geometry for rendering
   renderResources.edgeGeometry = {

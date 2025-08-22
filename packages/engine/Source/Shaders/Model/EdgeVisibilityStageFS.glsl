@@ -1,12 +1,27 @@
+// MRT support: declare multiple outputs
+#ifdef HAS_EDGE_VISIBILITY_MRT
+layout(location = 0) out vec4 out_color;
+layout(location = 1) out vec4 out_id;
+#endif
+
 void edgeVisibilityStage(inout vec4 color)
 {
 #ifdef HAS_EDGE_VISIBILITY
+
+    if (!u_isEdgePass) {
+        return;
+    }
+    
     // Convert normalized edge type back to 0-255 range for proper classification
     float edgeTypeInt = v_edgeType * 255.0;
     
     // Color code different edge types
+    vec4 edgeColor = vec4(0.0);
+    vec4 edgeId = vec4(0.0);
+    
     if (edgeTypeInt < 0.5) { // HIDDEN (0)
-        color = vec4(0.0, 0.0, 0.0, 0.0); // Transparent for hidden edges
+        edgeColor = vec4(0.0, 0.0, 0.0, 0.0); // Transparent for hidden edges
+        edgeId = vec4(0.0); // No ID for hidden edges
     }
     else if (edgeTypeInt > 0.5 && edgeTypeInt < 1.5) { // SILHOUETTE (1) - Conditional visibility
         // Proper silhouette detection using face normals
@@ -28,17 +43,29 @@ void edgeVisibilityStage(inout vec4 color)
             discard; // Both triangles face same direction
         } else {
             // True silhouette
-            color = vec4(1.0, 0.0, 0.0, 1.0);
+            edgeColor = vec4(1.0, 0.0, 0.0, 1.0);
+            edgeId = vec4(1.0, 0.0, 0.0, 1.0); // Red ID for silhouette edges
         }
     }
     else if (edgeTypeInt > 1.5 && edgeTypeInt < 2.5) { // HARD (2) - BRIGHT GREEN
-        color = vec4(0.0, 2.0, 0.0, 1.0); // Extra bright green
+        edgeColor = vec4(0.0, 2.0, 0.0, 1.0); // Extra bright green
+        edgeId = vec4(0.0, 1.0, 0.0, 1.0); // Green ID for hard edges
     }
     else if (edgeTypeInt > 2.5 && edgeTypeInt < 3.5) { // REPEATED (3) - Same as HARD but secondary encoding
-        color = vec4(0.0, 2.0, 0.0, 1.0); // Same bright green as HARD edges
+        edgeColor = vec4(0.0, 2.0, 0.0, 1.0); // Same bright green as HARD edges
+        edgeId = vec4(0.0, 1.0, 0.0, 1.0); // Green ID for repeated edges
     }
     else { // Unknown - YELLOW
-        color = vec4(1.0, 1.0, 0.0, 1.0);
+        edgeColor = vec4(1.0, 1.0, 0.0, 1.0);
+        edgeId = vec4(1.0, 1.0, 0.0, 1.0); // Yellow ID for unknown edges
     }
+    // Output to color buffer
+    color = edgeColor;
+    
+    // Output to ID buffer if MRT is enabled
+    #ifdef HAS_EDGE_VISIBILITY_MRT
+        out_color = edgeColor;
+        out_id = edgeId;
+    #endif
 #endif
 }
