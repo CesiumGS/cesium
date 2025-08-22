@@ -25,7 +25,6 @@ import {
   add,
   image,
   moon,
-  share as shareIcon,
   script,
   settings as settingsIcon,
   sun,
@@ -38,16 +37,9 @@ import {
 } from "./ConsoleMirror.tsx";
 import { getBaseUrl } from "./util/getBaseUrl.ts";
 import { SettingsModal } from "./SettingsModal.tsx";
-import {
-  Popover,
-  PopoverArrow,
-  PopoverDescription,
-  PopoverDisclosure,
-  PopoverHeading,
-  PopoverProvider,
-} from "@ariakit/react";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
-import "./Popover.css";
+import { MetadataPopover } from "./MetadataPopover.tsx";
+import { SharePopover } from "./SharePopover.tsx";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -298,16 +290,6 @@ function App() {
     setDescription("");
   }
 
-  function share() {
-    const base64String = makeCompressedBase64String({
-      code: codeState.code,
-      html: codeState.html,
-    });
-
-    const shareUrl = `${getBaseUrl()}#c=${base64String}`;
-    window.history.replaceState({}, "", shareUrl);
-  }
-
   function openStandalone() {
     let baseHref = getBaseUrl();
     const pos = baseHref.lastIndexOf("/");
@@ -475,20 +457,8 @@ function App() {
             style={{ width: "118px" }}
           />
         </a>
-        <PopoverProvider>
-          <PopoverDisclosure
-            render={<div className="metadata">{title}</div>}
-            disabled={false}
-          />
-          <Popover className="popover">
-            <PopoverArrow className="arrow" />
-            <PopoverHeading className="heading">{title}</PopoverHeading>
-            <PopoverDescription>{description}</PopoverDescription>
-          </Popover>
-        </PopoverProvider>
-        <Button tone="accent" onClick={share}>
-          <Icon href={shareIcon} /> Share
-        </Button>
+        <MetadataPopover title={title} description={description} />
+        <SharePopover code={codeState.code} html={codeState.html} />
         <Divider aria-orientation="vertical" />
         <Button onClick={() => openStandalone()}>
           Standalone <Icon href={windowPopout} />
