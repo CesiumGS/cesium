@@ -330,9 +330,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   if (hasEdgeVisibility) {
     pipelineStages.push(EdgeVisibilityPipelineStage);
-  }
-
-  if (hasEdgeVisibility) {
     pipelineStages.push(EdgeDetectionPipelineStage);
   }
 
