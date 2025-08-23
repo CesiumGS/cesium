@@ -40,6 +40,11 @@ EdgeVisibilityPipelineStage.process = function (
     undefined,
     ShaderDestination.BOTH,
   );
+  shaderBuilder.addDefine(
+    "HAS_EDGE_VISIBILITY_MRT",
+    undefined,
+    ShaderDestination.FRAGMENT,
+  );
   shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
 
   // Add a uniform to distinguish between original geometry pass and edge pass

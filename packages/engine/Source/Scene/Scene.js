@@ -2581,6 +2581,17 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
 
   const originalFramebuffer = passState.framebuffer;
 
+  // Set edge framebuffer for rendering
+  // if (scene._enableEdgeVisibility && defined(scene._view) && defined(scene._view.edgeFramebuffer)) {
+  //   passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+
+  //   // Enable MRT draw buffers for edge rendering
+  //   const gl = scene.context._gl;
+  //   if (gl.drawBuffers) {
+  //     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+  //   }
+  // }
+
   // performPass
   const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES];
   const commandCount = frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES];
@@ -2589,8 +2600,31 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
     executeCommand(commands[j], scene, passState);
   }
 
-  // Restore original framebuffer
+  // Restore original framebuffer and draw buffers
   passState.framebuffer = originalFramebuffer;
+
+  // Restore single draw buffer for normal rendering
+  const gl = scene.context._gl;
+  if (gl.drawBuffers) {
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+  }
+
+  // Update edge ID texture after edge rendering is complete
+  if (
+    scene._enableEdgeVisibility &&
+    defined(scene._view) &&
+    defined(scene._view.edgeFramebuffer)
+  ) {
+    const idTexture = scene._view.edgeFramebuffer.idTexture;
+    if (defined(idTexture)) {
+      scene.context.uniformState.edgeIdTexture = idTexture;
+    } else {
+      scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+    }
+  } else {
+    // Provide fallback default texture if edge rendering is not available
+    scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+  }
 }
 
 /**
@@ -3759,6 +3793,11 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       scene._hdr,
       scene.msaaSamples,
     );
+  }
+
+  // Initialize edge ID texture with default texture to prevent undefined errors
+  if (!defined(context.uniformState.edgeIdTexture)) {
+    context.uniformState.edgeIdTexture = context.defaultTexture;
   }
 
   if (useInvertClassification) {

@@ -1,6 +1,6 @@
 // MRT support: declare multiple outputs
 #ifdef HAS_EDGE_VISIBILITY_MRT
-layout(location = 0) out vec4 out_color;
+layout(location = 0) out vec4 out_FragColor;
 layout(location = 1) out vec4 out_id;
 #endif
 
@@ -64,7 +64,7 @@ void edgeVisibilityStage(inout vec4 color)
     
     // Output to ID buffer if MRT is enabled
     #ifdef HAS_EDGE_VISIBILITY_MRT
-        out_color = edgeColor;
+        out_FragColor = edgeColor;
         out_id = edgeId;
     #endif
 #endif

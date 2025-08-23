@@ -121,7 +121,7 @@ void main()
 
     #ifdef HAS_EDGE_VISIBILITY
     edgeVisibilityStage(color);
-    edgeDetectionStage();
+    edgeDetectionStage(color);
     #endif
 
     #endif
