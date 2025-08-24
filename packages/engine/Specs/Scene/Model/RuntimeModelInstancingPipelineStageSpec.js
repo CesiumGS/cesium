@@ -141,7 +141,7 @@ describe(
         scene.frameState,
       );
 
-      expect(renderResources.attributes.length).toBe(5);
+      expect(renderResources.attributes.length).toBe(6);
 
       const shaderBuilder = renderResources.shaderBuilder;
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
