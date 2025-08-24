@@ -45,9 +45,17 @@ RuntimeModelInstancingPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
   shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
-  shaderBuilder.addDefine("USE_API_INSTANCING", undefined, ShaderDestination.VERTEX);
-  shaderBuilder.addDefine("USE_API_INSTANCING", undefined, ShaderDestination.FRAGMENT);
-  
+  shaderBuilder.addDefine(
+    "USE_API_INSTANCING",
+    undefined,
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addDefine(
+    "USE_API_INSTANCING",
+    undefined,
+    ShaderDestination.FRAGMENT,
+  );
+
   shaderBuilder.addVertexLines(InstancingStageCommon);
   shaderBuilder.addVertexLines(RuntimeModelInstancingPipelineStageVS);
 
@@ -56,7 +64,7 @@ RuntimeModelInstancingPipelineStage.process = function (
 
   const model = renderResources.model;
   const sceneGraph = model.sceneGraph;
-  
+
   /**
    * @type {ModelInstance[]}
    */
@@ -126,7 +134,7 @@ RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
 };
 
 RuntimeModelInstancingPipelineStage._getColorsTypedArray = function (
-  modelInstances
+  modelInstances,
 ) {
   const colorsTypedArray = new Uint8Array(modelInstances.length * 4);
 
@@ -169,13 +177,14 @@ RuntimeModelInstancingPipelineStage._createAttributes = function (
     typedArray: transformsTypedArray,
   });
 
-  const colorsTypedArray = RuntimeModelInstancingPipelineStage._getColorsTypedArray(modelInstances);
+  const colorsTypedArray =
+    RuntimeModelInstancingPipelineStage._getColorsTypedArray(modelInstances);
   const colorsBuffer = Buffer.createVertexBuffer({
     context,
-    usage: BufferUsage.DYNAMIC_DRAW,
+    usage,
     typedArray: colorsTypedArray,
   });
-  
+
   renderResources.runtimeNode.instancingTransformsBuffer = transformsBuffer;
   renderResources.runtimeNode.instanceColorsBuffer = colorsBuffer;
 
@@ -262,7 +271,7 @@ RuntimeModelInstancingPipelineStage._createAttributes = function (
       offsetInBytes: 0,
       strideInBytes: 4,
       instanceDivisor: 1,
-    }
+    },
   ];
 
   return attributes;
@@ -279,7 +288,7 @@ RuntimeModelInstancingPipelineStage._createUniforms = function (
     "u_instance_nodeTransform",
     ShaderDestination.VERTEX,
   );
-  
+
   shaderBuilder.addUniform(
     "float",
     "gex_instanceColorBlend",
@@ -307,10 +316,13 @@ RuntimeModelInstancingPipelineStage._createUniforms = function (
     },
 
     gex_instanceColorBlend: () => {
-      return ColorBlendMode.getColorBlend(renderResources.model.colorBlendMode, renderResources.model.colorBlendAmount);
-    }
+      return ColorBlendMode.getColorBlend(
+        renderResources.model.colorBlendMode,
+        renderResources.model.colorBlendAmount,
+      );
+    },
   };
-  
+
   return uniformMap;
 };
 

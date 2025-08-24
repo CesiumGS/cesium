@@ -152,6 +152,10 @@ describe(
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_INSTANCE_MATRICES",
         "HAS_INSTANCING",
+        "USE_API_INSTANCING",
+      ]);
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "vec4 v_gex_instanceColor;",
       ]);
       ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
         "in vec4 a_instancingTransformRow0;",
@@ -159,10 +163,11 @@ describe(
         "in vec4 a_instancingTransformRow2;",
         "in vec3 a_instancingPositionHigh;",
         "in vec3 a_instancingPositionLow;",
+        "in vec4 a_gex_instanceColor;",
       ]);
-
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
         "uniform mat4 u_instance_nodeTransform;",
+        "uniform float gex_instanceColorBlend;",
       ]);
 
       expect(runtimeNode.instancingTransformsBuffer).toBeDefined();
