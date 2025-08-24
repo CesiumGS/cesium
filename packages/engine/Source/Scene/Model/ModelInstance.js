@@ -132,7 +132,6 @@ class ModelInstance {
   get color() {
     return this._color;
   }
-  
   set color(value) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(value)) {
@@ -142,7 +141,9 @@ class ModelInstance {
 
     if (
       this._color === value ||
-      (defined(this._color) && defined(value) && Color.equals(this._color, value))
+      (defined(this._color) &&
+        defined(value) &&
+        Color.equals(this._color, value))
     ) {
       return;
     }

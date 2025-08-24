@@ -2268,7 +2268,6 @@ function updateRuntimeModelInstances(model) {
       if (!model.sceneGraph.modelInstances._dirty) {
         model.sceneGraph.modelInstances._dirty = true;
       }
-      
       instance._dirty = false;
     }
 
@@ -2276,7 +2275,6 @@ function updateRuntimeModelInstances(model) {
       if (!model._runtimeInstancesDirty) {
         model._runtimeInstancesDirty = true;
       }
-
       instance._dirtyDraw = false;
     }
   }

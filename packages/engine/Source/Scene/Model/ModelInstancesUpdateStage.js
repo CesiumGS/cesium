@@ -60,8 +60,8 @@ function updateRuntimeNode(runtimeNode, sceneGraph, frameState) {
   runtimeNode.instancingTransformsBuffer.copyFromArrayView(
     transformsTypedArray,
   );
-  
-  const colorsTypedArray = RuntimeModelInstancingPipelineStage._getColorsTypedArray(modelInstances);
+  const colorsTypedArray =
+    RuntimeModelInstancingPipelineStage._getColorsTypedArray(modelInstances);
   runtimeNode.instanceColorsBuffer.copyFromArrayView(colorsTypedArray);
 
   const childrenLength = runtimeNode.children.length;

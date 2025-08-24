@@ -167,6 +167,8 @@ describe(
       ]);
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
         "uniform mat4 u_instance_nodeTransform;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform float gex_instanceColorBlend;",
       ]);
 
