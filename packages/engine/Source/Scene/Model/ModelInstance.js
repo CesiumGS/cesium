@@ -6,6 +6,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
 import Color from "../../Core/Color.js";
+import defined from "../../Core/defined.js";
 
 const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
@@ -49,7 +50,7 @@ class ModelInstance {
     this._relativeTransform = new Matrix4();
     this._relativeScaledTransform = new Matrix4();
     this._pickId = undefined;
-    this._color = Color.WHITE;
+    this._color = undefined;
 
     this._updateTransform(transform);
     this._dirty = false;
@@ -134,10 +135,15 @@ class ModelInstance {
   
   set color(value) {
     //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object("color", value);
+    if (defined(value)) {
+      Check.typeOf.object("color", value);
+    }
     //>>includeEnd('debug');
 
-    if (this._color.equals(value)) {
+    if (
+      this._color === value ||
+      (defined(this._color) && defined(value) && Color.equals(this._color, value))
+    ) {
       return;
     }
 
