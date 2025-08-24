@@ -83,6 +83,10 @@ void main()
     primitiveOutlineStage(material);
     #endif
 
+    #ifdef USE_API_INSTANCING
+    RuntimeModelInstancingStage(material);
+    #endif
+
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
     // When not picking metadata END

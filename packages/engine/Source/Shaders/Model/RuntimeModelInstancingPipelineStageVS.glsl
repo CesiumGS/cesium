@@ -15,4 +15,6 @@ void RuntimeModelInstancingStage(
 
     instanceModelView = czm_modelViewRelativeToEye;
     instanceModelViewInverseTranspose = mat3(czm_modelViewRelativeToEye * instanceModel);
+    
+    v_gex_instanceColor = a_gex_instanceColor;
 }

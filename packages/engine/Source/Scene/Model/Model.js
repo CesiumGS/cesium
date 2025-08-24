@@ -2260,20 +2260,30 @@ function updateVerticalExaggeration(model, frameState) {
 }
 
 function updateRuntimeModelInstances(model) {
-  if (model._runtimeInstancesDirty) {
-    model.resetDrawCommands();
-    model._runtimeInstancesDirty = false;
-  }
-  
   let instance;
   for (let i = 0; i < model.sceneGraph.modelInstances.length; i++) {
     instance = model.sceneGraph.modelInstances.get(i);
+
     if (instance._dirty) {
       if (!model.sceneGraph.modelInstances._dirty) {
         model.sceneGraph.modelInstances._dirty = true;
       }
+      
       instance._dirty = false;
     }
+
+    if (instance._dirtyDraw) {
+      if (!model._runtimeInstancesDirty) {
+        model._runtimeInstancesDirty = true;
+      }
+
+      instance._dirtyDraw = false;
+    }
+  }
+
+  if (model._runtimeInstancesDirty) {
+    model.resetDrawCommands();
+    model._runtimeInstancesDirty = false;
   }
 }
 
