@@ -132,12 +132,17 @@ RuntimeModelInstancingPipelineStage._getColorsTypedArray = function (
 
   for (let i = 0; i < modelInstances.length; i++) {
     const color = modelInstances[i]?.color;
+
+    if (color === undefined) {
+      continue;
+    }
+
     const o = i * 4;
 
-    colorsTypedArray[o + 0] = Math.round(((color?.red ?? 1.0) * 255));
-    colorsTypedArray[o + 1] = Math.round(((color?.green ?? 1.0) * 255));
-    colorsTypedArray[o + 2] = Math.round(((color?.blue ?? 1.0) * 255));
-    colorsTypedArray[o + 3] = Math.round(((color?.alpha ?? 1.0) * 255));
+    colorsTypedArray[o + 0] = Math.round(color.red * 255);
+    colorsTypedArray[o + 1] = Math.round(color.green * 255);
+    colorsTypedArray[o + 2] = Math.round(color.blue * 255);
+    colorsTypedArray[o + 3] = Math.round(color.alpha * 255);
   }
 
   return colorsTypedArray;
