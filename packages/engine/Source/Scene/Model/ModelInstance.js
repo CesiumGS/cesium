@@ -117,11 +117,6 @@ class ModelInstance {
     return this._relativeScaledTransform;
   }
 
-  /**
-   * The Pick Id of the instance.
-   * @type {string|undefined}
-   * @readonly
-   */
   get pickId() {
     return this._pickId;
   }
