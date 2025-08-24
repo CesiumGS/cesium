@@ -317,7 +317,7 @@ function Model(options) {
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 
-  this._runtimeInstancesLength = 0;
+  this._runtimeInstancesDirty = false;
 
   this._featureTables = [];
   this._featureTableId = undefined;
@@ -2260,12 +2260,11 @@ function updateVerticalExaggeration(model, frameState) {
 }
 
 function updateRuntimeModelInstances(model) {
-  if (
-    model.sceneGraph.modelInstances.length !== model._runtimeInstancesLength
-  ) {
+  if (model._runtimeInstancesDirty) {
     model.resetDrawCommands();
-    model._runtimeInstancesLength = model.sceneGraph.modelInstances.length;
+    model._runtimeInstancesDirty = false;
   }
+  
   let instance;
   for (let i = 0; i < model.sceneGraph.modelInstances.length; i++) {
     instance = model.sceneGraph.modelInstances.get(i);
