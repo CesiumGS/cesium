@@ -251,15 +251,18 @@ function App() {
   const [galleryLoaded, setGalleryLoaded] = useState(false);
 
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
-  function appendConsole(type: ConsoleMessageType, message: string) {
-    setConsoleMessages((prevConsoleMessages) => [
-      ...prevConsoleMessages,
-      { type, message, id: crypto.randomUUID() },
-    ]);
-    if (!consoleExpanded && type !== "log") {
-      rightSideRef.current?.toggleExpanded();
-    }
-  }
+  const appendConsole = useCallback(
+    function appendConsole(type: ConsoleMessageType, message: string) {
+      setConsoleMessages((prevConsoleMessages) => [
+        ...prevConsoleMessages,
+        { type, message, id: crypto.randomUUID() },
+      ]);
+      if (!consoleExpanded && type !== "log") {
+        rightSideRef.current?.toggleExpanded();
+      }
+    },
+    [consoleExpanded],
+  );
 
   function resetConsole() {
     // the console should only be cleared by the Bucket when the viewer page
@@ -373,6 +376,26 @@ function App() {
             html: data.html,
           });
           setReadyForViewer(true);
+        } else if (searchParams.has("gist")) {
+          // This is currently for legacy support only so old links on GH or the forums don't break
+          fetch(`https://api.github.com/gists/${searchParams.get("gist")}`)
+            .then((data) => data.json())
+            .then(function (data) {
+              const files = data.files;
+              const code = files["Cesium-Sandcastle.js"].content;
+              const html =
+                files["Cesium-Sandcastle.html"]?.content ?? defaultHtmlCode;
+              dispatch({ type: "setAndRun", code: code, html: html });
+              setTitle("Gist Import");
+              setReadyForViewer(true);
+            })
+            .catch(function (error) {
+              appendConsole(
+                "error",
+                `Unable to GET gist from GitHub API. This could be due to too many requests from your IP or an incorrect id. Try again in an hour or copy and paste the code from the gist: https://gist.github.com/${searchParams.get("gist")}`,
+              );
+              console.log(error);
+            });
         } else if (searchParams.has("src")) {
           const legacyId = searchParams.get("src");
           if (!legacyId) {
@@ -400,7 +423,7 @@ function App() {
         }
       }
     },
-    [galleryLoaded, legacyIdMap, loadGalleryItem],
+    [galleryLoaded, legacyIdMap, loadGalleryItem, appendConsole],
   );
 
   useEffect(() => loadFromUrl(), [galleryLoaded, galleryItems, loadFromUrl]);
