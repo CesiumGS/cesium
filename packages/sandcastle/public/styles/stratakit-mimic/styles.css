@@ -1,0 +1,26 @@
+/*
+ * Create the layers here so they are initialized in the correct "order"
+ * Without this the layers added by the `unstable_loadStyles` is ALWAYS after
+ * any css files linked directly so the reset applies AFTER our styles and breaks things
+ */
+@layer reset, itwinui;
+
+/*
+ * These are the component styles extracted from the stratakit source with classnames
+ * changed to avoid namespace conflicts. Each is set up to still "inject" into the
+ * CSS @layers that the stratakit styles sets up to accurately get variables
+ */
+@import "./components/Field.css";
+@import "./components/Button.css";
+@import "./components/Select.css";
+@import "./components/Icon.css";
+@import "./components/Switch.css";
+@import "./components/Label.css";
+
+/*
+ * Extra tokens missing from stratakit as well as some targeted adjustments to
+ * specific components styles. This also includes some styles for semantic elements
+ * to match them closer to the stratakit style without the full HTML structure or classes
+ */
+@import "../stratakit-ext-tokens.css";
+@import "./adjustments.css";

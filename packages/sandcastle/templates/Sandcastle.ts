@@ -114,20 +114,27 @@ const Sandcastle = {
     toolbarId?: string,
   ) {
     Sandcastle.declare(onchange);
+
     const input = document.createElement("input");
     input.checked = checked;
     input.type = "checkbox";
     input.style.pointerEvents = "none";
+    input.className = "stratakit-mimic-switch";
+
     const label = document.createElement("label");
-    label.appendChild(input);
     label.appendChild(document.createTextNode(text));
     label.style.pointerEvents = "none";
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "cesium-button";
-    button.appendChild(label);
+    label.className = "stratakit-mimic-label";
 
-    button.onclick = function () {
+    const field = document.createElement("div");
+    field.className = "stratakit-mimic-field";
+    // stratakit was previously known as kiwi and still uses it for some internal attributes
+    field.dataset.kiwiLabelPlacement = "after";
+    field.dataset.kiwiControlType = "checkable";
+    field.appendChild(input);
+    field.appendChild(label);
+
+    field.onclick = function () {
       Sandcastle.reset();
       Sandcastle.highlight(onchange);
       input.checked = !input.checked;
@@ -138,7 +145,7 @@ const Sandcastle = {
     if (!toolbar) {
       throw new Error(`Toolbar not found: ${toolbarId}`);
     }
-    toolbar.appendChild(button);
+    toolbar.appendChild(field);
   },
 
   /**
@@ -150,15 +157,20 @@ const Sandcastle = {
    */
   addToolbarButton(text: string, onclick: () => void, toolbarId?: string) {
     Sandcastle.declare(onclick);
+
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "cesium-button";
+    button.className = "stratakit-mimic-button";
+    // stratakit was previously known as kiwi and still uses it for some internal attributes
+    button.dataset.kiwiVariant = "solid";
+    button.dataset.kiwiTone = "neutral";
     button.onclick = function () {
       Sandcastle.reset();
       Sandcastle.highlight(onclick);
       onclick();
     };
     button.textContent = text;
+
     const toolbar = document.getElementById(toolbarId || "toolbar");
     if (!toolbar) {
       throw new Error(`Toolbar not found: ${toolbarId}`);
@@ -190,7 +202,10 @@ const Sandcastle = {
    */
   addToolbarMenu(options: SelectOption[], toolbarId?: string) {
     const menu = document.createElement("select");
-    menu.className = "cesium-button";
+    menu.className = "stratakit-mimic-button stratakit-mimic-select";
+    // stratakit was previously known as kiwi and still uses it for some internal attributes
+    menu.dataset.kiwiVariant = "solid";
+    menu.dataset.kiwiTone = "neutral";
     menu.onchange = function () {
       Sandcastle.reset();
       const item = options[menu.selectedIndex];
@@ -198,11 +213,21 @@ const Sandcastle = {
         item.onselect();
       }
     };
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "stratakit-mimic-select-root";
+    wrapper.appendChild(menu);
+
+    // generate element direct from html string https://stackoverflow.com/a/35385518/7416863
+    const icon = document.createElement("template");
+    icon.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 16 16" class="stratakit-mimic-icon stratakit-mimic-disclosure-arrow stratakit-mimic-select-arrow" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 10 5 7h6l-3 3Z" clip-rule="evenodd"></path></svg>`;
+    wrapper.appendChild(icon.content.firstChild!);
+
     const toolbar = document.getElementById(toolbarId || "toolbar");
     if (!toolbar) {
       throw new Error(`Toolbar not found: ${toolbarId}`);
     }
-    toolbar.appendChild(menu);
+    toolbar.appendChild(wrapper);
 
     if (!defaultAction && typeof options[0].onselect === "function") {
       defaultAction = options[0].onselect;
