@@ -79,6 +79,10 @@ ModelInstanceCollection.prototype.initialize = function (transforms) {
     const instance = new ModelInstance(transform);
     this._instances.push(instance);
   }
+
+  if (transforms.length > 0 && this._model !== undefined) {
+    this._model._runtimeInstancesDirty = true;
+  }
 };
 
 /**
@@ -113,6 +117,11 @@ ModelInstanceCollection.prototype.add = function (transform) {
 
   const instance = new ModelInstance(transform, this);
   this._instances.push(instance);
+
+  if (this._model !== undefined) {
+    this._model._runtimeInstancesDirty = true;
+  }
+
   return instance;
 };
 
@@ -152,6 +161,10 @@ ModelInstanceCollection.prototype.remove = function (instance) {
 
   this._instances.splice(index, 1);
 
+  if (this._model !== undefined) {
+    this._model._runtimeInstancesDirty = true;
+  }
+
   return true;
 };
 
@@ -172,6 +185,10 @@ ModelInstanceCollection.prototype.remove = function (instance) {
 ModelInstanceCollection.prototype.removeAll = function () {
   const instances = this._instances;
   instances.length = 0;
+
+  if (this._model !== undefined) {
+    this._model._runtimeInstancesDirty = true;
+  }
 };
 
 /**

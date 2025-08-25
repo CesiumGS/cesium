@@ -3,6 +3,8 @@ void RuntimeModelInstancingStage(
     out mat4 instanceModelView,
     out mat3 instanceModelViewInverseTranspose)
 {
+    v_gex_show = a_gex_show;
+    
     vec3 positionMC = attributes.positionMC;
 
     mat4 instancingTransform = getInstancingTransform();
@@ -15,4 +17,6 @@ void RuntimeModelInstancingStage(
 
     instanceModelView = czm_modelViewRelativeToEye;
     instanceModelViewInverseTranspose = mat3(czm_modelViewRelativeToEye * instanceModel);
+    
+    v_gex_instanceColor = a_gex_instanceColor;
 }

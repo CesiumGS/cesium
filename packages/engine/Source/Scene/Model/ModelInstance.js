@@ -5,6 +5,8 @@ import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
+import Color from "../../Core/Color.js";
+import defined from "../../Core/defined.js";
 
 const scratchTranslationRotationScale = new TranslationRotationScale();
 const scratchRotation = new Matrix3();
@@ -48,9 +50,12 @@ class ModelInstance {
     this._relativeTransform = new Matrix4();
     this._relativeScaledTransform = new Matrix4();
     this._pickId = undefined;
+    this._show = true;
+    this._color = undefined;
 
     this._updateTransform(transform);
     this._dirty = false;
+    this._drawDirty = false;
   }
 
   /**
@@ -117,13 +122,58 @@ class ModelInstance {
     return this._relativeScaledTransform;
   }
 
-  /**
-   * The Pick Id of the instance.
-   * @type {string|undefined}
-   * @readonly
-   */
   get pickId() {
     return this._pickId;
+  }
+
+  /**
+   * Whether or not to render the model instance.
+   *
+   * @type {boolean}
+   *
+   * @default true
+   */
+  get show() {
+    return this._show;
+  }
+  set show(value) {
+    //>>includeStart('debug', pragmas.debug);
+    //Check.typeOf.object("show", value);
+    //>>includeEnd('debug');
+
+    if (this._show === value) {
+      return;
+    }
+
+    this._show = value;
+    this._dirty = true;
+  }
+
+  /**
+   * The Color of the instance.
+   * @type {Color}
+   */
+  get color() {
+    return this._color;
+  }
+  set color(value) {
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(value)) {
+      Check.typeOf.object("color", value);
+    }
+    //>>includeEnd('debug');
+
+    if (
+      this._color === value ||
+      (defined(this._color) &&
+        defined(value) &&
+        Color.equals(this._color, value))
+    ) {
+      return;
+    }
+
+    this._color = value;
+    this._drawDirty = true;
   }
 
   _updateTransform(transform) {

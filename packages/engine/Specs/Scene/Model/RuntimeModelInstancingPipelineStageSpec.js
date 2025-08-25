@@ -141,7 +141,7 @@ describe(
         scene.frameState,
       );
 
-      expect(renderResources.attributes.length).toBe(5);
+      expect(renderResources.attributes.length).toBe(7);
 
       const shaderBuilder = renderResources.shaderBuilder;
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -152,17 +152,26 @@ describe(
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_INSTANCE_MATRICES",
         "HAS_INSTANCING",
+        "USE_API_INSTANCING",
+      ]);
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "float v_gex_show;",
+        "vec4 v_gex_instanceColor;",
       ]);
       ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "in float a_gex_show;",
         "in vec4 a_instancingTransformRow0;",
         "in vec4 a_instancingTransformRow1;",
         "in vec4 a_instancingTransformRow2;",
         "in vec3 a_instancingPositionHigh;",
         "in vec3 a_instancingPositionLow;",
+        "in vec4 a_gex_instanceColor;",
       ]);
-
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
         "uniform mat4 u_instance_nodeTransform;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float gex_instanceColorBlend;",
       ]);
 
       expect(runtimeNode.instancingTransformsBuffer).toBeDefined();

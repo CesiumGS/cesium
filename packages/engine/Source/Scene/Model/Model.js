@@ -317,7 +317,7 @@ function Model(options) {
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 
-  this._runtimeInstancesLength = 0;
+  this._runtimeInstancesDirty = false;
 
   this._featureTables = [];
   this._featureTableId = undefined;
@@ -2260,21 +2260,28 @@ function updateVerticalExaggeration(model, frameState) {
 }
 
 function updateRuntimeModelInstances(model) {
-  if (
-    model.sceneGraph.modelInstances.length !== model._runtimeInstancesLength
-  ) {
-    model.resetDrawCommands();
-    model._runtimeInstancesLength = model.sceneGraph.modelInstances.length;
-  }
   let instance;
   for (let i = 0; i < model.sceneGraph.modelInstances.length; i++) {
     instance = model.sceneGraph.modelInstances.get(i);
+
     if (instance._dirty) {
       if (!model.sceneGraph.modelInstances._dirty) {
         model.sceneGraph.modelInstances._dirty = true;
       }
       instance._dirty = false;
     }
+
+    if (instance._drawDirty) {
+      if (!model._runtimeInstancesDirty) {
+        model._runtimeInstancesDirty = true;
+      }
+      instance._drawDirty = false;
+    }
+  }
+
+  if (model._runtimeInstancesDirty) {
+    model.resetDrawCommands();
+    model._runtimeInstancesDirty = false;
   }
 }
 
