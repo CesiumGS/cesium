@@ -3456,7 +3456,9 @@ Scene.prototype.updateEnvironment = function () {
   }
 
   const clearGlobeDepth = (environmentState.clearGlobeDepth =
-    defined(globe) && globe.show);
+    defined(globe) &&
+    globe.show &&
+    (!globe.depthTestAgainstTerrain || this.mode === SceneMode.SCENE2D));
   const useDepthPlane = (environmentState.useDepthPlane =
     clearGlobeDepth &&
     this.mode === SceneMode.SCENE3D &&
