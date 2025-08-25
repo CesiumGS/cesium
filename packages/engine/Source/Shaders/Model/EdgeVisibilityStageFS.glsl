@@ -1,4 +1,3 @@
-// MRT support: declare multiple outputs
 #ifdef HAS_EDGE_VISIBILITY_MRT
 layout(location = 0) out vec4 out_FragColor;
 layout(location = 1) out vec4 out_id;

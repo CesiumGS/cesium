@@ -23,9 +23,10 @@ function EdgeFramebuffer(options) {
   // Color attachment 1: ID for picking and edge detection
   this._framebufferManager = new FramebufferManager({
     colorAttachmentsLength: 2, // MRT: Color + ID textures
-    createColorAttachments: true, // Explicitly enable automatic texture creation
+    createColorAttachments: true,
     depthStencil: true,
     supportsDepthTexture: true,
+    color: true,
   });
 
   this._framebuffer = undefined;
@@ -121,7 +122,7 @@ EdgeFramebuffer.prototype.update = function (
     height,
     msaaSamples,
     pixelDatatype,
-    PixelFormat.RGBA, // Color format for both attachments
+    PixelFormat.RGBA,
   );
 
   // Always assign framebuffer if FramebufferManager has one

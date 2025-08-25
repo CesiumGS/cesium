@@ -13,8 +13,8 @@ void edgeDetectionStage(inout vec4 color) {
     // }
     // Also check edge ID for fallback
     vec4 edgeId = texture(czm_edgeIdTexture, screenCoord);
-    if (edgeId.a > 0.0) {
-        color = vec4(1.0, 0.0, 0.0, 1.0); // Red to indicate ID data exists but no color
+    if (edgeId.a > 0.0 || edgeId.r > 0.0 || edgeId.g > 0.0 || edgeId.b > 0.0) {
+        color = vec4(1.0, 0.0, 0.0, 1.0);
         return;
     }
     
