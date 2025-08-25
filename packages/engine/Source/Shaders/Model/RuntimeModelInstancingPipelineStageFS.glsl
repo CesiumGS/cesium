@@ -1,5 +1,9 @@
 void RuntimeModelInstancingStage(inout czm_modelMaterial material)
 {
+  if (v_gex_show == 0.0) {
+    discard;
+  }
+
   if (v_gex_instanceColor.r == 0.0 &&
       v_gex_instanceColor.g == 0.0 &&
       v_gex_instanceColor.b == 0.0 &&

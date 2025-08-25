@@ -2271,11 +2271,11 @@ function updateRuntimeModelInstances(model) {
       instance._dirty = false;
     }
 
-    if (instance._dirtyDraw) {
+    if (instance._drawDirty) {
       if (!model._runtimeInstancesDirty) {
         model._runtimeInstancesDirty = true;
       }
-      instance._dirtyDraw = false;
+      instance._drawDirty = false;
     }
   }
 

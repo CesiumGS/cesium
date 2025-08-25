@@ -141,7 +141,7 @@ describe(
         scene.frameState,
       );
 
-      expect(renderResources.attributes.length).toBe(6);
+      expect(renderResources.attributes.length).toBe(7);
 
       const shaderBuilder = renderResources.shaderBuilder;
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -155,9 +155,11 @@ describe(
         "USE_API_INSTANCING",
       ]);
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "float v_gex_show;",
         "vec4 v_gex_instanceColor;",
       ]);
       ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "in float a_gex_show;",
         "in vec4 a_instancingTransformRow0;",
         "in vec4 a_instancingTransformRow1;",
         "in vec4 a_instancingTransformRow2;",

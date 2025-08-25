@@ -50,11 +50,12 @@ class ModelInstance {
     this._relativeTransform = new Matrix4();
     this._relativeScaledTransform = new Matrix4();
     this._pickId = undefined;
+    this._show = true;
     this._color = undefined;
 
     this._updateTransform(transform);
     this._dirty = false;
-    this._dirtyDraw = false;
+    this._drawDirty = false;
   }
 
   /**
@@ -126,6 +127,29 @@ class ModelInstance {
   }
 
   /**
+   * Whether or not to render the model instance.
+   *
+   * @type {boolean}
+   *
+   * @default true
+   */
+  get show() {
+    return this._show;
+  }
+  set show(value) {
+    //>>includeStart('debug', pragmas.debug);
+    //Check.typeOf.object("show", value);
+    //>>includeEnd('debug');
+
+    if (this._show === value) {
+      return;
+    }
+
+    this._show = value;
+    this._dirty = true;
+  }
+
+  /**
    * The Color of the instance.
    * @type {Color}
    */
@@ -149,7 +173,7 @@ class ModelInstance {
     }
 
     this._color = value;
-    this._dirtyDraw = true;
+    this._drawDirty = true;
   }
 
   _updateTransform(transform) {

@@ -43,6 +43,9 @@ RuntimeModelInstancingPipelineStage.process = function (
   frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addVarying("float", "v_gex_show");
+  shaderBuilder.addVarying("vec4", "v_gex_instanceColor");
+
   shaderBuilder.addDefine("HAS_INSTANCING");
   shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
   shaderBuilder.addDefine(
@@ -59,7 +62,6 @@ RuntimeModelInstancingPipelineStage.process = function (
   shaderBuilder.addVertexLines(InstancingStageCommon);
   shaderBuilder.addVertexLines(RuntimeModelInstancingPipelineStageVS);
 
-  shaderBuilder.addVarying("vec4", "v_gex_instanceColor");
   shaderBuilder.addFragmentLines(RuntimeModelInstancingPipelineStageFS);
 
   const model = renderResources.model;
@@ -84,6 +86,23 @@ RuntimeModelInstancingPipelineStage.process = function (
     sceneGraph,
   );
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
+};
+
+RuntimeModelInstancingPipelineStage._getShowsTypedArray = function (
+  modelInstances,
+) {
+  const showsTypedArray = new Uint8Array(modelInstances.length);
+
+  for (let i = 0; i < modelInstances.length; i++) {
+    const modelInstance = modelInstances[i];
+    if (!defined(modelInstance)) {
+      continue;
+    }
+
+    showsTypedArray[i] = modelInstance.show ? 255 : 0;
+  }
+
+  return showsTypedArray;
 };
 
 RuntimeModelInstancingPipelineStage._getTransformsTypedArray = function (
@@ -139,9 +158,14 @@ RuntimeModelInstancingPipelineStage._getColorsTypedArray = function (
   const colorsTypedArray = new Uint8Array(modelInstances.length * 4);
 
   for (let i = 0; i < modelInstances.length; i++) {
-    const color = modelInstances[i]?.color;
+    const modelInstance = modelInstances[i];
+    if (!defined(modelInstance)) {
+      continue;
+    }
 
-    if (color === undefined) {
+    const color = modelInstance.color;
+
+    if (!defined(color)) {
       continue;
     }
 
@@ -165,6 +189,18 @@ RuntimeModelInstancingPipelineStage._createAttributes = function (
   const usage = BufferUsage.STATIC_DRAW;
 
   // Create typed array and buffer
+  const showsTypedArray =
+    RuntimeModelInstancingPipelineStage._getShowsTypedArray(
+      modelInstances,
+      renderResources.model,
+      frameState,
+    );
+  const showsBuffer = Buffer.createVertexBuffer({
+    context,
+    usage,
+    typedArray: showsTypedArray,
+  });
+
   const transformsTypedArray =
     RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
       modelInstances,
@@ -185,16 +221,20 @@ RuntimeModelInstancingPipelineStage._createAttributes = function (
     typedArray: colorsTypedArray,
   });
 
+  renderResources.runtimeNode.instanceShowsBuffer = showsBuffer;
   renderResources.runtimeNode.instancingTransformsBuffer = transformsBuffer;
   renderResources.runtimeNode.instanceColorsBuffer = colorsBuffer;
 
   // Destruction of resources allocated by the Model
   // is handled by Model.destroy().
+  showsBuffer.vertexArrayDestroyable = false;
   transformsBuffer.vertexArrayDestroyable = false;
   colorsBuffer.vertexArrayDestroyable = false;
 
   // Add attribute declarations
   const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addAttribute("float", "a_gex_show");
+
   shaderBuilder.addAttribute("vec4", `a_instancingTransformRow0`);
   shaderBuilder.addAttribute("vec4", `a_instancingTransformRow1`);
   shaderBuilder.addAttribute("vec4", `a_instancingTransformRow2`);
@@ -212,6 +252,16 @@ RuntimeModelInstancingPipelineStage._createAttributes = function (
   const strideInBytes = componentByteSize * vertexSizeInFloats;
 
   const attributes = [
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: showsBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.BYTE,
+      normalize: true,
+      offsetInBytes: 0,
+      strideInBytes: 1,
+      instanceDivisor: 1,
+    },
     {
       index: renderResources.attributeIndex++,
       vertexBuffer: transformsBuffer,

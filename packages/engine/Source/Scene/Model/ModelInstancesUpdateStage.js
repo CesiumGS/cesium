@@ -50,6 +50,10 @@ ModelInstancesUpdateStage.update = function (
 function updateRuntimeNode(runtimeNode, sceneGraph, frameState) {
   const modelInstances = sceneGraph.modelInstances._instances;
 
+  const showsTypedArray =
+    RuntimeModelInstancingPipelineStage._getShowsTypedArray(modelInstances);
+  runtimeNode.instanceShowsBuffer.copyFromArrayView(showsTypedArray);
+
   const transformsTypedArray =
     RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
       modelInstances,
