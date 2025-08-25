@@ -2582,15 +2582,19 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
   const originalFramebuffer = passState.framebuffer;
 
   // Set edge framebuffer for rendering
-  // if (scene._enableEdgeVisibility && defined(scene._view) && defined(scene._view.edgeFramebuffer)) {
-  //   passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+  if (
+    scene._enableEdgeVisibility &&
+    defined(scene._view) &&
+    defined(scene._view.edgeFramebuffer)
+  ) {
+    passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
 
-  //   // Enable MRT draw buffers for edge rendering
-  //   const gl = scene.context._gl;
-  //   if (gl.drawBuffers) {
-  //     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
-  //   }
-  // }
+    scene._view.edgeFramebuffer.clear(
+      scene.context,
+      passState,
+      Color.TRANSPARENT,
+    );
+  }
 
   // performPass
   const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES];
@@ -2602,29 +2606,6 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
 
   // Restore original framebuffer and draw buffers
   passState.framebuffer = originalFramebuffer;
-
-  // Restore single draw buffer for normal rendering
-  const gl = scene.context._gl;
-  if (gl.drawBuffers) {
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
-  }
-
-  // Update edge ID texture after edge rendering is complete
-  if (
-    scene._enableEdgeVisibility &&
-    defined(scene._view) &&
-    defined(scene._view.edgeFramebuffer)
-  ) {
-    const idTexture = scene._view.edgeFramebuffer.idTexture;
-    if (defined(idTexture)) {
-      scene.context.uniformState.edgeIdTexture = idTexture;
-    } else {
-      scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
-    }
-  } else {
-    // Provide fallback default texture if edge rendering is not available
-    scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
-  }
 }
 
 /**
@@ -2776,6 +2757,37 @@ function executeCommands(scene, passState) {
 
     // Draw edges
     performCesium3DTileEdgesPass(scene, passState, frustumCommands);
+
+    // Update edge textures after edge rendering is complete
+    if (
+      scene._enableEdgeVisibility &&
+      defined(scene._view) &&
+      defined(scene._view.edgeFramebuffer)
+    ) {
+      // MSAA
+      scene._view.edgeFramebuffer.prepareColorTextures(context);
+
+      // Get edge color texture (attachment 0)
+      const colorTexture = scene._view.edgeFramebuffer.colorTexture;
+      if (defined(colorTexture) && !colorTexture.isDestroyed()) {
+        scene.context.uniformState.edgeColorTexture = colorTexture;
+      } else {
+        scene.context.uniformState.edgeColorTexture =
+          scene.context.defaultTexture;
+      }
+
+      // Get edge ID texture (attachment 1)
+      const idTexture = scene._view.edgeFramebuffer.idTexture;
+      if (defined(idTexture) && !idTexture.isDestroyed()) {
+        scene.context.uniformState.edgeIdTexture = idTexture;
+      } else {
+        scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+      }
+    } else {
+      scene.context.uniformState.edgeColorTexture =
+        scene.context.defaultTexture;
+      scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+    }
 
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
@@ -3795,9 +3807,12 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     );
   }
 
-  // Initialize edge ID texture with default texture to prevent undefined errors
+  // Initialize edge textures with default texture to prevent undefined errors
   if (!defined(context.uniformState.edgeIdTexture)) {
     context.uniformState.edgeIdTexture = context.defaultTexture;
+  }
+  if (!defined(context.uniformState.edgeColorTexture)) {
+    context.uniformState.edgeColorTexture = context.defaultTexture;
   }
 
   if (useInvertClassification) {

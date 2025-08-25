@@ -23,6 +23,7 @@ function EdgeFramebuffer(options) {
   // Color attachment 1: ID for picking and edge detection
   this._framebufferManager = new FramebufferManager({
     colorAttachmentsLength: 2, // MRT: Color + ID textures
+    createColorAttachments: true, // Explicitly enable automatic texture creation
     depthStencil: true,
     supportsDepthTexture: true,
   });
@@ -160,6 +161,15 @@ EdgeFramebuffer.prototype.clear = function (context, passState, clearColor) {
   });
 
   passState.framebuffer = framebuffer;
+};
+
+/**
+ * Prepares color textures for reading (resolves MSAA if needed).
+ *
+ * @param {Context} context The context.
+ */
+EdgeFramebuffer.prototype.prepareColorTextures = function (context) {
+  this._framebufferManager.prepareTextures(context);
 };
 
 /**

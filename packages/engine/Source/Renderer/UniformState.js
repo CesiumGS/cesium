@@ -30,6 +30,10 @@ function UniformState() {
    */
   this.edgeIdTexture = undefined;
   /**
+   * @type {Texture}
+   */
+  this.edgeColorTexture = undefined;
+  /**
    * @type {number}
    */
   this.gamma = undefined;
