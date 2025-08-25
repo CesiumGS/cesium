@@ -267,12 +267,12 @@ function App() {
       envString = `${host.replace("localhost:", "")} `;
     }
 
-    const baseTitle = "Cesium Sandcastle";
     const dirtyIndicator = codeState.dirty ? "*" : "";
-    if (title !== "") {
-      document.title = `${envString}${title}${dirtyIndicator} | ${baseTitle}`;
+    if (title === "" || title === "New Sandcastle") {
+      // No need to clutter the window/tab with a name if not viewing a named gallery demo
+      document.title = `${envString}Sandcastle${dirtyIndicator} | CesiumJS`;
     } else {
-      document.title = `${envString}${baseTitle}`;
+      document.title = `${envString}${title}${dirtyIndicator} | Sandcastle | CesiumJS`;
     }
   }, [title, codeState.dirty]);
 
