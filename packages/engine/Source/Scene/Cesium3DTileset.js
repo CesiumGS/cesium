@@ -3042,7 +3042,7 @@ function addTileDebugLabel(tile, tileset, position) {
         labelString += `\n- ${urls[i]}`;
       }
       attributes += urls.length;
-    } else {
+    } else if (!tile.hasImplicitContent) {
       labelString += `\nUrl: ${tile._contentHeader.uri}`;
       attributes++;
     }
