@@ -47,7 +47,10 @@ void edgeVisibilityStage(inout vec4 color)
     }
     else if (edgeTypeInt > 2.5 && edgeTypeInt < 3.5) { // REPEATED (3)
         edgeColor = vec4(0.0, 0.0, 1.0, 1.0);
+    } else {
+        edgeColor = vec4(0.0, 0.0, 0.0, 0.0);
     }
+    
     color = edgeColor;
     
     #ifdef HAS_EDGE_VISIBILITY_MRT
