@@ -12,7 +12,7 @@
 #### Fixes :wrench:
 
 - Removes the minimum tile threshold of four for WMTS. [#4372](https://github.com/CesiumGS/cesium/issues/4372)
-- Fixes issue where a GaussianSplatPrimitive would be rendered even if out of current camera view.
+- Fixes issue where multiple instances of a GaussianSplatPrimitive would transform tile positions incorrectly and render out of position [12795](https://github.com/CesiumGS/cesium/issues/12795)
 
 #### Additions :tada:
 
