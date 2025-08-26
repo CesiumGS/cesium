@@ -51,6 +51,10 @@ const defaultHtmlCode = `<style>
 `;
 
 const GALLERY_BASE = __GALLERY_BASE_URL__;
+const cesiumVersion = __CESIUM_VERSION__;
+const versionString = __COMMIT_SHA__
+  ? `Commit: ${__COMMIT_SHA__.substring(0, 7)} - ${cesiumVersion}`
+  : cesiumVersion;
 
 type RightSideRef = {
   toggleExpanded: () => void;
@@ -164,6 +168,7 @@ function AppBarButton({
 
 export type SandcastleAction =
   | { type: "reset" }
+  | { type: "resetDirty" }
   | { type: "setCode"; code: string }
   | { type: "setHtml"; html: string }
   | { type: "runSandcastle" }
@@ -177,9 +182,6 @@ function App() {
   const rightSideRef = useRef<RightSideRef>(null);
   const consoleCollapsedHeight = 26;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
-
-  const cesiumVersion = __CESIUM_VERSION__;
-  const versionString = __COMMIT_SHA__ ? `Commit: ${__COMMIT_SHA__}` : "";
 
   const startOnEditor = !!(window.location.search || window.location.hash);
   const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">(
@@ -196,6 +198,7 @@ function App() {
     committedCode: string;
     committedHtml: string;
     runNumber: number;
+    dirty: boolean;
   };
 
   const initialState: CodeState = {
@@ -204,6 +207,7 @@ function App() {
     committedCode: defaultJsCode,
     committedHtml: defaultHtmlCode,
     runNumber: 0,
+    dirty: false,
   };
 
   const [codeState, dispatch] = useReducer(function reducer(
@@ -218,12 +222,14 @@ function App() {
         return {
           ...state,
           code: action.code,
+          dirty: true,
         };
       }
       case "setHtml": {
         return {
           ...state,
           html: action.html,
+          dirty: true,
         };
       }
       case "runSandcastle": {
@@ -241,10 +247,45 @@ function App() {
           committedCode: action.code ?? state.code,
           committedHtml: action.html ?? state.html,
           runNumber: state.runNumber + 1,
+          dirty: false,
+        };
+      }
+      case "resetDirty": {
+        return {
+          ...state,
+          dirty: false,
         };
       }
     }
   }, initialState);
+
+  useEffect(() => {
+    const host = window.location.host;
+    let envString = "";
+    if (host.includes("localhost") && host !== "localhost:8080") {
+      // this helps differentiate tabs for local sandcastle development or other testing
+      envString = `${host.replace("localhost:", "")} `;
+    }
+
+    const dirtyIndicator = codeState.dirty ? "*" : "";
+    if (title === "" || title === "New Sandcastle") {
+      // No need to clutter the window/tab with a name if not viewing a named gallery demo
+      document.title = `${envString}Sandcastle${dirtyIndicator} | CesiumJS`;
+    } else {
+      document.title = `${envString}${title}${dirtyIndicator} | Sandcastle | CesiumJS`;
+    }
+  }, [title, codeState.dirty]);
+
+  const confirmLeave = useCallback(() => {
+    if (!codeState.dirty) {
+      return true;
+    }
+
+    /* eslint-disable-next-line no-alert */
+    return window.confirm(
+      "You have unsaved changes. Are you sure you want to navigate away from this demo?",
+    );
+  }, [codeState.dirty]);
 
   const [legacyIdMap, setLegacyIdMap] = useState<Record<string, string>>({});
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
@@ -280,6 +321,9 @@ function App() {
   }
 
   function resetSandcastle() {
+    if (!confirmLeave()) {
+      return;
+    }
     dispatch({ type: "reset" });
 
     window.history.pushState({}, "", getBaseUrl());
@@ -295,6 +339,7 @@ function App() {
 
     const shareUrl = `${getBaseUrl()}#c=${base64String}`;
     window.history.replaceState({}, "", shareUrl);
+    dispatch({ type: "resetDirty" });
   }
 
   function openStandalone() {
@@ -430,12 +475,27 @@ function App() {
   useEffect(() => {
     // Listen to browser forward/back navigation and try to load from URL
     // this is necessary because of the pushState used for faster gallery loading
-    function pushStateListener() {
-      loadFromUrl();
+    function popStateListener() {
+      if (confirmLeave()) {
+        loadFromUrl();
+      }
     }
-    window.addEventListener("popstate", pushStateListener);
-    return () => window.removeEventListener("popstate", pushStateListener);
-  }, [loadFromUrl]);
+    window.addEventListener("popstate", popStateListener);
+    return () => window.removeEventListener("popstate", popStateListener);
+  }, [loadFromUrl, confirmLeave]);
+
+  useEffect(() => {
+    // if the code has been edited listen for navigation away and warn
+    if (codeState.dirty) {
+      function beforeUnloadListener(e: BeforeUnloadEvent) {
+        e.preventDefault();
+        return ""; // modern browsers ignore the contents of this string
+      }
+      window.addEventListener("beforeunload", beforeUnloadListener);
+      return () =>
+        window.removeEventListener("beforeunload", beforeUnloadListener);
+    }
+  }, [codeState.dirty]);
 
   return (
     <Root
@@ -466,8 +526,7 @@ function App() {
         </Button>
         <div className="flex-spacer"></div>
         <div className="version">
-          {versionString && <pre>{versionString.substring(0, 7)} - </pre>}
-          <pre>{cesiumVersion}</pre>
+          {versionString && <pre>{versionString}</pre>}
         </div>
       </header>
       <div className="application-bar">
@@ -528,6 +587,9 @@ function App() {
             hidden={leftPanel !== "gallery"}
             galleryItems={galleryItems}
             loadDemo={(item, switchToCode) => {
+              if (!confirmLeave()) {
+                return;
+              }
               // Load the gallery item every time it's clicked
               loadGalleryItem(item.id);
 
