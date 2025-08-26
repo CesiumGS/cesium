@@ -7,6 +7,7 @@ import {
   Cartesian3,
   Ellipsoid,
   BoundingSphere,
+  Color,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
@@ -47,11 +48,15 @@ describe(
         fixedFrameTransform,
       );
 
-      const instance = new ModelInstance(instanceModelMatrix);
+      const instance = new ModelInstance({
+        transform: instanceModelMatrix,
+      });
 
       expect(instance.transform).toEqual(instanceModelMatrix);
       expect(instance.center).toEqual(new Cartesian3());
-      expect(instance.relativeTransform).toEqual(instanceModelMatrix);
+      expect(instance.transform).toEqual(instanceModelMatrix);
+      expect(instance.show).toEqual(true);
+      expect(instance.color).toEqual(undefined);
     });
 
     it("creates an instance with translation", async function () {
@@ -68,7 +73,9 @@ describe(
         fixedFrameTransform,
       );
 
-      const instance = new ModelInstance(instanceModelMatrix);
+      const instance = new ModelInstance({
+        transform: instanceModelMatrix,
+      });
 
       expect(instance.transform).toEqual(instanceModelMatrix);
       const center = new Cartesian3(10, 10, 10);
@@ -108,7 +115,9 @@ describe(
         fixedFrameTransform,
       );
 
-      const instance = new ModelInstance(instanceModelMatrix);
+      const instance = new ModelInstance({
+        transform: instanceModelMatrix,
+      });
 
       const sampleModelMatrix = Matrix4.IDENTITY;
       const sampleRootNodeTransform = Matrix4.IDENTITY;
@@ -224,7 +233,9 @@ describe(
         fixedFrameTransform,
       );
 
-      const instance = new ModelInstance(instanceModelMatrix);
+      const instance = new ModelInstance({
+        transform: instanceModelMatrix,
+      });
 
       // values based on the Primitive for the "Wheels" Node in the CesiumMilkTruck
       const sampleModel = {
@@ -309,7 +320,9 @@ describe(
         fixedFrameTransform,
       );
 
-      const instance = new ModelInstance(instanceModelMatrix);
+      const instance = new ModelInstance({
+        transform: instanceModelMatrix,
+      });
 
       // values based on the Primitive for the "Wheels" Node in the CesiumMilkTruck
       const sampleModel = {
@@ -384,6 +397,31 @@ describe(
 
       expect(primitiveBoundingSphere.center).toEqual(boundingSphereCenter);
       expect(primitiveBoundingSphere.radius).toEqual(boundingSphereRadius);
+    });
+
+    it("creates an instance with show and color", async function () {
+      const position = new Cartesian3(0, 0, 0);
+
+      const headingPositionRoll = new HeadingPitchRoll();
+      const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
+        "north",
+        "west",
+      );
+      const instanceModelMatrix = new Transforms.headingPitchRollToFixedFrame(
+        position,
+        headingPositionRoll,
+        Ellipsoid.WGS84,
+        fixedFrameTransform,
+      );
+
+      const instance = new ModelInstance({
+        transform: instanceModelMatrix,
+        show: false,
+        color: Color.RED,
+      });
+
+      expect(instance.show).toEqual(false);
+      expect(instance.color).toEqual(Color.RED);
     });
   },
   "WebGL",

@@ -49,15 +49,21 @@ describe("Scene/Model/ModelInstanceCollection", function () {
   });
 
   it("can add an instance", function () {
-    const instance = collection.add(sampleTransform1);
+    const instance = collection.add({
+      transform: sampleTransform1,
+    });
 
     expect(collection.length).toEqual(1);
     expect(collection.get(0)).toBe(instance);
   });
 
   it("can remove an instance", function () {
-    const sampleInstance1 = collection.add(sampleTransform1);
-    collection.add(sampleTransform2);
+    const sampleInstance1 = collection.add({
+      transform: sampleTransform1,
+    });
+    collection.add({
+      transform: sampleTransform2,
+    });
 
     const removed = collection.remove(sampleInstance1);
 
@@ -67,8 +73,12 @@ describe("Scene/Model/ModelInstanceCollection", function () {
   });
 
   it("can remove all instances", function () {
-    collection.add(sampleTransform1);
-    collection.add(sampleTransform2);
+    collection.add({
+      transform: sampleTransform1,
+    });
+    collection.add({
+      transform: sampleTransform2,
+    });
     expect(collection.length).toEqual(2);
     collection.removeAll();
     expect(collection.length).toEqual(0);

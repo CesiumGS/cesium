@@ -23,7 +23,12 @@ class ModelInstance {
    * Constructs a {@link ModelInstance}, a copy of a {@link Model} mesh, for efficiently rendering a large number of copies the same model using GPU mesh instancing.
    * The position, orientation, and scale of the instance is determined by the specified {@link Matrix4}.
    * @constructor
-   * @param {Matrix4} transform Matrix4 describing the transform of the instance
+   *
+   * @param {object} options Object with the following properties:
+   * @param {Matrix4} options.transform Matrix4 describing the transform of the instance.
+   * @param {boolean} [options.show=true] Determines if the instance in the collection will be shown.
+   * @param {Color} [options.color] A color that blends with the instance rendered color
+   *
    * @example
    * const position = Cesium.Cartesian3.fromDegrees(-75.1652, 39.9526);
    *
@@ -38,22 +43,25 @@ class ModelInstance {
    *   Cesium.Ellipsoid.WGS84,
    *   fixedFrameTransform,
    * );
-   * const modelInstance = new Cesium.ModelInstance(instanceModelMatrix);
+   * const modelInstance = new Cesium.ModelInstance({
+   *   transform: instanceModelMatrix
+   * });
    */
-  constructor(transform) {
+  constructor(options) {
     //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object("transform", transform);
+    Check.typeOf.object("options", options);
+    Check.typeOf.object("options.transform", options.transform);
     //>>includeEnd('debug');
 
-    this._transform = transform;
+    this._transform = options.transform;
     this._center = new Cartesian3();
     this._relativeTransform = new Matrix4();
     this._relativeScaledTransform = new Matrix4();
     this._pickId = undefined;
-    this._show = true;
-    this._color = undefined;
+    this.show = options.show ?? true;
+    this.color = options.color;
 
-    this._updateTransform(transform);
+    this._updateTransform(options.transform);
     this._dirty = false;
     this._drawDirty = false;
   }
@@ -138,7 +146,7 @@ class ModelInstance {
   }
   set show(value) {
     //>>includeStart('debug', pragmas.debug);
-    //Check.typeOf.object("show", value);
+    Check.typeOf.bool("show", value);
     //>>includeEnd('debug');
 
     if (this._show === value) {
