@@ -1,8 +1,10 @@
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import PixelFormat from "../Core/PixelFormat.js";
+import Color from "../Core/Color.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
+import ClearCommand from "../Renderer/ClearCommand.js";
 
 /**
  * Creates and manages framebuffers for edge visibility rendering.
@@ -32,6 +34,13 @@ function EdgeFramebuffer(options) {
   this._colorTexture = undefined;
   this._idTexture = undefined;
   this._depthStencilTexture = undefined;
+
+  this._clearCommand = new ClearCommand({
+    color: new Color(0.0, 0.0, 0.0, 0.0),
+    depth: 1.0,
+    stencil: 0,
+    owner: this,
+  });
 }
 
 Object.defineProperties(EdgeFramebuffer.prototype, {
@@ -138,34 +147,32 @@ EdgeFramebuffer.prototype.update = function (
 };
 
 /**
- * Clears the framebuffer.
+ * Clears the framebuffer using ClearCommand.
+ * @deprecated Use getClearCommand() instead for proper MRT clearing.
  *
  * @param {Context} context The context.
  * @param {PassState} passState The pass state.
  * @param {Color} clearColor The clear color.
  */
 EdgeFramebuffer.prototype.clear = function (context, passState, clearColor) {
-  const framebuffer = passState.framebuffer;
-  const gl = context._gl;
+  const clearCommand = this.getClearCommand(clearColor);
+  clearCommand.execute(context, passState);
+};
 
-  passState.framebuffer = this._framebuffer;
+/**
+ * Gets the clear command for this framebuffer.
+ *
+ * @param {Color} [clearColor] The clear color to use. If undefined, uses the default.
+ * @returns {ClearCommand} The clear command.
+ */
+EdgeFramebuffer.prototype.getClearCommand = function (clearColor) {
+  this._clearCommand.framebuffer = this._framebuffer;
 
-  if (defined(gl.clearBufferfv)) {
-    gl.clearBufferfv(gl.COLOR, 0, [0.0, 0.0, 1.0, 0.0]);
-    gl.clearBufferfv(gl.COLOR, 1, [0.0, 0.0, 0.0, 0.0]);
-
-    if (defined(gl.clearBufferfi)) {
-      gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1.0, 0);
-    }
-  } else {
-    context.clear({
-      color: clearColor,
-      depth: 1.0,
-      stencil: 0,
-    });
+  if (defined(clearColor)) {
+    Color.clone(clearColor, this._clearCommand.color);
   }
 
-  passState.framebuffer = framebuffer;
+  return this._clearCommand;
 };
 
 /**
@@ -216,6 +223,7 @@ EdgeFramebuffer.prototype.isDestroyed = function () {
 EdgeFramebuffer.prototype.destroy = function () {
   this._framebufferManager =
     this._framebufferManager && this._framebufferManager.destroy();
+  this._clearCommand = undefined;
   return destroyObject(this);
 };
 

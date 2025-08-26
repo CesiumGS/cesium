@@ -2591,18 +2591,25 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
     defined(scene._view.edgeFramebuffer)
   ) {
     passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
-
-    scene._view.edgeFramebuffer.clear(
-      scene.context,
-      passState,
-      new Color(0.0, 0.0, 1.0, 0.0),
-    );
   }
 
   // performPass
   const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES];
   const commandCount = frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES];
 
+  // clear edge framebuffer
+  if (
+    scene._enableEdgeVisibility &&
+    defined(scene._view) &&
+    defined(scene._view.edgeFramebuffer)
+  ) {
+    const clearCommand = scene._view.edgeFramebuffer.getClearCommand(
+      new Color(0.0, 0.0, 0.0, 0.0),
+    );
+    clearCommand.execute(scene.context, passState);
+  }
+
+  // Then execute edge rendering commands
   for (let j = 0; j < commandCount; ++j) {
     executeCommand(commands[j], scene, passState);
   }
