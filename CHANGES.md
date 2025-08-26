@@ -16,6 +16,7 @@
 #### Additions :tada:
 
 - Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
+- Added spherical harmonics support for Gaussian Splats. Currently supported through the SPZ compression format.
 
 ## 1.132 - 2025-08-01
 
@@ -40,7 +41,6 @@
 - Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
 - Add wrapR property to Sampler and Texture3D, to support the newly added third dimension wrap.[#12701](https://github.com/CesiumGS/cesium/pull/12701)
 - Added the ability to load a specific changeset for iTwin Mesh Exports using `ITwinData.createTilesetFromIModelId` [#12778](https://github.com/CesiumGS/cesium/issues/12778)
-- Added spherical harmonics support for Gaussian Splats. Supports degrees 1, 2, and 3 in the SPZ format.
 
 #### Deprecated :hourglass_flowing_sand:
 
