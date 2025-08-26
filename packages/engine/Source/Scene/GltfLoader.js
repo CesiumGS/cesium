@@ -33,6 +33,7 @@ import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import addAllToArray from "../Core/addAllToArray.js";
+import getMeshPrimitives from "./getMeshPrimitives.js";
 
 const {
   Attribute,
@@ -2432,7 +2433,7 @@ function loadNode(loader, gltfNode, frameState) {
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
     const mesh = loader.gltfJson.meshes[meshId];
-    const primitives = mesh.primitives;
+    const primitives = getMeshPrimitives(mesh);
     for (let i = 0; i < primitives.length; ++i) {
       node.primitives.push(
         loadPrimitive(
