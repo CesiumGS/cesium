@@ -11,16 +11,13 @@ void edgeVisibilityStage(inout vec4 color)
         return;
     }
     
-    // Convert normalized edge type back to 0-255 range for proper classification
     float edgeTypeInt = v_edgeType * 255.0;
     
     // Color code different edge types
     vec4 edgeColor = vec4(0.0);
-    vec4 edgeId = vec4(0.0);
     
     if (edgeTypeInt < 0.5) { // HIDDEN (0)
         edgeColor = vec4(0.0, 0.0, 0.0, 0.0); // Transparent for hidden edges
-        edgeId = vec4(0.0); // No ID for hidden edges
     }
     else if (edgeTypeInt > 0.5 && edgeTypeInt < 1.5) { // SILHOUETTE (1) - Conditional visibility
         // Proper silhouette detection using face normals
@@ -43,30 +40,19 @@ void edgeVisibilityStage(inout vec4 color)
         } else {
             // True silhouette
             edgeColor = vec4(1.0, 0.0, 0.0, 1.0);
-            edgeId = vec4(1.0, 0.0, 0.0, 1.0); // Red ID for silhouette edges
         }
     }
     else if (edgeTypeInt > 1.5 && edgeTypeInt < 2.5) { // HARD (2) - BRIGHT GREEN
-        edgeColor = vec4(0.0, 2.0, 0.0, 1.0); // Extra bright green
-        edgeId = vec4(0.0, 1.0, 0.0, 1.0); // Green ID for hard edges
+        edgeColor = vec4(0.0, 1.0, 0.0, 1.0); // Extra bright green
     }
-    else if (edgeTypeInt > 2.5 && edgeTypeInt < 3.5) { // REPEATED (3) - Same as HARD but secondary encoding
-        edgeColor = vec4(0.0, 2.0, 0.0, 1.0); // Same bright green as HARD edges
-        edgeId = vec4(0.0, 1.0, 0.0, 1.0); // Green ID for repeated edges
+    else if (edgeTypeInt > 2.5 && edgeTypeInt < 3.5) { // REPEATED (3)
+        edgeColor = vec4(0.0, 0.0, 1.0, 1.0);
     }
-    else { // Unknown - YELLOW
-        edgeColor = vec4(1.0, 1.0, 0.0, 1.0);
-        edgeId = vec4(1.0, 1.0, 0.0, 1.0); // Yellow ID for unknown edges
-    }
-    // Output to color buffer
     color = edgeColor;
     
-    // Output to ID buffer if MRT is enabled
     #ifdef HAS_EDGE_VISIBILITY_MRT
-        // out_FragColor = edgeColor;
-        // out_id = edgeId;
         out_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
-        out_id = vec4(1.0, 1.0, 1.0, 1.0);
+        out_id.r = edgeTypeInt;
     #endif
 #endif
 }
