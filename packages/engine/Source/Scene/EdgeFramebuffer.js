@@ -146,14 +146,24 @@ EdgeFramebuffer.prototype.update = function (
  */
 EdgeFramebuffer.prototype.clear = function (context, passState, clearColor) {
   const framebuffer = passState.framebuffer;
+  const gl = context._gl;
 
   passState.framebuffer = this._framebuffer;
 
-  context.clear({
-    color: clearColor,
-    depth: 1.0,
-    stencil: 0,
-  });
+  if (defined(gl.clearBufferfv)) {
+    gl.clearBufferfv(gl.COLOR, 0, [0.0, 0.0, 1.0, 0.0]);
+    gl.clearBufferfv(gl.COLOR, 1, [0.0, 0.0, 0.0, 0.0]);
+
+    if (defined(gl.clearBufferfi)) {
+      gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1.0, 0);
+    }
+  } else {
+    context.clear({
+      color: clearColor,
+      depth: 1.0,
+      stencil: 0,
+    });
+  }
 
   passState.framebuffer = framebuffer;
 };

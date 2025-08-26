@@ -2591,6 +2591,12 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
     defined(scene._view.edgeFramebuffer)
   ) {
     passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+
+    scene._view.edgeFramebuffer.clear(
+      scene.context,
+      passState,
+      new Color(0.0, 0.0, 1.0, 0.0),
+    );
   }
 
   // performPass
