@@ -467,6 +467,7 @@ class ModelImageryMapping {
     Check.defined("texCoordsTypedArray", texCoordsTypedArray);
     //>>includeEnd('debug');
 
+    // TODO: This is where a standalone create function may be helpful
     const texCoordAttribute = {
       name: "Imagery Texture Coordinates",
       semantic: VertexAttributeSemantic.TEXCOORD,

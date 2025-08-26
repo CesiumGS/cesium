@@ -187,7 +187,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    */
   this.count = defined(primitive.indices)
     ? primitive.indices.count
-    : ModelUtility.getAttributeBySemantic(primitive, "POSITION").count;
+    : ModelUtility.getPositionAttribute(primitive.attributes).count;
 
   /**
    * Whether or not this primitive has a property table for storing metadata.

@@ -126,8 +126,7 @@ function Attribute() {
   /**
    * The attribute semantic. The combination of semantic and setIndex must be
    * unique within the attributes array.
-   *
-   * @type {VertexAttributeSemantic|InstanceAttributeSemantic}
+   * @type {string|undefined}
    * @private
    */
   this.semantic = undefined;
@@ -144,6 +143,8 @@ function Attribute() {
    *   <li>{@link VertexAttributeSemantic.FEATURE_ID}</li>
    *   <li>{@link InstanceAttributeSemantic.FEATURE_ID}</li>
    * </ul>
+   * @type {number|undefined}
+   * @private
    */
   this.setIndex = undefined;
 

@@ -14,7 +14,6 @@ import Transforms from "../../Core/Transforms.js";
 import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
 import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
 
 const scratchV0 = new Cartesian3();
@@ -193,9 +192,8 @@ export default function pickModel(
         }
       }
 
-      const positionAttribute = ModelUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.POSITION,
+      const positionAttribute = ModelUtility.getPositionAttribute(
+        primitive.attributes,
       );
       const byteOffset = positionAttribute.byteOffset;
       const byteStride = positionAttribute.byteStride;

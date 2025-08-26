@@ -14,7 +14,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfVertexBufferLoader
+ * @alias SpzVertexBufferLoader
  * @constructor
  * @augments ResourceLoader
  *
@@ -23,20 +23,20 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {object} options.gltf The glTF JSON.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+ * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {string} [options.cacheKey] The cache key of the resource.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
  * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
  * @private
  */
-function GltfVertexBufferLoader(options) {
+function SpzVertexBufferLoader(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
-  const bufferViewId = options.bufferViewId;
+  const attributeSemantic = options.attributeSemantic;
   const cacheKey = options.cacheKey;
   const asynchronous = options.asynchronous ?? true;
   const loadBuffer = options.loadBuffer ?? false;
@@ -58,7 +58,7 @@ function GltfVertexBufferLoader(options) {
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._gltf = gltf;
-  this._bufferViewId = bufferViewId;
+  this._attributeSemantic = attributeSemantic;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._loadBuffer = loadBuffer;
@@ -71,15 +71,15 @@ function GltfVertexBufferLoader(options) {
 }
 
 if (defined(Object.create)) {
-  GltfVertexBufferLoader.prototype = Object.create(ResourceLoader.prototype);
-  GltfVertexBufferLoader.prototype.constructor = GltfVertexBufferLoader;
+  SpzVertexBufferLoader.prototype = Object.create(ResourceLoader.prototype);
+  SpzVertexBufferLoader.prototype.constructor = SpzVertexBufferLoader;
 }
 
-Object.defineProperties(GltfVertexBufferLoader.prototype, {
+Object.defineProperties(SpzVertexBufferLoader.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfVertexBufferLoader.prototype
+   * @memberof SpzVertexBufferLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -93,7 +93,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
   /**
    * The vertex buffer. This is only defined when <code>loadAsTypedArray</code> is false.
    *
-   * @memberof GltfVertexBufferLoader.prototype
+   * @memberof SpzVertexBufferLoader.prototype
    *
    * @type {Buffer}
    * @readonly
@@ -107,7 +107,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
   /**
    * The typed array containing vertex buffer data. This is only defined when <code>loadAsTypedArray</code> is true.
    *
-   * @memberof GltfVertexBufferLoader.prototype
+   * @memberof SpzVertexBufferLoader.prototype
    *
    * @type {Uint8Array}
    * @readonly
@@ -122,44 +122,40 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise<GltfVertexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<SpzVertexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
-GltfVertexBufferLoader.prototype.load = async function () {
+SpzVertexBufferLoader.prototype.load = async function () {
   if (defined(this._promise)) {
     return this._promise;
   }
 
-  this._promise = loadFromBufferView(this);
+  this._promise = loadFromSpz(this);
   return this._promise;
-};
+}
 
-async function loadFromBufferView(vertexBufferLoader) {
+async function loadFromSpz(vertexBufferLoader) {
   vertexBufferLoader._state = ResourceLoaderState.LOADING;
   const resourceCache = vertexBufferLoader._resourceCache;
   try {
-    const bufferViewLoader = resourceCache.getBufferViewLoader({
+    const spzLoader = resourceCache.getSpzLoader({
       gltf: vertexBufferLoader._gltf,
-      bufferViewId: vertexBufferLoader._bufferViewId,
       gltfResource: vertexBufferLoader._gltfResource,
       baseResource: vertexBufferLoader._baseResource,
     });
-    vertexBufferLoader._bufferViewLoader = bufferViewLoader;
-    await bufferViewLoader.load();
+    vertexBufferLoader._spzLoader = spzLoader;
+    await spzLoader.load();
 
     if (vertexBufferLoader.isDestroyed()) {
       return;
     }
 
-    vertexBufferLoader._typedArray = bufferViewLoader.typedArray;
-    vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
+    vertexBufferLoader._state = ResourceLoaderState.LOADED;
     return vertexBufferLoader;
-  } catch (error) {
+  } catch {
     if (vertexBufferLoader.isDestroyed()) {
       return;
     }
-
-    handleError(vertexBufferLoader, error);
   }
 }
 
@@ -203,7 +199,7 @@ const scratchVertexBufferJob = new CreateVertexBufferJob();
  * @param {FrameState} frameState The frame state.
  * @private
  */
-GltfVertexBufferLoader.prototype.process = function (frameState) {
+SpzVertexBufferLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
@@ -217,6 +213,19 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     this._state !== ResourceLoaderState.PROCESSING
   ) {
     return false;
+  }
+
+  if (defined(this._spzLoader)) {
+    try {
+      const ready = this._spzLoader.process(frameState);
+      if (!ready) {
+        return false;
+      }
+
+      this._typedArray = this._spzLoader.typedArray;
+    } catch (error) {
+      handleError(this, error);
+    }
   }
 
   let buffer;
@@ -248,7 +257,7 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
  * Unloads the resource.
  * @private
  */
-GltfVertexBufferLoader.prototype.unload = function () {
+SpzVertexBufferLoader.prototype.unload = function () {
   if (defined(this._buffer)) {
     this._buffer.destroy();
   }
@@ -262,11 +271,15 @@ GltfVertexBufferLoader.prototype.unload = function () {
     resourceCache.unload(this._bufferViewLoader);
   }
 
+  if (defined(this._spzLoader)) {
+    resourceCache.unload(this._spzLoader);
+  }
 
   this._bufferViewLoader = undefined;
+  this._spzLoader = undefined;
   this._typedArray = undefined;
   this._buffer = undefined;
   this._gltf = undefined;
 };
 
-export default GltfVertexBufferLoader;
+export default SpzVertexBufferLoader;

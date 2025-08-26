@@ -392,22 +392,21 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     this._ready = true;
 
     this._originalPositions = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
-        VertexAttributeSemantic.POSITION,
+      ModelUtility.getPositionAttribute(
+        this.splatPrimitive.attributes
       ).typedArray,
     );
 
     this._originalRotations = new Float32Array(
       ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+        this.splatPrimitive.attributes,
         VertexAttributeSemantic.ROTATION,
       ).typedArray,
     );
 
     this._originalScales = new Float32Array(
       ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+        this.splatPrimitive.attributes,
         VertexAttributeSemantic.SCALE,
       ).typedArray,
     );

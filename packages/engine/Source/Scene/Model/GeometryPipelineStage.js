@@ -162,7 +162,7 @@ GeometryPipelineStage.process = function (
     //>>includeEnd('debug');
 
     const isPositionAttribute =
-      attribute.semantic === VertexAttributeSemantic.POSITION;
+      attribute.semantic === VertexAttributeSemantic.POSITION.semantic;
 
     let index;
     if (attributeLocationCount > 1) {

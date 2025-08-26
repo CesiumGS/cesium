@@ -7,7 +7,6 @@ import Pass from "../../Renderer/Pass.js";
 import MaterialStageFS from "../../Shaders/Model/MaterialStageFS.js";
 import AlphaMode from "../AlphaMode.js";
 import ModelComponents from "../ModelComponents.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import LightingModel from "./LightingModel.js";
 import ModelUtility from "./ModelUtility.js";
 
@@ -134,9 +133,8 @@ MaterialPipelineStage.process = function (
   }
 
   // If the primitive does not have normals, fall back to unlit lighting.
-  const hasNormals = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.NORMAL,
+  const hasNormals = ModelUtility.hasNormals(
+    primitive.attributes,
   );
 
   // Disable PointCloud normals if the user explicitly turned them off.

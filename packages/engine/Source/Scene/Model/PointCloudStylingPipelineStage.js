@@ -13,7 +13,6 @@ import PointCloudStylingStageVS from "../../Shaders/Model/PointCloudStylingStage
 import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 const scratchUniform = new Cartesian4();
 
@@ -91,9 +90,8 @@ PointCloudStylingPipelineStage.process = function (
     const propertyNames = getPropertyNames(shaderFunctionInfo);
 
     const usesNormalSemantic = propertyNames.indexOf("normalMC") >= 0;
-    const hasNormals = ModelUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.NORMAL,
+    const hasNormals = ModelUtility.hasNormals(
+      primitive.attributes
     );
 
     if (usesNormalSemantic && !hasNormals) {
@@ -219,9 +217,8 @@ function getGeometricError(
     return pointCloudShading.baseResolution;
   }
 
-  const positionAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION,
+  const positionAttribute = ModelUtility.getPositionAttribute(
+    primitive.attributes
   );
   const pointsLength = positionAttribute.count;
 

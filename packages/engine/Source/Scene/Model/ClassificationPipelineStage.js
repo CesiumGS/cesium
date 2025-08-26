@@ -55,9 +55,8 @@ ClassificationPipelineStage.process = function (
 };
 
 function createClassificationBatches(primitive, runtimePrimitive) {
-  const positionAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION,
+  const positionAttribute = ModelUtility.getPositionAttribute(
+    primitive.attributes
   );
 
   if (!defined(positionAttribute)) {
@@ -78,7 +77,7 @@ function createClassificationBatches(primitive, runtimePrimitive) {
 
   const count = hasIndices ? indices.count : positionAttribute.count;
   const featureIdAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
+    primitive.attributes,
     VertexAttributeSemantic.FEATURE_ID,
     0,
   );

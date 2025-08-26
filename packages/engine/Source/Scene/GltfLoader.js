@@ -28,12 +28,13 @@ import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
-import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import { defaultGltfVertexAttributeSemantics, isPositionAttribute, getSemanticNameFromPropertyName, getSetIndexFromPropertyName } from "./Model.VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import addAllToArray from "../Core/addAllToArray.js";
 import getMeshPrimitives from "./getMeshPrimitives.js";
+import ModelUtility from "./Model/ModelUtility.js";
 
 const {
   Attribute,
@@ -685,15 +686,26 @@ GltfLoader.prototype.process = function (frameState) {
 function getVertexBufferLoader(
   loader,
   accessorId,
-  semantic,
+  attribute,
   primitive,
-  draco,
-  spzExtension,
   loadBuffer,
   loadTypedArray,
   frameState,
 ) {
   const gltf = loader.gltfJson;
+
+  const spzExtension = primitive.extensions?.KHR_spz_gaussian_splats_compression;
+  if (defined(spzExtension)) {
+    return new SpzVertexBufferLoader({
+          gltf: gltf,
+    gltfResource: loader._gltfResource,
+    baseResource: loader._baseResource,
+        asynchronous: loader._asynchronous,
+    loadBuffer: loadBuffer,
+    loadTypedArray: loadTypedArray,
+    });
+  }
+
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
@@ -704,9 +716,8 @@ function getVertexBufferLoader(
     frameState: frameState,
     bufferViewId: bufferViewId,
     primitive: primitive,
-    draco: draco,
-    spz: spzExtension,
-    attributeSemantic: semantic,
+    // TODO: This is really only for draco, can we clean up?
+    attributeSemantic: attribute.semantic,
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
     loadBuffer: loadBuffer,
@@ -883,18 +894,6 @@ function loadAccessor(loader, accessor, useQuaternion) {
   return loadDefaultAccessorValues(accessor, values);
 }
 
-function fromArray(MathType, values) {
-  if (!defined(values)) {
-    return undefined;
-  }
-
-  if (MathType === Number) {
-    return values[0];
-  }
-
-  return MathType.unpack(values);
-}
-
 function getDefault(MathType) {
   if (MathType === Number) {
     return 0.0;
@@ -951,8 +950,8 @@ function setQuantizationFromWeb3dQuantizedAttributes(
   MathType,
 ) {
   const decodeMatrix = extension.decodeMatrix;
-  const decodedMin = fromArray(MathType, extension.decodedMin);
-  const decodedMax = fromArray(MathType, extension.decodedMax);
+  const decodedMin = ModelUtility.fromArray(MathType, extension.decodedMin);
+  const decodedMax = ModelUtility.fromArray(MathType, extension.decodedMax);
 
   if (defined(decodedMin) && defined(decodedMax)) {
     attribute.min = decodedMin;
@@ -1004,22 +1003,27 @@ function setQuantizationFromWeb3dQuantizedAttributes(
   attribute.quantization = quantization;
 }
 
-function createAttribute(gltf, accessorId, name, semantic, setIndex) {
+function createAttribute(gltf, accessorId, attributeSemantics) {
   const accessor = gltf.accessors[accessorId];
   const MathType = AttributeType.getMathType(accessor.type);
   const normalized = accessor.normalized ?? false;
 
+  let setIndex;
+  if (attributeSemantics.hasSetIndex) {
+    setIndex = getSetIndexFromPropertyName(attributeSemantics);
+  }
+
   const attribute = new Attribute();
-  attribute.name = name;
-  attribute.semantic = semantic;
+  attribute.name = attributeSemantics.propertyName;
+  attribute.semantic = getSemanticNameFromPropertyName(attributeSemantics);
   attribute.setIndex = setIndex;
   attribute.constant = getDefault(MathType);
   attribute.componentDatatype = accessor.componentType;
   attribute.normalized = normalized;
   attribute.count = accessor.count;
   attribute.type = accessor.type;
-  attribute.min = fromArray(MathType, accessor.min);
-  attribute.max = fromArray(MathType, accessor.max);
+  attribute.min = ModelUtility.fromArray(MathType, accessor.min);
+  attribute.max = ModelUtility.fromArray(MathType, accessor.max);
   attribute.byteOffset = accessor.byteOffset;
   attribute.byteStride = getAccessorByteStride(gltf, accessor);
 
@@ -1032,10 +1036,10 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   }
 
   const isQuantizable =
-    attribute.semantic === VertexAttributeSemantic.POSITION ||
-    attribute.semantic === VertexAttributeSemantic.NORMAL ||
-    attribute.semantic === VertexAttributeSemantic.TANGENT ||
-    attribute.semantic === VertexAttributeSemantic.TEXCOORD ||
+    attribute.semantic === defaultGltfVertexAttributeSemantics.POSITION ||
+    attribute.semantic === defaultGltfVertexAttributeSemantics.NORMAL ||
+    attribute.semantic === defaultGltfVertexAttributeSemantics.TANGENT ||
+    attribute.semantic === defaultGltfVertexAttributeSemantics.TEXCOORD ||
     attribute.semantic === VertexAttributeSemantic.FEATURE_ID ||
     attribute.semantic === VertexAttributeSemantic.SCALE ||
     attribute.semantic === VertexAttributeSemantic.ROTATION;
@@ -1054,21 +1058,22 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   return attribute;
 }
 
-function getSetIndex(gltfSemantic) {
-  const setIndexRegex = /^\w+_(\d+)$/;
-  const setIndexMatch = setIndexRegex.exec(gltfSemantic);
-  if (setIndexMatch !== null) {
-    return parseInt(setIndexMatch[1]);
-  }
-  return undefined;
-}
-
 const scratchSemanticInfo = {
   gltfSemantic: undefined,
   renamedSemantic: undefined,
-  modelSemantic: undefined,
 };
 
+// TODO: for now
+const semantics = defaultGltfVertexAttributeSemantics;
+/** @type {VertexAttributeSemantic} */
+const batchIdAttributeSemantic = {
+  semantic: "FEATURE_ID",
+  propertyName: "_BATCHID",
+  type: AttributeType.INT,
+  hasSetIndex: true
+}
+
+// TODO: Remove
 function getSemanticInfo(loader, semanticType, gltfSemantic) {
   // For .b3dm, rename _BATCHID (or the legacy BATCHID) to _FEATURE_ID_0
   // in the generated model components for compatibility with EXT_mesh_features
@@ -1080,26 +1085,22 @@ function getSemanticInfo(loader, semanticType, gltfSemantic) {
     renamedSemantic = "_FEATURE_ID_0";
   }
 
-  const modelSemantic = semanticType.fromGltfSemantic(renamedSemantic);
-
   const semanticInfo = scratchSemanticInfo;
   semanticInfo.gltfSemantic = gltfSemantic;
   semanticInfo.renamedSemantic = renamedSemantic;
-  semanticInfo.modelSemantic = modelSemantic;
 
   return semanticInfo;
 }
 
+// TODO: Also put these somewhere???
 function isClassificationAttribute(attributeSemantic) {
   // Classification models only use the position, texcoord, and feature ID attributes.
-  const isPositionAttribute =
-    attributeSemantic === VertexAttributeSemantic.POSITION;
   const isFeatureIdAttribute =
     attributeSemantic === VertexAttributeSemantic.FEATURE_ID;
   const isTexcoordAttribute =
-    attributeSemantic === VertexAttributeSemantic.TEXCOORD;
+    attributeSemantic === defaultGltfVertexAttributeSemantics.TEXCOORD;
 
-  return isPositionAttribute || isFeatureIdAttribute || isTexcoordAttribute;
+  return isPositionAttribute(attributeSemantic) || isFeatureIdAttribute || isTexcoordAttribute;
 }
 
 function finalizeDracoAttribute(
@@ -1150,7 +1151,7 @@ function finalizeSpzAttribute(
     );
   }
 
-  if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+  if (attribute.semantic === defaultGltfVertexAttributeSemantics.POSITION) {
     const findMinMaxXY = (flatArray) => {
       let minX = Infinity;
       let maxX = -Infinity;
@@ -1215,10 +1216,8 @@ function finalizeAttribute(
 function loadAttribute(
   loader,
   accessorId,
-  semanticInfo,
-  primitive,
-  draco,
-  spz,
+  attributeSemantics,
+  extensions,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -1227,34 +1226,22 @@ function loadAttribute(
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
-  const gltfSemantic = semanticInfo.gltfSemantic;
-  const renamedSemantic = semanticInfo.renamedSemantic;
-  const modelSemantic = semanticInfo.modelSemantic;
-
-  const setIndex = defined(modelSemantic)
-    ? getSetIndex(renamedSemantic)
-    : undefined;
-
-  const name = gltfSemantic;
   const attribute = createAttribute(
     gltf,
     accessorId,
-    name,
-    modelSemantic,
-    setIndex,
+    attributeSemantics
   );
 
-  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
+  const dracoExtension = extensions?.KHR_draco_mesh_compression;
+  if (!defined(dracoExtension) && !defined(bufferViewId) && !defined(spz)) {
     return attribute;
   }
 
   const vertexBufferLoader = getVertexBufferLoader(
     loader,
     accessorId,
-    gltfSemantic,
+    attribute,
     primitive,
-    draco,
-    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1272,7 +1259,8 @@ function loadAttribute(
     if (
       defined(draco) &&
       defined(draco.attributes) &&
-      defined(draco.attributes[gltfSemantic])
+      // TODO: I think?
+      defined(draco.attributes[attributeSemantics.semantic])
     ) {
       finalizeDracoAttribute(
         attribute,
@@ -1305,28 +1293,23 @@ function loadAttribute(
 function loadVertexAttribute(
   loader,
   accessorId,
-  semanticInfo,
-  primitive,
-  draco,
-  spz,
+  attributeSemantics,
+  gltfPrimitive,
   hasInstances,
   needsPostProcessing,
   frameState,
 ) {
-  const modelSemantic = semanticInfo.modelSemantic;
-
-  const isPositionAttribute =
-    modelSemantic === VertexAttributeSemantic.POSITION;
+  const isPosition = isPositionAttribute(attributeSemantics);
   const isFeatureIdAttribute =
-    modelSemantic === VertexAttributeSemantic.FEATURE_ID;
+    attributeSemantics.semantic === VertexAttributeSemantic.FEATURE_ID;
 
   const loadTypedArrayFor2D =
-    isPositionAttribute &&
+    isPosition &&
     !hasInstances &&
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
   const loadTypedArrayForPicking =
-    isPositionAttribute && loader._enablePick && !frameState.context.webgl2;
+    isPosition && loader._enablePick && !frameState.context.webgl2;
 
   const loadTypedArrayForClassification =
     loader._loadForClassification && isFeatureIdAttribute;
@@ -1353,10 +1336,8 @@ function loadVertexAttribute(
   const attribute = loadAttribute(
     loader,
     accessorId,
-    semanticInfo,
-    primitive,
-    draco,
-    spz,
+    attributeSemantics,
+    gltfPrimitive.extensions,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1427,10 +1408,8 @@ function loadInstancedAttribute(
   return loadAttribute(
     loader,
     accessorId,
-    semanticInfo,
-    undefined,
-    undefined,
-    undefined,
+    attributeSemantics,
+    undefined, // extensions
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1600,8 +1579,8 @@ function loadSpecularGlossiness(loader, specularGlossinessInfo, frameState) {
       frameState,
     );
   }
-  specularGlossiness.diffuseFactor = fromArray(Cartesian4, diffuseFactor);
-  specularGlossiness.specularFactor = fromArray(Cartesian3, specularFactor);
+  specularGlossiness.diffuseFactor = ModelUtility.fromArray(Cartesian4, diffuseFactor);
+  specularGlossiness.specularFactor = ModelUtility.fromArray(Cartesian3, specularFactor);
   specularGlossiness.glossinessFactor = glossinessFactor;
 
   return specularGlossiness;
@@ -1639,7 +1618,7 @@ function loadMetallicRoughness(loader, metallicRoughnessInfo, frameState) {
       frameState,
     );
   }
-  metallicRoughness.baseColorFactor = fromArray(Cartesian4, baseColorFactor);
+  metallicRoughness.baseColorFactor = ModelUtility.fromArray(Cartesian4, baseColorFactor);
   metallicRoughness.metallicFactor = metallicFactor;
   metallicRoughness.roughnessFactor = roughnessFactor;
 
@@ -1666,7 +1645,7 @@ function loadSpecular(loader, specularInfo, frameState) {
     );
   }
   specular.specularFactor = specularFactor;
-  specular.specularColorFactor = fromArray(Cartesian3, specularColorFactor);
+  specular.specularColorFactor = ModelUtility.fromArray(Cartesian3, specularColorFactor);
 
   return specular;
 }
@@ -1798,7 +1777,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
       frameState,
     );
   }
-  material.emissiveFactor = fromArray(Cartesian3, gltfMaterial.emissiveFactor);
+  material.emissiveFactor = ModelUtility.fromArray(Cartesian3, gltfMaterial.emissiveFactor);
   material.alphaMode = gltfMaterial.alphaMode;
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
@@ -1829,7 +1808,7 @@ function loadFeatureIdAttributeLegacy(
   const featureIds = gltfFeatureIdAttribute.featureIds;
   featureIdAttribute.featureCount = featureCount;
   featureIdAttribute.propertyTableId = featureTableId;
-  featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
+  featureIdAttribute.setIndex = getSetIndexFromPropertyName(featureIds.attribute);
   featureIdAttribute.positionalLabel = positionalLabel;
   return featureIdAttribute;
 }
@@ -1950,22 +1929,19 @@ function loadMorphTarget(
   const spz = undefined;
   const hasInstances = false;
 
-  for (const semantic in target) {
-    if (!target.hasOwnProperty(semantic)) {
+  for (const propertyName in target) {
+    if (!target.hasOwnProperty(propertyName)) {
       continue;
     }
-    const accessorId = target[semantic];
+    const accessorId = target[propertyName];
 
-    const semanticInfo = getSemanticInfo(
-      loader,
-      VertexAttributeSemantic,
-      semantic,
-    );
+    // TODO
+    const attributeSemantics = TODO(propertyName);
 
     const attributePlan = loadVertexAttribute(
       loader,
       accessorId,
-      semanticInfo,
+      attributeSemantics,
       primitive,
       draco,
       spz,
@@ -2027,21 +2003,17 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   }
 
   const loadForClassification = loader._loadForClassification;
-  const draco = extensions.KHR_draco_mesh_compression;
 
   let hasFeatureIds = false;
   const attributes = gltfPrimitive.attributes;
   if (defined(attributes)) {
-    for (const semantic in attributes) {
-      if (!attributes.hasOwnProperty(semantic)) {
+    for (const propertyName in attributes) {
+      if (!attributes.hasOwnProperty(propertyName)) {
         continue;
       }
-      const accessorId = attributes[semantic];
-      const semanticInfo = getSemanticInfo(
-        loader,
-        VertexAttributeSemantic,
-        semantic,
-      );
+      const accessorId = attributes[propertyName];
+      // TODO
+      const attributeSemantics = TODO(propertyName);
 
       const modelSemantic = semanticInfo.modelSemantic;
       if (loadForClassification && !isClassificationAttribute(modelSemantic)) {
@@ -2052,12 +2024,12 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
         hasFeatureIds = true;
       }
 
+      // TODO: If loadForClassification, take another path
       const attributePlan = loadVertexAttribute(
         loader,
         accessorId,
-        semanticInfo,
+        attributeSemantics,
         gltfPrimitive,
-        draco,
         spzExtension,
         hasInstances,
         needsPostProcessing,
@@ -2408,10 +2380,10 @@ function loadNode(loader, gltfNode, frameState) {
 
   node.name = gltfNode.name;
 
-  node.matrix = fromArray(Matrix4, gltfNode.matrix);
-  node.translation = fromArray(Cartesian3, gltfNode.translation);
-  node.rotation = fromArray(Quaternion, gltfNode.rotation);
-  node.scale = fromArray(Cartesian3, gltfNode.scale);
+  node.matrix = ModelUtility.fromArray(Matrix4, gltfNode.matrix);
+  node.translation = ModelUtility.fromArray(Cartesian3, gltfNode.translation);
+  node.rotation = ModelUtility.fromArray(Quaternion, gltfNode.rotation);
+  node.scale = ModelUtility.fromArray(Cartesian3, gltfNode.scale);
 
   const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
@@ -2768,7 +2740,7 @@ function parse(loader, frameState) {
 
   if (defined(cesiumRtcExtension)) {
     // CESIUM_RTC is almost always WGS84 coordinates so no axis conversion needed
-    const center = Cartesian3.fromArray(
+    const center = Cartesian3.ModelUtility.fromArray(
       cesiumRtcExtension.center,
       0,
       scratchCenter,

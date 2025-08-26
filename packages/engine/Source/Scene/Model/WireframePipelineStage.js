@@ -5,7 +5,6 @@ import IndexDatatype from "../../Core/IndexDatatype.js";
 import ModelUtility from "./ModelUtility.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import WireframeIndexGenerator from "../../Core/WireframeIndexGenerator.js";
 
 /**
@@ -74,9 +73,8 @@ WireframePipelineStage.process = function (
 };
 
 function createWireframeIndexBuffer(primitive, indices, frameState) {
-  const positionAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION,
+  const positionAttribute = ModelUtility.getPositionAttribute(
+    primitive.attributes
   );
   const vertexCount = positionAttribute.count;
   const webgl2 = frameState.context.webgl2;

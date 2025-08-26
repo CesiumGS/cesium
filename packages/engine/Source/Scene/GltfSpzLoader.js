@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
+import CesiumMath from "../Core/Math.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 import { loadSpz } from "@spz-loader/core";
@@ -16,8 +17,6 @@ import { loadSpz } from "@spz-loader/core";
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
- * @param {object} options.primitive The primitive containing the SPZ extension.
- * @param {object} options.spz The SPZ extension object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {string} [options.cacheKey] The cache key of the resource.
@@ -28,8 +27,6 @@ function GltfSpzLoader(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
-  const primitive = options.primitive;
-  const spz = options.spz;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
   const cacheKey = options.cacheKey;
@@ -37,8 +34,6 @@ function GltfSpzLoader(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.object("options.primitive", primitive);
-  Check.typeOf.object("options.spz", spz);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
@@ -47,13 +42,11 @@ function GltfSpzLoader(options) {
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._gltf = gltf;
-  this._primitive = primitive;
-  this._spz = spz;
   this._cacheKey = cacheKey;
   this._bufferViewLoader = undefined;
   this._bufferViewTypedArray = undefined;
   this._decodePromise = undefined;
-  this._decodedData = undefined;
+  this._typedArray = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = undefined;
   this._spzError = undefined;
@@ -80,15 +73,15 @@ Object.defineProperties(GltfSpzLoader.prototype, {
   /**
    * The decoded SPZ data.
    * @memberof GltfSpzLoader.prototype
-   * @type {object}
+   * @type {Uint8Array}
    * @readonly
    * @private
    */
-  decodedData: {
+  typedArray: {
     get: function () {
-      return this._decodedData;
-    },
-  },
+      return this._typedArray;
+    }
+  }
 });
 
 async function loadResources(loader) {
@@ -141,18 +134,61 @@ function handleError(spzLoader, error) {
   throw spzLoader.getError(errorMessage, error);
 }
 
+function getTypedArray(gcloudData, attributeSemantic) {
+  if (attributeSemantic === "POSITION") {
+    return gcloudData.positions;
+  }
+
+  if (attributeSemantic === "_SCALE") {
+    return gcloudData.scales;
+  }
+  
+  if (attributeSemantic === "_ROTATION") {
+    return gcloudData.rotations;
+  }
+  
+  if (attributeSemantic === "COLOR_0") {
+    const colors = gcloudData.colors;
+    const alphas = gcloudData.alphas;
+    const typedArray = new Uint8Array((colors.length / 3) * 4);
+    for (let i = 0; i < colors.length / 3; i++) {
+      typedArray[i * 4] = CesiumMath.clamp(
+        colors[i * 3] * 255.0,
+        0.0,
+        255.0,
+      );
+      typedArray[i * 4 + 1] = CesiumMath.clamp(
+        colors[i * 3 + 1] * 255.0,
+        0.0,
+        255.0,
+      );
+      typedArray[i * 4 + 2] = CesiumMath.clamp(
+        colors[i * 3 + 2] * 255.0,
+        0.0,
+        255.0,
+      );
+      typedArray[i * 4 + 3] = CesiumMath.clamp(
+        alphas[i] * 255.0,
+        0.0,
+        255.0,
+      );
+    }
+
+    return typedArray;
+  }
+}
+
 async function processDecode(loader, decodePromise) {
   try {
-    const gcloud = await decodePromise;
+    const gcloudData = await decodePromise;
     if (loader.isDestroyed()) {
       return;
     }
 
     loader.unload();
 
-    loader._decodedData = {
-      gcloud: gcloud,
-    };
+    // TODO: Expose each typed array under each attribute semantic
+    loader._typedArray = getTypedArray(gcloudData, loader._attributeSemantics)
     loader._state = ResourceLoaderState.READY;
     return loader._baseResource;
   } catch (error) {
@@ -170,10 +206,6 @@ async function processDecode(loader, decodePromise) {
  * @private
  */
 GltfSpzLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
   if (this._state === ResourceLoaderState.READY) {
     return true;
   }
@@ -198,6 +230,7 @@ GltfSpzLoader.prototype.process = function (frameState) {
     unpackOptions: { coordinateSystem: "UNSPECIFIED" },
   });
 
+  // Could not be scheduled this frame
   if (!defined(decodePromise)) {
     return false;
   }
@@ -216,9 +249,8 @@ GltfSpzLoader.prototype.unload = function () {
 
   this._bufferViewLoader = undefined;
   this._bufferViewTypedArray = undefined;
-  this._decodedData = undefined;
+  this._typedArray = undefined;
   this._gltf = undefined;
-  this._primitive = undefined;
 };
 
 export default GltfSpzLoader;

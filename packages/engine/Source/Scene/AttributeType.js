@@ -8,48 +8,70 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 
 /**
- * An enum describing the attribute type for glTF and 3D Tiles.
- *
- * @enum {string}
- *
+ * The attribute data types used for rendering glTF and 3D Tiles.
+ * @type {Record<string,string>}
  * @private
  */
 const AttributeType = {
   /**
-   * The attribute is a single component.
-   *
+   * The attribute is a ingle-precision floating-point number.
    * @type {string}
    * @constant
    */
   SCALAR: "SCALAR",
 
   /**
-   * The attribute is a two-component vector.
-   *
+   * The attribute is a two-component vector of single-precision floating-point numbers.
    * @type {string}
    * @constant
    */
   VEC2: "VEC2",
 
   /**
-   * The attribute is a three-component vector.
-   *
+   * The attribute is a three-component vector of single-precision floating-point numbers.
    * @type {string}
    * @constant
    */
   VEC3: "VEC3",
 
   /**
-   * The attribute is a four-component vector.
-   *
+   * The attribute is a four-component vector of single-precision floating-point numbers.
    * @type {string}
    * @constant
    */
   VEC4: "VEC4",
 
   /**
-   * The attribute is a 2x2 matrix.
+   * The attribute is a 32-bit signed integer.
+   * @type {string}
+   * @constant
+   */
+  INT: "INT",
+
+  /**
+   * The attribute is a two-component vector of a signed integers.
    *
+   * @type {string}
+   * @constant
+   */
+  IVEC2: "IVEC2",
+
+  /**
+   * The attribute is a three-component vector of a signed integers.
+   * @type {string}
+   * @constant
+   */
+  IVEC3: "IVEC3",
+
+  /**
+   * The attribute is a four-component vector of a signed integers.
+   * @type {string}
+   * @constant
+   */
+  IVEC4: "IVEC4",
+
+  /**
+   * The attribute is a 2x2 matrix.
    * @type {string}
    * @constant
    */
@@ -57,7 +79,6 @@ const AttributeType = {
 
   /**
    * The attribute is a 3x3 matrix.
-   *
    * @type {string}
    * @constant
    */
@@ -65,7 +86,6 @@ const AttributeType = {
 
   /**
    * The attribute is a 4x4 matrix.
-   *
    * @type {string}
    * @constant
    */
@@ -83,12 +103,16 @@ const AttributeType = {
 AttributeType.getMathType = function (attributeType) {
   switch (attributeType) {
     case AttributeType.SCALAR:
+    case AttributeType.INT:
       return Number;
     case AttributeType.VEC2:
+    case AttributeType.IVEC2:
       return Cartesian2;
     case AttributeType.VEC3:
+    case AttributeType.IVEC3:
       return Cartesian3;
     case AttributeType.VEC4:
+    case AttributeType.IVEC4:
       return Cartesian4;
     case AttributeType.MAT2:
       return Matrix2;
@@ -114,12 +138,16 @@ AttributeType.getMathType = function (attributeType) {
 AttributeType.getNumberOfComponents = function (attributeType) {
   switch (attributeType) {
     case AttributeType.SCALAR:
+    case AttributeType.INT:
       return 1;
     case AttributeType.VEC2:
+    case AttributeType.IVEC2:
       return 2;
     case AttributeType.VEC3:
+    case AttributeType.IVEC3:
       return 3;
     case AttributeType.VEC4:
+    case AttributeType.IVEC4:
     case AttributeType.MAT2:
       return 4;
     case AttributeType.MAT3:
@@ -148,6 +176,10 @@ AttributeType.getAttributeLocationCount = function (attributeType) {
     case AttributeType.VEC2:
     case AttributeType.VEC3:
     case AttributeType.VEC4:
+    case AttributeType.INT:
+    case AttributeType.IVEC2:
+    case AttributeType.IVEC3:
+    case AttributeType.IVEC4:
       return 1;
     case AttributeType.MAT2:
       return 2;
@@ -184,6 +216,14 @@ AttributeType.getGlslType = function (attributeType) {
       return "vec3";
     case AttributeType.VEC4:
       return "vec4";
+    case AttributeType.INT:
+      return "int";
+    case AttributeType.IVEC2:
+      return "ivec2";
+    case AttributeType.IVEC3:
+      return "ivec3";
+    case AttributeType.IVEC4:
+      return "ivec4";
     case AttributeType.MAT2:
       return "mat2";
     case AttributeType.MAT3:

@@ -1,303 +1,179 @@
 import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import AttributeType from "./AttributeType.js";
 
 /**
- * An enum describing the built-in vertex attribute semantics.
- *
- * @enum {string}
- *
+ * @typedef VertexAttributeSemantic
+ * @property {string} semantic The understood attribute semantic value.
+ * @property {string} propertyName The attribute semantic property name.
+ * @property {AttributeType} accessorType Vertex attribute type for the corresponding semantic property.
+ * @property {boolean} [hasSetIndex=false] If true, attribute semantic property name is of the form <code>[semantic]_[set_index]</code>, e.g., <code>TEXCOORD_0</code>, <code>TEXCOORD_1</code>, <code>COLOR_0</code>.
+ * @property {boolean} [canQuantize=false] If true, this attribute could be quantized with <code>KHR_mesh_quantization</code> and need decoding as per {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_mesh_quantization/README.md#extending-mesh-attributes|the KHR_mesh_quantization spec}
+ */
+
+/**
+ * Per-vertex position.
+ * @type {VertexAttributeSemantic}
+ * @constant
+ */
+export const POSITION = Object.freeze({
+  semantic: "POSITION",
+  propertyName: "POSITION",
+  type: AttributeType.VEC3,
+  canQuantize: true
+});
+
+/**
+ * Per-vertex normal.
+ * @type {VertexAttributeSemantic}
+ * @constant
+ */
+export const NORMAL = Object.freeze({
+  semantic: "NORMAL",
+  propertyName: "NORMAL",
+  type: AttributeType.VEC3,
+  canQuantize: true
+});
+
+/**
+ * Per-vertex tangent.
+ * @type {VertexAttributeSemantic}
+ * @constant
+ */
+export const TANGENT = Object.freeze({
+  semantic: "TANGENT",
+  propertyName: "TANGENT",
+  type: AttributeType.VEC3,
+  canQuantize: true
+});
+
+/**
+ * Per-vertex texture coordinates.
+ * @type {VertexAttributeSemantic}
+ * @constant
+ */
+export const TEXCOORD = Object.freeze({
+  semantic: "TEXCOORD",
+  propertyName: "TEXCOORD",
+  type: AttributeType.VEC2,
+  hasSetIndex: true,
+  canQuantize: true
+});
+
+/**
+ * Per-vertex color.
+ * @type {VertexAttributeSemantic}
+ * @constant
+ */
+export const COLOR = Object.freeze({
+  semantic: "COLOR",
+  propertyName: "COLOR",
+  type: AttributeType.VEC4, // When VEC3, the 4th channel is assumed to be 1.0
+  hasSetIndex: true,
+});
+
+/**
+ * Per-vertex joint IDs for skinning.
+ * @type {VertexAttributeSemantic}
+ * @constant
+ */
+export const JOINTS = Object.freeze({
+  semantic: "JOINTS",
+  propertyName: "JOINTS",
+  type: AttributeType.IVEC4,
+  hasSetIndex: true,
+});
+
+/**
+ * Per-vertex joint weights for skinning.
+ * @type {VertexAttributeSemantic}
+ * @constant
+ */
+export const WEIGHTS = Object.freeze({
+  semantic: "WEIGHTS",
+  propertyName: "WEIGHTS",
+  type: AttributeType.VEC4,
+  hasSetIndex: true,
+});
+
+/**
+ * Vertex attribute semantic names and their associated properties as defined by the core glTF specification.
+ * @type {Set<VertexAttributeSemantic>}
  * @private
  */
-const VertexAttributeSemantic = {
-  /**
-   * Per-vertex position.
-   *
-   * @type {string}
-   * @constant
-   */
-  POSITION: "POSITION",
+export const defaultGltfVertexAttributeSemantics = Object.freeze({
+  POSITION,
+  NORMAL,
+  TANGENT,
+  TEXCOORD,
+  COLOR,
+  JOINTS,
+  WEIGHTS,
+});
 
-  /**
-   * Per-vertex normal.
-   *
-   * @type {string}
-   * @constant
-   */
-  NORMAL: "NORMAL",
+/**
+ * Per-vertex feature ID.
+ * @type {VertexAttributeSemantic}
+ * @constant
+ */
+export const FEATURE_ID = Object.freeze({
+  semantic: "FEATURE_ID",
+  propertyName: "_FEATURE_ID",
+  type: AttributeType.INT,
+  hasSetIndex: true,
+  canQuantize: true
+});
 
-  /**
-   * Per-vertex tangent.
-   *
-   * @type {string}
-   * @constant
-   */
-  TANGENT: "TANGENT",
+/**
+ * Returns <code>true</code> if the vertex attribute semantic property name, as defined in the <code>attributes</code> property of a glTF mesh, is understood to be the <code>POSITION</code> attribute.
+ * @param {VertexAttributeSemantic} attributeSemantic The vertex attribute semantic.
+ * @returns {boolean}  <code>true</code> if the vertex attribute semantic property name, as defined in the <code>attributes</code> property of a glTF mesh, is understood to be the <code>POSITION</code> attribute.
+ * @private
+ */
+export function isPositionAttribute(attributeSemantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("attributeSemantic", attributeSemantic);
+  Check.typeOf.string("attributeSemantic.propertyName", attributeSemantic.propertyName);
+  //>>includeEnd('debug');
 
-  /**
-   * Per-vertex texture coordinates.
-   *
-   * @type {string}
-   * @constant
-   */
-  TEXCOORD: "TEXCOORD",
-
-  /**
-   * Per-vertex color.
-   *
-   * @type {string}
-   * @constant
-   */
-  COLOR: "COLOR",
-
-  /**
-   * Per-vertex joint IDs for skinning.
-   *
-   * @type {string}
-   * @constant
-   */
-  JOINTS: "JOINTS",
-
-  /**
-   * Per-vertex joint weights for skinning.
-   *
-   * @type {string}
-   * @constant
-   */
-  WEIGHTS: "WEIGHTS",
-
-  /**
-   * Per-vertex feature ID.
-   *
-   * @type {string}
-   * @constant
-   */
-  FEATURE_ID: "_FEATURE_ID",
-  /**
-   * Gaussian Splat Scale
-   *
-   * @type {string}
-   * @constant
-   */
-  SCALE: "_SCALE",
-  /**
-   * Gaussian Splat Rotation
-   *
-   * @type {string}
-   * @constant
-   */
-  ROTATION: "_ROTATION",
-};
-
-function semanticToVariableName(semantic) {
-  switch (semantic) {
-    case VertexAttributeSemantic.POSITION:
-      return "positionMC";
-    case VertexAttributeSemantic.NORMAL:
-      return "normalMC";
-    case VertexAttributeSemantic.TANGENT:
-      return "tangentMC";
-    case VertexAttributeSemantic.TEXCOORD:
-      return "texCoord";
-    case VertexAttributeSemantic.COLOR:
-      return "color";
-    case VertexAttributeSemantic.JOINTS:
-      return "joints";
-    case VertexAttributeSemantic.WEIGHTS:
-      return "weights";
-    case VertexAttributeSemantic.FEATURE_ID:
-      return "featureId";
-    case VertexAttributeSemantic.SCALE:
-      return "scale";
-    case VertexAttributeSemantic.ROTATION:
-      return "rotation";
-    //>>includeStart('debug', pragmas.debug);
-    default:
-      throw new DeveloperError("semantic is not a valid value.");
-    //>>includeEnd('debug');
-  }
+  return attributeSemantic.propertyName === POSITION.propertyName;
 }
 
 /**
- * Returns whether the vertex attribute semantic can have a set index.
- *
- * @param {VertexAttributeSemantic} semantic The semantic.
- *
- * @returns {boolean} Whether the semantic can have a set index.
- *
+ * Gets the vertex attribute semantic name corresponding to the vertex attribute semantic property name, as defined in the <code>attributes</code> property of a glTF mesh.
+ * @param {string} propertyName The vertex attribute semantic property name.
+ * @returns {string} The vertex attribute semantic name.
  * @private
  */
-VertexAttributeSemantic.hasSetIndex = function (semantic) {
+export function getSemanticNameFromPropertyName(propertyName) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("semantic", semantic);
+  Check.typeOf.string("propertyName", propertyName);
   //>>includeEnd('debug');
 
-  switch (semantic) {
-    case VertexAttributeSemantic.POSITION:
-    case VertexAttributeSemantic.NORMAL:
-    case VertexAttributeSemantic.TANGENT:
-      return false;
-    case VertexAttributeSemantic.TEXCOORD:
-    case VertexAttributeSemantic.COLOR:
-    case VertexAttributeSemantic.JOINTS:
-    case VertexAttributeSemantic.WEIGHTS:
-    case VertexAttributeSemantic.FEATURE_ID:
-    case VertexAttributeSemantic.SCALE:
-    case VertexAttributeSemantic.ROTATION:
-      return true;
-    //>>includeStart('debug', pragmas.debug);
-    default:
-      throw new DeveloperError("semantic is not a valid value.");
-    //>>includeEnd('debug');
-  }
-};
-
-/**
- * Gets the vertex attribute semantic matching the glTF semantic.
- *
- * @param {string} gltfSemantic The glTF semantic.
- *
- * @returns {VertexAttributeSemantic|undefined} The vertex attribute semantic, or undefined if there is no match.
- *
- * @private
- */
-VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("gltfSemantic", gltfSemantic);
-  //>>includeEnd('debug');
-
-  let semantic = gltfSemantic;
-
-  // Strip the set index from the semantic
   const setIndexRegex = /^(\w+)_\d+$/;
-  const setIndexMatch = setIndexRegex.exec(gltfSemantic);
+  const setIndexMatch = setIndexRegex.exec(propertyName);
   if (setIndexMatch !== null) {
-    semantic = setIndexMatch[1];
+    return setIndexMatch[1];
   }
 
-  switch (semantic) {
-    case "POSITION":
-      return VertexAttributeSemantic.POSITION;
-    case "NORMAL":
-      return VertexAttributeSemantic.NORMAL;
-    case "TANGENT":
-      return VertexAttributeSemantic.TANGENT;
-    case "TEXCOORD":
-      return VertexAttributeSemantic.TEXCOORD;
-    case "COLOR":
-      return VertexAttributeSemantic.COLOR;
-    case "JOINTS":
-      return VertexAttributeSemantic.JOINTS;
-    case "WEIGHTS":
-      return VertexAttributeSemantic.WEIGHTS;
-    case "_FEATURE_ID":
-      return VertexAttributeSemantic.FEATURE_ID;
-    case "_SCALE":
-      return VertexAttributeSemantic.SCALE;
-    case "_ROTATION":
-      return VertexAttributeSemantic.ROTATION;
-  }
-
-  return undefined;
-};
+  return propertyName;
+}
 
 /**
- * Gets the vertex attribute semantic matching the pnts semantic.
- *
- * @param {string} pntsSemantic The pnts semantic.
- *
- * @returns {VertexAttributeSemantic|undefined} The vertex attribute semantic, or undefined if there is no match.
- *
+ * Gets the vertex attribute set index corresponding to the vertex attribute semantic property name, as defined in the <code>attributes</code> property of a glTF mesh.
+ * @param {string} propertyName The vertex attribute semantic property name.
+ * @returns {number} The vertex attribute set index, or <code>0</code> if the property name contains no set index.
  * @private
  */
-VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
+export function getSetIndexFromPropertyName(propertyName) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("pntsSemantic", pntsSemantic);
+  Check.typeOf.string("propertyName", propertyName);
   //>>includeEnd('debug');
 
-  switch (pntsSemantic) {
-    case "POSITION":
-    case "POSITION_QUANTIZED":
-      return VertexAttributeSemantic.POSITION;
-    case "RGBA":
-    case "RGB":
-    case "RGB565":
-      return VertexAttributeSemantic.COLOR;
-    case "NORMAL":
-    case "NORMAL_OCT16P":
-      return VertexAttributeSemantic.NORMAL;
-    case "BATCH_ID":
-      return VertexAttributeSemantic.FEATURE_ID;
-    //>>includeStart('debug', pragmas.debug);
-    default:
-      throw new DeveloperError("pntsSemantic is not a valid value.");
-    //>>includeEnd('debug');
+  const setIndexRegex = /^\w+_(\d+)$/;
+  const setIndexMatch = setIndexRegex.exec(propertyName);
+  if (setIndexMatch !== null) {
+    return parseInt(setIndexMatch[1]);
   }
-};
 
-/**
- * Gets the GLSL type (such as <code>vec3</code> or <code>int</code>) for the
- * given vertex attribute.
- *
- * @param {VertexAttributeSemantic} semantic The semantic.
- *
- * @returns {string} The shader type.
- *
- * @private
- */
-VertexAttributeSemantic.getGlslType = function (semantic) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("semantic", semantic);
-  //>>includeEnd('debug');
-
-  switch (semantic) {
-    case VertexAttributeSemantic.POSITION:
-    case VertexAttributeSemantic.NORMAL:
-    case VertexAttributeSemantic.TANGENT:
-      return "vec3";
-    case VertexAttributeSemantic.TEXCOORD:
-      return "vec2";
-    case VertexAttributeSemantic.COLOR:
-      return "vec4";
-    case VertexAttributeSemantic.JOINTS:
-      return "ivec4";
-    case VertexAttributeSemantic.WEIGHTS:
-      return "vec4";
-    case VertexAttributeSemantic.FEATURE_ID:
-      return "int";
-    case VertexAttributeSemantic.SCALE:
-      return "vec3";
-    case VertexAttributeSemantic.ROTATION:
-      return "vec4";
-    case VertexAttributeSemantic.OPACITY:
-      return "float";
-    //>>includeStart('debug', pragmas.debug);
-    default:
-      throw new DeveloperError("semantic is not a valid value.");
-    //>>includeEnd('debug');
-  }
-};
-
-/**
- * Gets the variable name for the given semantic and set index.
- *
- * @param {VertexAttributeSemantic} semantic The semantic.
- * @param {number} [setIndex] The set index.
- *
- * @returns {string} The variable name.
- *
- * @private
- */
-VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("semantic", semantic);
-  //>>includeEnd('debug');
-
-  let variableName = semanticToVariableName(semantic);
-  if (defined(setIndex)) {
-    variableName += `_${setIndex}`;
-  }
-  return variableName;
-};
-
-export default Object.freeze(VertexAttributeSemantic);
+  return 0;
+}

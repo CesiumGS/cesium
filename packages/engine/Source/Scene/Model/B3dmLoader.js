@@ -342,7 +342,7 @@ function processNode(node) {
   for (let i = 0; i < primitivesLength; i++) {
     const primitive = node.primitives[i];
     const featureIdVertexAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
+      primitive.attributes,
       VertexAttributeSemantic.FEATURE_ID,
     );
     if (defined(featureIdVertexAttribute)) {

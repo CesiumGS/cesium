@@ -5,7 +5,7 @@ import Quaternion from "../../Core/Quaternion.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Axis from "../Axis.js";
 import AttributeType from "../AttributeType.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import VertexAttributeSemantic from "../VertexAttributeSemanticMap.js";
 import CullFace from "../CullFace.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix3 from "../../Core/Matrix3.js";
@@ -43,6 +43,19 @@ ModelUtility.getError = function (type, path, error) {
   return runtimeError;
 };
 
+/** TODO */
+ModelUtility.fromArray = function(MathType, values) {
+  if (!defined(values)) {
+    return undefined;
+  }
+
+  if (MathType === Number) {
+    return values[0];
+  }
+
+  return MathType.unpack(values);
+}
+
 /**
  * Get a transformation matrix from a node in the model.
  *
@@ -64,17 +77,14 @@ ModelUtility.getNodeTransform = function (node) {
 };
 
 /**
- * Find an attribute by semantic such as POSITION or TANGENT.
- *
- * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
+ * Find an attribute by semantic such as <code>POSITION</code> or <code>TANGENT</code>.
+ * @param {ModelComponents.Attribute[]} attributes The list of attributes, such as <code>ModelComponents.Primitive.attributes</code> or <code>ModelComponents.Instances.attributes</code>
  * @param {VertexAttributeSemantic|InstanceAttributeSemantic} semantic The semantic to search for
- * @param {number} [setIndex] The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
- * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
- *
+ * @param {number} [setIndex=0] The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
+ * @return {ModelComponents.Attribute|undefined} The selected attribute, or <code>undefined</code> if not found.
  * @private
  */
-ModelUtility.getAttributeBySemantic = function (object, semantic, setIndex) {
-  const attributes = object.attributes;
+ModelUtility.getAttributeBySemantic = function (attributes, semantic, setIndex) {
   const attributesLength = attributes.length;
   for (let i = 0; i < attributesLength; ++i) {
     const attribute = attributes[i];
@@ -87,6 +97,42 @@ ModelUtility.getAttributeBySemantic = function (object, semantic, setIndex) {
   }
 
   return undefined;
+};
+
+/**
+ * Find an attribute by the <code>POSITION</code> semantic.
+ * @param {ModelComponents.Attribute[]} attributes The list of attributes, such as <code>ModelComponents.Primitive.attributes</code> or <code>ModelComponents.Instances.attributes</code>
+ * @return {ModelComponents.Attribute|undefined} The selected attribute, or <code>undefined</code> if not found.
+ * @private
+ */
+ModelUtility.getPositionAttribute = function (attributes) {
+  const attributesLength = attributes.length;
+  for (let i = 0; i < attributesLength; ++i) {
+    const attribute = attributes[i];
+    if (attribute.semantic === "POSITION") {
+      return attribute;
+    }
+  }
+
+  return undefined;
+};
+
+/**
+ * Returns true if the list of attributes contains an attribute understood to contain normals by the <code>NORMAL</code> semantic.
+ * @param {ModelComponents.Attribute[]} attributes The list of attributes, such as <code>ModelComponents.Primitive.attributes</code> or <code>ModelComponents.Instances.attributes</code>
+ * @return {boolean} <code>true</code> if there exists an attribute understood to contain normals, or <code>false</code> if not found.
+ * @private
+ */
+ModelUtility.hasNormals = function (attributes) {
+  const attributesLength = attributes.length;
+  for (let i = 0; i < attributesLength; ++i) {
+    const attribute = attributes[i];
+    if (attribute.semantic === "NORMAL") {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 /**
@@ -222,9 +268,8 @@ ModelUtility.getPositionMinMax = function (
   instancingTranslationMin,
   instancingTranslationMax,
 ) {
-  const positionGltfAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
-    "POSITION",
+  const positionGltfAttribute = ModelUtility.getPositionAttribute(
+    primitive.attributes
   );
 
   let positionMax = positionGltfAttribute.max;

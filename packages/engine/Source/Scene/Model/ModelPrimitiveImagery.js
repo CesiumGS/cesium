@@ -941,9 +941,8 @@ class ModelPrimitiveImagery {
     Check.defined("primitive", primitive);
     //>>includeEnd('debug');
 
-    const primitivePositionAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
-      "POSITION",
+    const primitivePositionAttribute = ModelUtility.getPositionAttribute(
+      primitive.attributes
     );
     if (!defined(primitivePositionAttribute)) {
       throw new DeveloperError(

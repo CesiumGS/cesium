@@ -9,7 +9,6 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelUtility from "./ModelUtility.js";
 import SceneMode from "../SceneMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import SceneTransforms from "../SceneTransforms.js";
 
 const scratchModelMatrix = new Matrix4();
@@ -54,9 +53,8 @@ SceneMode2DPipelineStage.process = function (
   primitive,
   frameState,
 ) {
-  const positionAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION,
+  const positionAttribute = ModelUtility.getPositionAttribute(
+    primitive.attributes
   );
 
   const shaderBuilder = renderResources.shaderBuilder;

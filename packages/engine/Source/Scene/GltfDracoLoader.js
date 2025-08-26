@@ -5,7 +5,7 @@ import defined from "../Core/defined.js";
 import DracoLoader from "./DracoLoader.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
-import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import DracoVertexAttributes from "./DracoVertexAttributes.js";
 
 /**
  * Load a draco buffer from a glTF.
@@ -175,24 +175,6 @@ async function processDecode(loader, decodePromise) {
   }
 }
 
-const SemanticToDracoAttributeType = {};
-SemanticToDracoAttributeType[VertexAttributeSemantic.POSITION] = "POSITION";
-SemanticToDracoAttributeType[VertexAttributeSemantic.NORMAL] = "NORMAL";
-SemanticToDracoAttributeType[VertexAttributeSemantic.COLOR] = "COLOR";
-SemanticToDracoAttributeType[VertexAttributeSemantic.TEXCOORD] = "TEX_COORD";
-
-function getDracoAttributeType(attribute) {
-  for (const semantic in SemanticToDracoAttributeType) {
-    if (SemanticToDracoAttributeType.hasOwnProperty(semantic)) {
-      if (attribute.startsWith(semantic)) {
-        return SemanticToDracoAttributeType[semantic];
-      }
-    }
-  }
-
-  return undefined;
-}
-
 /**
  * Processes the resource until it becomes ready.
  *
@@ -236,17 +218,15 @@ GltfDracoLoader.prototype.process = function (frameState) {
 
   // Skip de-quantization transform if present for floating point attributes.
   // They will stay quantized in memory and be dequantized in the shader.
-  const attributesToSkipTransform = [];
+  const attributesToSkipTransform = new Set();
 
-  for (const attribute in primitive.attributes) {
-    if (primitive.attributes.hasOwnProperty(attribute)) {
-      const dracoAttributeType = getDracoAttributeType(attribute);
-      if (defined(dracoAttributeType)) {
-        const accessor = gltf.accessors[primitive.attributes[attribute]];
+  for (const attributePropertyName in primitive.attributes) {
+    if (primitive.attributes.hasOwnProperty(attributePropertyName)) {
+      const accessorId = primitive.attributes[attributePropertyName];
+      if (defined(DracoVertexAttributes[attributePropertyName])) {
+        const accessor = gltf.accessors[accessorId];
         if (accessor.componentType === ComponentDatatype.FLOAT) {
-          if (!attributesToSkipTransform.includes(dracoAttributeType)) {
-            attributesToSkipTransform.push(dracoAttributeType);
-          }
+          attributesToSkipTransform.add(attributePropertyName);
         }
       }
     }
@@ -261,7 +241,7 @@ GltfDracoLoader.prototype.process = function (frameState) {
     bufferView: bufferView,
     compressedAttributes: compressedAttributes,
     dequantizeInShader: true,
-    attributesToSkipTransform: attributesToSkipTransform,
+    attributesToSkipTransform: Array.from(attributesToSkipTransform),
   };
 
   const decodePromise = DracoLoader.decodeBufferView(decodeOptions);

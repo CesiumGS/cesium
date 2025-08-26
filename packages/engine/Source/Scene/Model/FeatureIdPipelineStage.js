@@ -6,7 +6,6 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 import FeatureIdStageFS from "../../Shaders/Model/FeatureIdStageFS.js";
 import FeatureIdStageVS from "../../Shaders/Model/FeatureIdStageVS.js";
 import ModelComponents from "../ModelComponents.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
 import Matrix3 from "../../Core/Matrix3.js";
 
@@ -147,9 +146,8 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
 
 function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
   const featureIdsArray = primitive.featureIds;
-  const positionAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION,
+  const positionAttribute = ModelUtility.getPositionAttribute(
+    primitive.attributes
   );
   const count = positionAttribute.count;
 

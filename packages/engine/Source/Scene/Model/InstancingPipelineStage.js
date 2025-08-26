@@ -507,15 +507,15 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   const transforms = new Array(count);
 
   const translationAttribute = ModelUtility.getAttributeBySemantic(
-    instances,
+    instances.attributes,
     InstanceAttributeSemantic.TRANSLATION,
   );
   const rotationAttribute = ModelUtility.getAttributeBySemantic(
-    instances,
+    instances.attributes,
     InstanceAttributeSemantic.ROTATION,
   );
   const scaleAttribute = ModelUtility.getAttributeBySemantic(
-    instances,
+    instances.attributes,
     InstanceAttributeSemantic.SCALE,
   );
 
@@ -701,7 +701,7 @@ function processTransformAttributes(
   keepTypedArray,
 ) {
   const rotationAttribute = ModelUtility.getAttributeBySemantic(
-    instances,
+    instances.attributes,
     InstanceAttributeSemantic.ROTATION,
   );
 
@@ -825,11 +825,11 @@ function processTransformVec3Attributes(
   const shaderBuilder = renderResources.shaderBuilder;
   const runtimeNode = renderResources.runtimeNode;
   const translationAttribute = ModelUtility.getAttributeBySemantic(
-    instances,
+    instances.attributes,
     InstanceAttributeSemantic.TRANSLATION,
   );
   const scaleAttribute = ModelUtility.getAttributeBySemantic(
-    instances,
+    instances.attributes,
     InstanceAttributeSemantic.SCALE,
   );
 

@@ -424,18 +424,17 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const positions = tile.content._originalPositions;
   const rotations = tile.content._originalRotations;
   const scales = tile.content._originalScales;
-  const attributePositions = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
-    VertexAttributeSemantic.POSITION,
+  const attributePositions = ModelUtility.getPositionAttribute(
+    splatPrimitive.attributes
   ).typedArray;
 
   const attributeRotations = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
+    splatPrimitive.attributes,
     VertexAttributeSemantic.ROTATION,
   ).typedArray;
 
   const attributeScales = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
+    splatPrimitive.attributes,
     VertexAttributeSemantic.SCALE,
   ).typedArray;
 
@@ -789,9 +788,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._positions = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
         (splatPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.POSITION,
+          ModelUtility.getPositionAttribute(
+            splatPrimitive.attributes
           ),
       );
 
@@ -799,7 +797,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         ComponentDatatype.FLOAT,
         (splatPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            splatPrimitive.attributes,
             VertexAttributeSemantic.SCALE,
           ),
       );
@@ -808,7 +806,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         ComponentDatatype.FLOAT,
         (splatPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            splatPrimitive.attributes,
             VertexAttributeSemantic.ROTATION,
           ),
       );
@@ -817,7 +815,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         ComponentDatatype.UNSIGNED_BYTE,
         (splatPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            splatPrimitive.attributes,
             VertexAttributeSemantic.COLOR,
           ),
       );

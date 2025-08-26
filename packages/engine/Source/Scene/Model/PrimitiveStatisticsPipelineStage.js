@@ -54,7 +54,7 @@ PrimitiveStatisticsPipelineStage.process = function (
 function countGeometry(statistics, primitive) {
   const indicesCount = defined(primitive.indices)
     ? primitive.indices.count
-    : ModelUtility.getAttributeBySemantic(primitive, "POSITION").count;
+    : ModelUtility.getPositionAttribute(primitive.attributes).count;
 
   const primitiveType = primitive.primitiveType;
 
