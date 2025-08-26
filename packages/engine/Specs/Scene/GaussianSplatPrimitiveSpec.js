@@ -58,17 +58,17 @@ describe(
         new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
       );
       expect(tileset.hasExtension("3DTILES_content_gltf")).toBe(true);
-      expect(
-        tileset.isGltfExtensionUsed("KHR_gaussian_splatting"),
-      ).toBe(true);
+      expect(tileset.isGltfExtensionUsed("KHR_gaussian_splatting")).toBe(true);
       expect(
         tileset.isGltfExtensionUsed("KHR_gaussian_splatting_compression_spz_2"),
       ).toBe(true);
+      expect(tileset.isGltfExtensionRequired("KHR_gaussian_splatting")).toBe(
+        true,
+      );
       expect(
-        tileset.isGltfExtensionRequired("KHR_gaussian_splatting"),
-      ).toBe(true);
-      expect(
-        tileset.isGltfExtensionRequired("KHR_gaussian_splatting_compression_spz_2"),
+        tileset.isGltfExtensionRequired(
+          "KHR_gaussian_splatting_compression_spz_2",
+        ),
       ).toBe(true);
 
       const tile = await Cesium3DTilesTester.waitForTileContentReady(
@@ -108,7 +108,8 @@ describe(
 describe(
   "Scene/GaussianSplatPrimitive_Legacy",
   function () {
-    const tilesetUrl = "./Data/Cesium3DTiles/GaussianSplats/tower_legacy/tileset.json";
+    const tilesetUrl =
+      "./Data/Cesium3DTiles/GaussianSplats/tower_legacy/tileset.json";
 
     let scene;
     let options;
@@ -193,4 +194,3 @@ describe(
   },
   "WebGL",
 );
-

@@ -123,7 +123,8 @@ describe(
 describe(
   "Scene/GaussianSplat3DTileContent_Legacy",
   function () {
-    const tilesetUrl = "./Data/Cesium3DTiles/GaussianSplats/tower_legacy/tileset.json";
+    const tilesetUrl =
+      "./Data/Cesium3DTiles/GaussianSplats/tower_legacy/tileset.json";
 
     let scene;
     let options;
