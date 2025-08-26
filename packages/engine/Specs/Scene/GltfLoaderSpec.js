@@ -128,6 +128,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const meshPrimitiveRestartTestData =
+      "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -4170,6 +4172,93 @@ describe(
       expect(clearcoatRoughnessFactor).toBe(0.2);
       expect(clearcoatRoughnessTexture.texture.width).toBe(256);
       expect(clearcoatNormalTexture.texture.width).toBe(256);
+    });
+
+    it("loads model with EXT_mesh_primitive_restart extension", async function () {
+      const gltf = await Resource.fetchJson({
+        url: meshPrimitiveRestartTestData,
+      });
+      const gltfLoader = await loadGltf(meshPrimitiveRestartTestData);
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(gltf.meshes[0].primitives.length).toBe(8);
+      expect(loadedPrimitives.length).toBe(4);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a primitive appears in multiple groups", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].primitives[1] = 5;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a primitive appears more than once in a group", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].primitives[1] = 6;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart for unsupported modes", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].primitives[6].mode = 4;
+        delete gltf.meshes[0].primitives[0].mode;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if primitives have different modes", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].primitives[7].mode = 3;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a primitive does not define an indices property", async function () {
+      function modifyGltf(gltf) {
+        delete gltf.meshes[0].primitives[0].indices;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
     });
 
     it("parses copyright field", function () {

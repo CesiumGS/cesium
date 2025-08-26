@@ -160,7 +160,7 @@ async function requestMetadata(
   const cacheKey = metadataResource.url;
   let promise = BingMapsImageryProvider._metadataCache[cacheKey];
   if (!defined(promise)) {
-    promise = metadataResource.fetchJsonp("jsonp");
+    promise = metadataResource.fetchJson();
     BingMapsImageryProvider._metadataCache[cacheKey] = promise;
   }
 
