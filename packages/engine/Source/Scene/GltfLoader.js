@@ -2023,12 +2023,12 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   //support the latest glTF spec and the legacy extension
   const gsExtension = extensions.KHR_spz_gaussian_splatting;
   const spzExtension =
-    gsExtension?.extensions.KHR_gaussian_splatting_compression_2;
+    gsExtension?.extensions.KHR_gaussian_splatting_compression_spz_2;
   const legacySpzExtension = extensions.KHR_spz_gaussian_splats_compression;
 
   if (
-    defined(gsExtension) &&
-    (defined(spzExtension) || defined(legacySpzExtension))
+    (defined(gsExtension) && defined(spzExtension)) ||
+    defined(legacySpzExtension)
   ) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;

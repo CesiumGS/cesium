@@ -79,6 +79,7 @@ const VertexAttributeSemantic = {
    * @type {string}
    * @constant
    */
+  _SCALE: "_SCALE",
   SCALE: "KHR_gaussian_splatting:SCALE",
   /**
    * Gaussian Splat Rotation
@@ -86,6 +87,7 @@ const VertexAttributeSemantic = {
    * @type {string}
    * @constant
    */
+  _ROTATION: "_ROTATION",
   ROTATION: "KHR_gaussian_splatting:ROTATION",
 };
 
