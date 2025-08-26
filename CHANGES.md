@@ -17,6 +17,10 @@
 
 - Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
 
+#### Fixes :wrench:
+
+- Fixed a crash that could happen when loading PNTS (point cloud) data that contained a batch table without a binary part [#11166](https://github.com/CesiumGS/cesium/issues/11166)
+
 #### Deprecated :hourglass_flowing_sand:
 
 - Deprecated support of the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian Splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. The deprecated extension will be removed in version 1.135. Please retile your existing 3D Tiles using Gaussian splatting before that time. [#12837](https://github.com/CesiumGS/cesium/issues/12837)
@@ -2475,7 +2479,6 @@ _This is an npm-only release to fix a publishing issue_.
     tileset.boundingSphere.center,
   );
   ```
-
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.
 
 ### Additions :tada:
@@ -4321,7 +4324,6 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
-
     - `TimeInterval.fromIso8601` now takes a single options parameter. Code that looked like:
 
             TimeInterval.fromIso8601(intervalString, true, true, data);
@@ -4334,7 +4336,6 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
-
     - `interval.intersect(otherInterval)` -> `TimeInterval.intersect(interval, otherInterval)`
     - `interval.contains(date)` -> `TimeInterval.contains(interval, date)`
 
