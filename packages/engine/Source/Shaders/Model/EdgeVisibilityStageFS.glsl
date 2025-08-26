@@ -51,8 +51,9 @@ void edgeVisibilityStage(inout vec4 color)
     color = edgeColor;
     
     #ifdef HAS_EDGE_VISIBILITY_MRT
-        out_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
-        out_id.r = edgeTypeInt;
+        out_FragColor = edgeColor;
+        out_id.r = edgeTypeInt;                    // Edge type
+        out_id.g = v_edgeFeatureId;               // Feature ID
     #endif
 #endif
 }

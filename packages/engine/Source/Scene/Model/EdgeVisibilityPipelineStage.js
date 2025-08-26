@@ -11,6 +11,7 @@ import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js"
 import ModelUtility from "./ModelUtility.js";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelComponents from "../ModelComponents.js";
 
 const EdgeVisibilityPipelineStage = {
   name: "EdgeVisibilityPipelineStage",
@@ -54,6 +55,13 @@ EdgeVisibilityPipelineStage.process = function (
   const edgeTypeLocation = shaderBuilder.addAttribute("float", "a_edgeType");
   shaderBuilder.addVarying("float", "v_edgeType", "flat");
 
+  // Add feature ID attribute and varying for edge geometry
+  const edgeFeatureIdLocation = shaderBuilder.addAttribute(
+    "float",
+    "a_edgeFeatureId",
+  );
+  shaderBuilder.addVarying("float", "v_edgeFeatureId", "flat");
+
   // Add silhouette normal attribute and varying for silhouette edges
   const silhouetteNormalLocation = shaderBuilder.addAttribute(
     "vec3",
@@ -80,6 +88,7 @@ EdgeVisibilityPipelineStage.process = function (
   shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
     "#ifdef HAS_EDGE_VISIBILITY",
     "  v_edgeType = a_edgeType;",
+    "  v_edgeFeatureId = a_edgeFeatureId;",
     "  // Transform normals from model space to view space",
     "  v_silhouetteNormalView = czm_normal * a_silhouetteNormal;",
     "  v_faceNormalAView = czm_normal * a_faceNormalA;",
@@ -116,6 +125,7 @@ EdgeVisibilityPipelineStage.process = function (
     renderResources,
     frameState.context,
     edgeTypeLocation,
+    edgeFeatureIdLocation,
     silhouetteNormalLocation,
     faceNormalALocation,
     faceNormalBLocation,
@@ -413,6 +423,7 @@ function extractVisibleEdges(primitive) {
  * @param {PrimitiveRenderResources} renderResources The render resources
  * @param {Context} context The rendering context
  * @param {number} edgeTypeLocation The shader location for edge type attribute
+ * @param {number} edgeFeatureIdLocation The shader location for edge feature ID attribute
  * @param {number} silhouetteNormalLocation The shader location for silhouette normal attribute
  * @param {number} faceNormalALocation The shader location for face normal A attribute
  * @param {number} faceNormalBLocation The shader location for face normal B attribute
@@ -427,6 +438,7 @@ function createCPULineEdgeGeometry(
   renderResources,
   context,
   edgeTypeLocation,
+  edgeFeatureIdLocation,
   silhouetteNormalLocation,
   faceNormalALocation,
   faceNormalBLocation,
@@ -456,12 +468,53 @@ function createCPULineEdgeGeometry(
   // Create edge-domain vertices (2 per edge)
   const edgePosArray = new Float32Array(totalVerts * 3);
   const edgeTypeArray = new Float32Array(totalVerts);
+  const edgeFeatureIdArray = new Float32Array(totalVerts);
   const silhouetteNormalArray = new Float32Array(totalVerts * 3);
   const faceNormalAArray = new Float32Array(totalVerts * 3);
   const faceNormalBArray = new Float32Array(totalVerts * 3);
   let p = 0;
 
   const maxSrcVertex = srcPos.length / 3 - 1;
+
+  // Get feature ID data from the original primitive
+  const primitive = renderResources.runtimePrimitive.primitive;
+  let srcFeatureIds = null;
+
+  // Try to get the first feature ID attribute (featureId_0)
+  if (defined(primitive.featureIds) && primitive.featureIds.length > 0) {
+    const firstFeatureId = primitive.featureIds[0];
+
+    if (firstFeatureId instanceof ModelComponents.FeatureIdAttribute) {
+      // Try multiple possible semantic names
+      const possibleSemantics = [
+        `_FEATURE_ID_${firstFeatureId.setIndex}`,
+        `FEATURE_ID_${firstFeatureId.setIndex}`,
+        `_FEATURE_ID`,
+        `FEATURE_ID`,
+        firstFeatureId.attribute?.semantic, // Direct from the FeatureIdAttribute
+      ].filter(Boolean);
+
+      let featureIdAttribute = null;
+
+      for (const semanticName of possibleSemantics) {
+        featureIdAttribute = ModelUtility.getAttributeBySemantic(
+          primitive,
+          semanticName,
+        );
+      }
+
+      // If still not found, try to access the attribute directly from firstFeatureId
+      if (!defined(featureIdAttribute) && defined(firstFeatureId.attribute)) {
+        featureIdAttribute = firstFeatureId.attribute;
+      }
+
+      if (defined(featureIdAttribute)) {
+        srcFeatureIds = defined(featureIdAttribute.typedArray)
+          ? featureIdAttribute.typedArray
+          : ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+      }
+    }
+  }
 
   for (let i = 0; i < numEdges; i++) {
     const a = edgeIndices[i * 2];
@@ -478,6 +531,8 @@ function createCPULineEdgeGeometry(
       edgePosArray[p++] = 0;
       edgeTypeArray[i * 2] = 0;
       edgeTypeArray[i * 2 + 1] = 0;
+      edgeFeatureIdArray[i * 2] = 0;
+      edgeFeatureIdArray[i * 2 + 1] = 0;
       // Fill with default values
       const normalIdx = i * 2;
       silhouetteNormalArray[normalIdx * 3] = 0;
@@ -524,6 +579,22 @@ function createCPULineEdgeGeometry(
 
     edgeTypeArray[i * 2] = t;
     edgeTypeArray[i * 2 + 1] = t;
+
+    // Set feature ID for both edge endpoints
+    let featureIdA = 0.0; // Default feature ID
+
+    if (defined(srcFeatureIds)) {
+      // Get feature IDs from the original vertices
+      if (a < srcFeatureIds.length) {
+        featureIdA = srcFeatureIds[a];
+      }
+    }
+
+    // Use the feature ID of the first vertex for both edge endpoints
+    // (alternatively, could use average or other logic)
+    const edgeFeatureId = featureIdA;
+    edgeFeatureIdArray[i * 2] = edgeFeatureId;
+    edgeFeatureIdArray[i * 2 + 1] = edgeFeatureId;
 
     // Add silhouette normal for silhouette edges (type 1)
     let normalX = 0,
@@ -593,6 +664,11 @@ function createCPULineEdgeGeometry(
     typedArray: edgeTypeArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+  const edgeFeatureIdBuffer = Buffer.createVertexBuffer({
+    context,
+    typedArray: edgeFeatureIdArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
   const silhouetteNormalBuffer = Buffer.createVertexBuffer({
     context,
     typedArray: silhouetteNormalArray,
@@ -642,6 +718,13 @@ function createCPULineEdgeGeometry(
       normalize: false,
     },
     {
+      index: edgeFeatureIdLocation,
+      vertexBuffer: edgeFeatureIdBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    {
       index: silhouetteNormalLocation,
       vertexBuffer: silhouetteNormalBuffer,
       componentsPerAttribute: 3,
@@ -668,6 +751,22 @@ function createCPULineEdgeGeometry(
 
   if (!vertexArray || totalVerts === 0 || totalVerts % 2 !== 0) {
     return undefined;
+  }
+
+  // Feature ID statistics calculated but not currently used
+  if (defined(srcFeatureIds)) {
+    // Calculate min/max without spreading large arrays for potential debugging
+    let min = edgeFeatureIdArray[0];
+    let max = edgeFeatureIdArray[0];
+    for (let i = 1; i < edgeFeatureIdArray.length; i++) {
+      if (edgeFeatureIdArray[i] < min) {
+        min = edgeFeatureIdArray[i];
+      }
+      if (edgeFeatureIdArray[i] > max) {
+        max = edgeFeatureIdArray[i];
+      }
+    }
+    // Range: min=${min}, max=${max}, unique=${new Set(edgeFeatureIdArray).size}
   }
 
   return { vertexArray, indexBuffer, indexCount: totalVerts };
