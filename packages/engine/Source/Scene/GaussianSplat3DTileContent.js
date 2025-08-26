@@ -7,6 +7,7 @@ import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
 import destroyObject from "../Core/destroyObject.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
  * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-spz-splat-compression/extensions/2.0/Khronos/KHR_spz_gaussian_splats_compression|KHR_spz_gaussian_splats_compression} extension.
@@ -324,6 +325,34 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
     },
   },
 });
+
+GaussianSplat3DTileContent.tilesetHasGaussianSplattingExt = function (tileset) {
+  let hasGaussianSplatExtension = false;
+  let hasLegacyGaussianSplatExtension = false;
+  if (tileset.isGltfExtensionRequired instanceof Function) {
+    hasGaussianSplatExtension =
+      tileset.isGltfExtensionRequired("KHR_gaussian_splatting") &&
+      tileset.isGltfExtensionRequired(
+        "KHR_gaussian_splatting_compression_spz_2",
+      );
+
+    hasLegacyGaussianSplatExtension = tileset.isGltfExtensionRequired(
+      "KHR_spz_gaussian_splats_compression",
+    );
+  }
+
+  if (hasLegacyGaussianSplatExtension) {
+    deprecationWarning(
+      "KHR_spz_gaussian_splats_compression",
+      "Support for the original KHR_spz_gaussian_splats_compression extension has been deprecated in favor " +
+        "of the up to date KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions and will be " +
+        "removed in CesiumJS 1.134.\n\nPlease retile your tileset with the KHR_gaussian_splatting and " +
+        "KHR_gaussian_splatting_compression_spz_2 extensions.",
+    );
+  }
+
+  return hasGaussianSplatExtension || hasLegacyGaussianSplatExtension;
+};
 
 /**
  * Determine Spherical Harmonics degree and coefficient count from attributes

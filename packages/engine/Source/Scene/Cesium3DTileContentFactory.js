@@ -93,28 +93,14 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
-    let hasGaussianSplatExtension = false;
-    if (tileset.isGltfExtensionRequired instanceof Function) {
-      hasGaussianSplatExtension = tileset.isGltfExtensionRequired(
-        "KHR_spz_gaussian_splats_compression",
-      );
-    }
-    if (hasGaussianSplatExtension) {
+    if (GaussianSplat3DTileContent.tilesetHasGaussianSplattingExt(tileset)) {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
-    const forceGaussianSplats =
-      tileset.debugTreatTilesetAsGaussianSplats ?? false;
-    let hasGaussianSplatExtension = false;
-    if (tileset.isGltfExtensionRequired instanceof Function) {
-      hasGaussianSplatExtension = tileset.isGltfExtensionRequired(
-        "KHR_spz_gaussian_splats_compression",
-      );
-    }
-    if (forceGaussianSplats || hasGaussianSplatExtension) {
+    if (GaussianSplat3DTileContent.tilesetHasGaussianSplattingExt(tileset)) {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 

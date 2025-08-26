@@ -306,8 +306,15 @@ async function loadFromSpz(vertexBufferLoader) {
   }
 }
 
+function getShPrefix(attribute) {
+  const prefix = attribute.startsWith("KHR_gaussian_splatting:")
+    ? "KHR_gaussian_splatting:"
+    : "_";
+  return `${prefix}SH_DEGREE_`;
+}
+
 function extractSHDegreeAndCoef(attribute) {
-  const prefix = "_SH_DEGREE_";
+  const prefix = getShPrefix(attribute);
   const separator = "_COEF_";
 
   const lStart = prefix.length;
@@ -327,9 +334,15 @@ function processSpz(vertexBufferLoader) {
 
   if (vertexBufferLoader._attributeSemantic === "POSITION") {
     vertexBufferLoader._typedArray = gcloudData.positions;
-  } else if (vertexBufferLoader._attributeSemantic === "_SCALE") {
+  } else if (
+    vertexBufferLoader._attributeSemantic === "_SCALE" ||
+    vertexBufferLoader._attributeSemantic === "KHR_gaussian_splatting:SCALE"
+  ) {
     vertexBufferLoader._typedArray = gcloudData.scales;
-  } else if (vertexBufferLoader._attributeSemantic === "_ROTATION") {
+  } else if (
+    vertexBufferLoader._attributeSemantic === "_ROTATION" ||
+    vertexBufferLoader._attributeSemantic === "KHR_gaussian_splatting:ROTATION"
+  ) {
     vertexBufferLoader._typedArray = gcloudData.rotations;
   } else if (vertexBufferLoader._attributeSemantic === "COLOR_0") {
     const colors = gcloudData.colors;
@@ -357,7 +370,7 @@ function processSpz(vertexBufferLoader) {
         255.0,
       );
     }
-  } else if (vertexBufferLoader._attributeSemantic.startsWith("_SH_DEGREE_")) {
+  } else if (vertexBufferLoader._attributeSemantic.includes("SH_DEGREE_")) {
     const { l, n } = extractSHDegreeAndCoef(
       vertexBufferLoader._attributeSemantic,
     );

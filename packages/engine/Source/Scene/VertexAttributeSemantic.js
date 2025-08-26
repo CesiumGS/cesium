@@ -79,14 +79,14 @@ const VertexAttributeSemantic = {
    * @type {string}
    * @constant
    */
-  SCALE: "_SCALE",
+  SCALE: "KHR_gaussian_splatting:SCALE",
   /**
    * Gaussian Splat Rotation
    *
    * @type {string}
    * @constant
    */
-  ROTATION: "_ROTATION",
+  ROTATION: "KHR_gaussian_splatting:ROTATION",
 };
 
 function semanticToVariableName(semantic) {
@@ -193,8 +193,10 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
     case "_FEATURE_ID":
       return VertexAttributeSemantic.FEATURE_ID;
     case "_SCALE":
+    case "KHR_gaussian_splatting:SCALE":
       return VertexAttributeSemantic.SCALE;
     case "_ROTATION":
+    case "KHR_gaussian_splatting:ROTATION":
       return VertexAttributeSemantic.ROTATION;
   }
 
@@ -284,7 +286,7 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
  * @param {VertexAttributeSemantic} semantic The semantic.
  * @param {number} [setIndex] The set index.
  *
- * @returns {string} The variable name.
+ * @returns {string} The varia_SCALEble name.
  *
  * @private
  */
