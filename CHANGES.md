@@ -7,6 +7,9 @@
 #### Breaking Changes :mega:
 
 - Removed the argument fallback in `ITwinData.*` functions. Please switch to the new options argument signature [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+
+#### Fixes :wrench:
+
 - Fixed a crash that could happen when loading PNTS (point cloud) data that contained a batch table without a binary part [#11166](https://github.com/CesiumGS/cesium/issues/11166)
 
 ## 1.132 - 2025-08-01
@@ -2463,7 +2466,6 @@ _This is an npm-only release to fix a publishing issue_.
     tileset.boundingSphere.center,
   );
   ```
-
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.
 
 ### Additions :tada:
@@ -4309,7 +4311,6 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
-
     - `TimeInterval.fromIso8601` now takes a single options parameter. Code that looked like:
 
             TimeInterval.fromIso8601(intervalString, true, true, data);
@@ -4322,7 +4323,6 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
-
     - `interval.intersect(otherInterval)` -> `TimeInterval.intersect(interval, otherInterval)`
     - `interval.contains(date)` -> `TimeInterval.contains(interval, date)`
 
