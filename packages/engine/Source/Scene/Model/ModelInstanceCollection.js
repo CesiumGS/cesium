@@ -1,4 +1,3 @@
-import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import ModelInstance from "./ModelInstance.js";
@@ -36,7 +35,9 @@ import RuntimeError from "../../Core/RuntimeError.js";
  *
  * // Add an instance at the specified transform to a collection
  * const collection = new Cesium.ModelInstanceCollection();
- * collection.add(instanceModelMatrix);
+ * collection.add({
+ *   transform: instanceModelMatrix
+ * });
  *
  * // Add an instance to a model
  * const model = await Cesium.Model.fromGltfAsync({
@@ -44,7 +45,9 @@ import RuntimeError from "../../Core/RuntimeError.js";
  *   minimumPixelSize: 64,
  * });
  * viewer.scene.primitives.add(model);
- * model.instances.add(instanceModelMatrix);
+ * model.instances.add({
+ *   transform: instanceModelMatrix
+ * });
  */
 function ModelInstanceCollection(options) {
   this._instances = [];
@@ -75,9 +78,14 @@ ModelInstanceCollection.prototype.initialize = function (transforms) {
   }
 
   for (let i = 0; i < transforms.length; i++) {
-    const transform = transforms[i];
-    const instance = new ModelInstance(transform);
+    const instance = new ModelInstance({
+      transform: transforms[i],
+    });
     this._instances.push(instance);
+  }
+
+  if (transforms.length > 0 && this._model !== undefined) {
+    this._model._runtimeInstancesDirty = true;
   }
 };
 
@@ -85,7 +93,10 @@ ModelInstanceCollection.prototype.initialize = function (transforms) {
  * Creates and adds an instance with the specified transform to the collection.
  * The added instance is returned so it can be modified or removed from the collection later.
  *
- * @param {Matrix4} transform A transform that represents an instance of a Model
+ * @param {object} options Object with the following properties:
+ * @param {Matrix4} options.transform Matrix4 describing the transform of the instance.
+ * @param {boolean} [options.show=true] Determines if the billboards in the collection will be shown.
+ * @param {Color} [options.color] Determines if the billboards in the collection will be shown.
  * @returns {ModelInstance} The model instance that was added to the collection.
  *
  * @performance Calling <code>add</code> is expected constant time. However, the collection's vertex buffer
@@ -95,24 +106,27 @@ ModelInstanceCollection.prototype.initialize = function (transforms) {
  * @example
  * // Example:  Provide a transform to add a model instance to the collection
  * const collection = new ModelInstanceCollection()
- * const instance = collection.add(transform)
+ * const instance = collection.add({
+ *   transform: instanceTransform
+ * })
  *
  * @see ModelInstanceCollection#remove
  * @see ModelInstanceCollection#removeAll
  */
-ModelInstanceCollection.prototype.add = function (transform) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("transform", transform);
-  //>>includeEnd('debug');
-
+ModelInstanceCollection.prototype.add = function (options) {
   if (this._model?._loader._hasMeshGpuInstancing) {
     throw new RuntimeError(
       "Models with the EXT_mesh_gpu_instancing extension cannot use the ModelInstanceCollection class.",
     );
   }
 
-  const instance = new ModelInstance(transform, this);
+  const instance = new ModelInstance(options);
   this._instances.push(instance);
+
+  if (this._model !== undefined) {
+    this._model._runtimeInstancesDirty = true;
+  }
+
   return instance;
 };
 
@@ -132,7 +146,9 @@ ModelInstanceCollection.prototype.add = function (transform) {
  *
  *
  * @example
- * const instance = collection.add(transform);
+ * const instance = collection.add({
+ *   transform: transform
+ * });
  * collection.remove(instance);  // Returns true
  *
  * @see ModelInstanceCollection#add
@@ -151,6 +167,10 @@ ModelInstanceCollection.prototype.remove = function (instance) {
   }
 
   this._instances.splice(index, 1);
+
+  if (this._model !== undefined) {
+    this._model._runtimeInstancesDirty = true;
+  }
 
   return true;
 };
@@ -172,6 +192,10 @@ ModelInstanceCollection.prototype.remove = function (instance) {
 ModelInstanceCollection.prototype.removeAll = function () {
   const instances = this._instances;
   instances.length = 0;
+
+  if (this._model !== undefined) {
+    this._model._runtimeInstancesDirty = true;
+  }
 };
 
 /**

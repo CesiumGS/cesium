@@ -49,7 +49,10 @@ ModelInstancesUpdateStage.update = function (
  */
 function updateRuntimeNode(runtimeNode, sceneGraph, frameState) {
   const modelInstances = sceneGraph.modelInstances._instances;
-  const buffer = runtimeNode.instancingTransformsBuffer;
+
+  const showsTypedArray =
+    RuntimeModelInstancingPipelineStage._getShowsTypedArray(modelInstances);
+  runtimeNode.instanceShowsBuffer.copyFromArrayView(showsTypedArray);
 
   const transformsTypedArray =
     RuntimeModelInstancingPipelineStage._getTransformsTypedArray(
@@ -61,8 +64,9 @@ function updateRuntimeNode(runtimeNode, sceneGraph, frameState) {
   runtimeNode.instancingTransformsBuffer.copyFromArrayView(
     transformsTypedArray,
   );
-
-  runtimeNode.instancingTransformsBuffer = buffer;
+  const colorsTypedArray =
+    RuntimeModelInstancingPipelineStage._getColorsTypedArray(modelInstances);
+  runtimeNode.instanceColorsBuffer.copyFromArrayView(colorsTypedArray);
 
   const childrenLength = runtimeNode.children.length;
 
