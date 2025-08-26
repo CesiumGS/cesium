@@ -8,7 +8,6 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
  * Creates and manages framebuffers for edge visibility rendering.
  *
  * @param {Object} options Object with the following properties:
- * @param {boolean} [options.multisampling=false] Whether to enable multisampling.
  *
  * @alias EdgeFramebuffer
  * @constructor
@@ -91,7 +90,6 @@ Object.defineProperties(EdgeFramebuffer.prototype, {
  * @param {Context} context The context.
  * @param {Viewport} viewport The viewport.
  * @param {boolean} hdr Whether HDR is enabled.
- * @param {number} [msaaSamples=1] The number of MSAA samples.
  * @param {Texture} [existingColorTexture] Optional existing color texture to reuse.
  * @param {Texture} [existingDepthTexture] Optional existing depth texture to reuse.
  *
@@ -101,14 +99,11 @@ EdgeFramebuffer.prototype.update = function (
   context,
   viewport,
   hdr,
-  msaaSamples,
   existingColorTexture,
   existingDepthTexture,
 ) {
   const width = viewport.width;
   const height = viewport.height;
-
-  msaaSamples = defined(msaaSamples) ? msaaSamples : 1;
 
   const pixelDatatype = hdr
     ? context.halfFloatingPointTexture
@@ -120,7 +115,7 @@ EdgeFramebuffer.prototype.update = function (
     context,
     width,
     height,
-    msaaSamples,
+    1, // No MSAA
     pixelDatatype,
     PixelFormat.RGBA,
   );
@@ -154,7 +149,6 @@ EdgeFramebuffer.prototype.clear = function (context, passState, clearColor) {
 
   passState.framebuffer = this._framebuffer;
 
-  // Clear color attachments and depth/stencil
   context.clear({
     color: clearColor,
     depth: 1.0,
@@ -165,20 +159,10 @@ EdgeFramebuffer.prototype.clear = function (context, passState, clearColor) {
 };
 
 /**
- * Prepares color textures for reading (resolves MSAA if needed).
- *
- * @param {Context} context The context.
- */
-EdgeFramebuffer.prototype.prepareColorTextures = function (context) {
-  this._framebufferManager.prepareTextures(context);
-};
-
-/**
  * Gets the edge framebuffer, creating it if necessary.
  *
  * @param {Context} context The context.
  * @param {Viewport} viewport The viewport.
- * @param {number} [msaaSamples=1] The number of MSAA samples.
  * @param {Texture} [existingColorTexture] Optional existing color texture to reuse.
  * @param {Texture} [existingDepthTexture] Optional existing depth texture to reuse.
  *
@@ -187,7 +171,6 @@ EdgeFramebuffer.prototype.prepareColorTextures = function (context) {
 EdgeFramebuffer.prototype.getFramebuffer = function (
   context,
   viewport,
-  msaaSamples,
   existingColorTexture,
   existingDepthTexture,
 ) {
@@ -195,7 +178,6 @@ EdgeFramebuffer.prototype.getFramebuffer = function (
     context,
     viewport,
     false,
-    msaaSamples,
     existingColorTexture,
     existingDepthTexture,
   );

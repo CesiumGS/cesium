@@ -63,8 +63,10 @@ void edgeVisibilityStage(inout vec4 color)
     
     // Output to ID buffer if MRT is enabled
     #ifdef HAS_EDGE_VISIBILITY_MRT
-        out_FragColor = edgeColor;
-        out_id = edgeId;
+        // out_FragColor = edgeColor;
+        // out_id = edgeId;
+        out_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+        out_id = vec4(1.0, 1.0, 1.0, 1.0);
     #endif
 #endif
 }
