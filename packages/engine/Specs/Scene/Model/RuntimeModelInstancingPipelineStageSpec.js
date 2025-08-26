@@ -79,8 +79,12 @@ describe(
       fixedFrameTransform,
     );
 
-    const sampleInstance1 = new ModelInstance(instanceModelMatrix1);
-    const sampleInstance2 = new ModelInstance(instanceModelMatrix2);
+    const sampleInstance1 = new ModelInstance({
+      transform: instanceModelMatrix1,
+    });
+    const sampleInstance2 = new ModelInstance({
+      transform: instanceModelMatrix2,
+    });
 
     function mockRenderResources(node) {
       return {
@@ -292,8 +296,12 @@ describe(
         instanceModelMatrix4,
       );
 
-      const sampleInstance3 = new ModelInstance(instanceModelMatrix3);
-      const sampleInstance4 = new ModelInstance(instanceModelMatrix4);
+      const sampleInstance3 = new ModelInstance({
+        transform: instanceModelMatrix3,
+      });
+      const sampleInstance4 = new ModelInstance({
+        transform: instanceModelMatrix4,
+      });
 
       // mock resources for ModelInstancesUpdateStage
       sceneGraph.modelInstances._instances = [sampleInstance3, sampleInstance4];
