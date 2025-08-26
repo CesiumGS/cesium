@@ -52,7 +52,7 @@ describe("Scene/buildVoxelDrawCommands", function () {
     const { shaderProgram } = primitive._drawCommand;
     const fragmentShaderText = shaderProgram._fragmentShaderText;
     const clippingFunctionSignature =
-      "vec4 getClippingPlane(highp sampler2D packedPlanes, int planeNumber, mat4 transform)";
+      "vec4 getClippingPlane(highp sampler2D packedPlanes, int planeNumber)";
 
     expect(fragmentShaderText.includes(clippingFunctionSignature)).toBe(true);
   });

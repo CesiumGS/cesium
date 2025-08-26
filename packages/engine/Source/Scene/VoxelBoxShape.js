@@ -59,19 +59,19 @@ function VoxelBoxShape() {
   const boundPlanes = [
     new ClippingPlane(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      -DefaultMinBounds.x,
+      DefaultMinBounds.x,
     ),
     new ClippingPlane(
       Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()),
-      -DefaultMinBounds.y,
+      DefaultMinBounds.y,
     ),
     new ClippingPlane(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      -DefaultMinBounds.z,
+      DefaultMinBounds.z,
     ),
-    new ClippingPlane(Cartesian3.UNIT_X, DefaultMaxBounds.x),
-    new ClippingPlane(Cartesian3.UNIT_Y, DefaultMaxBounds.y),
-    new ClippingPlane(Cartesian3.UNIT_Z, DefaultMaxBounds.z),
+    new ClippingPlane(Cartesian3.UNIT_X, -DefaultMaxBounds.x),
+    new ClippingPlane(Cartesian3.UNIT_Y, -DefaultMaxBounds.y),
+    new ClippingPlane(Cartesian3.UNIT_Z, -DefaultMaxBounds.z),
   ];
 
   this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });

@@ -1,18 +1,20 @@
 import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
+import ClippingPlane from "./ClippingPlane.js";
+import ContextLimits from "../Renderer/ContextLimits.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
+import Frozen from "../Core/Frozen.js";
 import Intersect from "../Core/Intersect.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
-import Plane from "../Core/Plane.js";
-import ContextLimits from "../Renderer/ContextLimits.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
+import Plane from "../Core/Plane.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
-import ClippingPlane from "./ClippingPlane.js";
 
 /**
  * Specifies a set of defining rendering bounds for a {@link VoxelPrimitive}.
@@ -35,11 +37,6 @@ function VoxelBoundCollection(options) {
   } = options ?? Frozen.EMPTY_OBJECT;
 
   this._planes = [];
-
-  // Do partial texture updates if just one plane is dirty.
-  // If many planes are dirty, refresh the entire texture.
-  this._dirtyIndex = -1;
-  this._multipleDirtyPlanes = false;
 
   /**
    * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes
@@ -168,15 +165,6 @@ Object.defineProperties(VoxelBoundCollection.prototype, {
   },
 });
 
-function setIndexDirty(collection, index) {
-  // If there's already a different _dirtyIndex set, more than one plane has changed since update.
-  // Entire texture must be reloaded
-  collection._multipleDirtyPlanes =
-    collection._multipleDirtyPlanes ||
-    (collection._dirtyIndex !== -1 && collection._dirtyIndex !== index);
-  collection._dirtyIndex = index;
-}
-
 /**
  * Adds the specified {@link ClippingPlane} to the collection to be used to selectively disable rendering
  * on the outside of each plane. Use {@link VoxelBoundCollection#unionClippingRegions} to modify
@@ -190,14 +178,7 @@ function setIndexDirty(collection, index) {
  */
 VoxelBoundCollection.prototype.add = function (plane) {
   const newPlaneIndex = this._planes.length;
-
-  const that = this;
-  plane.onChangeCallback = function (index) {
-    setIndexDirty(that, index);
-  };
   plane.index = newPlaneIndex;
-
-  setIndexDirty(this, newPlaneIndex);
   this._planes.push(plane);
   this.planeAdded.raiseEvent(plane, newPlaneIndex);
 };
@@ -277,8 +258,6 @@ VoxelBoundCollection.prototype.remove = function (clippingPlane) {
     }
   }
 
-  // Indicate planes texture is dirty
-  this._multipleDirtyPlanes = true;
   planes.length = length;
 
   this.planeRemoved.raiseEvent(clippingPlane, index);
@@ -303,27 +282,68 @@ VoxelBoundCollection.prototype.removeAll = function () {
     }
     this.planeRemoved.raiseEvent(plane, i);
   }
-  this._multipleDirtyPlanes = true;
   this._planes = [];
 };
 
+const scratchPlane = new Plane(Cartesian3.fromElements(1.0, 0.0, 0.0), 0.0);
+
 // Pack starting at the beginning of the buffer to allow partial update
-function packPlanesAsFloats(clippingPlaneCollection, startIndex, endIndex) {
+function transformAndPackPlanes(clippingPlaneCollection, transform) {
   const float32View = clippingPlaneCollection._float32View;
   const planes = clippingPlaneCollection._planes;
 
   let floatIndex = 0;
-  for (let i = startIndex; i < endIndex; ++i) {
-    const plane = planes[i];
-    const normal = plane.normal;
+  for (let i = 0; i < planes.length; ++i) {
+    const { normal, distance } = transformPlane(
+      planes[i],
+      transform,
+      scratchPlane,
+    );
 
     float32View[floatIndex] = normal.x;
     float32View[floatIndex + 1] = normal.y;
     float32View[floatIndex + 2] = normal.z;
-    float32View[floatIndex + 3] = plane.distance;
+    float32View[floatIndex + 3] = distance;
 
     floatIndex += 4; // each plane is 4 floats
   }
+}
+
+const scratchPlaneCartesian4 = new Cartesian4();
+const scratchTransformedNormal = new Cartesian3();
+
+function transformPlane(plane, transform, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("plane", plane);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
+
+  const { normal, distance } = plane;
+  const planeAsCartesian4 = Cartesian4.fromElements(
+    normal.x,
+    normal.y,
+    normal.z,
+    distance,
+    scratchPlaneCartesian4,
+  );
+  let transformedPlane = Matrix4.multiplyByVector(
+    transform,
+    planeAsCartesian4,
+    scratchPlaneCartesian4,
+  );
+
+  // Convert the transformed plane to Hessian Normal Form
+  const transformedNormal = Cartesian3.fromCartesian4(
+    transformedPlane,
+    scratchTransformedNormal,
+  );
+  transformedPlane = Cartesian4.divideByScalar(
+    transformedPlane,
+    Cartesian3.magnitude(transformedNormal),
+    scratchPlaneCartesian4,
+  );
+
+  return Plane.fromCartesian4(transformedPlane, result);
 }
 
 function computeTextureResolution(pixelsNeeded, result) {
@@ -331,6 +351,8 @@ function computeTextureResolution(pixelsNeeded, result) {
   result.y = Math.ceil(pixelsNeeded / result.x);
   return result;
 }
+
+let boundCounter = 0;
 
 const textureResolutionScratch = new Cartesian2();
 /**
@@ -340,11 +362,11 @@ const textureResolutionScratch = new Cartesian2();
  * Do not call this function directly.
  * </p>
  */
-VoxelBoundCollection.prototype.update = function (frameState) {
+VoxelBoundCollection.prototype.update = function (frameState, transform) {
   let clippingPlanesTexture = this._clippingPlanesTexture;
 
   // Compute texture requirements for current planes
-  // In RGBA FLOAT, a plane is 4 floats packed to a RGBA.
+  // In RGBA FLOAT, a plane is 4 floats packed to a single RGBA pixel.
   const pixelsNeeded = this.length;
 
   if (defined(clippingPlanesTexture)) {
@@ -365,7 +387,7 @@ VoxelBoundCollection.prototype.update = function (frameState) {
     }
   }
 
-  // If there are no clipping planes, there's nothing to update.
+  // If there are no bound planes, there's nothing to update.
   if (this.length === 0) {
     return;
   }
@@ -393,41 +415,21 @@ VoxelBoundCollection.prototype.update = function (frameState) {
     );
 
     this._clippingPlanesTexture = clippingPlanesTexture;
-    this._multipleDirtyPlanes = true;
   }
 
-  const dirtyIndex = this._dirtyIndex;
-  if (!this._multipleDirtyPlanes && dirtyIndex === -1) {
-    return;
-  }
   const { width, height } = clippingPlanesTexture;
-  if (!this._multipleDirtyPlanes) {
-    // partial updates possible
-    const offsetY = Math.floor(dirtyIndex / width);
-    const offsetX = Math.floor(dirtyIndex - offsetY * width);
-    packPlanesAsFloats(this, dirtyIndex, dirtyIndex + 1);
-    clippingPlanesTexture.copyFrom({
-      source: {
-        width: 1,
-        height: 1,
-        arrayBufferView: this._float32View,
-      },
-      xOffset: offsetX,
-      yOffset: offsetY,
-    });
-  } else {
-    packPlanesAsFloats(this, 0, this._planes.length);
-    clippingPlanesTexture.copyFrom({
-      source: {
-        width: width,
-        height: height,
-        arrayBufferView: this._float32View,
-      },
-    });
+  transformAndPackPlanes(this, transform);
+  clippingPlanesTexture.copyFrom({
+    source: {
+      width: width,
+      height: height,
+      arrayBufferView: this._float32View,
+    },
+  });
+  if (boundCounter < 2) {
+    console.log(`VoxelBoundCollection: float32View = ${this._float32View}`);
+    boundCounter++;
   }
-
-  this._multipleDirtyPlanes = false;
-  this._dirtyIndex = -1;
 };
 
 /**

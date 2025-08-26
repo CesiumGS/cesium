@@ -352,6 +352,13 @@ function VoxelPrimitive(options) {
   this._transformPositionUvToWorld = new Matrix4();
 
   /**
+   * @type {Matrix4}
+   * @private
+   * TODO: explain
+   */
+  this._transformPlaneUvToView = new Matrix4();
+
+  /**
    * @type {Matrix3}
    * @private
    */
@@ -1152,6 +1159,7 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
   new Cartesian3(-1.0, -1.0, -1.0),
   new Matrix4(),
 );
+const scratchTransformPositionViewToLocal = new Matrix4();
 
 /**
  * Updates the voxel primitive.
@@ -1195,13 +1203,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
   if (!this._shapeVisible) {
     return;
-  }
-
-  // TODO: apply to all shape types. Move to shape.update? Would need to pass frameState.
-  if (this.shape === VoxelShapeType.BOX) {
-    // TODO: copy renderBoundPlanes from the shape to the primitive?
-    this._shape.renderBoundPlanes.update(frameState);
-    uniforms.renderBoundPlanesTexture = this._shape.renderBoundPlanes.texture;
   }
 
   // Update the traversal and prepare for rendering.
@@ -1288,6 +1289,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
   // Prepare to render: update uniforms that can change every frame
   // Using a uniform instead of going through RenderState's scissor because the viewport is not accessible here, and the scissor command needs pixel coordinates.
+  // TODO: only update if changed! This is a lot of matrix multiplication every frame.
   uniforms.ndcSpaceAxisAlignedBoundingBox = Cartesian4.clone(
     ndcAabb,
     uniforms.ndcSpaceAxisAlignedBoundingBox,
@@ -1304,6 +1306,23 @@ VoxelPrimitive.prototype.update = function (frameState) {
     this._transformPositionUvToWorld,
     uniforms.transformPositionUvToView,
   );
+
+  const transformPositionLocalToWorld = this._shape.shapeTransform;
+  const transformPositionWorldToLocal = Matrix4.inverse(
+    transformPositionLocalToWorld,
+    scratchTransformPositionWorldToLocal,
+  );
+  const transformPositionViewToLocal = Matrix4.multiplyTransformation(
+    transformPositionWorldToLocal,
+    transformPositionViewToWorld,
+    scratchTransformPositionViewToLocal,
+  );
+  this._transformPlaneUvToView = Matrix4.transpose(
+    //uniforms.transformPositionViewToUv,
+    transformPositionViewToLocal,
+    this._transformPlaneUvToView,
+  );
+
   const transformDirectionViewToWorld =
     context.uniformState.inverseViewRotation;
   uniforms.transformDirectionViewToLocal = Matrix3.multiply(
@@ -1345,6 +1364,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
   );
   uniforms.stepSize = this._stepSizeMultiplier;
 
+  updateRenderBoundPlanes(this, frameState);
+
   // Render the primitive
   const command = frameState.passes.pick
     ? this._drawCommandPick
@@ -1354,6 +1375,18 @@ VoxelPrimitive.prototype.update = function (frameState) {
   command.boundingVolume = this._shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+function updateRenderBoundPlanes(primitive, frameState) {
+  // TODO: apply to all shape types. Move to shape.update? Would need to pass frameState.
+  if (primitive.shape !== VoxelShapeType.BOX) {
+    return;
+  }
+  const uniforms = primitive._uniforms;
+  const { renderBoundPlanes } = primitive._shape;
+  // TODO: copy renderBoundPlanes from the shape to the primitive?
+  renderBoundPlanes.update(frameState, primitive._transformPlaneUvToView);
+  uniforms.renderBoundPlanesTexture = renderBoundPlanes.texture;
+}
 
 /**
  * Converts a position in UV space to tile coordinates.

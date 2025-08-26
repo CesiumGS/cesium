@@ -138,13 +138,24 @@ Ray getViewRayUv() {
     #endif
 }
 
+Ray getViewRayEC() {
+    vec4 eyeCoordinates = czm_windowToEyeCoordinates(gl_FragCoord);
+    vec3 viewPosEC = (czm_orthographicIn3D == 1.0)
+        ? vec3(eyeCoordinates.xy, 0.0)
+        : vec3(0.0);
+    vec3 viewDirEC = normalize(eyeCoordinates.xyz);
+    // TODO: handle ellipsoid shape scaling?
+    return Ray(viewPosEC, viewDirEC, viewDirEC);
+}
+
 void main()
 {
     Ray viewRayUv = getViewRayUv();
+    Ray viewRayEC = getViewRayEC();
 
     Intersections ix;
     vec2 screenCoord = (gl_FragCoord.xy - czm_viewport.xy) / czm_viewport.zw; // [0,1]
-    RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayUv, ix);
+    RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayUv, viewRayEC, ix);
     // Exit early if the scene was completely missed.
     if (shapeIntersection.entry.w == NO_HIT) {
         discard;

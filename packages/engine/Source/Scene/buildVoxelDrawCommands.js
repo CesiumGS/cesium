@@ -37,7 +37,7 @@ function buildVoxelDrawCommands(primitive, context) {
 
   if (clippingPlanesLength > 0) {
     const functionId = "getClippingPlane";
-    const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber, mat4 transform)`;
+    const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber)`;
     const textureResolution = ClippingPlaneCollection.getTextureResolution(
       clippingPlanes,
       context,
@@ -54,7 +54,7 @@ function buildVoxelDrawCommands(primitive, context) {
 
   if (renderBoundPlanesLength > 0) {
     const functionId = "getBoundPlane";
-    const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber, mat4 transform)`;
+    const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber)`;
     const textureResolution = VoxelBoundCollection.getTextureResolution(
       renderBoundPlanes,
       context,
@@ -171,8 +171,7 @@ function getPlaneFunctionBody(textureResolution) {
     // Sample from center of pixel
     float u = (float(pixX) + 0.5) * ${pixelWidthString};
     float v = (float(pixY) + 0.5) * ${pixelHeightString};
-    vec4 plane = texture(packedPlanes, vec2(u, v));
-    return czm_transformPlane(plane, transform);`;
+    return texture(packedPlanes, vec2(u, v));`;
 }
 
 export default buildVoxelDrawCommands;
