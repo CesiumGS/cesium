@@ -9,13 +9,16 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
     vec4 edgeId = texture(czm_edgeIdTexture, screenCoord);
     
     if (edgeId.r > 0.0) {
-        float edgeFeatureId = edgeId.g;
-        float currentFeatureId = float(featureIds.featureId_0);
+        // Comment out feature ID for now:
+        // float edgeFeatureId = edgeId.g;
+        // float currentFeatureId = float(featureIds.featureId_0);
         
-        if (edgeFeatureId == currentFeatureId) {
-            color = edgeColor;
-            return;
-        }
+        // if (edgeFeatureId == currentFeatureId) {
+        //     color = edgeColor;
+        //     return;
+        // }
+
+        color = edgeColor;
     }
     
     /*
