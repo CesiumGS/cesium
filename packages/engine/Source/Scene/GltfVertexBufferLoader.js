@@ -306,7 +306,7 @@ async function loadFromSpz(vertexBufferLoader) {
   }
 }
 
-function getShPrefix(attribute) {
+function getShAttributePrefix(attribute) {
   const prefix = attribute.startsWith("KHR_gaussian_splatting:")
     ? "KHR_gaussian_splatting:"
     : "_";
@@ -314,7 +314,7 @@ function getShPrefix(attribute) {
 }
 
 function extractSHDegreeAndCoef(attribute) {
-  const prefix = getShPrefix(attribute);
+  const prefix = getShAttributePrefix(attribute);
   const separator = "_COEF_";
 
   const lStart = prefix.length;

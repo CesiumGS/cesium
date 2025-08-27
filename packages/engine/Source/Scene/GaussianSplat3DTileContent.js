@@ -354,15 +354,21 @@ GaussianSplat3DTileContent.tilesetHasGaussianSplattingExt = function (tileset) {
   return hasGaussianSplatExtension || hasLegacyGaussianSplatExtension;
 };
 
+function getShAttributePrefix(attribute) {
+  const prefix = attribute.startsWith("KHR_gaussian_splatting:")
+    ? "KHR_gaussian_splatting:"
+    : "_";
+  return `${prefix}SH_DEGREE_`;
+}
+
 /**
  * Determine Spherical Harmonics degree and coefficient count from attributes
  * @param {Array} attributes - The list of attributes.
  * @returns {Object} An object containing the degree (l) and coefficient (n).
  */
 function degreeAndCoefFromAttributes(attributes) {
-  const prefix = "_SH_DEGREE_";
   const shAttributes = attributes.filter((attr) =>
-    attr.name.startsWith(prefix),
+    attr.name.includes("SH_DEGREE_"),
   );
 
   switch (shAttributes.length) {
@@ -423,7 +429,7 @@ function float32ToFloat16(float32) {
  * @private
  */
 function extractSHDegreeAndCoef(attribute) {
-  const prefix = "_SH_DEGREE_";
+  const prefix = getShAttributePrefix(attribute);
   const separator = "_COEF_";
 
   const lStart = prefix.length;
@@ -448,7 +454,7 @@ function packSphericalHarmonicData(tileContent) {
   const packedData = new Uint32Array(totalLength);
 
   const shAttributes = tileContent.splatPrimitive.attributes.filter((attr) =>
-    attr.name.startsWith("_SH_DEGREE_"),
+    attr.name.includes("SH_DEGREE_"),
   );
   let stride = 0;
   const base = [0, 9, 24];
