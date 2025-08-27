@@ -610,7 +610,7 @@ function App() {
                 }
                 setLeftPanel("editor");
               } else {
-                // Load the gallery item every time it's clicked ro act as a "rerun" button
+                // Load the gallery item every time it's clicked to act as a "rerun" button
                 loadGalleryItem(item.id);
               }
             }}
