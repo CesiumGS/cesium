@@ -1,27 +1,14 @@
 <style>
   @import url(../templates/bucket.css);
-  #toolbar {
-    background: rgba(42, 42, 42, 0.8);
-    padding: 4px;
-    border-radius: 4px;
-    max-height: 80%;
-    overflow-y: auto;
-  }
-  #toolbar input {
-    vertical-align: middle;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
 
-  .tab {
+  .tab-bar {
     overflow: hidden;
-    border: 1px solid #ccc;
-    background-color: #f1f1f1;
+    border-bottom: 1px solid #ccc;
     display: grid;
     grid-auto-flow: column;
   }
 
-  .tab button {
+  .tab-bar button {
     background-color: inherit;
     float: left;
     border: none;
@@ -30,8 +17,9 @@
     padding: 4px 4px;
   }
 
-  .tab button.active {
-    background-color: #ccc;
+  .tab-bar button.active {
+    background-color: white;
+    color: black;
   }
 
   .numinput {
@@ -41,7 +29,7 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-  <div class="tab">
+  <div class="tab-bar">
     <button
       class="tablinks active"
       onclick="setActiveTab(event, 'ground-table')"
