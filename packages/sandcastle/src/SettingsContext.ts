@@ -1,6 +1,10 @@
 import { createContext } from "react";
 
-export type AvailableFontId = "droid-sans" | "fira-code" | "dejavu-sans";
+export type AvailableFontId =
+  | "droid-sans"
+  | "fira-code"
+  | "cascadia-code"
+  | "jetbrains-mono";
 type FontDefinition = {
   readableName: string;
   cssValue: string;
@@ -17,10 +21,15 @@ export const availableFonts: Record<AvailableFontId, FontDefinition> = {
     cssValue: "Fira Code",
     supportsLigatures: true,
   },
-  "dejavu-sans": {
-    readableName: "DejaVu Sans Mono",
-    cssValue: "DejaVu Sans Mono",
-    supportsLigatures: false,
+  "cascadia-code": {
+    readableName: "Cascadia Code",
+    cssValue: "Cascadia Code",
+    supportsLigatures: true,
+  },
+  "jetbrains-mono": {
+    readableName: "JetBrains Mono",
+    cssValue: "JetBrains Mono",
+    supportsLigatures: true,
   },
 };
 
