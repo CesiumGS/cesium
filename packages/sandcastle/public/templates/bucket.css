@@ -74,16 +74,23 @@ body {
 }
 
 #toolbar {
-  margin: 5px;
-  padding: 2px 5px;
   position: absolute;
-  background: rgba(42, 42, 42, 0.8);
-  background: var(--stratakit-color-bg-page-base);
+  margin: 5px;
   padding: 8px;
+  background: var(--stratakit-color-bg-page-base, oklch(24.37% 0.006 268.32));
   border-radius: 4px;
+  --animation-control-height: 130px;
+  max-height: calc(100% - var(--animation-control-height));
+  overflow-y: auto;
 
   &:empty {
     display: none;
+  }
+
+  input {
+    vertical-align: middle;
+    padding-top: 2px;
+    padding-bottom: 2px;
   }
 }
 

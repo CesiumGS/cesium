@@ -1,32 +1,12 @@
 <style>
   @import url(../templates/bucket.css);
 
-  #toolbar {
-    background: rgba(42, 42, 42, 0.8);
-    padding: 4px;
-    border-radius: 4px;
-  }
-
-  #toolbar input {
-    vertical-align: middle;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-
-  #toolbar .header {
-    font-weight: bold;
-  }
-
-  #toolbar #colorRamp {
+  #colorRamp {
     width: 100%;
     border: 1px solid lightgray;
   }
 
-  #toolbar .cesium-button {
-    display: block;
-  }
-
-  #toolbar #minHeight {
+  #minHeight {
     text-align: right;
   }
 </style>
@@ -36,7 +16,7 @@
   <table>
     <tbody>
       <tr>
-        <td class="header">Elevation</td>
+        <td><b>Elevation</b></td>
       </tr>
       <tr>
         <td id="minHeight"><span data-bind="text: minHeight"></span>m</td>
@@ -44,7 +24,7 @@
         <td><span data-bind="text: maxHeight"></span>m</td>
       </tr>
       <tr>
-        <td class="header">Options</td>
+        <td><b>Options</b></td>
       </tr>
       <tr>
         <td>Exaggeration</td>
