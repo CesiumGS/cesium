@@ -2021,15 +2021,9 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   }
 
   const gaussianSplattingExtension = extensions.KHR_gaussian_splatting;
-  const spzExtension = (() => {
-    // Yes, this is gross, but we expect the extension object downstream, not a boolean.
-    if (defined(gaussianSplattingExtension)) {
-      return gaussianSplattingExtension.extensions
-        .KHR_gaussian_splatting_compression_spz_2;
-    }
-
-    return undefined;
-  })();
+  const spzExtension =
+    gaussianSplattingExtension?.extensions
+      ?.KHR_gaussian_splatting_compression_spz_2;
   const legacySpzExtension = extensions.KHR_spz_gaussian_splats_compression;
   if (
     (defined(gaussianSplattingExtension) && defined(spzExtension)) ||
