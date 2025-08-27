@@ -16,7 +16,7 @@
 #### Additions :tada:
 
 - Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
-- Added spherical harmonics support for Gaussian Splats. Currently supported through the SPZ compression format.
+- Added spherical harmonics support for Gaussian splats. Currently supported with the SPZ compression format.
 
 ## 1.132 - 2025-08-01
 
