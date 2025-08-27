@@ -74,7 +74,9 @@
 
         const cesiumView = {};
 
-        if (savedViewData.cameraOn) {
+        //if (savedViewData.cameraOn) {
+        const useCamera = false;
+        if (useCamera) {
           const position = savedViewData.camera.eye;
           const fov =
             2.0 *
@@ -108,6 +110,8 @@
             new Cesium.Cartesian3(),
           );
 
+          // Scale eye along direction of dirScale
+
           // Convert rows to column-major array
           // Probably not necessary, can use Cesium.Matrix4.fromRowMajorArray
           const ecefTransformArray = [
@@ -131,9 +135,10 @@
           const ecefTransform = Cesium.Matrix4.fromColumnMajorArray(ecefTransformArray);
 
           // This works when you directly set viewer.camera.position, direction, up, but not when you use viewer.camera.setView() - why?
+          const testPoint = new Cesium.Cartesian3(position[0], position[1], position[2]);
           const newPos = Cesium.Matrix4.multiplyByPoint(
             ecefTransform,
-            new Cesium.Cartesian3(position.x, position.y, position.z),
+            testPoint,
             viewer.camera.position,
           );
           const newDir = Cesium.Matrix4.multiplyByPointAsVector(
@@ -158,8 +163,35 @@
           frustum.far = 1000000;
 
           viewer.camera.frustum = frustum;
+          const cam = viewer.camera;
+          console.log(cam);
           // viewer.camera.setView(cesiumView);
         }
+
+        // Apply test ortho view
+        console.log("Testing ortho view");
+
+        const orthoView = {
+          direction: [0.692078850684251, 0.7011604395228591, -0.17146691367047218],
+          frustum: {
+            far: 1000000,
+            fov: undefined,
+            near: 0.01,
+          },
+          position: [1255389.8978600262, -4732988.808369093, 4073555.356273554],
+          up: [0.6188478278988585, -0.4540867701756252, 0.6409622227997012],
+        };
+        const orthoFrustum = new Cesium.OrthographicFrustum();
+        orthoFrustum.aspectRatio = viewer.camera.frustum.aspectRatio;
+        orthoFrustum.near = orthoView.frustum.near;
+        orthoFrustum.far = orthoView.frustum.far;
+
+        const testView = {
+          destination: Cesium.Cartesian3.fromArray(orthoView.position),
+          up: Cesium.Cartesian3.fromArray(orthoView.up),
+          direction: Cesium.Cartesian3.fromArray(orthoView.direction),
+        };
+        viewer.camera.setView(testView);
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
