@@ -3,7 +3,7 @@ layout(location = 0) out vec4 out_FragColor;
 layout(location = 1) out vec4 out_id;
 #endif
 
-void edgeVisibilityStage(inout vec4 color)
+void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
 {
 #ifdef HAS_EDGE_VISIBILITY
 
@@ -56,7 +56,7 @@ void edgeVisibilityStage(inout vec4 color)
     #ifdef HAS_EDGE_VISIBILITY_MRT
         out_FragColor = edgeColor;
         out_id.r = edgeTypeInt;                    // Edge type
-        out_id.g = v_edgeFeatureId;               // Feature ID
+        out_id.g = float(featureIds.featureId_0); // Feature ID from current geometry
     #endif
 #endif
 }
