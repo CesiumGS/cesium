@@ -84,7 +84,7 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
 /**
  * Performs checks to ensure that the provided tileset has the Gaussian Splatting extensions.
  *
- * @param tileset The tileset to check for the extensions.
+ * @param {Cesium3DTileset} tileset The tileset to check for the extensions.
  * @returns {boolean} Returns <code>true</code> if the necessary extensions are included in the tileset.
  * @static
  */
