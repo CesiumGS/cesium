@@ -485,7 +485,7 @@ function App() {
           onClick={openDocsPage}
           onAuxClick={openDocsPage}
         >
-          <Icon href={`${documentation}#icon-large`} size="large" />
+          <Icon href={documentation} size="large" />
         </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
