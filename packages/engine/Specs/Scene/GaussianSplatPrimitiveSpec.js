@@ -169,28 +169,6 @@ describe(
       expect(tile.content).toBeDefined();
       expect(tile.content instanceof GaussianSplat3DTileContent).toBe(true);
     });
-
-    xit("loads a Gaussian splats tileset and toggles visibility", async function () {
-      const tileset = await Cesium3DTilesTester.loadTileset(
-        scene,
-        tilesetUrl,
-        options,
-      );
-      scene.camera.lookAt(
-        tileset.boundingSphere.center,
-        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
-      );
-      const tile = await Cesium3DTilesTester.waitForTileContentReady(
-        scene,
-        tileset.root,
-      );
-      expect(tile.content).toBeDefined();
-      expect(tileset.gaussianSplatPrimitive).toBeDefined();
-      expect(scene).notToRender([0, 0, 0, 255]);
-
-      tileset.show = false;
-      expect(scene).toRender([0, 0, 0, 255]);
-    });
   },
   "WebGL",
 );
