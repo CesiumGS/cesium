@@ -195,60 +195,6 @@ function generateOutlines(loadPlan) {
 
   const vertexCount = primitive.attributes[0].count;
 
-  // if (!defined(loadPlan.outlineIndices) && defined(primitive.edgeVisibility)) {
-  //   const visibilitySource = primitive.edgeVisibility.visibility;
-  //   const visibilityBytes = ArrayBuffer.isView(visibilitySource)
-  //     ? visibilitySource
-  //     : new Uint8Array(visibilitySource);
-
-  //   const triangleIndexArray = defined(indices)
-  //     ? indices.typedArray
-  //     : undefined;
-  //   if (defined(triangleIndexArray)) {
-  //     const outlinePairs = [];
-  //     const seenEdgeHashes = new Set();
-
-  //     let bitOffset = 0; // 2 bits per edge in order (v0:v1, v1:v2, v2:v0)
-  //     const totalIndices = triangleIndexArray.length;
-  //     for (let i = 0; i + 2 < totalIndices; i += 3) {
-  //       const v0 = triangleIndexArray[i];
-  //       const v1 = triangleIndexArray[i + 1];
-  //       const v2 = triangleIndexArray[i + 2];
-
-  //       // Iterate the 3 edges in order
-  //       const edgeVertices = [
-  //         [v0, v1],
-  //         [v1, v2],
-  //         [v2, v0],
-  //       ];
-
-  //       for (let e = 0; e < 3; e++) {
-  //         const byte = visibilityBytes[bitOffset >> 3];
-  //         const shift = bitOffset & 7;
-  //         const visibility2Bit = (byte >> shift) & 0x3;
-  //         bitOffset += 2;
-
-  //         // Only record hard edges (value 2). Skip repeated-hard (3) and others.
-  //         if (visibility2Bit !== 2) {
-  //           continue;
-  //         }
-
-  //         const a = edgeVertices[e][0];
-  //         const b = edgeVertices[e][1];
-  //         const small = Math.min(a, b);
-  //         const big = Math.max(a, b);
-  //         const hash = small * vertexCount + big;
-  //         if (!seenEdgeHashes.has(hash)) {
-  //           seenEdgeHashes.add(hash);
-  //           outlinePairs.push(small, big);
-  //         }
-  //       }
-  //     }
-
-  //     loadPlan.outlineIndices = outlinePairs;
-  //   }
-  // }
-
   const generator = new PrimitiveOutlineGenerator({
     triangleIndices: indices.typedArray,
     outlineIndices: loadPlan.outlineIndices,

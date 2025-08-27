@@ -2642,9 +2642,7 @@ function executeCommands(scene, passState) {
   // early-z, but we would have to draw it in each frustum.
   // Do not render environment primitives during a pick pass since they do not generate picking commands.
   if (!picking) {
-    // TEMP: Comment out environment rendering to test EdgeFramebuffer
-    // renderEnvironment(scene, passState);
-    // console.log("TEMP: Environment rendering disabled for EdgeFramebuffer testing");
+    renderEnvironment(scene, passState);
   }
 
   const {
@@ -2721,18 +2719,16 @@ function executeCommands(scene, passState) {
     }
 
     if (globeTranslucencyState.translucent) {
-      // TEMP: Comment out globe rendering to test EdgeFramebuffer
-      // uniformState.updatePass(Pass.GLOBE);
-      // globeTranslucencyState.executeGlobeCommands(
-      //   frustumCommands,
-      //   executeCommand,
-      //   globeTranslucencyFramebuffer,
-      //   scene,
-      //   passState,
-      // );
+      uniformState.updatePass(Pass.GLOBE);
+      globeTranslucencyState.executeGlobeCommands(
+        frustumCommands,
+        executeCommand,
+        globeTranslucencyFramebuffer,
+        scene,
+        passState,
+      );
     } else {
-      // TEMP: Comment out globe rendering to test EdgeFramebuffer
-      // performPass(frustumCommands, Pass.GLOBE);
+      performPass(frustumCommands, Pass.GLOBE);
     }
 
     if (useGlobeDepthFramebuffer) {
@@ -2942,17 +2938,16 @@ function executeCommands(scene, passState) {
     uniformState.updateFrustum(frustum);
 
     if (globeTranslucencyState.translucent) {
-      // TEMP: Comment out globe ID pass rendering to test EdgeFramebuffer
-      // uniformState.updatePass(Pass.GLOBE);
-      // globeTranslucencyState.executeGlobeCommands(
-      //   frustumCommands,
-      //   executeIdCommand,
-      //   globeTranslucencyFramebuffer,
-      //   scene,
-      //   passState,
-      // );
+      uniformState.updatePass(Pass.GLOBE);
+      globeTranslucencyState.executeGlobeCommands(
+        frustumCommands,
+        executeIdCommand,
+        globeTranslucencyFramebuffer,
+        scene,
+        passState,
+      );
     } else {
-      // performIdPass(frustumCommands, Pass.GLOBE);
+      performIdPass(frustumCommands, Pass.GLOBE);
     }
 
     if (clearGlobeDepth) {
@@ -2981,41 +2976,41 @@ function executeCommands(scene, passState) {
  *
  * @private
  */
-// function renderEnvironment(scene, passState) {
-//   const { context, environmentState, view } = scene;
+function renderEnvironment(scene, passState) {
+  const { context, environmentState, view } = scene;
 
-//   context.uniformState.updatePass(Pass.ENVIRONMENT);
+  context.uniformState.updatePass(Pass.ENVIRONMENT);
 
-//   if (defined(environmentState.skyBoxCommand)) {
-//     executeCommand(environmentState.skyBoxCommand, scene, passState);
-//   }
+  if (defined(environmentState.skyBoxCommand)) {
+    executeCommand(environmentState.skyBoxCommand, scene, passState);
+  }
 
-//   if (environmentState.isSkyAtmosphereVisible) {
-//     executeCommand(environmentState.skyAtmosphereCommand, scene, passState);
-//   }
+  if (environmentState.isSkyAtmosphereVisible) {
+    executeCommand(environmentState.skyAtmosphereCommand, scene, passState);
+  }
 
-//   if (environmentState.isSunVisible) {
-//     environmentState.sunDrawCommand.execute(context, passState);
-//     if (scene.sunBloom && !environmentState.useWebVR) {
-//       let framebuffer;
-//       if (environmentState.useGlobeDepthFramebuffer) {
-//         framebuffer = view.globeDepth.framebuffer;
-//       } else if (environmentState.usePostProcess) {
-//         framebuffer = view.sceneFramebuffer.framebuffer;
-//       } else {
-//         framebuffer = environmentState.originalFramebuffer;
-//       }
-//       scene._sunPostProcess.execute(context);
-//       scene._sunPostProcess.copy(context, framebuffer);
-//       passState.framebuffer = framebuffer;
-//     }
-//   }
+  if (environmentState.isSunVisible) {
+    environmentState.sunDrawCommand.execute(context, passState);
+    if (scene.sunBloom && !environmentState.useWebVR) {
+      let framebuffer;
+      if (environmentState.useGlobeDepthFramebuffer) {
+        framebuffer = view.globeDepth.framebuffer;
+      } else if (environmentState.usePostProcess) {
+        framebuffer = view.sceneFramebuffer.framebuffer;
+      } else {
+        framebuffer = environmentState.originalFramebuffer;
+      }
+      scene._sunPostProcess.execute(context);
+      scene._sunPostProcess.copy(context, framebuffer);
+      passState.framebuffer = framebuffer;
+    }
+  }
 
-//   // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-//   if (environmentState.isMoonVisible) {
-//     environmentState.moonCommand.execute(context, passState);
-//   }
-// }
+  // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+  if (environmentState.isMoonVisible) {
+    environmentState.moonCommand.execute(context, passState);
+  }
+}
 
 /**
  * Execute compute commands from the scene's environment state and computeCommandList
@@ -4311,27 +4306,6 @@ function render(scene) {
   scene.updateEnvironment();
   scene.updateAndExecuteCommands(passState, backgroundColor);
   scene.resolveFramebuffers(passState);
-
-  // Test EdgeFramebuffer: Clear to red if enabled
-  // if (
-  //   scene._enableEdgeVisibility &&
-  //   defined(scene._view.edgeFramebuffer.framebuffer)
-  // ) {
-  //   const originalFramebuffer = passState.framebuffer;
-  //   passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
-  //   scene._view.edgeFramebuffer.clear(
-  //     scene.context,
-  //     passState,
-  //     new Color(1.0, 0.0, 0.0, 1.0),
-  //   );
-  //   passState.framebuffer = originalFramebuffer;
-  // }
-
-  // Testing
-  // if (scene._enableEdgeVisibility && defined(scene._view.edgeFramebuffer.framebuffer)) {
-  //   passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
-  //   // scene._view.edgeFramebuffer.clear(scene.context, passState, new Color(1.0, 0.0, 0.0, 1.0));
-  // }
 
   passState.framebuffer = undefined;
   executeOverlayCommands(scene, passState);
